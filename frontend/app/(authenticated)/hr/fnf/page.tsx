@@ -9,6 +9,7 @@ import { useHrEmployees,
   unwrapEmployees} from "@/hooks/api/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -154,16 +155,16 @@ function FnfCard({ item, onMarkPaid, isPending }: FnfCardProps) {
           </div>
 
           {item.status !== "PAID" && (
-            <Button
+            <LoadingButton
               size="sm"
               variant="outline"
               className="text-xs shrink-0 gap-1.5 duration-200"
               onClick={handleMarkPaid}
-              disabled={isPending}
+              isPending={isPending}
             >
               <CheckCircle2 className="h-3 w-3" />
               Mark Paid
-            </Button>
+            </LoadingButton>
           )}
         </div>
       </CardContent>
@@ -197,7 +198,9 @@ function FnfContent() {
     onSuccess: () => qc.invalidateQueries({ queryKey: fnfKeys.list() }),
   });
 
-  const { data: employeesRaw } = useHrEmployees({ limit: 200 });
+  const [sheetOpen, setSheetOpen] = useState(false);
+
+  const { data: employeesRaw } = useHrEmployees({ limit: 100 }, { enabled: sheetOpen });
   const employees = useMemo<Employee[]>(() => {
     return unwrapEmployees(employeesRaw);
   }, [employeesRaw]);
@@ -213,7 +216,6 @@ function FnfContent() {
     [employees],
   );
 
-  const [sheetOpen, setSheetOpen] = useState(false);
   const [completeId, setCompleteId] = useState<number | null>(null);
   const [userId, setUserId] = useState("");
   const [basicDues, setBasicDues] = useState("");

@@ -30,11 +30,24 @@ export function useHrDepartments() {
   });
 }
 
+export interface LegacyDepartment {
+  id: number;
+  name: string;
+}
+
+export function useLegacyHrDepartments() {
+  return useQuery({
+    queryKey: queryKeys.hr.legacyDepartments(),
+    queryFn: () => apiClient.get<LegacyDepartment[]>("/hr/departments/legacy"),
+    staleTime: 2 * 60_000,
+  });
+}
+
 export function useCreateDepartment() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: CreateDepartmentInput) =>
-      apiClient.post<{ success: boolean }>("/hr/departments", data),
+      apiClient.post<Department>("/hr/departments", data),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: queryKeys.hr.departments() }),
   });
@@ -44,7 +57,7 @@ export type HrEmployeesParams = {
   page?: number;
   limit?: number;
   search?: string;
-  departmentId?: number;
+  departmentId?: string;
   isActive?: "true" | "false" | "all";
   /** Server-side role filter (users.role). */
   role?: string;
@@ -92,7 +105,7 @@ export function unwrapEmployees(
   return normalizeEmployeesResponse(res).data;
 }
 
-export function useHrEmployees(params?: HrEmployeesParams) {
+export function useHrEmployees(params?: HrEmployeesParams, options?: { enabled?: boolean }) {
   const limit = params?.limit ?? 20;
   return useQuery({
     queryKey: queryKeys.hr.employees(params),
@@ -104,6 +117,7 @@ export function useHrEmployees(params?: HrEmployeesParams) {
       return normalizeEmployeesResponse(res, limit);
     },
     staleTime: 2 * 60_000,
+    enabled: options?.enabled ?? true,
   });
 }
 
@@ -112,7 +126,8 @@ export function useHrEmployees(params?: HrEmployeesParams) {
  * Fetches a large page and always returns a flat Employee[].
  */
 export function useHrEmployeeOptions(params?: Omit<HrEmployeesParams, "page">) {
-  const query = useHrEmployees({ limit: 200, isActive: "true", ...params, page: 1 });
+  const merged = { limit: 100, isActive: "true" as const, ...params, page: 1 };
+  const query = useHrEmployees({ ...merged, limit: Math.min(merged.limit, 100) });
   return {
     ...query,
     employees: unwrapEmployees(query.data),

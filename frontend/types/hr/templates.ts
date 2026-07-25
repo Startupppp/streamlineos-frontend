@@ -104,8 +104,10 @@ export interface HrTemplateRender {
   createdAt: string;
 }
 
+export type HrTemplateListItem = Omit<HrTemplate, "content">;
+
 export interface TemplateListResponse {
-  data: HrTemplate[];
+  data: HrTemplateListItem[];
   total: number;
   page: number;
   limit: number;

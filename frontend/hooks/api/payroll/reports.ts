@@ -67,35 +67,39 @@ export function usePayrollCostCenter(params: Omit<ReportFilterParams, "departmen
   });
 }
 
-export function usePayrollEarnings(params: ReportFilterParams) {
+export function usePayrollEarnings(params: ReportFilterParams, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: reportKeys.earnings(params),
     queryFn: () => apiClient.get<ComponentPivotReport>("/payroll/reports/earnings", params),
     staleTime: 60_000,
+    enabled: options?.enabled ?? true,
   });
 }
 
-export function usePayrollDeductions(params: ReportFilterParams) {
+export function usePayrollDeductions(params: ReportFilterParams, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: reportKeys.deductions(params),
     queryFn: () => apiClient.get<ComponentPivotReport>("/payroll/reports/deductions", params),
     staleTime: 60_000,
+    enabled: options?.enabled ?? true,
   });
 }
 
-export function usePayrollReimbursementsReport(params: ReportFilterParams) {
+export function usePayrollReimbursementsReport(params: ReportFilterParams, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: reportKeys.reimbursements(params),
     queryFn: () => apiClient.get<ComponentPivotReport>("/payroll/reports/reimbursements", params),
     staleTime: 60_000,
+    enabled: options?.enabled ?? true,
   });
 }
 
-export function usePayrollTaxReport(params: ReportFilterParams) {
+export function usePayrollTaxReport(params: ReportFilterParams, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: reportKeys.tax(params),
     queryFn: () => apiClient.get<ComponentPivotReport>("/payroll/reports/tax", params),
     staleTime: 60_000,
+    enabled: options?.enabled ?? true,
   });
 }
 

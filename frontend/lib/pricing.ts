@@ -1,15 +1,40 @@
+/**
+ * Public / marketing pricing.
+ *
+ * Chargeable amounts, seat limits, and trial length MUST match backend
+ * `plan-entitlements.constants.ts`. The billing UI loads live plans from
+ * GET /billing/plans; this file is only for landing pages that cannot call auth APIs.
+ *
+ * Keep in sync via `lib/__tests__/pricing-consistency.test.ts`.
+ */
+
 export const PRICING = {
   currency: "₹",
+  /** Free plan seat limit — mirrors PLAN_LIMITS.members.FREE */
   freeSeatLimit: 5,
+  /** Alias used by older marketing copy */
   starterSeatLimit: 5,
-  scaleupPriceInr: 499,
+  /** STARTER monthly price in INR — mirrors PLAN_PRICES_PAISE.STARTER / 100 */
+  starterMonthlyInr: 999,
+  /** PROFESSIONAL monthly price in INR */
+  professionalMonthlyInr: 2499,
+  /** ENTERPRISE monthly price in INR (from) */
+  enterpriseMonthlyInr: 4999,
+  /** Annual discount fraction — mirrors ANNUAL_DISCOUNT_PCT */
   annualDiscountPct: 20,
+  /** Trial length in days — mirrors DEFAULT_TRIAL_DAYS */
+  trialDays: 14,
+  freeStorageGb: 5,
+  starterStorageGb: 100,
+  professionalStorageGb: 1024,
 } as const;
 
 export type BillingPeriod = "monthly" | "annual";
 
 export type PricingTier = {
-  id: "starter" | "startup" | "growth" | "enterprise";
+  id: "free" | "starter" | "professional" | "enterprise";
+  /** Backend plan id when chargeable */
+  planId: "FREE" | "STARTER" | "PROFESSIONAL" | "ENTERPRISE";
   name: string;
   tagline: string;
   description: string;
@@ -28,9 +53,13 @@ export type PricingTier = {
 
 const fmt = (n: number) => `${PRICING.currency}${n.toLocaleString("en-IN")}`;
 
+const annualOf = (monthly: number) =>
+  Math.round(monthly * (1 - PRICING.annualDiscountPct / 100));
+
 export const PRICING_TIERS: PricingTier[] = [
   {
-    id: "starter",
+    id: "free",
+    planId: "FREE",
     name: "Free",
     tagline: "Forever free",
     description: "Try StreamlineOS with a small team. No card required.",
@@ -41,12 +70,12 @@ export const PRICING_TIERS: PricingTier[] = [
       annual: `${PRICING.currency}0`,
     },
     price: `${PRICING.currency}0`,
-    period: `up to ${PRICING.starterSeatLimit} seats`,
+    period: `up to ${PRICING.freeSeatLimit} seats`,
     bestFor: "Solo founders, evaluating",
     features: [
-      `Up to ${PRICING.starterSeatLimit} seats`,
+      `Up to ${PRICING.freeSeatLimit} seats`,
       "All core modules — HR, Projects, CRM, Chat",
-      "5 GB workspace storage",
+      `${PRICING.freeStorageGb} GB workspace storage`,
       "Single organization",
       "Community support",
     ],
@@ -55,76 +84,84 @@ export const PRICING_TIERS: PricingTier[] = [
     highlight: false,
   },
   {
-    id: "startup",
-    name: "Startup",
+    id: "starter",
+    planId: "STARTER",
+    name: "Starter",
     tagline: "Built for growing teams",
     description:
-      "Unlimited seats with everything an early-stage team needs to operate.",
-    monthly: 499,
-    annual: 399,
-    priceLabel: { monthly: fmt(499), annual: fmt(399) },
-    price: fmt(499),
-    period: "per seat / month",
-    bestFor: "5–25 person startups",
+      "Core HR, payroll, and leave for early-stage teams with clear seat limits.",
+    monthly: PRICING.starterMonthlyInr,
+    annual: annualOf(PRICING.starterMonthlyInr),
+    priceLabel: {
+      monthly: fmt(PRICING.starterMonthlyInr),
+      annual: fmt(annualOf(PRICING.starterMonthlyInr)),
+    },
+    price: fmt(PRICING.starterMonthlyInr),
+    period: "per org / month",
+    bestFor: "Small teams getting operational",
     features: [
-      "Unlimited seats",
+      `Up to 10 seats`,
       "Everything in Free",
-      "Workflow automation",
-      "Public API access",
-      "Custom roles & permissions",
-      "100 GB workspace storage",
-      "Email support (24hr response)",
+      "Payroll management",
+      "Leave & attendance",
+      `${PRICING.starterStorageGb} GB workspace storage`,
+      "Email support",
     ],
-    cta: "Start 14-day trial",
+    cta: `Start ${PRICING.trialDays}-day trial`,
     ctaHref: "/signin",
     highlight: true,
     badge: "Most popular",
   },
   {
-    id: "growth",
-    name: "Growth",
+    id: "professional",
+    planId: "PROFESSIONAL",
+    name: "Professional",
     tagline: "For scaling teams",
     description:
-      "AI assistance, multi-org, SSO, and the controls scaling teams need.",
-    monthly: 799,
-    annual: 639,
-    priceLabel: { monthly: fmt(799), annual: fmt(639) },
-    price: fmt(799),
-    period: "per seat / month",
-    bestFor: "25–100 employees",
+      "AI assistance, CRM, recruitment, and the controls scaling teams need.",
+    monthly: PRICING.professionalMonthlyInr,
+    annual: annualOf(PRICING.professionalMonthlyInr),
+    priceLabel: {
+      monthly: fmt(PRICING.professionalMonthlyInr),
+      annual: fmt(annualOf(PRICING.professionalMonthlyInr)),
+    },
+    price: fmt(PRICING.professionalMonthlyInr),
+    period: "per org / month",
+    bestFor: "Growing companies",
     features: [
-      "Everything in Startup",
+      "Up to 50 seats",
+      "Everything in Starter",
       "AI lead scoring & smart drafts",
-      "Multi-branch, multi-org",
-      "SAML / SSO + SCIM",
-      "Advanced analytics & scheduled reports",
-      "1 TB workspace storage",
-      "Priority support (4hr response)",
+      "Recruitment & performance",
+      "CRM & sales tools",
+      "Priority support",
     ],
-    cta: "Start 14-day trial",
+    cta: `Start ${PRICING.trialDays}-day trial`,
     ctaHref: "/signin",
     highlight: false,
   },
   {
     id: "enterprise",
+    planId: "ENTERPRISE",
     name: "Enterprise",
     tagline: "Compliance-grade",
-    description: "Dedicated infrastructure, custom SLA, and on-prem option.",
-    monthly: 1499,
+    description: "Negotiated seats, custom SLA, and dedicated support.",
+    monthly: PRICING.enterpriseMonthlyInr,
     annual: null,
-    priceLabel: { monthly: `from ${fmt(1499)}`, annual: "Custom" },
-    price: `from ${fmt(1499)}`,
-    period: "per seat / month",
-    bestFor: "100+ employees, regulated industries",
+    priceLabel: {
+      monthly: `from ${fmt(PRICING.enterpriseMonthlyInr)}`,
+      annual: "Custom",
+    },
+    price: `from ${fmt(PRICING.enterpriseMonthlyInr)}`,
+    period: "per org / month",
+    bestFor: "Large / regulated teams",
     features: [
-      "Everything in Growth",
-      "Dedicated infrastructure / VPC",
-      "Custom SLA (99.99% uptime)",
+      "Everything in Professional",
+      "Negotiated seat limits",
+      "Custom SLA",
       "Audit logs & compliance pack",
-      "Dedicated CSM & solutions engineer",
-      "Self-hosting option",
-      "Custom data residency (India / EU / US)",
-      "Unlimited storage",
+      "Dedicated CSM",
+      "Custom data residency",
     ],
     cta: "Talk to sales",
     ctaHref: "/contact?topic=sales",
@@ -155,11 +192,13 @@ export function calculateSavingsVsAllInOne(
   billingPeriod: BillingPeriod = "annual",
 ): SavingsBreakdown {
   const competitorAnnual = COMPETITOR_PRICES.allInOneErp * seats * 12;
+  const starter = PRICING_TIERS.find((t) => t.id === "starter")!;
   const streamlinePerSeat =
     billingPeriod === "annual"
-      ? (PRICING_TIERS[1].annual ?? 0)
-      : (PRICING_TIERS[1].monthly ?? 0);
-  const streamlineAnnual = streamlinePerSeat * seats * 12;
+      ? (starter.annual ?? 0)
+      : (starter.monthly ?? 0);
+  // Org-priced plans: compare total org cost vs competitor per-seat stack for the seat count.
+  const streamlineAnnual = streamlinePerSeat * 12;
   return {
     competitorAnnual,
     streamlineAnnual,
@@ -177,7 +216,8 @@ export function calculateSavingsVsStack(seats: number) {
     COMPETITOR_PRICES.teamChat +
     COMPETITOR_PRICES.notion;
   const stackAnnual = stackPerSeat * seats * 12;
-  const streamlineAnnual = (PRICING_TIERS[1].annual ?? 0) * seats * 12;
+  const starter = PRICING_TIERS.find((t) => t.id === "starter")!;
+  const streamlineAnnual = (starter.annual ?? 0) * 12;
   return {
     stackAnnual,
     stackPerSeat,
@@ -190,11 +230,12 @@ export function calculateSavingsVsStack(seats: number) {
 }
 
 export function bundleSavingsCopy(): string {
-  return `Typical all-in-one platforms charge ${fmt(COMPETITOR_PRICES.allInOneErp)}/seat or more for the same bundle. StreamlineOS Startup is ${fmt(PRICING_TIERS[1].annual ?? 399)}/seat on annual billing.`;
+  const starter = PRICING_TIERS.find((t) => t.id === "starter")!;
+  return `Typical all-in-one platforms charge ${fmt(COMPETITOR_PRICES.allInOneErp)}/seat or more for the same bundle. StreamlineOS Starter is ${fmt(starter.annual ?? annualOf(PRICING.starterMonthlyInr))}/month on annual billing.`;
 }
 
 export function cheapestAnnualLabel(): string {
   const cheapest = PRICING_TIERS.find((t) => t.annual && t.annual > 0);
-  if (!cheapest || !cheapest.annual) return fmt(399);
+  if (!cheapest || !cheapest.annual) return fmt(annualOf(PRICING.starterMonthlyInr));
   return fmt(cheapest.annual);
 }

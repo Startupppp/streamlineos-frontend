@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import Link from "next/link";
 import { useInterviewerPerformance } from "@/hooks/api/hr/recruitment";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +9,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { ChevronLeft, Clock, TrendingUp, UserCheck, AlertCircle } from "lucide-react";
+import { Clock, TrendingUp, UserCheck, AlertCircle } from "lucide-react";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { cn } from "@/lib/utils";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
@@ -176,27 +175,21 @@ export default function InterviewerPerformancePage() {
     <PageWrapper
       title="Interviewer Performance"
       subtitle="Track how quickly interviewers submit scorecards after interviews"
+      backHref="/hr/recruitment/interviews"
+      backLabel="Back to Interviews"
       actions={
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/hr/recruitment/interviews">
-              <ChevronLeft className="mr-1 h-4 w-4" />
-              Back to Interviews
-            </Link>
-          </Button>
-          <Select value={String(days)} onValueChange={handlePeriodChange}>
-            <SelectTrigger className={cn("w-40", FILTER_SELECT_TRIGGER)}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-              {PERIOD_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value} className="text-xs">
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <Select value={String(days)} onValueChange={handlePeriodChange}>
+          <SelectTrigger className={cn("w-40", FILTER_SELECT_TRIGGER)}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+            {PERIOD_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       }
     >
       <div className="flex flex-1 min-h-0 flex-col space-y-4">

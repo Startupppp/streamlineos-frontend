@@ -31,6 +31,7 @@ import {
 interface KanbanColumnProps {
   col: ColumnConfig;
   items: AtsPipelineCandidate[];
+  total: number;
   isRejected: boolean;
   onCardClick: (candidate: AtsPipelineCandidate) => void;
 }
@@ -38,6 +39,7 @@ interface KanbanColumnProps {
 const KanbanColumn = memo(function KanbanColumn({
   col,
   items,
+  total,
   isRejected,
   onCardClick,
 }: KanbanColumnProps) {
@@ -55,7 +57,7 @@ const KanbanColumn = memo(function KanbanColumn({
           "inline-flex items-center justify-center rounded-full min-w-[22px] h-5 px-1.5 text-[11px] font-bold bg-white/25",
           col.headerText
         )}>
-          {items.length}
+          {total}
         </span>
       </div>
 
@@ -114,6 +116,7 @@ export function PipelineKanban({
   } | null>(null);
 
   const stageMap = Object.fromEntries(stages.map((s) => [s.stage, s.candidates]));
+  const stageTotals = Object.fromEntries(stages.map((s) => [s.stage, s.total]));
 
   const handleCardClick = useCallback((candidate: AtsPipelineCandidate) => {
     setSelectedCandidate(candidate);
@@ -149,13 +152,13 @@ export function PipelineKanban({
   }, []);
 
   const FLOW_STAGES = [
-    { label: "New", color: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300", count: stageMap["NEW"]?.length ?? 0 },
-    { label: "Screening", color: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300", count: stageMap["SCREENING"]?.length ?? 0 },
-    { label: "Interview", color: "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300", count: stageMap["INTERVIEW"]?.length ?? 0 },
-    { label: "Offer", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300", count: stageMap["OFFER"]?.length ?? 0 },
-    { label: "Hired", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300", count: stageMap["HIRED"]?.length ?? 0 },
+    { label: "New", color: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300", count: stageTotals["NEW"] ?? 0 },
+    { label: "Screening", color: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300", count: stageTotals["SCREENING"] ?? 0 },
+    { label: "Interview", color: "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300", count: stageTotals["INTERVIEW"] ?? 0 },
+    { label: "Offer", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300", count: stageTotals["OFFER"] ?? 0 },
+    { label: "Hired", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300", count: stageTotals["HIRED"] ?? 0 },
   ];
-  const rejectedCount = stageMap["REJECTED"]?.length ?? 0;
+  const rejectedCount = stageTotals["REJECTED"] ?? 0;
 
   if (isLoading) {
     return (
@@ -209,6 +212,7 @@ export function PipelineKanban({
               key={col.id}
               col={col}
               items={stageMap[col.id] ?? []}
+              total={stageTotals[col.id] ?? 0}
               isRejected={col.id === "REJECTED"}
               onCardClick={handleCardClick}
             />

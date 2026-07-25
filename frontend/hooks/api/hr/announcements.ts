@@ -12,8 +12,8 @@ export interface HrAnnouncement {
   targetType: "ALL" | "DEPARTMENT" | "BRANCH" | "ROLE";
   targetIds: string[];
   isPinned: boolean;
-  publishAt?: string;
-  expiresAt?: string;
+  publishAt?: string | null;
+  expiresAt?: string | null;
   status: "DRAFT" | "SCHEDULED" | "PUBLISHED" | "EXPIRED";
   readCount: number;
   attachmentUrls: string[];

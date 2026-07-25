@@ -93,6 +93,12 @@ export interface PayrollRun {
   orgId: string;
   month: string;
   status: PayrollRunStatus;
+  runType?: string | null;
+  entityId?: number | null;
+  periodId?: number | null;
+  payDate?: string | null;
+  statutoryRuleVersion?: string | null;
+  calculationVersion?: string | null;
   grossTotal: string | null;
   deductionTotal: string | null;
   netTotal: string | null;
@@ -110,6 +116,9 @@ export interface PayrollRunListItem {
   id: number;
   month: string;
   status: PayrollRunStatus;
+  runType?: string | null;
+  entityId?: number | null;
+  statutoryRuleVersion?: string | null;
   grossTotal: string | null;
   netTotal: string | null;
   employeeCount: number | null;

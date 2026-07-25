@@ -1,6 +1,5 @@
 "use client";
 
-import { useCallback } from "react";
 import { FileCheck, FileBadge, Shield, FileText, Building2, File } from "lucide-react";
 import { SearchInput } from "@/components/ui/search-input";
 import {
@@ -10,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FilterPill, FilterPillGroup } from "@/components/ui/filter-pill";
 import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 
@@ -34,29 +34,6 @@ export interface DocumentFiltersProps {
   categoryTabs: string[];
 }
 
-interface CategoryFilterButtonProps {
-  category: string;
-  isSelected: boolean;
-  onCategoryChange: (value: string) => void;
-}
-
-function CategoryFilterButton({ category, isSelected, onCategoryChange }: CategoryFilterButtonProps) {
-  const handleClick = useCallback(() => onCategoryChange(category), [onCategoryChange, category]);
-  return (
-    <button
-      onClick={handleClick}
-      className={cn(
-        "px-2.5 py-1 rounded-full text-xs font-medium transition-colors duration-200 border",
-        isSelected
-          ? "bg-primary text-primary-foreground border-primary"
-          : "bg-transparent text-muted-foreground border-border hover:bg-muted hover:text-foreground",
-      )}
-    >
-      {category}
-    </button>
-  );
-}
-
 export function DocumentFilters({
   searchTerm,
   onSearchChange,
@@ -72,15 +49,18 @@ export function DocumentFilters({
         placeholder="Search documents..."
         value={searchTerm}
         onValueChange={onSearchChange}
-        className="w-48"
+        className="max-w-sm"
         aria-label="Search documents"
       />
 
       <Select value={selectedType} onValueChange={onTypeChange}>
-        <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)}>
+        <SelectTrigger
+          aria-label="Filter by document type"
+          className={cn("w-[9.5rem]", FILTER_SELECT_TRIGGER)}
+        >
           <SelectValue placeholder="All types" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent align="start">
           <SelectItem value="all" className="text-xs">All types</SelectItem>
           {DOCUMENT_TYPES.map((type) => (
             <SelectItem key={type.value} value={type.value} className="text-xs">
@@ -90,16 +70,17 @@ export function DocumentFilters({
         </SelectContent>
       </Select>
 
-      <div className="flex items-center gap-1 ml-1 overflow-x-auto scrollbar-hide flex-nowrap [&>*]:shrink-0">
+      <FilterPillGroup className="ml-1">
         {categoryTabs.map((cat) => (
-          <CategoryFilterButton
+          <FilterPill
             key={cat}
-            category={cat}
-            isSelected={selectedCategory === cat}
-            onCategoryChange={onCategoryChange}
-          />
+            active={selectedCategory === cat}
+            onClick={() => onCategoryChange(cat)}
+          >
+            {cat}
+          </FilterPill>
         ))}
-      </div>
+      </FilterPillGroup>
     </div>
   );
 }

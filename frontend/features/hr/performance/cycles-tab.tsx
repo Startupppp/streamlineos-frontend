@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, memo } from "react";
+import { useState, useCallback, useMemo, memo, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -40,7 +40,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { ReviewCycle } from "@/types/hr";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { cycleSchema, type CycleFormValues } from "./cycle-schema";
+import { buildCycleSchema, type CycleFormValues } from "./cycle-schema";
 
 function getCycleProgress(cycle: ReviewCycle): number {
   if (cycle.status === "COMPLETED") return 100;
@@ -80,9 +80,14 @@ export function CyclesTab() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editCycle, setEditCycle] = useState<ReviewCycle | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const isEditRef = useRef(false);
+  isEditRef.current = !!editCycle;
 
   const cycleForm = useForm<CycleFormValues>({
-    resolver: zodResolver(cycleSchema),
+    resolver: (values, context, options) =>
+      zodResolver(
+        buildCycleSchema({ enforceFutureDates: !isEditRef.current }),
+      )(values, context, options),
     defaultValues: { name: "", type: "QUARTERLY", periodStart: "", periodEnd: "", deadline: "" },
   });
 
@@ -105,13 +110,6 @@ export function CyclesTab() {
   }, [cycleForm]);
 
   const handleCreate = useCallback((data: CycleFormValues) => {
-    if (!editCycle) {
-      const today = new Date().toISOString().slice(0, 10);
-      if (data.periodStart < today) {
-        toast.error("Period start date cannot be earlier than today");
-        return;
-      }
-    }
     if (editCycle) {
       updateCycle.mutate(
         { id: editCycle.id, name: data.name, type: data.type, periodStart: data.periodStart, periodEnd: data.periodEnd, deadline: data.deadline },
@@ -171,7 +169,7 @@ export function CyclesTab() {
   });
   const deadlineBounds = planningEndPickerProps({
     startDate: watchedPeriodEnd,
-    mode: "after",
+    mode: "onOrAfter",
     existingValue: editCycle ? cycleForm.watch("deadline") : undefined,
   });
 
@@ -186,7 +184,7 @@ export function CyclesTab() {
     const nextDeadline = clearEndIfInvalid(
       nextEnd || value,
       currentDeadline,
-      "after",
+      "onOrAfter",
     );
     if (nextDeadline !== currentDeadline) {
       cycleForm.setValue("deadline", nextDeadline, { shouldValidate: true });
@@ -196,7 +194,7 @@ export function CyclesTab() {
   function handlePeriodEndChange(value: string) {
     cycleForm.setValue("periodEnd", value, { shouldValidate: true });
     const currentDeadline = cycleForm.getValues("deadline") ?? "";
-    const nextDeadline = clearEndIfInvalid(value, currentDeadline, "after");
+    const nextDeadline = clearEndIfInvalid(value, currentDeadline, "onOrAfter");
     if (nextDeadline !== currentDeadline) {
       cycleForm.setValue("deadline", nextDeadline, { shouldValidate: true });
     }

@@ -8,6 +8,7 @@ import { SURVEYS_PERMISSIONS } from "./surveys";
 import { FEEDBUCKET_PERMISSIONS } from "./feedbucket";
 import { NOTIFICATIONS_PERMISSIONS } from "./notifications";
 import { ACCOUNTING_PERMISSIONS } from "./accounting";
+import { PAYROLL_PERMISSIONS } from "./payroll";
 import { ROLES } from "@/lib/constants/roles";
 
 export const PERMISSIONS = [
@@ -21,6 +22,7 @@ export const PERMISSIONS = [
   ...FEEDBUCKET_PERMISSIONS,
   ...NOTIFICATIONS_PERMISSIONS,
   ...ACCOUNTING_PERMISSIONS,
+  ...PAYROLL_PERMISSIONS,
 ];
 
 const EMPLOYEE_SELF_SERVICE = [
@@ -88,6 +90,29 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
     "reports:view",
     "reports:create",
     "reports:export",
+    "payroll:runs:view",
+    "payroll:runs:create",
+    "payroll:runs:update",
+    "payroll:runs:approve",
+    "payroll:runs:manage",
+    "payroll:salaries:view",
+    "payroll:salaries:update",
+    "payroll:salaries:manage",
+    "payroll:templates:view",
+    "payroll:templates:manage",
+    "payroll:policies:view",
+    "payroll:policies:manage",
+    "payroll:components:view",
+    "payroll:components:manage",
+    "payroll:payslips:view",
+    "payroll:payslips:manage",
+    "payroll:tax:view",
+    "payroll:tax:manage",
+    "payroll:reports:view",
+    "payroll:reports:export",
+    "payroll:accounting:view",
+    "payroll:fnf:view",
+    "payroll:fnf:manage",
   ],
 
   SALES: [
@@ -242,6 +267,16 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
     "projects:view",
     "projects:tickets:view",
     "reports:view",
+    "payroll:runs:view",
+    "payroll:runs:create",
+    "payroll:runs:update",
+    "payroll:salaries:view",
+    "payroll:salaries:update",
+    "payroll:templates:view",
+    "payroll:components:view",
+    "payroll:payslips:view",
+    "payroll:payslips:manage",
+    "payroll:reports:view",
   ],
 
   INVENTORY_MANAGER: [

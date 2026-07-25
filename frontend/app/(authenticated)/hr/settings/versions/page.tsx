@@ -56,11 +56,15 @@ export default function VersionHistoryPage() {
     setQueriedId(parsed);
   }, [idInput]);
 
+  const [activatingId, setActivatingId] = useState<number | null>(null);
+
   const handleActivate = useCallback(
     (id: number) => {
+      setActivatingId(id);
       activate.mutate(id, {
         onSuccess: () => toast.success("Version activated"),
         onError: (err) => toast.error(getErrorMessage(err)),
+        onSettled: () => setActivatingId(null),
       });
     },
     [activate],
@@ -146,7 +150,8 @@ export default function VersionHistoryPage() {
                       size="sm"
                       variant="outline"
                       className="text-xs"
-                      isPending={activate.isPending}
+                      isPending={activate.isPending && activatingId === item.id}
+                      disabled={activate.isPending}
                       onClick={() => handleActivate(item.id)}
                     >
                       Activate

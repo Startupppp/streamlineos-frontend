@@ -9,6 +9,7 @@ import { Pencil, CalendarDays } from "lucide-react";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   Form,
@@ -201,14 +202,14 @@ function EventForm({ editing, defaultMonth, onSuccess, onCancel }: EventFormProp
           )}
         />
         <div className="flex gap-2 pt-1">
-          <Button
+          <LoadingButton
             type="submit"
             size="sm"
             className="text-xs"
-            disabled={create.isPending || update.isPending}
+            isPending={create.isPending || update.isPending}
           >
             {editing ? "Update" : "Add Event"}
-          </Button>
+          </LoadingButton>
           <Button type="button" variant="ghost" size="sm" className="text-xs" onClick={onCancel}>
             Cancel
           </Button>
@@ -275,15 +276,15 @@ export function CalendarManager({ month }: CalendarManagerProps) {
           <span className="text-[13px] font-medium text-foreground">Payroll Calendar</span>
         </div>
         <div className="flex gap-2">
-          <Button
+          <LoadingButton
             variant="outline"
             size="sm"
             className="text-xs"
             onClick={handleGenerate}
-            disabled={generate.isPending}
+            isPending={generate.isPending}
           >
             Generate Calendar
-          </Button>
+          </LoadingButton>
           <AnimatedIconButton
             icon={PlusIcon}
             iconClassName="mr-1.5"

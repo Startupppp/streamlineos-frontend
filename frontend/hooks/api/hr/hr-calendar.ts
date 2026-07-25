@@ -9,7 +9,6 @@ export const HR_CALENDAR_EVENT_TYPES = [
   "BIRTHDAY",
   "ANNIVERSARY",
   "REVIEW_CYCLE",
-  "TRAINING",
   "TRAVEL",
   "INTERVIEW",
 ] as const;
@@ -22,7 +21,6 @@ export const HR_CALENDAR_TYPE_LABELS: Record<HrCalendarEventType, string> = {
   BIRTHDAY: "Birthday",
   ANNIVERSARY: "Anniversary",
   REVIEW_CYCLE: "Review Cycle",
-  TRAINING: "Training",
   TRAVEL: "Travel",
   INTERVIEW: "Interview",
 };
@@ -33,7 +31,6 @@ export const HR_CALENDAR_TYPE_COLORS: Record<HrCalendarEventType, string> = {
   BIRTHDAY: "bg-pink-100 text-pink-700 border-pink-200",
   ANNIVERSARY: "bg-purple-100 text-purple-700 border-purple-200",
   REVIEW_CYCLE: "bg-indigo-100 text-indigo-700 border-indigo-200",
-  TRAINING: "bg-green-100 text-green-700 border-green-200",
   TRAVEL: "bg-orange-100 text-orange-700 border-orange-200",
   INTERVIEW: "bg-cyan-100 text-cyan-700 border-cyan-200",
 };

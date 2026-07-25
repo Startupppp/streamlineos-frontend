@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Download, Loader2, CheckCircle2 } from "lucide-react";
+import { Download, CheckCircle2 } from "lucide-react";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -188,20 +188,17 @@ export function PublicationsTab({ canManage }: PublicationsTabProps) {
         cell: (row) => {
           const isDownloading = downloadingIds.has(row.id);
           return (
-            <Button
+            <LoadingButton
               variant="outline"
               size="sm"
               className="h-6 text-[11px] gap-1"
-              disabled={isDownloading || !row.pdfUrl}
+              disabled={!row.pdfUrl}
+              isPending={isDownloading}
               onClick={() => handleDownload(row.id)}
             >
-              {isDownloading ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
-              ) : (
-                <Download className="h-3 w-3" />
-              )}
+              <Download className="h-3 w-3" />
               PDF
-            </Button>
+            </LoadingButton>
           );
         },
       },

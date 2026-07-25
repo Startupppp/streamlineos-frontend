@@ -15,18 +15,18 @@ import { cn } from "@/lib/utils";
 import type { EmployeeStatusFilter } from "./employee-list-filters";
 
 export interface Department {
-  id: number;
+  id: string;
   name: string;
 }
 
 interface EmployeesFiltersProps {
   search: string;
-  departmentId: number | undefined;
+  departmentId: string | undefined;
   status: EmployeeStatusFilter;
   departments: Department[] | undefined;
   hasFilters: boolean;
   onSearchChange: (v: string) => void;
-  onDepartmentIdChange: (id: number | undefined) => void;
+  onDepartmentIdChange: (id: string | undefined) => void;
   onStatusChange: (s: EmployeeStatusFilter) => void;
   onClear: () => void;
   /** Optional role (server-backed). Omit to hide. */
@@ -60,9 +60,9 @@ export function EmployeesFilters({
       />
 
       <Select
-        value={departmentId != null ? String(departmentId) : "all"}
+        value={departmentId ?? "all"}
         onValueChange={(v) =>
-          onDepartmentIdChange(v === "all" ? undefined : Number(v))
+          onDepartmentIdChange(v === "all" ? undefined : v)
         }
       >
         <SelectTrigger
@@ -75,7 +75,7 @@ export function EmployeesFilters({
         <SelectContent align="start">
           <SelectItem value="all">All departments</SelectItem>
           {departments?.map((d) => (
-            <SelectItem key={d.id} value={String(d.id)}>
+            <SelectItem key={d.id} value={d.id}>
               {d.name}
             </SelectItem>
           ))}

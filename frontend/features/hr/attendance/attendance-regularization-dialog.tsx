@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import { EntityFormSheet } from "@/components/shared/entity-form-sheet";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -102,9 +103,10 @@ export function AttendanceRegularizationDialog({
 
   return (
     <>
-      <button
+      <Button
         type="button"
-        className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        variant="ghost"
+        className="justify-start gap-1.5 px-0 h-auto py-0 font-normal text-sm text-muted-foreground hover:bg-transparent hover:text-foreground"
         onClick={() => setOpen(true)}
       >
         {children ?? (
@@ -113,7 +115,7 @@ export function AttendanceRegularizationDialog({
             Request Correction
           </>
         )}
-      </button>
+      </Button>
 
       <EntityFormSheet<RegularizationFormValues>
         open={open}

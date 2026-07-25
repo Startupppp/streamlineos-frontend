@@ -61,10 +61,18 @@ interface OnboardingDoc {
   version: number | null;
 }
 
+interface OnboardingDocsResponse {
+  data: OnboardingDoc[];
+  pagination: { page: number; limit: number; total: number; totalPages: number };
+}
+
 function useMyOnboardingDocs() {
   return useQuery<OnboardingDoc[]>({
     queryKey: queryKeys.hr.myOnboardingDocs(),
-    queryFn: () => apiClient.get<OnboardingDoc[]>("/hr/onboarding-docs"),
+    queryFn: async () => {
+      const res = await apiClient.get<OnboardingDocsResponse>("/hr/onboarding-docs", { limit: 100 });
+      return res.data;
+    },
     staleTime: 60_000,
   });
 }

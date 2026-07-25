@@ -102,15 +102,17 @@ export function InputsPageContent() {
   const actions = (
     <div className="flex items-center gap-2">
       {!currentPeriod && !isLoading && (
-        <Button
+        <LoadingButton
           variant="outline"
           size="sm"
           className="text-xs gap-1"
           onClick={() => setShowCreateConfirm(true)}
+          isPending={createPeriod.isPending}
+          loadingText="Opening…"
         >
           <Calendar className="h-3.5 w-3.5" />
           Open Period
-        </Button>
+        </LoadingButton>
       )}
       {currentPeriod && currentPeriod.status !== "locked" && (
         <LoadingButton
@@ -234,14 +236,15 @@ export function InputsPageContent() {
                 No input period found for{" "}
                 <strong>{formatPeriodLabel(month)}</strong>.
               </p>
-              <Button
+              <LoadingButton
                 variant="outline"
                 size="sm"
                 onClick={() => setShowCreateConfirm(true)}
-                disabled={createPeriod.isPending}
+                isPending={createPeriod.isPending}
+                loadingText="Opening…"
               >
                 Open Period
-              </Button>
+              </LoadingButton>
             </div>
           )}
         </div>
@@ -258,9 +261,11 @@ export function InputsPageContent() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleCreatePeriod}>
-              Open Period
+            <AlertDialogCancel disabled={createPeriod.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction asChild>
+              <LoadingButton onClick={handleCreatePeriod} isPending={createPeriod.isPending} loadingText="Opening…">
+                Open Period
+              </LoadingButton>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -278,12 +283,11 @@ export function InputsPageContent() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleLock}
-              className="bg-primary text-primary-foreground"
-            >
-              Lock Period
+            <AlertDialogCancel disabled={lockPeriod.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction asChild>
+              <LoadingButton onClick={handleLock} isPending={lockPeriod.isPending} loadingText="Locking…">
+                Lock Period
+              </LoadingButton>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -301,12 +305,16 @@ export function InputsPageContent() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleUnlock}
-              className="bg-amber-600 text-white hover:bg-amber-700"
-            >
-              Unlock Period
+            <AlertDialogCancel disabled={unlockPeriod.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction asChild>
+              <LoadingButton
+                onClick={handleUnlock}
+                isPending={unlockPeriod.isPending}
+                loadingText="Unlocking…"
+                className="bg-amber-600 text-white hover:bg-amber-700 dark:bg-amber-600/90 dark:hover:bg-amber-600/80"
+              >
+                Unlock Period
+              </LoadingButton>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

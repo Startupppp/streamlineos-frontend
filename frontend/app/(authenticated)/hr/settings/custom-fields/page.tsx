@@ -13,6 +13,8 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { CustomFieldsDataTable } from "@/features/hr/custom-fields/components/custom-fields-data-table";
 import { CustomFieldUpsertSheet } from "@/features/hr/custom-fields/components/custom-field-upsert-sheet";
 import { useHrCustomFields, useCreateCustomField } from "@/features/hr/custom-fields/hooks/use-hr-custom-fields";
+import { useCan } from "@/hooks/api/access";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import type { CreateCustomFieldPayload, UpdateCustomFieldPayload } from "@/features/hr/forms/lib/types";
 
 const ENTITY_TYPES = [
@@ -24,7 +26,11 @@ const ENTITY_TYPES = [
 export default function HrCustomFieldsPage() {
   const [entityType, setEntityType] = useState("employee");
   const [open, setOpen] = useState(false);
-  const { data: fields, isLoading } = useHrCustomFields(entityType);
+  const canView = useCan("hr:employees:view");
+  const canManage = useCan("hr:employees:manage");
+  const { data: fields, isLoading, isError, refetch } = useHrCustomFields(entityType, {
+    enabled: canView,
+  });
   const create = useCreateCustomField(entityType);
 
   async function handleCreate(payload: CreateCustomFieldPayload | UpdateCustomFieldPayload) {
@@ -46,6 +52,22 @@ export default function HrCustomFieldsPage() {
     setOpen(true);
   }
 
+  function handleRetry() {
+    void refetch();
+  }
+
+  if (!canView) {
+    return (
+      <PageWrapper title="Custom Fields" subtitle="Define additional fields for HR entities">
+        <NoPermissionState
+          permission="hr:employees:view"
+          title="Access Restricted"
+          description="You don't have permission to view custom field definitions."
+        />
+      </PageWrapper>
+    );
+  }
+
   return (
     <>
       <PageWrapper
@@ -62,9 +84,11 @@ export default function HrCustomFieldsPage() {
           </Select>
         }
         actions={
-          <Button size="sm" className="gap-1.5" onClick={handleCreateClick}>
-            <Plus className="h-4 w-4" /> New Field
-          </Button>
+          canManage ? (
+            <Button size="sm" className="gap-1.5" onClick={handleCreateClick}>
+              <Plus className="h-4 w-4" /> New Field
+            </Button>
+          ) : undefined
         }
       >
         {isLoading ? (
@@ -73,6 +97,12 @@ export default function HrCustomFieldsPage() {
               <Skeleton key={i} className="h-12 w-full rounded-lg" />
             ))}
           </div>
+        ) : isError ? (
+          <ErrorState
+            title="Couldn't load custom fields"
+            description="Check your connection and try again."
+            onRetry={handleRetry}
+          />
         ) : (
           <div className="flex flex-1 min-h-0 flex-col pt-2">
             <CustomFieldsDataTable entityType={entityType} fields={fields ?? []} />

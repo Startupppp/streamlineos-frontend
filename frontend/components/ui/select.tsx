@@ -51,22 +51,22 @@ function SelectTrigger({
       data-size={size}
       className={cn(
         FIELD_CONTROL_CLASS,
-        "flex w-full min-w-0 items-center justify-between gap-2 px-3 font-sans font-medium whitespace-nowrap",
+        "flex w-full min-w-0 items-center justify-between gap-2 overflow-hidden px-3 font-sans font-medium whitespace-nowrap",
         "data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground",
         FIELD_CONTROL_HOVER_CLASS,
         "data-[state=open]:border-ring data-[state=open]:ring-1 data-[state=open]:ring-ring",
         FIELD_CONTROL_INVALID_CLASS,
         FIELD_CONTROL_DISABLED_CLASS,
         "data-[size=sm]:h-9",
-        "*:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2",
-        "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "*:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:min-w-0 *:data-[slot=select-value]:flex-1 *:data-[slot=select-value]:truncate",
+        "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5",
         className,
       )}
       {...props}
     >
       {children}
       <SelectPrimitive.Icon asChild>
-        <ChevronDownIcon className="size-4 opacity-50" />
+        <ChevronDownIcon className="size-3.5 shrink-0 opacity-60" />
       </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
   );
@@ -98,7 +98,7 @@ function SelectContent({
           className={cn(
             "p-1",
             position === "popper" &&
-              "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)] scroll-my-1"
+              "w-full min-w-[var(--radix-select-trigger-width)] scroll-my-1",
           )}
         >
           {children}

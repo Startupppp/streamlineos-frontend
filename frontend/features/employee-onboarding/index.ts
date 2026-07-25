@@ -1,7 +1,6 @@
 export { EmployeeOnboardingShell } from "./components/employee-onboarding-shell";
 export { StepPersonal } from "./components/step-personal";
 export { StepBank } from "./components/step-bank";
-export { StepDocuments } from "./components/step-documents";
 export { StepReview } from "./components/step-review";
 export {
   ONBOARDING_SEQUENCE,

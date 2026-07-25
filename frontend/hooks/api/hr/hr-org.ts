@@ -13,11 +13,12 @@ import type {
   LocationInput,
 } from "@/types/hr/core";
 
-export function useOrgLocations() {
+export function useOrgLocations(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: queryKeys.hr.orgLocations(),
     queryFn: () => apiClient.get<HrLocation[]>("/hr/org/locations"),
     staleTime: 5 * 60_000,
+    enabled: options?.enabled ?? true,
   });
 }
 
@@ -49,11 +50,12 @@ export function useDeleteLocation() {
   });
 }
 
-export function useOrgJobRoles() {
+export function useOrgJobRoles(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: queryKeys.hr.orgRoles(),
     queryFn: () => apiClient.get<HrJobRole[]>("/hr/org/roles"),
     staleTime: 5 * 60_000,
+    enabled: options?.enabled ?? true,
   });
 }
 
@@ -85,11 +87,12 @@ export function useDeleteJobRole() {
   });
 }
 
-export function useOrgJobLevels() {
+export function useOrgJobLevels(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: queryKeys.hr.orgLevels(),
     queryFn: () => apiClient.get<HrJobLevel[]>("/hr/org/levels"),
     staleTime: 5 * 60_000,
+    enabled: options?.enabled ?? true,
   });
 }
 
@@ -121,11 +124,12 @@ export function useDeleteJobLevel() {
   });
 }
 
-export function useOrgTeams() {
+export function useOrgTeams(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: queryKeys.hr.orgTeams(),
     queryFn: () => apiClient.get<HrTeam[]>("/hr/org/teams"),
     staleTime: 5 * 60_000,
+    enabled: options?.enabled ?? true,
   });
 }
 

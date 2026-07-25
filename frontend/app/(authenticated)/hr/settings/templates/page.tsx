@@ -33,7 +33,7 @@ import {
   HR_TEMPLATE_STATUSES,
   KIND_LABELS,
   STATUS_LABELS,
-  type HrTemplate,
+  type HrTemplateListItem,
   type HrTemplateKind,
   type HrTemplateStatus,
 } from "@/types/hr/templates";
@@ -41,8 +41,8 @@ import {
 const ALL_SENTINEL = "all";
 
 function buildTemplateColumns(
-  onEdit: (t: HrTemplate) => void,
-): DataTableColumn<HrTemplate>[] {
+  onEdit: (t: HrTemplateListItem) => void,
+): DataTableColumn<HrTemplateListItem>[] {
   return [
     {
       key: "name",
@@ -112,7 +112,7 @@ export default function HrTemplatesPage() {
   const [kind, setKind] = useState<HrTemplateKind | "all">(ALL_SENTINEL);
   const [status, setStatus] = useState<HrTemplateStatus | "all">(ALL_SENTINEL);
   const [upsertOpen, setUpsertOpen] = useState(false);
-  const [editingTemplate, setEditingTemplate] = useState<HrTemplate | undefined>(undefined);
+  const [editingTemplate, setEditingTemplate] = useState<HrTemplateListItem | undefined>(undefined);
   const [page, setPage] = useState(1);
 
   const params = useMemo(
@@ -134,7 +134,7 @@ export default function HrTemplatesPage() {
     setUpsertOpen(true);
   }, []);
 
-  const handleOpenEdit = useCallback((template: HrTemplate) => {
+  const handleOpenEdit = useCallback((template: HrTemplateListItem) => {
     setEditingTemplate(template);
     setUpsertOpen(true);
   }, []);
@@ -236,7 +236,7 @@ export default function HrTemplatesPage() {
           </div>
         }
       >
-        <DataTable<HrTemplate>
+        <DataTable<HrTemplateListItem>
           className="flex-1 min-h-0"
           data={templates}
           columns={buildTemplateColumns(handleOpenEdit)}

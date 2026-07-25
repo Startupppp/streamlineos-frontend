@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import {
   Select,
@@ -210,15 +211,15 @@ export function ExceptionsTab({ runId, isLocked }: ExceptionsTabProps) {
                     {!isLocked && ex.status === "OPEN" && (
                       <div className="flex items-center gap-1 shrink-0">
                         {canUpdate && (
-                          <Button
+                          <LoadingButton
                             size="sm"
                             variant="ghost"
                             className="h-6 px-2 text-[10px]"
                             onClick={() => handleResolve(ex)}
-                            disabled={resolveMutation.isPending}
+                            isPending={resolveMutation.isPending}
                           >
                             Resolve
-                          </Button>
+                          </LoadingButton>
                         )}
                         {canManage && (
                           <Button
@@ -267,9 +268,11 @@ export function ExceptionsTab({ runId, isLocked }: ExceptionsTabProps) {
                 />
               </div>
               <AlertDialogFooter>
-                <AlertDialogCancel type="button" onClick={handleOverrideCancel}>Cancel</AlertDialogCancel>
-                <AlertDialogAction type="submit" disabled={overrideMutation.isPending}>
-                  Override
+                <AlertDialogCancel type="button" disabled={overrideMutation.isPending} onClick={handleOverrideCancel}>Cancel</AlertDialogCancel>
+                <AlertDialogAction asChild>
+                  <LoadingButton type="submit" isPending={overrideMutation.isPending} loadingText="Overriding…">
+                    Override
+                  </LoadingButton>
                 </AlertDialogAction>
               </AlertDialogFooter>
             </form>

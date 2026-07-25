@@ -7,6 +7,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -141,24 +142,24 @@ export function IncentivesTab() {
     cell: (row) =>
       row.status === "PENDING" ? (
         <div className="flex items-center gap-1">
-          <Button
+          <LoadingButton
             size="sm"
             variant="outline"
             className="h-6 text-[10px] px-2 text-emerald-700 border-emerald-200 hover:bg-emerald-50"
-            disabled={approveIncentive.isPending}
+            isPending={approveIncentive.isPending}
             onClick={makeApproveOpener(row)}
           >
             Approve
-          </Button>
-          <Button
+          </LoadingButton>
+          <LoadingButton
             size="sm"
             variant="outline"
             className="h-6 text-[10px] px-2 text-red-600 border-red-200 hover:bg-red-50"
-            disabled={rejectIncentive.isPending}
+            isPending={rejectIncentive.isPending}
             onClick={makeRejectHandler(row.id)}
           >
             Reject
-          </Button>
+          </LoadingButton>
         </div>
       ) : null,
   };
@@ -304,12 +305,13 @@ export function IncentivesTab() {
             >
               Cancel
             </Button>
-            <Button
-              disabled={!approvedAmount.trim() || approveIncentive.isPending}
+            <LoadingButton
+              disabled={!approvedAmount.trim()}
+              isPending={approveIncentive.isPending}
               onClick={handleConfirmApprove}
             >
               Approve
-            </Button>
+            </LoadingButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>

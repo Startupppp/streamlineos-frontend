@@ -47,15 +47,6 @@ export function useUserOnboarding(userId: string) {
   });
 }
 
-export function useOnboardingTasks(userId: string) {
-  return useQuery<OnboardingTask[]>({
-    queryKey: [...queryKeys.hr.onboardingUser(userId), "tasks"] as const,
-    queryFn: () => apiClient.get<OnboardingTask[]>(`/onboarding/${userId}`),
-    enabled: !!userId,
-    staleTime: 30_000,
-  });
-}
-
 
 export function useCompleteOnboardingTask() {
   const qc = useQueryClient();
@@ -95,7 +86,7 @@ export interface OnboardingTemplate {
   id: number;
   orgId: string;
   name: string;
-  departmentId: number | null;
+  departmentId: string | null;
   description: string | null;
   isActive: boolean;
   createdBy: string;
@@ -106,9 +97,23 @@ export interface OnboardingTemplate {
 
 export interface CreateOnboardingTemplateInput {
   name: string;
-  departmentId?: number;
+  departmentId?: string;
   description?: string;
   steps: OnboardingTemplateStep[];
+}
+
+export interface OnboardingTemplateDepartment {
+  id: string;
+  name: string;
+}
+
+export function useOnboardingTemplateDepartments() {
+  return useQuery<OnboardingTemplateDepartment[]>({
+    queryKey: queryKeys.hr.onboardingTemplateDepartments(),
+    queryFn: () =>
+      apiClient.get<OnboardingTemplateDepartment[]>("/onboarding/templates/departments"),
+    staleTime: 5 * 60_000,
+  });
 }
 
 // Named Hr* to avoid collision with hooks/api/crm/clients.ts's client-onboarding

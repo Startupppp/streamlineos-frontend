@@ -73,8 +73,8 @@ function TemplateCard({
           <AnimatedIconButton icon={EyeIcon} iconClassName="mr-1.5" variant="outline" size="sm" className="text-xs" onClick={onPreview}>
             Preview
           </AnimatedIconButton>
-          <Button variant="outline" size="sm" className="text-xs gap-1" onClick={onEdit}>
-            <Pencil className="h-3 w-3" />
+          <Button variant="outline" size="sm" className="text-xs" onClick={onEdit}>
+            <Pencil className="mr-1.5 h-3.5 w-3.5" />
             Edit
           </Button>
           {!template.isDefault && (

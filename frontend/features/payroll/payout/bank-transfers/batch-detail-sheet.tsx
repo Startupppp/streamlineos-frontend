@@ -1,15 +1,19 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
+import { toast } from "sonner";
+import { Upload } from "lucide-react";
 import { Sheet, SheetBody, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
-import { usePayoutBatch } from "@/hooks/api/payroll/payout-batches";
+import { usePayoutBatch, useImportBankReturn } from "@/hooks/api/payroll/payout-batches";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { formatMoney } from "@/features/payroll/shared";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { ItemActionDialog, RevealCell } from "./batch-item-actions";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   getUserDisplayName,
   type NamedUser,
@@ -132,6 +136,8 @@ function buildColumns(
 export function BatchDetailSheet({ batchId, onClose, canManage }: BatchDetailSheetProps) {
   const { data, isLoading } = usePayoutBatch(batchId ?? 0);
   const { data: membersData } = useOrgMembers(1, 200);
+  const importReturn = useImportBankReturn();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [actionDialog, setActionDialog] = useState<{
     type: "paid" | "failed";
     item: PayoutBatchItem;
@@ -155,6 +161,12 @@ export function BatchDetailSheet({ batchId, onClose, canManage }: BatchDetailShe
 
   const batch = data?.batch;
   const items = data?.items ?? [];
+  const canImportReturn =
+    canManage &&
+    batch != null &&
+    (batch.status === "SENT" ||
+      batch.status === "PARTIALLY_PAID" ||
+      batch.status === "PAID");
 
   function handleCloseActionDialog() {
     setActionDialog(null);
@@ -162,6 +174,43 @@ export function BatchDetailSheet({ batchId, onClose, canManage }: BatchDetailShe
 
   function handleAction(type: "paid" | "failed", item: PayoutBatchItem) {
     setActionDialog({ type, item });
+  }
+
+  function handleReturnFile(file: File | undefined) {
+    if (!file || batchId == null || batch == null) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const csv = typeof reader.result === "string" ? reader.result : "";
+      if (!csv.trim()) {
+        toast.error("Empty file");
+        return;
+      }
+      importReturn.mutate(
+        { batchId, csv, runId: batch.runId },
+        {
+          onSuccess: (res) => {
+            toast.success(
+              `Return imported: ${res.paid} paid, ${res.failed} failed, ${res.skipped} skipped`,
+              { description: res.honestyNote },
+            );
+            if (res.parseErrors.length > 0) {
+              toast.message(
+                `${res.parseErrors.length} row warning(s)`,
+                {
+                  description: res.parseErrors
+                    .slice(0, 3)
+                    .map((e) => `L${e.line}: ${e.message}`)
+                    .join("; "),
+                },
+              );
+            }
+          },
+          onError: (err) => toast.error(getErrorMessage(err)),
+        },
+      );
+    };
+    reader.onerror = () => toast.error("Failed to read file");
+    reader.readAsText(file);
   }
 
   const columns = useMemo(
@@ -173,7 +222,7 @@ export function BatchDetailSheet({ batchId, onClose, canManage }: BatchDetailShe
     <>
       <Sheet open={batchId !== null} onOpenChange={(open) => !open && onClose()}>
         <SheetContent className="p-0 flex flex-col gap-0 overflow-hidden sm:max-w-2xl">
-          <div className="shrink-0 px-6 py-4 border-b">
+          <div className="shrink-0 px-6 py-4 border-b space-y-2">
             <SheetHeader>
               <SheetTitle className="flex items-center gap-2">
                 {batch ? (
@@ -193,6 +242,37 @@ export function BatchDetailSheet({ batchId, onClose, canManage }: BatchDetailShe
                 )}
               </SheetTitle>
             </SheetHeader>
+            {canImportReturn && (
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-[10px] text-muted-foreground leading-snug max-w-md">
+                  Import bank return CSV (itemId or userId, status, utr). Manual workflow — no bank
+                  network connection.
+                </p>
+                <div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".csv,text/csv"
+                    className="hidden"
+                    onChange={(e) => {
+                      handleReturnFile(e.target.files?.[0]);
+                      e.target.value = "";
+                    }}
+                  />
+                  <LoadingButton
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-xs"
+                    isPending={importReturn.isPending}
+                    loadingText="Importing…"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload className="mr-1 h-3.5 w-3.5" />
+                    Import return CSV
+                  </LoadingButton>
+                </div>
+              </div>
+            )}
           </div>
 
           <SheetBody className="px-6 py-4">

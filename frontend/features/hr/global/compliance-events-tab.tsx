@@ -5,6 +5,7 @@ import { format, parseISO } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import { CheckCircle2, AlertCircle, Clock } from "lucide-react";
 import {
   useComplianceEvents,
@@ -61,10 +62,12 @@ export function ComplianceEventsTab() {
       </div>
 
       {events.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-          <CheckCircle2 className="h-10 w-10 mb-3 text-emerald-400" />
-          <p className="text-sm">No compliance events found.</p>
-        </div>
+        <EmptyState
+          illustration={<CheckCircle2 className="h-10 w-10 text-emerald-400" aria-hidden />}
+          title="No compliance events found."
+          description="Generate events or adjust filters to see upcoming compliance deadlines."
+          compact
+        />
       ) : (
         <div className="space-y-2">
           {events.map((event) => (

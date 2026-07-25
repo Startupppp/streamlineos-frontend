@@ -4,6 +4,7 @@ import { useState } from "react";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Shield, ShieldOff } from "lucide-react";
 import { StateIllustration } from "@/components/illustrations";
@@ -84,26 +85,26 @@ export function LegalHoldsTable() {
             Items
           </Button>
           {canManage && row.status === "active" && (
-            <Button
+            <LoadingButton
               variant="outline"
               size="sm"
               onClick={() => handleRelease(row)}
-              disabled={release.isPending}
+              isPending={release.isPending}
             >
               <ShieldOff className="h-3.5 w-3.5 mr-1" />
               Release
-            </Button>
+            </LoadingButton>
           )}
           {canManage && row.status === "released" && (
-            <Button
+            <LoadingButton
               variant="ghost"
               size="sm"
               className="text-destructive hover:text-destructive"
               onClick={() => handleDelete(row)}
-              disabled={remove.isPending}
+              isPending={remove.isPending}
             >
               Delete
-            </Button>
+            </LoadingButton>
           )}
         </div>
       ),

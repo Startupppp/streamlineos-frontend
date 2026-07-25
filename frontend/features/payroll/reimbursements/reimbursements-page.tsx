@@ -8,6 +8,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
@@ -170,24 +171,24 @@ export function ReimbursementsPageContent() {
     cell: (row) =>
       row.status === "PENDING" ? (
         <div className="flex items-center gap-1">
-          <Button
+          <LoadingButton
             size="sm"
             variant="outline"
             className="h-6 text-[10px] px-2 text-emerald-700 border-emerald-200 hover:bg-emerald-50 dark:text-emerald-300 dark:border-emerald-500/30 dark:hover:bg-emerald-500/10"
-            disabled={processReimbursement.isPending}
+            isPending={processReimbursement.isPending}
             onClick={makeApproveHandler(row.id)}
           >
             Approve
-          </Button>
-          <Button
+          </LoadingButton>
+          <LoadingButton
             size="sm"
             variant="outline"
             className="h-6 text-[10px] px-2 text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-500/30 dark:hover:bg-red-500/10"
-            disabled={processReimbursement.isPending}
+            isPending={processReimbursement.isPending}
             onClick={makeRejectOpener(row)}
           >
             Reject
-          </Button>
+          </LoadingButton>
         </div>
       ) : null,
   };
@@ -338,13 +339,14 @@ export function ReimbursementsPageContent() {
             <Button variant="outline" onClick={handleCancelReject}>
               Cancel
             </Button>
-            <Button
+            <LoadingButton
               variant="destructive"
-              disabled={!rejectReason.trim() || processReimbursement.isPending}
+              disabled={!rejectReason.trim()}
+              isPending={processReimbursement.isPending}
               onClick={handleConfirmReject}
             >
               Reject Claim
-            </Button>
+            </LoadingButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>

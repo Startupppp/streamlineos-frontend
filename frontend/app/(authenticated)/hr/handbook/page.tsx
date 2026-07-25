@@ -22,13 +22,13 @@ import { toast } from "sonner";
 import { Plus, AlertTriangle, RefreshCw } from "lucide-react";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { HandbookVersionCard } from "@/features/hr/handbook/handbook-version-card";
+import { FilterPill, FilterPillGroup } from "@/components/ui/filter-pill";
 import {
   HandbookCreateForm,
   ACCEPTED_FILE_TYPES,
   ACCEPTED_FILE_EXTENSIONS,
   MAX_FILE_SIZE,
 } from "@/features/hr/handbook/handbook-create-form";
-import { cn } from "@/lib/utils";
 
 const VERSION_FORMAT_REGEX = /^\d+\.\d+$/;
 
@@ -377,23 +377,17 @@ function HandbookContent() {
       <div className="flex flex-1 min-h-0 flex-col gap-4">
         <div className={FILTER_TOOLBAR_ROW}>
           <SearchInput placeholder="Search versions..." value={searchQuery} onValueChange={handleSearchChange} className="w-48" />
-          <div className="flex items-center gap-1">
+          <FilterPillGroup>
             {STATUS_FILTERS.map((f) => (
-              <button
+              <FilterPill
                 key={f.value}
-                type="button"
+                active={statusFilter === f.value}
                 onClick={statusFilterHandlers[f.value]}
-                className={cn(
-                  "px-3 py-1 text-xs font-medium rounded-full border transition-colors duration-200",
-                  statusFilter === f.value
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-transparent text-muted-foreground border-border hover:bg-muted",
-                )}
               >
                 {f.label}
-              </button>
+              </FilterPill>
             ))}
-          </div>
+          </FilterPillGroup>
         </div>
 
         {!filteredVersions.length ? (
@@ -411,7 +405,7 @@ function HandbookContent() {
                 )}
               </div>
               {!isFiltered && (
-                <Button size="sm" className="gap-1.5 mt-1" onClick={handleNewVersionClick}>
+                <Button variant="outline" size="sm" className="gap-1.5 mt-1" onClick={handleNewVersionClick}>
                   <Plus className="h-3.5 w-3.5" />
                   New Version
                 </Button>

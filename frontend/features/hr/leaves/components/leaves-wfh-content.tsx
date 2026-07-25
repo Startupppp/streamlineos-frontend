@@ -59,9 +59,11 @@ export function LeavesWfhContent() {
 
   const { data: contextData, isLoading: contextLoading } = useHrLeaveContext();
   const { data: myData, isLoading: myLoading } = useHrMyLeaveRequests();
-  const { data: approvalsData, isLoading: approvalsLoading } = useHrLeaveApprovals();
+  const { data: approvalsData, isLoading: approvalsLoading } = useHrLeaveApprovals({
+    enabled: isAdmin,
+  });
   const { data: thisWeekData } = useHrLeavesThisWeek();
-  const { data: pendingWfhRequests } = useHrPendingWfhRequests();
+  const { data: pendingWfhRequests } = useHrPendingWfhRequests({ enabled: isAdmin });
 
   const {
     open: leaveSheetOpen,

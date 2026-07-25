@@ -1,8 +1,7 @@
 ﻿"use client";
 
 import { use, useCallback, useState } from "react";
-import Link from "next/link";
-import { ChevronLeft, CreditCard, Send } from "lucide-react";
+import { CreditCard, Send } from "lucide-react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -147,6 +146,7 @@ export default function PurchaseBillDetailPage({
           ? `${bill.vendorName ?? "Unknown vendor"} · ${bill.billDate ? new Date(bill.billDate).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "2-digit" }) : "—"}`
           : "Loading…"
       }
+      backHref="/accounting/purchase-bills"
       actions={
         <div className="flex items-center gap-2">
           {canSubmitApproval && (
@@ -178,12 +178,6 @@ export default function PurchaseBillDetailPage({
               Record payment
             </Button>
           )}
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/accounting/purchase-bills">
-              <ChevronLeft className="mr-1 h-4 w-4" />
-              Back
-            </Link>
-          </Button>
         </div>
       }
     >

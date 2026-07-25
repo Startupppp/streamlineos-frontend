@@ -1,0 +1,68 @@
+/**
+ * PayrollOS visual tokens (PRD §11.2)
+ * Scoped under .payroll-os so the rest of the product is unchanged.
+ */
+.payroll-os {
+  --payroll-ink: #16212b;
+  --payroll-ledger: #1f5d78;
+  --payroll-mint: #d9f1e7;
+  --payroll-mint-fg: #0f5c45;
+  --payroll-audit: #f5c56b;
+  --payroll-audit-fg: #7a4e00;
+  --payroll-control: #c94c4c;
+  --payroll-control-fg: #7f1d1d;
+  --payroll-paper: #f7f8f6;
+  --payroll-rule: #dce3e5;
+}
+
+.payroll-os .payroll-money {
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  letter-spacing: -0.01em;
+}
+
+.payroll-os .payroll-rail {
+  border-color: var(--payroll-rule);
+  background: color-mix(in srgb, var(--payroll-paper) 88%, white);
+}
+
+.dark .payroll-os .payroll-rail {
+  background: color-mix(in srgb, var(--card) 92%, black);
+}
+
+.payroll-os .payroll-ledger-text {
+  color: var(--payroll-ledger);
+}
+
+.payroll-os .payroll-ready {
+  background: color-mix(in srgb, var(--payroll-mint) 70%, white);
+  border-color: color-mix(in srgb, var(--payroll-mint-fg) 25%, transparent);
+  color: var(--payroll-mint-fg);
+}
+
+.dark .payroll-os .payroll-ready {
+  background: color-mix(in srgb, var(--payroll-mint-fg) 18%, transparent);
+  color: #a7f3d0;
+}
+
+.payroll-os .payroll-attention {
+  background: color-mix(in srgb, var(--payroll-audit) 35%, white);
+  border-color: color-mix(in srgb, var(--payroll-audit-fg) 30%, transparent);
+  color: var(--payroll-audit-fg);
+}
+
+.dark .payroll-os .payroll-attention {
+  background: color-mix(in srgb, var(--payroll-audit) 12%, transparent);
+  color: #fde68a;
+}
+
+.payroll-os .payroll-blocked {
+  background: color-mix(in srgb, var(--payroll-control) 12%, white);
+  border-color: color-mix(in srgb, var(--payroll-control) 35%, transparent);
+  color: var(--payroll-control-fg);
+}
+
+.dark .payroll-os .payroll-blocked {
+  background: color-mix(in srgb, var(--payroll-control) 15%, transparent);
+  color: #fecaca;
+}

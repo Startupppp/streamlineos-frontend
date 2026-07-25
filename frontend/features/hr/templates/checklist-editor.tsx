@@ -5,7 +5,7 @@ import { nanoid } from "nanoid";
 import { GripVertical, PlusCircle } from "lucide-react";
 import { Trash2Icon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -102,12 +102,11 @@ export function ChecklistEditor({ items, onChange }: ChecklistEditorProps) {
             />
             <span className="text-[11px] text-muted-foreground">Req</span>
           </div>
-          <AnimatedIconButton
+          <TooltipIconButton
             icon={Trash2Icon}
             iconSize={14}
+            label="Remove Task"
             type="button"
-            variant="ghost"
-            size="icon"
             className="w-7 shrink-0 text-muted-foreground hover:text-destructive"
             onClick={() => handleRemove(item.id)}
           />

@@ -18,8 +18,8 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 interface DepartmentComboboxProps {
-  value?: number | null;
-  onValueChange: (value: number | undefined) => void;
+  value?: string | null;
+  onValueChange: (value: string | undefined) => void;
   placeholder?: string;
   disabled?: boolean;
   allowCreate?: boolean;
@@ -27,9 +27,9 @@ interface DepartmentComboboxProps {
 }
 
 interface DepartmentOptionProps {
-  dept: { id: number; name: string };
+  dept: { id: string; name: string };
   isSelected: boolean;
-  onSelect: (id: number) => void;
+  onSelect: (id: string) => void;
 }
 
 const DepartmentOption = memo(function DepartmentOption({
@@ -107,7 +107,7 @@ export function DepartmentCombobox({
   }, [open]);
 
   const handleSelect = useCallback(
-    (id: number) => {
+    (id: string) => {
       onValueChange(id);
       setOpen(false);
     },
@@ -140,13 +140,13 @@ export function DepartmentCombobox({
             queryKey: queryKeys.hr.departments(),
             queryFn: async () => {
               const result = await qc.getQueryData<
-                { id: number; name: string }[]
+                { id: string; name: string }[]
               >(queryKeys.hr.departments());
               return result ?? [];
             },
           });
           const found = list?.find(
-            (d: { id: number; name: string }) => d.name === name,
+            (d: { id: string; name: string }) => d.name === name,
           );
           if (found) {
             onValueChange(found.id);

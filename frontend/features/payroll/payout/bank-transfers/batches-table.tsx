@@ -179,6 +179,27 @@ export function BatchesTable({
           columns={columns}
           getRowKey={(row) => row.id}
           onRowClick={(row) => onSelectBatch(row.id)}
+          mobileCard={(row) => (
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-mono text-xs font-medium">{row.batchNumber}</span>
+                <span
+                  className={cn(
+                    "inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                    BATCH_STATUS_STYLES[row.status],
+                  )}
+                >
+                  {row.status.replace("_", " ")}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>{row.itemCount} items</span>
+                <span className="font-mono tabular-nums text-foreground font-medium">
+                  {formatMoney(row.totalAmount, policyCurrency)}
+                </span>
+              </div>
+            </div>
+          )}
           emptyState={
             <EmptyState
               illustration={<EmptyTransferIllustration />}

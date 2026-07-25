@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import { Loader2, ChevronsUpDown, Check } from "lucide-react";
+import { ChevronsUpDown, Check } from "lucide-react";
 import { MailIcon, XIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import {
   Dialog,
   DialogContent,
@@ -71,38 +72,32 @@ function BadgeRemoveButton({ name, onClick }: { name: string; onClick: () => voi
 function SendReportButton({ isSending, disabled, onClick }: { isSending: boolean; disabled: boolean; onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
-    <Button
+    <LoadingButton
       onClick={onClick}
       disabled={disabled}
+      isPending={isSending}
+      loadingText="Sending..."
       className="h-9 gap-1.5 flex-1"
       {...hoverHandlers}
     >
-      {isSending ? (
-        <>
-          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          Sending...
-        </>
-      ) : (
-        <>
-          <MailIcon ref={iconRef} size={14} />
-          Send Report
-        </>
-      )}
-    </Button>
+      <MailIcon ref={iconRef} size={14} />
+      Send Report
+    </LoadingButton>
   );
 }
 
 function MailTriggerButton() {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
-    <button
-      className="text-xs font-semibold text-primary hover:text-primary/80 flex items-center gap-1.5 transition-colors duration-200"
+    <Button
       type="button"
+      variant="ghost"
+      className="h-auto px-0 py-0 gap-1.5 text-xs font-semibold text-primary hover:bg-transparent hover:text-primary/80"
       {...hoverHandlers}
     >
       <MailIcon ref={iconRef} size={14} />
       Email Report
-    </button>
+    </Button>
   );
 }
 
@@ -213,7 +208,7 @@ export function AttendanceEmailDialog() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
-  const { data: employeesData } = useHrEmployees({ limit: 200 });
+  const { data: employeesData } = useHrEmployees({ limit: 100 });
   const allUsers = useMemo<UserOption[]>(() => {
     const raw = employeesData
       ? unwrapEmployees(employeesData)

@@ -5,6 +5,7 @@ import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { FlaskConical } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useSimulationHistory, type SimulationRecord, type SimulationType } from "@/hooks/api/hr/enterprise-ops-simulator";
 import { format } from "date-fns";
 import { useOrgMembers } from "@/hooks/api/organization";
@@ -81,7 +82,14 @@ export function SimulationHistory() {
       columns={columns}
       getRowKey={(r) => r.id}
       isLoading={isLoading}
-      emptyState={<p className="text-sm text-muted-foreground text-center py-8">No simulations run yet</p>}
+      emptyState={
+        <EmptyState
+          illustrationPreset="chart"
+          title="No simulations run yet"
+          description="Run a simulation to preview policy, leave, attendance, or payroll outcomes."
+          compact
+        />
+      }
       pagination={
         data
           ? {

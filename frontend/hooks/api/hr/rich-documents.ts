@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -18,17 +18,37 @@ export interface RichDocument {
   updatedAt: Date | string | null;
 }
 
+export type RichDocumentListItem = Omit<RichDocument, "contentJson">;
+
+export interface RichDocumentListResponse {
+  data: RichDocumentListItem[];
+  pagination: { page: number; limit: number; total: number; totalPages: number };
+}
+
+export interface RichDocumentListParams {
+  page?: number;
+  limit?: number;
+  isPublished?: boolean;
+}
+
 const richDocKeys = {
   all: [...queryKeys.hr.all, "richDocuments"] as const,
-  list: () => [...richDocKeys.all, "list"] as const,
+  lists: () => [...richDocKeys.all, "list"] as const,
+  list: (params: Record<string, unknown>) => [...richDocKeys.all, "list", params] as const,
   detail: (id: number) => [...richDocKeys.all, "detail", id] as const,
 };
 
-export function useRichDocuments() {
+export function useRichDocuments(params?: RichDocumentListParams) {
+  const queryParams: Record<string, unknown> = {
+    page: params?.page ?? 1,
+    limit: params?.limit ?? 20,
+    ...(params?.isPublished !== undefined ? { isPublished: String(params.isPublished) } : {}),
+  };
   return useQuery({
-    queryKey: richDocKeys.list(),
-    queryFn: () => apiClient.get<RichDocument[]>("/hr/rich-documents"),
+    queryKey: richDocKeys.list(queryParams),
+    queryFn: () => apiClient.get<RichDocumentListResponse>("/hr/rich-documents", queryParams),
     staleTime: 2 * 60_000,
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -46,7 +66,7 @@ export function useCreateRichDocument() {
   return useMutation({
     mutationFn: (data: { title: string; templateType?: string; contentJson?: unknown }) =>
       apiClient.post<RichDocument>("/hr/rich-documents", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: richDocKeys.list() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: richDocKeys.lists() }),
   });
 }
 
@@ -56,7 +76,7 @@ export function useUpdateRichDocument() {
     mutationFn: ({ id, ...data }: { id: number; title?: string; contentJson?: unknown }) =>
       apiClient.patch<{ success: boolean }>(`/hr/rich-documents/${id}`, data),
     onSuccess: (_res, vars) => {
-      qc.invalidateQueries({ queryKey: richDocKeys.list() });
+      qc.invalidateQueries({ queryKey: richDocKeys.lists() });
       qc.invalidateQueries({ queryKey: richDocKeys.detail(vars.id) });
     },
   });
@@ -67,7 +87,7 @@ export function useDeleteRichDocument() {
   return useMutation({
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/rich-documents/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: richDocKeys.list() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: richDocKeys.lists() }),
   });
 }
 
@@ -77,7 +97,7 @@ export function usePublishRichDocument() {
     mutationFn: (id: number) =>
       apiClient.patch<{ success: boolean }>(`/hr/rich-documents/${id}/publish`),
     onSuccess: (_res, id) => {
-      qc.invalidateQueries({ queryKey: richDocKeys.list() });
+      qc.invalidateQueries({ queryKey: richDocKeys.lists() });
       qc.invalidateQueries({ queryKey: richDocKeys.detail(id) });
     },
   });

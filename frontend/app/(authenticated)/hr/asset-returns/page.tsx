@@ -25,7 +25,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { Plus, CheckCircle2, Laptop, AlertCircle } from "lucide-react";
 import { useCan } from "@/hooks/api/access";
-import { useHrEmployees, useHrAssets,
+import { useHrEmployees, useHrAssetList,
   unwrapEmployees} from "@/hooks/api/hr";
 import { cn } from "@/lib/utils";
 import { EmptyDevicesIllustration } from "@/components/illustrations";
@@ -226,18 +226,18 @@ export default function AssetReturnsPage() {
   const qc = useQueryClient();
   const isAdmin = useCan("hr:employees:manage");
 
-  const { data: employeesRaw } = useHrEmployees({ limit: 200 });
+  const { data: employeesRaw } = useHrEmployees({ limit: 100 });
   const employees = useMemo<Employee[]>(() => {
     if (Array.isArray(employeesRaw)) return employeesRaw;
     return (employeesRaw as PaginatedEmployees | undefined)?.data ?? [];
   }, [employeesRaw]);
 
-  const { data: allAssets } = useHrAssets();
+  const { data: assignedAssetsData } = useHrAssetList({ status: "ASSIGNED", limit: 100 });
 
   const allAssignedAssets = useMemo<Asset[]>(() => {
-    if (!allAssets) return [];
-    return allAssets.filter((a) => a.status === "ASSIGNED" && !!a.assignedTo);
-  }, [allAssets]);
+    const rows = assignedAssetsData?.data ?? [];
+    return rows.filter((a) => !!a.assignedTo);
+  }, [assignedAssetsData]);
 
   const assetOptions = useMemo<ComboboxOption[]>(
     () =>

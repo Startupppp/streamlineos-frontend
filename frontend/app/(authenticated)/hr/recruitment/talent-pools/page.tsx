@@ -26,7 +26,9 @@ import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetT
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Plus, Trash2, UserPlus, X } from "lucide-react";
+import { PlusIcon, TrashIcon, UserPlusIcon, XIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { ErrorState } from "@/components/shared/error-state";
@@ -63,10 +65,9 @@ function CreatePoolSheet() {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button size="sm" className="gap-1.5">
-          <Plus className="h-3.5 w-3.5" />
+        <AnimatedIconButton icon={PlusIcon} iconSize={14} size="sm" className="gap-1.5">
           New Pool
-        </Button>
+        </AnimatedIconButton>
       </SheetTrigger>
       <SheetContent className="flex flex-col p-0 gap-0">
         <SheetHeader className="shrink-0 px-4 pt-4 pb-3 border-b">
@@ -126,10 +127,9 @@ function AddMemberSheet({ poolId }: { poolId: number }) {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button size="sm" variant="outline" className="gap-1.5 text-xs">
-          <UserPlus className="h-3.5 w-3.5" />
+        <AnimatedIconButton icon={UserPlusIcon} iconSize={14} size="sm" variant="outline" className="gap-1.5 text-xs">
           Add Candidate
-        </Button>
+        </AnimatedIconButton>
       </SheetTrigger>
       <SheetContent className="flex flex-col p-0 gap-0">
         <SheetHeader className="shrink-0 px-4 pt-4 pb-3 border-b">
@@ -199,14 +199,12 @@ function PoolMemberRow({ member: m, onRemove }: PoolMemberRowProps) {
         <TruncatedText text={`${m.firstName} ${m.lastName}`} className="text-sm font-medium text-foreground" />
         <TruncatedText text={m.currentRole ?? m.email ?? ""} className="text-[11px] text-muted-foreground" />
       </div>
-      <Button
-        variant="ghost"
-        size="icon"
+      <TooltipIconButton
+        icon={XIcon}
+        label={`Remove ${m.firstName} ${m.lastName} from pool`}
         className="w-7 shrink-0 text-muted-foreground hover:text-destructive"
         onClick={handleRemoveClick}
-      >
-        <X className="h-3.5 w-3.5" />
-      </Button>
+      />
     </div>
   );
 }
@@ -265,6 +263,7 @@ export default function TalentPoolsPage() {
   function handleSelectPool(poolId: number) { setSelectedPoolId(poolId); }
   function handleDeleteSelectedPool() { if (selectedPoolId !== null) setDeleteTarget(selectedPoolId); }
   function handleCloseDeleteDialog(open: boolean) { if (!open) setDeleteTarget(null); }
+  function handleRetry() { void refetch(); }
 
   return (
     <>
@@ -283,7 +282,7 @@ export default function TalentPoolsPage() {
           <ErrorState
             title="Unable to load talent pools"
             description="Try again. If this keeps happening, check your permissions or contact an admin."
-            onRetry={() => void refetch()}
+            onRetry={handleRetry}
           />
         ) : isEmpty ? (
           <RecruitmentEmptyState
@@ -314,14 +313,12 @@ export default function TalentPoolsPage() {
                     </h2>
                     <div className="flex items-center gap-2">
                       <AddMemberSheet poolId={selectedPoolId} />
-                      <Button
-                        variant="ghost"
-                        size="icon"
+                      <TooltipIconButton
+                        icon={TrashIcon}
+                        label="Delete pool"
                         className="w-8 text-muted-foreground hover:text-destructive"
                         onClick={handleDeleteSelectedPool}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
+                      />
                     </div>
                   </div>
                   <PoolMembersList poolId={selectedPoolId} />
@@ -344,6 +341,7 @@ export default function TalentPoolsPage() {
         description="Candidates in this pool won't be deleted, only the pool grouping."
         confirmLabel="Delete Pool"
         destructive
+        isPending={deletePool.isPending}
         onConfirm={handleDelete}
       />
     </>

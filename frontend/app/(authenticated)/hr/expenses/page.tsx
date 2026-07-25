@@ -100,7 +100,7 @@ export default function ExpensesPage() {
 
   const updateStatusMutation = useUpdateExpenseStatus();
 
-  const { data: employeesRaw } = useHrEmployees({ limit: 200 });
+  const { data: employeesRaw } = useHrEmployees({ limit: 100 }, { enabled: isAdmin });
   const employees = useMemo(() => {
     const raw = employeesRaw
       ? unwrapEmployees(employeesRaw)

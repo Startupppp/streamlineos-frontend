@@ -27,6 +27,7 @@ import { useIsMobile } from "@/hooks/common/use-mobile";
 import { useEnabledModules } from "@/hooks/api/access/org-modules";
 import { useAccess, useCan } from "@/hooks/api/access";
 import { usePermissions } from "@/lib/rbac/hooks";
+import { useEntitlements } from "@/hooks/api/entitlements";
 import {
   PRODUCT_DEFINITIONS,
   PRODUCT_DESCRIPTIONS,
@@ -37,6 +38,12 @@ import {
   type ProductKey,
 } from "../sidebar/sidebar-nav-items";
 import { cn } from "@/lib/utils";
+
+/** Maps product switcher keys → plan-locked module keys from the entitlements API. */
+const PRODUCT_TO_LOCKED_MODULE: Partial<Record<ProductKey, string>> = {
+  payroll: "payroll",
+  inventory: "inventory",
+};
 
 const ICON_STROKE = 1.75;
 const HOVER_CLOSE_DELAY_MS = 175;
@@ -57,6 +64,7 @@ interface ProductTileProps {
   icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
   isActive: boolean;
   isEnabled: boolean;
+  planLocked: boolean;
   canManageModules: boolean;
   onClose: () => void;
 }
@@ -64,6 +72,7 @@ interface ProductTileProps {
 interface ProductGridProps {
   activeProduct: ProductKey;
   enabledModules: string[];
+  lockedModules: string[];
   canManageModules: boolean;
   permissions: string[];
   effectiveRole: string;
@@ -78,22 +87,24 @@ function ProductTile({
   icon: Icon,
   isActive,
   isEnabled,
+  planLocked,
   canManageModules,
   onClose,
 }: ProductTileProps) {
   const shouldReduceMotion = useReducedMotion();
   const accent = MODULE_ACCENTS[productKey];
   const description = PRODUCT_DESCRIPTIONS[productKey];
+  const effectivelyEnabled = isEnabled && !planLocked;
 
   const card = (
     <motion.div
-      whileTap={shouldReduceMotion || !isEnabled ? undefined : { scale: 0.98 }}
+      whileTap={shouldReduceMotion || !effectivelyEnabled ? undefined : { scale: 0.98 }}
       className={cn(
         "relative flex items-center gap-2.5 rounded-lg p-2.5 w-full transition-colors duration-150",
-        !isEnabled && "opacity-50 cursor-default",
+        !effectivelyEnabled && "opacity-50 cursor-default",
         isActive
           ? cn("bg-accent border-[1.5px]", accent.border)
-          : isEnabled
+          : effectivelyEnabled
             ? "border border-transparent hover:bg-muted/80"
             : "border border-transparent",
       )}
@@ -111,7 +122,7 @@ function ProductTile({
         <p
           className={cn(
             "text-[13px] font-medium text-foreground leading-tight truncate",
-            !isEnabled && "pr-12",
+            !effectivelyEnabled && "pr-12",
           )}
           title={label}
         >
@@ -121,7 +132,7 @@ function ProductTile({
           {description}
         </p>
       </div>
-      {isActive && (
+      {isActive && effectivelyEnabled && (
         <motion.span
           role="img"
           aria-label="Selected product"
@@ -143,16 +154,36 @@ function ProductTile({
           />
         </motion.span>
       )}
-      {!isEnabled && (
+      {!effectivelyEnabled && (
         <span className="absolute top-1.5 right-1.5 inline-flex items-center gap-0.5 h-4 px-1 rounded bg-muted border border-border">
           <Lock className="h-2.5 w-2.5 text-muted-foreground" />
           <span className="text-[9px] font-medium text-muted-foreground">
-            Locked
+            {planLocked ? "Upgrade" : "Locked"}
           </span>
         </span>
       )}
     </motion.div>
   );
+
+  if (planLocked) {
+    return (
+      <Tooltip delayDuration={200}>
+        <TooltipTrigger asChild>
+          <Link
+            href="/settings/billing"
+            onClick={onClose}
+            className="flex"
+            aria-label={`${label} — upgrade plan`}
+          >
+            {card}
+          </Link>
+        </TooltipTrigger>
+        <TooltipContent side="bottom" className="text-xs">
+          Requires a paid plan. Upgrade to unlock {label}.
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
 
   if (!isEnabled) {
     if (!canManageModules) {
@@ -199,6 +230,7 @@ function ProductTile({
 function ProductGrid({
   activeProduct,
   enabledModules,
+  lockedModules,
   canManageModules,
   permissions,
   effectiveRole,
@@ -228,7 +260,11 @@ function ProductGrid({
       <div className="grid grid-cols-2 gap-1">
         {visibleProducts.map((product, index) => {
           const enabled = isModuleEnabled(product.key, enabledModules);
-          const isActive = activeProduct === product.key && enabled;
+          const lockedKey = PRODUCT_TO_LOCKED_MODULE[product.key];
+          const planLocked = Boolean(
+            lockedKey && lockedModules.includes(lockedKey),
+          );
+          const isActive = activeProduct === product.key && enabled && !planLocked;
           return (
             <motion.div
               key={product.key}
@@ -251,6 +287,7 @@ function ProductGrid({
                 icon={product.icon}
                 isActive={isActive}
                 isEnabled={enabled}
+                planLocked={planLocked}
                 canManageModules={canManageModules}
                 onClose={onClose}
               />
@@ -280,6 +317,8 @@ export function ProductSwitcherMenu({
 
   const activeProduct = getProductFromPathname(pathname);
   const enabledModules = useEnabledModules();
+  const { data: entitlements } = useEntitlements();
+  const lockedModules = entitlements?.lockedModules ?? [];
   const canManageModules = useCan("settings:manage");
   const { permissions } = usePermissions();
   const { data: access } = useAccess();
@@ -422,6 +461,7 @@ export function ProductSwitcherMenu({
           <ProductGrid
             activeProduct={activeProduct}
             enabledModules={enabledModules}
+            lockedModules={lockedModules}
             canManageModules={canManageModules}
             permissions={permissions}
             effectiveRole={effectiveRole}
@@ -477,6 +517,7 @@ export function ProductSwitcherMenu({
               <ProductGrid
                 activeProduct={activeProduct}
                 enabledModules={enabledModules}
+                lockedModules={lockedModules}
                 canManageModules={canManageModules}
                 permissions={permissions}
                 effectiveRole={effectiveRole}

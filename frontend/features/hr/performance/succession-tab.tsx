@@ -26,6 +26,8 @@ import {
   type NamedUser,
 } from "@/features/projects/shared/resolve-user-name";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { successionFormSchema } from "./succession-schema";
+import { zodFieldErrors } from "./zod-field-errors";
 
 const READINESS_CONFIG: Record<SuccessionReadiness, { label: string; className: string }> = {
   ready_now: { label: "Ready Now", className: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30" },
@@ -52,6 +54,7 @@ const DEFAULT_FORM: FormState = {
 export function SuccessionTab() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<FormState>(DEFAULT_FORM);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const { data: plans = [], isLoading } = useSuccessionPlans();
   const { data: membersData } = useOrgMembers(1, 200);
@@ -76,17 +79,19 @@ export function SuccessionTab() {
   }
 
   async function handleCreate() {
-    if (!form.roleName || !form.successorId) {
-      toast.error("Role name and successor are required");
+    const parsed = successionFormSchema.safeParse(form);
+    if (!parsed.success) {
+      setFieldErrors(zodFieldErrors(parsed.error));
       return;
     }
+    setFieldErrors({});
     try {
       await create.mutateAsync({
-        roleName: form.roleName,
-        successorId: form.successorId,
-        incumbentId: form.incumbentId || null,
-        readiness: form.readiness,
-        note: form.note || null,
+        roleName: parsed.data.roleName,
+        successorId: parsed.data.successorId,
+        incumbentId: parsed.data.incumbentId || null,
+        readiness: parsed.data.readiness,
+        note: parsed.data.note || null,
         jobRoleId: null,
       });
       toast.success("Succession plan created");
@@ -170,7 +175,13 @@ export function SuccessionTab() {
         </div>
       )}
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) {
+          setForm(DEFAULT_FORM);
+          setFieldErrors({});
+        }
+      }}>
         <DialogContent className="flex max-h-[90dvh] flex-col gap-0 p-0">
           <DialogHeader className="shrink-0 border-b border-border px-6 py-4">
             <DialogTitle>New Succession Plan</DialogTitle>
@@ -180,28 +191,52 @@ export function SuccessionTab() {
               <Label>Role / Position</Label>
               <Input
                 value={form.roleName}
-                onChange={(e) => setForm((p) => ({ ...p, roleName: e.target.value }))}
+                onChange={(e) => {
+                  setForm((p) => ({ ...p, roleName: e.target.value }));
+                  setFieldErrors((prev) => {
+                    const next = { ...prev };
+                    delete next.roleName;
+                    return next;
+                  });
+                }}
                 placeholder="e.g. Head of Engineering"
               />
+              {fieldErrors.roleName && <p className="text-xs text-destructive">{fieldErrors.roleName}</p>}
             </div>
             <div className="space-y-1">
               <Label>Successor</Label>
               <MemberPicker
                 mode="single"
                 value={form.successorId || undefined}
-                onChange={(id) => setForm((p) => ({ ...p, successorId: id ?? "" }))}
+                onChange={(id) => {
+                  setForm((p) => ({ ...p, successorId: id ?? "" }));
+                  setFieldErrors((prev) => {
+                    const next = { ...prev };
+                    delete next.successorId;
+                    return next;
+                  });
+                }}
                 placeholder="Select successor"
               />
+              {fieldErrors.successorId && <p className="text-xs text-destructive">{fieldErrors.successorId}</p>}
             </div>
             <div className="space-y-1">
               <Label>Incumbent (optional)</Label>
               <MemberPicker
                 mode="single"
                 value={form.incumbentId || undefined}
-                onChange={(id) => setForm((p) => ({ ...p, incumbentId: id ?? "" }))}
+                onChange={(id) => {
+                  setForm((p) => ({ ...p, incumbentId: id ?? "" }));
+                  setFieldErrors((prev) => {
+                    const next = { ...prev };
+                    delete next.incumbentId;
+                    return next;
+                  });
+                }}
                 allowUnassigned
                 placeholder="Current holder"
               />
+              {fieldErrors.incumbentId && <p className="text-xs text-destructive">{fieldErrors.incumbentId}</p>}
             </div>
             <div className="space-y-1">
               <Label>Readiness</Label>
@@ -227,8 +262,16 @@ export function SuccessionTab() {
               <Label>Note</Label>
               <Input
                 value={form.note}
-                onChange={(e) => setForm((p) => ({ ...p, note: e.target.value }))}
+                onChange={(e) => {
+                  setForm((p) => ({ ...p, note: e.target.value }));
+                  setFieldErrors((prev) => {
+                    const next = { ...prev };
+                    delete next.note;
+                    return next;
+                  });
+                }}
               />
+              {fieldErrors.note && <p className="text-xs text-destructive">{fieldErrors.note}</p>}
             </div>
           </DialogBody>
           <DialogFooter className="shrink-0 border-t border-border px-6 py-4">

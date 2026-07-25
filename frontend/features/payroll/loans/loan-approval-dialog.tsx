@@ -12,6 +12,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { useUpdateLoanStatus } from "@/hooks/api/payroll/loans-admin";
 
 export interface LoanApprovalDialogProps {
@@ -63,20 +64,15 @@ export function LoanApprovalDialog({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={handleConfirm}
-            disabled={isPending}
-            className={
-              action === "reject"
-                ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                : undefined
-            }
-          >
-            {isPending
-              ? "Processing…"
-              : action === "approve"
-                ? "Approve"
-                : "Reject"}
+          <AlertDialogAction asChild>
+            <LoadingButton
+              variant={action === "reject" ? "destructive" : "default"}
+              onClick={handleConfirm}
+              isPending={isPending}
+              loadingText="Processing…"
+            >
+              {action === "approve" ? "Approve" : "Reject"}
+            </LoadingButton>
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

@@ -3,7 +3,8 @@
 import React, { useState, useCallback } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { motion } from "framer-motion";
-import { Plus, Eye, Pencil } from "lucide-react";
+import { Plus, Pencil } from "lucide-react";
+import { EyeIcon } from "@animateicons/react/lucide";
 import { StateIllustration } from "@/components/illustrations";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -22,7 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/ui/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCan } from "@/hooks/api/access";
-import { useHrPolicies, useSeedDefaultPolicies } from "@/hooks/api/hr/policies";
+import { useHrPolicies, useSeedDefaultPolicies , useOrgPolicyConflicts } from "@/hooks/api/hr/policies";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
 import {
@@ -33,8 +34,8 @@ import {
 import type { HrPolicy, HrPolicyType, HrPolicyStatus } from "@/types/hr/policies";
 import { PolicyUpsertSheet } from "@/features/hr/policies/policy-upsert-sheet";
 import { PolicyPreviewDialog } from "@/features/hr/policies/policy-preview-dialog";
-import { PolicyVersionHistory } from "@/features/hr/policies/policy-version-history";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 const STATUS_BADGE: Record<string, string> = {
@@ -46,6 +47,8 @@ const STATUS_BADGE: Record<string, string> = {
 export default function HrPoliciesPage() {
   const canView = useCan("hr:policies:view");
   const canManage = useCan("hr:policies:manage");
+  const { data: orgConflicts } = useOrgPolicyConflicts();
+  const conflictCount = orgConflicts?.conflicts.length ?? 0;
 
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
@@ -158,23 +161,20 @@ export default function HrPoliciesPage() {
       header: "",
       cell: (row: HrPolicy) => (
         <div className="flex items-center gap-1 justify-end">
-          <Button
-            variant="ghost"
-            size="icon"
+          <TooltipIconButton
+            icon={EyeIcon}
+            label="Preview"
             className="w-7"
             onClick={() => setPreviewPolicyId(row.id)}
-          >
-            <Eye className="h-3.5 w-3.5" />
-          </Button>
+          />
           {canManage && (
-            <Button
-              variant="ghost"
-              size="icon"
+            <TooltipIconButton
+              label="Edit"
               className="w-7"
               onClick={() => handleOpenEdit(row)}
             >
               <Pencil className="h-3.5 w-3.5" />
-            </Button>
+            </TooltipIconButton>
           )}
         </div>
       ),
@@ -262,6 +262,12 @@ export default function HrPoliciesPage() {
         </div>
       }
     >
+      {conflictCount > 0 && (
+        <div className="mb-3 flex items-center gap-2 rounded-lg border border-amber-200/80 bg-amber-50/70 px-3 py-2 text-xs text-amber-800 dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-200">
+          <span className="font-semibold">{conflictCount} policy conflict{conflictCount === 1 ? "" : "s"} detected.</span>
+          <span>Resolve overlapping scopes and dates before activating drafts.</span>
+        </div>
+      )}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}

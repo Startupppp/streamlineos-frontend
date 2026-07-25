@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -306,11 +307,15 @@ export function TemplatesPageContent() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {deleteTemplateMutation.isPending ? "Deleting…" : "Delete"}
+            <AlertDialogAction asChild>
+              <LoadingButton
+                variant="destructive"
+                onClick={handleDeleteConfirm}
+                isPending={deleteTemplateMutation.isPending}
+                loadingText="Deleting…"
+              >
+                Delete
+              </LoadingButton>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

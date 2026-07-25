@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, ArrowLeft } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { useCan } from "@/hooks/api/access";
@@ -38,17 +38,18 @@ export default function CompensationPlanningPage() {
     );
   }
 
+  function handleBackToCycles() {
+    setSelectedCycle(null);
+  }
+
   return (
     <PageWrapper
       title={selectedCycle ? selectedCycle.name : "Compensation Planning"}
       subtitle={selectedCycle ? `FY ${selectedCycle.fiscalYear} · ${selectedCycle.status}` : "Annual increment cycles, merit matrix, and budget pools"}
+      onBack={selectedCycle ? handleBackToCycles : undefined}
+      backLabel="All Cycles"
       actions={
-        selectedCycle ? (
-          <Button variant="outline" size="sm" onClick={() => setSelectedCycle(null)}>
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            All Cycles
-          </Button>
-        ) : canManage ? (
+        !selectedCycle && canManage ? (
           <Button onClick={() => setCreateOpen(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
             <Plus className="h-4 w-4 mr-2" />
             New Cycle

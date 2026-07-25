@@ -38,6 +38,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertTriangle } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { StateIllustration } from "@/components/illustrations";
@@ -143,7 +144,7 @@ export function LaborTabs() {
     {
       key: "actions", header: "",
       cell: (r) => canManage ? (
-        <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => deleteMembership.mutate(r.id)} disabled={deleteMembership.isPending}>Delete</Button>
+        <LoadingButton variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => deleteMembership.mutate(r.id)} isPending={deleteMembership.isPending}>Delete</LoadingButton>
       ) : null,
     },
   ];
@@ -165,7 +166,7 @@ export function LaborTabs() {
     {
       key: "actions", header: "",
       cell: (r) => canManage ? (
-        <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => deleteAgreement.mutate(r.id)} disabled={deleteAgreement.isPending}>Delete</Button>
+        <LoadingButton variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => deleteAgreement.mutate(r.id)} isPending={deleteAgreement.isPending}>Delete</LoadingButton>
       ) : null,
     },
   ];
@@ -187,7 +188,7 @@ export function LaborTabs() {
     {
       key: "actions", header: "",
       cell: (r) => canManage ? (
-        <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => deleteCase.mutate(r.id)} disabled={deleteCase.isPending}>Delete</Button>
+        <LoadingButton variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => deleteCase.mutate(r.id)} isPending={deleteCase.isPending}>Delete</LoadingButton>
       ) : null,
     },
   ];
@@ -208,22 +209,15 @@ export function LaborTabs() {
           <span>{expiring!.data.length} collective agreement{expiring!.data.length !== 1 ? "s" : ""} expiring within 30 days.</span>
         </div>
       )}
-      <div className="flex gap-1 border-b mb-4">
-        {tabs.map((tab) => (
-          <button
-            key={tab.key}
-            type="button"
-            onClick={() => setActiveTab(tab.key)}
-            className={`px-4 py-2 text-sm font-medium transition-colors ${
-              activeTab === tab.key
-                ? "border-b-2 border-primary text-foreground"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ActiveTab)} className="mb-4">
+        <TabsList className="w-fit">
+          {tabs.map((tab) => (
+            <TabsTrigger key={tab.key} value={tab.key}>
+              {tab.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
 
       {isLoading ? (
         <div className="space-y-3">

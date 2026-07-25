@@ -81,6 +81,11 @@ export interface DataTableProps<T> {
     direction: "asc" | "desc";
     onChange: (field: string, direction: "asc" | "desc") => void;
   };
+  /**
+   * Optional mobile card renderer. When provided, cards replace the table
+   * below the `sm` breakpoint to avoid horizontal page overflow at 375/390px.
+   */
+  mobileCard?: (row: T, index: number) => ReactNode;
 }
 
 function SortIndicator({ sorted }: { sorted: "asc" | "desc" | false }) {
@@ -105,6 +110,7 @@ export function DataTable<T>({
   search,
   toolbar,
   sortState,
+  mobileCard,
 }: DataTableProps<T>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const externalSorting: SortingState = sortState?.field
@@ -327,9 +333,42 @@ export function DataTable<T>({
             )}
           </div>
         ) : (
+          <>
+          {mobileCard ? (
+            <div className="sm:hidden flex flex-col gap-2 p-2">
+              {rows.map((row, index) => (
+                <div
+                  key={row.id}
+                  role={onRowClick ? "button" : undefined}
+                  tabIndex={onRowClick ? 0 : undefined}
+                  onClick={onRowClick ? () => onRowClick(row.original) : undefined}
+                  onKeyDown={
+                    onRowClick
+                      ? (e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            onRowClick(row.original);
+                          }
+                        }
+                      : undefined
+                  }
+                  className={cn(
+                    "rounded-lg border border-border bg-card p-3 text-left touch-manipulation",
+                    onRowClick && "cursor-pointer active:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    rowClassName?.(row.original, index),
+                  )}
+                >
+                  {mobileCard(row.original, index)}
+                </div>
+              ))}
+            </div>
+          ) : null}
           <div
             style={minWidth && minWidth !== "auto" ? { minWidth } : undefined}
-            className={cn((!minWidth || minWidth === "content") && "min-w-max")}
+            className={cn(
+              (!minWidth || minWidth === "content") && "min-w-max",
+              mobileCard && "hidden sm:block",
+            )}
           >
             <Table containerClassName="overflow-visible">
               <TableHeader className="sticky top-0 z-10 bg-muted/40 border-b border-border backdrop-blur-sm">
@@ -402,6 +441,7 @@ export function DataTable<T>({
               </TableBody>
             </Table>
           </div>
+          </>
         )}
       </div>
 

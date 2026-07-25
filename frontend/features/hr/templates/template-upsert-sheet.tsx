@@ -32,13 +32,13 @@ import {
 } from "@/components/ui/select";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useCreateHrTemplate, useUpdateHrTemplate } from "@/hooks/api/hr/hr-templates";
+import { useCreateHrTemplate, useHrTemplate, useUpdateHrTemplate } from "@/hooks/api/hr/hr-templates";
 import {
   HR_TEMPLATE_KINDS,
   HR_LETTER_TYPES,
   KIND_LABELS,
   LETTER_TYPE_LABELS,
-  type HrTemplate,
+  type HrTemplateListItem,
   type HrTemplateKind,
 } from "@/types/hr/templates";
 import { ChecklistEditor } from "./checklist-editor";
@@ -103,17 +103,18 @@ type FormValues = z.infer<typeof schema>;
 interface TemplateUpsertSheetProps {
   open: boolean;
   onClose: () => void;
-  template?: HrTemplate;
+  template?: HrTemplateListItem;
 }
 
 export function TemplateUpsertSheet({ open, onClose, template }: TemplateUpsertSheetProps) {
   const isEdit = !!template;
   const create = useCreateHrTemplate();
   const update = useUpdateHrTemplate();
+  const { data: templateDetail } = useHrTemplate(template?.id ?? 0);
   const isPending = create.isPending || update.isPending;
 
   const defaultValues = useCallback((): FormValues => {
-    const c = template?.content ?? {};
+    const c = templateDetail?.content ?? {};
     return {
       kind: template?.kind ?? "email",
       name: template?.name ?? "",
@@ -125,7 +126,7 @@ export function TemplateUpsertSheet({ open, onClose, template }: TemplateUpsertS
       contentSections: (c["sections"] as unknown) ?? [],
       contentQuestions: (c["questions"] as unknown) ?? [],
     };
-  }, [template]);
+  }, [template, templateDetail]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -133,8 +134,10 @@ export function TemplateUpsertSheet({ open, onClose, template }: TemplateUpsertS
   });
 
   useEffect(() => {
-    if (open) form.reset(defaultValues());
-  }, [open, form, defaultValues]);
+    if (!open) return;
+    if (isEdit && !templateDetail) return;
+    form.reset(defaultValues());
+  }, [open, isEdit, templateDetail, form, defaultValues]);
 
   const kind = form.watch("kind");
   const isChecklist = (CHECKLIST_KINDS as readonly string[]).includes(kind);

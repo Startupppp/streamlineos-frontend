@@ -147,15 +147,15 @@ export function DelegationSheet() {
       header: "",
       cell: (row) =>
         canManage && !isExpired(row.endsAt) ? (
-          <Button
+          <LoadingButton
             variant="ghost"
             size="sm"
             className="text-destructive hover:text-destructive"
             onClick={() => handleRevoke(row.id)}
-            disabled={revokeProxy.isPending}
+            isPending={revokeProxy.isPending}
           >
             Revoke
-          </Button>
+          </LoadingButton>
         ) : null,
     },
   ];

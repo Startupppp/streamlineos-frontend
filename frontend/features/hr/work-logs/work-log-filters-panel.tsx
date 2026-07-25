@@ -32,6 +32,7 @@ function FilterClearButton({ onClick, ariaLabel }: { onClick: () => void; ariaLa
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
     <button
+      type="button"
       onClick={onClick}
       className="ml-0.5 hover:text-foreground rounded-full"
       aria-label={ariaLabel}
@@ -155,8 +156,10 @@ export function WorkLogFiltersPanel({
             </Badge>
           )}
           <button
+            type="button"
             onClick={handleClearAll}
             className="text-[10px] font-semibold text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors duration-200"
+            aria-label="Clear all filters"
           >
             Clear all
           </button>

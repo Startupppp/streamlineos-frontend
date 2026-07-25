@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { SendIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
@@ -20,12 +21,11 @@ import { getErrorMessage } from "@/lib/get-error-message";
 interface Props {
   runId: number;
   status: string;
-  onChanged?: () => void;
 }
 
 const SUBMIT_STATUSES = new Set(["PREVIEW_READY", "EXCEPTIONS_FOUND"]);
 
-export function SubmitApprovalAction({ runId, status, onChanged }: Props) {
+export function SubmitApprovalAction({ runId, status }: Props) {
   const canUpdate = useCan("payroll:runs:update");
   const [open, setOpen] = useState(false);
   const { mutate, isPending } = useSubmitApproval();
@@ -48,7 +48,6 @@ export function SubmitApprovalAction({ runId, status, onChanged }: Props) {
         onSuccess: () => {
           setOpen(false);
           toast.success("Submitted for approval");
-          onChanged?.();
         },
         onError: (err) => {
           const msg = getErrorMessage(err);
@@ -65,7 +64,7 @@ export function SubmitApprovalAction({ runId, status, onChanged }: Props) {
   return (
     <>
       <AnimatedIconButton icon={SendIcon} iconSize={16} iconClassName="mr-1.5" size="sm" className="h-9" onClick={handleOpen}>
-        Submit for approval
+        Submit for Approval
       </AnimatedIconButton>
 
       <Dialog open={open} onOpenChange={setOpen}>
@@ -88,9 +87,9 @@ export function SubmitApprovalAction({ runId, status, onChanged }: Props) {
             <Button variant="outline" onClick={handleCancel} disabled={isPending}>
               Cancel
             </Button>
-            <Button onClick={handleConfirm} disabled={isPending}>
-              {isPending ? "Submitting…" : "Submit"}
-            </Button>
+            <LoadingButton onClick={handleConfirm} isPending={isPending} loadingText="Submitting…">
+              Submit
+            </LoadingButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>

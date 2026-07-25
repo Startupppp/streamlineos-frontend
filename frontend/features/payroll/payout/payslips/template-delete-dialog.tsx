@@ -11,6 +11,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useDeletePayslipTemplate } from "@/hooks/api/payroll";
 import type { PayslipTemplate } from "@/types/payroll";
@@ -56,12 +57,16 @@ export function TemplateDeleteDialog({ template, open, onOpenChange }: Props) {
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={handleConfirm}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-          >
-            Delete
+          <AlertDialogCancel disabled={deleteMutation.isPending}>Cancel</AlertDialogCancel>
+          <AlertDialogAction asChild>
+            <LoadingButton
+              variant="destructive"
+              onClick={handleConfirm}
+              isPending={deleteMutation.isPending}
+              loadingText="Deleting…"
+            >
+              Delete
+            </LoadingButton>
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

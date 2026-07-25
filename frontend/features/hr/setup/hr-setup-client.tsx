@@ -34,6 +34,7 @@ import {
   useSkipChecklistItem,
   useRestartModuleChecklist,
   useDismissTour,
+  useDismissModuleChecklist,
 } from "@/hooks/api/onboarding-flow";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
@@ -74,6 +75,7 @@ export function HrSetupClient() {
   const skipItem = useSkipChecklistItem();
   const restartChecklist = useRestartModuleChecklist();
   const dismissTour = useDismissTour();
+  const dismissChecklist = useDismissModuleChecklist();
 
   async function handleSkip(itemKey: string) {
     try {
@@ -94,6 +96,7 @@ export function HrSetupClient() {
 
   async function handleFinishLater() {
     try {
+      await dismissChecklist.mutateAsync("HR");
       await dismissTour.mutateAsync(HR_SETUP_TOUR_KEY);
     } catch (err) {
       toast.error(getErrorMessage(err));
@@ -213,7 +216,7 @@ export function HrSetupClient() {
                 <LoadingButton
                   variant="ghost"
                   className="text-muted-foreground"
-                  isPending={dismissTour.isPending}
+                  isPending={dismissTour.isPending || dismissChecklist.isPending}
                   loadingText="Saving…"
                   onClick={handleFinishLater}
                 >

@@ -6,8 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { ArrowLeft, Eye, EyeOff, Wand2, FileCode } from "lucide-react";
-import Link from "next/link";
+import { Eye, EyeOff, Wand2, FileCode } from "lucide-react";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -248,14 +247,9 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
             ? `Editing "${template.title}" — v${template.version}`
             : "Create a reusable HTML document template with variable tokens."
         }
+        backHref="/hr/documents/templates"
         actions={
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/hr/documents/templates">
-                <ArrowLeft className="mr-1 h-4 w-4" />
-                Back
-              </Link>
-            </Button>
             <Button variant="outline" size="sm" onClick={handleCancel}>
               Reset
             </Button>

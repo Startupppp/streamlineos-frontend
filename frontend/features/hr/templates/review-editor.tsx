@@ -5,7 +5,7 @@ import { nanoid } from "nanoid";
 import { PlusCircle } from "lucide-react";
 import { Trash2Icon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -95,12 +95,11 @@ export function ReviewEditor({ sections, onChange }: ReviewEditorProps) {
               onChange={(e) => handleSectionTitle(section.id, e.target.value)}
               className="flex-1 text-sm font-medium"
             />
-            <AnimatedIconButton
+            <TooltipIconButton
               icon={Trash2Icon}
               iconSize={14}
+              label="Remove Section"
               type="button"
-              variant="ghost"
-              size="icon"
               className="w-7 text-muted-foreground hover:text-destructive"
               onClick={() => handleRemoveSection(section.id)}
             />
@@ -135,12 +134,11 @@ export function ReviewEditor({ sections, onChange }: ReviewEditorProps) {
                   />
                   <span className="text-[10px] text-muted-foreground">Req</span>
                 </div>
-                <AnimatedIconButton
+                <TooltipIconButton
                   icon={Trash2Icon}
                   iconSize={14}
+                  label="Remove Question"
                   type="button"
-                  variant="ghost"
-                  size="icon"
                   className="w-7 text-muted-foreground hover:text-destructive"
                   onClick={() => handleRemoveQuestion(section.id, q.id)}
                 />

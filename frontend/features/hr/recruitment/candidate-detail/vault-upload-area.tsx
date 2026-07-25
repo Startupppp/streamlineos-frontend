@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { FileType, Loader2, Upload } from "lucide-react";
 import { UploadIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import {
   Select,
   SelectContent,
@@ -124,21 +124,18 @@ export function VaultUploadArea({ candidateId }: VaultUploadAreaProps) {
             ))}
           </SelectContent>
         </Select>
-        <Button
+        <LoadingButton
           variant="outline"
           size="sm"
           className="text-xs gap-1.5 shrink-0"
-          disabled={addDoc.isPending}
+          isPending={addDoc.isPending}
+          loadingText="Uploading..."
           onClick={handleUploadButtonClick}
           {...uploadHoverHandlers}
         >
-          {addDoc.isPending ? (
-            <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
-          ) : (
-            <UploadIcon ref={uploadIconRef} size={12} />
-          )}
-          {addDoc.isPending ? "Uploading..." : "Browse"}
-        </Button>
+          <UploadIcon ref={uploadIconRef} size={12} />
+          Browse
+        </LoadingButton>
       </div>
 
       <div

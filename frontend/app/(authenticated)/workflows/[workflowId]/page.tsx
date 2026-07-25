@@ -1,12 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { format, formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import {
-  ArrowLeft,
   Pencil,
   Clock,
   CheckCircle2,
@@ -180,7 +179,6 @@ function ExecutionsTab({ workflowId }: ExecutionsTabProps) {
 
 export default function WorkflowDetailPage() {
   const params = useParams<{ workflowId: string }>();
-  const router = useRouter();
   const workflowId = params.workflowId;
   const [activeTab, setActiveTab] = useState("overview");
 
@@ -189,10 +187,6 @@ export default function WorkflowDetailPage() {
 
   function handleRetry() {
     void refetch();
-  }
-
-  function handleBack() {
-    router.push("/workflows");
   }
 
   function handleTrigger() {
@@ -222,13 +216,10 @@ export default function WorkflowDetailPage() {
           ? `Version ${workflow.version} · Updated ${formatDistanceToNow(new Date(workflow.updatedAt), { addSuffix: true })}`
           : undefined
       }
+      backHref="/workflows"
       actions={
         workflow ? (
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={handleBack}>
-              <ArrowLeft className="h-3.5 w-3.5 mr-1.5" />
-              Back
-            </Button>
             <AnimatedIconButton
               icon={PlayIcon}
               iconSize={14}

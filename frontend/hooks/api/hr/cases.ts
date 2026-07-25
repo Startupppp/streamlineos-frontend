@@ -268,10 +268,44 @@ export function useCreateDisciplinaryAction() {
       generateLetter?: boolean;
       letterTemplateId?: number;
       letterContext?: Record<string, string>;
+      forceEscalate?: boolean;
     }) => apiClient.post<DisciplinaryAction>("/hr/cases/disciplinary", body),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: caseKeys.disciplinary });
       toast.success("Disciplinary action issued");
+    },
+    onError: (e) => toast.error(getErrorMessage(e)),
+  });
+}
+
+export function useMyDisciplinaryActions() {
+  return useQuery({
+    queryKey: [...caseKeys.disciplinary, "mine"] as const,
+    queryFn: () =>
+      apiClient.get<
+        Array<{
+          id: number;
+          actionType: DisciplinaryActionType;
+          effectiveDate: string;
+          note: string | null;
+          caseId: number | null;
+          acknowledgedAt: string | null;
+          createdAt: string;
+        }>
+      >("/hr/cases/disciplinary/mine"),
+    staleTime: 60_000,
+  });
+}
+
+export function useAcknowledgeDisciplinaryAction() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["hr-disciplinary", "acknowledge"],
+    mutationFn: ({ id, note }: { id: number; note?: string }) =>
+      apiClient.post(`/hr/cases/disciplinary/${id}/acknowledge`, { note }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: caseKeys.disciplinary });
+      toast.success("Acknowledged");
     },
     onError: (e) => toast.error(getErrorMessage(e)),
   });

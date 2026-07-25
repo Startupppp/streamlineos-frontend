@@ -26,6 +26,7 @@ import { toast } from "sonner";
 import { Pencil, AlertCircle, Sparkles } from "lucide-react";
 import { CopyIcon, Trash2Icon, PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { FilterPill, FilterPillGroup } from "@/components/ui/filter-pill";
 import { EmptyMailIllustration } from "@/components/illustrations";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
@@ -82,11 +83,11 @@ function TemplateCard({ template, onCopy, onEdit, onDelete }: TemplateCardProps)
             {categoryKey}
           </span>
           <div className="flex gap-1">
-            <AnimatedIconButton icon={CopyIcon} variant="ghost" size="icon" className="h-6 w-6" iconSize={12} onClick={handleCopy} />
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleEdit}>
+            <AnimatedIconButton icon={CopyIcon} variant="ghost" size="icon" className="h-6 w-6" iconSize={12} onClick={handleCopy} aria-label="Copy template body" />
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleEdit} aria-label="Edit template">
               <Pencil className="h-3 w-3" />
             </Button>
-            <AnimatedIconButton icon={Trash2Icon} variant="ghost" size="icon" className="h-6 w-6 text-destructive" iconSize={12} onClick={handleDelete} />
+            <AnimatedIconButton icon={Trash2Icon} variant="ghost" size="icon" className="h-6 w-6 text-destructive" iconSize={12} onClick={handleDelete} aria-label="Delete template" />
           </div>
         </div>
         <div>
@@ -240,9 +241,6 @@ function EmailTemplatesContent() {
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
   const handleDeleteTemplate = useCallback((id: number) => setDeleteId(id), []);
   const handleSearchChange = useCallback((value: string) => setSearchQuery(value), []);
-  const handleSetCategory = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    setActiveCategory(e.currentTarget.dataset.category ?? "All");
-  }, []);
 
   const handleGenerateAi = useCallback(() => {
     const trimmedName = name.trim();
@@ -301,6 +299,7 @@ function EmailTemplatesContent() {
           title="No email templates yet"
           description="Create your first email template to standardize communications."
           action={{ label: "Add Template", onClick: handleOpenSheet }}
+          actionVariant="outline"
         />
       ) : (
         <div className="space-y-3">
@@ -308,37 +307,16 @@ function EmailTemplatesContent() {
             <div className="min-w-0 w-44">
           <SearchInput placeholder="Search templates..." value={searchQuery} onValueChange={handleSearchChange} />
         </div>
-            <div className="flex items-center gap-1 flex-wrap">
-              <button
-                type="button"
-                onClick={handleSetCategory}
-                data-category="All"
-                className={cn(
-                  "px-3 py-1 text-xs font-medium rounded-full border transition-colors duration-200",
-                  activeCategory === "All"
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-transparent text-muted-foreground border-border hover:bg-muted",
-                )}
-              >
+            <FilterPillGroup className="flex-wrap">
+              <FilterPill active={activeCategory === "All"} onClick={() => setActiveCategory("All")}>
                 All
-              </button>
+              </FilterPill>
               {CATEGORIES.map((cat) => (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={handleSetCategory}
-                  data-category={cat}
-                  className={cn(
-                    "px-3 py-1 text-xs font-medium rounded-full border transition-colors duration-200",
-                    activeCategory === cat
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-transparent text-muted-foreground border-border hover:bg-muted",
-                  )}
-                >
+                <FilterPill key={cat} active={activeCategory === cat} onClick={() => setActiveCategory(cat)}>
                   {cat}
-                </button>
+                </FilterPill>
               ))}
-            </div>
+            </FilterPillGroup>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

@@ -7,6 +7,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { UserRound } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -64,7 +65,14 @@ function DependentRow({ dep, onDelete }: { dep: Dependent; onDelete: () => void 
           </div>
         </div>
       </div>
-      <AnimatedIconButton size="icon" variant="ghost" className="w-7 text-muted-foreground hover:text-destructive" onClick={onDelete} icon={Trash2Icon} iconSize={14} />
+      <TooltipIconButton
+        variant="ghost"
+        className="w-7 text-muted-foreground hover:text-destructive"
+        onClick={onDelete}
+        icon={Trash2Icon}
+        iconSize={14}
+        label={`Delete ${dep.name}`}
+      />
     </div>
   );
 }

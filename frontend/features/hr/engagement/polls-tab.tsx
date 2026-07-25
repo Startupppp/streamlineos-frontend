@@ -8,7 +8,9 @@ import { toast } from "sonner";
 import { BarChart3, Vote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { PlusIcon } from "@animateicons/react/lucide";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
+import { PlusIcon, XIcon } from "@animateicons/react/lucide";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -138,15 +140,15 @@ function PollCard({
             {showResults ? "Hide" : "Results"}
           </Button>
           {canManage && (
-            <Button
+            <LoadingButton
               size="sm"
               variant="ghost"
               className="text-[11px] px-2"
               onClick={handleToggleStatus}
-              disabled={updatePoll.isPending}
+              isPending={updatePoll.isPending}
             >
               {poll.status === "active" ? "Close" : "Activate"}
-            </Button>
+            </LoadingButton>
           )}
         </div>
       </div>
@@ -175,16 +177,17 @@ function PollCard({
         poll.status === "active" && !voted && (
           <div className="flex flex-col gap-1.5">
             {poll.options.map((option, idx) => (
-              <button
+              <LoadingButton
                 key={idx}
                 type="button"
+                variant="outline"
                 onClick={() => handleVote(idx)}
-                disabled={vote.isPending}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border hover:border-primary/40 hover:bg-primary/5 text-xs text-left transition-colors"
+                isPending={vote.isPending}
+                className="justify-start gap-2 rounded-lg border-border px-3 py-2 text-xs font-normal text-left hover:border-primary/40 hover:bg-primary/5"
               >
                 <Vote className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                 {option}
-              </button>
+              </LoadingButton>
             ))}
           </div>
         )
@@ -327,28 +330,28 @@ export function PollsTab() {
                     )}
                   />
                   {fields.length > 2 && (
-                    <Button
+                    <TooltipIconButton
                       type="button"
-                      variant="ghost"
-                      size="icon"
+                      icon={XIcon}
+                      label="Remove option"
                       className="w-8 shrink-0"
                       onClick={() => remove(idx)}
-                    >
-                      ×
-                    </Button>
+                    />
                   )}
                 </div>
               ))}
               {fields.length < 10 && (
-                <Button
+                <AnimatedIconButton
                   type="button"
+                  icon={PlusIcon}
+                  iconSize={12}
                   variant="outline"
                   size="sm"
-                  className="text-xs"
+                  className="text-xs gap-1"
                   onClick={() => append({ value: "" })}
                 >
-                  + Add option
-                </Button>
+                  Add Option
+                </AnimatedIconButton>
               )}
             </div>
 

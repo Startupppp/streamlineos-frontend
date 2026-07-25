@@ -134,9 +134,9 @@ interface MarkPaidButtonProps {
 function MarkPaidButton({ sub, disabled, onMarkPaid }: MarkPaidButtonProps) {
   function handleClick() { onMarkPaid(sub); }
   return (
-    <Button size="sm" variant="outline" className="text-xs" disabled={disabled} onClick={handleClick}>
+    <LoadingButton size="sm" variant="outline" className="text-xs" isPending={disabled} loadingText="Marking Paid…" onClick={handleClick}>
       Mark Invoice Paid
-    </Button>
+    </LoadingButton>
   );
 }
 

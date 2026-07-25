@@ -33,12 +33,14 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { Employee, OneOnOneMeeting, MeetingStatus } from "@/types/hr";
+import type { OneOnOneMeeting, MeetingStatus } from "@/types/hr";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { meetingFormSchema } from "./meeting-schema";
+import { zodFieldErrors } from "./zod-field-errors";
 
 export function MeetingsTab() {
   const { data: meetings, isLoading } = useOneOnOneMeetings();
-  const { data: employeesRaw } = useHrEmployees({ limit: 200 });
+  const { data: employeesRaw } = useHrEmployees({ limit: 100 });
   const createMeeting = useCreateOneOnOne();
   const updateMeeting = useUpdateOneOnOne();
   const deleteMeeting = useDeleteOneOnOne();
@@ -50,6 +52,7 @@ export function MeetingsTab() {
   const [scheduledTime, setScheduledTime] = useState("10:00");
   const [duration, setDuration] = useState("30");
   const [agenda, setAgenda] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const employees = useMemo(
     () => unwrapEmployees(employeesRaw).filter((e) => !!e.id),
@@ -62,30 +65,37 @@ export function MeetingsTab() {
     setScheduledTime("10:00");
     setDuration("30");
     setAgenda("");
+    setFieldErrors({});
   }, []);
 
   const handleCreate = useCallback(() => {
-    if (!empId.trim()) { toast.error("Please select an employee"); return; }
-    if (!scheduledDate.trim()) { toast.error("Please select a date"); return; }
-    const numDuration = Number(duration);
-    if (!Number.isInteger(numDuration) || numDuration < 15 || numDuration > 480) {
-      toast.error("Duration must be a whole number between 15 and 480 minutes");
+    const parsed = meetingFormSchema.safeParse({
+      employeeId: empId,
+      scheduledDate,
+      scheduledTime,
+      duration,
+      agenda,
+    });
+    if (!parsed.success) {
+      setFieldErrors(zodFieldErrors(parsed.error));
       return;
     }
-    if (!agenda.trim()) { toast.error("Agenda is required"); return; }
+    setFieldErrors({});
 
     const [yr, mo, dy] = scheduledDate.split("-").map(Number);
     const [hr, mn] = scheduledTime.split(":").map(Number);
     const localDt = new Date(yr, mo - 1, dy, hr, mn, 0, 0);
-
-    if (localDt <= new Date()) { toast.error("Meeting date must be in the future"); return; }
+    const numDuration = Number(duration);
 
     const isDuplicate = (meetings ?? []).some((m: OneOnOneMeeting) => {
       if (m.employeeId !== empId || m.status === "CANCELLED") return false;
       const diff = Math.abs(new Date(m.scheduledAt).getTime() - localDt.getTime());
       return diff < 60 * 60 * 1000;
     });
-    if (isDuplicate) { toast.error("A meeting with this employee is already scheduled at this time"); return; }
+    if (isDuplicate) {
+      setFieldErrors({ scheduledDate: "A meeting with this employee is already scheduled at this time" });
+      return;
+    }
 
     createMeeting.mutate(
       { employeeId: empId, scheduledAt: localDt.toISOString(), duration: numDuration, agenda: agenda.trim() },
@@ -117,10 +127,39 @@ export function MeetingsTab() {
 
   const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
   const handleDeleteDialogChange = useCallback((open: boolean) => { if (!open) setDeleteId(null); }, []);
-  const handleScheduledDateChange = useCallback((value: string) => setScheduledDate(value), []);
-  const handleScheduledTimeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setScheduledTime(e.target.value), []);
-  const handleDurationChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setDuration(e.target.value), []);
-  const handleAgendaChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setAgenda(e.target.value), []);
+  const handleScheduledDateChange = useCallback((value: string) => {
+    setScheduledDate(value);
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next.scheduledDate;
+      return next;
+    });
+  }, []);
+  const handleScheduledTimeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setScheduledTime(e.target.value);
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next.scheduledTime;
+      delete next.scheduledDate;
+      return next;
+    });
+  }, []);
+  const handleDurationChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setDuration(e.target.value);
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next.duration;
+      return next;
+    });
+  }, []);
+  const handleAgendaChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setAgenda(e.target.value);
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next.agenda;
+      return next;
+    });
+  }, []);
 
   if (isLoading) {
     return <LoadingState variant="list" rows={12} />;
@@ -186,7 +225,12 @@ export function MeetingsTab() {
           <label className="text-sm font-medium">Employee</label>
           <Popover open={empPickerOpen} onOpenChange={setEmpPickerOpen}>
             <PopoverTrigger asChild>
-              <Button variant="outline" role="combobox" aria-expanded={empPickerOpen} className="w-full justify-between font-normal">
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={empPickerOpen}
+                className={cn("w-full justify-between font-normal", fieldErrors.employeeId && "border-destructive")}
+              >
                 <span className="truncate">{employees.find((e) => e.id === empId)?.name ?? employees.find((e) => e.id === empId)?.email ?? "Select team member"}</span>
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
@@ -198,7 +242,19 @@ export function MeetingsTab() {
                   <CommandEmpty>No employee found.</CommandEmpty>
                   <CommandGroup>
                     {employees.map((e) => (
-                      <CommandItem key={e.id} value={`${e.name ?? ""} ${e.email}`} onSelect={() => { setEmpId(e.id); setEmpPickerOpen(false); }}>
+                      <CommandItem
+                        key={e.id}
+                        value={`${e.name ?? ""} ${e.email}`}
+                        onSelect={() => {
+                          setEmpId(e.id);
+                          setEmpPickerOpen(false);
+                          setFieldErrors((prev) => {
+                            const next = { ...prev };
+                            delete next.employeeId;
+                            return next;
+                          });
+                        }}
+                      >
                         <Check className={cn("mr-2 h-4 w-4", empId === e.id ? "opacity-100" : "opacity-0")} />
                         {e.name ?? e.email}
                       </CommandItem>
@@ -208,24 +264,29 @@ export function MeetingsTab() {
               </Command>
             </PopoverContent>
           </Popover>
+          {fieldErrors.employeeId && <p className="text-xs text-destructive">{fieldErrors.employeeId}</p>}
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Date</label>
             <DatePicker value={scheduledDate ?? ""} onChange={handleScheduledDateChange} fromDate={new Date()} placeholder="Pick a date" className="text-sm" />
+            {fieldErrors.scheduledDate && <p className="text-xs text-destructive">{fieldErrors.scheduledDate}</p>}
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Time</label>
             <Input type="time" value={scheduledTime} onChange={handleScheduledTimeChange} />
+            {fieldErrors.scheduledTime && <p className="text-xs text-destructive">{fieldErrors.scheduledTime}</p>}
           </div>
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Duration (min)</label>
           <Input type="number" min={15} max={480} step={15} value={duration} onChange={handleDurationChange} />
+          {fieldErrors.duration && <p className="text-xs text-destructive">{fieldErrors.duration}</p>}
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Agenda</label>
           <Textarea placeholder="Topics to discuss..." value={agenda} onChange={handleAgendaChange} rows={3} maxLength={1000} className="resize-none w-full" />
+          {fieldErrors.agenda && <p className="text-xs text-destructive">{fieldErrors.agenda}</p>}
         </div>
       </HrSheet>
 

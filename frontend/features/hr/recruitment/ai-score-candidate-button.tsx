@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles, Loader2, TrendingUp, AlertCircle, MessageSquare } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Sparkles, TrendingUp, AlertCircle, MessageSquare } from "lucide-react";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
@@ -71,20 +70,16 @@ export function AIScoreCandidateButton({ candidateId, jobId, compact }: AIScoreC
     return (
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button
+          <LoadingButton
             variant="ghost"
             size="sm"
             className="px-2 text-xs gap-1"
             onClick={handleCompactClick}
-            disabled={scoreMutation.isPending}
+            isPending={scoreMutation.isPending}
           >
-            {scoreMutation.isPending ? (
-              <Loader2 className="h-3 w-3 animate-spin" />
-            ) : (
-              <Sparkles className="h-3 w-3 text-primary" />
-            )}
+            {!scoreMutation.isPending && <Sparkles className="h-3 w-3 text-primary" />}
             {result ? <span className={cn("font-bold", fitColor(result.fitLevel))}>{result.score}</span> : "Get AI Estimate"}
-          </Button>
+          </LoadingButton>
         </PopoverTrigger>
         {result && (
           <PopoverContent className="w-80 p-3" align="start" onClick={handlePopoverContentClick}>
@@ -111,13 +106,17 @@ export function AIScoreCandidateButton({ candidateId, jobId, compact }: AIScoreC
 
   return (
     <div className="space-y-3">
-      <Button variant="outline" size="sm" onClick={handleScore} disabled={scoreMutation.isPending} className="w-full">
-        {scoreMutation.isPending ? (
-          <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Scoring...</>
-        ) : (
-          <><Sparkles className="h-4 w-4 mr-2 text-primary" />Get AI Estimate</>
-        )}
-      </Button>
+      <LoadingButton
+        variant="outline"
+        size="sm"
+        onClick={handleScore}
+        isPending={scoreMutation.isPending}
+        loadingText="Scoring..."
+        className="w-full"
+      >
+        <Sparkles className="h-4 w-4 mr-2 text-primary" />
+        Get AI Estimate
+      </LoadingButton>
       {result && (
         <>
           <ScoreDetails result={result} fitColor={fitColor} fitBg={fitBg} />

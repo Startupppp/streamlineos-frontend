@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -84,9 +85,9 @@ export function WorkflowUpsertSheet({ open, onOpenChange, editDefinition }: Prop
         name: editDefinition.name,
         isDefault: editDefinition.isDefault,
         settings: {
-          rejectionCommentRequired: editDefinition.settings.rejectionCommentRequired ?? false,
-          allowDelegation: editDefinition.settings.allowDelegation ?? true,
-          allowReopen: editDefinition.settings.allowReopen ?? false,
+          rejectionCommentRequired: editDefinition.settings?.rejectionCommentRequired ?? false,
+          allowDelegation: editDefinition.settings?.allowDelegation ?? true,
+          allowReopen: editDefinition.settings?.allowReopen ?? false,
         },
         steps: editDefinition.steps?.map((s) => ({
           stepOrder: s.stepOrder,
@@ -257,16 +258,16 @@ export function WorkflowUpsertSheet({ open, onOpenChange, editDefinition }: Prop
                       )}
                     />
                   </div>
-                  <Button
+                  <TooltipIconButton
                     type="button"
                     variant="ghost"
-                    size="icon"
                     className="w-7 shrink-0 text-destructive"
                     onClick={() => remove(index)}
                     disabled={fields.length === 1}
-                  >
-                    <Trash2Icon size={14} />
-                  </Button>
+                    icon={Trash2Icon}
+                    iconSize={14}
+                    label={`Remove step ${index + 1}`}
+                  />
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">

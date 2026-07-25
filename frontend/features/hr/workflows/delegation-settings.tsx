@@ -11,8 +11,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { UserCombobox } from "@/components/ui/user-combobox";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { getErrorMessage } from "@/lib/api-client";
@@ -35,7 +35,7 @@ interface Props {
 }
 
 export function DelegationSettings({ open, onOpenChange }: Props) {
-  const { data: delegations, isLoading } = useMyDelegations();
+  const { data: delegations, isLoading } = useMyDelegations({ enabled: open });
   const create = useCreateDelegation();
   const remove = useDeleteDelegation();
 
@@ -98,14 +98,14 @@ export function DelegationSettings({ open, onOpenChange }: Props) {
                     </span>
                   </div>
                 </div>
-                <Button
+                <TooltipIconButton
                   variant="ghost"
-                  size="icon"
                   className="h-6 w-6 text-destructive shrink-0"
                   onClick={() => handleRemove(d.id)}
-                >
-                  <Trash2Icon size={12} />
-                </Button>
+                  icon={Trash2Icon}
+                  iconSize={12}
+                  label="Remove delegation"
+                />
               </div>
             ))}
           </div>

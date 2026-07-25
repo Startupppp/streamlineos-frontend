@@ -1,14 +1,14 @@
 "use client";
 
 import { use, useCallback } from "react";
-import Link from "next/link";
 import { toast } from "sonner";
-import { ArrowLeft, CheckCircle2, Circle, Clock, AlertCircle, CheckCheck, ListTodo, Timer } from "lucide-react";
+import { CheckCircle2, Circle, Clock, AlertCircle, CheckCheck, ListTodo, Timer } from "lucide-react";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTasksIllustration } from "@/components/illustrations";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
@@ -69,6 +69,7 @@ function TaskCard({
       <CardContent className="p-3">
         <div className="flex items-start gap-3">
           <button
+            type="button"
             onClick={handleClick}
             disabled={isPending}
             aria-label={done ? `Mark "${task.title}" as pending` : `Mark "${task.title}" as complete`}
@@ -119,15 +120,15 @@ function TaskCard({
             </div>
           </div>
 
-          <Button
+          <LoadingButton
             size="sm"
             variant={done ? "outline" : "default"}
             className="shrink-0 h-7 text-xs"
-            disabled={isPending}
+            isPending={isPending}
             onClick={handleClick}
           >
             {done ? "Mark Pending" : "Mark Complete"}
-          </Button>
+          </LoadingButton>
         </div>
       </CardContent>
     </Card>
@@ -224,14 +225,7 @@ export default function UserOnboardingPage({
     <PageWrapper
       title={`${employeeName} — Onboarding`}
       subtitle="Track and manage onboarding tasks for this employee."
-      actions={
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/hr/onboarding">
-            <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
-            Back
-          </Link>
-        </Button>
-      }
+      backHref="/hr/onboarding"
     >
       {isLoading ? (
         <LoadingSkeleton />

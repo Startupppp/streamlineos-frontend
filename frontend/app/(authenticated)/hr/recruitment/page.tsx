@@ -7,6 +7,7 @@ import { useRecruitmentStats, useJobPostings, useInterviews } from "@/hooks/api/
 import { useCandidates, useRecruitmentAnalytics } from "@/hooks/api/hr/recruitment";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -77,7 +78,7 @@ function QueueSection({
         </div>
         <Button variant="ghost" size="sm" className="text-xs gap-1 h-7 text-muted-foreground hover:text-foreground" asChild>
           <Link href={viewAllHref}>
-            View all <ArrowRight className="h-3 w-3" />
+            View All <ArrowRight className="h-3 w-3" />
           </Link>
         </Button>
       </div>
@@ -147,10 +148,9 @@ export default function RecruitmentCommandCenterPage() {
       actions={
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button size="sm" className="gap-1.5 text-xs">
-              <PlusIcon className="h-3.5 w-3.5" />
+            <AnimatedIconButton icon={PlusIcon} iconSize={14} size="sm" className="gap-1.5 text-xs">
               Create
-            </Button>
+            </AnimatedIconButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             {CREATE_ACTIONS.map((action) => (

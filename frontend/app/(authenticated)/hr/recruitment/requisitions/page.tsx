@@ -37,10 +37,11 @@ import {
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   Plus, MapPin, Users, Calendar, DollarSign, CheckCircle2, XCircle, Send,
-  Briefcase, ChevronRight,
+  Briefcase,
 } from "lucide-react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { FilterPill } from "@/components/ui/filter-pill";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
@@ -200,8 +201,6 @@ function CreateRequisitionSheet({ open, onClose }: CreateRequisitionSheetProps) 
       }
     );
   }
-
-  const isPending = createRequisition.isPending || submitRequisition.isPending;
 
   function handleSheetOpenChange(v: boolean) {
     if (!v) onClose();
@@ -516,7 +515,7 @@ function RequisitionCard({
               {req.status === "APPROVED" && !alreadyConverted && (
                 <>
                   <DropdownMenuItem onClick={handleConvertToJob} disabled={isConverting}>
-                    <ChevronRight className="mr-2 h-3.5 w-3.5" /> Convert to Job Posting
+                    <Briefcase className="mr-2 h-3.5 w-3.5" /> Convert to Job Posting
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                 </>
@@ -608,14 +607,15 @@ function RequisitionCard({
             {req.status === "APPROVED" && (
               <LoadingButton
                 size="sm"
+                variant="outline"
                 className="text-xs"
                 onClick={handleConvertToJob}
                 disabled={alreadyConverted}
                 isPending={isConverting}
                 loadingText="Creating…"
               >
-                <ChevronRight className="mr-1 h-3 w-3" />
-                {alreadyConverted ? "Job created" : "Create Job"}
+                <Briefcase className="mr-1 h-3 w-3" />
+                {alreadyConverted ? "Job Created" : "Create Job"}
               </LoadingButton>
             )}
           </div>
@@ -637,18 +637,9 @@ function StatusTabButton({ label, value, activeStatus, onSelect }: StatusTabButt
     onSelect(value);
   }
   return (
-    <button
-      type="button"
-      onClick={handleClick}
-      className={cn(
-        "px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
-        activeStatus === value
-          ? "bg-primary text-primary-foreground"
-          : "text-muted-foreground hover:text-foreground hover:bg-muted"
-      )}
-    >
+    <FilterPill active={activeStatus === value} onClick={handleClick}>
       {label}
-    </button>
+    </FilterPill>
   );
 }
 

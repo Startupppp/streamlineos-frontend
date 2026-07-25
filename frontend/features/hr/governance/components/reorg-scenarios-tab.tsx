@@ -4,6 +4,7 @@ import { useState } from "react";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EyeIcon } from "@animateicons/react/lucide";
@@ -66,15 +67,15 @@ export function ReorgScenariosTab() {
             Simulate
           </Button>
           {canManage && (
-            <Button
+            <LoadingButton
               variant="ghost"
               size="sm"
               className="text-destructive hover:text-destructive"
               onClick={() => handleDelete(row.id)}
-              disabled={deleteScenario.isPending}
+              isPending={deleteScenario.isPending}
             >
               Delete
-            </Button>
+            </LoadingButton>
           )}
         </div>
       ),

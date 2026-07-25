@@ -40,7 +40,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import type { HiringFlow, HiringFlowRound } from "@/types/hr/recruitment";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { ErrorState } from "@/components/shared/error-state";
-import { EllipsisIcon } from "@animateicons/react/lucide";
+import { EllipsisIcon, PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 
 const ROUND_TYPES = [
@@ -203,11 +203,15 @@ function FlowCard({ flow, onEdit, onAddRound, onEditRound, onDelete }: FlowCardP
             )}
           </div>
           <div className="flex items-center gap-1 shrink-0">
-            <Button variant="ghost" size="icon" className="w-7" onClick={handleAddRound} aria-label="Add round">
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-              </svg>
-            </Button>
+            <AnimatedIconButton
+              icon={PlusIcon}
+              iconSize={16}
+              variant="ghost"
+              size="icon"
+              className="w-7"
+              aria-label="Add round"
+              onClick={handleAddRound}
+            />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <AnimatedIconButton
@@ -585,12 +589,9 @@ export default function HiringFlowsPage() {
         title="Hiring Flows"
         subtitle="Define reusable multi-round interview workflows"
         actions={
-          <Button size="sm" onClick={handleOpenCreateFlow}>
-            <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
+          <AnimatedIconButton icon={PlusIcon} iconSize={16} size="sm" onClick={handleOpenCreateFlow}>
             New Flow
-          </Button>
+          </AnimatedIconButton>
         }
       >
         {renderContent()}

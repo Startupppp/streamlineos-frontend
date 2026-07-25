@@ -9,7 +9,7 @@ export const TOGGLE_GROUPS = [
     id: "attendance",
     label: "Attendance & Inputs",
     description: "How payroll inputs are calculated",
-    keys: ["lopFromAttendance", "overtime", "timesheets", "leaveSync"],
+    keys: ["lopFromAttendance", "overtime", "timesheets", "leaveSync", "requireLockedPayrollInputs"],
   },
   {
     id: "earnings",
@@ -51,6 +51,7 @@ export const TOGGLE_GROUPS = [
 export const RISKY_TOGGLES = new Set([
   "pf", "esi", "professionalTax", "tds", "gratuity", "lwf",
   "approvalWorkflow", "managerApproval", "financeApproval", "lockAfterApproval",
+  "requireLockedPayrollInputs",
 ]);
 
 export const TOGGLE_META: Record<string, { label: string; description: string }> = {
@@ -75,6 +76,10 @@ export const TOGGLE_META: Record<string, { label: string; description: string }>
   multiCurrency: { label: "Multi-Currency", description: "Pay employees in foreign currencies" },
   employeeDeclarations: { label: "Investment Declarations", description: "Employees declare investments for TDS calculation" },
   payrollVarianceWarnings: { label: "Variance Warnings", description: "Alert when pay changes >20% vs last month" },
+  requireLockedPayrollInputs: {
+    label: "Require Locked Inputs (Freeze Before Pay)",
+    description: "Block payroll generate unless attendance/leave inputs are locked for the period",
+  },
   countryComplianceChecklist: { label: "Compliance Checklist", description: "Run statutory compliance checks before approving" },
   globalPaymentReport: { label: "Global Payment Report", description: "Consolidated payout report across all entities" },
   bankPayoutFile: { label: "Bank Payout File", description: "Generate bank-compatible payment file (NEFT/RTGS)" },

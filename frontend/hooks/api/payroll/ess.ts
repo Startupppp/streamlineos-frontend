@@ -11,6 +11,10 @@ import type {
   EssTaxDeclarationResponse,
   EssBankDetails,
   EssFnfSettlement,
+  ManagerInbox,
+  TotalRewardsStatement,
+  TeamRewardsResult,
+  PayCompressionStats,
 } from "@/types/payroll/ess";
 
 export const essKeys = {
@@ -23,7 +27,98 @@ export const essKeys = {
   taxDeclaration: () => ["payroll", "ess", "tax-declaration"] as const,
   bank: () => ["payroll", "ess", "bank"] as const,
   fnf: () => ["payroll", "ess", "fnf"] as const,
+  managerInbox: () => ["payroll", "manager", "inbox"] as const,
+  totalRewards: () => ["payroll", "ess", "total-rewards"] as const,
+  teamRewards: () => ["payroll", "manager", "team-rewards"] as const,
+  orgPayCompression: () => ["payroll", "analytics", "pay-compression"] as const,
 };
+
+export function useEssTotalRewards() {
+  return useQuery({
+    queryKey: essKeys.totalRewards(),
+    queryFn: () => apiClient.get<TotalRewardsStatement>("/payroll/me/total-rewards"),
+    staleTime: 60_000,
+  });
+}
+
+export function useManagerTeamRewards(enabled = true) {
+  return useQuery({
+    queryKey: essKeys.teamRewards(),
+    queryFn: () => apiClient.get<TeamRewardsResult>("/payroll/manager/team-rewards"),
+    staleTime: 60_000,
+    enabled,
+  });
+}
+
+export function useOrgPayCompression(enabled = true) {
+  return useQuery({
+    queryKey: essKeys.orgPayCompression(),
+    queryFn: () =>
+      apiClient.get<PayCompressionStats & { scope: "organization" }>(
+        "/payroll/analytics/pay-compression",
+      ),
+    staleTime: 60_000,
+    enabled,
+  });
+}
+
+export function useManagerInbox(enabled = true) {
+  return useQuery({
+    queryKey: essKeys.managerInbox(),
+    queryFn: () => apiClient.get<ManagerInbox>("/payroll/manager/inbox"),
+    staleTime: 30_000,
+    enabled,
+  });
+}
+
+function useInvalidateManagerInbox() {
+  const qc = useQueryClient();
+  return () => {
+    void qc.invalidateQueries({ queryKey: essKeys.managerInbox() });
+  };
+}
+
+export function useManagerApproveReimbursement() {
+  const invalidate = useInvalidateManagerInbox();
+  return useMutation({
+    mutationKey: ["payroll", "manager", "reimb-approve"],
+    mutationFn: (id: number) =>
+      apiClient.post<{ success: boolean }>(`/payroll/manager/reimbursements/${id}/approve`),
+    onSuccess: () => invalidate(),
+  });
+}
+
+export function useManagerRejectReimbursement() {
+  const invalidate = useInvalidateManagerInbox();
+  return useMutation({
+    mutationKey: ["payroll", "manager", "reimb-reject"],
+    mutationFn: ({ id, reason }: { id: number; reason?: string }) =>
+      apiClient.post<{ success: boolean }>(`/payroll/manager/reimbursements/${id}/reject`, {
+        reason,
+      }),
+    onSuccess: () => invalidate(),
+  });
+}
+
+export function useManagerApproveLoan() {
+  const invalidate = useInvalidateManagerInbox();
+  return useMutation({
+    mutationKey: ["payroll", "manager", "loan-approve"],
+    mutationFn: (id: number) =>
+      apiClient.post<{ success: boolean }>(`/payroll/manager/loans/${id}/approve`),
+    onSuccess: () => invalidate(),
+  });
+}
+
+export function useManagerRejectLoan() {
+  const invalidate = useInvalidateManagerInbox();
+  return useMutation({
+    mutationKey: ["payroll", "manager", "loan-reject"],
+    mutationFn: (id: number) =>
+      apiClient.post<{ success: boolean }>(`/payroll/manager/loans/${id}/reject`),
+    onSuccess: () => invalidate(),
+  });
+}
 
 export function useEssOverview() {
   return useQuery({

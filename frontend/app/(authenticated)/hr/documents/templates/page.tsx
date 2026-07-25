@@ -403,6 +403,7 @@ export default function DocumentTemplatesPage() {
                 label: "Create your first template",
                 href: "/hr/documents/templates/new",
               }}
+              actionVariant="outline"
             />
           }
         />

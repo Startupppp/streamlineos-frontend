@@ -39,10 +39,10 @@ function useReport(reportType: PivotReportType, params: {
   costCenter?: string;
   workerType?: string;
 }) {
-  const earnings = usePayrollEarnings(params);
-  const deductions = usePayrollDeductions(params);
-  const reimbursements = usePayrollReimbursementsReport(params);
-  const tax = usePayrollTaxReport(params);
+  const earnings = usePayrollEarnings(params, { enabled: reportType === "earnings" });
+  const deductions = usePayrollDeductions(params, { enabled: reportType === "deductions" });
+  const reimbursements = usePayrollReimbursementsReport(params, { enabled: reportType === "reimbursements" });
+  const tax = usePayrollTaxReport(params, { enabled: reportType === "tax" });
 
   if (reportType === "earnings") return earnings;
   if (reportType === "deductions") return deductions;
@@ -124,6 +124,20 @@ export function ReportPivot({
         isLoading={isLoading}
         minWidth="800px"
         pagination={{ pageSize: 50 }}
+        mobileCard={(row) => {
+          const amounts = Object.values(row.components ?? {}).filter(Boolean);
+          return (
+            <div className="space-y-1">
+              <p className="text-sm font-medium truncate">{row.name || row.employeeId}</p>
+              <p className="text-[11px] text-muted-foreground truncate">
+                {row.department || "—"} · {row.workerType || "—"}
+              </p>
+              <p className="text-[11px] text-muted-foreground">
+                {amounts.length} component{amounts.length === 1 ? "" : "s"}
+              </p>
+            </div>
+          );
+        }}
         emptyState={
           <EmptyState
             compact

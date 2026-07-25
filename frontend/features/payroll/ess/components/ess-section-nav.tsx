@@ -50,14 +50,15 @@ export function EssSectionNav({ items }: EssSectionNavProps) {
       ref={navRef}
       className="sticky top-0 z-10 bg-muted/40 backdrop-blur-sm border-b border-border shrink-0"
     >
-      <div className="flex overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden gap-1 px-4 sm:px-6 py-1.5">
+      <div className="flex flex-nowrap items-center gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>*]:shrink-0 px-4 sm:px-6 py-1.5">
         {items.map((item) => (
           <button
             key={item.id}
             type="button"
             onClick={() => handleClick(item.id)}
+            aria-current={activeId === item.id ? "true" : undefined}
             className={cn(
-              "shrink-0 px-3 py-1 text-xs font-medium rounded-md transition-colors whitespace-nowrap",
+              "shrink-0 px-3 py-1 text-xs font-medium rounded-full transition-colors whitespace-nowrap",
               activeId === item.id
                 ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted",

@@ -12,6 +12,7 @@ import {
   Landmark,
   BarChart2,
   BookOpen,
+  Scale,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -42,6 +43,7 @@ const REPORT_OPTIONS: ReportOption[] = [
   { type: "bank-payout", label: "Bank Payout", icon: Landmark },
   { type: "variance", label: "Variance", icon: BarChart2 },
   { type: "journal", label: "Journal", icon: BookOpen },
+  { type: "pay-compression", label: "Pay Compression", icon: Scale },
 ];
 
 interface ReportSelectorProps {
@@ -80,14 +82,21 @@ export function ReportSelector({ activeReport, onSelect }: ReportSelectorProps) 
         ))}
       </nav>
 
-      <div className="lg:hidden">
+      <div className="lg:hidden w-full min-w-0 sticky top-0 z-10 bg-background pb-2">
+        <label className="sr-only" htmlFor="payroll-report-type">
+          Report type
+        </label>
         <Select value={activeReport} onValueChange={handleSelectChange}>
-          <SelectTrigger className="w-full">
-            <SelectValue />
+          <SelectTrigger
+            id="payroll-report-type"
+            className="w-full min-h-11 touch-manipulation"
+            aria-label="Select payroll report"
+          >
+            <SelectValue placeholder="Select report" />
           </SelectTrigger>
           <SelectContent>
             {REPORT_OPTIONS.map(({ type, label }) => (
-              <SelectItem key={type} value={type}>
+              <SelectItem key={type} value={type} className="min-h-10">
                 {label}
               </SelectItem>
             ))}

@@ -1,22 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useTransitionHrTemplate } from "@/hooks/api/hr/hr-templates";
-import type { HrTemplate, HrTemplateStatus } from "@/types/hr/templates";
+import type { HrTemplateListItem, HrTemplateStatus } from "@/types/hr/templates";
 
 const TRANSITIONS: Record<HrTemplateStatus, Array<{ to: HrTemplateStatus; label: string; variant: "default" | "outline" | "destructive" }>> = {
   draft: [{ to: "review", label: "Submit for Review", variant: "default" }],
@@ -33,22 +23,23 @@ const TRANSITIONS: Record<HrTemplateStatus, Array<{ to: HrTemplateStatus; label:
 };
 
 interface TemplateLifecycleActionsProps {
-  template: HrTemplate;
+  template: HrTemplateListItem;
 }
 
 export function TemplateLifecycleActions({ template }: TemplateLifecycleActionsProps) {
-  const [pending, setPending] = useState<HrTemplateStatus | null>(null);
+  const [confirmTarget, setConfirmTarget] = useState<HrTemplateStatus | null>(null);
   const transition = useTransitionHrTemplate();
   const actions = TRANSITIONS[template.status] ?? [];
 
   function handleTransition(to: HrTemplateStatus) {
-    setPending(to);
     transition.mutate(
       { id: template.id, to },
       {
-        onSuccess: () => toast.success(`Template moved to ${to}`),
+        onSuccess: () => {
+          toast.success(`Template moved to ${to}`);
+          setConfirmTarget(null);
+        },
         onError: (e) => toast.error(getErrorMessage(e)),
-        onSettled: () => setPending(null),
       },
     );
   }
@@ -58,27 +49,26 @@ export function TemplateLifecycleActions({ template }: TemplateLifecycleActionsP
   return (
     <div className="flex items-center gap-2">
       {actions.map((action) => (
-        <AlertDialog key={action.to}>
-          <AlertDialogTrigger asChild>
-            <Button size="sm" variant={action.variant} disabled={transition.isPending}>
-              {action.label}
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>{action.label}</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to move this template to <strong>{action.to}</strong>?
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={() => handleTransition(action.to)}>
-                Confirm
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <Fragment key={action.to}>
+          <Button
+            size="sm"
+            variant={action.variant}
+            disabled={transition.isPending}
+            onClick={() => setConfirmTarget(action.to)}
+          >
+            {action.label}
+          </Button>
+          <ConfirmDialog
+            open={confirmTarget === action.to}
+            onOpenChange={(v) => !v && setConfirmTarget(null)}
+            title={action.label}
+            description={`Are you sure you want to move this template to ${action.to}?`}
+            confirmLabel="Confirm"
+            destructive={action.variant === "destructive"}
+            isPending={transition.isPending}
+            onConfirm={() => handleTransition(action.to)}
+          />
+        </Fragment>
       ))}
     </div>
   );

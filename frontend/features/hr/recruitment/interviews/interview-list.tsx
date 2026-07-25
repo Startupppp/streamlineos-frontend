@@ -13,7 +13,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { toast } from "sonner";
 import { CheckCircle2, XCircle, Clock, CalendarClock, Users, MessageSquare } from "lucide-react";
 import { XIcon } from "@animateicons/react/lucide";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { format } from "date-fns";
 import { EmptyCalendarIllustration } from "@/components/illustrations";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
@@ -254,7 +254,7 @@ export function InterviewList() {
             >
               Reschedule
             </LoadingButton>
-            <AnimatedIconButton icon={XIcon} iconSize={14} variant="ghost" size="icon" className="w-8" onClick={handleClearSelection} />
+            <TooltipIconButton icon={XIcon} iconSize={14} variant="ghost" label="Clear selection" className="w-8" onClick={handleClearSelection} />
           </div>
         </div>
       )}

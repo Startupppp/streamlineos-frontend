@@ -10,6 +10,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetBody } from "@/components/ui/sheet";
 import {
   AlertDialog,
@@ -348,9 +349,9 @@ export function InputsTab({ runId, isLocked }: InputsTabProps) {
                 <Button type="button" variant="outline" size="sm" onClick={handleSheetClose}>
                   Cancel
                 </Button>
-                <Button type="submit" size="sm" disabled={patchMutation.isPending}>
+                <LoadingButton type="submit" size="sm" isPending={patchMutation.isPending} loadingText="Saving…">
                   Save Override
-                </Button>
+                </LoadingButton>
               </div>
             </form>
           </Form>
@@ -367,12 +368,15 @@ export function InputsTab({ runId, isLocked }: InputsTabProps) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleReimportCancel}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleReimportConfirm}
-              disabled={reimportMutation.isPending}
-            >
-              Re-import
+            <AlertDialogCancel disabled={reimportMutation.isPending} onClick={handleReimportCancel}>Cancel</AlertDialogCancel>
+            <AlertDialogAction asChild>
+              <LoadingButton
+                onClick={handleReimportConfirm}
+                isPending={reimportMutation.isPending}
+                loadingText="Re-importing…"
+              >
+                Re-import
+              </LoadingButton>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -10,7 +10,6 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -20,9 +19,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Loader2, Plus, ExternalLink, Trash2 } from "lucide-react";
+import { Loader2, Plus, Trash2 } from "lucide-react";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { EllipsisIcon } from "@animateicons/react/lucide";
+import { EllipsisIcon, ExternalLinkIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -220,7 +219,7 @@ export function ExternalBoardsSheet({
             loadingText="Adding…"
           >
             <Plus className="h-3.5 w-3.5" />
-            Track posting
+            Track Posting
           </LoadingButton>
         </div>
 
@@ -259,9 +258,14 @@ export function ExternalBoardsSheet({
                         target="_blank"
                         rel="noopener noreferrer"
                       >
-                        <Button variant="ghost" size="icon" className="h-6 w-6">
-                          <ExternalLink className="h-3 w-3" />
-                        </Button>
+                        <AnimatedIconButton
+                          icon={ExternalLinkIcon}
+                          iconSize={12}
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          aria-label="Open posting"
+                        />
                       </a>
                     )}
                     <PostingActionsMenu

@@ -102,6 +102,7 @@ export function PolicyScopesEditor({ value, onChange, disabled }: Props) {
             className="w-8 shrink-0 text-muted-foreground hover:text-destructive"
             onClick={() => handleRemove(index)}
             disabled={disabled || value.length === 1}
+            aria-label="Remove scope"
           />
         </div>
       ))}

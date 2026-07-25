@@ -8,6 +8,7 @@ import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { Lock } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useCan } from "@/hooks/api/access";
 import {
   useAccommodations,
@@ -118,7 +119,19 @@ export function AccommodationsPageContent() {
           getRowKey={(r) => r.id}
           onRowClick={(r) => setSelectedId(r.id)}
           isLoading={isLoading}
-          emptyState={<p className="text-sm text-muted-foreground text-center py-8">No accommodation requests</p>}
+          emptyState={
+            <EmptyState
+              illustrationPreset="team"
+              title="No accommodation requests"
+              description="Create a request to track workplace accommodations from intake through decision."
+              action={
+                canManage
+                  ? { label: "New Request", onClick: () => setShowCreate(true) }
+                  : undefined
+              }
+              compact
+            />
+          }
           pagination={
             data
               ? {

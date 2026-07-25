@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -26,6 +25,7 @@ import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
+  useHrAutomationEvents,
   useHrAutomations,
   useToggleHrAutomation,
   useDeleteHrAutomation,
@@ -39,15 +39,8 @@ import { format } from "date-fns";
 import { Pencil, History } from "lucide-react";
 import { PlayIcon, Trash2Icon, PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { TruncatedText } from "@/components/ui/truncated-text";
-
-const HR_TRIGGER_EVENTS = [
-  "employee.created", "employee.onboarded", "employee.probation_due", "employee.confirmed",
-  "employee.transferred", "employee.promoted", "employee.salary_revised",
-  "leave.requested", "leave.approved", "attendance.late", "attendance.missed_punch",
-  "document.expiring", "asset.assigned", "asset.return_due", "review.cycle_started",
-  "goal.overdue", "course.assigned", "resignation.submitted", "exit.completed",
-] as const;
 
 function RuleCard({
   rule,
@@ -100,23 +93,21 @@ function RuleCard({
               aria-label="Toggle automation"
             />
             <div className="flex items-center gap-1">
-              <Button size="icon" variant="ghost" className="w-7" onClick={onViewRuns} title="View runs">
+              <TooltipIconButton label="View Runs" className="w-7" onClick={onViewRuns}>
                 <History className="h-3.5 w-3.5" />
-              </Button>
-              <AnimatedIconButton icon={PlayIcon} size="icon" variant="ghost" className="w-7" iconSize={14} onClick={onTest} title="Dry-run test" />
+              </TooltipIconButton>
               {canManage && (
                 <>
-                  <Button size="icon" variant="ghost" className="w-7" onClick={onEdit} title="Edit">
+                  <TooltipIconButton icon={PlayIcon} iconSize={14} label="Dry-Run Test" className="w-7" onClick={onTest} />
+                  <TooltipIconButton label="Edit" className="w-7" onClick={onEdit}>
                     <Pencil className="h-3.5 w-3.5" />
-                  </Button>
-                  <AnimatedIconButton
+                  </TooltipIconButton>
+                  <TooltipIconButton
                     icon={Trash2Icon}
-                    size="icon"
-                    variant="ghost"
-                    className="w-7 text-destructive hover:text-destructive"
                     iconSize={14}
+                    label="Delete"
+                    className="w-7 text-destructive hover:text-destructive"
                     onClick={onDelete}
-                    title="Delete"
                   />
                 </>
               )}
@@ -150,6 +141,8 @@ export default function HrAutomationsPage() {
     triggerEvent: triggerFilter === "all" ? undefined : triggerFilter,
     isEnabled: enabledFilter,
   });
+  const { data: eventCatalog } = useHrAutomationEvents();
+  const triggerEvents = eventCatalog?.events.map((e) => e.value) ?? [];
 
   const toggle = useToggleHrAutomation();
   const remove = useDeleteHrAutomation();
@@ -246,7 +239,7 @@ export default function HrAutomationsPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All triggers</SelectItem>
-              {HR_TRIGGER_EVENTS.map((e) => (
+              {triggerEvents.map((e) => (
                 <SelectItem key={e} value={e}>{e}</SelectItem>
               ))}
             </SelectContent>
@@ -313,10 +306,7 @@ export default function HrAutomationsPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={handleDelete}
-            >
+            <AlertDialogAction variant="destructive" onClick={handleDelete}>
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

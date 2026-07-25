@@ -13,6 +13,7 @@ import {
 import { apiClient } from "@/lib/api-client";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -30,12 +31,12 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { format, addDays } from "date-fns";
 import {
-  Plus,
   FileText,
   Download,
   CheckCircle2,
   LogOut,
 } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { FileUpload } from "@/components/storage/file-upload";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import { useSession } from "next-auth/react";
@@ -378,10 +379,9 @@ export default function ExitManagementPage() {
       subtitle="Resignations, exit interviews, and offboarding"
       actions={
         !isCEO && !hasActiveResignation ? (
-          <Button size="sm" onClick={handleOpenSheet} className="gap-1.5">
-            <Plus className="h-3.5 w-3.5" />
+          <AnimatedIconButton icon={PlusIcon} iconSize={14} size="sm" className="gap-1.5" onClick={handleOpenSheet}>
             Submit Resignation
-          </Button>
+          </AnimatedIconButton>
         ) : hasActiveResignation ? (
           <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-800">
             Resignation pending
@@ -547,14 +547,15 @@ export default function ExitManagementPage() {
               onUploadComplete={handleUploadComplete}
             />
           )}
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={handleDownloadTemplate}
-            className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors duration-200"
+            className="h-auto gap-1.5 p-0 text-xs font-normal text-muted-foreground hover:bg-transparent hover:text-foreground"
           >
             <Download className="h-3 w-3" />
-            Download template
-          </button>
+            Download Template
+          </Button>
         </div>
       </HrSheet>
 

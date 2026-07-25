@@ -77,7 +77,7 @@ const columns: DataTableColumn<LetterRender>[] = [
 export function LettersHistoryTable({ letters, isLoading, className }: LettersHistoryTableProps) {
   const emptyState = (
     <EmptyState
-      illustration={<FileText className="w-8 text-muted-foreground" />}
+      illustrationPreset="documents"
       title="No letters generated"
       description="Generated letters will appear here."
       compact

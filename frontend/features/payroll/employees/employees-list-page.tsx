@@ -219,6 +219,30 @@ export function EmployeesListPage() {
           total: data?.total ?? 0,
           onPageChange: handlePageChange,
         }}
+        mobileCard={(row) => {
+          const cfg = STATUS_CONFIG[row.status];
+          return (
+            <div className="space-y-1.5">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate">{row.userName}</p>
+                  <p className="text-[11px] text-muted-foreground truncate">{row.userEmail}</p>
+                </div>
+                <span
+                  className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border shrink-0 ${cfg.className}`}
+                >
+                  {cfg.label}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>{row.workerType}</span>
+                <span className="font-mono tabular-nums text-foreground">
+                  {formatMoney(row.annualCtc)}
+                </span>
+              </div>
+            </div>
+          );
+        }}
         emptyState={
           <EmptyState
             illustration={<EmptyPersonIllustration />}

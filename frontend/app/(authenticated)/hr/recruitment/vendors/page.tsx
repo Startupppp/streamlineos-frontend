@@ -7,10 +7,7 @@ import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recr
 import { EmptyTeamIllustration } from "@/components/illustrations";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Plus } from "lucide-react";
@@ -52,7 +49,6 @@ export default function VendorsPage() {
 
   const handleCloseSubmissions = useCallback(() => setViewingVendor(null), []);
   const handleCloseDelete = useCallback((v: boolean) => { if (!v) setDeletingId(null); }, []);
-  const handleCancelDelete = useCallback(() => setDeletingId(null), []);
 
   const handleDeleteConfirm = useCallback(() => {
     if (deletingId === null) return;
@@ -130,28 +126,16 @@ export default function VendorsPage() {
 
       {sheetOpen && <VendorSheet initial={editingVendor} onClose={handleCloseSheet} />}
       {viewingVendor && <SubmissionSheet vendor={viewingVendor} onClose={handleCloseSubmissions} />}
-      {deletingId !== null && (
-        <AlertDialog open onOpenChange={handleCloseDelete}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete Vendor</AlertDialogTitle>
-              <AlertDialogDescription>
-                This will permanently delete the vendor and all submission records. This action cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={handleCancelDelete}>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDeleteConfirm}
-                disabled={deleteVendor.isPending}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      )}
+      <ConfirmSheet
+        open={deletingId !== null}
+        onOpenChange={handleCloseDelete}
+        title="Delete Vendor"
+        description="This will permanently delete the vendor and all submission records. This action cannot be undone."
+        confirmLabel="Delete"
+        destructive
+        isPending={deleteVendor.isPending}
+        onConfirm={handleDeleteConfirm}
+      />
       </div>
     </PageWrapper>
   );

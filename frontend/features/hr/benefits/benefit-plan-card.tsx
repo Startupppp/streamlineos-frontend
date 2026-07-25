@@ -4,6 +4,7 @@ import { Shield, Heart, Umbrella, PiggyBank, Smile, Star, Package } from "lucide
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import type { BenefitPlan } from "@/hooks/api/hr";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
@@ -70,14 +71,14 @@ export function BenefitPlanCard({ plan, enrolled, onEnroll, onWaive, onEdit, isA
 
         <div className="flex items-center gap-2">
           {!isAdmin && onEnroll && !enrolled && (
-            <Button size="sm" className="text-xs" onClick={onEnroll} disabled={isPending}>
+            <LoadingButton size="sm" className="text-xs" onClick={onEnroll} isPending={isPending}>
               Enroll
-            </Button>
+            </LoadingButton>
           )}
           {!isAdmin && onWaive && enrolled && (
-            <Button size="sm" variant="outline" className="text-xs" onClick={onWaive} disabled={isPending}>
+            <LoadingButton size="sm" variant="outline" className="text-xs" onClick={onWaive} isPending={isPending}>
               Waive
-            </Button>
+            </LoadingButton>
           )}
           {enrolled && !isAdmin && (
             <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 text-[10px] dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">Enrolled</Badge>

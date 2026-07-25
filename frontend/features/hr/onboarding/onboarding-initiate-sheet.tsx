@@ -43,7 +43,7 @@ interface OnboardingInitiateSheetProps {
 export function OnboardingInitiateSheet({ open, onOpenChange }: OnboardingInitiateSheetProps) {
   const form = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: { userId: "" } });
   const initiate = useInitiateOnboarding();
-  const { data: employeesRaw } = useHrEmployees({ limit: 500 });
+  const { data: employeesRaw } = useHrEmployees({ limit: 100 });
   const { data: onboardingStatuses } = useOnboardingStatus();
 
   const employees = useMemo<Employee[]>(() => {

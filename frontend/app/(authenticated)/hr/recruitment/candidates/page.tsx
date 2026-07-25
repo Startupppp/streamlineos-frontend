@@ -18,6 +18,7 @@ import {
 } from "@/hooks/api/hr";
 import { useCandidatesPage } from "@/hooks/api/hr/recruitment";
 import { Button } from "@/components/ui/button";
+import { FilterPill, FilterPillGroup } from "@/components/ui/filter-pill";
 import { SearchInput } from "@/components/ui/search-input";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { toast } from "sonner";
@@ -38,7 +39,6 @@ import { CONTENT_FILL_PANEL, FILTER_TOOLBAR_ROW } from "@/components/ui/content-
 import { CandidateComparisonDialog } from "@/components/hr/recruitment/candidate-comparison-dialog";
 import { AddCandidateSheet } from "@/features/hr/recruitment/candidates-list/add-candidate-sheet";
 import { EditCandidateSheet } from "@/features/hr/recruitment/candidates-list/edit-candidate-sheet";
-import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ErrorState } from "@/components/shared/error-state";
 import { RecruitmentListPagination } from "@/features/hr/recruitment/components/recruitment-list-pagination";
@@ -240,18 +240,10 @@ export default function CandidatesPage() {
             <div className="min-w-0 w-[200px]">
               <SearchInput placeholder="Search candidates…" value={searchQuery} onValueChange={handleSearchChange} />
             </div>
-            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide flex-nowrap [&>*]:shrink-0">
-              <button
-                onClick={handleClearStatusFilter}
-                className={cn(
-                  "px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 cursor-pointer",
-                  !statusFilter
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "bg-muted text-muted-foreground hover:bg-muted/80",
-                )}
-              >
+            <FilterPillGroup>
+              <FilterPill active={!statusFilter} onClick={handleClearStatusFilter}>
                 All · {candidates?.length ?? 0}
-              </button>
+              </FilterPill>
               {STAGE_CONFIG.map((s) => (
                 <StagePillButton
                   key={s.value}
@@ -261,7 +253,7 @@ export default function CandidatesPage() {
                   onFilter={setFilter}
                 />
               ))}
-            </div>
+            </FilterPillGroup>
           </div>
         }
         actions={
@@ -274,7 +266,7 @@ export default function CandidatesPage() {
                       {selectedIds.size}
                     </span>
                   </div>
-                  selected
+                  <span className="hidden sm:inline">selected</span>
                 </div>
                 <Button
                   size="sm"
@@ -282,7 +274,8 @@ export default function CandidatesPage() {
                   className="gap-1.5 text-xs"
                   onClick={handleOpenBulkReject}
                 >
-                  <XCircle className="h-3.5 w-3.5" /> Reject
+                  <XCircle className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Reject</span>
                 </Button>
                 {selectedIds.size >= 2 && selectedIds.size <= 4 && (
                   <Button
@@ -291,7 +284,8 @@ export default function CandidatesPage() {
                     className="gap-1.5 text-xs"
                     onClick={handleOpenCompare}
                   >
-                    <GitCompare className="h-3.5 w-3.5" /> Compare
+                    <GitCompare className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">Compare</span>
                   </Button>
                 )}
                 <Button
@@ -311,10 +305,12 @@ export default function CandidatesPage() {
               onClick={handleSelectAll}
             >
               <CheckSquare className="h-3.5 w-3.5" />
-              {selectedIds.size === filteredCandidates.length &&
-              filteredCandidates.length > 0
-                ? "Deselect all"
-                : "Select all"}
+              <span className="hidden sm:inline">
+                {selectedIds.size === filteredCandidates.length &&
+                filteredCandidates.length > 0
+                  ? "Deselect all"
+                  : "Select all"}
+              </span>
             </Button>
             <Button
               size="sm"
@@ -323,7 +319,8 @@ export default function CandidatesPage() {
               asChild
             >
               <Link href="/hr/recruitment/candidates/import">
-                <Upload className="h-3.5 w-3.5" /> Import
+                <Upload className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Import</span>
               </Link>
             </Button>
             <Button
@@ -331,7 +328,8 @@ export default function CandidatesPage() {
               className="gap-1.5 text-xs"
               onClick={handleOpenAddSheet}
             >
-              <Plus className="h-3.5 w-3.5" /> Add Candidate
+              <Plus className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Add Candidate</span>
             </Button>
           </>
         }
@@ -407,12 +405,9 @@ export default function CandidatesPage() {
         onOpenChange={setBulkRejectOpen}
         title={`Reject ${selectedIds.size} candidate(s)?`}
         description="This will move all selected candidates to Rejected and send automated rejection emails. This action cannot be undone."
-        confirmLabel={
-          bulkReject.isPending
-            ? "Rejecting…"
-            : `Reject ${selectedIds.size} Candidate(s)`
-        }
+        confirmLabel={`Reject ${selectedIds.size} Candidate(s)`}
         destructive
+        isPending={bulkReject.isPending}
         onConfirm={handleBulkReject}
       />
       {compareOpen && (
@@ -434,6 +429,7 @@ export default function CandidatesPage() {
         description={`This will permanently delete ${deletingCandidate?.firstName} ${deletingCandidate?.lastName} and all related data. This cannot be undone.`}
         confirmLabel="Delete Candidate"
         destructive
+        isPending={deleteCandidate.isPending}
         onConfirm={handleDelete}
       />
     </>

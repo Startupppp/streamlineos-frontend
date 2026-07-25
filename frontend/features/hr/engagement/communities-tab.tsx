@@ -3,8 +3,8 @@
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import { Users, UserCheck } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
@@ -57,25 +57,25 @@ function CommunityCard({ community, currentUserId }: CommunityCardProps) {
           <Users className="h-5 w-5 text-primary" />
         </div>
         {isMember ? (
-          <Button
+          <LoadingButton
             size="sm"
             variant="outline"
             className="text-xs gap-1 px-2.5"
             onClick={handleLeave}
-            disabled={leave.isPending}
+            isPending={leave.isPending}
           >
             <UserCheck className="h-3 w-3" />
             Joined
-          </Button>
+          </LoadingButton>
         ) : (
-          <Button
+          <LoadingButton
             size="sm"
             className="text-xs px-2.5"
             onClick={handleJoin}
-            disabled={join.isPending}
+            isPending={join.isPending}
           >
             Join
-          </Button>
+          </LoadingButton>
         )}
       </div>
       <div className="space-y-0.5">

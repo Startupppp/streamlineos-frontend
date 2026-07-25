@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,7 @@ import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { format } from "date-fns";
 import { useAllOffers, type OfferListItem } from "@/hooks/api/hr/recruitment/offers";
 import { ErrorState } from "@/components/shared/error-state";
+import { DataTablePagination } from "@/components/shared/data-table-pagination";
 import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 
@@ -59,7 +60,10 @@ function OfferRow({ offer }: { offer: OfferListItem }) {
   );
 }
 
-const OFFER_STATUS_FILTERS = [
+const OFFER_STATUS_FILTERS: ReadonlyArray<{
+  value: OfferListItem["offerStatus"] | "ALL";
+  label: string;
+}> = [
   { value: "ALL", label: "All statuses" },
   { value: "DRAFT", label: "Draft" },
   { value: "PENDING_APPROVAL", label: "Pending approval" },
@@ -69,17 +73,25 @@ const OFFER_STATUS_FILTERS = [
   { value: "DECLINED", label: "Declined" },
   { value: "COUNTERED", label: "Countered" },
   { value: "EXPIRED", label: "Expired" },
-] as const;
+];
+
+const PAGE_SIZE = 20;
 
 export default function OffersPage() {
-  const { data: offers, isLoading, isError, refetch } = useAllOffers();
-  const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [statusFilter, setStatusFilter] = useState<OfferListItem["offerStatus"] | "ALL">("ALL");
+  const [page, setPage] = useState(1);
+  const { data, isLoading, isError, refetch } = useAllOffers({
+    page,
+    pageSize: PAGE_SIZE,
+    status: statusFilter === "ALL" ? undefined : statusFilter,
+  });
+  const offers = data?.items ?? [];
 
-  const filtered = useMemo(() => {
-    if (!offers) return [];
-    if (statusFilter === "ALL") return offers;
-    return offers.filter((o) => o.offerStatus === statusFilter);
-  }, [offers, statusFilter]);
+  function handleStatusChange(value: string) {
+    const match = OFFER_STATUS_FILTERS.find((s) => s.value === value);
+    setStatusFilter(match?.value ?? "ALL");
+    setPage(1);
+  }
 
   if (isLoading) {
     return (
@@ -103,7 +115,8 @@ export default function OffersPage() {
     );
   }
 
-  const total = offers?.length ?? 0;
+  const total = data?.total ?? 0;
+  const totalPages = data?.totalPages ?? 0;
 
   return (
     <PageWrapper
@@ -115,9 +128,9 @@ export default function OffersPage() {
       }
       variant="display"
       filters={
-        total > 0 ? (
+        total > 0 || statusFilter !== "ALL" ? (
           <div className={FILTER_TOOLBAR_ROW}>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <Select value={statusFilter} onValueChange={handleStatusChange}>
               <SelectTrigger className={cn("w-44", FILTER_SELECT_TRIGGER)}>
                 <SelectValue />
               </SelectTrigger>
@@ -132,13 +145,13 @@ export default function OffersPage() {
       }
     >
       <div className="flex flex-1 min-h-0 flex-col">
-        {!offers?.length ? (
+        {offers.length === 0 && statusFilter === "ALL" ? (
           <RecruitmentEmptyState
             illustration={<EmptyDocumentsIllustration />}
             title="No offers yet"
             description="Offers created from a candidate's profile will appear here."
           />
-        ) : filtered.length === 0 ? (
+        ) : offers.length === 0 ? (
           <RecruitmentEmptyState
             illustration={<EmptyDocumentsIllustration />}
             title="No offers match this filter"
@@ -146,7 +159,16 @@ export default function OffersPage() {
           />
         ) : (
           <div className="flex flex-1 min-h-0 flex-col gap-3">
-            {filtered.map((offer) => <OfferRow key={offer.id} offer={offer} />)}
+            {offers.map((offer) => <OfferRow key={offer.id} offer={offer} />)}
+            {totalPages > 1 && (
+              <DataTablePagination
+                page={page}
+                totalPages={totalPages}
+                total={total}
+                limit={PAGE_SIZE}
+                onPageChange={setPage}
+              />
+            )}
           </div>
         )}
       </div>

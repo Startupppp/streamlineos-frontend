@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -102,15 +102,15 @@ export function PositionsTable() {
       header: "",
       cell: (row) =>
         canManage ? (
-          <Button
+          <LoadingButton
             variant="ghost"
             size="sm"
             className="text-destructive hover:text-destructive"
             onClick={() => handleDelete(row.id)}
-            disabled={deletePosition.isPending}
+            isPending={deletePosition.isPending}
           >
             Delete
-          </Button>
+          </LoadingButton>
         ) : null,
     },
   ];

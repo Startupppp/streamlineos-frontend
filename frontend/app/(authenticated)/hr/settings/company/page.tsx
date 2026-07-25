@@ -17,8 +17,8 @@ const LINKS = [
   },
   {
     title: "Work Week & Shifts",
-    description: "Define working days and hours via shift roster policies",
-    href: "/hr/settings/policies",
+    description: "Define shifts, rotations, and weekly-off rosters",
+    href: "/hr/shifts",
   },
 ] as const;
 

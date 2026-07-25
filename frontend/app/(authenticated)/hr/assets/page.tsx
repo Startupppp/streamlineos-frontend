@@ -12,13 +12,12 @@ import {
   Wrench,
   Plus,
   Pencil,
-  Trash2,
-  UserPlus,
-  UserMinus,
   Download,
 } from "lucide-react";
+import { Trash2Icon, UserPlusIcon, UserMinusIcon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -44,14 +43,16 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useQueryClient } from "@tanstack/react-query";
 import {
-  useHrAssets,
+  useHrAssetList,
   useCreateAsset,
   useUpdateAsset,
   useAssignAsset,
   useHrEmployees,
   unwrapEmployees,
 } from "@/hooks/api";
+import { fetchAllAssetsForExport, hrAssetListPrefix } from "@/hooks/api/hr/assets";
 import { AccessRequestsTab } from "@/features/hr/assets/access-requests-tab";
 import { useCan } from "@/hooks/api/access";
 import { Card, CardContent } from "@/components/ui/card";
@@ -259,33 +260,30 @@ function ASSET_COLUMNS(
       className: "text-right",
       cell: (asset: Asset) => (
         <div className="flex items-center justify-end gap-1">
-          <Button
+          <TooltipIconButton
+            icon={asset.assignedTo ? UserMinusIcon : UserPlusIcon}
+            iconSize={14}
             variant="ghost"
-            size="icon"
             className="w-7"
-            title={asset.assignedTo ? "Reassign / Unassign" : "Assign Employee"}
+            label={asset.assignedTo ? "Reassign / Unassign" : "Assign Employee"}
             onClick={(e) => { e.stopPropagation(); onAssign(asset); }}
-          >
-            {asset.assignedTo ? <UserMinus className="h-3.5 w-3.5" /> : <UserPlus className="h-3.5 w-3.5" />}
-          </Button>
-          <Button
+          />
+          <TooltipIconButton
             variant="ghost"
-            size="icon"
             className="w-7"
-            title="Edit asset"
+            label="Edit asset"
             onClick={(e) => { e.stopPropagation(); onEdit(asset); }}
           >
             <Pencil className="h-3.5 w-3.5" />
-          </Button>
-          <Button
+          </TooltipIconButton>
+          <TooltipIconButton
+            icon={Trash2Icon}
+            iconSize={14}
             variant="ghost"
-            size="icon"
             className="w-7 text-destructive hover:text-destructive"
-            title="Retire asset"
+            label="Retire asset"
             onClick={(e) => { e.stopPropagation(); onRetire(asset.id); }}
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
+          />
         </div>
       ),
     }] as DataTableColumn<Asset>[] : []),
@@ -504,10 +502,13 @@ function AssetForm({
   );
 }
 
+const PAGE_SIZE = 20;
+
 export default function HrAssetsPage() {
   const [statusFilter, setStatusFilter] = useState<string | undefined>();
   const [categoryFilter, setCategoryFilter] = useState<string | undefined>();
   const [assignmentFilter, setAssignmentFilter] = useState<string | undefined>();
+  const [page, setPage] = useState(1);
   const [addOpen, setAddOpen] = useState(false);
   const [editAsset, setEditAsset] = useState<Asset | null>(null);
   const [deleteAssetId, setDeleteAssetId] = useState<number | null>(null);
@@ -517,11 +518,16 @@ export default function HrAssetsPage() {
   const [assignEmpId, setAssignEmpId] = useState("");
   const [assignPending, setAssignPending] = useState(false);
 
+  const qc = useQueryClient();
   const createAsset = useCreateAsset();
   const updateAsset = useUpdateAsset();
   const assignAsset = useAssignAsset();
   const canManageAssets = useCan("hr:assets:manage");
-  const { data, isLoading, isError, refetch } = useHrAssets();
+  const { data, isLoading, isError, refetch } = useHrAssetList({
+    page,
+    limit: PAGE_SIZE,
+    status: statusFilter,
+  });
   const { data: employeesRaw } = useHrEmployees(undefined);
 
   const employees = useMemo(
@@ -530,26 +536,21 @@ export default function HrAssetsPage() {
   );
   const employeeOptions = buildEmployeeOptions(employees);
 
-  const items = useMemo<Asset[]>(() => (Array.isArray(data) ? data : []), [data]);
+  const invalidateAssetList = useCallback(() => {
+    void qc.invalidateQueries({ queryKey: hrAssetListPrefix });
+  }, [qc]);
+
+  const items = useMemo<Asset[]>(() => data?.data ?? [], [data]);
   const filteredItems = useMemo(() => {
     let result = items;
-    if (statusFilter) result = result.filter((a) => a.status === statusFilter);
     if (categoryFilter) result = result.filter((a) => a.type === categoryFilter);
     if (assignmentFilter === "assigned") result = result.filter((a) => !!a.assignedTo);
     if (assignmentFilter === "unassigned") result = result.filter((a) => !a.assignedTo);
     return result;
-  }, [items, statusFilter, categoryFilter, assignmentFilter]);
+  }, [items, categoryFilter, assignmentFilter]);
 
-  const counts = items.reduce(
-    (acc, a) => {
-      if (a.status === "AVAILABLE") acc.available++;
-      else if (a.status === "ASSIGNED") acc.assigned++;
-      else if (a.status === "MAINTENANCE") acc.maintenance++;
-      acc.total++;
-      return acc;
-    },
-    { total: 0, available: 0, assigned: 0, maintenance: 0 },
-  );
+  const total = data?.pagination.total ?? 0;
+  const counts = data?.counts ?? { total: 0, available: 0, assigned: 0, maintenance: 0, retired: 0 };
 
   const addForm = useForm<AssetFormValues>({
     resolver: zodResolver(assetFormSchema),
@@ -604,6 +605,7 @@ export default function HrAssetsPage() {
         {
           onSuccess: () => {
             toast.success("Asset registered successfully");
+            invalidateAssetList();
             setAddOpen(false);
             addForm.reset();
           },
@@ -611,7 +613,7 @@ export default function HrAssetsPage() {
         },
       );
     },
-    [createAsset, addForm],
+    [createAsset, addForm, invalidateAssetList],
   );
 
   const handleOpenEdit = useCallback(
@@ -656,13 +658,14 @@ export default function HrAssetsPage() {
         {
           onSuccess: () => {
             toast.success("Asset updated");
+            invalidateAssetList();
             setEditAsset(null);
           },
           onError: (e) => toast.error(getErrorMessage(e)),
         },
       );
     },
-    [editAsset, updateAsset],
+    [editAsset, updateAsset, invalidateAssetList],
   );
 
   const handleOpenAssign = useCallback((asset: Asset) => {
@@ -691,6 +694,7 @@ export default function HrAssetsPage() {
           toast.success(
             assignEmpId ? "Asset assigned to employee" : "Asset unassigned",
           );
+          invalidateAssetList();
           setAssignDialog(null);
           setAssignEmpId("");
         },
@@ -698,7 +702,7 @@ export default function HrAssetsPage() {
         onSettled: () => setAssignPending(false),
       },
     );
-  }, [assignDialog, assignEmpId, assignAsset]);
+  }, [assignDialog, assignEmpId, assignAsset, invalidateAssetList]);
 
   const handleUnassign = useCallback(() => {
     if (!assignDialog) return;
@@ -708,6 +712,7 @@ export default function HrAssetsPage() {
       {
         onSuccess: () => {
           toast.success("Asset unassigned");
+          invalidateAssetList();
           setAssignDialog(null);
           setAssignEmpId("");
         },
@@ -715,7 +720,7 @@ export default function HrAssetsPage() {
         onSettled: () => setAssignPending(false),
       },
     );
-  }, [assignDialog, assignAsset]);
+  }, [assignDialog, assignAsset, invalidateAssetList]);
 
   const handleConfirmDelete = useCallback(() => {
     if (deleteAssetId === null) return;
@@ -724,12 +729,13 @@ export default function HrAssetsPage() {
       {
         onSuccess: () => {
           toast.success("Asset retired");
+          invalidateAssetList();
           setDeleteAssetId(null);
         },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [deleteAssetId, updateAsset]);
+  }, [deleteAssetId, updateAsset, invalidateAssetList]);
 
   const handleCloseDelete = useCallback((open: boolean) => {
     if (!open) setDeleteAssetId(null);
@@ -743,7 +749,14 @@ export default function HrAssetsPage() {
   const handleExport = useCallback(async () => {
     try {
       const { downloadXlsx } = await import("@/lib/export/xlsx-utils");
-      const exportRows = filteredItems.map((a) => {
+      const allAssets = await fetchAllAssetsForExport({ status: statusFilter });
+      const exportItems = allAssets.filter((a) => {
+        if (categoryFilter && a.type !== categoryFilter) return false;
+        if (assignmentFilter === "assigned" && !a.assignedTo) return false;
+        if (assignmentFilter === "unassigned" && a.assignedTo) return false;
+        return true;
+      });
+      const exportRows = exportItems.map((a) => {
         const emp = employees.find((e) => e.id === a.assignedTo) ?? null;
         return {
           name: a.name,
@@ -789,17 +802,18 @@ export default function HrAssetsPage() {
         },
       ]);
       toast.success(
-        filteredItems.length < items.length
-          ? `Exported ${filteredItems.length} filtered assets`
+        statusFilter || categoryFilter || assignmentFilter
+          ? `Exported ${exportItems.length} filtered assets`
           : "Assets exported",
       );
     } catch {
       toast.error("Export failed");
     }
-  }, [filteredItems, items.length, employees, statusFilter, categoryFilter, assignmentFilter]);
+  }, [employees, statusFilter, categoryFilter, assignmentFilter]);
 
   const handleStatusFilterChange = useCallback((v: string) => {
     setStatusFilter(v === "all" ? undefined : v);
+    setPage(1);
   }, []);
 
   const handleCategoryFilterChange = useCallback((v: string) => {
@@ -824,10 +838,14 @@ export default function HrAssetsPage() {
             className="gap-1.5"
             onClick={handleExport}
             disabled={!filteredItems.length}
-            title={filteredItems.length < items.length ? `Export ${filteredItems.length} filtered assets` : "Export all assets"}
+            title={
+              statusFilter || categoryFilter || assignmentFilter
+                ? "Export filtered assets"
+                : "Export all assets"
+            }
           >
             <Download className="h-3.5 w-3.5" />
-            Export{filteredItems.length < items.length ? ` (${filteredItems.length})` : ""}
+            Export
           </Button>
           <Button size="sm" className="gap-1.5" onClick={handleOpenAdd}>
             <Plus className="h-3.5 w-3.5" />
@@ -925,6 +943,13 @@ export default function HrAssetsPage() {
             columns={ASSET_COLUMNS(employees, handleOpenAssign, handleOpenEdit, handleSetDeleteId, canManageAssets)}
             getRowKey={(row) => row.id}
             isLoading={isLoading}
+            pagination={{
+              mode: "server",
+              page,
+              pageSize: PAGE_SIZE,
+              total,
+              onPageChange: setPage,
+            }}
             minWidth="900px"
             emptyState={
               <div className="flex flex-1 min-h-0 w-full flex-col items-center justify-center gap-4 rounded-xl border border-dashed border-border bg-card py-14 px-6 text-center">

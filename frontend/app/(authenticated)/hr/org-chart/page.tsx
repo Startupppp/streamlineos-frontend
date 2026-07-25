@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { ViewToggle, type ViewOption } from "@/components/ui/view-toggle";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { Users, Network, Building2, Download } from "lucide-react";
 import type { OrgChartNode } from "@/types/hr";
@@ -167,6 +168,11 @@ const LEGEND_ITEMS = [
 
 type OrgView = "tree" | "departments";
 
+const ORG_VIEW_OPTIONS: ViewOption<OrgView>[] = [
+  { value: "tree", icon: Network, label: "Hierarchy" },
+  { value: "departments", icon: Building2, label: "Departments" },
+];
+
 export default function OrgChartPage() {
   const { data: rawNodes, isLoading } = useHrOrgChart();
   const [view, setView] = useState<OrgView>("tree");
@@ -217,9 +223,6 @@ export default function OrgChartPage() {
 
   const handleSearchChange = useCallback((value: string) => setSearch(value), []);
 
-  const handleViewTree = useCallback(() => setView("tree"), []);
-  const handleViewDepartments = useCallback(() => setView("departments"), []);
-
   const handleExport = useCallback(async () => {
     try {
       const { downloadXlsx } = await import("@/lib/export/xlsx-utils");
@@ -269,28 +272,7 @@ export default function OrgChartPage() {
           <div className="min-w-0 w-48">
           <SearchInput placeholder="Search members…" value={search} onValueChange={handleSearchChange} />
         </div>
-          <div className="flex items-center gap-1 rounded-lg border p-1">
-            <button
-              onClick={handleViewTree}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md transition-colors duration-200",
-                view === "tree" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              <Network className="h-3 w-3" />
-              Hierarchy
-            </button>
-            <button
-              onClick={handleViewDepartments}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md transition-colors duration-200",
-                view === "departments" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              <Building2 className="h-3 w-3" />
-              Departments
-            </button>
-          </div>
+          <ViewToggle value={view} options={ORG_VIEW_OPTIONS} onChange={setView} showLabel />
         </div>
       }
     >

@@ -21,10 +21,9 @@ import type { PublishResult } from "@/types/payroll";
 interface Props {
   runId: number;
   status: string;
-  onChanged?: () => void;
 }
 
-export function PublishPayslipsAction({ runId, status, onChanged }: Props) {
+export function PublishPayslipsAction({ runId, status }: Props) {
   const canManage = useCan("payroll:payslips:manage");
   const [open, setOpen] = useState(false);
   const { mutate, isPending } = usePublishPayslips();
@@ -50,7 +49,6 @@ export function PublishPayslipsAction({ runId, status, onChanged }: Props) {
           if (data.runStatus === "PAYSLIPS_PUBLISHED") {
             toast.success("Run status updated to Payslips Published");
           }
-          onChanged?.();
         },
         onError: (err) => {
           toast.error(getErrorMessage(err));

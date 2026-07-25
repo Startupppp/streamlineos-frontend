@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { LockOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { LockIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Textarea } from "@/components/ui/textarea";
@@ -24,10 +25,9 @@ import { getErrorMessage } from "@/lib/get-error-message";
 interface Props {
   runId: number;
   status: string;
-  onChanged?: () => void;
 }
 
-function LockButton({ runId, onChanged }: { runId: number; onChanged?: () => void }) {
+function LockButton({ runId }: { runId: number }) {
   const canManage = useCan("payroll:runs:manage");
   const [open, setOpen] = useState(false);
   const { mutate, isPending } = useLockRun();
@@ -40,7 +40,7 @@ function LockButton({ runId, onChanged }: { runId: number; onChanged?: () => voi
     mutate(
       { runId },
       {
-        onSuccess: () => { setOpen(false); toast.success("Payroll locked"); onChanged?.(); },
+        onSuccess: () => { setOpen(false); toast.success("Payroll locked"); },
         onError: (err) => { toast.error(getErrorMessage(err)); },
       },
     );
@@ -62,8 +62,10 @@ function LockButton({ runId, onChanged }: { runId: number; onChanged?: () => voi
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirm} disabled={isPending}>
-              {isPending ? "Locking…" : "Lock"}
+            <AlertDialogAction asChild>
+              <LoadingButton onClick={handleConfirm} isPending={isPending} loadingText="Locking…">
+                Lock
+              </LoadingButton>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -72,7 +74,7 @@ function LockButton({ runId, onChanged }: { runId: number; onChanged?: () => voi
   );
 }
 
-function ReopenButton({ runId, onChanged }: { runId: number; onChanged?: () => void }) {
+function ReopenButton({ runId }: { runId: number }) {
   const canManage = useCan("payroll:runs:manage");
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
@@ -88,7 +90,7 @@ function ReopenButton({ runId, onChanged }: { runId: number; onChanged?: () => v
     mutate(
       { runId, reason: reason.trim() },
       {
-        onSuccess: () => { setOpen(false); setReason(""); toast.success("Run reopened"); onChanged?.(); },
+        onSuccess: () => { setOpen(false); setReason(""); toast.success("Run reopened"); },
         onError: (err) => { toast.error(getErrorMessage(err)); },
       },
     );
@@ -101,7 +103,7 @@ function ReopenButton({ runId, onChanged }: { runId: number; onChanged?: () => v
   return (
     <>
       <Button size="sm" variant="outline" className="h-9" onClick={handleOpen}>
-        <LockOpen className="mr-2 h-4 w-4" /> Reopen Run
+        <LockOpen className="mr-1.5 h-4 w-4" /> Reopen Run
       </Button>
       <AlertDialog open={open} onOpenChange={handleOpenChange}>
         <AlertDialogContent>
@@ -120,8 +122,15 @@ function ReopenButton({ runId, onChanged }: { runId: number; onChanged?: () => v
           />
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirm} disabled={isPending || !reason.trim()}>
-              {isPending ? "Reopening…" : "Reopen"}
+            <AlertDialogAction asChild>
+              <LoadingButton
+                onClick={handleConfirm}
+                isPending={isPending}
+                disabled={!reason.trim()}
+                loadingText="Reopening…"
+              >
+                Reopen
+              </LoadingButton>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -130,7 +139,7 @@ function ReopenButton({ runId, onChanged }: { runId: number; onChanged?: () => v
   );
 }
 
-function CloseButton({ runId, onChanged }: { runId: number; onChanged?: () => void }) {
+function CloseButton({ runId }: { runId: number }) {
   const canManage = useCan("payroll:runs:manage");
   const [open, setOpen] = useState(false);
   const { mutate, isPending } = useCloseRun();
@@ -143,7 +152,7 @@ function CloseButton({ runId, onChanged }: { runId: number; onChanged?: () => vo
     mutate(
       { runId },
       {
-        onSuccess: () => { setOpen(false); toast.success("Run closed"); onChanged?.(); },
+        onSuccess: () => { setOpen(false); toast.success("Run closed"); },
         onError: (err) => { toast.error(getErrorMessage(err)); },
       },
     );
@@ -164,8 +173,10 @@ function CloseButton({ runId, onChanged }: { runId: number; onChanged?: () => vo
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirm} disabled={isPending}>
-              {isPending ? "Closing…" : "Close Run"}
+            <AlertDialogAction asChild>
+              <LoadingButton onClick={handleConfirm} isPending={isPending} loadingText="Closing…">
+                Close Run
+              </LoadingButton>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -174,9 +185,9 @@ function CloseButton({ runId, onChanged }: { runId: number; onChanged?: () => vo
   );
 }
 
-export function LockActions({ runId, status, onChanged }: Props) {
-  if (status === "APPROVED") return <LockButton runId={runId} onChanged={onChanged} />;
-  if (status === "LOCKED") return <ReopenButton runId={runId} onChanged={onChanged} />;
-  if (status === "PAYSLIPS_PUBLISHED") return <CloseButton runId={runId} onChanged={onChanged} />;
+export function LockActions({ runId, status }: Props) {
+  if (status === "APPROVED") return <LockButton runId={runId} />;
+  if (status === "LOCKED") return <ReopenButton runId={runId} />;
+  if (status === "PAYSLIPS_PUBLISHED") return <CloseButton runId={runId} />;
   return null;
 }

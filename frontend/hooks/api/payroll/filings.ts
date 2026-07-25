@@ -1,0 +1,129 @@
+"use client";
+
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api-client";
+
+export type FilingType = "PF_ECR" | "ESI" | "PT" | "TDS_24Q" | "FORM16" | "LWF";
+
+export type FilingStatus =
+  | "DRAFT"
+  | "EXPORT_PREPARED"
+  | "SUBMITTED"
+  | "ACKNOWLEDGED"
+  | "RECONCILED"
+  | "FAILED";
+
+export interface PayrollFiling {
+  id: number;
+  orgId: string;
+  entityId: number | null;
+  periodId: number | null;
+  fiscalYear: string | null;
+  filingType: FilingType;
+  ruleVersion: string | null;
+  status: FilingStatus;
+  statusLabel: string | null;
+  challanRef: string | null;
+  acknowledgementRef: string | null;
+  createdAt: string;
+  exportSummary?: FilingExportSummary;
+}
+
+export interface FilingExportSummary {
+  rowCount: number;
+  totals: Record<string, string>;
+  missingIdentifiers: string[];
+  notes: string[];
+  periodMonth: string | null;
+  runId: number | null;
+  ruleBundleVersion: string;
+  entityId?: number | null;
+}
+
+/** Backend honesty contract — filings are export-only until a provider is connected. */
+export interface FilingCapability {
+  mode: "export_only";
+  automaticFiling: boolean;
+  automaticRemittance: boolean;
+  providerDependent: boolean;
+  honestyLabel: string;
+  supportedTypes: FilingType[];
+  note: string;
+  ruleBundleVersion?: string;
+  ruleEffectiveFrom?: string;
+  artifactFormat?: "csv";
+  formLabels?: { quarterlyReturn: string; annualCertificate: string };
+}
+
+export const filingsKeys = {
+  all: ["payroll", "filings"] as const,
+  capabilities: ["payroll", "filings", "capabilities"] as const,
+};
+
+export function usePayrollFilings() {
+  return useQuery({
+    queryKey: filingsKeys.all,
+    queryFn: () => apiClient.get<PayrollFiling[]>("/payroll/filings"),
+    staleTime: 60_000,
+  });
+}
+
+export function useFilingCapabilities() {
+  return useQuery({
+    queryKey: filingsKeys.capabilities,
+    queryFn: () => apiClient.get<FilingCapability>("/payroll/filings/capabilities"),
+    staleTime: 5 * 60_000,
+  });
+}
+
+export function usePrepareFilingExport() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["payroll", "filings", "export"],
+    mutationFn: (body: {
+      filingType: FilingType;
+      fiscalYear?: string;
+      month?: string;
+      runId?: number;
+      entityId?: number;
+    }) => apiClient.post<PayrollFiling>("/payroll/filings/export", body),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: filingsKeys.all });
+    },
+  });
+}
+
+export function useAttachAcknowledgement() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["payroll", "filings", "acknowledgement"],
+    mutationFn: ({
+      filingId,
+      challanRef,
+      acknowledgementRef,
+    }: {
+      filingId: number;
+      challanRef?: string;
+      acknowledgementRef?: string;
+    }) =>
+      apiClient.patch<PayrollFiling>(
+        `/payroll/filings/${filingId}/acknowledgement`,
+        { challanRef, acknowledgementRef },
+      ),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: filingsKeys.all });
+    },
+  });
+}
+
+export async function downloadFilingExport(filingId: number): Promise<void> {
+  const blob = await apiClient.download(`/payroll/filings/${filingId}/export`);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `filing_${filingId}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}

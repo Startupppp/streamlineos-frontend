@@ -1,4 +1,10 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render as rtlRender, screen, fireEvent } from "@testing-library/react";
+import type { ReactElement } from "react";
+import { TooltipProvider } from "@/components/ui/tooltip";
+
+function render(ui: ReactElement) {
+  return rtlRender(<TooltipProvider>{ui}</TooltipProvider>);
+}
 import { HrSetupClient } from "../hr-setup-client";
 import { useCan } from "@/hooks/api/access";
 import {
@@ -6,6 +12,7 @@ import {
   useSkipChecklistItem,
   useRestartModuleChecklist,
   useDismissTour,
+  useDismissModuleChecklist,
   useSaveTourProgress,
 } from "@/hooks/api/onboarding-flow";
 
@@ -15,6 +22,7 @@ jest.mock("@/hooks/api/onboarding-flow", () => ({
   useSkipChecklistItem: jest.fn(),
   useRestartModuleChecklist: jest.fn(),
   useDismissTour: jest.fn(),
+  useDismissModuleChecklist: jest.fn(),
   useSaveTourProgress: jest.fn(),
 }));
 
@@ -39,6 +47,7 @@ describe("HrSetupClient", () => {
     (useSkipChecklistItem as jest.Mock).mockReturnValue(pendingMutation());
     (useRestartModuleChecklist as jest.Mock).mockReturnValue(pendingMutation());
     (useDismissTour as jest.Mock).mockReturnValue(pendingMutation());
+    (useDismissModuleChecklist as jest.Mock).mockReturnValue(pendingMutation());
     (useSaveTourProgress as jest.Mock).mockReturnValue(pendingMutation());
   });
 

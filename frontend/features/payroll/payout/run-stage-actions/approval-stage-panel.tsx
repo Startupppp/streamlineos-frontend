@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -22,7 +23,6 @@ import type { PayrollApprovalRow } from "@/types/payroll";
 interface Props {
   runId: number;
   status: string;
-  onChanged?: () => void;
 }
 
 const VISIBLE_STATUSES = new Set([
@@ -50,20 +50,26 @@ interface StageRowProps {
   canAct: boolean;
   isActive: boolean;
   runId: number;
-  onChanged?: () => void;
 }
 
-function StageRow({ row, canAct, isActive, runId, onChanged }: StageRowProps) {
+function StageRow({ row, canAct, isActive, runId }: StageRowProps) {
   const [rejectOpen, setRejectOpen] = useState(false);
+  const [approveOpen, setApproveOpen] = useState(false);
   const [comment, setComment] = useState("");
   const { mutate: approve, isPending: approvePending } = useApproveStage();
   const { mutate: reject, isPending: rejectPending } = useRejectStage();
 
-  function handleApprove() {
+  function handleApproveOpen() { setApproveOpen(true); }
+  function handleApproveCancel() { setApproveOpen(false); }
+
+  function handleApproveConfirm() {
     approve(
       { runId, approvalId: row.id },
       {
-        onSuccess: () => { toast.success("Stage approved"); onChanged?.(); },
+        onSuccess: () => {
+          setApproveOpen(false);
+          toast.success("Stage approved");
+        },
         onError: (err) => { toast.error(getErrorMessage(err)); },
       },
     );
@@ -77,7 +83,7 @@ function StageRow({ row, canAct, isActive, runId, onChanged }: StageRowProps) {
     reject(
       { runId, approvalId: row.id, comment: comment.trim() },
       {
-        onSuccess: () => { setRejectOpen(false); setComment(""); toast.success("Stage rejected"); onChanged?.(); },
+        onSuccess: () => { setRejectOpen(false); setComment(""); toast.success("Stage rejected"); },
         onError: (err) => { toast.error(getErrorMessage(err)); },
       },
     );
@@ -110,7 +116,7 @@ function StageRow({ row, canAct, isActive, runId, onChanged }: StageRowProps) {
 
       {isActive && canAct && row.isCurrentUserApprover !== false && (
         <div className="flex gap-2 pl-9 pt-1">
-          <Button size="sm" variant="outline" className="" onClick={handleApprove} disabled={approvePending}>
+          <Button size="sm" variant="outline" className="" onClick={handleApproveOpen} disabled={approvePending}>
             <CheckCircle2 className="mr-1 h-3.5 w-3.5" /> Approve
           </Button>
           <Button size="sm" variant="outline" className="text-destructive border-destructive/40 hover:bg-destructive/10" onClick={handleRejectOpen} disabled={rejectPending}>
@@ -123,6 +129,23 @@ function StageRow({ row, canAct, isActive, runId, onChanged }: StageRowProps) {
           Waiting on{row.approverName ? ` ${row.approverName}` : " approver"} to act
         </p>
       )}
+
+      <Dialog open={approveOpen} onOpenChange={setApproveOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Approve Stage?</DialogTitle>
+            <DialogDescription>
+              Confirm approval of &quot;{row.stageName}&quot;. This advances the payroll approval chain.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleApproveCancel} disabled={approvePending}>Cancel</Button>
+            <LoadingButton onClick={handleApproveConfirm} isPending={approvePending} loadingText="Approving…">
+              Approve
+            </LoadingButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>
         <DialogContent>
@@ -138,9 +161,15 @@ function StageRow({ row, canAct, isActive, runId, onChanged }: StageRowProps) {
           />
           <DialogFooter>
             <Button variant="outline" onClick={handleRejectCancel} disabled={rejectPending}>Cancel</Button>
-            <Button variant="destructive" onClick={handleRejectConfirm} disabled={rejectPending || !comment.trim()}>
-              {rejectPending ? "Rejecting…" : "Reject"}
-            </Button>
+            <LoadingButton
+              variant="destructive"
+              onClick={handleRejectConfirm}
+              isPending={rejectPending}
+              disabled={!comment.trim()}
+              loadingText="Rejecting…"
+            >
+              Reject
+            </LoadingButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -148,13 +177,13 @@ function StageRow({ row, canAct, isActive, runId, onChanged }: StageRowProps) {
   );
 }
 
-export function ApprovalStagePanel({ runId, status, onChanged }: Props) {
+export function ApprovalStagePanel({ runId, status }: Props) {
   const canView = useCan("payroll:runs:view");
   const canApprove = useCan("payroll:runs:approve");
-  const { data, isLoading } = useRunApprovals(runId);
+  const visible = VISIBLE_STATUSES.has(status) && canView;
+  const { data, isLoading } = useRunApprovals(runId, { enabled: visible });
 
-  if (!VISIBLE_STATUSES.has(status)) return null;
-  if (!canView) return null;
+  if (!visible) return null;
 
   return (
     <div className="bg-card border border-border rounded-xl p-4 space-y-3">
@@ -179,7 +208,6 @@ export function ApprovalStagePanel({ runId, status, onChanged }: Props) {
           canAct={canApprove}
           isActive={row.status === "PENDING" && status === "PENDING_APPROVAL"}
           runId={runId}
-          onChanged={onChanged}
         />
       ))}
     </div>

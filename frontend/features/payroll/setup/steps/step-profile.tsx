@@ -21,12 +21,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
+import { FilterPill, FilterPillGroup } from "@/components/ui/filter-pill";
 import { MonthPicker } from "@/features/payroll/shared";
 import { NavButtons } from "@/features/payroll/setup/nav-buttons";
 import { useCreatePolicy, useUpdatePolicy } from "@/hooks/api/payroll";
 import { CURRENCIES, PAY_FREQUENCIES } from "@/features/payroll/setup/lib/constants";
 import type { SetupDraft } from "@/features/payroll/setup/lib/draft";
-import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -244,24 +244,17 @@ export function StepProfile({ draft, updateDraft, goNext }: StepProfileProps) {
               <FormItem>
                 <FormLabel>Pay Frequency</FormLabel>
                 <FormControl>
-                  <div className="flex rounded-md border border-border overflow-hidden">
-                    {PAY_FREQUENCIES.map(({ value, label }, idx) => (
-                      <button
+                  <FilterPillGroup>
+                    {PAY_FREQUENCIES.map(({ value, label }) => (
+                      <FilterPill
                         key={value}
-                        type="button"
+                        active={watchFrequency === value}
                         onClick={() => handleFrequencyClick(value)}
-                        className={cn(
-                          "flex-1 py-1.5 text-xs font-medium transition-colors",
-                          idx > 0 && "border-l border-border",
-                          watchFrequency === value
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-card text-foreground hover:bg-muted",
-                        )}
                       >
                         {label}
-                      </button>
+                      </FilterPill>
                     ))}
-                  </div>
+                  </FilterPillGroup>
                 </FormControl>
                 <FormMessage />
               </FormItem>

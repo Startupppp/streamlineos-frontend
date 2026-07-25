@@ -135,6 +135,20 @@ export function FnfTable() {
         isLoading={isLoading}
         minWidth="600px"
         pagination={{ pageSize: 20 }}
+        mobileCard={(row) => (
+          <div className="space-y-1.5">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-sm font-medium truncate">{row.userName}</p>
+                <p className="text-[11px] text-muted-foreground truncate">{row.userEmail}</p>
+              </div>
+              <FnfStatusBadge status={row.status} />
+            </div>
+            <p className="font-mono tabular-nums text-sm font-medium">
+              {formatMoney(row.netPayable)}
+            </p>
+          </div>
+        )}
         emptyState={
           <EmptyState
             illustration={<EmptyExpensesIllustration />}

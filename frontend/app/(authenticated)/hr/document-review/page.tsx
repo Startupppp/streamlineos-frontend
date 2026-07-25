@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useCallback } from "react";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { ErrorState } from "@/components/shared/error-state";
 
 import { cn } from "@/lib/utils";
@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { SearchInput } from "@/components/ui/search-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 
 import { ReviewTable, type EmployeeDocSummary } from "@/features/hr/document-review/review-table";
 import { ReviewSheet } from "@/features/hr/document-review/review-sheet";
@@ -18,42 +19,50 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 
-function useDocReviewSummary() {
-  return useQuery<EmployeeDocSummary[]>({
-    queryKey: queryKeys.hr.onboardingDocsSummary(),
-    queryFn: () => apiClient.get<EmployeeDocSummary[]>("/hr/onboarding-docs/summary"),
+const PAGE_SIZE = 20;
+
+interface DocReviewSummaryResponse {
+  data: EmployeeDocSummary[];
+  pagination: { page: number; limit: number; total: number; totalPages: number };
+}
+
+function useDocReviewSummary(page: number, search: string, status: string) {
+  const params: Record<string, unknown> = { page, limit: PAGE_SIZE };
+  if (search.trim()) params.search = search.trim();
+  if (status !== "ALL") params.status = status;
+  return useQuery<DocReviewSummaryResponse>({
+    queryKey: queryKeys.hr.onboardingDocsSummary(params),
+    queryFn: () => apiClient.get<DocReviewSummaryResponse>("/hr/onboarding-docs/summary", params),
+    placeholderData: keepPreviousData,
+    staleTime: 30_000,
   });
 }
 
 export default function DocumentReviewPage() {
   const canReview = useCan("hr:employees:manage");
-  const { data: summary, isLoading, isError, refetch } = useDocReviewSummary();
 
   const [reviewUserId, setReviewUserId] = useState<string | null>(null);
   const [reviewUserName, setReviewUserName] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [page, setPage] = useState(1);
 
-  const filteredList = useMemo(() => {
-    let list = summary ?? [];
-    if (searchQuery.trim()) {
-      const q = searchQuery.trim().toLowerCase();
-      list = list.filter(
-        (e) =>
-          (e.userName ?? "").toLowerCase().includes(q) ||
-          (e.designation ?? "").toLowerCase().includes(q)
-      );
-    }
-    if (statusFilter !== "ALL") {
-      list = list.filter((e) => (e.onboardingDocStatus ?? "PENDING") === statusFilter);
-    }
-    return list;
-  }, [summary, searchQuery, statusFilter]);
+  const debouncedSearch = useDebouncedValue(searchQuery, 300);
+  const { data, isLoading, isError, refetch } = useDocReviewSummary(page, debouncedSearch, statusFilter);
+
+  const list = data?.data ?? [];
+  const total = data?.pagination.total ?? 0;
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   const handleSearchChange = useCallback((value: string) => {
     setSearchQuery(value);
+    setPage(1);
+  }, []);
+
+  const handleStatusChange = useCallback((value: string) => {
+    setStatusFilter(value);
+    setPage(1);
   }, []);
 
   const handleOpenReview = useCallback((emp: EmployeeDocSummary) => {
@@ -82,8 +91,6 @@ export default function DocumentReviewPage() {
     );
   }
 
-  const list = summary ?? [];
-
   return (
     <PageWrapper
       title="Document Review"
@@ -91,7 +98,7 @@ export default function DocumentReviewPage() {
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
           <SearchInput placeholder="Search employees..." value={searchQuery} onValueChange={handleSearchChange} className="w-[200px]" />
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <Select value={statusFilter} onValueChange={handleStatusChange}>
             <SelectTrigger className={cn("w-[140px]", FILTER_SELECT_TRIGGER)}>
               <SelectValue />
             </SelectTrigger>
@@ -107,7 +114,12 @@ export default function DocumentReviewPage() {
       }
     >
       <div className="flex flex-1 min-h-0 flex-col">
-        <ReviewTable list={filteredList} canReview={canReview} onOpenReview={handleOpenReview} />
+        <ReviewTable
+          list={list}
+          canReview={canReview}
+          onOpenReview={handleOpenReview}
+          pagination={{ page, pageSize: PAGE_SIZE, total, onPageChange: setPage }}
+        />
       </div>
 
       <ReviewSheet
