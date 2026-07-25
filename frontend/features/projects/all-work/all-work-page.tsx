@@ -33,7 +33,7 @@ import { AllWorkListSection } from "./all-work-list-section";
 import { AllWorkTableSection } from "./all-work-table-section";
 import { AllWorkBoardSection } from "./all-work-board-section";
 import { AllWorkViewsMenu } from "./all-work-views-menu";
-import { PaginationFooter } from "./all-work-pagination";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { useAllWorkFilters } from "./use-all-work-filters";
 import { useAllWorkBulk } from "./use-all-work-bulk";
 
@@ -289,9 +289,9 @@ export function AllWorkPage() {
                   </div>
                 </ScrollArea>
 
-                <PaginationFooter
+                <TablePagination
                   page={currentPage}
-                  limit={limit}
+                  pageSize={limit}
                   total={total}
                   onPageChange={handlePageChange}
                 />

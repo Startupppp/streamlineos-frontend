@@ -3,6 +3,7 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type { KbAskCitation } from "@/types/kb";
 
 export interface KbChatHistoryMessage {
@@ -33,6 +34,7 @@ export interface KbConversationListPage {
 const HISTORY_PAGE_SIZE = 30;
 
 export function useKbChatHistory(enabled: boolean) {
+  const canViewPages = useCan("kb:pages:view");
   return useInfiniteQuery({
     queryKey: queryKeys.kb.chatHistory(),
     queryFn: ({ pageParam }) => {
@@ -42,7 +44,7 @@ export function useKbChatHistory(enabled: boolean) {
     },
     initialPageParam: undefined as number | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
-    enabled,
+    enabled: canViewPages && enabled,
     staleTime: 30_000,
   });
 }
@@ -59,6 +61,7 @@ export function useClearKbChatHistory() {
 }
 
 export function useKbConversations(enabled: boolean) {
+  const canViewPages = useCan("kb:pages:view");
   return useInfiniteQuery({
     queryKey: queryKeys.kb.chatConversations(),
     queryFn: ({ pageParam }) => {
@@ -68,7 +71,7 @@ export function useKbConversations(enabled: boolean) {
     },
     initialPageParam: undefined as number | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
-    enabled,
+    enabled: canViewPages && enabled,
     staleTime: 30_000,
   });
 }
@@ -110,6 +113,7 @@ export function useDeleteKbConversation() {
 }
 
 export function useKbConversationMessages(conversationId: number | null, enabled: boolean) {
+  const canViewPages = useCan("kb:pages:view");
   return useInfiniteQuery({
     queryKey: queryKeys.kb.chatConversationMessages(conversationId ?? 0),
     queryFn: ({ pageParam }) => {
@@ -122,7 +126,7 @@ export function useKbConversationMessages(conversationId: number | null, enabled
     },
     initialPageParam: undefined as number | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
-    enabled: enabled && conversationId !== null,
+    enabled: canViewPages && enabled && conversationId !== null,
     staleTime: 30_000,
   });
 }

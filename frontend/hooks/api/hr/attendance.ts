@@ -150,6 +150,7 @@ export function useHrToggleBreak(
 ) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "attendance", "toggle-break"],
     mutationFn: () =>
       apiClient.post<{ success: boolean }>("/hr/attendance/break"),
     onMutate: async () => {
@@ -217,6 +218,7 @@ export function useUpsertWorkLog(
 ) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "work-logs", "upsert"],
     mutationFn: (data: UpsertWorkLogInput) =>
       apiClient.post<WorkLog>("/hr/work-logs", data),
     onSuccess: (...args) => {
@@ -233,6 +235,7 @@ export function useUpdateWorkLogStatus(
 ) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "work-logs", "update-status"],
     mutationFn: (data: UpdateWorkLogStatusInput) =>
       apiClient.patch<WorkLog>("/hr/work-logs/status", data),
     onSuccess: (...args) => {

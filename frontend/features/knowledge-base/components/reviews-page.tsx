@@ -46,17 +46,10 @@ import {
   KbXCircleIcon,
   KbAlertCircleIcon,
 } from "@/features/knowledge-base/lib/kb-icons";
+import { kbFormatDate } from "@/features/knowledge-base/lib/kb-date-utils";
 
 type StatusFilter = "all" | KbReviewStatus;
 type TypeFilter = "all" | KbReviewType;
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
 
 function isOverdue(dueAt: string | null, status: KbReviewStatus): boolean {
   if (!dueAt || status !== "pending") return false;
@@ -323,7 +316,7 @@ export default function ReviewsPage() {
               overdue ? "text-red-600 font-medium" : "text-muted-foreground",
             )}
           >
-            {review.dueAt ? formatDate(review.dueAt) : "—"}
+            {review.dueAt ? kbFormatDate(review.dueAt) : "—"}
             {overdue && " (overdue)"}
           </span>
         );

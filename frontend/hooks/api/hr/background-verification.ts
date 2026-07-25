@@ -34,6 +34,7 @@ export function useBackgroundVerifications() {
 export function useCreateBackgroundVerification() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "background-verification", "create"],
     mutationFn: (data: { userId: string; type: string; provider?: string; referenceNumber?: string; notes?: string }) =>
       apiClient.post<BackgroundVerification>("/hr/background-verification", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: bgvKeys.list() }),
@@ -43,6 +44,7 @@ export function useCreateBackgroundVerification() {
 export function useUpdateBackgroundVerification() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "background-verification", "update"],
     mutationFn: (data: { id: number; status?: string; result?: string; notes?: string }) =>
       apiClient.patch<{ success: boolean }>("/hr/background-verification", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: bgvKeys.list() }),

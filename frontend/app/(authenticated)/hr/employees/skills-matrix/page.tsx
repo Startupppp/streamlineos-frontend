@@ -8,6 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useSkillsMatrix } from "@/hooks/api/hr";
+import { useCan } from "@/hooks/api/access";
 import { getInitials } from "@/lib/format-utils";
 import { EmptyTeamIllustration } from "@/components/illustrations";
 import { LayoutGrid, Table2, AlertCircle } from "lucide-react";
@@ -31,7 +32,10 @@ const LEVEL_LABELS: Record<number, string> = {
 };
 
 export default function SkillsMatrixPage() {
-  const { data, isLoading, isError, refetch } = useSkillsMatrix();
+  const canReadEmployees = useCan("hr:employees:read");
+  const { data, isLoading, isError, refetch } = useSkillsMatrix({
+    enabled: canReadEmployees,
+  });
   const [compact, setCompact] = useState(false);
 
   const toggleCompact = useCallback(() => setCompact((c) => !c), []);

@@ -9,12 +9,12 @@ import { LoadingState } from "@/components/shared/loading-state";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyMailIllustration } from "@/components/illustrations";
 import {
-  useKbArticleFeedback,
+  useSupportKbArticleFeedback,
   type KbArticleDetail,
 } from "@/hooks/api/support/kb";
 
 export function KbFeedbackPanel({ article }: { article: KbArticleDetail }) {
-  const feedbackQuery = useKbArticleFeedback(article.id);
+  const feedbackQuery = useSupportKbArticleFeedback(article.id);
   const feedback = feedbackQuery.data ?? [];
 
   return (

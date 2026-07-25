@@ -30,7 +30,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import {
-  useCreateKbArticle,
+  useCreateSupportKbArticle,
   type KbCategory,
   type KbArticleVisibility,
 } from "@/hooks/api/support/kb";
@@ -46,7 +46,7 @@ export interface KbNewArticleDialogProps {
 
 export function KbNewArticleDialog({ categories, onClose }: KbNewArticleDialogProps) {
   const router = useRouter();
-  const create = useCreateKbArticle();
+  const create = useCreateSupportKbArticle();
 
   const form = useForm<KbArticleFormValues>({
     resolver: zodResolver(kbArticleSchema),

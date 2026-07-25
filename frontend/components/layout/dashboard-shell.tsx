@@ -209,7 +209,7 @@ export function DashboardShell({
 
             <TrialBanner />
 
-            <div className="flex h-[calc(100dvh-var(--shell-banner-offset,0px))] min-h-0 flex-col overflow-hidden">
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
               <GlobalHeader
                 isSidebarCollapsed={isSidebarCollapsed}
                 onToggleSidebar={handleToggleSidebar}
@@ -234,7 +234,7 @@ export function DashboardShell({
                 >
                   <div
                     className={cn(
-                      "flex min-h-0 flex-1 flex-col overflow-auto md:pb-0",
+                      "flex min-h-0 flex-1 flex-col overflow-hidden",
                       getMobileModuleContentPaddingClassName(
                         showModuleBottomNav,
                       ),

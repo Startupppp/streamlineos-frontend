@@ -64,6 +64,7 @@ export function useExpensePageData(filters: ExpensePageFilters = {}) {
 export function useCreateExpense() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "expenses", "create"],
     mutationFn: (data: CreateExpenseInput) =>
       apiClient.post<Expense>("/hr/expenses", data),
     onSuccess: () =>
@@ -74,6 +75,7 @@ export function useCreateExpense() {
 export function useUpdateExpenseStatus() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "expenses", "update-status"],
     mutationFn: ({ expenseId, ...data }: UpdateExpenseStatusInput) =>
       apiClient.patch<{ success: boolean }>(`/hr/expenses/${expenseId}`, data),
     onSuccess: () =>
@@ -84,6 +86,7 @@ export function useUpdateExpenseStatus() {
 export function useUpdateExpense() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "expenses", "update"],
     mutationFn: ({
       expenseId,
       ...data
@@ -107,6 +110,7 @@ export function useUpdateExpense() {
 export function useDeleteExpense() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "expenses", "delete"],
     mutationFn: (expenseId: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/expenses/${expenseId}`),
     onSuccess: () =>

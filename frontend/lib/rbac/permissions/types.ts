@@ -143,6 +143,7 @@ export type PermissionKey =
   | "kb:reviews:manage"
   | "kb:settings:manage"
   | "kb:pages:import"
+  | "kb:pages:export"
   | "support:kb:view"
   | "support:kb:manage"
   | "support:macros:view"

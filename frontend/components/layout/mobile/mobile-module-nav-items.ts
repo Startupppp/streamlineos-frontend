@@ -3,8 +3,10 @@ import type { NavGroup, NavRoute } from "../sidebar/sidebar-nav-items";
 export const MAX_MOBILE_MODULE_TABS = 5;
 export const MOBILE_PRIMARY_TABS_WHEN_OVERFLOW = 4;
 
+export const MOBILE_MODULE_BOTTOM_NAV_HEIGHT = "4rem";
+
 export const MOBILE_MODULE_CONTENT_PADDING_CLASS =
-  "pb-[calc(7.5rem+env(safe-area-inset-bottom))]";
+  "pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-0";
 
 export function getAllMobileModuleTabs(navGroups: NavGroup[]): NavRoute[] {
   const tabs: NavRoute[] = [];

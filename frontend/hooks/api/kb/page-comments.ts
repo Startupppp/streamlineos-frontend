@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 export type KbPageComment = {
   id: number;
@@ -23,11 +24,12 @@ export type CreateKbPageCommentInput = {
 };
 
 export function useKbPageComments(pageId: number) {
+  const canUpdatePages = useCan("kb:pages:update");
   return useQuery({
     queryKey: queryKeys.kb.pageComments(pageId),
     queryFn: () => apiClient.get<KbPageComment[]>(`/kb/pages/${pageId}/comments`),
     staleTime: 30_000,
-    enabled: pageId > 0,
+    enabled: canUpdatePages && pageId > 0,
   });
 }
 

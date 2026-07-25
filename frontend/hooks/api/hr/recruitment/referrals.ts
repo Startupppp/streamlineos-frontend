@@ -16,6 +16,7 @@ export function useAllReferrals() {
 export function useSubmitReferral() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "referrals", "submit"],
     mutationFn: (data: CreateReferralInput) =>
       apiClient.post<CandidateReferral>("/hr/recruitment/referrals", data),
     onSuccess: () => {
@@ -27,6 +28,7 @@ export function useSubmitReferral() {
 export function useUpdateReferralStatus() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "referrals", "update-status"],
     mutationFn: ({ id, ...data }: { id: number; status?: string; bonusAmount?: number; bonusEligible?: boolean; notes?: string }) =>
       apiClient.patch<CandidateReferral>(`/hr/recruitment/referrals/${id}`, data),
     onSuccess: () => {

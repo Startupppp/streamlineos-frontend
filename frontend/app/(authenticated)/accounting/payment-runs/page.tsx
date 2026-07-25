@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { ErrorState } from "@/components/shared";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
@@ -114,6 +116,10 @@ export default function PaymentRunsPage() {
 
   const items = query.data?.items ?? [];
 
+  function handleRetry(): void {
+    void query.refetch();
+  }
+
   function handleNewClick(): void {
     setCreateOpen(true);
   }
@@ -155,22 +161,30 @@ export default function PaymentRunsPage() {
         </Select>
       }
     >
-      <DataTable
-        className="flex-1 min-h-0"
-        data={items}
-        columns={COLUMNS}
-        getRowKey={(run) => run.id}
-        onRowClick={handleRowClick}
-        isLoading={query.isLoading}
-        emptyState={
-          <EmptyState
-            illustrationPreset="tasks"
-            title="No payment runs"
-            description="Create a payment run to batch-process vendor payments."
-            action={{ label: "New run", onClick: handleNewClick }}
-          />
-        }
-      />
+      {query.error ? (
+        <ErrorState
+          title="Failed to load payment runs"
+          description={getErrorMessage(query.error)}
+          onRetry={handleRetry}
+        />
+      ) : (
+        <DataTable
+          className="flex-1 min-h-0"
+          data={items}
+          columns={COLUMNS}
+          getRowKey={(run) => run.id}
+          onRowClick={handleRowClick}
+          isLoading={query.isLoading}
+          emptyState={
+            <EmptyState
+              illustrationPreset="tasks"
+              title="No payment runs"
+              description="Create a payment run to batch-process vendor payments."
+              action={{ label: "New run", onClick: handleNewClick }}
+            />
+          }
+        />
+      )}
 
       <PaymentRunFormSheet open={createOpen} onOpenChange={handleCreateOpenChange} />
     </PageWrapper>

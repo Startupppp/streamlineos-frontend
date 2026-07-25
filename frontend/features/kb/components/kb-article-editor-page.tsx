@@ -5,14 +5,14 @@ import { notFound } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ErrorState } from "@/components/shared/error-state";
 import { LoadingState } from "@/components/shared/loading-state";
-import { useKbArticle, useKbCategories } from "@/hooks/api/support/kb";
+import { useSupportKbArticle, useSupportKbCategories } from "@/hooks/api/support/kb";
 import { isApiError } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { KbArticleEditor } from "./kb-article-editor";
 
 export function KbArticleEditorPage({ articleId }: { articleId: number }) {
-  const articleQuery = useKbArticle(articleId);
-  const categoriesQuery = useKbCategories();
+  const articleQuery = useSupportKbArticle(articleId);
+  const categoriesQuery = useSupportKbCategories();
   const categories = useMemo(() => categoriesQuery.data ?? [], [categoriesQuery.data]);
 
   function handleRetry() {

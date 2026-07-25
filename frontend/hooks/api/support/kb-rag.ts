@@ -41,9 +41,9 @@ interface AskKbInput {
   articleId?: number;
 }
 
-export function useAskKb() {
+export function useSupportAskKb() {
   return useMutation({
-    mutationKey: ["kb", "rag", "ask"],
+    mutationKey: ["supportKb", "rag", "ask"],
     mutationFn: (input: AskKbInput) =>
       apiClient.post<KbAnswer>("/support/kb/ask", input),
   });
@@ -54,17 +54,17 @@ interface PublicAskKbInput {
   question: string;
 }
 
-export function usePublicAskKb() {
+export function usePublicAskSupportKb() {
   return useMutation({
-    mutationKey: ["kb", "rag", "public-ask"],
+    mutationKey: ["supportKb", "rag", "public-ask"],
     mutationFn: ({ orgId, question }: PublicAskKbInput) =>
       apiClient.post<KbAnswer>("/public/kb/ask", { org: orgId, question }),
   });
 }
 
-export function useKbIndexStatus(id: number) {
+export function useSupportKbIndexStatus(id: number) {
   return useQuery({
-    queryKey: [...queryKeys.kb.article(id), "index-status"] as const,
+    queryKey: [...queryKeys.supportKb.article(id), "index-status"] as const,
     queryFn: () =>
       apiClient.get<KbIndexStatus>(`/support/kb/articles/${id}/index-status`),
     enabled: Number.isFinite(id) && id > 0,
@@ -72,25 +72,25 @@ export function useKbIndexStatus(id: number) {
   });
 }
 
-export function useReindexKbArticle() {
+export function useReindexSupportKbArticle() {
   const qc = useQueryClient();
   return useMutation({
-    mutationKey: ["kb", "rag", "reindex"],
+    mutationKey: ["supportKb", "rag", "reindex"],
     mutationFn: (id: number) =>
       apiClient.post<ReindexResult>(`/support/kb/articles/${id}/reindex`, {}),
     onSuccess: (_data, id) => {
       qc.invalidateQueries({
-        queryKey: [...queryKeys.kb.article(id), "index-status"],
+        queryKey: [...queryKeys.supportKb.article(id), "index-status"],
       });
     },
   });
 }
 
-export function useReindexAllKb() {
+export function useReindexAllSupportKb() {
   const qc = useQueryClient();
   return useMutation({
-    mutationKey: ["kb", "rag", "reindex-all"],
+    mutationKey: ["supportKb", "rag", "reindex-all"],
     mutationFn: () => apiClient.post<IndexAllResult>("/support/kb/reindex-all", {}),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.kb.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportKb.all }),
   });
 }

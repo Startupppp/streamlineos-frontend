@@ -2078,9 +2078,9 @@ export const NAV_GROUPS: NavGroup[] = [
         requiredPermission: "kb:pages:view",
       },
       {
-        label: "Knowledge Base",
+        label: "Ask KB",
         icon: Library,
-        href: "/knowledge-base",
+        href: "/knowledge/chat",
         requiredPermission: "kb:pages:view",
       },
     ],
@@ -2262,12 +2262,6 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "Security",
     requiredPermission: "settings:manage",
     routes: [
-      {
-        label: "Password Policy",
-        icon: Lock,
-        href: "/settings/security",
-        requiredPermission: "settings:manage",
-      },
       {
         label: "Session Policy",
         icon: Clock,
@@ -2630,9 +2624,9 @@ export function getNavGroupsForProduct(
         href: "/knowledge",
       },
       {
-        label: "Knowledge Base",
+        label: "Ask KB",
         icon: Library,
-        href: "/knowledge-base",
+        href: "/knowledge/chat",
       },
     ];
     const visibleRoutes = documentRoutes

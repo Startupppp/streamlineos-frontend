@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 export type KbImportItem = {
   title: string;
@@ -78,9 +79,11 @@ export function useImportKbPages() {
 }
 
 export function useKbImportJobs() {
+  const canImport = useCan("kb:pages:import");
   return useQuery({
     queryKey: queryKeys.kb.importJobs(),
     queryFn: () => apiClient.get<KbImportJob[]>("/kb/import-jobs"),
+    enabled: canImport,
     staleTime: 30_000,
   });
 }
@@ -98,9 +101,11 @@ export function useExportKbPage() {
 }
 
 export function useKbExportJobs() {
+  const canExport = useCan("kb:pages:export");
   return useQuery({
     queryKey: queryKeys.kb.exportJobs(),
     queryFn: () => apiClient.get<KbExportJob[]>("/kb/export-jobs"),
+    enabled: canExport,
     staleTime: 30_000,
   });
 }

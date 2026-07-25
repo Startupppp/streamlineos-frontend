@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Mic, MicOff, Hand, PhoneOff, Monitor, MonitorOff, Settings, VolumeX, Volume2, MessageSquare, Smile, PauseCircle, PlayCircle } from "lucide-react";
 import { MicIcon, MicOffIcon, ChevronDownIcon, ChevronUpIcon, UserPlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -105,6 +105,31 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
       setExpanded(true);
     }
   }, [remoteScreenStreams.size]);
+
+  const notifiedMicErrorRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!micError) {
+      notifiedMicErrorRef.current = null;
+      return;
+    }
+    if (notifiedMicErrorRef.current === micError) return;
+    notifiedMicErrorRef.current = micError;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setExpanded(true);
+    toast.error(micError);
+  }, [micError]);
+
+  const expandedForRealtimeRef = useRef(false);
+  useEffect(() => {
+    if (!realtimeError) {
+      expandedForRealtimeRef.current = false;
+      return;
+    }
+    if (expandedForRealtimeRef.current) return;
+    expandedForRealtimeRef.current = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setExpanded(true);
+  }, [realtimeError]);
 
   const audioLevels = useHuddleAudioLevels(remoteStreams, localStream, currentUserId);
 

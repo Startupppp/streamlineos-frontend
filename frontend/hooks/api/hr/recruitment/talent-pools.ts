@@ -39,6 +39,7 @@ export function useTalentPools() {
 export function useCreateTalentPool() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "talent-pools", "create"],
     mutationFn: (data: { name: string; description?: string }) =>
       apiClient.post<TalentPool>("/hr/recruitment/talent-pools", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: poolsKey }),
@@ -48,6 +49,7 @@ export function useCreateTalentPool() {
 export function useDeleteTalentPool() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "talent-pools", "delete"],
     mutationFn: (poolId: number) => apiClient.delete<{ success: boolean }>(`/hr/recruitment/talent-pools/${poolId}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: poolsKey }),
   });
@@ -65,6 +67,7 @@ export function usePoolMembers(poolId: number) {
 export function useAddPoolMember(poolId: number) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "talent-pools", "add-member", poolId],
     mutationFn: (data: { candidateId: number; notes?: string }) =>
       apiClient.post(`/hr/recruitment/talent-pools/${poolId}/members`, data),
     onSuccess: () => {
@@ -77,6 +80,7 @@ export function useAddPoolMember(poolId: number) {
 export function useRemovePoolMember(poolId: number) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "talent-pools", "remove-member", poolId],
     mutationFn: (candidateId: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/recruitment/talent-pools/${poolId}/members/${candidateId}`),
     onSuccess: () => {

@@ -15,7 +15,7 @@ interface KbArticleComment {
   updatedAt: string | null;
 }
 
-export function useKbComments(articleId: number) {
+export function useSupportKbComments(articleId: number) {
   return useQuery({
     queryKey: queryKeys.kbComments.list(articleId),
     queryFn: () =>
@@ -27,10 +27,10 @@ export function useKbComments(articleId: number) {
   });
 }
 
-export function useAddKbComment(articleId: number) {
+export function useAddSupportKbComment(articleId: number) {
   const qc = useQueryClient();
   return useMutation({
-    mutationKey: ["kbComments", "add"],
+    mutationKey: ["supportKbComments", "add"],
     mutationFn: (body: string) =>
       apiClient.post<KbArticleComment>(
         `/support/kb/articles/${articleId}/comments`,
@@ -41,10 +41,10 @@ export function useAddKbComment(articleId: number) {
   });
 }
 
-export function useDeleteKbComment(articleId: number) {
+export function useDeleteSupportKbComment(articleId: number) {
   const qc = useQueryClient();
   return useMutation({
-    mutationKey: ["kbComments", "delete"],
+    mutationKey: ["supportKbComments", "delete"],
     mutationFn: (commentId: number) =>
       apiClient.delete<{ success: boolean }>(
         `/support/kb/articles/${articleId}/comments/${commentId}`

@@ -17,17 +17,7 @@ import {
   KbFileTextIcon,
 } from "@/features/knowledge-base/lib/kb-icons";
 import { TruncatedText } from "@/components/ui/truncated-text";
-
-function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const minutes = Math.floor(diff / 60000);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
-  if (days > 0) return `${days}d ago`;
-  if (hours > 0) return `${hours}h ago`;
-  if (minutes > 0) return `${minutes}m ago`;
-  return "just now";
-}
+import { kbTimeAgo } from "@/features/knowledge-base/lib/kb-date-utils";
 
 function RecentRow({ page }: { page: KbPage }) {
   return (
@@ -43,7 +33,7 @@ function RecentRow({ page }: { page: KbPage }) {
       <TruncatedText text={page.title || "Untitled"} className="flex-1 text-sm font-medium" />
       <span className="text-xs text-muted-foreground shrink-0 flex items-center gap-1">
         <KbClockIcon className="h-3 w-3" />
-        {timeAgo(page.updatedAt)}
+        {kbTimeAgo(page.updatedAt)}
       </span>
     </Link>
   );

@@ -23,6 +23,7 @@ export function useHiringFlows() {
 export function useCreateHiringFlow() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "hiring-flows", "create"],
     mutationFn: (data: CreateHiringFlowInput) =>
       apiClient.post<HiringFlow>("/hr/recruitment/hiring-flows", data),
     onSuccess: () => {
@@ -34,6 +35,7 @@ export function useCreateHiringFlow() {
 export function useUpdateHiringFlow() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "hiring-flows", "update"],
     mutationFn: ({ id, ...data }: UpdateHiringFlowInput & { id: number }) =>
       apiClient.patch<HiringFlow>(`/hr/recruitment/hiring-flows/${id}`, data),
     onSuccess: (_data, { id }) => {
@@ -46,6 +48,7 @@ export function useUpdateHiringFlow() {
 export function useDeleteHiringFlow() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "hiring-flows", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/recruitment/hiring-flows/${id}`),
     onSuccess: () => {
@@ -66,6 +69,7 @@ export function useHiringFlowRounds(flowId: number) {
 export function useCreateHiringFlowRound() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "hiring-flow-rounds", "create"],
     mutationFn: ({ flowId, ...data }: CreateHiringFlowRoundInput & { flowId: number }) =>
       apiClient.post<HiringFlowRound>(`/hr/recruitment/hiring-flows/${flowId}/rounds`, data),
     onSuccess: (_data, { flowId }) => {
@@ -79,6 +83,7 @@ export function useCreateHiringFlowRound() {
 export function useUpdateHiringFlowRound() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "hiring-flow-rounds", "update"],
     mutationFn: ({ flowId, roundId, ...data }: UpdateHiringFlowRoundInput & { flowId: number; roundId: number }) =>
       apiClient.patch<HiringFlowRound>(`/hr/recruitment/hiring-flows/${flowId}/rounds/${roundId}`, data),
     onSuccess: (_data, { flowId }) => {
@@ -92,6 +97,7 @@ export function useUpdateHiringFlowRound() {
 export function useDeleteHiringFlowRound() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "hiring-flow-rounds", "delete"],
     mutationFn: ({ flowId, roundId }: { flowId: number; roundId: number }) =>
       apiClient.delete<{ success: boolean }>(`/hr/recruitment/hiring-flows/${flowId}/rounds/${roundId}`),
     onSuccess: (_data, { flowId }) => {

@@ -4,7 +4,6 @@ import { useState } from "react";
 import {
   KbCheckIcon,
   KbEdit2Icon,
-  KbLoader2Icon,
   KbMessageSquareIcon,
   KbXIcon,
 } from "@/features/knowledge-base/lib/kb-icons";
@@ -12,6 +11,7 @@ import { toast } from "sonner";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -24,18 +24,8 @@ import {
   useDeleteKbPageComment,
   useResolveKbPageComment,
 } from "@/hooks/api/kb";
+import { kbTimeAgo } from "@/features/knowledge-base/lib/kb-date-utils";
 import type { KbPageComment } from "@/hooks/api/kb/page-comments";
-
-function formatRelativeTime(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const minutes = Math.floor(diff / 60000);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
-  if (days > 0) return `${days}d ago`;
-  if (hours > 0) return `${hours}h ago`;
-  if (minutes > 0) return `${minutes}m ago`;
-  return "just now";
-}
 
 interface CommentRowProps {
   comment: KbPageComment;
@@ -103,7 +93,7 @@ function CommentRow({ comment, replies, pageId, onReply }: CommentRowProps) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[13px] font-medium">{comment.authorName ?? "Unknown"}</span>
-            <span className="text-xs text-muted-foreground">{formatRelativeTime(comment.createdAt)}</span>
+            <span className="text-xs text-muted-foreground">{kbTimeAgo(comment.createdAt)}</span>
             {isResolved && (
               <Badge variant="secondary" className="text-[10px] h-4 px-1.5 py-0">
                 Resolved
@@ -305,17 +295,14 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange }: PageCo
             className="resize-none min-h-[80px] text-sm"
           />
           <div className="flex justify-end">
-            <Button
+            <LoadingButton
               onClick={handlePost}
-              disabled={!newContent.trim() || createComment.isPending}
-              className=""
+              disabled={!newContent.trim()}
+              isPending={createComment.isPending}
+              loadingText="Posting…"
             >
-              {createComment.isPending ? (
-                <KbLoader2Icon className="h-4 w-4 animate-spin" />
-              ) : (
-                "Post comment"
-              )}
-            </Button>
+              Post comment
+            </LoadingButton>
           </div>
         </div>
       </SheetContent>

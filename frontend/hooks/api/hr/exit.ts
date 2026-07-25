@@ -67,6 +67,7 @@ export function useResignations() {
 export function useCreateResignation() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "exit", "create"],
     mutationFn: (data: {
       reason: string;
       reasonCategory?: string;
@@ -83,6 +84,7 @@ export function useCreateResignation() {
 export function useHrReviewResignation() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "exit", "hr-review"],
     mutationFn: ({ id, action, remarks }: { id: number; action: "approve" | "reject"; remarks?: string }) =>
       apiClient.patch<{ success: boolean }>(`/hr/exit/${id}/hr-review`, { decision: action, remarks }),
     onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.list() }),
@@ -92,6 +94,7 @@ export function useHrReviewResignation() {
 export function useCeoReviewResignation() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "exit", "ceo-review"],
     mutationFn: ({ id, action, remarks }: { id: number; action: "approve" | "reject"; remarks?: string }) =>
       apiClient.patch<{ success: boolean }>(`/hr/exit/${id}/ceo-review`, { decision: action, remarks }),
     onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.list() }),
@@ -101,6 +104,7 @@ export function useCeoReviewResignation() {
 export function useWithdrawResignation() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "exit", "withdraw"],
     mutationFn: ({ id }: { id: number }) =>
       apiClient.patch<{ success: boolean }>(`/hr/exit/${id}/withdraw`, {}),
     onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.list() }),

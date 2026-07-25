@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   KbArticle,
   PaginatedArticles,
@@ -14,19 +15,22 @@ import type {
 } from "@/types/kb";
 
 export function useKbArticles(params: ListArticlesParams) {
+  const canViewArticles = useCan("kb:articles:view");
   const queryParams: Record<string, unknown> = { ...params };
   return useQuery({
     queryKey: queryKeys.kb.articles(queryParams),
     queryFn: () => apiClient.get<PaginatedArticles>("/kb/articles", queryParams),
     staleTime: 30_000,
+    enabled: canViewArticles,
   });
 }
 
 export function useKbArticle(articleId: number) {
+  const canViewArticles = useCan("kb:articles:view");
   return useQuery({
     queryKey: queryKeys.kb.article(articleId),
     queryFn: () => apiClient.get<KbArticle>(`/kb/articles/${articleId}`),
-    enabled: Number.isFinite(articleId) && articleId > 0,
+    enabled: canViewArticles && Number.isFinite(articleId) && articleId > 0,
     staleTime: 60_000,
   });
 }

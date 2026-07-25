@@ -1,6 +1,5 @@
 "use client";
 
-import type { MouseEvent as ReactMouseEvent } from "react";
 import { SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,8 +7,6 @@ import {
   ResponsivePopoverContent,
   ResponsivePopoverTrigger,
 } from "@/components/ui/responsive-popover";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -18,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { DisplayToggleRow } from "@/features/projects/shared/display-toggle-row";
 import type {
   DisplayPrefs,
   ProjectGroupBy,
@@ -29,33 +27,6 @@ interface DisplayPrefsPopoverProps {
   prefs: DisplayPrefs;
   onToggle: (key: keyof DisplayPrefs) => void;
   onSet: (next: Partial<DisplayPrefs>) => void;
-}
-
-interface ToggleRowProps {
-  label: string;
-  checked: boolean;
-  onCheckedChange: () => void;
-  id: string;
-}
-
-function ToggleRow({ label, checked, onCheckedChange, id }: ToggleRowProps) {
-  function handleLabelClick(event: ReactMouseEvent<HTMLLabelElement>) {
-    event.preventDefault();
-    onCheckedChange();
-  }
-
-  return (
-    <div className="flex h-9 items-center justify-between gap-3">
-      <Label
-        htmlFor={id}
-        onClick={handleLabelClick}
-        className="cursor-pointer text-[13px] font-normal text-foreground"
-      >
-        {label}
-      </Label>
-      <Switch id={id} checked={checked} onCheckedChange={onCheckedChange} />
-    </div>
-  );
 }
 
 function SectionLabel({ children }: { children: string }) {
@@ -110,8 +81,8 @@ export function DisplayPrefsPopover({
     onSet({ orderDir: value as ProjectSortDir });
   }
 
-  function handleShowClosedChange() {
-    onToggle("showClosed");
+  function handleShowClosedChange(checked: boolean) {
+    if (checked !== prefs.showClosed) onToggle("showClosed");
   }
 
   return (
@@ -175,7 +146,7 @@ export function DisplayPrefsPopover({
 
         <div className={cn("my-2 border-t border-border")} />
 
-        <ToggleRow
+        <DisplayToggleRow
           id="show-closed"
           label="Show closed projects"
           checked={prefs.showClosed}
@@ -185,7 +156,7 @@ export function DisplayPrefsPopover({
         <SectionLabel>Properties</SectionLabel>
         <div>
           {PROPERTY_TOGGLES.map((p) => (
-            <ToggleRow
+            <DisplayToggleRow
               key={p.key}
               id={`toggle-${p.key}`}
               label={p.label}

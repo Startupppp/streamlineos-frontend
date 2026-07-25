@@ -13,7 +13,7 @@ import { ResumeLastProjectAction } from "@/features/projects/project-list/resume
 import { ProjectCard } from "@/features/projects/project-list/project-card";
 import { ProjectTable } from "@/features/projects/project-list/project-table";
 import { ProjectFilterBar } from "@/features/projects/project-list/project-filter-bar";
-import { ProjectPagination } from "@/features/projects/project-list/project-pagination";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { ProjectsEmptyState } from "@/features/projects/project-list/projects-empty-state";
 import { GroupingSidebar } from "@/features/projects/project-list/grouping-sidebar";
 import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
@@ -438,9 +438,10 @@ export default function ProjectsPage() {
           )}
 
           {pagination && pagination.totalPages > 1 ? (
-            <ProjectPagination
+            <TablePagination
               page={pagination.page}
-              totalPages={pagination.totalPages}
+              pageSize={viewMode === "grid" ? 12 : 25}
+              total={pagination.total}
               onPageChange={setPage}
             />
           ) : null}

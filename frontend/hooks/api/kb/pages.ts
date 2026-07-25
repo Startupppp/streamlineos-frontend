@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 export type KbPage = {
   id: number;
@@ -106,88 +107,103 @@ export type MoveKbPageInput = {
 };
 
 export function useKbPagesTree() {
+  const canView = useCan("kb:pages:view");
   return useQuery({
     queryKey: queryKeys.kb.pagesTree(),
     queryFn: () => apiClient.get<KbPageTreeNode[]>("/kb/pages/tree"),
     staleTime: 30_000,
+    enabled: canView,
   });
 }
 
 export function useKbProjectPagesTree(projectId: number) {
+  const canView = useCan("kb:pages:view");
   return useQuery({
     queryKey: queryKeys.kb.pagesTreeByProject(projectId),
     queryFn: () => apiClient.get<KbPageTreeNode[]>("/kb/pages/tree", { projectId }),
     staleTime: 30_000,
-    enabled: Number.isFinite(projectId) && projectId > 0,
+    enabled: canView && Number.isFinite(projectId) && projectId > 0,
   });
 }
 
 export function useKbPagesRecent() {
+  const canView = useCan("kb:pages:view");
   return useQuery({
     queryKey: queryKeys.kb.pagesRecent(),
     queryFn: () => apiClient.get<KbPage[]>("/kb/pages/recent"),
     staleTime: 30_000,
+    enabled: canView,
   });
 }
 
 export function useKbPagesFavorites() {
+  const canView = useCan("kb:pages:view");
   return useQuery({
     queryKey: queryKeys.kb.pagesFavorites(),
     queryFn: () => apiClient.get<KbPage[]>("/kb/pages/favorites"),
     staleTime: 30_000,
+    enabled: canView,
   });
 }
 
 export function useKbPagesTrash() {
+  const canView = useCan("kb:pages:view");
   return useQuery({
     queryKey: queryKeys.kb.pagesTrash(),
     queryFn: () => apiClient.get<KbPage[]>("/kb/pages/trash"),
     staleTime: 30_000,
+    enabled: canView,
   });
 }
 
 export function useKbPagesSearch(q: string) {
+  const canView = useCan("kb:pages:view");
   return useQuery({
     queryKey: queryKeys.kb.pagesSearch(q),
     queryFn: () => apiClient.get<KbPageSearchResult[]>("/kb/pages/search", { q }),
     staleTime: 0,
-    enabled: q.length > 0,
+    enabled: canView && q.length > 0,
   });
 }
 
 export function useKbPage(pageId: number) {
+  const canView = useCan("kb:pages:view");
   return useQuery({
     queryKey: queryKeys.kb.page(pageId),
     queryFn: () => apiClient.get<KbPageDetail>(`/kb/pages/${pageId}`),
     staleTime: 15_000,
-    enabled: Number.isFinite(pageId) && pageId > 0,
+    enabled: canView && Number.isFinite(pageId) && pageId > 0,
   });
 }
 
 export function useKbPageBacklinks(pageId: number) {
+  const canView = useCan("kb:pages:view");
   return useQuery({
     queryKey: queryKeys.kb.pageBacklinks(pageId),
     queryFn: () => apiClient.get<KbPageBacklink[]>(`/kb/pages/${pageId}/backlinks`),
     staleTime: 60_000,
-    enabled: Number.isFinite(pageId) && pageId > 0,
+    enabled: canView && Number.isFinite(pageId) && pageId > 0,
   });
 }
 
 export function useKbPageVersions(pageId: number) {
+  const canView = useCan("kb:pages:view");
   return useQuery({
     queryKey: queryKeys.kb.pageVersions(pageId),
     queryFn: () => apiClient.get<KbPageVersion[]>(`/kb/pages/${pageId}/versions`),
     staleTime: 60_000,
-    enabled: Number.isFinite(pageId) && pageId > 0,
+    enabled: canView && Number.isFinite(pageId) && pageId > 0,
   });
 }
 
 export function useKbPageVersion(pageId: number, versionNumber: number) {
+  const canView = useCan("kb:pages:view");
   return useQuery({
     queryKey: queryKeys.kb.pageVersion(pageId, versionNumber),
     queryFn: () => apiClient.get<KbPageVersion>(`/kb/pages/${pageId}/versions/${versionNumber}`),
     staleTime: 300_000,
     enabled:
+      canView &&
       Number.isFinite(pageId) &&
       pageId > 0 &&
       Number.isFinite(versionNumber) &&

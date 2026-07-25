@@ -11,7 +11,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import type { Role } from "@/types/organization";
 
 const PM_TEMPLATE_ID = "project_manager";
-const PM_ROLE_SLUG = "project_manager";
+const PM_ROLE_SLUG = "PROJECT_MANAGER";
 const PM_ROLE_NAME = "Project Manager";
 
 function resolvePmRole(roles: Role[]): Role | undefined {

@@ -6,6 +6,8 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { PmPageShell, PmSection } from "@/features/projects/shared/pm-chrome";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { TicketFilterBar } from "@/features/projects/shared/ticket-filter-bar";
@@ -319,49 +321,47 @@ export function MyWorkPage() {
         title="My Issues"
         subtitle="Your tickets across all projects"
         noInternalScroll
-        filtersClassName="flex-col items-stretch gap-2 overflow-x-visible pb-2 md:w-full md:flex-row md:flex-nowrap md:items-center md:justify-between md:gap-2"
+        filtersClassName="flex-col items-stretch gap-0 overflow-visible pb-2 [&>*]:w-full [&>*]:min-w-0 [&>*]:shrink"
         filters={
-          <>
-            <div className="min-w-0 w-full overflow-x-auto scrollbar-hide md:w-auto md:shrink-0">
-              <TabsList>
+          <PageTabsToolbar
+            tabs={
+              <TabsList className="w-full md:w-auto">
                 {WORK_TABS.map((tab) => (
-                  <TabsTrigger key={tab} value={tab}>
+                  <TabsTrigger
+                    key={tab}
+                    value={tab}
+                    className="min-w-0 flex-1 md:flex-initial"
+                  >
                     {TAB_CONFIG[tab].label}
                   </TabsTrigger>
                 ))}
               </TabsList>
-            </div>
-            <div className="flex min-w-0 w-full items-center gap-2 md:ml-auto md:w-auto md:max-w-full md:shrink-0">
+            }
+            filters={() => (
               <TicketFilterBar
-                className="min-w-0 w-full md:w-auto"
                 showSprintFilter={false}
                 showAssigneeFilter={false}
-                align="end"
-                mobileSearchFirst
-                leading={
-                  showViewSwitcher ? (
-                    <ViewSwitcher
-                      activeView={activeView}
-                      onViewChange={handleViewChange}
-                      allowedViews={MY_WORK_VIEWS}
-                    />
-                  ) : undefined
-                }
-                trailing={
-                  <>
-                    {showViewSwitcher ? (
-                      <DisplayOptionsPanel
-                        viewType={activeView}
-                        options={displayOptions}
-                        onChange={handleDisplayOptionsChange}
-                      />
-                    ) : null}
-                    {groupingSidebarButton}
-                  </>
-                }
               />
-            </div>
-          </>
+            )}
+            actions={
+              showViewSwitcher ? (
+                <>
+                  <ViewSwitcher
+                    activeView={activeView}
+                    onViewChange={handleViewChange}
+                    allowedViews={MY_WORK_VIEWS}
+                    className="shrink-0"
+                  />
+                  <DisplayOptionsPanel
+                    viewType={activeView}
+                    options={displayOptions}
+                    onChange={handleDisplayOptionsChange}
+                  />
+                  {groupingSidebarButton}
+                </>
+              ) : null
+            }
+          />
         }
       >
         <PmPageShell className="min-h-0 flex-1 overflow-hidden">
@@ -388,27 +388,29 @@ export function MyWorkPage() {
                     className={CONTENT_FILL_PANEL}
                   />
                 ) : showBucketList ? (
-                  <div className="flex flex-col gap-3 overflow-y-auto">
-                    {BUCKET_ORDER.map((bucket) => {
-                      const items =
-                        dueBuckets?.[bucket]?.map((t) => ({
-                          id: t.id,
-                          projectId: t.projectId,
-                          projectName: t.projectName,
-                          projectKey: t.projectKey,
-                          ticketNumber: t.ticketNumber,
-                          title: t.title,
-                          status: t.status,
-                          priority: t.priority,
-                          type: t.type,
-                          dueDate: t.dueDate,
-                        })) ?? [];
-                      if (items.length === 0) return null;
-                      return (
-                        <BucketSection key={bucket} bucket={bucket} items={items} />
-                      );
-                    })}
-                  </div>
+                  <ScrollArea className="min-h-0 flex-1" hideScrollbar>
+                    <div className="flex flex-col gap-3">
+                      {BUCKET_ORDER.map((bucket) => {
+                        const items =
+                          dueBuckets?.[bucket]?.map((t) => ({
+                            id: t.id,
+                            projectId: t.projectId,
+                            projectName: t.projectName,
+                            projectKey: t.projectKey,
+                            ticketNumber: t.ticketNumber,
+                            title: t.title,
+                            status: t.status,
+                            priority: t.priority,
+                            type: t.type,
+                            dueDate: t.dueDate,
+                          })) ?? [];
+                        if (items.length === 0) return null;
+                        return (
+                          <BucketSection key={bucket} bucket={bucket} items={items} />
+                        );
+                      })}
+                    </div>
+                  </ScrollArea>
                 ) : (
                   <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
                     <MyWorkViewBody

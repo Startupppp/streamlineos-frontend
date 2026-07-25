@@ -47,16 +47,16 @@ import { KbNewArticleDialog } from "./kb-new-article-dialog";
 import { KbAnalyticsTab } from "./kb-analytics-tab";
 import { KbAskPanel } from "@/components/support/kb-ask-panel";
 import {
-  useKbArticles,
-  useKbCategories,
-  useDeleteKbArticle,
-  useDeleteKbCategory,
+  useSupportKbArticles,
+  useSupportKbCategories,
+  useDeleteSupportKbArticle,
+  useDeleteSupportKbCategory,
   type KbArticleListItem,
   type KbArticleStatus,
   type KbArticleVisibility,
   type KbCategory,
 } from "@/hooks/api/support/kb";
-import { useReindexAllKb } from "@/hooks/api/support/kb-rag";
+import { useReindexAllSupportKb } from "@/hooks/api/support/kb-rag";
 import { useAccess } from "@/hooks/api/access";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -95,7 +95,7 @@ export function KbManagerContent() {
     access?.isOrgOwner || access?.isPlatformAdmin || access?.modules?.support,
   );
 
-  const categoriesQuery = useKbCategories({ enabled: supportEnabled });
+  const categoriesQuery = useSupportKbCategories({ enabled: supportEnabled });
   const categories = useMemo(() => categoriesQuery.data ?? [], [categoriesQuery.data]);
 
   const articleParams = useMemo(
@@ -108,12 +108,12 @@ export function KbManagerContent() {
     [statusParam, visibilityParam, categoryParam, debouncedSearch],
   );
 
-  const articlesQuery = useKbArticles(articleParams, { enabled: supportEnabled });
+  const articlesQuery = useSupportKbArticles(articleParams, { enabled: supportEnabled });
   const articles = useMemo(() => articlesQuery.data ?? [], [articlesQuery.data]);
 
-  const deleteCategoryMutation = useDeleteKbCategory();
-  const deleteArticleMutation = useDeleteKbArticle();
-  const reindexAll = useReindexAllKb();
+  const deleteCategoryMutation = useDeleteSupportKbCategory();
+  const deleteArticleMutation = useDeleteSupportKbArticle();
+  const reindexAll = useReindexAllSupportKb();
 
   const hasFilters =
     statusParam !== "all" ||

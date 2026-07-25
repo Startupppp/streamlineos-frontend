@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { UserCombobox } from "@/components/ui/user-combobox";
@@ -259,31 +260,31 @@ export default function PageMetadataSheet({
                   }
                 >
                   {showPublish && (
-                    <Button
+                    <LoadingButton
                       className={ACTION_BTN_BASE}
                       onClick={handlePublish}
-                      disabled={publishPage.isPending}
+                      isPending={publishPage.isPending}
                     >
                       Publish
-                    </Button>
+                    </LoadingButton>
                   )}
                   {status !== "archived" ? (
-                    <Button
+                    <LoadingButton
                       variant="outline"
                       className={ACTION_BTN_DANGER}
                       onClick={handleArchive}
-                      disabled={archivePage.isPending}
+                      isPending={archivePage.isPending}
                     >
                       Archive
-                    </Button>
+                    </LoadingButton>
                   ) : (
-                    <Button
+                    <LoadingButton
                       className={ACTION_BTN_BASE}
                       onClick={handleUnarchive}
-                      disabled={unarchivePage.isPending}
+                      isPending={unarchivePage.isPending}
                     >
                       Unarchive
-                    </Button>
+                    </LoadingButton>
                   )}
                 </div>
               )}
@@ -358,14 +359,14 @@ export default function PageMetadataSheet({
                     >
                       Verify
                     </Button>
-                    <Button
+                    <LoadingButton
                       variant="outline"
                       className={ACTION_BTN_WARNING}
                       onClick={handleMarkStale}
-                      disabled={markStalePage.isPending}
+                      isPending={markStalePage.isPending}
                     >
                       Mark stale
-                    </Button>
+                    </LoadingButton>
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -378,13 +379,13 @@ export default function PageMetadataSheet({
                       className={FIELD_CLASS}
                     />
                     <div className="grid grid-cols-2 gap-2">
-                      <Button
+                      <LoadingButton
                         className={ACTION_BTN_BASE}
                         onClick={handleConfirmVerify}
-                        disabled={verifyPage.isPending}
+                        isPending={verifyPage.isPending}
                       >
                         Confirm
-                      </Button>
+                      </LoadingButton>
                       <Button
                         variant="outline"
                         className={ACTION_BTN_NEUTRAL}

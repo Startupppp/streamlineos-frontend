@@ -9,7 +9,6 @@ import {
   CreditCard,
   Key,
   LayoutGrid,
-  Lock,
   LogOut,
   Shield,
   ShieldAlert,
@@ -135,7 +134,6 @@ function buildMenuEntries(opts: {
     if (canManageSettings) {
       accessLinks.push(
         { href: "/settings/modules", label: "Modules", icon: LayoutGrid },
-        { href: "/settings/security", label: "Security", icon: Lock },
       );
     }
     if (accessLinks.length > 0) {

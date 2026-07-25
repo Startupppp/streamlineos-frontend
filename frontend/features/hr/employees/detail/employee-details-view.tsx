@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useHydrated } from "@/hooks/common/use-hydrated";
 import dynamic from "next/dynamic";
-import { EditEmployeeForm, type EmployeeData } from "./edit-employee-form";
+import { EditEmployeeForm, type EmployeeData } from "@/features/hr/employees/detail/edit-employee-form";
 import { EmployeeAttendanceHistory } from "@/components/hr/employee-attendance-history";
 import { SelfEditProfileForm } from "@/components/hr/self-edit-profile-form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -357,8 +357,7 @@ const LIFECYCLE_BADGE: Record<string, { label: string; className: string }> = {
   },
   ALUMNI: {
     label: "Alumni",
-    className:
-      "bg-muted text-muted-foreground border-border",
+    className: "bg-muted text-muted-foreground border-border",
   },
   SUSPENDED: {
     label: "Suspended",
@@ -578,7 +577,6 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
       canUpdateEmployee,
     );
 
-  // Prefer lifecycle status over a second "Active" employment badge when labels collide.
   const showEmploymentActiveBadge =
     !isAlreadyTerminated &&
     (!lifecycleBadge || lifecycleBadge.label.toUpperCase() !== "ACTIVE");

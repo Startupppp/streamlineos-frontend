@@ -13,7 +13,7 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
           queries: {
             staleTime: 1000 * 60 * 2,
             gcTime: 1000 * 60 * 10,
-            refetchOnWindowFocus: false,
+            refetchOnWindowFocus: true,
             retry: 1,
           },
           mutations: {

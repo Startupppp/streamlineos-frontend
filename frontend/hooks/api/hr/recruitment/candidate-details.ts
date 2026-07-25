@@ -162,6 +162,7 @@ export function useCandidateVault(candidateId: number) {
 export function useAddVaultDocument(candidateId: number) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "vault", "add", candidateId],
     mutationFn: (data: {
       filename: string;
       s3Key: string;
@@ -179,6 +180,7 @@ export function useAddVaultDocument(candidateId: number) {
 export function useDeleteVaultDocument(candidateId: number) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "vault", "delete", candidateId],
     mutationFn: (documentId: number) =>
       apiClient.delete<{ success: boolean }>(
         `/hr/recruitment/candidates/${candidateId}/vault/${documentId}`
@@ -203,6 +205,7 @@ export function useRolloutDocuments(candidateId: number) {
 export function useGenerateAndRollout(candidateId: number) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "rollout-documents", candidateId],
     mutationFn: (data: RolloutDocumentsInput) =>
       apiClient.post<RolloutDocumentsResult>(
         `/hr/recruitment/candidates/${candidateId}/rollout-documents`,
@@ -218,6 +221,7 @@ export function useGenerateAndRollout(candidateId: number) {
 export function useUpdateCandidateBgv(candidateId: number) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "candidates", "bgv", candidateId],
     mutationFn: (data: UpdateBgvInput) =>
       apiClient.patch<{ id: number; bgvStatus: BgvStatus }>(`/hr/recruitment/candidates/${candidateId}/bgv-status`, data),
     onSuccess: () =>
@@ -257,6 +261,7 @@ export function useCandidateReferrals(candidateId: number) {
 export function useCreateReferral(candidateId: number) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "referrals", "create", candidateId],
     mutationFn: (data: {
       referredBy: string;
       relationship?: string;
@@ -273,6 +278,7 @@ export function useCreateReferral(candidateId: number) {
 export function useUpdateReferral(candidateId: number) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "referrals", "update", candidateId],
     mutationFn: (data: {
       id: number;
       bonusEligible?: boolean;
@@ -298,6 +304,7 @@ export function useCalibrationSessions(candidateId: number) {
 export function useCreateCalibration(candidateId: number) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "calibration", "create", candidateId],
     mutationFn: (data: {
       jobPostingId?: number;
       scheduledAt?: string;
@@ -313,6 +320,7 @@ export function useCreateCalibration(candidateId: number) {
 export function useUpdateCalibration(candidateId: number) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "calibration", "update", candidateId],
     mutationFn: (data: {
       id: number;
       scheduledAt?: string | null;
@@ -340,6 +348,7 @@ export function useReferenceChecks(candidateId: number) {
 export function useCreateReferenceCheck(candidateId: number) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "reference-checks", "create", candidateId],
     mutationFn: (data: CreateReferenceCheckInput) =>
       apiClient.post<ReferenceCheck>(
         `/hr/recruitment/candidates/${candidateId}/reference-checks`,
@@ -353,6 +362,7 @@ export function useCreateReferenceCheck(candidateId: number) {
 export function useUpdateReferenceCheck(candidateId: number, checkId: number) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "reference-checks", "update", candidateId, checkId],
     mutationFn: (data: {
       status?: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "DECLINED";
       outcome?: string | null;
@@ -371,6 +381,7 @@ export function useUpdateReferenceCheck(candidateId: number, checkId: number) {
 export function useDeleteReferenceCheck(candidateId: number, checkId: number) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "reference-checks", "delete", candidateId, checkId],
     mutationFn: () =>
       apiClient.delete<{ success: boolean }>(
         `/hr/recruitment/candidates/${candidateId}/reference-checks/${checkId}`

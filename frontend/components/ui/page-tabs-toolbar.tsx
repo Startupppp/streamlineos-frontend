@@ -89,11 +89,12 @@ export function PageTabsToolbar({
                 <Button
                   type="button"
                   variant="outline"
-                  size="icon"
-                  className="shrink-0 md:hidden"
+                  size="sm"
+                  className="h-9 shrink-0 gap-1.5 px-2.5 md:hidden"
                   aria-label="Filters"
                 >
                   <ListFilter className="h-4 w-4" />
+                  <span className="text-xs">Filters</span>
                 </Button>
               </ResponsivePopoverTrigger>
               <ResponsivePopoverContent

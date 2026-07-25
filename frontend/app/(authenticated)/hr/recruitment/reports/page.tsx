@@ -1,442 +1,21 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
-import { PageWrapper } from "@/components/ui/page-wrapper";
-import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
-import { EmptyLeaderboardIllustration } from "@/components/illustrations";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { LoadingButton } from "@/components/ui/loading-button";
-import { DownloadIcon } from "@animateicons/react/lucide";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Input } from "@/components/ui/input";
-import { DatePicker } from "@/components/ui/date-picker";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetBody,
-} from "@/components/ui/sheet";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Checkbox } from "@/components/ui/checkbox";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { toast } from "sonner";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useGenerateReport,
-  useScheduledReports,
-  useCreateScheduledReport,
-  useDeleteScheduledReport,
   ENTITY_FIELDS,
   type ReportEntity,
-  type ReportSchedule,
   type GenerateReportResult,
-  type ScheduledReport,
 } from "@/hooks/api";
-
-const HR_ROLES = ["CEO", "HR", "ADMIN", "HR_MANAGER", "OWNER"];
-
-const ENTITY_OPTIONS: { value: ReportEntity; label: string }[] = [
-  { value: "candidates", label: "Candidates" },
-  { value: "jobs", label: "Job Postings" },
-  { value: "interviews", label: "Interviews" },
-  { value: "offers", label: "Offers" },
-];
-
-type IndexedRow = Record<string, unknown> & { _idx: number };
-
-function RecipientBadge({
-  email,
-  onRemove,
-}: {
-  email: string;
-  onRemove: (email: string) => void;
-}) {
-  function handleRemove() {
-    onRemove(email);
-  }
-  return (
-    <Badge variant="secondary" className="gap-1 text-xs">
-      {email}
-      <button
-        type="button"
-        onClick={handleRemove}
-        className="ml-0.5 hover:text-destructive"
-        aria-label={`Remove ${email}`}
-      >
-        ×
-      </button>
-    </Badge>
-  );
-}
-
-function ScheduleReportSheet({
-  entity,
-  fields,
-  onClose,
-}: {
-  entity: ReportEntity;
-  fields: string[];
-  onClose: () => void;
-}) {
-  const [name, setName] = useState("");
-  const [schedule, setSchedule] = useState<ReportSchedule>("WEEKLY");
-  const [recipientInput, setRecipientInput] = useState("");
-  const [recipients, setRecipients] = useState<string[]>([]);
-
-  const create = useCreateScheduledReport();
-
-  const handleAddRecipient = useCallback(() => {
-    const email = recipientInput.trim();
-    if (!email) return;
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      toast.error("Invalid email");
-      return;
-    }
-    if (recipients.includes(email)) return;
-    setRecipients((prev) => [...prev, email]);
-    setRecipientInput("");
-  }, [recipientInput, recipients]);
-
-  const handleRemoveRecipient = useCallback((email: string) => {
-    setRecipients((prev) => prev.filter((r) => r !== email));
-  }, []);
-
-  const handleSubmit = useCallback(() => {
-    if (!name.trim()) {
-      toast.error("Report name is required");
-      return;
-    }
-    if (recipients.length === 0) {
-      toast.error("At least one recipient required");
-      return;
-    }
-    if (fields.length === 0) {
-      toast.error("Select at least one field");
-      return;
-    }
-    create.mutate(
-      {
-        name: name.trim(),
-        reportConfig: { entity, fields, filters: {} },
-        schedule,
-        recipients,
-      },
-      {
-        onSuccess: () => {
-          toast.success("Scheduled report created");
-          onClose();
-        },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      },
-    );
-  }, [name, recipients, fields, entity, schedule, create, onClose]);
-
-  function handleNameChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setName(e.target.value);
-  }
-  function handleScheduleChange(v: string) {
-    setSchedule(v as ReportSchedule);
-  }
-  function handleRecipientInputChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setRecipientInput(e.target.value);
-  }
-  function handleRecipientKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleAddRecipient();
-    }
-  }
-  function handleSheetOpenChange(v: boolean) {
-    if (!v) onClose();
-  }
-
-  return (
-    <Sheet open onOpenChange={handleSheetOpenChange}>
-      <SheetContent className="w-full sm:max-w-md p-0 flex flex-col gap-0">
-        <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
-          <SheetTitle>Schedule Report</SheetTitle>
-          <SheetDescription>
-            Send this report automatically by email
-          </SheetDescription>
-        </SheetHeader>
-        <SheetBody className="px-6 py-5 space-y-3">
-          <div className="space-y-1.5">
-            <Label>
-              Report Name <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              value={name}
-              onChange={handleNameChange}
-              placeholder="e.g. Weekly Candidates Report"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Frequency</Label>
-            <Select value={schedule} onValueChange={handleScheduleChange}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="WEEKLY">Weekly (every Monday)</SelectItem>
-                <SelectItem value="MONTHLY">Monthly (1st of month)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label>Recipients</Label>
-            <div className="flex gap-2">
-              <Input
-                value={recipientInput}
-                onChange={handleRecipientInputChange}
-                onKeyDown={handleRecipientKeyDown}
-                placeholder="email@company.com"
-                className="flex-1"
-              />
-              <Button variant="outline" size="sm" onClick={handleAddRecipient}>
-                Add
-              </Button>
-            </div>
-            <div className="flex flex-wrap gap-1.5 mt-1">
-              {recipients.map((r) => (
-                <RecipientBadge
-                  key={r}
-                  email={r}
-                  onRemove={handleRemoveRecipient}
-                />
-              ))}
-            </div>
-          </div>
-        </SheetBody>
-        <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
-          <Button
-            variant="outline"
-            onClick={onClose}
-            disabled={create.isPending}
-            className="flex-1"
-          >
-            Cancel
-          </Button>
-          <LoadingButton
-            onClick={handleSubmit}
-            isPending={create.isPending}
-            loadingText="Saving..."
-            className="flex-1"
-          >
-            Schedule Report
-          </LoadingButton>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
-  );
-}
-
-function ScheduledReportItem({
-  report,
-  onDelete,
-}: {
-  report: ScheduledReport;
-  onDelete: (id: number) => void;
-}) {
-  function handleDelete() {
-    onDelete(report.id);
-  }
-  return (
-    <div className="border rounded-lg px-3 py-2.5 flex items-center justify-between gap-3">
-      <div>
-        <p className="text-sm font-medium">{report.name}</p>
-        <p className="text-xs text-muted-foreground">
-          {report.schedule === "WEEKLY" ? "Weekly" : "Monthly"} ·{" "}
-          {report.reportConfig.entity} ·{" "}
-          {report.recipients.slice(0, 2).join(", ")}
-          {report.recipients.length > 2 &&
-            ` +${report.recipients.length - 2} more`}
-        </p>
-      </div>
-      <Button
-        size="sm"
-        variant="ghost"
-        className="text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
-        onClick={handleDelete}
-      >
-        Delete
-      </Button>
-    </div>
-  );
-}
-
-function ScheduledReportsList() {
-  const { data: reports = [], isLoading, isError, refetch } = useScheduledReports();
-  const deleteReport = useDeleteScheduledReport();
-  const [deletingId, setDeletingId] = useState<number | null>(null);
-
-  const handleDelete = useCallback(() => {
-    if (deletingId === null) return;
-    deleteReport.mutate(deletingId, {
-      onSuccess: () => {
-        toast.success("Scheduled report deleted");
-        setDeletingId(null);
-      },
-      onError: (e) => {
-        toast.error(getErrorMessage(e));
-        setDeletingId(null);
-      },
-    });
-  }, [deletingId, deleteReport]);
-
-  function handleDeleteDialogChange(v: boolean) {
-    if (!v) setDeletingId(null);
-  }
-  function handleCancelDelete() {
-    setDeletingId(null);
-  }
-
-  if (isLoading) return <Skeleton className="h-24 rounded-lg" />;
-  if (isError) {
-    return (
-      <div className="mt-6 rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-center">
-        <p className="text-sm font-medium text-foreground">Unable to load scheduled reports</p>
-        <p className="text-xs text-muted-foreground mt-1">Try again shortly.</p>
-        <Button size="sm" variant="outline" className="mt-3" onClick={() => void refetch()}>
-          Try again
-        </Button>
-      </div>
-    );
-  }
-  if (reports.length === 0) return null;
-
-  return (
-    <div className="mt-6">
-      <h3 className="text-sm font-semibold mb-3">Scheduled Reports</h3>
-      <div className="space-y-2">
-        {reports.map((r) => (
-          <ScheduledReportItem key={r.id} report={r} onDelete={setDeletingId} />
-        ))}
-      </div>
-      {deletingId !== null && (
-        <AlertDialog open onOpenChange={handleDeleteDialogChange}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete Scheduled Report</AlertDialogTitle>
-              <AlertDialogDescription>
-                This will stop the scheduled emails for this report.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={handleCancelDelete}>
-                Cancel
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDelete}
-                disabled={deleteReport.isPending}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      )}
-    </div>
-  );
-}
-
-function ResultTable({ result }: { result: GenerateReportResult }) {
-  const headers = useMemo(
-    () =>
-      result.fields.length > 0
-        ? result.fields
-        : result.rows[0]
-          ? Object.keys(result.rows[0])
-          : [],
-    [result.fields, result.rows],
-  );
-
-  const indexedRows = useMemo<IndexedRow[]>(
-    () => result.rows.slice(0, 100).map((row, i) => ({ ...row, _idx: i })),
-    [result.rows],
-  );
-
-  const columns = useMemo<DataTableColumn<IndexedRow>[]>(
-    () =>
-      headers.map((h) => ({
-        key: h,
-        header: h,
-        cell: (row) => (
-          <span className="whitespace-nowrap">{String(row[h] ?? "")}</span>
-        ),
-        className: "text-xs",
-        headerClassName: "text-xs whitespace-nowrap",
-      })),
-    [headers],
-  );
-
-  const footer =
-    result.total > 100 ? (
-      <span>Showing 100 of {result.total} rows — export to see all</span>
-    ) : undefined;
-
-  return (
-    <div className="mt-4 max-h-[50dvh] overflow-auto">
-      <DataTable
-        data={indexedRows}
-        columns={columns}
-        getRowKey={(row) => row._idx}
-        footer={footer}
-        emptyState={
-          <p className="text-sm text-muted-foreground text-center py-8">
-            No data matches the selected filters
-          </p>
-        }
-      />
-    </div>
-  );
-}
-
-interface FieldCheckItemProps {
-  field: { value: string; label: string };
-  isChecked: boolean;
-  onToggle: (value: string) => void;
-}
-
-function FieldCheckItem({ field: f, isChecked, onToggle }: FieldCheckItemProps) {
-  function handleCheckedChange() { onToggle(f.value); }
-  return (
-    <div className="flex items-center gap-2">
-      <Checkbox
-        id={f.value}
-        checked={isChecked}
-        onCheckedChange={handleCheckedChange}
-      />
-      <label htmlFor={f.value} className="text-xs cursor-pointer">
-        {f.label}
-      </label>
-    </div>
-  );
-}
+import { HR_ROLES } from "@/features/hr/recruitment/reports/lib/report-constants";
+import { ReportBuilderCard } from "@/features/hr/recruitment/reports/components/report-builder-card";
+import { ReportResultPanel } from "@/features/hr/recruitment/reports/components/report-result-panel";
+import { ScheduledReportsList } from "@/features/hr/recruitment/reports/components/scheduled-reports-list";
+import { ScheduleReportSheet } from "@/features/hr/recruitment/reports/components/schedule-report-sheet";
 
 export default function ReportsPage() {
   const { data: session } = useSession();
@@ -454,14 +33,14 @@ export default function ReportsPage() {
 
   const availableFields = ENTITY_FIELDS[entity];
 
-  const toggleField = useCallback((field: string) => {
+  const handleFieldToggle = useCallback((field: string) => {
     setSelectedFields((prev) =>
       prev.includes(field) ? prev.filter((f) => f !== field) : [...prev, field],
     );
   }, []);
 
-  const handleEntityChange = useCallback((val: ReportEntity) => {
-    setEntity(val);
+  const handleEntityChange = useCallback((val: string) => {
+    setEntity(val as ReportEntity);
     setSelectedFields([]);
     setResult(null);
   }, []);
@@ -487,46 +66,6 @@ export default function ReportsPage() {
     );
   }, [entity, selectedFields, availableFields, dateFrom, dateTo, generate]);
 
-  const handleExportCsv = useCallback(async () => {
-    if (!result) return;
-    const Papa = (await import("papaparse")).default;
-    const csv = Papa.unparse(result.rows);
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${entity}-report.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }, [result, entity]);
-
-  const handleExportXlsx = useCallback(async () => {
-    if (!result) return;
-    const ExcelJS = (await import("exceljs")).default;
-    const wb = new ExcelJS.Workbook();
-    const ws = wb.addWorksheet(entity);
-    if (result.rows.length > 0) {
-      ws.columns = Object.keys(result.rows[0]).map((key) => ({
-        header: key,
-        key,
-      }));
-      result.rows.forEach((row) => ws.addRow(row));
-    }
-    const buffer = await wb.xlsx.writeBuffer();
-    const blob = new Blob([buffer], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${entity}-report.xlsx`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }, [result, entity]);
-
-  function handleEntitySelectChange(v: string) {
-    handleEntityChange(v as ReportEntity);
-  }
   function handleDateFromChange(value: string) {
     setDateFrom(value);
   }
@@ -544,140 +83,35 @@ export default function ReportsPage() {
     <PageWrapper
       title="Reports & Exports"
       subtitle="Build custom reports and export recruitment data"
- variant="display">
+      variant="display"
+    >
       <div className="flex flex-1 min-h-0 flex-col">
-      <div className="grid gap-4 lg:grid-cols-[300px_1fr]">
-        <div className="space-y-4">
-          <Card>
-            <CardHeader className="pb-2 pt-4 px-4">
-              <CardTitle className="text-sm">Report Builder</CardTitle>
-            </CardHeader>
-            <CardContent className="px-4 pb-4 space-y-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs">Entity</Label>
-                <Select value={entity} onValueChange={handleEntitySelectChange}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ENTITY_OPTIONS.map((o) => (
-                      <SelectItem
-                        key={o.value}
-                        value={o.value}
-                        className="text-xs"
-                      >
-                        {o.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs">Fields (all if none selected)</Label>
-                <div className="max-h-40 overflow-y-auto space-y-1.5 rounded border p-2">
-                  {availableFields.map((f) => (
-                    <FieldCheckItem
-                      key={f.value}
-                      field={f}
-                      isChecked={selectedFields.includes(f.value)}
-                      onToggle={toggleField}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div className="space-y-1">
-                  <Label className="text-xs">Date From</Label>
-                  <DatePicker value={dateFrom ?? ""} onChange={handleDateFromChange} placeholder="Pick a date" className="text-xs" />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Date To</Label>
-                  <DatePicker value={dateTo ?? ""} onChange={handleDateToChange} placeholder="Pick a date" className="text-xs" />
-                </div>
-              </div>
-
-              <LoadingButton
-                size="sm"
-                className="w-full"
-                onClick={handleGenerate}
-                isPending={generate.isPending}
-                loadingText="Generating..."
-              >
-                Generate Report
-              </LoadingButton>
-            </CardContent>
-          </Card>
-
-          {isHr && <ScheduledReportsList />}
-        </div>
-
-        <div>
-          {!result && !generate.isPending && (
-            <RecruitmentEmptyState
-              illustration={<EmptyLeaderboardIllustration />}
-              title="No report generated yet"
-              description="Configure the report builder on the left and click Generate Report."
+        <div className="grid gap-4 lg:grid-cols-[300px_1fr]">
+          <div className="space-y-4">
+            <ReportBuilderCard
+              entity={entity}
+              selectedFields={selectedFields}
+              dateFrom={dateFrom}
+              dateTo={dateTo}
+              isPending={generate.isPending}
+              onEntityChange={handleEntityChange}
+              onFieldToggle={handleFieldToggle}
+              onDateFromChange={handleDateFromChange}
+              onDateToChange={handleDateToChange}
+              onGenerate={handleGenerate}
             />
-          )}
+            {isHr && <ScheduledReportsList />}
+          </div>
 
-          {generate.isPending && (
-            <div className="space-y-2">
-              {Array.from({ length: 12 }).map((_, i) => (
-                <Skeleton key={i} className="h-8 rounded" />
-              ))}
-            </div>
-          )}
-
-          {result && (
-            <Card>
-              <CardHeader className="pb-2 pt-4 px-4 flex-row items-center justify-between">
-                <div>
-                  <CardTitle className="text-sm capitalize">
-                    {result.entity} Report
-                  </CardTitle>
-                  <p className="text-xs text-muted-foreground">
-                    {result.total} records
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <AnimatedIconButton
-                    icon={DownloadIcon}
-                    iconSize={14}
-                    size="sm"
-                    variant="outline"
-                    onClick={handleExportCsv}
-                  >
-                    CSV
-                  </AnimatedIconButton>
-                  <AnimatedIconButton
-                    icon={DownloadIcon}
-                    iconSize={14}
-                    size="sm"
-                    variant="outline"
-                    onClick={handleExportXlsx}
-                  >
-                    Excel
-                  </AnimatedIconButton>
-                  {isHr && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={handleOpenSchedule}
-                    >
-                      Schedule
-                    </Button>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent className="px-4 pb-4">
-                <ResultTable result={result} />
-              </CardContent>
-            </Card>
-          )}
+          <div>
+            <ReportResultPanel
+              result={result}
+              isPending={generate.isPending}
+              isHr={isHr}
+              onSchedule={handleOpenSchedule}
+            />
+          </div>
         </div>
-      </div>
       </div>
 
       {scheduleSheetOpen && result && (

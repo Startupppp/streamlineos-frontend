@@ -1,5 +1,5 @@
 import { requirePermission } from "@/lib/rbac/require-permission";
-import { PayslipsContent } from "./payslips-content";
+import { PayslipsContent } from "@/features/payroll/payslips/payslips-content";
 
 export const metadata = { title: "Payslips — Payroll" };
 

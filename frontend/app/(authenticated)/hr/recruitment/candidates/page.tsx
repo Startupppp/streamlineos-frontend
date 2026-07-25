@@ -41,7 +41,7 @@ import { AddCandidateSheet } from "@/features/hr/recruitment/candidates-list/add
 import { EditCandidateSheet } from "@/features/hr/recruitment/candidates-list/edit-candidate-sheet";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ErrorState } from "@/components/shared/error-state";
-import { RecruitmentListPagination } from "@/features/hr/recruitment/components/recruitment-list-pagination";
+import { TablePagination } from "@/components/ui/table-pagination";
 import {
   CandidateCard,
   CandidateCardSkeleton,
@@ -388,11 +388,10 @@ export default function CandidatesPage() {
                 />
               ))}
             </div>
-            <RecruitmentListPagination
+            <TablePagination
               page={candidatesPage?.page ?? 1}
               pageSize={candidatesPage?.pageSize ?? 24}
               total={candidatesPage?.total ?? 0}
-              totalPages={candidatesPage?.totalPages ?? 1}
               onPageChange={(p) => setFilter("page", p <= 1 ? null : String(p))}
             />
           </>

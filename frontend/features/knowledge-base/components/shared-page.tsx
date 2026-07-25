@@ -12,24 +12,14 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { pageHref } from "@/features/knowledge-base/lib/knowledge-routes";
 import { KbUsersIcon } from "@/features/knowledge-base/lib/kb-icons";
 import type { KbPageTreeNode } from "@/hooks/api/kb/pages";
-
-const STATUS_BADGE_CLASS: Record<string, string> = {
-  draft: "bg-muted text-muted-foreground border-border",
-  in_review: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  published: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  archived: "bg-muted text-muted-foreground border-border opacity-60",
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  draft: "Draft",
-  in_review: "In Review",
-  published: "Published",
-  archived: "Archived",
-};
+import {
+  KB_STATUS_LABELS,
+  KB_STATUS_BADGE_CLASS,
+} from "@/features/knowledge-base/lib/kb-page-status";
 
 function SharedRow({ node }: { node: KbPageTreeNode }) {
   const badgeClass =
-    STATUS_BADGE_CLASS[node.status] ??
+    KB_STATUS_BADGE_CLASS[node.status] ??
     "bg-muted text-muted-foreground border-border";
   return (
     <Link
@@ -45,7 +35,7 @@ function SharedRow({ node }: { node: KbPageTreeNode }) {
           variant="outline"
           className={`text-[10px] h-4 px-1.5 shrink-0 ${badgeClass}`}
         >
-          {STATUS_LABELS[node.status] ?? node.status}
+          {KB_STATUS_LABELS[node.status] ?? node.status}
         </Badge>
       )}
     </Link>

@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 export type KbReviewType = "approval" | "freshness";
 export type KbReviewStatus = "pending" | "approved" | "rejected";
@@ -47,19 +48,23 @@ export type KbPageReviewsParams = {
 };
 
 export function useKbPageReviews(params?: KbPageReviewsParams) {
+  const canViewReviews = useCan("kb:reviews:view");
   const queryParams: Record<string, unknown> = { ...params };
   return useQuery({
     queryKey: queryKeys.kb.pageReviews(queryParams),
     queryFn: () => apiClient.get<KbPageReview[]>("/kb/page-reviews", queryParams),
     staleTime: 30_000,
+    enabled: canViewReviews,
   });
 }
 
 export function useKbPageReviewsDue() {
+  const canViewReviews = useCan("kb:reviews:view");
   return useQuery({
     queryKey: queryKeys.kb.pageReviewsDue(),
     queryFn: () => apiClient.get<KbPageReview[]>("/kb/page-reviews/due"),
     staleTime: 60_000,
+    enabled: canViewReviews,
   });
 }
 

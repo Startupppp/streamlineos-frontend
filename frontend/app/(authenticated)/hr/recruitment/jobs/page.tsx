@@ -13,7 +13,7 @@ import {
 } from "@/hooks/api/hr/recruitment";
 import type { JobBoardPlatform, JobShareLinks } from "@/hooks/api/hr/recruitment";
 import type { JobPosting } from "@/types/hr";
-import { RecruitmentListPagination } from "@/features/hr/recruitment/components/recruitment-list-pagination";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -556,13 +556,11 @@ export default function JobPostingsPage() {
                 );
               })}
             </div>
-            <RecruitmentListPagination
+            <TablePagination
               page={jobsPage?.page ?? 1}
               pageSize={jobsPage?.pageSize ?? pageSizeFromUrl}
               total={jobsPage?.total ?? 0}
-              totalPages={jobsPage?.totalPages ?? 1}
               onPageChange={(p) => setPagination({ page: p })}
-              onPageSizeChange={(size) => setPagination({ page: 1, pageSize: size })}
             />
           </>
         )}

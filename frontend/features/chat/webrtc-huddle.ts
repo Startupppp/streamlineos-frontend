@@ -11,6 +11,7 @@ import { safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
 import { useAblyConnection } from "./use-ably-connection";
 import {
   getIceServers,
+  getMicErrorMessage,
   handleIncomingSignal,
   updatedStreamMap,
   type IncomingSignalData,
@@ -213,7 +214,7 @@ export function useWebRTCHuddle(
       })
       .catch((err: unknown) => {
         if (mounted) {
-          setMicError(getErrorMessage(err));
+          setMicError(getMicErrorMessage(err));
         }
       });
 

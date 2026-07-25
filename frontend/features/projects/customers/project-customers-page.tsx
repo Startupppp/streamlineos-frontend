@@ -165,7 +165,6 @@ export function ProjectCustomersPage() {
       title="Customers"
       subtitle="CRM companies linked to this workspace"
       noInternalScroll
-      actions={<CustomerDisplayPrefsPopover prefs={prefs} onToggle={toggle} />}
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
           <div className="min-w-0 flex-1 lg:max-w-sm">
@@ -183,6 +182,9 @@ export function ProjectCustomersPage() {
             filters={filters}
             onRemove={handleFilterRemove}
           />
+          <div className="ml-auto shrink-0">
+            <CustomerDisplayPrefsPopover prefs={prefs} onToggle={toggle} />
+          </div>
         </div>
       }
     >

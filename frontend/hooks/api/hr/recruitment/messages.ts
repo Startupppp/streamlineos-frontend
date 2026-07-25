@@ -67,6 +67,7 @@ export function useMessageThreads() {
 export function useSendCandidateMessage() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "messages", "send"],
     mutationFn: (data: SendCandidateMessageInput) =>
       apiClient.post<CandidateMessage>("/hr/recruitment/messages", data),
     onSuccess: (_, variables) => {

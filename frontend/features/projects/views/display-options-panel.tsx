@@ -1,10 +1,8 @@
 "use client";
 
-import { memo, useCallback, type MouseEvent as ReactMouseEvent } from "react";
+import { memo, useCallback } from "react";
 import { Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import {
   ResponsivePopover,
   ResponsivePopoverContent,
@@ -18,7 +16,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
+import { DisplayToggleRow } from "@/features/projects/shared/display-toggle-row";
 import type { ViewType } from "./view-switcher";
 import type {
   DisplayOptions,
@@ -179,56 +177,6 @@ const COMPLETED_OPTIONS: { value: CompletedIssuesFilter; label: string }[] = [
   { value: "last-month", label: "Last month" },
 ];
 
-interface PropertyChipProps {
-  label: string;
-  active: boolean;
-  onToggle: () => void;
-}
-
-function PropertyChip({ label, active, onToggle }: PropertyChipProps) {
-  return (
-    <button
-      type="button"
-      onClick={onToggle}
-      className={cn(
-        "flex h-9 items-center justify-center rounded border px-2 text-xs transition-colors",
-        active
-          ? "bg-primary/10 border-primary/40 text-primary"
-          : "border-border text-muted-foreground hover:border-primary/30",
-      )}
-    >
-      {label}
-    </button>
-  );
-}
-
-interface ToggleRowProps {
-  id: string;
-  label: string;
-  checked: boolean;
-  onCheckedChange: (checked: boolean) => void;
-}
-
-function ToggleRow({ id, label, checked, onCheckedChange }: ToggleRowProps) {
-  function handleLabelClick(event: ReactMouseEvent<HTMLLabelElement>) {
-    event.preventDefault();
-    onCheckedChange(!checked);
-  }
-
-  return (
-    <div className="flex h-9 items-center justify-between gap-3">
-      <Label
-        htmlFor={id}
-        onClick={handleLabelClick}
-        className="cursor-pointer text-xs font-normal"
-      >
-        {label}
-      </Label>
-      <Switch id={id} checked={checked} onCheckedChange={onCheckedChange} />
-    </div>
-  );
-}
-
 export type { DisplayOptions };
 
 interface DisplayOptionsPanelProps {
@@ -288,10 +236,6 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
   function handleShowEmptyColumns(checked: boolean) { set("showEmptyColumns", checked); }
   function handleShowEmptyRows(checked: boolean) { set("showEmptyRows", checked); }
   function handleShowEmptyGroups(checked: boolean) { set("showEmptyGroups", checked); }
-
-  function handleToggleProperty(key: PropertyKey) {
-    set(key, !options[key]);
-  }
 
   function handleReset() {
     onChange(DEFAULT_DISPLAY_OPTIONS);
@@ -414,7 +358,7 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
                   ))}
                 </SelectContent>
               </Select>
-              <ToggleRow
+              <DisplayToggleRow
                 id="disp-order-complete"
                 label="Order completed by recency"
                 checked={options.orderCompleteByRecency}
@@ -443,16 +387,16 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
           <>
             <Separator />
             <div className="space-y-0">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Show</p>
-              <ToggleRow id="disp-sub-issues" label="Sub-issues" checked={options.showSubIssues} onCheckedChange={handleShowSubIssues} />
+              <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Show</p>
+              <DisplayToggleRow id="disp-sub-issues" label="Sub-issues" checked={options.showSubIssues} onCheckedChange={handleShowSubIssues} />
               {isBoard && (
                 <>
-                  <ToggleRow id="disp-empty-columns" label="Empty columns" checked={options.showEmptyColumns} onCheckedChange={handleShowEmptyColumns} />
-                  <ToggleRow id="disp-empty-rows" label="Empty rows" checked={options.showEmptyRows} onCheckedChange={handleShowEmptyRows} />
+                  <DisplayToggleRow id="disp-empty-columns" label="Empty columns" checked={options.showEmptyColumns} onCheckedChange={handleShowEmptyColumns} />
+                  <DisplayToggleRow id="disp-empty-rows" label="Empty rows" checked={options.showEmptyRows} onCheckedChange={handleShowEmptyRows} />
                 </>
               )}
               {isList && (
-                <ToggleRow id="disp-empty-groups" label="Empty groups" checked={options.showEmptyGroups} onCheckedChange={handleShowEmptyGroups} />
+                <DisplayToggleRow id="disp-empty-groups" label="Empty groups" checked={options.showEmptyGroups} onCheckedChange={handleShowEmptyGroups} />
               )}
             </div>
           </>
@@ -461,18 +405,17 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
         {propertyChips.length > 0 && (
           <>
             <Separator />
-            <div className="space-y-2">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Properties</p>
-              <div className="grid grid-cols-2 gap-1.5">
-                {propertyChips.map((chip) => (
-                  <PropertyChip
-                    key={chip.key}
-                    label={chip.label}
-                    active={options[chip.key]}
-                    onToggle={() => handleToggleProperty(chip.key)}
-                  />
-                ))}
-              </div>
+            <div className="space-y-0">
+              <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Properties</p>
+              {propertyChips.map((chip) => (
+                <DisplayToggleRow
+                  key={chip.key}
+                  id={`disp-prop-${chip.key}`}
+                  label={chip.label}
+                  checked={options[chip.key]}
+                  onCheckedChange={(checked) => set(chip.key, checked)}
+                />
+              ))}
             </div>
           </>
         )}

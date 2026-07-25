@@ -1,80 +1,41 @@
 "use client";
 
 import { useState, useMemo, useCallback, useEffect } from "react";
-import {
-  FolderPlus,
-  Upload,
-  FilePlus2,
-  FileText,
-  Pencil,
-  Trash2,
-  Globe,
-  FolderOpen,
-  HardDrive,
-  Star,
-  LayoutTemplate,
-  LayoutGrid,
-  List,
-  AlertCircle,
-  Mail,
-  CalendarCheck,
-  AlertTriangle,
-} from "lucide-react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { LoadingButton } from "@/components/ui/loading-button";
+import { FileText, FolderOpen, HardDrive, Star } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useHrDocumentList,
   useDeleteDocument,
-  useRichDocuments,
-  useDeleteRichDocument,
+  useHrEmployees,
+  unwrapEmployees,
 } from "@/hooks/api/hr";
 import { hrDocumentListPrefix } from "@/hooks/api/hr/documents";
-import { useLetters } from "@/hooks/api/hr/letters";
 import { CreateEnvelopeDialog } from "@/features/sign";
 import { UploadDocumentDialog } from "@/features/hr/documents/components/upload-document-dialog";
 import { LetterGenerationSheet } from "@/features/hr/documents/letter-generation-sheet";
-import { LettersHistoryTable } from "@/features/hr/documents/letters-history-table";
-import { ComplianceCalendar } from "@/features/hr/documents/compliance-calendar";
-import { ExpiringDocumentsTable } from "@/features/hr/documents/expiring-documents-table";
-import { useHrEmployees, unwrapEmployees } from "@/hooks/api/hr";
 import { useSession } from "next-auth/react";
-import { formatDistanceToNow } from "date-fns";
-import { cn } from "@/lib/utils";
-import type { Document, Employee } from "@/types/hr";
+import type { Document } from "@/types/hr";
 
 import { DocumentFilters, DOCUMENT_TYPES } from "@/features/hr/documents/document-filters";
 import { DocumentTable, type FolderItem } from "@/features/hr/documents/document-table";
 import { NewFolderDialog } from "@/features/hr/documents/new-folder-dialog";
 import { EditDocumentSheet } from "@/features/hr/documents/edit-document-sheet";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { TruncatedText } from "@/components/ui/truncated-text";
 import { useCan } from "@/hooks/api/access";
+import { RichDocumentsSection } from "@/features/hr/documents/rich-documents-section";
+import { DocumentsExtendedSection } from "@/features/hr/documents/documents-extended-section";
+import { DocumentPageActions } from "@/features/hr/documents/document-page-actions";
+import { DocumentLibrarySkeleton, DocumentLibraryError } from "@/features/hr/documents/document-page-states";
 
 const DOCUMENT_CATEGORIES = [
-  "Personal Documents",
-  "Employment",
-  "Compliance",
-  "Training",
-  "Financial",
-  "Legal",
-  "Other",
+  "Personal Documents", "Employment", "Compliance",
+  "Training", "Financial", "Legal", "Other",
 ];
 
 const DEFAULT_CATEGORY_TABS = [
-  "All Files",
-  "Contracts",
-  "Policies",
-  "Tax Forms",
-  "Templates",
-  "Payroll",
+  "All Files", "Contracts", "Policies", "Tax Forms", "Templates", "Payroll",
 ];
 
 export default function DocumentsPage() {
@@ -97,10 +58,7 @@ export default function DocumentsPage() {
   const [isLetterGenOpen, setIsLetterGenOpen] = useState(false);
 
   const { data: employeesRaw } = useHrEmployees({ limit: 100 });
-  const employees = useMemo(
-    () => unwrapEmployees(employeesRaw),
-    [employeesRaw],
-  );
+  const employees = useMemo(() => unwrapEmployees(employeesRaw), [employeesRaw]);
 
   const foldersKey = session?.orgId ? `hr-doc-folders-${session.orgId}` : null;
 
@@ -118,8 +76,8 @@ export default function DocumentsPage() {
   }, [foldersKey]);
 
   const typeFilter = selectedType !== "all" ? (selectedType as Document["type"]) : undefined;
-
   const qc = useQueryClient();
+
   const { data: documentsPage, isLoading, isError, refetch } = useHrDocumentList({
     page,
     limit: pageSize,
@@ -134,11 +92,7 @@ export default function DocumentsPage() {
     [policiesPage],
   );
   const totalDocuments = documentsPage?.pagination.total ?? 0;
-
-  const categoryTabs = useMemo(
-    () => [...DEFAULT_CATEGORY_TABS, ...customFolders],
-    [customFolders],
-  );
+  const categoryTabs = useMemo(() => [...DEFAULT_CATEGORY_TABS, ...customFolders], [customFolders]);
 
   const filteredDocuments = useMemo(() => {
     return documents.filter((doc) => {
@@ -155,43 +109,34 @@ export default function DocumentsPage() {
           (selectedCategory === "Tax Forms" && (doc.type === "ID_PROOF" || doc.tags?.some((t) => t.toLowerCase().includes("tax")))) ||
           (selectedCategory === "Templates" && doc.tags?.some((t) => t.toLowerCase().includes("template"))) ||
           (selectedCategory === "Payroll" && doc.type === "PAYSLIP");
-
         const customFolderMatch =
           customFolders.includes(selectedCategory) &&
           (doc.category?.toLowerCase() === selectedCategory.toLowerCase() ||
             doc.tags?.some((t) => t.toLowerCase() === selectedCategory.toLowerCase()));
-
         if (!builtInMatch && !customFolderMatch) return false;
       }
-
       return matchesSearch;
     });
   }, [documents, searchTerm, selectedCategory, customFolders]);
 
   const totalFiltered = totalDocuments;
   const totalPages = Math.max(1, documentsPage?.pagination.totalPages ?? 1);
-  const paginatedDocuments = filteredDocuments;
 
-  const folders: FolderItem[] = [
+  const folders: FolderItem[] = useMemo(() => [
     { name: "Employee Contracts", count: documents.filter((d) => d.type === "CONTRACT" || d.type === "OFFER_LETTER").length, colorIdx: 0 },
     { name: "Company Policies", count: policies.length, colorIdx: 1 },
     { name: "Tax Documents", count: documents.filter((d) => d.type === "ID_PROOF" || d.tags?.some((t) => t.toLowerCase().includes("tax"))).length, colorIdx: 2 },
     { name: "Archives", count: documents.filter((d) => d.type === "OTHER").length, colorIdx: 3 },
-  ];
+  ], [documents, policies]);
 
   const totalStorageBytes = documents.reduce((acc, doc) => acc + (doc.fileSize ?? 0), 0);
   const maxStorageGB = 20;
-  const usedGB = totalStorageBytes / (1024 * 1024 * 1024);
-  const storagePercent = Math.min(100, Math.round((usedGB / maxStorageGB) * 100));
+  const storagePercent = Math.min(100, Math.round((totalStorageBytes / (1024 * 1024 * 1024) / maxStorageGB) * 100));
 
   const handleDelete = useCallback(async (documentId: number) => {
     await toast.promise(
       deleteMutation.mutateAsync(documentId),
-      {
-        loading: "Deleting document...",
-        success: "Document deleted",
-        error: "Failed to delete document",
-      },
+      { loading: "Deleting document...", success: "Document deleted", error: "Failed to delete document" },
     );
     void qc.invalidateQueries({ queryKey: hrDocumentListPrefix });
   }, [deleteMutation, qc]);
@@ -203,6 +148,17 @@ export default function DocumentsPage() {
   const handleOpenNewFolder = useCallback(() => setIsNewFolderOpen(true), []);
   const handleViewList = useCallback(() => setViewMode("list"), []);
   const handleViewGrid = useCallback(() => setViewMode("grid"), []);
+  const handleEdit = useCallback((doc: Document) => setEditingDocument(doc), []);
+  const handleSendForSignature = useCallback((doc: Document) => setSignatureDocument(doc), []);
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleOpenLetterGen = useCallback(() => setIsLetterGenOpen(true), []);
+  const handleLetterSaved = useCallback(() => { void refetch(); }, [refetch]);
+  const handleUploadSuccess = useCallback(() => {
+    void qc.invalidateQueries({ queryKey: hrDocumentListPrefix });
+    setIsUploadOpen(false);
+  }, [qc]);
+  const handleEditSheetChange = useCallback((open: boolean) => { if (!open) setEditingDocument(null); }, []);
+  const handleSignatureDialogChange = useCallback((open: boolean) => { if (!open) setSignatureDocument(null); }, []);
 
   const handleNewFolder = useCallback((name: string) => {
     setCustomFolders((prev) => {
@@ -218,119 +174,24 @@ export default function DocumentsPage() {
     toast.success(`Folder "${name}" created`);
   }, [foldersKey]);
 
-  const handleEdit = useCallback((doc: Document) => setEditingDocument(doc), []);
-  const handleUploadSuccess = useCallback(() => {
-    void qc.invalidateQueries({ queryKey: hrDocumentListPrefix });
-    setIsUploadOpen(false);
-  }, [qc]);
-  const handleEditSheetChange = useCallback((open: boolean) => { if (!open) setEditingDocument(null); }, []);
-  const handleSendForSignature = useCallback((doc: Document) => setSignatureDocument(doc), []);
-  const handleSignatureDialogChange = useCallback((open: boolean) => { if (!open) setSignatureDocument(null); }, []);
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
-  const handleOpenLetterGen = useCallback(() => setIsLetterGenOpen(true), []);
-  const handleLetterSaved = useCallback(() => { void refetch(); }, [refetch]);
-
-  if (isLoading) {
-    return (
-      <PageWrapper
-        title="Document Library"
-        subtitle="Centralized repository for all HR documents, contracts, and policy files."
- variant="display">
-        <div className="space-y-4">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {Array.from({ length: 10 }).map((_, i) => (
-              <Skeleton key={i} className="h-[72px] rounded-xl" />
-            ))}
-          </div>
-          <Skeleton className="h-[400px] rounded-2xl" />
-        </div>
-      </PageWrapper>
-    );
-  }
-
-  if (isError) {
-    return (
-      <PageWrapper
-        title="Document Library"
-        subtitle="Centralized repository for all HR documents, contracts, and policy files."
- variant="display">
-        <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
-          <AlertCircle className="w-8 text-destructive" />
-          <div>
-            <p className="text-sm font-medium text-foreground">Failed to load documents</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Something went wrong. Please try again.</p>
-          </div>
-          <Button size="sm" variant="outline" onClick={handleRetry}>Try again</Button>
-        </div>
-      </PageWrapper>
-    );
-  }
-
-  const pageActions = (
-    <div className="flex items-center gap-2">
-      <div className="rounded-lg border border-border p-1 flex items-center gap-0.5">
-        <button
-          type="button"
-          onClick={handleViewList}
-          className={cn(
-            "h-7 w-7 rounded-md flex items-center justify-center transition-colors duration-200",
-            viewMode === "list"
-              ? "bg-primary text-primary-foreground"
-              : "text-muted-foreground hover:text-foreground",
-          )}
-          aria-label="List view"
-        >
-          <List className="h-3.5 w-3.5" />
-        </button>
-        <button
-          type="button"
-          onClick={handleViewGrid}
-          className={cn(
-            "h-7 w-7 rounded-md flex items-center justify-center transition-colors duration-200",
-            viewMode === "grid"
-              ? "bg-primary text-primary-foreground"
-              : "text-muted-foreground hover:text-foreground",
-          )}
-          aria-label="Grid view"
-        >
-          <LayoutGrid className="h-3.5 w-3.5" />
-        </button>
-      </div>
-
-      {canManageDocs && (
-        <Button variant="outline" size="sm" className="gap-1.5" onClick={handleOpenLetterGen}>
-          <Mail className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">Generate Letter</span>
-        </Button>
-      )}
-      <Button variant="outline" size="sm" className="gap-1.5" asChild>
-        <Link href="/hr/documents/templates">
-          <LayoutTemplate className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">Templates</span>
-        </Link>
-      </Button>
-      <Button variant="outline" size="sm" className="gap-1.5" onClick={handleOpenNewFolder}>
-        <FolderPlus className="h-3.5 w-3.5" />
-        <span className="hidden sm:inline">New Folder</span>
-      </Button>
-      <Button variant="outline" size="sm" className="gap-1.5" onClick={handleOpenUpload}>
-        <Upload className="h-3.5 w-3.5" />
-        <span className="hidden sm:inline">Upload</span>
-      </Button>
-      <Button size="sm" className="gap-1.5" asChild>
-        <Link href="/hr/documents/editor/new">
-          <FilePlus2 className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">Create Document</span>
-        </Link>
-      </Button>
-    </div>
-  );
+  if (isLoading) return <DocumentLibrarySkeleton />;
+  if (isError) return <DocumentLibraryError onRetry={handleRetry} />;
 
   return (
     <PageWrapper
       title="Document Library"
       subtitle="Centralized repository for all company-wide HR documents, contracts, and policy files."
-      actions={pageActions}
+      actions={
+        <DocumentPageActions
+          viewMode={viewMode}
+          canManageDocs={canManageDocs}
+          onViewList={handleViewList}
+          onViewGrid={handleViewGrid}
+          onOpenLetterGen={handleOpenLetterGen}
+          onOpenNewFolder={handleOpenNewFolder}
+          onOpenUpload={handleOpenUpload}
+        />
+      }
       filters={
         <DocumentFilters
           searchTerm={searchTerm}
@@ -357,7 +218,7 @@ export default function DocumentsPage() {
         </StatCardGrid>
 
         <DocumentTable
-          paginatedDocuments={paginatedDocuments}
+          paginatedDocuments={filteredDocuments}
           allFilteredDocuments={filteredDocuments}
           folders={folders}
           page={page}
@@ -374,7 +235,6 @@ export default function DocumentsPage() {
         />
 
         <RichDocumentsSection />
-
         <DocumentsExtendedSection />
 
         <UploadDocumentDialog
@@ -419,223 +279,5 @@ export default function DocumentsPage() {
         />
       </div>
     </PageWrapper>
-  );
-}
-
-interface RichDocumentRowProps {
-  doc: { id: number; title: string; templateType: string | null; isPublished: boolean | null; updatedAt: Date | string | null };
-  onDelete: (id: number) => void;
-  isDeletePending: boolean;
-}
-
-function RichDocumentRow({ doc, onDelete, isDeletePending }: RichDocumentRowProps) {
-  const handleDelete = useCallback(() => onDelete(doc.id), [onDelete, doc.id]);
-
-  return (
-    <div className="flex items-center justify-between p-2.5 rounded-xl border border-border bg-card hover:bg-muted/30 transition-colors duration-200">
-      <div className="flex items-center gap-2.5 min-w-0">
-        <div className="w-7 rounded-lg bg-muted flex items-center justify-center shrink-0">
-          <FileText className="h-3.5 w-3.5 text-muted-foreground" />
-        </div>
-        <div className="min-w-0">
-          <TruncatedText text={doc.title} className="text-sm font-medium text-foreground" />
-          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-            {doc.templateType && (
-              <span className="inline-flex items-center text-[10px] font-semibold px-1.5 py-0 rounded-full border bg-muted text-muted-foreground border-border">
-                {doc.templateType}
-              </span>
-            )}
-            {doc.isPublished && (
-              <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0 rounded-full border bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
-                <Globe className="h-2.5 w-2.5" />
-                Published
-              </span>
-            )}
-            {doc.updatedAt && (
-              <span className="text-[10px] text-muted-foreground">
-                {formatDistanceToNow(new Date(doc.updatedAt), { addSuffix: true })}
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-      <div className="flex items-center gap-1 shrink-0">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="w-7 text-muted-foreground hover:text-foreground"
-          asChild
-        >
-          <Link href={`/hr/documents/editor/${doc.id}`} aria-label="Edit document">
-            <Pencil className="h-3.5 w-3.5" />
-          </Link>
-        </Button>
-        <LoadingButton
-          variant="ghost"
-          size="icon"
-          className="w-7 text-muted-foreground hover:text-rose-600"
-          onClick={handleDelete}
-          isPending={isDeletePending}
-          aria-label="Delete document"
-        >
-          {!isDeletePending && <Trash2 className="h-3.5 w-3.5" />}
-        </LoadingButton>
-      </div>
-    </div>
-  );
-}
-
-function RichDocumentsSection() {
-  const [page, setPage] = useState(1);
-  const { data, isLoading } = useRichDocuments({ page, limit: 20 });
-  const deleteMutation = useDeleteRichDocument();
-
-  const richDocs = data?.data ?? [];
-  const total = data?.pagination.total ?? 0;
-  const totalPages = data?.pagination.totalPages ?? 1;
-
-  const handleDelete = useCallback((id: number) => {
-    deleteMutation.mutate(id, {
-      onSuccess: () => toast.success("Document deleted"),
-      onError: (e) => toast.error(getErrorMessage(e)),
-    });
-  }, [deleteMutation]);
-
-  const handlePrevPage = useCallback(() => {
-    setPage((prev) => Math.max(1, prev - 1));
-  }, []);
-
-  const handleNextPage = useCallback(() => {
-    setPage((prev) => prev + 1);
-  }, []);
-
-  if (isLoading) {
-    return (
-      <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between mb-3">
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-4 w-16" />
-          </div>
-          <div className="space-y-2">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <Skeleton key={i} className="h-11 w-full rounded-xl" />
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (richDocs.length === 0) return null;
-
-  return (
-    <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
-              <FileText className="h-3.5 w-3.5 text-primary" />
-            </div>
-            <h3 className="text-sm font-semibold text-foreground">Created Documents</h3>
-          </div>
-          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border">
-            {total}
-          </span>
-        </div>
-        <div className="space-y-1.5">
-          {richDocs.map((doc) => (
-            <RichDocumentRow
-              key={doc.id}
-              doc={doc}
-              onDelete={handleDelete}
-              isDeletePending={deleteMutation.isPending}
-            />
-          ))}
-        </div>
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between pt-3">
-            <span className="text-[11px] text-muted-foreground">
-              Page {page} of {totalPages}
-            </span>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs"
-                disabled={page <= 1}
-                onClick={handlePrevPage}
-              >
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs"
-                disabled={page >= totalPages}
-                onClick={handleNextPage}
-              >
-                Next
-              </Button>
-            </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-function DocumentsExtendedSection() {
-  const { data: letters = [], isLoading: lettersLoading } = useLetters();
-  const { data: allDocsPage, isLoading: docsLoading } = useHrDocumentList({ limit: 100 });
-  const allDocs = allDocsPage?.data ?? [];
-
-  const expiringDocs = allDocs.filter(
-    (d) => d.expiryDate && new Date(d.expiryDate) <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-  );
-
-  return (
-    <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
-      <CardContent className="p-4">
-        <Tabs defaultValue="letters">
-          <TabsList className="mb-4">
-            <TabsTrigger value="letters" className="gap-1.5">
-              <Mail className="h-3 w-3" />
-              Letters
-            </TabsTrigger>
-            <TabsTrigger value="expiring" className="gap-1.5">
-              <AlertTriangle className="h-3 w-3" />
-              Expiring
-            </TabsTrigger>
-            <TabsTrigger value="compliance" className="gap-1.5">
-              <CalendarCheck className="h-3 w-3" />
-              Calendar
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="letters" className="mt-0">
-            <LettersHistoryTable letters={letters} isLoading={lettersLoading} />
-          </TabsContent>
-
-          <TabsContent value="expiring" className="mt-0">
-            <ExpiringDocumentsTable
-              expiringDocuments={expiringDocs.map((d) => ({
-                id: d.id,
-                name: d.name,
-                type: d.type ?? "",
-                expiryDate: d.expiryDate ?? "",
-                userId: d.userId ?? null,
-              }))}
-              expiringCertifications={[]}
-              isLoading={docsLoading}
-            />
-          </TabsContent>
-
-          <TabsContent value="compliance" className="mt-0">
-            <ComplianceCalendar />
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
   );
 }

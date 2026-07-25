@@ -106,6 +106,7 @@ export function useRecruitmentVendors() {
 export function useCreateVendor() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "vendors", "create"],
     mutationFn: (data: CreateVendorInput) => apiClient.post<RecruitmentVendor>("/hr/recruitment/vendors", data),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.hr.recruitmentVendors() });
@@ -116,6 +117,7 @@ export function useCreateVendor() {
 export function useUpdateVendor(id: number) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "vendors", "update", id],
     mutationFn: (data: UpdateVendorInput) =>
       apiClient.patch<RecruitmentVendor>(`/hr/recruitment/vendors/${id}`, data),
     onSuccess: () => {
@@ -127,6 +129,7 @@ export function useUpdateVendor(id: number) {
 export function useDeleteVendor() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "vendors", "delete"],
     mutationFn: (id: number) => apiClient.delete(`/hr/recruitment/vendors/${id}`),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.hr.recruitmentVendors() });
@@ -146,6 +149,7 @@ export function useVendorSubmissions(vendorId: number) {
 export function useCreateVendorSubmission(vendorId: number) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "vendor-submissions", "create", vendorId],
     mutationFn: (data: CreateSubmissionInput) =>
       apiClient.post<VendorSubmission>(`/hr/recruitment/vendors/${vendorId}/submissions`, data),
     onSuccess: () => {
@@ -158,6 +162,7 @@ export function useCreateVendorSubmission(vendorId: number) {
 export function useUpdateVendorSubmission(vendorId: number) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "vendor-submissions", "update", vendorId],
     mutationFn: ({ submissionId, ...data }: UpdateSubmissionInput & { submissionId: number }) =>
       apiClient.patch<VendorSubmission>(
         `/hr/recruitment/vendors/${vendorId}/submissions?submissionId=${submissionId}`,
@@ -172,6 +177,7 @@ export function useUpdateVendorSubmission(vendorId: number) {
 
 export function useGenerateVendorPortalLink(vendorId: number) {
   return useMutation({
+    mutationKey: ["hr", "recruitment", "vendors", "portal-link", vendorId],
     mutationFn: () =>
       apiClient.post<{ portalToken: string; portalTokenExpiresAt: string }>(
         `/hr/recruitment/vendors/${vendorId}/portal-link`,

@@ -23,10 +23,10 @@ import {
   KbFileTextIcon,
   KbClipboardIcon,
   KbXIcon,
-  KbLoader2Icon,
   KbTriangleAlertIcon,
 } from "@/features/knowledge-base/lib/kb-icons";
 import { ExportJobsCard } from "./export-jobs-card";
+import { kbTimeAgo } from "@/features/knowledge-base/lib/kb-date-utils";
 import type { KbImportJob } from "@/hooks/api/kb/import-export";
 
 type ParsedItem = {
@@ -41,17 +41,6 @@ function sizeLabel(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const minutes = Math.floor(diff / 60000);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
-  if (days > 0) return `${days}d ago`;
-  if (hours > 0) return `${hours}h ago`;
-  if (minutes > 0) return `${minutes}m ago`;
-  return "just now";
 }
 
 function ImportJobRow({ job }: { job: KbImportJob }) {
@@ -82,7 +71,7 @@ function ImportJobRow({ job }: { job: KbImportJob }) {
         {job.status}
       </Badge>
       <span className="text-xs text-muted-foreground shrink-0">
-        {timeAgo(job.createdAt)}
+        {kbTimeAgo(job.createdAt)}
       </span>
     </div>
   );

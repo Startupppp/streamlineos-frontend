@@ -868,6 +868,23 @@ export const queryKeys = {
       [...base, "playbook", "list", params] as const,
   },
 
+  supportKb: {
+    all: [...base, "supportKb"] as const,
+    categories: () => [...base, "supportKb", "categories"] as const,
+    articles: (params?: Record<string, unknown>) =>
+      params === undefined
+        ? ([...base, "supportKb", "articles"] as const)
+        : ([...base, "supportKb", "articles", params] as const),
+    article: (articleId: number) =>
+      [...base, "supportKb", "article", articleId] as const,
+    publicArticles: (params?: Record<string, unknown>) =>
+      params === undefined
+        ? ([...base, "supportKb", "publicArticles"] as const)
+        : ([...base, "supportKb", "publicArticles", params] as const),
+    publicArticle: (orgId: string, slug: string) =>
+      [...base, "supportKb", "publicArticle", orgId, slug] as const,
+  },
+
   kb: {
     all: [...base, "kb"] as const,
     kbPages: () => [...base, "kb", "pages"] as const,

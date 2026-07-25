@@ -29,13 +29,13 @@ import { ErrorState } from "@/components/shared/error-state";
 import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyUploadIllustration } from "@/components/illustrations";
 import {
-  useKbAttachments,
-  useUploadKbAttachment,
-  useDeleteKbAttachment,
-  useKbAttachmentDownloadUrl,
+  useSupportKbAttachments,
+  useUploadSupportKbAttachment,
+  useDeleteSupportKbAttachment,
+  useSupportKbAttachmentDownloadUrl,
   type KbAttachment,
 } from "@/hooks/api/support/kb-attachments";
-import { useKbIndexStatus, useReindexKbArticle } from "@/hooks/api/support/kb-rag";
+import { useSupportKbIndexStatus, useReindexSupportKbArticle } from "@/hooks/api/support/kb-rag";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatFileSize } from "@/lib/format-utils";
 import { toast } from "sonner";
@@ -106,12 +106,12 @@ function AttachmentRowItem({
 }
 
 export function KbAttachmentsPanel({ article }: { article: KbArticleDetail }) {
-  const attachmentsQuery = useKbAttachments(article.id);
-  const uploadAttachment = useUploadKbAttachment(article.id);
-  const deleteAttachment = useDeleteKbAttachment(article.id);
-  const downloadUrl = useKbAttachmentDownloadUrl(article.id);
-  const indexStatus = useKbIndexStatus(article.id);
-  const reindex = useReindexKbArticle();
+  const attachmentsQuery = useSupportKbAttachments(article.id);
+  const uploadAttachment = useUploadSupportKbAttachment(article.id);
+  const deleteAttachment = useDeleteSupportKbAttachment(article.id);
+  const downloadUrl = useSupportKbAttachmentDownloadUrl(article.id);
+  const indexStatus = useSupportKbIndexStatus(article.id);
+  const reindex = useReindexSupportKbArticle();
   const inputRef = useRef<HTMLInputElement>(null);
   const [pendingDelete, setPendingDelete] = useState<KbAttachment | null>(null);
   const attachments = attachmentsQuery.data ?? [];

@@ -1,7 +1,7 @@
-"use client";
-
+import { requirePermission } from "@/lib/rbac/require-permission";
 import { ReportsView } from "@/features/timesheets-core/reports";
 
-export default function TimesheetReportsPage() {
+export default async function TimesheetReportsPage() {
+  await requirePermission("timesheets:reports:view");
   return <ReportsView />;
 }

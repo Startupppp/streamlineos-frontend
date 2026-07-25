@@ -9,6 +9,7 @@ import {
   KbLoader2Icon,
   KbRotateCcwIcon,
 } from "@/features/knowledge-base/lib/kb-icons";
+import { kbTimeAgo } from "@/features/knowledge-base/lib/kb-date-utils";
 import { toast } from "sonner";
 import { Sheet, SheetBody, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
@@ -34,17 +35,6 @@ const PlateDocumentEditor = dynamic(
   () => import("@/components/editor/plate/plate-document-editor"),
   { ssr: false, loading: () => <Skeleton className="h-32 w-full" /> }
 );
-
-function formatRelativeTime(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const minutes = Math.floor(diff / 60000);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
-  if (days > 0) return `${days}d ago`;
-  if (hours > 0) return `${hours}h ago`;
-  if (minutes > 0) return `${minutes}m ago`;
-  return "just now";
-}
 
 interface PageHistorySheetProps {
   pageId: number;
@@ -145,7 +135,7 @@ export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHis
                         <div className="min-w-0">
                           <p className="text-sm font-medium">Version {v.versionNumber}</p>
                           <p className="text-xs text-muted-foreground">
-                            {v.authorName ? `${v.authorName} · ` : ""}{formatRelativeTime(v.createdAt)}
+                            {v.authorName ? `${v.authorName} · ` : ""}{kbTimeAgo(v.createdAt)}
                           </p>
                           {v.changeSummary && (
                             <TruncatedText text={v.changeSummary ?? ""} className="text-xs text-muted-foreground mt-0.5" />
@@ -174,11 +164,11 @@ export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHis
                 {versionDetail.authorName && (
                   <p className="text-xs text-muted-foreground">
                     By <span className="font-medium text-foreground">{versionDetail.authorName}</span>
-                    {" · "}{formatRelativeTime(versionDetail.createdAt)}
+                    {" · "}{kbTimeAgo(versionDetail.createdAt)}
                   </p>
                 )}
                 {!versionDetail.authorName && (
-                  <p className="text-xs text-muted-foreground">{formatRelativeTime(versionDetail.createdAt)}</p>
+                  <p className="text-xs text-muted-foreground">{kbTimeAgo(versionDetail.createdAt)}</p>
                 )}
                 {versionDetail.changeSummary && (
                   <p className="text-xs text-muted-foreground mt-0.5">{versionDetail.changeSummary}</p>

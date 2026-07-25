@@ -51,6 +51,7 @@ export function useNineBox(cycleId: number) {
 export function useUpsertCalibrationEntry(cycleId: number) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "calibration", "upsert", cycleId],
     mutationFn: (body: { employeeId: string; preRating?: string; postRating?: string; note?: string }) =>
       apiClient.post<CalibrationEntry>(`/hr/performance/calibration/cycles/${cycleId}/entries`, body),
     onSuccess: () => {

@@ -1,5 +1,5 @@
-import { EmployeeDetailsView } from "./employee-details-view";
-import type { EmployeeData } from "./edit-employee-form";
+import { EmployeeDetailsView } from "@/features/hr/employees/detail/employee-details-view";
+import type { EmployeeData } from "@/features/hr/employees/detail/edit-employee-form";
 import { notFound } from "next/navigation";
 import { requirePermission } from "@/lib/rbac/require-permission";
 import { serverApiClient } from "@/lib/api/server-client";

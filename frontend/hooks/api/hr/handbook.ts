@@ -47,6 +47,7 @@ export function useHandbookVersions() {
 export function useCreateHandbookVersion() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "handbook", "create"],
     mutationFn: (data: CreateHandbookVersionInput) =>
       apiClient.post<HandbookVersion>("/hr/handbook", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: handbookKeys.list() }),
@@ -56,6 +57,7 @@ export function useCreateHandbookVersion() {
 export function useUpdateHandbookVersion() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "handbook", "update"],
     mutationFn: ({ id, ...data }: UpdateHandbookVersionInput) =>
       apiClient.patch<{ success: boolean }>(`/hr/handbook/${id}`, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: handbookKeys.list() }),
@@ -65,6 +67,7 @@ export function useUpdateHandbookVersion() {
 export function useDeleteHandbookVersion() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "handbook", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/handbook/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: handbookKeys.list() }),

@@ -17,7 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import {
-  useUpdateKbArticle,
+  useUpdateSupportKbArticle,
   type KbArticleDetail,
   type KbArticleStatus,
   type KbArticleVisibility,
@@ -111,7 +111,7 @@ export function KbArticleEditor({
   article: KbArticleDetail;
   categories: KbCategory[];
 }) {
-  const update = useUpdateKbArticle();
+  const update = useUpdateSupportKbArticle();
 
   const [title, setTitle] = useState(article.title);
   const [categoryId, setCategoryId] = useState<string>(

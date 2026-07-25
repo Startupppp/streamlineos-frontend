@@ -15,7 +15,7 @@ import {
   FolderTree,
   ArrowRight,
 } from "lucide-react";
-import { usePublicKb } from "@/hooks/api/support/kb";
+import { usePublicSupportKb } from "@/hooks/api/support/kb";
 import { KbAskPanel } from "@/components/support/kb-ask-panel";
 import { getApiError } from "@/lib/api-client";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
@@ -40,7 +40,7 @@ export function HelpCenterClient({ orgId }: HelpCenterClientProps) {
     [activeCategory, debouncedSearch],
   );
 
-  const { data, isLoading, error, refetch } = usePublicKb(orgId, queryParams);
+  const { data, isLoading, error, refetch } = usePublicSupportKb(orgId, queryParams);
 
   const categories = data?.categories ?? [];
   const articles = data?.articles ?? [];

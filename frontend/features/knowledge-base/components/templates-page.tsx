@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { PageWrapper, PageSection } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertDialog,
@@ -33,7 +33,6 @@ import {
 import {
   KbLayoutTemplateIcon,
   KbTrash2Icon,
-  KbLoader2Icon,
 } from "@/features/knowledge-base/lib/kb-icons";
 import type { KbPageTemplate } from "@/hooks/api/kb/page-templates";
 import type { StarterTemplate } from "@/features/knowledge-base/lib/starter-templates";
@@ -85,33 +84,25 @@ function TemplateCard({
           )}
         </div>
         <div className="flex items-center gap-1 shrink-0">
-          <Button
+          <LoadingButton
             size="sm"
             onClick={handleUseClick}
-            disabled={isCreating}
+            isPending={isCreating}
             className="text-xs"
           >
-            {isCreating ? (
-              <KbLoader2Icon className="h-3 w-3 animate-spin" />
-            ) : (
-              "Use"
-            )}
-          </Button>
+            Use
+          </LoadingButton>
           {canDelete && (
-            <Button
+            <LoadingButton
               size="sm"
               variant="ghost"
               onClick={handleDeleteClick}
-              disabled={deleteTemplate.isPending}
+              isPending={deleteTemplate.isPending}
               className="w-7 p-0 text-muted-foreground hover:text-destructive"
               aria-label="Delete template"
             >
-              {deleteTemplate.isPending ? (
-                <KbLoader2Icon className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <KbTrash2Icon className="h-3.5 w-3.5" />
-              )}
-            </Button>
+              <KbTrash2Icon className="h-3.5 w-3.5" />
+            </LoadingButton>
           )}
         </div>
       </div>
@@ -159,19 +150,15 @@ function StarterCard({ template, onUse, isCreating }: StarterCardProps) {
         <TruncatedText text={template.name} className="text-[13px] font-medium" />
         <TruncatedText text={template.description} lines={2} className="text-xs text-muted-foreground mt-0.5" />
       </div>
-      <Button
+      <LoadingButton
         size="sm"
         variant="outline"
         onClick={handleUseClick}
-        disabled={isCreating}
+        isPending={isCreating}
         className="text-xs shrink-0"
       >
-        {isCreating ? (
-          <KbLoader2Icon className="h-3 w-3 animate-spin" />
-        ) : (
-          "Use"
-        )}
-      </Button>
+        Use
+      </LoadingButton>
     </div>
   );
 }

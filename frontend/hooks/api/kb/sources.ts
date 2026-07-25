@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useCan } from "@/hooks/api/access";
 
 export interface KbSource {
   id: number;
@@ -18,10 +19,12 @@ export interface KbSource {
 }
 
 export function useKbSources() {
+  const canView = useCan("kb:pages:view");
   return useQuery({
     queryKey: ["kb", "sources"],
     queryFn: () => apiClient.get<KbSource[]>("/kb/sources"),
     staleTime: 15_000,
+    enabled: canView,
     refetchInterval: (query) =>
       query.state.data?.some((s) => s.status === "processing") ? 3000 : false,
   });

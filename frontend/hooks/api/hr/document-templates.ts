@@ -81,6 +81,7 @@ export function useDocumentTemplate(id: number) {
 export function useCreateDocumentTemplate() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "document-templates", "create"],
     mutationFn: (data: CreateDocumentTemplateInput) =>
       apiClient.post<DocumentTemplate>("/hr/documents/templates", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.documentTemplates() }),
@@ -90,6 +91,7 @@ export function useCreateDocumentTemplate() {
 export function useUpdateDocumentTemplate() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "document-templates", "update"],
     mutationFn: ({ id, ...data }: UpdateDocumentTemplateInput & { id: number }) =>
       apiClient.put<DocumentTemplate>(`/hr/documents/templates/${id}`, data),
     onSuccess: (_data, variables) => {
@@ -102,6 +104,7 @@ export function useUpdateDocumentTemplate() {
 export function useDeleteDocumentTemplate() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "document-templates", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/documents/templates/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.documentTemplates() }),
@@ -111,6 +114,7 @@ export function useDeleteDocumentTemplate() {
 export function useSetDocumentTemplateDefault() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "document-templates", "set-default"],
     mutationFn: ({ id, isDefault }: { id: number; isDefault: boolean }) =>
       apiClient.patch<DocumentTemplate>(`/hr/documents/templates/${id}`, { isDefault }),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.documentTemplates() }),
@@ -157,6 +161,7 @@ export function useCandidateDocuments(candidateId: number) {
 export function useGenerateCandidateDocument(candidateId: number) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "document-templates", "generate-candidate", candidateId],
     mutationFn: (data: GenerateCandidateDocumentInput) =>
       apiClient.post<CandidateDocument>(
         `/hr/recruitment/candidates/${candidateId}/documents`,

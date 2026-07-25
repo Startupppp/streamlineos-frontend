@@ -12,9 +12,11 @@ import {
   getMobileModuleOverflowTabs,
   getOverflowTabsByGroup,
   getAllMobileModuleTabs,
+  getMobileModuleContentPaddingClassName,
   isMobileNavRouteActive,
   shouldShowMobileModuleBottomNav,
   MAX_MOBILE_MODULE_TABS,
+  MOBILE_MODULE_CONTENT_PADDING_CLASS,
   MOBILE_PRIMARY_TABS_WHEN_OVERFLOW,
 } from "./mobile-module-nav-items";
 
@@ -205,6 +207,20 @@ describe("mobile module nav items", () => {
         },
       ]);
       expect(isMobileNavRouteActive("/timesheets/team", tabs[1]!, tabs)).toBe(true);
+    });
+  });
+
+  describe("getMobileModuleContentPaddingClassName", () => {
+    it("reserves the bottom nav height plus breathing room on mobile when the bar is shown", () => {
+      expect(getMobileModuleContentPaddingClassName(true)).toBe(
+        MOBILE_MODULE_CONTENT_PADDING_CLASS,
+      );
+      expect(MOBILE_MODULE_CONTENT_PADDING_CLASS).toContain("4.5rem");
+      expect(MOBILE_MODULE_CONTENT_PADDING_CLASS).toContain("md:pb-0");
+    });
+
+    it("skips padding when the module bottom nav is hidden", () => {
+      expect(getMobileModuleContentPaddingClassName(false)).toBeUndefined();
     });
   });
 

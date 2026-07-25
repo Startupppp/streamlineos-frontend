@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 export type ArticleMigrationPreview = {
   total: number;
@@ -21,10 +22,12 @@ export type MigrationResult = {
 };
 
 export function useArticleMigrationPreview() {
+  const canManageSettings = useCan("kb:settings:manage");
   return useQuery({
     queryKey: queryKeys.kb.articleMigrationPreview(),
     queryFn: () => apiClient.get<ArticleMigrationPreview>("/kb/article-migration/preview"),
     staleTime: 60_000,
+    enabled: canManageSettings,
   });
 }
 

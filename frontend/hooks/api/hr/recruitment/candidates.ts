@@ -182,6 +182,7 @@ export function useCandidateDuplicates() {
 export function useLinkDuplicateCandidate() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "candidates", "link-duplicate"],
     mutationFn: ({ candidateId, duplicateOfId }: { candidateId: number; duplicateOfId: number }) =>
       apiClient.post<{ success: boolean }>(`/hr/recruitment/candidates/${candidateId}/link-duplicate`, { duplicateOfId }),
     onSuccess: () => {
@@ -194,6 +195,7 @@ export function useLinkDuplicateCandidate() {
 export function useUnlinkDuplicateCandidate() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "candidates", "unlink-duplicate"],
     mutationFn: (candidateId: number) =>
       apiClient.post<{ success: boolean }>(`/hr/recruitment/candidates/${candidateId}/unlink-duplicate`, {}),
     onSuccess: () => {
@@ -206,6 +208,7 @@ export function useUnlinkDuplicateCandidate() {
 export function useBulkShortlistCandidates() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "candidates", "bulk-shortlist"],
     mutationFn: (candidateIds: number[]) =>
       apiClient.post<{ shortlisted: number; skipped: number }>("/hr/recruitment/candidates/bulk-shortlist", { candidateIds }),
     onSuccess: () => {
@@ -235,6 +238,7 @@ export function useCandidate(id: number) {
 export function useGenerateCandidateAiScore() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "candidates", "ai-score"],
     mutationFn: (candidateId: number) =>
       apiClient.post<AiScoreResult>(
         `/hr/recruitment/candidates/${candidateId}/ai-score`,
@@ -249,6 +253,7 @@ export function useGenerateCandidateAiScore() {
 
 export function useGenerateCandidateCompositeScore() {
   return useMutation({
+    mutationKey: ["hr", "recruitment", "candidates", "composite-score"],
     mutationFn: (candidateId: number) =>
       apiClient.post<CompositeScoreResult>(
         `/hr/recruitment/candidates/${candidateId}/composite-score`,
@@ -260,6 +265,7 @@ export function useGenerateCandidateCompositeScore() {
 export function useCreateCandidate() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "candidates", "create"],
     mutationFn: (data: CreateCandidateInput) =>
       apiClient.post<Candidate>("/hr/recruitment/candidates", data),
     onSuccess: () => {
@@ -272,6 +278,7 @@ export function useCreateCandidate() {
 export function useUpdateCandidate() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "candidates", "update"],
     mutationFn: ({ id, ...data }: UpdateCandidateInput & { id: number }) =>
       apiClient.patch<{ success: boolean }>(`/hr/recruitment/candidates/${id}`, data),
     onSuccess: (_data, { id }) => {
@@ -285,6 +292,7 @@ export function useUpdateCandidate() {
 export function useDeleteCandidate() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "candidates", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/recruitment/candidates/${id}`),
     onSuccess: () => {
@@ -298,6 +306,7 @@ export function useDeleteCandidate() {
 export function useCreateApplication() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "applications", "create"],
     mutationFn: ({ candidateId, ...data }: { candidateId: number; jobPostingId: number; coverLetter?: string }) =>
       apiClient.post<CandidateApplication>(
         `/hr/recruitment/candidates/${candidateId}/applications`,
@@ -321,6 +330,7 @@ export function useAtsKanban() {
 export function useUpdateCandidateStage() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "candidates", "update-stage"],
     mutationFn: ({ candidateId, stage }: { candidateId: number; stage: CandidateStatus }) =>
       apiClient.patch<{ id: number; stage: CandidateStatus; changed: boolean }>(
         `/hr/recruitment/candidates/${candidateId}/stage`,
@@ -376,6 +386,7 @@ export function useUpdateCandidateStage() {
 export function useBulkRejectCandidates() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "candidates", "bulk-reject"],
     mutationFn: (data: BulkRejectInput) =>
       apiClient.post<BulkRejectResult>(
         "/hr/recruitment/candidates/bulk-reject",

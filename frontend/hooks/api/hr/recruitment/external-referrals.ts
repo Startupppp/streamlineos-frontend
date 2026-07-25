@@ -52,6 +52,7 @@ export function useExternalReferrals() {
 export function useUpdateExternalReferral() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "external-referrals", "update"],
     mutationFn: ({ id, ...data }: { id: number } & UpdateExternalReferralInput) =>
       apiClient.patch<ExternalReferral>(`/hr/recruitment/external-referrals/${id}`, data),
     onSuccess: () => {
@@ -71,6 +72,7 @@ export function useExternalReferrers() {
 export function useUpdateExternalReferrerStatus(referrerId: number) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "external-referrers", "update-status", referrerId],
     mutationFn: (status: ExternalReferrerStatus) =>
       apiClient.patch<ExternalReferrer>(`/hr/recruitment/external-referrers/${referrerId}`, { status }),
     onSuccess: () => {

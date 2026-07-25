@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   Department,
   Employee,
@@ -46,6 +47,7 @@ export function useLegacyHrDepartments() {
 export function useCreateDepartment() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "departments", "create"],
     mutationFn: (data: CreateDepartmentInput) =>
       apiClient.post<Department>("/hr/departments", data),
     onSuccess: () =>
@@ -125,9 +127,16 @@ export function useHrEmployees(params?: HrEmployeesParams, options?: { enabled?:
  * Convenience for employee pickers (selects, assign dialogs).
  * Fetches a large page and always returns a flat Employee[].
  */
-export function useHrEmployeeOptions(params?: Omit<HrEmployeesParams, "page">) {
-  const merged = { limit: 100, isActive: "true" as const, ...params, page: 1 };
-  const query = useHrEmployees({ ...merged, limit: Math.min(merged.limit, 100) });
+export function useHrEmployeeOptions(
+  params?: Omit<HrEmployeesParams, "page"> & { enabled?: boolean },
+) {
+  const canView = useCan("hr:employees:view");
+  const { enabled, ...rest } = params ?? {};
+  const merged = { limit: 100, isActive: "true" as const, ...rest, page: 1 };
+  const query = useHrEmployees(
+    { ...merged, limit: Math.min(merged.limit, 100) },
+    { enabled: canView && (enabled ?? true) },
+  );
   return {
     ...query,
     employees: unwrapEmployees(query.data),
@@ -137,6 +146,7 @@ export function useHrEmployeeOptions(params?: Omit<HrEmployeesParams, "page">) {
 export function useUpdateProfile() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "employees", "update"],
     mutationFn: ({ userId, ...data }: UpdateProfileInput) =>
       apiClient.patch<{ success: boolean }>(`/hr/employees/${userId}`, data),
     onSuccess: () =>
@@ -248,6 +258,25 @@ export function useFindExpert(params: FindExpertParams) {
     queryFn: () => apiClient.get<ExpertResult[]>("/hr/employees/find-expert", params as unknown as Record<string, string>),
     enabled: params.skill.trim().length > 0,
     staleTime: 2 * 60_000,
+  });
+}
+
+export interface SkillsMatrixData {
+  employees: {
+    userId: string;
+    name: string | null;
+    image: string | null;
+    skills: Record<string, number>;
+  }[];
+  skills: string[];
+}
+
+export function useSkillsMatrix(options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: [...queryKeys.hr.all, "skillsMatrix"] as const,
+    queryFn: () => apiClient.get<SkillsMatrixData>("/hr/employees/skills-matrix"),
+    staleTime: 60_000,
+    enabled: options?.enabled ?? true,
   });
 }
 

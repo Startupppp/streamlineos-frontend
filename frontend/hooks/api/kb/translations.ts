@@ -3,22 +3,25 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type { KbTranslation, UpsertTranslationInput } from "@/types/kb";
 
 export function useKbTranslations(articleId: number) {
+  const canViewArticles = useCan("kb:articles:view");
   return useQuery({
     queryKey: queryKeys.kb.translations(articleId),
     queryFn: () => apiClient.get<KbTranslation[]>(`/kb/articles/${articleId}/translations`),
-    enabled: articleId > 0,
+    enabled: canViewArticles && articleId > 0,
     staleTime: 30_000,
   });
 }
 
 export function useKbTranslation(articleId: number, locale: string) {
+  const canViewArticles = useCan("kb:articles:view");
   return useQuery({
     queryKey: queryKeys.kb.translation(articleId, locale),
     queryFn: () => apiClient.get<KbTranslation>(`/kb/articles/${articleId}/translations/${locale}`),
-    enabled: articleId > 0 && locale.length > 0,
+    enabled: canViewArticles && articleId > 0 && locale.length > 0,
     staleTime: 30_000,
   });
 }

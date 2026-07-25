@@ -30,15 +30,7 @@ import {
   KbTrash2Icon,
 } from "@/features/knowledge-base/lib/kb-icons";
 import type { KbPage } from "@/hooks/api/kb/pages";
-
-function formatRelativeTime(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const days = Math.floor(diff / 86400000);
-  if (days > 0) return `${days}d ago`;
-  const hours = Math.floor(diff / 3600000);
-  if (hours > 0) return `${hours}h ago`;
-  return "recently";
-}
+import { kbTimeAgo } from "@/features/knowledge-base/lib/kb-date-utils";
 
 function TrashRow({ page }: { page: KbPage }) {
   const restore = useRestoreKbPage();
@@ -76,7 +68,7 @@ function TrashRow({ page }: { page: KbPage }) {
         <div className="flex-1 min-w-0">
           <TruncatedText text={page.title || "Untitled"} className="text-sm font-medium" />
           <p className="text-xs text-muted-foreground">
-            Deleted {page.deletedAt ? formatRelativeTime(page.deletedAt) : ""}
+            Deleted {page.deletedAt ? kbTimeAgo(page.deletedAt) : ""}
           </p>
         </div>
         <div className="flex items-center gap-1 shrink-0">

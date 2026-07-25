@@ -10,11 +10,6 @@ import {
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { keepPreviousData } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,8 +20,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { SearchInput } from "@/components/ui/search-input";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -34,6 +27,11 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import {
+  ResponsivePopover,
+  ResponsivePopoverContent,
+  ResponsivePopoverTrigger,
+} from "@/components/ui/responsive-popover";
 import { useProjectWorkspaceMembers } from "@/hooks/api/projects/workspace-members";
 import type { User } from "@/hooks/api/users";
 import { useCan } from "@/hooks/api/access";
@@ -43,6 +41,7 @@ import {
   getUserDisplayName,
   getUserInitials,
 } from "@/features/projects/shared/resolve-user-name";
+import { DisplayToggleRow } from "@/features/projects/shared/display-toggle-row";
 import { PmAccessButton } from "@/features/projects/members/pm-access-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
@@ -145,13 +144,13 @@ function DisplayPropsToggle({
 }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
 
-  function handleToggle(key: keyof DisplayProps) {
-    onChange({ ...value, [key]: !value[key] });
+  function handleToggle(key: keyof DisplayProps, checked: boolean) {
+    onChange({ ...value, [key]: checked });
   }
 
   return (
-    <Popover>
-      <PopoverTrigger asChild>
+    <ResponsivePopover>
+      <ResponsivePopoverTrigger asChild>
         <Button
           variant="outline"
           size="sm"
@@ -161,31 +160,24 @@ function DisplayPropsToggle({
           <SlidersHorizontalIcon ref={iconRef} size={13} />
           Display
         </Button>
-      </PopoverTrigger>
-      <PopoverContent align="end" className="w-48 p-3">
-        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-2.5">
+      </ResponsivePopoverTrigger>
+      <ResponsivePopoverContent align="end" title="Display properties" className="w-52 p-3">
+        <p className="mb-3 text-[13px] font-semibold text-foreground">
           Display properties
         </p>
-        <div className="flex flex-col gap-3">
+        <div>
           {DISPLAY_PROP_ITEMS.map(({ key, label }) => (
-            <div key={key} className="flex items-center justify-between gap-2">
-              <Label
-                htmlFor={`dp-${key}`}
-                className="text-xs cursor-pointer select-none"
-              >
-                {label}
-              </Label>
-              <Switch
-                id={`dp-${key}`}
-                checked={value[key]}
-                onCheckedChange={() => handleToggle(key)}
-                className="h-4 w-7 [&>span]:h-3 [&>span]:w-3"
-              />
-            </div>
+            <DisplayToggleRow
+              key={key}
+              id={`dp-${key}`}
+              label={label}
+              checked={value[key]}
+              onCheckedChange={(checked) => handleToggle(key, checked)}
+            />
           ))}
         </div>
-      </PopoverContent>
-    </Popover>
+      </ResponsivePopoverContent>
+    </ResponsivePopover>
   );
 }
 

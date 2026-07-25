@@ -3,16 +3,19 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 export type KbSettings = {
   trashRetentionDays: number;
 };
 
 export function useKbSettings() {
+  const canManageSettings = useCan("kb:settings:manage");
   return useQuery({
     queryKey: queryKeys.kb.settings(),
     queryFn: () => apiClient.get<KbSettings>("/kb/settings"),
     staleTime: 300_000,
+    enabled: canManageSettings,
   });
 }
 

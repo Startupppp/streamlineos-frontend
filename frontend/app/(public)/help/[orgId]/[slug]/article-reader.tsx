@@ -21,11 +21,11 @@ import {
   LifeBuoy,
 } from "lucide-react";
 import {
-  usePublicKbArticle,
-  useSubmitKbFeedback,
+  usePublicSupportKbArticle,
+  useSubmitSupportKbFeedback,
 } from "@/hooks/api/support/kb";
 import {
-  usePublicKbAttachments,
+  usePublicSupportKbAttachments,
   type PublicKbAttachment,
 } from "@/hooks/api/support/kb-attachments";
 import { ArticleContent, prepareArticle } from "@/components/kb/article-content";
@@ -109,9 +109,9 @@ interface ArticleReaderProps {
 }
 
 export function ArticleReader({ orgId, slug }: ArticleReaderProps) {
-  const { data: article, isLoading, error, refetch } = usePublicKbArticle(orgId, slug);
-  const attachmentsQuery = usePublicKbAttachments(orgId, slug);
-  const submitFeedback = useSubmitKbFeedback();
+  const { data: article, isLoading, error, refetch } = usePublicSupportKbArticle(orgId, slug);
+  const attachmentsQuery = usePublicSupportKbAttachments(orgId, slug);
+  const submitFeedback = useSubmitSupportKbFeedback();
 
   const [showComment, setShowComment] = useState(false);
   const [pendingHelpful, setPendingHelpful] = useState<boolean | null>(null);

@@ -1,10 +1,7 @@
-import { DashboardGate } from "@/components/shared/dashboard-gate";
+import { requirePermission } from "@/lib/rbac/require-permission";
 import { WorkforcePlanningPage } from "@/features/hr/workforce";
 
-export default function HrWorkforcePage() {
-  return (
-    <DashboardGate permission="hr:analytics:read">
-      <WorkforcePlanningPage />
-    </DashboardGate>
-  );
+export default async function HrWorkforcePage() {
+  await requirePermission("hr:analytics:read");
+  return <WorkforcePlanningPage />;
 }

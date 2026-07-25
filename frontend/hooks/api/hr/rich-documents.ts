@@ -64,6 +64,7 @@ export function useRichDocument(id: number) {
 export function useCreateRichDocument() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "rich-documents", "create"],
     mutationFn: (data: { title: string; templateType?: string; contentJson?: unknown }) =>
       apiClient.post<RichDocument>("/hr/rich-documents", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: richDocKeys.lists() }),
@@ -73,6 +74,7 @@ export function useCreateRichDocument() {
 export function useUpdateRichDocument() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "rich-documents", "update"],
     mutationFn: ({ id, ...data }: { id: number; title?: string; contentJson?: unknown }) =>
       apiClient.patch<{ success: boolean }>(`/hr/rich-documents/${id}`, data),
     onSuccess: (_res, vars) => {
@@ -85,6 +87,7 @@ export function useUpdateRichDocument() {
 export function useDeleteRichDocument() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "rich-documents", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/rich-documents/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: richDocKeys.lists() }),
@@ -94,6 +97,7 @@ export function useDeleteRichDocument() {
 export function usePublishRichDocument() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "rich-documents", "publish"],
     mutationFn: (id: number) =>
       apiClient.patch<{ success: boolean }>(`/hr/rich-documents/${id}/publish`),
     onSuccess: (_res, id) => {

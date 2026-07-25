@@ -1,24 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Button } from "@/components/ui/button";
-import { LoadingButton } from "@/components/ui/loading-button";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -37,6 +24,7 @@ import {
 } from "@/hooks/api/hr/reimbursements";
 import { useCan } from "@/hooks/api/access";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
+import { ApprovalActions } from "@/features/hr/shared/approval-actions";
 
 const CATEGORIES = [
   { value: "all", label: "All Categories" },
@@ -84,9 +72,6 @@ export function ReimbursementsPageContent() {
   const status = searchParams.get("status") ?? "all";
   const category = searchParams.get("category") ?? "all";
 
-  const [rejectTarget, setRejectTarget] = useState<Reimbursement | null>(null);
-  const [rejectReason, setRejectReason] = useState("");
-
   const { data, isLoading } = useReimbursements();
   const processReimbursement = useProcessReimbursement();
   const canApprove = useCan("hr:payroll:approve");
@@ -122,39 +107,17 @@ export function ReimbursementsPageContent() {
     return handleApprove;
   }
 
-  function makeRejectOpener(row: Reimbursement) {
-    function handleOpenReject() {
-      setRejectTarget(row);
-      setRejectReason("");
-    }
-    return handleOpenReject;
-  }
-
-  function handleCancelReject() {
-    setRejectTarget(null);
-    setRejectReason("");
-  }
-
-  function handleRejectDialogChange(open: boolean) {
-    if (!open) handleCancelReject();
-  }
-
-  function handleRejectReasonChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
-    setRejectReason(e.target.value);
-  }
-
-  function handleConfirmReject() {
-    if (!rejectTarget || !rejectReason.trim()) return;
-    processReimbursement.mutate(
-      { id: rejectTarget.id, status: "REJECTED", rejectionReason: rejectReason.trim() },
-      {
-        onSuccess: () => {
-          toast.success("Claim rejected");
-          handleCancelReject();
+  function makeRejectHandler(id: number) {
+    function handleReject(reason: string) {
+      processReimbursement.mutate(
+        { id, status: "REJECTED", rejectionReason: reason },
+        {
+          onSuccess: () => toast.success("Claim rejected"),
+          onError: () => toast.error("Failed to reject claim"),
         },
-        onError: () => toast.error("Failed to reject claim"),
-      },
-    );
+      );
+    }
+    return handleReject;
   }
 
   const filtered = (data ?? []).filter((r) => {
@@ -170,26 +133,18 @@ export function ReimbursementsPageContent() {
     header: "",
     cell: (row) =>
       row.status === "PENDING" ? (
-        <div className="flex items-center gap-1">
-          <LoadingButton
-            size="sm"
-            variant="outline"
-            className="h-6 text-[10px] px-2 text-emerald-700 border-emerald-200 hover:bg-emerald-50 dark:text-emerald-300 dark:border-emerald-500/30 dark:hover:bg-emerald-500/10"
-            isPending={processReimbursement.isPending}
-            onClick={makeApproveHandler(row.id)}
-          >
-            Approve
-          </LoadingButton>
-          <LoadingButton
-            size="sm"
-            variant="outline"
-            className="h-6 text-[10px] px-2 text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-500/30 dark:hover:bg-red-500/10"
-            isPending={processReimbursement.isPending}
-            onClick={makeRejectOpener(row)}
-          >
-            Reject
-          </LoadingButton>
-        </div>
+        <ApprovalActions
+          onApprove={makeApproveHandler(row.id)}
+          onReject={makeRejectHandler(row.id)}
+          isApproving={processReimbursement.isPending}
+          isRejecting={processReimbursement.isPending}
+          rejectTitle="Reject Claim"
+          rejectDescription="Provide a reason for rejecting this reimbursement claim."
+          approveLabel="Approve"
+          rejectLabel="Reject Claim"
+          size="sm"
+          className="[&_button]:h-6 [&_button]:text-[10px] [&_button]:px-2"
+        />
       ) : null,
   };
 
@@ -284,72 +239,33 @@ export function ReimbursementsPageContent() {
   );
 
   return (
-    <>
-      <PageWrapper
-        title="Reimbursements"
-        subtitle="Review and approve employee expense claims"
-        filters={filterBar}
-      >
-        <div className="flex flex-1 min-h-0 flex-col gap-3">
-          <div className="shrink-0 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-[12px] text-blue-700 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300">
-            Approved claims flow into the{" "}
-            <span className="font-medium">{formatMonth(month)}</span> payroll run automatically.
-            Approved reimbursements are included as payroll inputs.
-          </div>
-          <DataTable
-            className="flex-1 min-h-0"
-            data={filtered}
-            columns={columns}
-            getRowKey={(row) => row.id}
-            isLoading={isLoading}
-            minWidth="820px"
-            emptyState={
-              <EmptyState
-                illustration={<EmptyExpensesIllustration />}
-                title="No claims found"
-                description="No reimbursement claims match the current filters."
-              />
-            }
-          />
+    <PageWrapper
+      title="Reimbursements"
+      subtitle="Review and approve employee expense claims"
+      filters={filterBar}
+    >
+      <div className="flex flex-1 min-h-0 flex-col gap-3">
+        <div className="shrink-0 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-[12px] text-blue-700 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300">
+          Approved claims flow into the{" "}
+          <span className="font-medium">{formatMonth(month)}</span> payroll run automatically.
+          Approved reimbursements are included as payroll inputs.
         </div>
-      </PageWrapper>
-
-      <Dialog open={rejectTarget !== null} onOpenChange={handleRejectDialogChange}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Reject Claim</DialogTitle>
-            <DialogDescription>
-              Provide a reason for rejecting this reimbursement claim.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-1.5 py-2">
-            <Label htmlFor="reject-reason" className="text-sm">
-              Reason <span className="text-destructive">*</span>
-            </Label>
-            <Textarea
-              id="reject-reason"
-              value={rejectReason}
-              onChange={handleRejectReasonChange}
-              placeholder="Explain why this claim is being rejected…"
-              rows={3}
-              className="text-sm resize-none"
+        <DataTable
+          className="flex-1 min-h-0"
+          data={filtered}
+          columns={columns}
+          getRowKey={(row) => row.id}
+          isLoading={isLoading}
+          minWidth="820px"
+          emptyState={
+            <EmptyState
+              illustration={<EmptyExpensesIllustration />}
+              title="No claims found"
+              description="No reimbursement claims match the current filters."
             />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={handleCancelReject}>
-              Cancel
-            </Button>
-            <LoadingButton
-              variant="destructive"
-              disabled={!rejectReason.trim()}
-              isPending={processReimbursement.isPending}
-              onClick={handleConfirmReject}
-            >
-              Reject Claim
-            </LoadingButton>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+          }
+        />
+      </div>
+    </PageWrapper>
   );
 }
