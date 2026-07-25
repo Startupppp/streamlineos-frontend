@@ -44,9 +44,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MemberPicker } from "@/components/shared";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { TeamFormSheet } from "./team-form-sheet";
+import { TeamProjectsSection } from "./team-projects-section";
+import { WorkspaceMemberPicker } from "./workspace-member-picker";
 import type { ProjectTeamMember, UpdateTeamInput } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -324,12 +325,10 @@ export function TeamHomePage({ teamId }: Props) {
             </p>
             {canManage ? (
               <div className="flex min-w-0 flex-wrap items-center gap-2">
-                <MemberPicker
-                  mode="single"
+                <WorkspaceMemberPicker
                   value={addMemberId}
-                  onChange={(id) => setAddMemberId(id ?? undefined)}
-                  placeholder="Add a member…"
-                  allowUnassigned={false}
+                  onChange={(id) => setAddMemberId(id)}
+                  excludeUserIds={data.members.map((m) => m.userId)}
                 />
                 <Select
                   value={addMemberRole}
@@ -420,6 +419,7 @@ export function TeamHomePage({ teamId }: Props) {
             </PmPanel>
           )}
         </PmSection>
+        <TeamProjectsSection teamId={teamId} />
       </PmPageShell>
 
       <TeamFormSheet

@@ -3,10 +3,7 @@
 import { use, useState, useCallback, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  useProject,
-  useUpdateProject,
-} from "@/hooks/api/projects";
+import { useProject, useUpdateProject } from "@/hooks/api/projects";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -26,12 +23,16 @@ import {
 import { CustomFieldsSettings } from "@/features/projects/settings/custom-fields-settings";
 import { LabelsSettings } from "@/features/projects/settings/labels-settings";
 import { StatusesSettings } from "@/features/projects/settings/statuses-settings";
+import { TeamRosterSection } from "@/features/projects/settings/team-roster-section";
 import {
   PmPageShell,
   PmPanel,
   PmSection,
 } from "@/features/projects/shared/pm-chrome";
-import { TEXT_ONE_LINE, TEXT_BODY } from "@/features/projects/shared/text-overflow";
+import {
+  TEXT_ONE_LINE,
+  TEXT_BODY,
+} from "@/features/projects/shared/text-overflow";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
@@ -45,6 +46,7 @@ type SectionId =
   | "labels"
   | "statuses"
   | "custom-fields"
+  | "teams"
   | "danger";
 
 interface NavSection {
@@ -57,6 +59,7 @@ const BASE_NAV: NavSection[] = [
   { id: "labels", label: "Labels" },
   { id: "statuses", label: "Statuses" },
   { id: "custom-fields", label: "Custom Fields" },
+  { id: "teams", label: "Teams & Roster" },
 ];
 
 const DANGER_SECTION: NavSection = { id: "danger", label: "Danger Zone" };
@@ -67,6 +70,7 @@ function isSectionId(value: string): value is SectionId {
     value === "labels" ||
     value === "statuses" ||
     value === "custom-fields" ||
+    value === "teams" ||
     value === "danger"
   );
 }
@@ -91,8 +95,7 @@ export default function ProjectSettingsPage({ params }: PageProps) {
           name: project.name || "",
           description: project.description || "",
           status:
-            (project.status as "ACTIVE" | "COMPLETED" | "ARCHIVED") ||
-            "ACTIVE",
+            (project.status as "ACTIVE" | "COMPLETED" | "ARCHIVED") || "ACTIVE",
           memberIds:
             project.members?.map((m: { userId: string }) => m.userId) || [],
         }
@@ -121,7 +124,7 @@ export default function ProjectSettingsPage({ params }: PageProps) {
         setActiveSection(rawId);
       }
     },
-    []
+    [],
   );
 
   const handleMemberRemoved = useCallback(
@@ -130,7 +133,7 @@ export default function ProjectSettingsPage({ params }: PageProps) {
       pendingFieldChangeRef.current = applyChange;
       setReassignDialog({ memberId, memberName });
     },
-    []
+    [],
   );
 
   const confirmReassign = useCallback(() => {
@@ -171,10 +174,10 @@ export default function ProjectSettingsPage({ params }: PageProps) {
           onError: (error) => {
             toast.error(getErrorMessage(error));
           },
-        }
+        },
       );
     },
-    [updateMutation, projectId, router]
+    [updateMutation, projectId, router],
   );
 
   if (isLoading) {
@@ -218,10 +221,7 @@ export default function ProjectSettingsPage({ params }: PageProps) {
   }
 
   return (
-    <PageWrapper
-      title="Settings"
-      subtitle={project.name}
-    >
+    <PageWrapper title="Settings" subtitle={project.name}>
       <PmPageShell>
         <div className="flex flex-col gap-4 pb-8 md:flex-row">
           <PmSection index={0} className="w-full shrink-0 md:w-48">
@@ -262,8 +262,15 @@ export default function ProjectSettingsPage({ params }: PageProps) {
               <div className="space-y-4">
                 <PmPanel className="p-4" solid>
                   <div className="mb-3 border-b border-border pb-3">
-                    <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>General</h3>
-                    <p className={cn("mt-0.5 text-xs text-muted-foreground", TEXT_BODY)}>
+                    <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>
+                      General
+                    </h3>
+                    <p
+                      className={cn(
+                        "mt-0.5 text-xs text-muted-foreground",
+                        TEXT_BODY,
+                      )}
+                    >
                       Project name, description, status, and members.
                     </p>
                   </div>
@@ -271,8 +278,9 @@ export default function ProjectSettingsPage({ params }: PageProps) {
                     form={form}
                     isPending={updateMutation.isPending}
                     originalMemberIds={
-                      project.members?.map((m: { userId: string }) => m.userId) ??
-                      []
+                      project.members?.map(
+                        (m: { userId: string }) => m.userId,
+                      ) ?? []
                     }
                     onMemberRemoved={handleMemberRemoved}
                     onSubmit={handleSubmit}
@@ -281,9 +289,17 @@ export default function ProjectSettingsPage({ params }: PageProps) {
                 </PmPanel>
                 <PmPanel className="p-4" solid>
                   <div className="mb-3 border-b border-border pb-3">
-                    <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>Member Roles</h3>
-                    <p className={cn("mt-0.5 text-xs text-muted-foreground", TEXT_BODY)}>
-                      Project-level roles are informational. Access is governed by org-level permissions.
+                    <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>
+                      Member Roles
+                    </h3>
+                    <p
+                      className={cn(
+                        "mt-0.5 text-xs text-muted-foreground",
+                        TEXT_BODY,
+                      )}
+                    >
+                      Project-level roles are informational. Access is governed
+                      by org-level permissions.
                     </p>
                   </div>
                   <ProjectMemberRolesSection projectId={projectId} />
@@ -309,13 +325,46 @@ export default function ProjectSettingsPage({ params }: PageProps) {
               </PmPanel>
             ) : null}
 
+            {activeSection === "teams" ? (
+              <PmPanel className="p-4" solid>
+                <div className="mb-3 border-b border-border pb-3">
+                  <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>
+                    Teams &amp; Roster
+                  </h3>
+                  <p
+                    className={cn(
+                      "mt-0.5 text-xs text-muted-foreground",
+                      TEXT_BODY,
+                    )}
+                  >
+                    Teams this project belongs to and their effective members.
+                    Assign from a team&rsquo;s detail page.
+                  </p>
+                </div>
+                <TeamRosterSection projectId={projectId} />
+              </PmPanel>
+            ) : null}
+
             {activeSection === "danger" && isOwner ? (
-              <PmPanel className="border-destructive/30 bg-destructive/5 p-4" solid>
+              <PmPanel
+                className="border-destructive/30 bg-destructive/5 p-4"
+                solid
+              >
                 <div className="mb-3 border-b border-destructive/20 pb-3">
-                  <h3 className={cn("text-sm font-semibold text-destructive", TEXT_ONE_LINE)}>
+                  <h3
+                    className={cn(
+                      "text-sm font-semibold text-destructive",
+                      TEXT_ONE_LINE,
+                    )}
+                  >
                     Danger Zone
                   </h3>
-                  <p className={cn("mt-0.5 text-xs text-muted-foreground", TEXT_BODY)}>
+                  <p
+                    className={cn(
+                      "mt-0.5 text-xs text-muted-foreground",
+                      TEXT_BODY,
+                    )}
+                  >
                     Irreversible actions for this project.
                   </p>
                 </div>
