@@ -14,8 +14,8 @@ import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import {
+  COMPACT_SEARCH_POPOVER_CONTENT_CLASS,
   FIELD_SEARCH_POPOVER_CONTENT_CLASS,
-  INLINE_POPOVER_MIN_CLASS,
 } from "@/components/ui/field-control";
 import { TicketParentLink } from "./ticket-parent-link";
 import type { Ticket } from "@/types/projects";
@@ -90,7 +90,7 @@ export function TicketParentControl({
       className={cn(
         "p-0",
         hasParent
-          ? cn(INLINE_POPOVER_MIN_CLASS, "min-w-64 w-[var(--radix-popover-trigger-width)]")
+          ? COMPACT_SEARCH_POPOVER_CONTENT_CLASS
           : FIELD_SEARCH_POPOVER_CONTENT_CLASS,
       )}
     >

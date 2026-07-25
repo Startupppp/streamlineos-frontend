@@ -16,6 +16,9 @@ export const FIELD_POPOVER_CONTENT_CLASS = "w-[var(--radix-popover-trigger-width
 export const FIELD_SEARCH_POPOVER_CONTENT_CLASS =
   "min-w-[var(--radix-popover-trigger-width)] w-[var(--radix-popover-trigger-width)]";
 
+export const COMPACT_SEARCH_POPOVER_CONTENT_CLASS =
+  "min-w-[max(16rem,var(--radix-popover-trigger-width))] w-auto max-w-[min(24rem,var(--radix-popover-content-available-width))]";
+
 export const FIELD_DATE_POPOVER_CONTENT_CLASS =
   "min-w-[var(--radix-popover-trigger-width)] w-auto";
 

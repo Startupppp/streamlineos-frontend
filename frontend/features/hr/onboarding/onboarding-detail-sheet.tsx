@@ -1,6 +1,13 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import {
+  forwardRef,
+  useState,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+} from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -9,9 +16,10 @@ import {
   AlertCircle,
   RefreshCw,
   FileText,
-  ExternalLink,
   Circle,
   Upload,
+  X,
+  Eye,
   ArrowLeft,
   ArrowRight,
 } from "lucide-react";
@@ -22,6 +30,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyUploadIllustration } from "@/components/illustrations";
 import { HrSheet } from "@/features/hr/hr-sheet";
@@ -114,6 +123,269 @@ const ACCEPTED_MIME_TYPES = new Set([
 const ACCEPTED_EXTENSIONS = ".pdf,.doc,.docx,.jpg,.jpeg,.png";
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 
+type PendingFilesMap = ReadonlyMap<number, File>;
+
+function validateDocumentFile(file: File): string | null {
+  if (!ACCEPTED_MIME_TYPES.has(file.type)) {
+    return "Invalid file type. Accepted formats: PDF, DOC, DOCX, JPG, JPEG, PNG.";
+  }
+  if (file.size > MAX_FILE_SIZE_BYTES) {
+    return "File size must be under 10 MB.";
+  }
+  return null;
+}
+
+function useBlobPreviewUrl(file: File | null): string | null {
+  const [url, setUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!file) {
+      setUrl(null);
+      return;
+    }
+    const objectUrl = URL.createObjectURL(file);
+    setUrl(objectUrl);
+    return () => {
+      URL.revokeObjectURL(objectUrl);
+    };
+  }, [file]);
+
+  return url;
+}
+
+type FileRowActionProps = {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  onClick: () => void;
+  destructive?: boolean;
+};
+
+function FileRowAction({ icon: Icon, label, onClick, destructive }: FileRowActionProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      className={cn(
+        "inline-flex h-7 shrink-0 items-center gap-0.5 rounded-md px-1.5 text-xs font-medium text-muted-foreground transition-colors duration-200 hover:bg-muted hover:text-foreground",
+        destructive && "hover:text-destructive",
+      )}
+    >
+      <Icon className="h-3.5 w-3.5" aria-hidden />
+      <span className="hidden sm:inline">{label}</span>
+    </button>
+  );
+}
+
+type DocumentFileRowProps = {
+  fileName: string;
+  viewHref: string | null;
+  pending?: boolean;
+  onReplace?: () => void;
+  onRemove?: () => void;
+};
+
+function DocumentFileRow({
+  fileName,
+  viewHref,
+  pending = false,
+  onReplace,
+  onRemove,
+}: DocumentFileRowProps) {
+  const handleView = useCallback(() => {
+    if (!viewHref) return;
+    window.open(viewHref, "_blank", "noopener,noreferrer");
+  }, [viewHref]);
+
+  return (
+    <div className="mt-1 flex min-w-0 items-center gap-1.5 rounded-md border border-border/60 bg-muted/30 px-2 py-1">
+      <FileText className="h-3 w-3 shrink-0 text-muted-foreground" aria-hidden />
+      <TruncatedText
+        text={fileName}
+        className="min-w-0 flex-1 text-xs text-foreground"
+        tooltip={fileName}
+      />
+      {pending ? (
+        <span className="shrink-0 rounded border border-border bg-muted px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+          Pending
+        </span>
+      ) : null}
+      <div className="flex shrink-0 items-center divide-x divide-border/60">
+        {viewHref ? (
+          <FileRowAction icon={Eye} label="View" onClick={handleView} />
+        ) : null}
+        {onReplace ? (
+          <FileRowAction icon={RefreshCw} label="Replace" onClick={onReplace} />
+        ) : null}
+        {onRemove ? (
+          <FileRowAction icon={X} label="Remove" onClick={onRemove} destructive />
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+type DocumentChecklistRowProps = {
+  docType: DocumentType;
+  submission: OnboardingDoc | null;
+  pendingFile: File | null;
+  isWizard: boolean;
+  onPickFile: (docType: DocumentType) => void;
+  onRemovePending: (documentTypeId: number) => void;
+  onOpenUpload: (docType: DocumentType, existing: OnboardingDoc | null) => void;
+};
+
+function DocumentChecklistRow({
+  docType,
+  submission,
+  pendingFile,
+  isWizard,
+  onPickFile,
+  onRemovePending,
+  onOpenUpload,
+}: DocumentChecklistRowProps) {
+  const isApproved = submission?.status === "APPROVED";
+  const status = submission?.status ?? "PENDING";
+  const showFileRow = Boolean(pendingFile) || Boolean(submission?.fileUrl);
+  const showUploadAction = canUpload(submission?.status) && !showFileRow;
+  const blobUrl = useBlobPreviewUrl(isWizard && pendingFile ? pendingFile : null);
+
+  const handleReplace = useCallback(() => {
+    if (isWizard) {
+      onPickFile(docType);
+      return;
+    }
+    onOpenUpload(docType, submission);
+  }, [docType, isWizard, onOpenUpload, onPickFile, submission]);
+
+  const handleRemovePending = useCallback(() => {
+    onRemovePending(docType.id);
+  }, [docType.id, onRemovePending]);
+
+  const handleUploadClick = useCallback(() => {
+    if (isWizard) {
+      onPickFile(docType);
+      return;
+    }
+    onOpenUpload(docType, submission);
+  }, [docType, isWizard, onOpenUpload, onPickFile, submission]);
+
+  const fileName = pendingFile?.name ?? submission?.fileName ?? "";
+  const viewHref = pendingFile ? blobUrl : submission?.fileUrl ?? null;
+  const canReplace = canUpload(submission?.status) && !isApproved;
+
+  return (
+    <div
+      className={cn(
+        "overflow-hidden rounded-xl border border-border/70 border-l-4 transition-colors duration-200",
+        isWizard
+          ? "bg-card/60"
+          : "rounded-2xl bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)]",
+        isApproved
+          ? "border-l-emerald-500"
+          : status === "SUBMITTED"
+            ? "border-l-amber-400"
+            : status === "REJECTED" || status === "RE_UPLOAD_REQUESTED"
+              ? "border-l-rose-400"
+              : "border-l-border",
+      )}
+    >
+      <div className="px-2.5 py-2 sm:px-3">
+        <div className="flex items-start gap-2">
+          <div className="mt-0.5 shrink-0">{docStatusIcon(status)}</div>
+
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                  <TruncatedText
+                    text={docType.name}
+                    lines={2}
+                    className={cn(
+                      "text-sm font-medium text-foreground",
+                      isApproved && "text-muted-foreground line-through",
+                    )}
+                  />
+                  {docType.isMandatory ? (
+                    <span className="inline-flex shrink-0 items-center rounded-full border border-border bg-muted px-1.5 py-px text-[10px] font-semibold text-muted-foreground">
+                      Required
+                    </span>
+                  ) : null}
+                  {submission ? (
+                    <span
+                      className={cn(
+                        "inline-flex shrink-0 items-center rounded-full border px-1.5 py-px text-[10px] font-semibold",
+                        docStatusBadgeClass(submission.status),
+                      )}
+                    >
+                      {docStatusLabel(submission.status)}
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+
+              {showUploadAction ? (
+                <AnimatedIconButton
+                  icon={UploadIcon}
+                  size="sm"
+                  variant="outline"
+                  className="h-8 shrink-0 gap-1 px-2 text-xs duration-200 sm:px-2.5"
+                  onClick={handleUploadClick}
+                  aria-label={`Upload ${docType.name}`}
+                >
+                  <span className="hidden sm:inline">Upload</span>
+                </AnimatedIconButton>
+              ) : null}
+            </div>
+
+            {docType.description && !isApproved ? (
+              <TruncatedText
+                text={docType.description}
+                lines={2}
+                className="mt-0.5 text-xs text-muted-foreground"
+              />
+            ) : null}
+
+            {showFileRow && fileName ? (
+              <DocumentFileRow
+                fileName={fileName}
+                viewHref={viewHref}
+                pending={Boolean(isWizard && pendingFile)}
+                onReplace={canReplace ? handleReplace : undefined}
+                onRemove={isWizard && pendingFile ? handleRemovePending : undefined}
+              />
+            ) : null}
+
+            {submission?.reviewedAt && isApproved ? (
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Approved{" "}
+                {new Date(submission.reviewedAt).toLocaleDateString("en-IN", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })}
+                {submission.reviewerName ? ` by ${submission.reviewerName}` : ""}
+              </p>
+            ) : null}
+
+            {submission?.status === "RE_UPLOAD_REQUESTED" && submission.remarks ? (
+              <TruncatedText
+                text={`Remarks: ${submission.remarks}`}
+                lines={2}
+                className="mt-0.5 text-xs text-amber-600 dark:text-amber-300"
+              />
+            ) : null}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export type EmployeeDocumentsTabHandle = {
+  submitPendingUploads: () => Promise<void>;
+};
+
 interface UploadSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -173,13 +445,9 @@ function UploadSheet({
     const f = e.target.files?.[0] ?? null;
     e.target.value = "";
     if (!f) return;
-    if (!ACCEPTED_MIME_TYPES.has(f.type)) {
-      setFileError("Invalid file type. Accepted formats: PDF, DOC, DOCX, JPG, JPEG, PNG.");
-      setSelectedFile(null);
-      return;
-    }
-    if (f.size > MAX_FILE_SIZE_BYTES) {
-      setFileError("File size must be under 10 MB.");
+    const validationError = validateDocumentFile(f);
+    if (validationError) {
+      setFileError(validationError);
       setSelectedFile(null);
       return;
     }
@@ -270,14 +538,21 @@ interface EmployeeDocumentsTabProps {
   onCanContinueChange?: (canContinue: boolean) => void;
 }
 
-export function EmployeeDocumentsTab({
-  onBack,
-  onContinue,
-  variant = "default",
-  hideNav = false,
-  countryCode,
-  onCanContinueChange,
-}: EmployeeDocumentsTabProps = {}) {
+export const EmployeeDocumentsTab = forwardRef<
+  EmployeeDocumentsTabHandle,
+  EmployeeDocumentsTabProps
+>(function EmployeeDocumentsTab(
+  {
+    onBack,
+    onContinue,
+    variant = "default",
+    hideNav = false,
+    countryCode,
+    onCanContinueChange,
+  },
+  ref,
+) {
+  const qc = useQueryClient();
   const { data: myDocs, isLoading: docsLoading } = useMyOnboardingDocs();
   const { data: docTypes, isLoading: typesLoading } = useHrDocumentTypes();
   const submitDoc = useSubmitOnboardingDoc();
@@ -285,6 +560,9 @@ export function EmployeeDocumentsTab({
   const [uploadTarget, setUploadTarget] = useState<DocumentType | null>(null);
   const [uploadExisting, setUploadExisting] = useState<OnboardingDoc | null>(null);
   const [uploadSheetOpen, setUploadSheetOpen] = useState(false);
+  const [pendingFiles, setPendingFiles] = useState<PendingFilesMap>(new Map());
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const pickTargetRef = useRef<DocumentType | null>(null);
 
   const isLoading = docsLoading || typesLoading;
   const isWizard = variant === "wizard";
@@ -305,13 +583,15 @@ export function EmployeeDocumentsTab({
 
   const approvedCount = checklist.filter((c) => c.submission?.status === "APPROVED").length;
   const progressPct = checklist.length > 0 ? Math.round((approvedCount / checklist.length) * 100) : 0;
-  const mandatoryUnsubmitted = checklist.some(
-    (c) =>
-      c.docType.isMandatory &&
-      (!c.submission ||
-        c.submission.status === "RE_UPLOAD_REQUESTED" ||
-        c.submission.status === "REJECTED"),
-  );
+  const mandatoryUnsubmitted = checklist.some((c) => {
+    if (!c.docType.isMandatory) return false;
+    if (pendingFiles.has(c.docType.id)) return false;
+    if (!c.submission) return true;
+    return (
+      c.submission.status === "RE_UPLOAD_REQUESTED" ||
+      c.submission.status === "REJECTED"
+    );
+  });
 
   useEffect(() => {
     onCanContinueChange?.(!mandatoryUnsubmitted);
@@ -322,6 +602,62 @@ export function EmployeeDocumentsTab({
     setUploadExisting(existing);
     setUploadSheetOpen(true);
   }, []);
+
+  const handlePickFile = useCallback((dt: DocumentType) => {
+    pickTargetRef.current = dt;
+    fileInputRef.current?.click();
+  }, []);
+
+  const handlePendingFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0] ?? null;
+      e.target.value = "";
+      const target = pickTargetRef.current;
+      if (!file || !target) return;
+      const validationError = validateDocumentFile(file);
+      if (validationError) {
+        toast.error(validationError);
+        return;
+      }
+      setPendingFiles((prev) => {
+        const next = new Map(prev);
+        next.set(target.id, file);
+        return next;
+      });
+      pickTargetRef.current = null;
+    },
+    [],
+  );
+
+  const handleRemovePending = useCallback((documentTypeId: number) => {
+    setPendingFiles((prev) => {
+      const next = new Map(prev);
+      next.delete(documentTypeId);
+      return next;
+    });
+  }, []);
+
+  const submitPendingUploads = useCallback(async () => {
+    const entries = Array.from(pendingFiles.entries());
+    if (entries.length === 0) return;
+
+    for (const [documentTypeId, file] of entries) {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("folder", "onboarding-docs");
+      const uploadResult = await apiClient.upload<{ url: string }>("/storage/upload", fd);
+      await apiClient.post("/hr/onboarding-docs", {
+        documentTypeId,
+        fileUrl: uploadResult.url,
+        fileName: file.name,
+      });
+    }
+
+    await qc.invalidateQueries({ queryKey: queryKeys.hr.myOnboardingDocs() });
+    setPendingFiles(new Map());
+  }, [pendingFiles, qc]);
+
+  useImperativeHandle(ref, () => ({ submitPendingUploads }), [submitPendingUploads]);
 
   const handleSubmit = useCallback(
     (fileUrl: string, fileName: string) => {
@@ -347,7 +683,7 @@ export function EmployeeDocumentsTab({
       <div className="space-y-3 pt-2">
         <Skeleton className="h-12 rounded-2xl" />
         {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-16 rounded-2xl" />
+          <Skeleton key={i} className="h-14 rounded-xl" />
         ))}
       </div>
     );
@@ -404,116 +740,19 @@ export function EmployeeDocumentsTab({
         </div>
       </div>
 
-      <div className="space-y-2">
-        {checklist.map(({ docType, submission }) => {
-          const isApproved = submission?.status === "APPROVED";
-          const status = submission?.status ?? "PENDING";
-          return (
-            <div
-              key={docType.id}
-              className={cn(
-                "overflow-hidden rounded-xl border border-border/70 border-l-4 transition-colors duration-200",
-                isWizard
-                  ? "bg-card/60"
-                  : "rounded-2xl bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)]",
-                isApproved
-                  ? "border-l-emerald-500"
-                  : status === "SUBMITTED"
-                    ? "border-l-amber-400"
-                    : status === "REJECTED" || status === "RE_UPLOAD_REQUESTED"
-                      ? "border-l-rose-400"
-                      : "border-l-border",
-              )}
-            >
-              <div className="p-3">
-                <div className="flex items-start gap-3">
-                  <div className="mt-0.5 shrink-0">
-                    {docStatusIcon(status)}
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <p
-                        className={cn(
-                          "text-sm font-medium",
-                          isApproved && "text-muted-foreground line-through",
-                        )}
-                      >
-                        {docType.name}
-                      </p>
-                      {docType.isMandatory ? (
-                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
-                          Required
-                        </span>
-                      ) : null}
-                      {submission ? (
-                        <span
-                          className={cn(
-                            "inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold",
-                            docStatusBadgeClass(submission.status),
-                          )}
-                        >
-                          {docStatusLabel(submission.status)}
-                        </span>
-                      ) : null}
-                    </div>
-
-                    {docType.description && !isApproved ? (
-                      <p className="mt-0.5 text-[11px] text-muted-foreground">
-                        {docType.description}
-                      </p>
-                    ) : null}
-
-                    {submission?.fileUrl ? (
-                      <a
-                        href={submission.fileUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mt-0.5 inline-flex items-center gap-1 text-[11px] text-primary transition-colors duration-200 hover:text-primary/80 hover:underline"
-                        aria-label={`View ${submission.fileName}`}
-                      >
-                        {submission.fileName}
-                        <ExternalLink className="h-2.5 w-2.5" />
-                      </a>
-                    ) : null}
-
-                    {submission?.reviewedAt && isApproved ? (
-                      <p className="mt-0.5 text-[11px] text-muted-foreground">
-                        Approved{" "}
-                        {new Date(submission.reviewedAt).toLocaleDateString(
-                          "en-IN",
-                          { day: "numeric", month: "short", year: "numeric" },
-                        )}
-                        {submission.reviewerName
-                          ? ` by ${submission.reviewerName}`
-                          : ""}
-                      </p>
-                    ) : null}
-
-                    {submission?.status === "RE_UPLOAD_REQUESTED" && submission.remarks && (
-                      <p className="text-[11px] text-amber-600 dark:text-amber-300 mt-0.5">
-                        Remarks: {submission.remarks}
-                      </p>
-                    )}
-                  </div>
-
-                  {canUpload(submission?.status) ? (
-                    <AnimatedIconButton
-                      icon={UploadIcon}
-                      size="sm"
-                      variant="outline"
-                      className="shrink-0 gap-1.5 text-xs duration-200"
-                      onClick={() => handleOpenUpload(docType, submission)}
-                      aria-label={`Upload ${docType.name}`}
-                    >
-                      {submission ? "Re-upload" : "Upload"}
-                    </AnimatedIconButton>
-                  ) : null}
-                </div>
-              </div>
-            </div>
-          );
-        })}
+      <div className="space-y-1.5">
+        {checklist.map(({ docType, submission }) => (
+          <DocumentChecklistRow
+            key={docType.id}
+            docType={docType}
+            submission={submission}
+            pendingFile={pendingFiles.get(docType.id) ?? null}
+            isWizard={isWizard}
+            onPickFile={handlePickFile}
+            onRemovePending={handleRemovePending}
+            onOpenUpload={handleOpenUpload}
+          />
+        ))}
       </div>
 
       {!hideNav && (onBack || onContinue) ? (
@@ -526,17 +765,31 @@ export function EmployeeDocumentsTab({
         </div>
       ) : null}
 
-      <UploadSheet
-        open={uploadSheetOpen}
-        onOpenChange={setUploadSheetOpen}
-        documentType={uploadTarget}
-        existingDoc={uploadExisting}
-        onSubmit={handleSubmit}
-        isPending={submitDoc.isPending}
-      />
+      {isWizard ? (
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept={ACCEPTED_EXTENSIONS}
+          className="hidden"
+          aria-hidden
+          tabIndex={-1}
+          onChange={handlePendingFileChange}
+        />
+      ) : null}
+
+      {!isWizard ? (
+        <UploadSheet
+          open={uploadSheetOpen}
+          onOpenChange={setUploadSheetOpen}
+          documentType={uploadTarget}
+          existingDoc={uploadExisting}
+          onSubmit={handleSubmit}
+          isPending={submitDoc.isPending}
+        />
+      ) : null}
     </>
   );
-}
+});
 
 function DocumentsTabNav({
   onBack,

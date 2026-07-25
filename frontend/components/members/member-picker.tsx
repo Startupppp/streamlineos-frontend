@@ -16,6 +16,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import {
+  COMPACT_SEARCH_POPOVER_CONTENT_CLASS,
   FIELD_CONTROL_CLASS,
   FIELD_SEARCH_POPOVER_CONTENT_CLASS,
 } from "@/components/ui/field-control";
@@ -172,7 +173,11 @@ export function MemberPicker(props: MemberPickerProps) {
     setSearch(v);
   }, []);
 
-  const popoverContentClass = cn(FIELD_SEARCH_POPOVER_CONTENT_CLASS, "p-0", contentClassName);
+  const popoverContentClass = cn(
+    trigger ? COMPACT_SEARCH_POPOVER_CONTENT_CLASS : FIELD_SEARCH_POPOVER_CONTENT_CLASS,
+    "p-0",
+    contentClassName,
+  );
 
   if (props.mode === "multi") {
     const { values = [], onToggle } = props;

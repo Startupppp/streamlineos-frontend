@@ -263,11 +263,11 @@ function ProfilePreviewInner({
             {showPayroll ? (
               <motion.section
                 key="payroll"
-                initial={{ opacity: 0, height: reduceMotion ? "auto" : 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: reduceMotion ? "auto" : 0 }}
+                initial={{ opacity: 0, y: reduceMotion ? 0 : 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: reduceMotion ? 0 : -4 }}
                 transition={{ duration: 0.22, ease: WIZARD_EASE }}
-                className="space-y-2.5 overflow-hidden rounded-xl border border-border/70 bg-background/60 p-3"
+                className="space-y-2.5 rounded-xl border border-border/70 bg-background/60 p-3"
               >
                 <div className="flex items-center gap-1.5 text-[11px] font-semibold text-foreground">
                   <Landmark
@@ -304,11 +304,11 @@ function ProfilePreviewInner({
             {showDocs ? (
               <motion.section
                 key="docs"
-                initial={{ opacity: 0, height: reduceMotion ? "auto" : 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: reduceMotion ? "auto" : 0 }}
+                initial={{ opacity: 0, y: reduceMotion ? 0 : 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: reduceMotion ? 0 : -4 }}
                 transition={{ duration: 0.22, ease: WIZARD_EASE }}
-                className="space-y-2.5 overflow-hidden rounded-xl border border-border/70 bg-background/60 p-3"
+                className="space-y-2.5 rounded-xl border border-border/70 bg-background/60 p-3"
               >
                 <div className="flex items-center gap-1.5 text-[11px] font-semibold text-foreground">
                   <FileText

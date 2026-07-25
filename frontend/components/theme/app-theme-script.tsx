@@ -15,6 +15,7 @@ export function AppThemeScript({ nonce }: { nonce?: string }) {
 
   return (
     <script
+      type={typeof window === "undefined" ? "text/javascript" : "text/plain"}
       nonce={nonce}
       suppressHydrationWarning
       dangerouslySetInnerHTML={{ __html: script }}

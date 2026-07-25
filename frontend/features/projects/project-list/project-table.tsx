@@ -38,10 +38,7 @@ import {
   getUserDisplayName,
   getUserInitials,
 } from "@/features/projects/shared/resolve-user-name";
-import {
-  TABLE_TITLE_CELL,
-  TEXT_FLEX_CHILD,
-} from "@/features/projects/shared/text-overflow";
+import { TEXT_FLEX_CHILD } from "@/features/projects/shared/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { PmPanel } from "@/features/projects/shared/pm-chrome";
 import { useCan } from "@/hooks/api/access";
@@ -225,7 +222,7 @@ export const ProjectTable = React.memo(function ProjectTable({
         header: "Name",
         sortable: true,
         sortValue: (p) => p.name,
-        className: TABLE_TITLE_CELL,
+        className: "min-w-[200px] w-[240px] max-w-[320px]",
         cell: (p) => (
           <div
             className={cn(
@@ -255,8 +252,7 @@ export const ProjectTable = React.memo(function ProjectTable({
       cols.push({
         key: "summary",
         header: "Summary",
-        headerClassName: "hidden xl:table-cell",
-        className: "w-[180px] hidden xl:table-cell",
+        className: "w-[180px]",
         cell: (p) =>
           p.description ? (
             <TruncatedText
@@ -310,8 +306,7 @@ export const ProjectTable = React.memo(function ProjectTable({
           };
           return order[p.priority ?? ""] ?? 4;
         },
-        headerClassName: "hidden md:table-cell",
-        className: "w-[96px] hidden md:table-cell",
+        className: "w-[96px]",
         cell: (p) => (
           <InlineProjectPriority
             projectId={p.id}
@@ -334,8 +329,7 @@ export const ProjectTable = React.memo(function ProjectTable({
           };
           return order[p.health];
         },
-        headerClassName: "hidden lg:table-cell",
-        className: "w-[96px] hidden lg:table-cell",
+        className: "w-[96px]",
         cell: (p) => {
           const healthLabels: Record<ProjectHealth, string> = {
             on_track: "On Track",
@@ -372,8 +366,7 @@ export const ProjectTable = React.memo(function ProjectTable({
         header: "Lead",
         sortable: true,
         sortValue: (p) => getUserDisplayName(p.manager),
-        headerClassName: "hidden md:table-cell",
-        className: "w-[130px] hidden md:table-cell",
+        className: "w-[130px]",
         cell: (p) =>
           canEdit ? (
             <InlineProjectLead projectId={p.id} manager={p.manager} />
@@ -408,8 +401,7 @@ export const ProjectTable = React.memo(function ProjectTable({
       cols.push({
         key: "members",
         header: "Members",
-        headerClassName: "hidden lg:table-cell",
-        className: "w-[90px] hidden lg:table-cell",
+        className: "w-[90px]",
         cell: (p) =>
           canEdit ? (
             <InlineProjectMembers projectId={p.id} members={p.members} />
@@ -432,8 +424,7 @@ export const ProjectTable = React.memo(function ProjectTable({
         sortable: true,
         sortValue: (p) =>
           p.endDate ? new Date(p.endDate).getTime() : Infinity,
-        headerClassName: "hidden lg:table-cell",
-        className: "w-[84px] hidden lg:table-cell",
+        className: "w-[84px]",
         cell: (p) => {
           const status = p.status ?? "ACTIVE";
           const targetDate = resolveTargetDate(p.endDate, status);
@@ -461,8 +452,7 @@ export const ProjectTable = React.memo(function ProjectTable({
         sortable: true,
         sortValue: (p) =>
           p.startDate ? new Date(p.startDate).getTime() : Infinity,
-        headerClassName: "hidden lg:table-cell",
-        className: "w-[80px] hidden lg:table-cell",
+        className: "w-[80px]",
         cell: (p) =>
           p.startDate ? (
             <span className="text-xs text-muted-foreground">
@@ -480,8 +470,7 @@ export const ProjectTable = React.memo(function ProjectTable({
         header: "Issues",
         sortable: true,
         sortValue: (p) => p.progress.total,
-        headerClassName: "hidden sm:table-cell",
-        className: "w-[72px] hidden sm:table-cell",
+        className: "w-[72px]",
         cell: (p) => (
           <div className="flex items-center gap-1 text-xs tabular-nums text-muted-foreground">
             <Ticket className="h-3 w-3 shrink-0" aria-hidden="true" />
@@ -497,8 +486,7 @@ export const ProjectTable = React.memo(function ProjectTable({
         header: "Progress",
         sortable: true,
         sortValue: (p) => p.progress.percentage,
-        headerClassName: "hidden sm:table-cell",
-        className: "w-[110px] hidden sm:table-cell",
+        className: "w-[110px]",
         cell: (p) => {
           const progressValue =
             p.progress.total > 0 ? p.progress.percentage : 0;
@@ -541,14 +529,15 @@ export const ProjectTable = React.memo(function ProjectTable({
   );
 
   return (
-    <PmPanel className="flex min-h-0 flex-1 flex-col">
+    <PmPanel className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
       <DataTable
         data={projects}
         columns={columns}
         getRowKey={(p) => p.id}
         onRowClick={handleRowClick}
+        minWidth="content"
         rowClassName={() => "group h-9 hover:bg-primary/[0.035]"}
-        className="min-h-0 flex-1 rounded-none border-0 bg-transparent shadow-none"
+        className="min-h-0 min-w-0 flex-1 overflow-hidden rounded-none border-0 bg-transparent shadow-none"
         emptyState={
           <div className="py-4 text-center text-sm text-muted-foreground">
             No projects found

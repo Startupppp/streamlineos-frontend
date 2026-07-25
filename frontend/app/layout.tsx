@@ -24,6 +24,7 @@ import {
   GoogleTagManagerNoscript,
 } from "@/features/analytics/google-tag-manager";
 import { MicrosoftClarity } from "@/features/analytics/clarity";
+import { AppThemeScript } from "../components/theme/app-theme-script";
 
 const geist = Geist({
   subsets: ["latin"],
@@ -132,6 +133,7 @@ export default async function RootLayout({
       style={{ colorScheme: "light" }}
     >
       <head>
+        <AppThemeScript nonce={nonce} />
         <OrganizationJsonLd />
         <WebsiteJsonLd />
         <GoogleTagManagerHead nonce={nonce} />

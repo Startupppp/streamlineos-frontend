@@ -215,7 +215,7 @@ function applyProjectDetailPatch(
 export function useUpdateProject(
   options?: Omit<
     UseMutationOptions<
-      { success: boolean },
+      ProjectWithDetails,
       Error,
       UpdateProjectInput,
       UpdateProjectContext
@@ -225,7 +225,7 @@ export function useUpdateProject(
 ) {
   const queryClient = useQueryClient();
   return useMutation<
-    { success: boolean },
+    ProjectWithDetails,
     Error,
     UpdateProjectInput,
     UpdateProjectContext
@@ -233,7 +233,7 @@ export function useUpdateProject(
     ...options,
     mutationKey: ["projects", "update"],
     mutationFn: ({ projectId, ...data }: UpdateProjectInput) =>
-      apiClient.patch<{ success: boolean }>(`/projects/${projectId}`, data),
+      apiClient.patch<ProjectWithDetails>(`/projects/${projectId}`, data),
     onMutate: async (variables) => {
       const { projectId, ...patch } = variables;
       await queryClient.cancelQueries({ queryKey: queryKeys.projects.all });
@@ -279,6 +279,9 @@ export function useUpdateProject(
     onSettled: (data, error, variables, context, mutFnCtx) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.detail(variables.projectId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.projects.members(variables.projectId),
       });
       queryClient.invalidateQueries({ queryKey: queryKeys.projects.all });
       options?.onSettled?.(data, error, variables, context, mutFnCtx);
