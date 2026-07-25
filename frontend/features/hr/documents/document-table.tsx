@@ -2,149 +2,24 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { format } from "date-fns";
-import {
-  FileText,
-  Folder,
-  Download,
-  Eye,
-  Trash2,
-  History,
-  File,
-  FileSpreadsheet,
-  FileImage,
-  Upload,
-  Pencil,
-  FileSignature,
-} from "lucide-react";
-import { EllipsisIcon } from "@animateicons/react/lucide";
+import { Download, Folder, Upload } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { viewFile, downloadFile } from "@/hooks/common/use-file-url";
 import type { Document } from "@/types/hr";
-import { useCan } from "@/hooks/api/access";
+import {
+  DOCUMENT_TYPES,
+  FOLDER_COLORS,
+  TYPE_BADGE_COLORS,
+  formatFileSize,
+  getFileIconConfig,
+} from "./document-table-constants";
+import { DocumentRowActions } from "./document-row-actions";
 
-const DOCUMENT_TYPES = [
-  { value: "CONTRACT", label: "Contract" },
-  { value: "CERTIFICATE", label: "Certificate" },
-  { value: "ID_PROOF", label: "ID Proof" },
-  { value: "PAYSLIP", label: "Payslip" },
-  { value: "POLICY", label: "Policy" },
-  { value: "OFFER_LETTER", label: "Offer Letter" },
-  { value: "RESUME", label: "Resume" },
-  { value: "OTHER", label: "Other" },
-] as const;
-
-const FILE_ICON_CONFIG: Record<
-  string,
-  {
-    bg: string;
-    text: string;
-    icon: React.ComponentType<{ className?: string }>;
-  }
-> = {
-  pdf: {
-    bg: "bg-rose-100 dark:bg-rose-500/10",
-    text: "text-rose-600 dark:text-rose-300",
-    icon: FileText,
-  },
-  docx: {
-    bg: "bg-blue-100 dark:bg-blue-500/10",
-    text: "text-blue-600 dark:text-blue-300",
-    icon: FileText,
-  },
-  doc: {
-    bg: "bg-blue-100 dark:bg-blue-500/10",
-    text: "text-blue-600 dark:text-blue-300",
-    icon: FileText,
-  },
-  xlsx: {
-    bg: "bg-emerald-100 dark:bg-emerald-500/10",
-    text: "text-emerald-600 dark:text-emerald-300",
-    icon: FileSpreadsheet,
-  },
-  xls: {
-    bg: "bg-emerald-100 dark:bg-emerald-500/10",
-    text: "text-emerald-600 dark:text-emerald-300",
-    icon: FileSpreadsheet,
-  },
-  csv: {
-    bg: "bg-emerald-100 dark:bg-emerald-500/10",
-    text: "text-emerald-600 dark:text-emerald-300",
-    icon: FileSpreadsheet,
-  },
-  png: {
-    bg: "bg-amber-100 dark:bg-amber-500/10",
-    text: "text-amber-600 dark:text-amber-300",
-    icon: FileImage,
-  },
-  jpg: {
-    bg: "bg-amber-100 dark:bg-amber-500/10",
-    text: "text-amber-600 dark:text-amber-300",
-    icon: FileImage,
-  },
-  jpeg: {
-    bg: "bg-amber-100 dark:bg-amber-500/10",
-    text: "text-amber-600 dark:text-amber-300",
-    icon: FileImage,
-  },
-};
-
-const DEFAULT_FILE_ICON = {
-  bg: "bg-muted",
-  text: "text-muted-foreground",
-  icon: File,
-};
-
-const TYPE_BADGE_COLORS: Record<string, string> = {
-  Contract:
-    "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  Certificate:
-    "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  "ID Proof":
-    "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  Payslip:
-    "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  Policy:
-    "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  "Offer Letter":
-    "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  Resume:
-    "bg-muted text-foreground border-border",
-  General:
-    "bg-muted text-foreground border-border",
-};
-
-const FOLDER_COLORS = [
-  "bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300",
-  "bg-emerald-100 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300",
-  "bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300",
-  "bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300",
-];
-
-function getFileIconConfig(fileName: string) {
-  const ext = fileName.split(".").pop()?.toLowerCase() ?? "";
-  return FILE_ICON_CONFIG[ext] ?? DEFAULT_FILE_ICON;
-}
-
-export function formatFileSize(bytes: number | null): string {
-  if (!bytes) return "—";
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
+export { formatFileSize } from "./document-table-constants";
 
 export interface FolderItem {
   name: string;
@@ -176,7 +51,7 @@ export function DocumentTable({
   page,
   pageSize,
   totalFiltered,
-  totalPages,
+  totalPages: _totalPages,
   selectedCategory,
   searchTerm,
   onPageChange,
@@ -185,7 +60,6 @@ export function DocumentTable({
   onOpenUpload,
   onSendForSignature,
 }: DocumentTableProps) {
-  const canManageDocs = useCan("hr:documents:manage");
   const [isZipping, setIsZipping] = useState(false);
 
   const filesWithUrl = allFilteredDocuments.filter((d) => !!d.fileUrl);
@@ -320,135 +194,18 @@ export function DocumentTable({
         header: "Actions",
         headerClassName: "text-right",
         cell(doc) {
-          const hasFileUrl = !!doc.fileUrl;
-
-          function handleView(e: React.MouseEvent) {
-            e.stopPropagation();
-            if (!hasFileUrl) {
-              toast.error("No file attached to this document.");
-              return;
-            }
-            viewFile(doc.fileUrl);
-          }
-
-          function handleDownload(e: React.MouseEvent) {
-            e.stopPropagation();
-            if (!hasFileUrl) {
-              toast.error("No file attached to this document.");
-              return;
-            }
-            downloadFile(doc.fileUrl, doc.fileName ?? doc.name);
-          }
-
-          function handleVersionHistory(e: React.MouseEvent) {
-            e.stopPropagation();
-            toast.info(`"${doc.name}" has ${doc.version} versions.`);
-          }
-
-          function handleDelete(e: React.MouseEvent) {
-            e.stopPropagation();
-            void onDelete(doc.id);
-          }
-
-          function handleEdit(e: React.MouseEvent) {
-            e.stopPropagation();
-            onEdit(doc);
-          }
-
-          function handleMenuTriggerClick(e: React.MouseEvent) {
-            e.stopPropagation();
-          }
-
-          function handleSendForSignature(e: React.MouseEvent) {
-            e.stopPropagation();
-            onSendForSignature(doc);
-          }
-
           return (
-            <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="w-7 text-muted-foreground hover:text-foreground"
-                disabled={!hasFileUrl}
-                onClick={handleView}
-                aria-label="View document"
-              >
-                <Eye className="h-3.5 w-3.5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="w-7 text-muted-foreground hover:text-foreground"
-                disabled={!hasFileUrl}
-                onClick={handleDownload}
-                aria-label="Download document"
-              >
-                <Download className="h-3.5 w-3.5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="w-7 text-muted-foreground hover:text-foreground"
-                onClick={handleEdit}
-                aria-label="Edit document"
-              >
-                <Pencil className="h-3.5 w-3.5" />
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild onClick={handleMenuTriggerClick}>
-                  <AnimatedIconButton
-                    icon={EllipsisIcon}
-                    variant="ghost"
-                    size="icon"
-                    className="w-7 text-muted-foreground hover:text-foreground"
-                    aria-label="More options"
-                  />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-44">
-                  <DropdownMenuItem disabled={!hasFileUrl} onClick={handleView}>
-                    <Eye className="mr-2 h-3.5 w-3.5" />
-                    View file
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    disabled={!hasFileUrl}
-                    onClick={handleDownload}
-                  >
-                    <Download className="mr-2 h-3.5 w-3.5" />
-                    Download
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleEdit}>
-                    <Pencil className="mr-2 h-3.5 w-3.5" />
-                    Edit details
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleSendForSignature}>
-                    <FileSignature className="mr-2 h-3.5 w-3.5" />
-                    Send for e-signature
-                  </DropdownMenuItem>
-                  {(doc.version ?? 1) > 1 && (
-                    <DropdownMenuItem onClick={handleVersionHistory}>
-                      <History className="mr-2 h-3.5 w-3.5" />
-                      History ({doc.version})
-                    </DropdownMenuItem>
-                  )}
-                  {canManageDocs && <DropdownMenuSeparator />}
-                  {canManageDocs && (
-                    <DropdownMenuItem
-                      onClick={handleDelete}
-                      className="text-rose-600 focus:text-rose-600 focus:bg-rose-50 dark:focus:bg-rose-950/40"
-                    >
-                      <Trash2 className="mr-2 h-3.5 w-3.5" />
-                      Delete
-                    </DropdownMenuItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+            <DocumentRowActions
+              doc={doc}
+              onDelete={onDelete}
+              onEdit={onEdit}
+              onSendForSignature={onSendForSignature}
+            />
           );
         },
       },
     ],
-    [onDelete, onEdit, onSendForSignature, canManageDocs],
+    [onDelete, onEdit, onSendForSignature],
   );
 
   const emptyState = (
@@ -482,7 +239,10 @@ export function DocumentTable({
     ) : undefined;
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 overflow-hidden rounded-2xl border border-border/70 bg-card/90 shadow-sm" aria-live="polite">
+    <div
+      className="flex flex-col flex-1 min-h-0 overflow-hidden rounded-2xl border border-border/70 bg-card/90 shadow-sm"
+      aria-live="polite"
+    >
       {showFolders && folders.length > 0 && (
         <div className="px-5 pt-4 pb-3 border-b border-border/50 shrink-0">
           <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">

@@ -79,7 +79,13 @@ function RoleEditorContent() {
   }
 
   const role = roleQuery.data;
-  const memberCount = membersQuery.data?.length ?? 0;
+  const memberCount = Array.isArray(membersQuery.data)
+    ? new Set(
+        membersQuery.data
+          .filter((member) => member.principalType === "user")
+          .map((member) => member.principalId),
+      ).size
+    : 0;
 
   return (
     <PageWrapper

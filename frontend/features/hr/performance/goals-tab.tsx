@@ -15,33 +15,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { DatePicker } from "@/components/ui/date-picker";
-import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
+import { Form } from "@/components/ui/form";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { toast } from "sonner";
@@ -53,14 +30,7 @@ import {
   planningEndPickerProps,
   planningStartPickerProps,
 } from "@/lib/date-constraints";
-import {
-  Plus,
-  Calendar,
-  Trash2,
-  Pencil,
-  ChevronsUpDown,
-  Check,
-} from "lucide-react";
+import { Plus, Calendar, Trash2, Pencil } from "lucide-react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { EmptyGoalsIllustration } from "@/components/illustrations";
@@ -72,6 +42,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { buildGoalSchema, type GoalFormValues } from "./goal-schema";
+import { GoalFormFields } from "./goal-form-fields";
 
 export function GoalsTab() {
   const { data: goals, isLoading } = useHrGoals();
@@ -403,155 +374,17 @@ export function GoalsTab() {
         isPending={createGoal.isPending || updateGoal.isPending}
       >
         <Form {...goalForm}>
-          {!editGoal && (
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">Employee</label>
-              <Popover open={userPickerOpen} onOpenChange={setUserPickerOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={userPickerOpen}
-                    className="w-full justify-between font-normal"
-                  >
-                    <span className="truncate">
-                      {employees.find((e) => e.id === watchedUserId)?.name ??
-                        employees.find((e) => e.id === watchedUserId)?.email ??
-                        "Select employee"}
-                    </span>
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent
-                  className="w-[var(--radix-popover-trigger-width)] p-0"
-                  align="start"
-                >
-                  <Command>
-                    <CommandInput placeholder="Search employees..." />
-                    <CommandList className="max-h-48 overflow-y-auto">
-                      <CommandEmpty>No employee found.</CommandEmpty>
-                      <CommandGroup>
-                        {employees.map((e) => (
-                          <CommandItem
-                            key={e.id}
-                            value={`${e.name ?? ""} ${e.email}`}
-                            onSelect={() => {
-                              goalForm.setValue("userId", e.id, {
-                                shouldValidate: true,
-                              });
-                              setUserPickerOpen(false);
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                watchedUserId === e.id
-                                  ? "opacity-100"
-                                  : "opacity-0",
-                              )}
-                            />
-                            {e.name ?? e.email}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-              {goalForm.formState.errors.userId?.message && (
-                <p className="text-xs text-destructive">
-                  {goalForm.formState.errors.userId.message}
-                </p>
-              )}
-            </div>
-          )}
-          <FormField
-            control={goalForm.control}
-            name="title"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Title</FormLabel>
-                <FormControl>
-                  <Input placeholder="e.g., Complete Q2 OKRs" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+          <GoalFormFields
+            form={goalForm}
+            isEdit={!!editGoal}
+            employees={employees}
+            watchedUserId={watchedUserId}
+            userPickerOpen={userPickerOpen}
+            onUserPickerOpenChange={setUserPickerOpen}
+            startBounds={startBounds}
+            endBounds={endBounds}
+            onStartDateChange={handleStartDateChange}
           />
-          <FormField
-            control={goalForm.control}
-            name="description"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Description</FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder="Goal details..."
-                    rows={3}
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={goalForm.control}
-            name="targetValue"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Target Value</FormLabel>
-                <FormControl>
-                  <Input inputMode="numeric" placeholder="100" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <div className="grid grid-cols-2 gap-3">
-            <FormField
-              control={goalForm.control}
-              name="startDate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Start Date</FormLabel>
-                  <FormControl>
-                    <DatePicker
-                      value={field.value}
-                      onChange={handleStartDateChange}
-                      placeholder="Pick a date"
-                      className="text-sm"
-                      fromDate={startBounds.fromDate}
-                      fromYear={startBounds.fromYear}
-                      toYear={startBounds.toYear}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={goalForm.control}
-              name="endDate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>End Date</FormLabel>
-                  <FormControl>
-                    <DatePicker
-                      value={field.value}
-                      onChange={field.onChange}
-                      placeholder="Pick a date"
-                      className="text-sm"
-                      fromDate={endBounds.fromDate}
-                      fromYear={endBounds.fromYear}
-                      toYear={endBounds.toYear}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
         </Form>
       </HrSheet>
 

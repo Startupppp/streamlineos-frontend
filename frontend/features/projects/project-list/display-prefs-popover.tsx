@@ -58,6 +58,7 @@ const PROPERTY_TOGGLES: { key: keyof DisplayPrefs; label: string }[] = [
   { key: "showHealth", label: "Health" },
   { key: "showLead", label: "Lead" },
   { key: "showMembers", label: "Members" },
+  { key: "showTeams", label: "Teams" },
   { key: "showTargetDate", label: "Target date" },
   { key: "showStartDate", label: "Start date" },
   { key: "showProgress", label: "Progress" },

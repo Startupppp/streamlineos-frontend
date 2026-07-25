@@ -8,351 +8,27 @@ import { useUpdateJobPosting, useDeleteJobPosting, useHrDepartments } from "@/ho
 import {
   useJobPostingsPage,
   usePublishJobToBoards,
-  useJobShareLinks,
   useDuplicateJobPosting,
 } from "@/hooks/api/hr/recruitment";
-import type { JobBoardPlatform, JobShareLinks } from "@/hooks/api/hr/recruitment";
-import type { JobPosting } from "@/types/hr";
+import type { JobBoardPlatform } from "@/hooks/api/hr/recruitment";
+import type { JobPostingStatus } from "@/types/hr";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
-} from "@/components/ui/dialog";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { ExternalBoardsSheet } from "@/features/hr/recruitment/jobs/external-boards-sheet";
+import { ShareJobDialog } from "@/features/hr/recruitment/jobs/share-job-dialog";
+import { JobCard, JobCardSkeleton } from "@/features/hr/recruitment/jobs/job-card";
+import { STATUS_OPTIONS } from "@/features/hr/recruitment/jobs/job-posting-constants";
 import { toast } from "sonner";
-import {
-  Plus, Trash2, Play, Pause, Share2, Loader2,
-  ExternalLink, MapPin, Users, Briefcase, Building2, Pencil, ListChecks, CopyPlus,
-} from "lucide-react";
-import { EllipsisIcon, CopyIcon, ExternalLinkIcon } from "@animateicons/react/lucide";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
-import type { JobPostingStatus } from "@/types/hr";
+import { Plus } from "lucide-react";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { CONTENT_FILL_PANEL, FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
-import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
-
-const STATUS_OPTIONS: { value: string; label: string }[] = [
-  { value: "ALL", label: "All Status" },
-  { value: "DRAFT", label: "Draft" },
-  { value: "OPEN", label: "Open" },
-  { value: "PAUSED", label: "Paused" },
-  { value: "CLOSED", label: "Closed" },
-  { value: "FILLED", label: "Filled" },
-];
-
-const STATUS_STYLES: Record<string, { dot: string; label: string; badge: string }> = {
-  OPEN: { dot: "bg-emerald-500", label: "Open", badge: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300" },
-  DRAFT: { dot: "bg-muted-foreground/50", label: "Draft", badge: "bg-muted text-muted-foreground" },
-  PAUSED: { dot: "bg-amber-500", label: "Paused", badge: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300" },
-  CLOSED: { dot: "bg-rose-400", label: "Closed", badge: "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300" },
-  FILLED: { dot: "bg-blue-500", label: "Filled", badge: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" },
-};
-
-const PLATFORM_ICONS: Record<string, string> = {
-  LINKEDIN: "in",
-  WHATSAPP: "wa",
-  TWITTER: "𝕏",
-};
-
-interface ShareLinkRowProps {
-  link: JobShareLinks["shareLinks"][number];
-  onCopy: (url: string) => void;
-}
-
-function ShareLinkRow({ link, onCopy }: ShareLinkRowProps) {
-  function handleCopyUtm() {
-    onCopy(link.utmUrl);
-  }
-  return (
-    <div className="flex items-center gap-2 rounded-xl border px-3 py-2.5 hover:bg-muted/30 transition-colors">
-      <span className="w-6 text-center text-xs font-bold text-muted-foreground">{PLATFORM_ICONS[link.platform] ?? link.platform[0]}</span>
-      <span className="flex-1 text-sm font-medium">{link.name}</span>
-      <TooltipIconButton
-        icon={CopyIcon}
-        iconSize={12}
-        label="Copy link"
-        className="h-6 w-6"
-        onClick={handleCopyUtm}
-      />
-      <a href={link.url} target="_blank" rel="noopener noreferrer">
-        <AnimatedIconButton
-          icon={ExternalLinkIcon}
-          iconSize={12}
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6"
-          aria-label="Open link"
-        />
-      </a>
-    </div>
-  );
-}
-
-function ShareJobDialog({ jobId, onClose }: { jobId: number; onClose: () => void }) {
-  const { data, isLoading } = useJobShareLinks(jobId);
-
-  function handleOpenChange(v: boolean) {
-    if (!v) onClose();
-  }
-
-  function handleCopyLink(url: string) {
-    navigator.clipboard.writeText(url).then(() => toast.success("Copied to clipboard"));
-  }
-
-  function handleCopyDirectLink() {
-    if (data) handleCopyLink(data.directLink);
-  }
-
-  return (
-    <Dialog open onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-base">Share Job Posting</DialogTitle>
-          <DialogDescription className="text-xs">
-            Share this job on social platforms with UTM tracking.
-          </DialogDescription>
-        </DialogHeader>
-        {isLoading ? (
-          <div className="flex justify-center py-6">
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-          </div>
-        ) : data ? (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 rounded-xl border px-3 py-2.5 bg-muted/40">
-              <span className="flex-1 text-xs text-muted-foreground truncate">{data.directLink}</span>
-              <TooltipIconButton
-                icon={CopyIcon}
-                iconSize={12}
-                label="Copy link"
-                className="h-6 w-6 shrink-0"
-                onClick={handleCopyDirectLink}
-              />
-            </div>
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Share on</p>
-            <div className="space-y-2">
-              {data.shareLinks.map((link: JobShareLinks["shareLinks"][number]) => (
-                <ShareLinkRow key={link.platform} link={link} onCopy={handleCopyLink} />
-              ))}
-            </div>
-          </div>
-        ) : (
-          <p className="text-sm text-muted-foreground text-center py-4">Could not load share links.</p>
-        )}
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-interface JobCardProps {
-  job: JobPosting;
-  deptName: string | undefined;
-  isPublishPending: boolean;
-  isDuplicatePending: boolean;
-  onStatusChange: (id: number, status: JobPostingStatus) => void;
-  onPublish: (id: number) => void;
-  onShare: (id: number) => void;
-  onTrackBoards: (id: number) => void;
-  onDuplicate: (id: number) => void;
-  onDelete: (id: number) => void;
-}
-
-function JobCard({
-  job,
-  deptName,
-  isPublishPending,
-  isDuplicatePending,
-  onStatusChange,
-  onPublish,
-  onShare,
-  onTrackBoards,
-  onDuplicate,
-  onDelete,
-}: JobCardProps) {
-  const statusStyle = (job.status && STATUS_STYLES[job.status]) || STATUS_STYLES.DRAFT;
-  const externalPlatforms = job.externalPostingIds ? Object.keys(job.externalPostingIds) : [];
-
-  function handlePublishOpen() { onStatusChange(job.id, "OPEN"); }
-  function handlePublishToBoards() { onPublish(job.id); }
-  function handleShare() { onShare(job.id); }
-  function handleTrackBoards() { onTrackBoards(job.id); }
-  function handlePause() { onStatusChange(job.id, "PAUSED"); }
-  function handleResume() { onStatusChange(job.id, "OPEN"); }
-  function handleClose() { onStatusChange(job.id, "CLOSED"); }
-  function handleReopen() { onStatusChange(job.id, "OPEN"); }
-  function handleDuplicate() { onDuplicate(job.id); }
-  function handleDelete() { onDelete(job.id); }
-
-  return (
-    <div
-      className="group relative rounded-lg border border-border bg-card overflow-hidden transition-shadow hover:shadow-md"
-    >
-      <div className="p-3">
-        <div className="flex items-start justify-between gap-2 mb-2">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <div className={cn("h-2 w-2 rounded-full shrink-0", statusStyle.dot)} />
-              <TruncatedText text={job.title} className="text-sm font-semibold text-foreground" />
-            </div>
-            {deptName && (
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Building2 className="h-3 w-3 shrink-0" />
-                <TruncatedText text={deptName} />
-              </div>
-            )}
-          </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <AnimatedIconButton
-                icon={EllipsisIcon}
-                iconSize={16}
-                variant="ghost"
-                size="icon"
-                className="w-7 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                aria-label="Job actions"
-              />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44">
-              <DropdownMenuItem asChild>
-                <Link href={`/hr/recruitment/jobs/${job.id}/edit`}>
-                  <Pencil className="mr-2 h-3.5 w-3.5" /> Edit
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleDuplicate} disabled={isDuplicatePending}>
-                <CopyPlus className="mr-2 h-3.5 w-3.5" /> Duplicate
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              {job.status === "DRAFT" && (
-                <DropdownMenuItem onClick={handlePublishOpen}>
-                  <Play className="mr-2 h-3.5 w-3.5" /> Publish
-                </DropdownMenuItem>
-              )}
-              {job.status === "OPEN" && (
-                <>
-                  <DropdownMenuItem onClick={handlePublishToBoards} disabled={isPublishPending}>
-                    <Share2 className="mr-2 h-3.5 w-3.5" /> Post to Job Boards
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleShare}>
-                    <ExternalLink className="mr-2 h-3.5 w-3.5" /> Share Job Link
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleTrackBoards}>
-                    <ListChecks className="mr-2 h-3.5 w-3.5" /> Track External Postings
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handlePause}>
-                    <Pause className="mr-2 h-3.5 w-3.5" /> Pause
-                  </DropdownMenuItem>
-                </>
-              )}
-              {job.status === "PAUSED" && (
-                <>
-                  <DropdownMenuItem onClick={handleResume}>
-                    <Play className="mr-2 h-3.5 w-3.5" /> Resume
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleClose}>
-                    Close Job
-                  </DropdownMenuItem>
-                </>
-              )}
-              {(job.status === "OPEN") && (
-                <DropdownMenuItem onClick={handleClose}>
-                  Close Job
-                </DropdownMenuItem>
-              )}
-              {(job.status === "CLOSED" || job.status === "FILLED") && (
-                <DropdownMenuItem onClick={handleReopen}>
-                  <Play className="mr-2 h-3.5 w-3.5" /> Reopen
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem variant="destructive" onClick={handleDelete}>
-                <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
-        <div className="flex flex-wrap gap-1.5 mb-3">
-          <span className={cn("inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full", statusStyle.badge)}>
-            {statusStyle.label}
-          </span>
-          {job.location && (
-            <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-              <MapPin className="h-2.5 w-2.5" />
-              {job.location}
-            </span>
-          )}
-          {job.type && (
-            <span className="inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-              {job.type.replace(/_/g, " ")}
-            </span>
-          )}
-          {job.isInternal && (
-            <span className="inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full bg-primary/10 text-foreground">
-              Internal
-            </span>
-          )}
-          {externalPlatforms.map((platform) => (
-            <Badge key={platform} variant="secondary" className="text-[9px] px-1 py-0 h-4 uppercase">{platform}</Badge>
-          ))}
-        </div>
-
-        <div className="flex items-center justify-between pt-3 border-t border-border/50">
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Users className="h-3.5 w-3.5" />
-            <span className="font-semibold text-foreground">{job.openings}</span>
-            <span>opening{job.openings !== 1 ? "s" : ""}</span>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-xs gap-1.5"
-            asChild
-          >
-            <Link href={`/hr/recruitment/jobs/${job.id}/edit`}>
-              <Briefcase className="h-3 w-3" />
-              View
-            </Link>
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function JobCardSkeleton() {
-  return (
-    <div className="rounded-lg border border-border bg-card p-3 space-y-3">
-      <div className="flex items-start justify-between gap-3">
-        <div className="space-y-2 flex-1">
-          <Skeleton className="h-4 w-40" />
-          <Skeleton className="h-3 w-28" />
-        </div>
-        <Skeleton className="h-6 w-16 rounded-full" />
-      </div>
-      <div className="flex gap-2">
-        <Skeleton className="h-5 w-20 rounded-full" />
-        <Skeleton className="h-5 w-16 rounded-full" />
-        <Skeleton className="h-5 w-14 rounded-full" />
-      </div>
-      <div className="flex items-center justify-between pt-2 border-t border-border/60">
-        <Skeleton className="h-3 w-24" />
-        <Skeleton className="h-4 w-16 rounded-lg" />
-      </div>
-    </div>
-  );
-}
 
 export default function JobPostingsPage() {
   const router = useRouter();
@@ -395,7 +71,7 @@ export default function JobPostingsPage() {
       if (key !== "page" && key !== "pageSize") params.delete("page");
       router.replace(`?${params.toString()}`, { scroll: false });
     },
-    [searchParams, router]
+    [searchParams, router],
   );
 
   const setPagination = useCallback(
@@ -418,7 +94,7 @@ export default function JobPostingsPage() {
         onError: (e) => toast.error(getErrorMessage(e)),
       });
     },
-    [updateJob]
+    [updateJob],
   );
 
   const handleDelete = useCallback(() => {
@@ -459,7 +135,7 @@ export default function JobPostingsPage() {
         onError: (e) => toast.error(getErrorMessage(e)),
       });
     },
-    [publishToBoards]
+    [publishToBoards],
   );
 
   function handleStatusFilterChange(v: string) { setFilter("status", v); }
@@ -482,7 +158,6 @@ export default function JobPostingsPage() {
       <PageWrapper
         title="Job Postings"
         subtitle={subtitle}
-        backHref="/hr/recruitment"
         actions={
           <Button size="sm" asChild>
             <Link href="/hr/recruitment/jobs/new">
@@ -516,54 +191,54 @@ export default function JobPostingsPage() {
         }
       >
         <div className="flex flex-1 min-h-0 flex-col gap-4">
-        {isLoading ? (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 12 }).map((_, i) => <JobCardSkeleton key={i} />)}
-          </div>
-        ) : isError ? (
-          <div className="flex flex-col items-center justify-center flex-1 gap-4 text-center">
-            <p className="text-sm font-semibold text-foreground">Unable to load job postings</p>
-            <p className="text-xs text-muted-foreground">Try again. If this keeps happening, check your permissions or contact an admin.</p>
-            <Button size="sm" variant="outline" onClick={handleRetry}>Try again</Button>
-          </div>
-        ) : !jobs?.length ? (
-          <RecruitmentEmptyState
-            illustration={<EmptyPersonIllustration />}
-            title="No job postings yet"
-            description="Create your first job posting to start hiring"
-            action={{ label: "New Job Posting", href: "/hr/recruitment/jobs/new" }}
-            className={CONTENT_FILL_PANEL}
-          />
-        ) : (
-          <>
+          {isLoading ? (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {jobs.map((job) => {
-                const deptName = departments?.find((d) => d.id === job.departmentId)?.name;
-                return (
-                  <JobCard
-                    key={job.id}
-                    job={job}
-                    deptName={deptName}
-                    isPublishPending={publishToBoards.isPending}
-                    isDuplicatePending={duplicateJob.isPending}
-                    onStatusChange={handleStatusChange}
-                    onPublish={handlePublish}
-                    onShare={setShareJobId}
-                    onTrackBoards={setBoardsJobId}
-                    onDuplicate={handleDuplicate}
-                    onDelete={setDeleteJobId}
-                  />
-                );
-              })}
+              {Array.from({ length: 12 }).map((_, i) => <JobCardSkeleton key={i} />)}
             </div>
-            <TablePagination
-              page={jobsPage?.page ?? 1}
-              pageSize={jobsPage?.pageSize ?? pageSizeFromUrl}
-              total={jobsPage?.total ?? 0}
-              onPageChange={(p) => setPagination({ page: p })}
+          ) : isError ? (
+            <div className="flex flex-col items-center justify-center flex-1 gap-4 text-center">
+              <p className="text-sm font-semibold text-foreground">Unable to load job postings</p>
+              <p className="text-xs text-muted-foreground">Try again. If this keeps happening, check your permissions or contact an admin.</p>
+              <Button size="sm" variant="outline" onClick={handleRetry}>Try again</Button>
+            </div>
+          ) : !jobs?.length ? (
+            <RecruitmentEmptyState
+              illustration={<EmptyPersonIllustration />}
+              title="No job postings yet"
+              description="Create your first job posting to start hiring"
+              action={{ label: "New Job Posting", href: "/hr/recruitment/jobs/new" }}
+              className={CONTENT_FILL_PANEL}
             />
-          </>
-        )}
+          ) : (
+            <>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {jobs.map((job) => {
+                  const deptName = departments?.find((d) => d.id === job.departmentId)?.name;
+                  return (
+                    <JobCard
+                      key={job.id}
+                      job={job}
+                      deptName={deptName}
+                      isPublishPending={publishToBoards.isPending}
+                      isDuplicatePending={duplicateJob.isPending}
+                      onStatusChange={handleStatusChange}
+                      onPublish={handlePublish}
+                      onShare={setShareJobId}
+                      onTrackBoards={setBoardsJobId}
+                      onDuplicate={handleDuplicate}
+                      onDelete={setDeleteJobId}
+                    />
+                  );
+                })}
+              </div>
+              <TablePagination
+                page={jobsPage?.page ?? 1}
+                pageSize={jobsPage?.pageSize ?? pageSizeFromUrl}
+                total={jobsPage?.total ?? 0}
+                onPageChange={(p) => setPagination({ page: p })}
+              />
+            </>
+          )}
         </div>
       </PageWrapper>
 

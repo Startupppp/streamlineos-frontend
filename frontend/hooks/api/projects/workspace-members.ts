@@ -1,15 +1,34 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import type { UsersResponse } from "@/hooks/api/users";
+import { useCan } from "@/hooks/api/access";
+
+export interface ProjectWorkspaceMember {
+  id: string;
+  role: "member" | "admin";
+  addedAt: string;
+  name: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  email: string;
+  image: string | null;
+  teams: string[];
+}
+
+export interface WorkspaceMembersResponse {
+  data: ProjectWorkspaceMember[];
+  total: number;
+  page: number;
+  limit: number;
+}
 
 interface ProjectWorkspaceMembersParams {
   page?: number;
   limit?: number;
   search?: string;
-  status?: "active" | "suspended" | "archived";
+  status?: string;
 }
 
 const WORKSPACE_MEMBERS_BASE = ["streamlineos", "projects", "workspaceMembers"] as const;
@@ -22,18 +41,47 @@ export const projectWorkspaceMembersQueryKeys = {
 
 export function useProjectWorkspaceMembers(
   params?: ProjectWorkspaceMembersParams,
-  options?: Omit<UseQueryOptions<UsersResponse, Error>, "queryKey" | "queryFn">,
+  options?: Omit<UseQueryOptions<WorkspaceMembersResponse, Error>, "queryKey" | "queryFn">,
 ) {
-  return useQuery<UsersResponse, Error>({
+  const canView = useCan("projects:members:view");
+  const { enabled: callerEnabled, ...restOptions } = options ?? {};
+  const enabled = canView && (callerEnabled ?? true);
+
+  return useQuery<WorkspaceMembersResponse, Error>({
     queryKey: projectWorkspaceMembersQueryKeys.list(params as Record<string, unknown> | undefined),
     queryFn: () =>
-      apiClient.get<UsersResponse>("/projects/members", {
+      apiClient.get<WorkspaceMembersResponse>("/projects/members", {
         ...(params?.page ? { page: String(params.page) } : {}),
         ...(params?.limit ? { limit: String(params.limit) } : {}),
         ...(params?.search ? { search: params.search } : {}),
         ...(params?.status ? { status: params.status } : {}),
       }),
     staleTime: 30_000,
-    ...options,
+    enabled,
+    ...restOptions,
+  });
+}
+
+export function useAddProjectWorkspaceMember() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["projects", "workspaceMembers", "add"],
+    mutationFn: (body: { userId: string; role?: "member" | "admin" }) =>
+      apiClient.post<unknown>("/projects/members", body),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: projectWorkspaceMembersQueryKeys.all });
+    },
+  });
+}
+
+export function useRemoveProjectWorkspaceMember() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["projects", "workspaceMembers", "remove"],
+    mutationFn: (userId: string) =>
+      apiClient.delete<unknown>(`/projects/members/${userId}`),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: projectWorkspaceMembersQueryKeys.all });
+    },
   });
 }

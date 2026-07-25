@@ -20,20 +20,41 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { SearchInput } from "@/components/ui/search-input";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import {
   ResponsivePopover,
   ResponsivePopoverContent,
   ResponsivePopoverTrigger,
 } from "@/components/ui/responsive-popover";
-import { useProjectWorkspaceMembers } from "@/hooks/api/projects/workspace-members";
-import type { User } from "@/hooks/api/users";
+import { MemberPicker } from "@/components/members/member-picker";
+import {
+  useProjectWorkspaceMembers,
+  useAddProjectWorkspaceMember,
+  useRemoveProjectWorkspaceMember,
+} from "@/hooks/api/projects/workspace-members";
+import type { ProjectWorkspaceMember } from "@/hooks/api/projects/workspace-members";
 import { useCan } from "@/hooks/api/access";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -45,22 +66,20 @@ import { DisplayToggleRow } from "@/features/projects/shared/display-toggle-row"
 import { PmAccessButton } from "@/features/projects/members/pm-access-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
-import { SlidersHorizontalIcon } from "@animateicons/react/lucide";
+import { SlidersHorizontalIcon, PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
 
 const DISPLAY_PROPS_KEY = "projects_members_display_props";
 
 interface DisplayProps {
-  showStatus: boolean;
-  showJoined: boolean;
+  showRole: boolean;
+  showAdded: boolean;
   showTeams: boolean;
-  showLastSeen: boolean;
 }
 
 const DEFAULT_DISPLAY: DisplayProps = {
-  showStatus: true,
-  showJoined: true,
+  showRole: true,
+  showAdded: true,
   showTeams: true,
-  showLastSeen: true,
 };
 
 function loadDisplayProps(): DisplayProps {
@@ -82,46 +101,16 @@ function saveDisplayProps(props: DisplayProps): void {
 }
 
 const DISPLAY_PROP_ITEMS: { key: keyof DisplayProps; label: string }[] = [
-  { key: "showStatus", label: "Status" },
-  { key: "showJoined", label: "Joined" },
+  { key: "showRole", label: "Role" },
+  { key: "showAdded", label: "Added" },
   { key: "showTeams", label: "Teams" },
-  { key: "showLastSeen", label: "Last seen" },
 ];
 
-function MemberStatusBadge({ role }: { role: string }) {
-  const normalized = role.toUpperCase();
-  if (normalized === "OWNER") {
-    return (
-      <Badge className="h-[18px] px-1.5 text-[10px] font-medium bg-primary/10 text-foreground border border-primary/20 hover:bg-primary/10">
-        Owner
-      </Badge>
-    );
-  }
-  if (normalized === "ADMIN") {
+function WorkspaceRoleBadge({ role }: { role: "member" | "admin" }) {
+  if (role === "admin") {
     return (
       <Badge className="h-[18px] px-1.5 text-[10px] font-medium bg-primary/10 text-foreground border border-primary/20 hover:bg-primary/10">
         Admin
-      </Badge>
-    );
-  }
-  if (normalized === "MEMBER") {
-    return (
-      <Badge
-        variant="secondary"
-        className="h-[18px] px-1.5 text-[10px] font-medium"
-      >
-        Member
-      </Badge>
-    );
-  }
-  if (
-    normalized === "INVITED" ||
-    normalized === "PENDING" ||
-    normalized === "APPLICATION"
-  ) {
-    return (
-      <Badge className="h-[18px] px-1.5 text-[10px] font-medium bg-amber-500/10 text-amber-600 border border-amber-500/20 dark:text-amber-400 dark:border-amber-500/30 dark:bg-amber-500/10 hover:bg-amber-500/10">
-        Application
       </Badge>
     );
   }
@@ -130,7 +119,7 @@ function MemberStatusBadge({ role }: { role: string }) {
       variant="secondary"
       className="h-[18px] px-1.5 text-[10px] font-medium"
     >
-      {role}
+      Member
     </Badge>
   );
 }
@@ -181,6 +170,155 @@ function DisplayPropsToggle({
   );
 }
 
+function AddMemberButton({ onClick }: { onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button size="sm" className="h-9 min-h-9 gap-1.5 text-xs" onClick={onClick} {...hoverHandlers}>
+      <PlusIcon ref={iconRef} size={14} />
+      Add member
+    </Button>
+  );
+}
+
+interface AddMemberDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+function AddMemberDialog({ open, onOpenChange }: AddMemberDialogProps) {
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [selectedRole, setSelectedRole] = useState<"member" | "admin">("member");
+
+  const addMember = useAddProjectWorkspaceMember();
+
+  function handleUserChange(userId: string | null) {
+    setSelectedUserId(userId);
+  }
+
+  function handleRoleChange(value: string) {
+    setSelectedRole(value as "member" | "admin");
+  }
+
+  function handleOpenChange(nextOpen: boolean) {
+    if (!nextOpen) {
+      setSelectedUserId(null);
+      setSelectedRole("member");
+    }
+    onOpenChange(nextOpen);
+  }
+
+  function handleSubmit() {
+    if (!selectedUserId) return;
+    addMember.mutate(
+      { userId: selectedUserId, role: selectedRole },
+      {
+        onSuccess: () => {
+          toast.success("Member added to workspace.");
+          handleOpenChange(false);
+        },
+        onError: (err) => {
+          toast.error(getErrorMessage(err));
+        },
+      },
+    );
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Add member</DialogTitle>
+          <DialogDescription>
+            Pick an org member to add to this workspace.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex flex-col gap-3 py-1">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[12px] font-medium text-foreground" htmlFor="add-member-picker">
+              Member
+            </label>
+            <MemberPicker
+              mode="single"
+              value={selectedUserId ?? undefined}
+              onChange={handleUserChange}
+              placeholder="Select a member…"
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[12px] font-medium text-foreground" htmlFor="add-member-role">
+              Role
+            </label>
+            <Select value={selectedRole} onValueChange={handleRoleChange}>
+              <SelectTrigger id="add-member-role" className="h-9 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+                <SelectItem value="member">Member</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => handleOpenChange(false)}
+            disabled={addMember.isPending}
+          >
+            Cancel
+          </Button>
+          <LoadingButton
+            type="button"
+            size="sm"
+            isPending={addMember.isPending}
+            loadingText="Adding…"
+            disabled={!selectedUserId}
+            onClick={handleSubmit}
+          >
+            Add member
+          </LoadingButton>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+interface MemberActionsProps {
+  member: ProjectWorkspaceMember;
+  onRemove: (member: ProjectWorkspaceMember) => void;
+}
+
+function MemberActions({ member, onRemove }: MemberActionsProps) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+
+  function handleRemoveSelect() {
+    onRemove(member);
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6"
+          aria-label="Member actions"
+          {...hoverHandlers}
+        >
+          <EllipsisIcon ref={iconRef} size={14} />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem variant="destructive" onSelect={handleRemoveSelect}>
+          Remove from workspace
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 export function MembersPage() {
   const router = useRouter();
   const pathname = usePathname();
@@ -188,7 +326,6 @@ export function MembersPage() {
   const [, startTransition] = useTransition();
 
   const q = searchParams.get("search") ?? "";
-  const statusFilter = searchParams.get("status") ?? "all";
   const page = Number(searchParams.get("page") ?? "1");
 
   const [search, setSearch] = useState(q);
@@ -197,11 +334,16 @@ export function MembersPage() {
   const [displayProps, setDisplayProps] =
     useState<DisplayProps>(loadDisplayProps);
 
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [removeTarget, setRemoveTarget] = useState<ProjectWorkspaceMember | null>(null);
+
+  const removeConfirmOpen = removeTarget !== null;
+
   const pushParams = useCallback(
     (updates: Record<string, string | null>) => {
       const params = new URLSearchParams(searchParams.toString());
       for (const [k, v] of Object.entries(updates)) {
-        if (v === null || v === "all" || v === "1") params.delete(k);
+        if (v === null || v === "1") params.delete(k);
         else params.set(k, v);
       }
       startTransition(() => {
@@ -219,11 +361,6 @@ export function MembersPage() {
   const handleSearchChange = useCallback(
     (value: string) => setSearch(value),
     [],
-  );
-
-  const handleStatusChange = useCallback(
-    (value: string) => pushParams({ status: value, page: null }),
-    [pushParams],
   );
 
   const handlePageChange = useCallback(
@@ -245,13 +382,11 @@ export function MembersPage() {
         page,
         limit: 25,
         search: q || undefined,
-        status:
-          statusFilter !== "all"
-            ? (statusFilter as "active" | "suspended" | "archived")
-            : undefined,
       },
-      { placeholderData: keepPreviousData, enabled: canView },
+      { placeholderData: keepPreviousData },
     );
+
+  const removeMember = useRemoveProjectWorkspaceMember();
 
   const handleRetry = useCallback(() => {
     void refetch().catch(() => {
@@ -259,25 +394,48 @@ export function MembersPage() {
     });
   }, [refetch, error]);
 
-  const members = data?.data ?? [];
-  const pagination = data?.pagination;
+  const handleRemoveRequest = useCallback((member: ProjectWorkspaceMember) => {
+    setRemoveTarget(member);
+  }, []);
 
-  const columns = useMemo<DataTableColumn<User>[]>(() => {
-    const cols: DataTableColumn<User>[] = [
+  const handleRemoveConfirmOpenChange = useCallback((open: boolean) => {
+    if (!open) setRemoveTarget(null);
+  }, []);
+
+  const handleRemoveConfirm = useCallback(() => {
+    if (!removeTarget) return;
+    const targetId = removeTarget.id;
+    const targetName = getUserDisplayName(removeTarget);
+    removeMember.mutate(targetId, {
+      onSuccess: () => {
+        toast.success(`${targetName} removed from workspace.`);
+        setRemoveTarget(null);
+      },
+      onError: (err) => {
+        toast.error(getErrorMessage(err));
+      },
+    });
+  }, [removeTarget, removeMember]);
+
+  const members = data?.data ?? [];
+  const total = data?.total ?? 0;
+
+  const columns = useMemo<DataTableColumn<ProjectWorkspaceMember>[]>(() => {
+    const cols: DataTableColumn<ProjectWorkspaceMember>[] = [
       {
         key: "name",
         header: "Name",
         sortable: true,
-        sortValue: (u) => getUserDisplayName(u),
-        cell: (user) => {
-          const displayName = getUserDisplayName(user);
-          const handle = user.email.split("@")[0] ?? user.email;
+        sortValue: (m) => getUserDisplayName(m),
+        cell: (member) => {
+          const displayName = getUserDisplayName(member);
+          const handle = member.email.split("@")[0] ?? member.email;
           return (
             <div className="flex items-center gap-2.5 min-w-0">
               <Avatar className="h-7 w-7 shrink-0">
-                <AvatarImage src={user.image ?? undefined} alt={displayName} />
+                <AvatarImage src={member.image ?? undefined} alt={displayName} />
                 <AvatarFallback className="text-[10px] font-semibold bg-primary/10 text-foreground">
-                  {getUserInitials(user)}
+                  {getUserInitials(member)}
                 </AvatarFallback>
               </Avatar>
               <div className="min-w-0">
@@ -296,26 +454,24 @@ export function MembersPage() {
       },
     ];
 
-    if (displayProps.showStatus) {
+    if (displayProps.showRole) {
       cols.push({
-        key: "status",
-        header: "Status",
-        cell: (user) => <MemberStatusBadge role={user.role} />,
+        key: "role",
+        header: "Role",
+        cell: (member) => <WorkspaceRoleBadge role={member.role} />,
       });
     }
 
-    if (displayProps.showJoined) {
+    if (displayProps.showAdded) {
       cols.push({
-        key: "joined",
-        header: "Joined",
+        key: "addedAt",
+        header: "Added",
         sortable: true,
-        sortValue: (u) => u.joinedAt ?? u.createdAt,
+        sortValue: (m) => m.addedAt,
         className: "tabular-nums",
-        cell: (user) => (
+        cell: (member) => (
           <span className="text-[11px] text-muted-foreground tabular-nums">
-            {formatDistanceToNow(new Date(user.joinedAt ?? user.createdAt), {
-              addSuffix: true,
-            })}
+            {formatDistanceToNow(new Date(member.addedAt), { addSuffix: true })}
           </span>
         ),
       });
@@ -325,14 +481,13 @@ export function MembersPage() {
       cols.push({
         key: "teams",
         header: "Teams",
-        cell: (user) => {
-          const teamList = user.teams?.length ? user.teams : null;
-          if (!teamList) {
+        cell: (member) => {
+          if (!member.teams.length) {
             return <span className="text-[11px] text-muted-foreground">—</span>;
           }
           return (
             <div className="flex flex-wrap gap-1">
-              {teamList.map((t) => (
+              {member.teams.map((t) => (
                 <Badge
                   key={t}
                   variant="outline"
@@ -347,122 +502,131 @@ export function MembersPage() {
       });
     }
 
-    if (displayProps.showLastSeen) {
+    if (canManage) {
       cols.push({
-        key: "lastSeen",
-        header: "Last seen",
-        className: "tabular-nums",
-        cell: (user) => (
-          <span className="text-[11px] text-muted-foreground tabular-nums">
-            {user.lastSeenAt
-              ? formatDistanceToNow(new Date(user.lastSeenAt), {
-                  addSuffix: true,
-                })
-              : "—"}
-          </span>
+        key: "actions",
+        header: "",
+        className: "w-10 text-right",
+        cell: (member) => (
+          <MemberActions member={member} onRemove={handleRemoveRequest} />
         ),
       });
     }
 
     return cols;
-  }, [displayProps]);
+  }, [displayProps, canManage, handleRemoveRequest]);
 
   return (
-    <PageWrapper
-      title="Members"
-      subtitle="Workspace members and their roles."
-      noInternalScroll
-      filtersClassName="flex-col items-stretch gap-2 overflow-x-visible"
-      filters={
-        <div className="flex w-full min-w-0 flex-col gap-2 sm:flex-row sm:flex-nowrap sm:items-center sm:gap-2 sm:overflow-x-auto sm:overscroll-x-contain sm:scrollbar-hide sm:touch-pan-x">
-          <div className="flex w-full min-w-0 items-center gap-1.5 sm:contents">
-            <div className="shrink-0 sm:order-2">
-              <Select value={statusFilter} onValueChange={handleStatusChange}>
-                <SelectTrigger
-                  size="sm"
-                  className={`w-fit min-w-[7.5rem] ${FILTER_SELECT_TRIGGER}`}
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-                  <SelectItem value="all">All statuses</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="suspended">Suspended</SelectItem>
-                  <SelectItem value="archived">Archived</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="shrink-0 sm:order-3">
-              <DisplayPropsToggle
-                value={displayProps}
-                onChange={handleDisplayChange}
-              />
-            </div>
-            {canManage ? (
-              <div className="ml-auto shrink-0 sm:order-4 sm:ml-0">
-                <PmAccessButton />
+    <>
+      <PageWrapper
+        title="Members"
+        subtitle="Workspace members and their roles."
+        noInternalScroll
+        filtersClassName="flex-col items-stretch gap-2 overflow-x-visible"
+        filters={
+          <div className="flex w-full min-w-0 flex-col gap-2 sm:flex-row sm:flex-nowrap sm:items-center sm:gap-2 sm:overflow-x-auto sm:overscroll-x-contain sm:scrollbar-hide sm:touch-pan-x">
+            <div className="flex w-full min-w-0 items-center gap-1.5 sm:contents">
+              <div className="shrink-0 sm:order-2">
+                <DisplayPropsToggle
+                  value={displayProps}
+                  onChange={handleDisplayChange}
+                />
               </div>
-            ) : null}
-          </div>
-          <div className="flex w-full min-w-0 items-center gap-1.5 sm:contents">
-            <div className="min-w-0 flex-1 sm:order-1 sm:w-[200px] sm:max-w-[min(240px,70vw)] sm:flex-none md:w-[240px]">
-              <SearchInput
-                placeholder="Search members…"
-                value={search}
-                onValueChange={handleSearchChange}
-                aria-label="Search members"
-                className="h-9"
-                inputClassName="h-9 min-h-9"
-              />
+              {canManage ? (
+                <div className="shrink-0 sm:order-3">
+                  <PmAccessButton />
+                </div>
+              ) : null}
+              {canManage ? (
+                <div className="ml-auto shrink-0 sm:order-4 sm:ml-0">
+                  <AddMemberButton onClick={() => setAddDialogOpen(true)} />
+                </div>
+              ) : null}
+            </div>
+            <div className="flex w-full min-w-0 items-center gap-1.5 sm:contents">
+              <div className="min-w-0 flex-1 sm:order-1 sm:w-[200px] sm:max-w-[min(240px,70vw)] sm:flex-none md:w-[240px]">
+                <SearchInput
+                  placeholder="Search members…"
+                  value={search}
+                  onValueChange={handleSearchChange}
+                  aria-label="Search members"
+                  className="h-9"
+                  inputClassName="h-9 min-h-9"
+                />
+              </div>
             </div>
           </div>
-        </div>
-      }
-    >
-      {!canView ? (
-        <EmptyState
-          illustrationPreset="team"
-          title="Access restricted"
-          description="You don't have permission to view workspace members."
-        />
-      ) : isError ? (
-        <ErrorState
-          title="Failed to load members"
-          description={getErrorMessage(error)}
-          onRetry={handleRetry}
-        />
-      ) : (
-        <DataTable
-          className="flex-1 min-h-0"
-          data={members}
-          columns={columns}
-          getRowKey={(user) => user.id}
-          isLoading={isLoading}
-          emptyState={
-            <EmptyState
-              illustrationPreset="team"
-              title={
-                q || statusFilter !== "all"
-                  ? "No members found"
-                  : "No members yet"
-              }
-              description={
-                q || statusFilter !== "all"
-                  ? "Try adjusting your search or filters."
-                  : "Workspace members will appear here."
-              }
-            />
-          }
-          pagination={{
-            mode: "server",
-            page,
-            pageSize: 25,
-            total: pagination?.total ?? 0,
-            onPageChange: handlePageChange,
-          }}
-          minWidth="640px"
-        />
-      )}
-    </PageWrapper>
+        }
+      >
+        {!canView ? (
+          <EmptyState
+            illustrationPreset="team"
+            title="Access restricted"
+            description="You don't have permission to view workspace members."
+          />
+        ) : isError ? (
+          <ErrorState
+            title="Failed to load members"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+          />
+        ) : (
+          <DataTable
+            className="flex-1 min-h-0"
+            data={members}
+            columns={columns}
+            getRowKey={(member) => member.id}
+            isLoading={isLoading}
+            emptyState={
+              <EmptyState
+                illustrationPreset="team"
+                title={q ? "No members found" : "No members yet"}
+                description={
+                  q
+                    ? "Try adjusting your search."
+                    : canManage
+                      ? "Add the first member to this workspace."
+                      : "Workspace members will appear here."
+                }
+                action={
+                  !q && canManage
+                    ? { label: "Add member", onClick: () => setAddDialogOpen(true) }
+                    : undefined
+                }
+              />
+            }
+            pagination={{
+              mode: "server",
+              page,
+              pageSize: 25,
+              total,
+              onPageChange: handlePageChange,
+            }}
+            minWidth="640px"
+          />
+        )}
+      </PageWrapper>
+
+      <AddMemberDialog
+        open={addDialogOpen}
+        onOpenChange={setAddDialogOpen}
+      />
+
+      <ConfirmDialog
+        open={removeConfirmOpen}
+        onOpenChange={handleRemoveConfirmOpenChange}
+        title="Remove member?"
+        description={
+          removeTarget
+            ? `${getUserDisplayName(removeTarget)} will be removed from this workspace.`
+            : "This member will be removed from the workspace."
+        }
+        confirmLabel="Remove"
+        cancelLabel="Cancel"
+        destructive
+        isPending={removeMember.isPending}
+        onConfirm={handleRemoveConfirm}
+      />
+    </>
   );
 }

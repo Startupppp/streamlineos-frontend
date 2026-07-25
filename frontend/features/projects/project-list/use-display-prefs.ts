@@ -22,6 +22,7 @@ export interface DisplayPrefs {
   showHealth: boolean;
   showLead: boolean;
   showMembers: boolean;
+  showTeams: boolean;
   showTargetDate: boolean;
   showStartDate: boolean;
   showProgress: boolean;
@@ -41,6 +42,7 @@ const DEFAULTS: DisplayPrefs = {
   showHealth: false,
   showLead: true,
   showMembers: false,
+  showTeams: false,
   showTargetDate: true,
   showStartDate: false,
   showProgress: true,

@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useState, useCallback, useMemo } from "react";
-import { format } from "date-fns";
 import { motion } from "framer-motion";
-import { useHrPendingWfhRequests, useProcessWfhRequest, useApproveLeaveDedicated, useRejectLeaveDedicated } from "@/hooks/api/hr";
+import { useHrPendingWfhRequests, useProcessWfhRequest } from "@/hooks/api/hr";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -12,269 +11,17 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyApprovalIllustration, EmptyCalendarIllustration } from "@/components/illustrations";
-import { Home, CheckCircle2, XCircle, CalendarDays, Clock, UserCheck, AlertTriangle } from "lucide-react";
+import { Home, CalendarDays } from "lucide-react";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { cn, resolveImageUrl } from "@/lib/utils";
 import { staggerContainer, fadeIn } from "@/lib/motion-variants";
 
 import type { LeaveRequest, WfhRequest } from "./leaves-shared";
-import { WfhRequestItem, priorityConfig } from "./leaves-shared";
-import { TruncatedText } from "@/components/ui/truncated-text";
-
-function LeaveStatusBadge({ status }: { status: string }) {
-  const config: Record<string, { label: string; className: string; icon: React.ComponentType<{ className?: string }> }> = {
-    PENDING: {
-      label: "Pending",
-      className: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300 border-amber-200 dark:border-amber-500/30",
-      icon: Clock,
-    },
-    APPROVED: {
-      label: "Approved",
-      className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30",
-      icon: CheckCircle2,
-    },
-    REJECTED: {
-      label: "Rejected",
-      className: "bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300 border-rose-200 dark:border-rose-500/30",
-      icon: XCircle,
-    },
-  };
-  const c = config[status] ?? config.PENDING;
-  const Icon = c.icon;
-  return (
-    <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border", c.className)}>
-      <Icon className="h-3 w-3" aria-hidden="true" />
-      {c.label}
-    </span>
-  );
-}
-
-function LeaveApprovalItem({
-  req,
-  processingId,
-  currentUserId,
-  onProcess,
-}: {
-  req: LeaveRequest;
-  processingId: number | null;
-  currentUserId: string | undefined;
-  onProcess: (requestId: number, status: "APPROVED" | "REJECTED") => void;
-}) {
-  const status = req.status ?? "PENDING";
-  const isPending = status === "PENDING";
-  const priority = req.priority || "MEDIUM";
-  const pConfig = priorityConfig[priority] ?? priorityConfig.MEDIUM;
-  const lopDays = Number(req.lopDays ?? 0);
-  const isSelfRequest = !!currentUserId && req.user?.id === currentUserId;
-
-  const handleApprove = useCallback(() => onProcess(req.id, "APPROVED"), [req.id, onProcess]);
-  const handleReject = useCallback(() => onProcess(req.id, "REJECTED"), [req.id, onProcess]);
-
-  return (
-    <div
-      className={cn(
-        "rounded-xl bg-card border border-border overflow-hidden transition-colors duration-200 hover:bg-muted/20 border-l-4",
-        status === "APPROVED" ? "border-l-emerald-500" :
-        status === "REJECTED" ? "border-l-rose-500" :
-        "border-l-amber-500"
-      )}
-      role="listitem"
-    >
-      <div className="flex items-center justify-between p-4">
-        <div className="flex items-center gap-3 min-w-0 flex-1">
-          <Avatar className="h-9 w-9 shrink-0">
-            <AvatarImage src={resolveImageUrl(req.user?.image)} />
-            <AvatarFallback className="text-xs bg-primary/10 text-primary font-semibold">
-              {req.user?.firstName?.[0]}{req.user?.lastName?.[0]}
-            </AvatarFallback>
-          </Avatar>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <p className="text-sm font-semibold text-foreground">
-                {req.user?.firstName ? `${req.user.firstName} ${req.user.lastName}` : req.user?.email}
-              </p>
-              <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-current/20", pConfig.textColor)}>
-                <span className={cn("h-1.5 w-1.5 rounded-full", pConfig.dotColor)} />
-                {pConfig.label}
-              </span>
-              {lopDays > 0 && (
-                <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-orange-200 dark:border-orange-500/30 bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-300">
-                  <AlertTriangle className="h-2.5 w-2.5" />
-                  LOP: {lopDays}d
-                </span>
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              <span className="font-medium text-foreground/80">{req.leaveType?.name}</span>
-              {" · "}
-              {format(new Date(req.startDate), "MMM dd")} – {format(new Date(req.endDate), "MMM dd, yyyy")}
-            </p>
-            {req.reason && (
-              <TruncatedText text={req.reason} className="text-xs text-muted-foreground mt-0.5" />
-            )}
-            {!isPending && req.approver?.name && (
-              <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                <UserCheck className="h-3 w-3" aria-hidden="true" />
-                {status === "APPROVED" ? "Approved" : "Rejected"} by {req.approver.name}
-              </p>
-            )}
-          </div>
-        </div>
-        <div className="flex items-center gap-2 shrink-0 ml-3">
-          {isPending ? (
-            isSelfRequest ? (
-              <span className="text-xs text-muted-foreground italic">Cannot approve own request</span>
-            ) : (
-              <>
-                <LoadingButton
-                  size="sm"
-                  className="h-7 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white text-[11px] font-semibold px-3 gap-1 border-0 transition-colors duration-200"
-                  isPending={processingId === req.id}
-                  onClick={handleApprove}
-                >
-                  <CheckCircle2 className="h-3 w-3" />
-                  Approve
-                </LoadingButton>
-                <Button
-                  size="sm"
-                  className="h-7 rounded-full bg-transparent border border-rose-200 dark:border-rose-500/30 text-rose-600 dark:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/20 text-[11px] font-semibold px-3 gap-1 transition-colors duration-200"
-                  disabled={processingId === req.id}
-                  onClick={handleReject}
-                >
-                  <XCircle className="h-3 w-3" />
-                  Reject
-                </Button>
-              </>
-            )
-          ) : (
-            <LeaveStatusBadge status={status} />
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function LeaveApprovalsList({
-  requests,
-  currentUserId,
-}: {
-  requests: LeaveRequest[];
-  currentUserId: string | undefined;
-}) {
-  const approveMutation = useApproveLeaveDedicated();
-  const rejectMutation = useRejectLeaveDedicated();
-  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
-  const [rejectingId, setRejectingId] = useState<number | null>(null);
-  const [rejectionReason, setRejectionReason] = useState("");
-  const processingId = approveMutation.variables?.leaveId ?? rejectMutation.variables?.leaveId ?? null;
-  const isPending = approveMutation.isPending || rejectMutation.isPending;
-
-  const handleProcess = useCallback(
-    (requestId: number, status: "APPROVED" | "REJECTED") => {
-      if (status === "APPROVED") {
-        approveMutation.mutate(
-          { leaveId: requestId },
-          {
-            onSuccess: () => toast.success("Request approved successfully"),
-            onError: (err) => toast.error(getErrorMessage(err)),
-          },
-        );
-      } else {
-        setRejectingId(requestId);
-        setRejectionReason("");
-        setRejectDialogOpen(true);
-      }
-    },
-    [approveMutation],
-  );
-
-  const handleRejectConfirm = useCallback(() => {
-    if (rejectingId === null) return;
-    const reason = rejectionReason.trim();
-    if (!reason) {
-      toast.error("Rejection reason is required");
-      return;
-    }
-    rejectMutation.mutate(
-      { leaveId: rejectingId, reason },
-      {
-        onSuccess: () => {
-          toast.success("Request rejected successfully");
-          setRejectDialogOpen(false);
-          setRejectingId(null);
-          setRejectionReason("");
-        },
-        onError: (err) => toast.error(getErrorMessage(err)),
-      },
-    );
-  }, [rejectingId, rejectionReason, rejectMutation]);
-
-  return (
-    <>
-      <div className="space-y-3" role="list" aria-label="Leave approvals">
-        {requests.map((req) => (
-          <LeaveApprovalItem
-            key={req.id}
-            req={req}
-            processingId={isPending ? (processingId ?? null) : null}
-            currentUserId={currentUserId}
-            onProcess={handleProcess}
-          />
-        ))}
-      </div>
-      <Sheet open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
-        <SheetContent className="sm:max-w-sm p-0 flex flex-col">
-          <SheetHeader className="p-5 pb-4 border-b">
-            <SheetTitle className="text-base font-semibold">Reject Leave Request</SheetTitle>
-            <p className="text-sm text-muted-foreground">
-              Provide a reason for rejecting this request.
-            </p>
-          </SheetHeader>
-          <div className="flex-1 p-5 space-y-4">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-foreground">
-                Rejection Reason <span className="text-destructive">*</span>
-              </Label>
-              <Textarea
-                placeholder="E.g. Insufficient notice, conflicting deadlines..."
-                value={rejectionReason}
-                onChange={(e) => setRejectionReason(e.target.value)}
-                rows={4}
-                className="resize-none text-sm"
-              />
-            </div>
-          </div>
-          <div className="flex gap-2 p-5 pt-4 border-t">
-            <Button
-              variant="outline"
-              className="flex-1 h-9"
-              onClick={() => {
-                setRejectDialogOpen(false);
-                setRejectingId(null);
-                setRejectionReason("");
-              }}
-            >
-              Cancel
-            </Button>
-            <LoadingButton
-              className="flex-1 h-9"
-              isPending={rejectMutation.isPending}
-              disabled={!rejectionReason.trim()}
-              onClick={handleRejectConfirm}
-            >
-              Reject
-            </LoadingButton>
-          </div>
-        </SheetContent>
-      </Sheet>
-    </>
-  );
-}
+import { WfhRequestItem } from "./leaves-shared";
+import { LeaveApprovalsList } from "./leave-approvals-list";
+import { WfhApprovalActions } from "./wfh-approval-actions";
 
 interface LeaveApprovalsContentProps {
   incomingLeaveRequests: LeaveRequest[];
@@ -295,23 +42,25 @@ export function LeaveApprovalsContent({
   const { data: pendingWfhRequests } = useHrPendingWfhRequests();
   const processWfhRequestMutation = useProcessWfhRequest();
 
-  const handleRejectionReasonChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setRejectionReason(e.target.value);
-  }, []);
+  const handleRejectionReasonChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setRejectionReason(e.target.value);
+    },
+    [],
+  );
 
-  const handleWfhApprove = useCallback((requestId: number) => {
-    processWfhRequestMutation.mutate(
-      { requestId, status: "APPROVED" },
-      {
-        onSuccess: () => {
-          toast.success("WFH request approved");
+  const handleWfhApprove = useCallback(
+    (requestId: number) => {
+      processWfhRequestMutation.mutate(
+        { requestId, status: "APPROVED" },
+        {
+          onSuccess: () => toast.success("WFH request approved"),
+          onError: (error) => toast.error(getErrorMessage(error)),
         },
-        onError: (error) => {
-          toast.error(getErrorMessage(error));
-        },
-      }
-    );
-  }, [processWfhRequestMutation]);
+      );
+    },
+    [processWfhRequestMutation],
+  );
 
   const handleWfhRejectOpen = useCallback((requestId: number) => {
     setRejectingId(requestId);
@@ -334,10 +83,8 @@ export function LeaveApprovalsContent({
           setRejectionReason("");
           setRejectingId(null);
         },
-        onError: (error) => {
-          toast.error(getErrorMessage(error));
-        },
-      }
+        onError: (error) => toast.error(getErrorMessage(error)),
+      },
     );
   }, [rejectingId, rejectionReason, processWfhRequestMutation]);
 
@@ -349,11 +96,11 @@ export function LeaveApprovalsContent({
 
   const approvedRequests = useMemo(
     () => allIncomingLeaveRequests.filter((r) => r.status === "APPROVED"),
-    [allIncomingLeaveRequests]
+    [allIncomingLeaveRequests],
   );
   const rejectedRequests = useMemo(
     () => allIncomingLeaveRequests.filter((r) => r.status === "REJECTED"),
-    [allIncomingLeaveRequests]
+    [allIncomingLeaveRequests],
   );
 
   return (
@@ -468,11 +215,7 @@ export function LeaveApprovalsContent({
           </CardHeader>
           <CardContent className="pt-0">
             {!pendingWfhRequests || pendingWfhRequests.length === 0 ? (
-              <EmptyState
-                illustration={<EmptyCalendarIllustration />}
-                title="No pending WFH requests"
-                description="All WFH requests have been processed."
-              />
+              <EmptyState illustration={<EmptyCalendarIllustration />} title="No pending WFH requests" description="All WFH requests have been processed." />
             ) : (
               <motion.div
                 className="space-y-3"
@@ -548,43 +291,5 @@ export function LeaveApprovalsContent({
         {processWfhRequestMutation.isPending && "Processing WFH request..."}
       </div>
     </>
-  );
-}
-
-function WfhApprovalActions({
-  requestId,
-  isPending,
-  onApprove,
-  onRejectOpen,
-}: {
-  requestId: number;
-  isPending: boolean;
-  onApprove: (id: number) => void;
-  onRejectOpen: (id: number) => void;
-}) {
-  const handleApprove = useCallback(() => onApprove(requestId), [requestId, onApprove]);
-  const handleReject = useCallback(() => onRejectOpen(requestId), [requestId, onRejectOpen]);
-
-  return (
-    <div className="flex gap-2">
-      <LoadingButton
-        size="sm"
-        className="h-7 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white text-[11px] font-semibold px-3 gap-1 border-0 transition-colors duration-200"
-        onClick={handleApprove}
-        isPending={isPending}
-      >
-        <CheckCircle2 className="h-3 w-3" />
-        Approve
-      </LoadingButton>
-      <Button
-        size="sm"
-        className="h-7 rounded-full bg-transparent border border-rose-200 dark:border-rose-500/30 text-rose-600 dark:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/20 text-[11px] font-semibold px-3 gap-1 transition-colors duration-200"
-        onClick={handleReject}
-        disabled={isPending}
-      >
-        <XCircle className="h-3 w-3" />
-        Reject
-      </Button>
-    </div>
   );
 }

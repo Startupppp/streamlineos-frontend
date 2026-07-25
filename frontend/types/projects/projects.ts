@@ -105,6 +105,7 @@ export interface ProjectListItem {
     lastName: string | null;
     image: string | null;
   }[];
+  teams: string[];
 }
 
 export interface Cycle {

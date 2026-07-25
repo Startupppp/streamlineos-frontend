@@ -417,6 +417,40 @@ export const ProjectTable = React.memo(function ProjectTable({
       });
     }
 
+    if (prefs?.showTeams) {
+      cols.push({
+        key: "teams",
+        header: "Teams",
+        className: "w-[140px]",
+        cell: (p) => {
+          if (!p.teams || p.teams.length === 0) {
+            return <span className="text-xs text-muted-foreground/40">—</span>;
+          }
+          return (
+            <div className="flex flex-wrap gap-1">
+              {p.teams.slice(0, 3).map((t) => (
+                <Badge
+                  key={t}
+                  variant="outline"
+                  className="h-[18px] px-1.5 text-[10px] font-normal"
+                >
+                  {t}
+                </Badge>
+              ))}
+              {p.teams.length > 3 ? (
+                <Badge
+                  variant="outline"
+                  className="h-[18px] px-1.5 text-[10px] font-normal text-muted-foreground"
+                >
+                  +{p.teams.length - 3}
+                </Badge>
+              ) : null}
+            </div>
+          );
+        },
+      });
+    }
+
     if (!prefs || prefs.showTargetDate) {
       cols.push({
         key: "endDate",

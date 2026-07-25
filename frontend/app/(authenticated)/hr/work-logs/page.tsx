@@ -5,21 +5,24 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { format, eachDayOfInterval, parse, isValid } from "date-fns";
 import { useGetWorkLogs, useUpsertWorkLog, useHrMyLeaveRequests } from "@/hooks/api/hr";
 import { useHrEmployees, useLegacyHrDepartments, unwrapEmployees } from "@/hooks/api/hr";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
 import { useSession } from "next-auth/react";
-import type { Employee } from "@/types/hr";
 
 import {
   WorkLogFilterActions,
   WorkLogFiltersPanel,
-  type WorkLogFilters
+  type WorkLogFilters,
 } from "@/features/hr/work-logs/work-log-filters";
 import { WorkLogMonthGroup } from "@/features/hr/work-logs/work-log-month-group";
-import { EmptyTimeIllustration } from "@/components/illustrations";
+import {
+  WorkLogDeptPromptCard,
+  WorkLogLoadingCard,
+  WorkLogErrorCard,
+  WorkLogNoResultsCard,
+  WorkLogTotalHoursCard,
+} from "@/features/hr/work-logs/work-log-state-cards";
+import { exportWorkLogsToXlsx } from "@/features/hr/work-logs/work-log-export";
 import { useCan } from "@/hooks/api/access";
 
 export default function WorkLogsPage() {
@@ -47,29 +50,19 @@ export default function WorkLogsPage() {
   }, [searchParams, currentYear, currentQuarter]);
 
   const setFilters = useCallback(
-    (
-      update:
-        | WorkLogFilters
-        | ((prev: WorkLogFilters) => WorkLogFilters),
-    ) => {
-      const newFilters =
-        typeof update === "function" ? update(filters) : update;
+    (update: WorkLogFilters | ((prev: WorkLogFilters) => WorkLogFilters)) => {
+      const newFilters = typeof update === "function" ? update(filters) : update;
       startTransition(() => {
         const params = new URLSearchParams(searchParams.toString());
-        if (newFilters.year !== currentYear)
-          params.set("year", String(newFilters.year));
+        if (newFilters.year !== currentYear) params.set("year", String(newFilters.year));
         else params.delete("year");
-        if (newFilters.quarter !== currentQuarter)
-          params.set("quarter", String(newFilters.quarter));
+        if (newFilters.quarter !== currentQuarter) params.set("quarter", String(newFilters.quarter));
         else params.delete("quarter");
-        if (newFilters.selectedUserId)
-          params.set("user", newFilters.selectedUserId);
+        if (newFilters.selectedUserId) params.set("user", newFilters.selectedUserId);
         else params.delete("user");
-        if (newFilters.departmentId)
-          params.set("dept", newFilters.departmentId);
+        if (newFilters.departmentId) params.set("dept", newFilters.departmentId);
         else params.delete("dept");
-        if (newFilters.month != null)
-          params.set("month", String(newFilters.month));
+        if (newFilters.month != null) params.set("month", String(newFilters.month));
         else params.delete("month");
         if (newFilters.dateFrom) params.set("from", newFilters.dateFrom);
         else params.delete("from");
@@ -94,14 +87,10 @@ export default function WorkLogsPage() {
     };
   });
 
-  const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(
-    new Set(),
-  );
+  const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState("");
 
-  const year = filters.year;
-  const quarter = filters.quarter;
-  const selectedUserId = filters.selectedUserId;
+  const { year, quarter, selectedUserId } = filters;
 
   const isAdminOrCeo = useCan("hr:employees:manage");
   const canEditSavedWorkLogs = useCan("hr:attendance:manage");
@@ -115,10 +104,7 @@ export default function WorkLogsPage() {
   );
 
   const employees = useMemo(
-    () =>
-      allEmployees.filter(
-        (e) => e.id !== session?.user?.id && e.isActive !== false,
-      ),
+    () => allEmployees.filter((e) => e.id !== session?.user?.id && e.isActive !== false),
     [allEmployees, session?.user?.id],
   );
 
@@ -138,12 +124,7 @@ export default function WorkLogsPage() {
     const emp = allEmployees.find((e) => e.id === targetId);
     if (emp?.joiningDate) return new Date(emp.joiningDate).getFullYear();
     return currentYear;
-  }, [
-    allEmployees,
-    draftFilters.selectedUserId,
-    session?.user?.id,
-    currentYear,
-  ]);
+  }, [allEmployees, draftFilters.selectedUserId, session?.user?.id, currentYear]);
 
   const availableYears = useMemo(() => {
     const years = [];
@@ -165,19 +146,8 @@ export default function WorkLogsPage() {
   const approvedLeaveDates = useMemo<Set<string>>(() => {
     const dateSet = new Set<string>();
     const requests =
-      (
-        myLeaveData as
-          | {
-              requests?: {
-                status: string;
-                startDate: string;
-                endDate: string;
-              }[];
-            }
-          | undefined
-      )?.requests ?? [];
-    const today = new Date();
-    const todayStr = format(today, "yyyy-MM-dd");
+      (myLeaveData as { requests?: { status: string; startDate: string; endDate: string }[] } | undefined)?.requests ?? [];
+    const todayStr = format(new Date(), "yyyy-MM-dd");
     for (const req of requests) {
       if (req.status !== "APPROVED") continue;
       if (req.startDate <= todayStr && req.endDate >= todayStr) {
@@ -187,12 +157,7 @@ export default function WorkLogsPage() {
     return dateSet;
   }, [myLeaveData]);
 
-  const {
-    data: logs,
-    isLoading,
-    isError,
-    refetch,
-  } = useGetWorkLogs({
+  const { data: logs, isLoading, isError, refetch } = useGetWorkLogs({
     year,
     quarter,
     ...(selectedUserId ? { userId: selectedUserId } : {}),
@@ -202,12 +167,8 @@ export default function WorkLogsPage() {
   });
 
   const upsertLog = useUpsertWorkLog({
-    onSuccess: () => {
-      toast.success("Work log saved successfully");
-    },
-    onError: () => {
-      toast.error("Failed to save log");
-    },
+    onSuccess: () => { toast.success("Work log saved successfully"); },
+    onError: () => { toast.error("Failed to save log"); },
   });
 
   const days = useMemo(() => {
@@ -220,7 +181,6 @@ export default function WorkLogsPage() {
   const monthGroups = useMemo(() => {
     const groups: { monthKey: string; label: string; days: Date[] }[] = [];
     let currentGroup: (typeof groups)[number] | null = null;
-
     for (const date of days) {
       const monthKey = format(date, "yyyy-MM");
       const label = format(date, "MMMM yyyy");
@@ -246,42 +206,27 @@ export default function WorkLogsPage() {
   }, [logs, monthGroups]);
 
   const totalHours = useMemo(
-    () =>
-      Object.values(filledCounts).reduce((sum, count) => sum + count * 8, 0),
+    () => Object.values(filledCounts).reduce((sum, count) => sum + count * 8, 0),
     [filledCounts],
   );
 
   const filterDay = useCallback(
     (date: Date) => {
-      if (filters.month !== undefined && date.getMonth() !== filters.month)
-        return false;
-
+      if (filters.month !== undefined && date.getMonth() !== filters.month) return false;
       const dateStr = format(date, "yyyy-MM-dd");
       if (filters.dateFrom && dateStr < filters.dateFrom) return false;
       if (filters.dateTo && dateStr > filters.dateTo) return false;
-
       if (!searchTerm.trim()) return true;
       const term = searchTerm.trim().toLowerCase();
       const log = logs?.find((l) => l.date === dateStr);
-
       const dateDisplay = format(date, "dd MMM yyyy EEEE").toLowerCase();
       if (dateDisplay.includes(term)) return true;
-
-      const dateFormats = [
-        "d MMM yyyy",
-        "yyyy-MM-dd",
-        "dd/MM/yyyy",
-        "MM/dd/yyyy",
-        "d MMMM yyyy",
-      ];
+      const dateFormats = ["d MMM yyyy", "yyyy-MM-dd", "dd/MM/yyyy", "MM/dd/yyyy", "d MMMM yyyy"];
       for (const fmt of dateFormats) {
         const parsed = parse(term, fmt, new Date());
-        if (isValid(parsed) && format(parsed, "yyyy-MM-dd") === dateStr)
-          return true;
+        if (isValid(parsed) && format(parsed, "yyyy-MM-dd") === dateStr) return true;
       }
-
       if (log?.description?.toLowerCase().includes(term)) return true;
-
       return false;
     },
     [searchTerm, logs, filters.month, filters.dateFrom, filters.dateTo],
@@ -293,100 +238,21 @@ export default function WorkLogsPage() {
   }, [days, filterDay, searchTerm]);
 
   const handleExportWorkLogs = useCallback(async () => {
-    type LeaveRequest = {
-      status: string;
-      startDate: string;
-      endDate: string;
-      reason?: string | null;
-      leaveType?: { name: string } | null;
-    };
     const leaveRequests = (
-      (myLeaveData as { requests?: LeaveRequest[] } | undefined)?.requests ?? []
-    ).filter((r): r is LeaveRequest => r.status === "APPROVED");
+      (myLeaveData as { requests?: { status: string; startDate: string; endDate: string; reason?: string | null; leaveType?: { name: string } | null }[] } | undefined)?.requests ?? []
+    ).filter((r) => r.status === "APPROVED");
 
-    const getLeaveForDate = (dateStr: string): LeaveRequest | undefined =>
-      leaveRequests.find((r) => r.startDate <= dateStr && r.endDate >= dateStr);
-
-    try {
-      const ExcelJS = (await import("exceljs")).default;
-      const workbook = new ExcelJS.Workbook();
-      const sheet = workbook.addWorksheet("Work Logs");
-
-      const selectedEmp = selectedUserId
-        ? allEmployees.find((e) => e.id === selectedUserId)
-        : null;
-      const employeeName = selectedEmp
-        ? `${selectedEmp.firstName ?? ""} ${selectedEmp.lastName ?? ""}`.trim()
-        : "My";
-
-      sheet.columns = [
-        { header: "Date", key: "date", width: 15 },
-        { header: "Day", key: "day", width: 12 },
-        { header: "Hours", key: "hours", width: 8 },
-        { header: "Description", key: "description", width: 50 },
-        { header: "Status", key: "status", width: 14 },
-      ];
-
-      const headerRow = sheet.getRow(1);
-      headerRow.fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FF4472C4" },
-      };
-      headerRow.font = { bold: true, color: { argb: "FFFFFFFF" } };
-
-      const filteredDays = days.filter(filterDay);
-      for (const date of filteredDays) {
-        const dateStr = format(date, "yyyy-MM-dd");
-        const log = logs?.find((l) => l.date === dateStr);
-        const leave = getLeaveForDate(dateStr);
-        const row = sheet.addRow({
-          date: format(date, "dd MMM yyyy"),
-          day: format(date, "EEEE"),
-          hours: log?.ticket ? "" : log?.description ? "8" : leave ? "" : "",
-          description: leave
-            ? `On Leave — ${leave.leaveType?.name ?? "Leave"}${leave.reason ? `: ${leave.reason}` : ""}`
-            : log?.description || "",
-          status: leave
-            ? "ON LEAVE"
-            : log?.status === "PENDING"
-              ? "LOGGED"
-              : log?.status || (log?.description ? "LOGGED" : ""),
-        });
-        if (leave) {
-          row.fill = {
-            type: "pattern",
-            pattern: "solid",
-            fgColor: { argb: "FFFFF3CD" },
-          };
-          row.font = { color: { argb: "FF856404" } };
-        }
-      }
-
-      const buffer = await workbook.xlsx.writeBuffer();
-      const blob = new Blob([buffer], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `work-logs-${employeeName}-Q${quarter}-${year}.xlsx`;
-      a.click();
-      URL.revokeObjectURL(url);
-      toast.success("Work logs exported successfully");
-    } catch {
-      toast.error("Failed to export work logs");
-    }
-  }, [
-    days,
-    logs,
-    myLeaveData,
-    selectedUserId,
-    allEmployees,
-    quarter,
-    year,
-    filterDay,
-  ]);
+    await exportWorkLogsToXlsx({
+      days,
+      logs,
+      leaveRequests,
+      selectedUserId,
+      allEmployees,
+      quarter,
+      year,
+      filterDay,
+    });
+  }, [days, logs, myLeaveData, selectedUserId, allEmployees, quarter, year, filterDay]);
 
   const sharedFilterProps = {
     filters,
@@ -413,27 +279,24 @@ export default function WorkLogsPage() {
     void refetch();
   }
 
-  const handleClearSearch = () => setSearchTerm("");
+  const handleClearSearch = useCallback(() => setSearchTerm(""), []);
+
+  const subtitle = selectedUserId
+    ? (() => {
+        const emp = allEmployees.find((e) => e.id === selectedUserId);
+        return emp
+          ? `Viewing logs for ${emp.firstName ?? ""} ${emp.lastName ?? ""}.`.trim()
+          : "Track your daily tasks and activities.";
+      })()
+    : "Track your daily tasks and activities.";
 
   return (
     <PageWrapper
       title="Work Logs"
-      subtitle={
-        selectedUserId
-          ? (() => {
-              const emp = allEmployees.find((e) => e.id === selectedUserId);
-              return emp
-                ? `Viewing logs for ${emp.firstName ?? ""} ${emp.lastName ?? ""}.`.trim()
-                : "Track your daily tasks and activities.";
-            })()
-          : "Track your daily tasks and activities."
-      }
+      subtitle={subtitle}
       variant="display"
       actions={
-        <WorkLogFilterActions
-          {...sharedFilterProps}
-          onExport={handleExportWorkLogs}
-        />
+        <WorkLogFilterActions {...sharedFilterProps} onExport={handleExportWorkLogs} />
       }
       filters={
         <WorkLogFiltersPanel
@@ -445,99 +308,17 @@ export default function WorkLogsPage() {
     >
       <div className="space-y-4">
         {filters.departmentId && !filters.selectedUserId ? (
-          <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
-            <CardContent className="py-12">
-              <div className="flex flex-col items-center justify-center text-center gap-2">
-                <div className="w-8 rounded-full bg-muted flex items-center justify-center">
-                  <Loader2 className="h-4 w-4 text-muted-foreground" />
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Department filter is applied. Select an employee from this
-                  department to view their work logs.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          <WorkLogDeptPromptCard />
         ) : isLoading ? (
-          <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
-            <CardContent className="py-12">
-              <div
-                className="flex flex-col items-center justify-center gap-3"
-                role="status"
-                aria-label="Loading work logs"
-              >
-                <Loader2
-                  className="w-8 animate-spin text-muted-foreground"
-                  aria-hidden="true"
-                />
-                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Loading work logs
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          <WorkLogLoadingCard />
         ) : isError ? (
-          <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
-            <CardContent className="py-12">
-              <div className="flex flex-col items-center justify-center text-center gap-3">
-                <p className="text-sm font-semibold text-foreground">
-                  Failed to load work logs
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Something went wrong. Please try again.
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-1"
-                  onClick={handleRetryWorkLogs}
-                >
-                  Try Again
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <WorkLogErrorCard onRetry={handleRetryWorkLogs} />
         ) : !hasSearchResults ? (
-          <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
-            <CardContent className="py-12">
-              <div className="flex flex-col items-center justify-center text-center gap-3">
-                <EmptyTimeIllustration className="mb-2 h-40 w-40 opacity-95" />
-                <h3 className="text-sm font-semibold text-foreground">
-                  No results found
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  No work logs match &ldquo;{searchTerm}&rdquo;. Try a different
-                  keyword or date.
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5 mt-1"
-                  onClick={handleClearSearch}
-                >
-                  Clear Search
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <WorkLogNoResultsCard searchTerm={searchTerm} onClear={handleClearSearch} />
         ) : (
           <div className="space-y-3">
             {!isLoading && logs && totalHours > 0 && (
-              <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden border-l-4 border-l-emerald-500">
-                <CardContent className="py-3 px-4">
-                  <div className="flex items-center gap-6">
-                    <div>
-                      <p className="text-3xl font-bold tabular-nums text-emerald-700 dark:text-emerald-300">
-                        {totalHours}
-                        <span className="text-lg ml-1 font-semibold">h</span>
-                      </p>
-                      <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mt-0.5">
-                        Total logged — Q{quarter} {year}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <WorkLogTotalHoursCard totalHours={totalHours} quarter={quarter} year={year} />
             )}
             {monthGroups.map((group) => {
               const filteredDays = group.days.filter(filterDay);
@@ -565,9 +346,7 @@ export default function WorkLogsPage() {
                   searchTerm={searchTerm}
                   logs={logs}
                   currentUserId={session?.user?.id}
-                  readOnly={
-                    !!selectedUserId && selectedUserId !== session?.user?.id
-                  }
+                  readOnly={!!selectedUserId && selectedUserId !== session?.user?.id}
                   canEditSaved={canEditSavedWorkLogs}
                   approvedLeaveDates={approvedLeaveDates}
                   onSave={handleSaveLog}

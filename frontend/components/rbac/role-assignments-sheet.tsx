@@ -97,7 +97,7 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
   const assign = useAssignRoleMember();
   const unassign = useUnassignRoleMember();
 
-  const members = membersQuery.data ?? [];
+  const members = Array.isArray(membersQuery.data) ? membersQuery.data : [];
   const directUsers = members.filter(
     (member) => member.principalType === "user" && member.via === "direct",
   );
