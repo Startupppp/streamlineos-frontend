@@ -23,6 +23,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { HrSheet } from "@/features/hr/hr-sheet";
+import { EmployeePicker } from "@/features/hr/shared/employee-picker";
 import { toast } from "sonner";
 import { resolveImageUrl, cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -52,7 +53,6 @@ export function PIPTab() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingPip, setEditingPip] = useState<PIP | null>(null);
   const [pipUserId, setPipUserId] = useState("");
-  const [pipUserPickerOpen, setPipUserPickerOpen] = useState(false);
   const [hrRepPickerOpen, setHrRepPickerOpen] = useState(false);
   const [hrRepId, setHrRepId] = useState("");
   const [reason, setReason] = useState("");
@@ -199,6 +199,15 @@ export function PIPTab() {
   const handleEndDateChange = useCallback((value: string) => setEndDate(value), []);
   const handleNotesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value), []);
 
+  const handlePipUserIdChange = useCallback((id: string) => {
+    setPipUserId(id);
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next.userId;
+      return next;
+    });
+  }, []);
+
   const pipStartBounds = planningStartPickerProps({
     existingValue: editingPip ? startDate : undefined,
   });
@@ -308,58 +317,12 @@ export function PIPTab() {
       >
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Employee <span className="text-destructive">*</span></label>
-          <Popover open={pipUserPickerOpen} onOpenChange={(o) => { if (!editingPip) setPipUserPickerOpen(o); }}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                role="combobox"
-                aria-expanded={pipUserPickerOpen}
-                className={cn(
-                  "w-full justify-between font-normal",
-                  fieldErrors.userId && "border-destructive",
-                )}
-                disabled={!!editingPip}
-              >
-                <span className="truncate">
-                  {pipUserId
-                    ? (() => { const e = employees.find((x) => x.id === pipUserId); return e ? ([e.firstName, e.lastName].filter(Boolean).join(" ") || e.email) : "Select employee"; })()
-                    : "Select employee"}
-                </span>
-                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
-              <Command>
-                <CommandInput placeholder="Search employees..." />
-                <CommandList className="max-h-48 overflow-y-auto">
-                  <CommandEmpty>No employee found.</CommandEmpty>
-                  <CommandGroup>
-                    {employees.filter((e) => e.isActive).map((e) => {
-                      const label = [e.firstName, e.lastName].filter(Boolean).join(" ") || e.email;
-                      return (
-                        <CommandItem
-                          key={e.id}
-                          value={`${label} ${e.email}`}
-                          onSelect={() => {
-                            setPipUserId(e.id);
-                            setPipUserPickerOpen(false);
-                            setFieldErrors((prev) => {
-                              const next = { ...prev };
-                              delete next.userId;
-                              return next;
-                            });
-                          }}
-                        >
-                          <Check className={cn("mr-2 h-4 w-4", pipUserId === e.id ? "opacity-100" : "opacity-0")} />
-                          {label}
-                        </CommandItem>
-                      );
-                    })}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
+          <EmployeePicker
+            value={pipUserId}
+            onChange={handlePipUserIdChange}
+            disabled={!!editingPip}
+            className={fieldErrors.userId ? "border-destructive" : undefined}
+          />
           {fieldErrors.userId && <p className="text-xs text-destructive">{fieldErrors.userId}</p>}
         </div>
         <div className="space-y-1.5">

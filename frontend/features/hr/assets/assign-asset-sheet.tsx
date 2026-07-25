@@ -1,8 +1,8 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Combobox } from "@/components/ui/combobox";
 import { HrSheet } from "@/features/hr/hr-sheet";
+import { EmployeePicker } from "@/features/hr/shared/employee-picker";
 import type { ComboboxOption } from "@/components/ui/combobox";
 import type { AssignDialogState } from "./asset-constants";
 
@@ -10,7 +10,6 @@ export function AssignAssetSheet({
   assignDialog,
   assignEmpId,
   assignPending,
-  employeeOptions,
   onOpenChange,
   onEmpChange,
   onConfirmAssign,
@@ -19,7 +18,7 @@ export function AssignAssetSheet({
   assignDialog: AssignDialogState | null;
   assignEmpId: string;
   assignPending: boolean;
-  employeeOptions: ComboboxOption[];
+  employeeOptions?: ComboboxOption[];
   onOpenChange: (open: boolean) => void;
   onEmpChange: (id: string) => void;
   onConfirmAssign: () => void;
@@ -50,13 +49,11 @@ export function AssignAssetSheet({
           <label className="text-sm font-medium">
             {hasCurrentAssignee ? "Reassign to Employee" : "Assign to Employee"}
           </label>
-          <Combobox
+          <EmployeePicker
             key={assignDialog?.assetId ?? "closed"}
-            options={employeeOptions}
             value={assignEmpId}
             onChange={onEmpChange}
             placeholder="Select employee…"
-            searchPlaceholder="Search by name or email…"
           />
         </div>
         {hasCurrentAssignee && (

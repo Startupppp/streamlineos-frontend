@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
+import { EmployeePicker } from "@/features/hr/shared/employee-picker";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import {
   Select,
@@ -20,7 +21,6 @@ interface AssetReturnLogSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   assetOptions: ComboboxOption[];
-  employeeOptions: ComboboxOption[];
   allAssignedAssets: Asset[];
   selectedAssetId: string;
   resolvedUserId: string;
@@ -42,7 +42,6 @@ export function AssetReturnLogSheet({
   open,
   onOpenChange,
   assetOptions,
-  employeeOptions,
   allAssignedAssets,
   selectedAssetId,
   resolvedUserId,
@@ -143,12 +142,10 @@ export function AssetReturnLogSheet({
             </Button>
           </div>
         ) : (
-          <Combobox
-            options={employeeOptions}
+          <EmployeePicker
             value={resolvedUserId}
             onChange={onEmployeeOverrideChange}
             placeholder="Select employee…"
-            searchPlaceholder="Search by name…"
           />
         )}
       </div>

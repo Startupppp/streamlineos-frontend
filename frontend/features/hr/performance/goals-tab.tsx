@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -8,8 +8,6 @@ import {
   useCreateGoal,
   useUpdateGoal,
   useDeleteGoal,
-  useHrEmployees,
-  unwrapEmployees,
   type HrGoal,
 } from "@/hooks/api/hr";
 import { Button } from "@/components/ui/button";
@@ -29,20 +27,8 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
 import { HrSheet } from "@/features/hr/hr-sheet";
+import { EmployeePicker } from "@/features/hr/shared/employee-picker";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -58,8 +44,6 @@ import {
   Calendar,
   Trash2,
   Pencil,
-  ChevronsUpDown,
-  Check,
 } from "lucide-react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -75,14 +59,12 @@ import { buildGoalSchema, type GoalFormValues } from "./goal-schema";
 
 export function GoalsTab() {
   const { data: goals, isLoading } = useHrGoals();
-  const { data: employeesRaw } = useHrEmployees({ limit: 100 });
   const createGoal = useCreateGoal();
   const updateGoal = useUpdateGoal();
   const deleteGoal = useDeleteGoal();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editGoal, setEditGoal] = useState<HrGoal | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
-  const [userPickerOpen, setUserPickerOpen] = useState(false);
   const isEditRef = useRef(false);
   isEditRef.current = !!editGoal;
 
@@ -103,11 +85,6 @@ export function GoalsTab() {
       endDate: "",
     },
   });
-
-  const employees = useMemo(
-    () => unwrapEmployees(employeesRaw).filter((e) => !!e.id),
-    [employeesRaw],
-  );
 
   const resetForm = useCallback(() => {
     goalForm.reset({
@@ -252,6 +229,11 @@ export function GoalsTab() {
   }, []);
 
   const watchedUserId = goalForm.watch("userId");
+
+  const handleUserIdChange = useCallback(
+    (id: string) => goalForm.setValue("userId", id, { shouldValidate: true }),
+    [goalForm],
+  );
 
   if (isLoading) {
     return <LoadingState variant="cards" rows={9} />;
@@ -406,58 +388,7 @@ export function GoalsTab() {
           {!editGoal && (
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Employee</label>
-              <Popover open={userPickerOpen} onOpenChange={setUserPickerOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={userPickerOpen}
-                    className="w-full justify-between font-normal"
-                  >
-                    <span className="truncate">
-                      {employees.find((e) => e.id === watchedUserId)?.name ??
-                        employees.find((e) => e.id === watchedUserId)?.email ??
-                        "Select employee"}
-                    </span>
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent
-                  className="w-[var(--radix-popover-trigger-width)] p-0"
-                  align="start"
-                >
-                  <Command>
-                    <CommandInput placeholder="Search employees..." />
-                    <CommandList className="max-h-48 overflow-y-auto">
-                      <CommandEmpty>No employee found.</CommandEmpty>
-                      <CommandGroup>
-                        {employees.map((e) => (
-                          <CommandItem
-                            key={e.id}
-                            value={`${e.name ?? ""} ${e.email}`}
-                            onSelect={() => {
-                              goalForm.setValue("userId", e.id, {
-                                shouldValidate: true,
-                              });
-                              setUserPickerOpen(false);
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                watchedUserId === e.id
-                                  ? "opacity-100"
-                                  : "opacity-0",
-                              )}
-                            />
-                            {e.name ?? e.email}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
+              <EmployeePicker value={watchedUserId} onChange={handleUserIdChange} />
               {goalForm.formState.errors.userId?.message && (
                 <p className="text-xs text-destructive">
                   {goalForm.formState.errors.userId.message}

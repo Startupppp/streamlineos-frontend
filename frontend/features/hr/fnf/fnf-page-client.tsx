@@ -1,11 +1,10 @@
 "use client";
 
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { useHrEmployees, unwrapEmployees } from "@/hooks/api/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -13,7 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
+import { EmployeePicker } from "@/features/hr/shared/employee-picker";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -22,7 +21,6 @@ import { format } from "date-fns";
 import { Plus, FileSpreadsheet, IndianRupee, CheckCircle2 } from "lucide-react";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
-import type { Employee } from "@/types/hr";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface FnfSettlement {
@@ -198,22 +196,6 @@ export function FnfPageClient() {
 
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  const { data: employeesRaw } = useHrEmployees({ limit: 100 }, { enabled: sheetOpen });
-  const employees = useMemo<Employee[]>(() => {
-    return unwrapEmployees(employeesRaw);
-  }, [employeesRaw]);
-
-  const employeeOptions = useMemo<ComboboxOption[]>(() =>
-    employees
-      .filter((e) => e.isActive)
-      .map((e) => ({
-        value: e.id,
-        label: e.firstName && e.lastName ? `${e.firstName} ${e.lastName}` : (e.name ?? e.email),
-        sublabel: e.designation ?? e.email,
-      })),
-    [employees],
-  );
-
   const [completeId, setCompleteId] = useState<number | null>(null);
   const [userId, setUserId] = useState("");
   const [basicDues, setBasicDues] = useState("");
@@ -348,12 +330,10 @@ export function FnfPageClient() {
           <label className="text-sm font-semibold text-foreground">
             Employee <span className="text-destructive">*</span>
           </label>
-          <Combobox
-            options={employeeOptions}
+          <EmployeePicker
             value={userId}
             onChange={setUserId}
             placeholder="Select employee…"
-            searchPlaceholder="Search by name…"
           />
         </div>
 
