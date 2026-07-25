@@ -906,28 +906,10 @@ export const queryKeys = {
     pageTemplates: () => [...base, "kb", "page-templates"] as const,
     spaces: () => [...base, "kb", "spaces"] as const,
     space: (spaceId: number) => [...base, "kb", "space", spaceId] as const,
-    spaceCategories: (spaceId: number) =>
-      [...base, "kb", "spaceCategories", spaceId] as const,
-    spaceMembers: (spaceId: number) =>
-      [...base, "kb", "spaceMembers", spaceId] as const,
-    categories: () => [...base, "kb", "categories"] as const,
-    articles: (params?: Record<string, unknown>) =>
-      params === undefined
-        ? ([...base, "kb", "articles"] as const)
-        : ([...base, "kb", "articles", params] as const),
-    article: (articleId: number) =>
-      [...base, "kb", "article", articleId] as const,
-    publicArticles: (params?: Record<string, unknown>) =>
-      params === undefined
-        ? ([...base, "kb", "publicArticles"] as const)
-        : ([...base, "kb", "publicArticles", params] as const),
-    publicArticle: (orgId: string, slug: string) =>
-      [...base, "kb", "publicArticle", orgId, slug] as const,
     search: (params?: Record<string, unknown>) =>
       params === undefined
         ? ([...base, "kb", "search"] as const)
         : ([...base, "kb", "search", params] as const),
-    ask: () => [...base, "kb", "ask"] as const,
     chatHistory: () => [...base, "kb", "chatHistory"] as const,
     chatConversations: () => [...base, "kb", "chatConversations"] as const,
     chatConversationMessages: (conversationId: number) =>
@@ -940,18 +922,6 @@ export const queryKeys = {
       range === undefined
         ? ([...base, "kb", "noResults"] as const)
         : ([...base, "kb", "noResults", range] as const),
-    verificationQueue: () => [...base, "kb", "verificationQueue"] as const,
-    versions: (articleId: number) =>
-      [...base, "kb", "versions", articleId] as const,
-    tags: () => [...base, "kb", "tags"] as const,
-    articleTags: (articleId: number) =>
-      [...base, "kb", "articleTags", articleId] as const,
-    translations: (articleId: number) =>
-      [...base, "kb", "translations", articleId] as const,
-    translation: (articleId: number, locale: string) =>
-      [...base, "kb", "translation", articleId, locale] as const,
-    comments: (articleId: number) =>
-      [...base, "kb", "comments", articleId] as const,
     pageReviews: (params?: Record<string, unknown>) =>
       params === undefined
         ? ([...base, "kb", "pageReviews"] as const)

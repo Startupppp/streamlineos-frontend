@@ -33,7 +33,7 @@ import {
   useMarkStaleKbPage,
 } from "@/hooks/api/kb/pages";
 import { PageRecordLinks } from "./page-record-links";
-import { KbInfoIcon } from "@/features/knowledge-base/lib/kb-icons";
+import { kbFormatDate } from "@/features/knowledge-base/lib/kb-date-utils";
 import type { KbPageDetail } from "@/hooks/api/kb/pages";
 
 const STATUS_OPTIONS: Array<{ value: "draft" | "in_review" | "published" | "archived"; label: string }> = [
@@ -62,37 +62,11 @@ const CONTENT_TYPE_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "playbook", label: "Playbook" },
 ];
 
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
 interface PageMetadataSheetProps {
   page: KbPageDetail;
   pageId: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-}
-
-export interface PageMetadataSheetTriggerProps {
-  onClick: () => void;
-}
-
-export function PageMetadataSheetTrigger({ onClick }: PageMetadataSheetTriggerProps) {
-  return (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="w-8"
-      onClick={onClick}
-      aria-label="Page settings"
-    >
-      <KbInfoIcon className="h-4 w-4" />
-    </Button>
-  );
 }
 
 export default function PageMetadataSheet({
@@ -348,7 +322,7 @@ export default function PageMetadataSheet({
                 </div>
                 {trustState === "verified" && page.verifiedUntil && (
                   <p className="text-[12px] text-muted-foreground">
-                    Verified until {formatDate(page.verifiedUntil)}
+                    Verified until {kbFormatDate(page.verifiedUntil)}
                   </p>
                 )}
                 {!verifyFormOpen ? (
@@ -401,7 +375,7 @@ export default function PageMetadataSheet({
 
             {page.nextReviewAt && (
               <p className="text-[12px] text-muted-foreground">
-                Next review: {formatDate(page.nextReviewAt)}
+                Next review: {kbFormatDate(page.nextReviewAt)}
               </p>
             )}
 

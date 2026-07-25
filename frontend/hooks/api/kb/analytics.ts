@@ -8,7 +8,6 @@ import type {
   KbAnalyticsOverview,
   KbAnalyticsRange,
   KbNoResultRow,
-  KbVerificationItem,
   KbPageAnalyticsRow,
   KbGapRow,
   KbContentGapRow,
@@ -33,16 +32,6 @@ export function useKbNoResults(range?: KbAnalyticsRange) {
     queryFn: () => apiClient.get<KbNoResultRow[]>("/kb/analytics/no-results", queryParams),
     staleTime: 5 * 60_000,
     enabled: canViewAnalytics,
-  });
-}
-
-export function useKbVerificationQueue() {
-  const canManageVerification = useCan("kb:articles:manage");
-  return useQuery({
-    queryKey: queryKeys.kb.verificationQueue(),
-    queryFn: () => apiClient.get<KbVerificationItem[]>("/kb/verification/queue"),
-    staleTime: 60_000,
-    enabled: canManageVerification,
   });
 }
 
