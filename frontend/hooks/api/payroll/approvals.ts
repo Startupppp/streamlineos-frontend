@@ -9,12 +9,12 @@ import type {
   ApproveStageResult,
 } from "@/types/payroll";
 
-export function useRunApprovals(runId: number) {
+export function useRunApprovals(runId: number, options?: { enabled?: boolean }) {
   return useQuery<PayrollApprovalRow[]>({
     queryKey: queryKeys.payroll.runApprovals(runId),
     queryFn: () => apiClient.get<PayrollApprovalRow[]>(`/payroll/runs/${runId}/approvals`),
     staleTime: 30_000,
-    enabled: runId > 0,
+    enabled: runId > 0 && (options?.enabled ?? true),
   });
 }
 

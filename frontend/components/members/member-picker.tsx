@@ -16,8 +16,9 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { FIELD_CONTROL_CLASS } from "@/components/ui/field-control";
-import { useOrgMembers } from "@/hooks/api/organization";
+import { useOrgMembers, useOrgMembersByIds } from "@/hooks/api/organization";
 import { useProjectMembers } from "@/hooks/api/projects/projects";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import {
   getUserDisplayName,
   getUserInitials,
@@ -59,16 +60,44 @@ interface MemberPickerMultiProps extends MemberPickerBaseProps {
 
 export type MemberPickerProps = MemberPickerSingleProps | MemberPickerMultiProps;
 
-function useMemberOptions(projectId?: number): MemberOption[] {
-  const { data: orgData } = useOrgMembers(1, 200, undefined, {
+function useMemberOptions(
+  projectId: number | undefined,
+  search: string,
+  selectedIds: string[],
+): { options: MemberOption[]; selectedMembers: MemberOption[] } {
+  const debouncedSearch = useDebouncedValue(search.trim(), 300);
+  const { data: orgData } = useOrgMembers(1, 50, debouncedSearch || undefined, {
     enabled: projectId === undefined,
     staleTime: 30_000,
+    placeholderData: (prev) => prev,
   });
   const { data: projectMembers = [] } = useProjectMembers(projectId ?? 0);
 
+  const orgOptions = useMemo(
+    () =>
+      (orgData?.data ?? []).map((m) => ({
+        id: m.userId,
+        name: m.name,
+        firstName: null,
+        lastName: null,
+        email: m.email,
+        image: m.image,
+      })),
+    [orgData?.data],
+  );
+
+  const missingIds = useMemo(
+    () =>
+      projectId === undefined
+        ? selectedIds.filter((id) => !orgOptions.some((m) => m.id === id))
+        : [],
+    [projectId, selectedIds, orgOptions],
+  );
+  const { data: selectedData } = useOrgMembersByIds(missingIds);
+
   return useMemo(() => {
     if (projectId !== undefined) {
-      return projectMembers.map((m) => ({
+      const options = projectMembers.map((m) => ({
         id: m.id,
         name: m.name,
         firstName: m.firstName,
@@ -76,8 +105,12 @@ function useMemberOptions(projectId?: number): MemberOption[] {
         email: m.email,
         image: m.image,
       }));
+      return {
+        options,
+        selectedMembers: options.filter((m) => selectedIds.includes(m.id)),
+      };
     }
-    return (orgData?.data ?? []).map((m) => ({
+    const resolved = (selectedData?.data ?? []).map((m) => ({
       id: m.userId,
       name: m.name,
       firstName: null,
@@ -85,14 +118,27 @@ function useMemberOptions(projectId?: number): MemberOption[] {
       email: m.email,
       image: m.image,
     }));
-  }, [projectId, orgData?.data, projectMembers]);
+    const byId = new Map<string, MemberOption>();
+    for (const m of [...orgOptions, ...resolved]) byId.set(m.id, m);
+    return {
+      options: orgOptions,
+      selectedMembers: selectedIds
+        .map((id) => byId.get(id))
+        .filter((m): m is MemberOption => m !== undefined),
+    };
+  }, [projectId, projectMembers, orgOptions, selectedData?.data, selectedIds]);
 }
 
-function filterMembers(members: MemberOption[], search: string, excludeUserId?: string) {
+function filterMembers(
+  members: MemberOption[],
+  search: string,
+  serverFiltered: boolean,
+  excludeUserId?: string,
+) {
   const eligible = excludeUserId
     ? members.filter((m) => m.id !== excludeUserId)
     : members;
-  if (!search.trim()) return eligible;
+  if (serverFiltered || !search.trim()) return eligible;
   const q = search.toLowerCase();
   return eligible.filter(
     (m) =>
@@ -125,10 +171,21 @@ export function MemberPicker(props: MemberPickerProps) {
   } = props;
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const members = useMemberOptions(projectId);
+  const multiValues = props.mode === "multi" ? props.values : undefined;
+  const singleValue = props.mode === "multi" ? undefined : props.value;
+  const selectedIds = useMemo(
+    () => multiValues ?? (singleValue ? [singleValue] : []),
+    [multiValues, singleValue],
+  );
+  const { options: members, selectedMembers } = useMemberOptions(
+    projectId,
+    search,
+    selectedIds,
+  );
+  const serverFiltered = projectId === undefined;
   const filtered = useMemo(
-    () => filterMembers(members, search, excludeUserId),
-    [members, search, excludeUserId],
+    () => filterMembers(members, search, serverFiltered, excludeUserId),
+    [members, search, serverFiltered, excludeUserId],
   );
 
   const handleSearchChange = useCallback((v: string) => {
@@ -137,7 +194,6 @@ export function MemberPicker(props: MemberPickerProps) {
 
   if (props.mode === "multi") {
     const { values = [], onToggle } = props;
-    const selectedMembers = members.filter((m) => values.includes(m.id));
 
     function handleToggle(userId: string) {
       onToggle?.(userId);
@@ -206,7 +262,9 @@ export function MemberPicker(props: MemberPickerProps) {
   }
 
   const { value, onChange, allowUnassigned } = props;
-  const selected = value ? members.find((m) => m.id === value) : null;
+  const selected = value
+    ? (selectedMembers.find((m) => m.id === value) ?? members.find((m) => m.id === value) ?? null)
+    : null;
 
   function handleSelect(userId: string | null) {
     onChange?.(userId);

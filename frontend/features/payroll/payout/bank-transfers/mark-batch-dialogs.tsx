@@ -1,6 +1,5 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -20,6 +19,7 @@ import {
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useMarkBatchSent, useMarkBatchPaid } from "@/hooks/api/payroll/payout-batches";
@@ -60,11 +60,14 @@ export function MarkBatchSentDialog({ batchId, runId, onClose }: MarkBatchSentDi
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={handleConfirm} disabled={markSentMutation.isPending}>
-            {markSentMutation.isPending && (
-              <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-            )}
-            Confirm
+          <AlertDialogAction asChild>
+            <LoadingButton
+              onClick={handleConfirm}
+              isPending={markSentMutation.isPending}
+              loadingText="Confirming…"
+            >
+              Confirm
+            </LoadingButton>
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -126,15 +129,14 @@ export function MarkBatchPaidDialog({
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button
+          <LoadingButton
             onClick={handleSubmit}
-            disabled={!txnRef.trim() || markPaidMutation.isPending}
+            disabled={!txnRef.trim()}
+            isPending={markPaidMutation.isPending}
+            loadingText="Confirming…"
           >
-            {markPaidMutation.isPending && (
-              <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
-            )}
             Confirm Paid
-          </Button>
+          </LoadingButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>

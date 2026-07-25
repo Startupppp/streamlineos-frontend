@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -29,6 +29,7 @@ import {
 import { TicketDetailSheet } from "./ticket-detail-sheet";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
@@ -59,6 +60,7 @@ function DeleteRoutingButton({ isPending, onClick }: { isPending: boolean; onCli
     <LoadingButton
       variant="ghost"
       size="icon"
+      aria-label="Delete routing rule"
       className="h-6 w-6 text-destructive hover:text-destructive"
       isPending={isPending}
       onClick={onClick}
@@ -69,12 +71,15 @@ function DeleteRoutingButton({ isPending, onClick }: { isPending: boolean; onCli
   );
 }
 
+const QUEUE_PAGE_SIZE = 25;
+
 export function QueueTab() {
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [page, setPage] = useState(1);
 
-  const params: Record<string, unknown> = { pageSize: 100 };
+  const params: Record<string, unknown> = { page, pageSize: QUEUE_PAGE_SIZE };
   if (statusFilter !== "all") params.status = statusFilter;
   if (categoryFilter !== "all") params.category = categoryFilter;
 
@@ -82,6 +87,26 @@ export function QueueTab() {
   const { data: routingRules } = useHelpdeskRoutingRules();
   const upsertRouting = useUpsertHelpdeskRouting();
   const deleteRouting = useDeleteHelpdeskRouting();
+
+  const totalPages = Math.max(1, data?.totalPages ?? 1);
+
+  const handleStatusFilterChange = useCallback((value: string) => {
+    setStatusFilter(value);
+    setPage(1);
+  }, []);
+
+  const handleCategoryFilterChange = useCallback((value: string) => {
+    setCategoryFilter(value);
+    setPage(1);
+  }, []);
+
+  const handlePrevPage = useCallback(() => {
+    setPage((prev) => Math.max(1, prev - 1));
+  }, []);
+
+  const handleNextPage = useCallback(() => {
+    setPage((prev) => prev + 1);
+  }, []);
 
   const handleDeleteRouting = async (ruleId: number) => {
     try {
@@ -95,7 +120,7 @@ export function QueueTab() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2 flex-wrap">
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
           <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)}>
             <SelectValue placeholder="Status" />
           </SelectTrigger>
@@ -107,7 +132,7 @@ export function QueueTab() {
             <SelectItem value="DONE">Resolved</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+        <Select value={categoryFilter} onValueChange={handleCategoryFilterChange}>
           <SelectTrigger className={cn("w-44", FILTER_SELECT_TRIGGER)}>
             <SelectValue placeholder="Category" />
           </SelectTrigger>
@@ -138,15 +163,44 @@ export function QueueTab() {
           <p className="text-xs text-muted-foreground mt-1">Adjust filters or wait for new submissions.</p>
         </div>
       ) : (
-        <div className="divide-y divide-border rounded-lg border border-border overflow-hidden">
-          {data.items.map((ticket) => (
-            <AdminTicketRow
-              key={ticket.id}
-              ticket={ticket}
-              onClick={() => setSelectedTicketId(ticket.id)}
-            />
-          ))}
-        </div>
+        <>
+          <div className="divide-y divide-border rounded-lg border border-border overflow-hidden">
+            {data.items.map((ticket) => (
+              <AdminTicketRow
+                key={ticket.id}
+                ticket={ticket}
+                onClick={() => setSelectedTicketId(ticket.id)}
+              />
+            ))}
+          </div>
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] text-muted-foreground">
+                Page {page} of {totalPages}
+              </span>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs"
+                  disabled={page <= 1}
+                  onClick={handlePrevPage}
+                >
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs"
+                  disabled={page >= totalPages}
+                  onClick={handleNextPage}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       <div className="rounded-lg border border-border p-4 space-y-3">

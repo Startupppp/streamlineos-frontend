@@ -2,12 +2,11 @@
 
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
-import { Megaphone } from "lucide-react";
+import { Megaphone, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -186,8 +185,9 @@ export function CampaignsTab() {
                       size="icon"
                       className="w-7 text-muted-foreground hover:text-foreground"
                       onClick={() => handleEdit(c)}
+                      aria-label="Edit campaign"
                     >
-                      <span className="text-xs">✏</span>
+                      <Pencil className="h-3.5 w-3.5" />
                     </Button>
                     <AnimatedIconButton
                       icon={Trash2Icon}
@@ -196,6 +196,7 @@ export function CampaignsTab() {
                       size="icon"
                       className="w-7 text-muted-foreground hover:text-destructive"
                       onClick={() => setDeleteId(c.id)}
+                      aria-label="Delete campaign"
                     />
                   </div>
                 )}

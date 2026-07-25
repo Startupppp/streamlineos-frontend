@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
+import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { Input } from "@/components/ui/input";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger, SheetBody,
@@ -17,7 +18,6 @@ export function InviteReferrersSheet() {
   const [copied, setCopied] = useState(false);
   const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { iconRef: shareIconRef, hoverHandlers: shareHoverHandlers } = useAnimatedIcon();
-  const { iconRef: copyIconRef, hoverHandlers: copyHoverHandlers } = useAnimatedIcon();
 
   useEffect(() => {
     return () => {
@@ -60,9 +60,13 @@ export function InviteReferrersSheet() {
         <SheetBody className="space-y-3 px-6 py-5">
           <div className="flex items-center gap-2">
             <Input readOnly value={link} className="text-xs" />
-            <Button variant="outline" size="icon" className="shrink-0" onClick={handleCopy} {...copyHoverHandlers}>
-              <CopyIcon ref={copyIconRef} size={14} />
-            </Button>
+            <TooltipIconButton
+              icon={CopyIcon}
+              label="Copy link"
+              variant="outline"
+              className="shrink-0"
+              onClick={handleCopy}
+            />
           </div>
           {copied && <p className="text-xs text-green-600">Copied to clipboard.</p>}
         </SheetBody>

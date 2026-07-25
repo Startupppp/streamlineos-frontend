@@ -20,10 +20,10 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { HrSheet } from "@/features/hr/hr-sheet";
-import { useHrDepartments } from "@/hooks/api/hr/employees";
 import {
   useHrOnboardingTemplates,
   useCreateHrOnboardingTemplate,
+  useOnboardingTemplateDepartments,
   type OnboardingTemplateStep,
 } from "@/hooks/api/hr/onboarding";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -41,7 +41,7 @@ function CreateTemplateSheet({ open, onOpenChange }: { open: boolean; onOpenChan
   const [description, setDescription] = useState("");
   const [steps, setSteps] = useState<OnboardingTemplateStep[]>([emptyStep()]);
 
-  const { data: departments } = useHrDepartments();
+  const { data: departments } = useOnboardingTemplateDepartments();
   const createTemplate = useCreateHrOnboardingTemplate();
 
   function resetForm() {
@@ -68,7 +68,7 @@ function CreateTemplateSheet({ open, onOpenChange }: { open: boolean; onOpenChan
     createTemplate.mutate(
       {
         name: name.trim(),
-        departmentId: departmentId ? Number(departmentId) : undefined,
+        departmentId: departmentId || undefined,
         description: description.trim() || undefined,
         steps: validSteps,
       },
@@ -101,13 +101,17 @@ function CreateTemplateSheet({ open, onOpenChange }: { open: boolean; onOpenChan
 
         <div className="space-y-1.5">
           <Label>Department (optional)</Label>
-          <Select value={departmentId} onValueChange={setDepartmentId}>
+          <Select
+            value={departmentId || "all"}
+            onValueChange={(v) => setDepartmentId(v === "all" ? "" : v)}
+          >
             <SelectTrigger>
               <SelectValue placeholder="All departments (default plan)" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="all">All departments (default plan)</SelectItem>
               {(departments ?? []).map((d) => (
-                <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>
+                <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -205,11 +209,11 @@ function CreateTemplateSheet({ open, onOpenChange }: { open: boolean; onOpenChan
 
 export function OnboardingTemplatesTab() {
   const { data: templates, isLoading } = useHrOnboardingTemplates();
-  const { data: departments } = useHrDepartments();
+  const { data: departments } = useOnboardingTemplateDepartments();
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  const departmentName = (id: number | null) =>
-    id ? (departments ?? []).find((d) => d.id === id)?.name : "All departments";
+  const departmentName = (id: string | null) =>
+    id ? (departments ?? []).find((d) => d.id === id)?.name ?? "Department" : "All departments";
 
   return (
     <div className="space-y-4">

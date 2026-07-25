@@ -100,6 +100,43 @@ export function useDuplicateWorkflow() {
   });
 }
 
+export type WorkflowSimulateResult = {
+  workflowId: number;
+  name: string;
+  objectType: string;
+  status: string;
+  version: number;
+  subjectEmployeeId: string;
+  steps: Array<{
+    stepOrder: number;
+    name: string;
+    mode: string;
+    approverType: string;
+    conditionPasses: boolean;
+    resolvedApproverUserIds: string[];
+    slaHours: number | null;
+  }>;
+  explanation: string;
+};
+
+export function useSimulateWorkflow() {
+  return useMutation({
+    mutationKey: ["hr", "workflows", "simulate"],
+    mutationFn: (input: {
+      workflowId: number;
+      subjectEmployeeId: string;
+      context?: Record<string, unknown>;
+    }) =>
+      apiClient.post<WorkflowSimulateResult>(
+        `/hr/workflows/${input.workflowId}/simulate`,
+        {
+          subjectEmployeeId: input.subjectEmployeeId,
+          context: input.context ?? {},
+        },
+      ),
+  });
+}
+
 export function useDeleteWorkflow() {
   const qc = useQueryClient();
   return useMutation({
@@ -117,11 +154,12 @@ export function useWorkflowInbox(page = 1, limit = 50) {
   });
 }
 
-export function useWorkflowActed(page = 1, limit = 50) {
+export function useWorkflowActed(page = 1, limit = 50, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: [...INSTANCES_KEY, "acted", page, limit],
     queryFn: () => apiClient.get<PaginatedResult<HrWorkflowInstance>>("/hr/workflows/instances/acted", { page, limit }),
     staleTime: 60_000,
+    enabled: options?.enabled ?? true,
   });
 }
 
@@ -199,11 +237,12 @@ export function useCommentInstance() {
   });
 }
 
-export function useMyDelegations() {
+export function useMyDelegations(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: [...DELEGATIONS_KEY, "mine"],
     queryFn: () => apiClient.get<HrWorkflowDelegation[]>("/hr/workflows/delegations/mine"),
     staleTime: 2 * 60_000,
+    enabled: options?.enabled ?? true,
   });
 }
 

@@ -44,7 +44,6 @@ const HR_TYPE_COLORS: Record<string, string> = {
   BIRTHDAY: "#93c5fd",
   ANNIVERSARY: "#bfdbfe",
   REVIEW_CYCLE: "#2563eb",
-  TRAINING: "#1d4ed8",
   TRAVEL: "#38bdf8",
   INTERVIEW: "#0284c7",
 };

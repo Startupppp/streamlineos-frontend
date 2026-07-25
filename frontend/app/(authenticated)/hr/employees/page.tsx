@@ -194,12 +194,6 @@ export default function EmployeesPage() {
     );
   }, [debouncedSearch, searchParams, updateParams]);
 
-  const deptMap = useMemo(() => {
-    const map = new Map<number, string>();
-    deptList?.forEach((d) => map.set(d.id, d.name));
-    return map;
-  }, [deptList]);
-
   const hasFilters = hasActiveEmployeeFilters(filters, { status: "all" });
 
   const clearFilters = useCallback(() => {
@@ -213,9 +207,7 @@ export default function EmployeesPage() {
     });
   }, [updateParams]);
 
-  const getDept = (emp: Employee) =>
-    emp.department?.name ??
-    (emp.departmentId ? (deptMap.get(emp.departmentId) ?? null) : null);
+  const getDept = (emp: Employee) => emp.department?.name ?? null;
 
   const handleExport = useCallback(async () => {
     try {

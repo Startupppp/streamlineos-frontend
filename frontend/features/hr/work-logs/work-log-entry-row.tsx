@@ -233,16 +233,18 @@ export function WorkLogEntryRow({
           )}
 
           {!showEditor ? (
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               disabled={readOnly}
               onClick={() => {
                 if (!readOnly) setExpanded(true);
               }}
               className={cn(
-                "flex w-full items-center justify-between gap-2 rounded-lg border border-dashed px-3 py-2 text-left text-sm transition-colors",
+                "h-auto w-full items-center justify-between gap-2 rounded-lg border border-dashed px-3 py-2 text-left text-sm font-normal transition-colors",
                 readOnly
-                  ? "cursor-default border-transparent bg-transparent text-muted-foreground"
+                  ? "cursor-default border-transparent bg-transparent text-muted-foreground hover:bg-transparent"
                   : "border-border/70 bg-muted/20 text-muted-foreground hover:border-primary/40 hover:bg-muted/40 hover:text-foreground",
                 isEmpty && isWeekendDay && "opacity-60",
               )}
@@ -274,7 +276,7 @@ export function WorkLogEntryRow({
                   </span>
                 )}
               </div>
-            </button>
+            </Button>
           ) : (
             <div className="space-y-2">
               {lockedSaved && (

@@ -172,7 +172,7 @@ export function TemplateSheet({ open, onOpenChange }: Props) {
                     <SelectItem value="review">Review</SelectItem>
                   </SelectContent>
                 </Select>
-                <AnimatedIconButton type="button" size="icon" variant="outline" icon={PlusIcon} iconSize={16} onClick={addSystem} />
+                <AnimatedIconButton type="button" size="icon" variant="outline" icon={PlusIcon} iconSize={16} onClick={addSystem} aria-label="Add system" />
               </div>
               {systemsError && (
                 <p className="text-sm font-medium text-destructive">{systemsError}</p>
@@ -182,7 +182,7 @@ export function TemplateSheet({ open, onOpenChange }: Props) {
                   <span className="text-sm text-foreground">{s.systemName}</span>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-muted-foreground capitalize">{s.action}</span>
-                    <AnimatedIconButton type="button" size="icon" variant="ghost" className="h-6 w-6 text-red-500" icon={Trash2Icon} iconSize={12} onClick={() => removeSystem(i)} />
+                    <AnimatedIconButton type="button" size="icon" variant="ghost" className="h-6 w-6 text-red-500" icon={Trash2Icon} iconSize={12} onClick={() => removeSystem(i)} aria-label={`Remove ${s.systemName}`} />
                   </div>
                 </div>
               ))}

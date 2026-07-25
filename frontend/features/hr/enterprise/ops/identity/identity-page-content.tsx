@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RefreshCw, AlertTriangle } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
+import { RefreshCw } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { useCan } from "@/hooks/api/access";
 import {
@@ -29,6 +30,7 @@ import {
   getUserDisplayName,
   type NamedUser,
 } from "@/features/projects/shared/resolve-user-name";
+import { StateIllustration } from "@/components/illustrations";
 
 const STATUS_COLORS: Record<ProvisioningStatus, string> = {
   pending: "bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-500/10 dark:text-yellow-300 dark:border-yellow-500/30",
@@ -171,9 +173,7 @@ export function IdentityPageContent() {
         subtitle="Manage system access provisioning for joiners, movers, and leavers"
       >
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center py-16 gap-4 text-center">
-          <div className="bg-destructive/10 p-4 rounded-full">
-            <AlertTriangle className="w-8 text-destructive" aria-hidden="true" />
-          </div>
+          <StateIllustration preset="alert" className="h-28 w-28" />
           <div className="space-y-1">
             <p className="text-base font-semibold text-foreground">Failed to load identity data</p>
             <p className="text-sm text-muted-foreground max-w-sm">
@@ -229,7 +229,19 @@ export function IdentityPageContent() {
                 columns={provisioningColumns}
                 getRowKey={(r) => r.id}
                 isLoading={false}
-                emptyState={<p className="text-sm text-muted-foreground text-center py-8">No provisioning records</p>}
+                emptyState={
+                  <EmptyState
+                    illustrationPreset="permissions"
+                    title="No provisioning records"
+                    description="Create a provisioning record to grant or revoke system access for joiners, movers, and leavers."
+                    action={
+                      canManage
+                        ? { label: "Provision", onClick: () => setShowCreate(true) }
+                        : undefined
+                    }
+                    compact
+                  />
+                }
                 pagination={
                   data
                     ? {
@@ -258,7 +270,19 @@ export function IdentityPageContent() {
                 columns={templateColumns}
                 getRowKey={(r) => r.id}
                 isLoading={false}
-                emptyState={<p className="text-sm text-muted-foreground text-center py-8">No templates. Create one to auto-generate provisioning tasks.</p>}
+                emptyState={
+                  <EmptyState
+                    illustrationPreset="automations"
+                    title="No templates yet"
+                    description="Create a template to auto-generate provisioning tasks for joiners, movers, or leavers."
+                    action={
+                      canManage
+                        ? { label: "Create template", onClick: () => setShowTemplate(true) }
+                        : undefined
+                    }
+                    compact
+                  />
+                }
               />
             )}
           </TabsContent>

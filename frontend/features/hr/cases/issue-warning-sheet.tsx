@@ -35,6 +35,7 @@ const schema = z.object({
   ]),
   effectiveDate: z.string().min(1, "Effective date required"),
   note: z.string().max(5000).optional(),
+  forceEscalate: z.boolean().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -62,19 +63,27 @@ export function IssueWarningSheet({ open, onOpenChange, caseId }: Props) {
       actionType: "verbal_warning",
       effectiveDate: new Date().toISOString().slice(0, 10),
       note: "",
+      forceEscalate: false,
     },
   });
 
   function handleSubmit(values: FormValues) {
     create.mutate(
-      { ...values, caseId },
+      { ...values, caseId, forceEscalate: values.forceEscalate || undefined },
       {
         onSuccess: () => {
           toast.success("Disciplinary action issued");
           onOpenChange(false);
           form.reset();
         },
-        onError: (err) => toast.error(getErrorMessage(err)),
+        onError: (err) => {
+          const msg = getErrorMessage(err);
+          toast.error(msg);
+          if (/progressive|forceEscalate|prior/i.test(msg)) {
+            form.setValue("forceEscalate", true);
+            toast.message("Enable force escalate to skip the progressive ladder (audited)");
+          }
+        },
       },
     );
   }
@@ -156,6 +165,31 @@ export function IssueWarningSheet({ open, onOpenChange, caseId }: Props) {
                   <Textarea rows={4} placeholder="Additional notes..." {...field} />
                 </FormControl>
                 <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="forceEscalate"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start gap-2 space-y-0 rounded-md border border-border p-3">
+                <FormControl>
+                  <input
+                    type="checkbox"
+                    className="mt-1 h-3.5 w-3.5"
+                    checked={Boolean(field.value)}
+                    onChange={(e) => field.onChange(e.target.checked)}
+                  />
+                </FormControl>
+                <div className="space-y-0.5">
+                  <FormLabel className="text-[12px] font-medium">
+                    Force escalate (skip progressive ladder)
+                  </FormLabel>
+                  <p className="text-[10px] text-muted-foreground leading-snug">
+                    Product policy only — not legal advice. Override is audited when enabled.
+                  </p>
+                </div>
               </FormItem>
             )}
           />

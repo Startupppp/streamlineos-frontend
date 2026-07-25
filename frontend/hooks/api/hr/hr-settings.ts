@@ -9,7 +9,6 @@ import type {
   PerformanceReview,
   Goal,
   WfhRequest,
-  DocumentType,
   CreateAssetInput,
   UpdateAssetInput,
   AssignAssetInput,
@@ -18,14 +17,6 @@ import type {
   CreateWfhRequestInput,
   ProcessWfhRequestInput,
 } from "@/types/hr";
-
-export function useHrAssets() {
-  return useQuery({
-    queryKey: queryKeys.hr.assets(),
-    queryFn: () => apiClient.get<Asset[]>("/hr/assets"),
-    staleTime: 2 * 60_000,
-  });
-}
 
 export function useCreateAsset() {
   const qc = useQueryClient();
@@ -51,24 +42,6 @@ export function useAssignAsset() {
     mutationFn: (data: AssignAssetInput) =>
       apiClient.patch<{ success: boolean }>("/hr/assets", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.assets() }),
-  });
-}
-
-export function useHrDocuments(userId?: string, type?: DocumentType) {
-  const params: Record<string, unknown> = {};
-  if (userId) params.userId = userId;
-  if (type) params.type = type;
-
-  return useQuery({
-    queryKey: queryKeys.hr.documents(
-      Object.keys(params).length ? params : undefined,
-    ),
-    queryFn: () =>
-      apiClient.get<Document[]>(
-        "/hr/documents",
-        Object.keys(params).length ? params : undefined,
-      ),
-    staleTime: 2 * 60_000,
   });
 }
 
@@ -141,11 +114,12 @@ export function useHrWfhRequests() {
   });
 }
 
-export function useHrPendingWfhRequests() {
+export function useHrPendingWfhRequests(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: queryKeys.hr.pendingWfhRequests(),
     queryFn: () => apiClient.get<WfhRequest[]>("/hr/wfh/pending"),
     staleTime: 2 * 60_000,
+    enabled: options?.enabled ?? true,
   });
 }
 

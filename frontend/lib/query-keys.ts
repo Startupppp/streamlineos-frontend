@@ -4,6 +4,7 @@ export const queryKeys = {
   hr: {
     all: [...base, "hr"] as const,
     departments: () => [...base, "hr", "departments"] as const,
+    legacyDepartments: () => [...base, "hr", "departments", "legacy"] as const,
     employees: (params?: Record<string, unknown>) =>
       [...base, "hr", "employees", params] as const,
     employee: (id: string) => [...base, "hr", "employees", id] as const,
@@ -14,8 +15,6 @@ export const queryKeys = {
       [...base, "hr", "leaves", params] as const,
     leaveBalance: (userId?: string) =>
       [...base, "hr", "leaveBalance", userId] as const,
-    payrolls: (params?: Record<string, unknown>) =>
-      [...base, "hr", "payrolls", params] as const,
     salaryStructures: (userId?: string) =>
       [...base, "hr", "salaryStructures", userId] as const,
     expenses: (params?: Record<string, unknown>) =>
@@ -77,10 +76,10 @@ export const queryKeys = {
     termination: (id: number) => [...base, "hr", "termination", id] as const,
     documentTypes: () => [...base, "hr", "documentTypes"] as const,
     onboardingDocsAll: [...base, "hr", "onboardingDocs"] as const,
-    onboardingDocs: (userId?: string) =>
-      [...base, "hr", "onboardingDocs", userId] as const,
-    onboardingDocsSummary: () =>
-      [...base, "hr", "onboardingDocs", "summary"] as const,
+    onboardingDocs: (params?: Record<string, unknown>) =>
+      [...base, "hr", "onboardingDocs", params] as const,
+    onboardingDocsSummary: (params?: Record<string, unknown>) =>
+      [...base, "hr", "onboardingDocs", "summary", params] as const,
     myOnboardingDocs: () => [...base, "hr", "myOnboardingDocs"] as const,
     teams: (teamId?: string) => [...base, "hr", "teams", teamId] as const,
     diversityReport: () => [...base, "hr", "diversityReport"] as const,
@@ -121,6 +120,8 @@ export const queryKeys = {
       [...base, "hr", "onboarding", "user", userId] as const,
     onboardingTemplates: () =>
       [...base, "hr", "onboarding", "templates"] as const,
+    onboardingTemplateDepartments: () =>
+      [...base, "hr", "onboarding", "templates", "departments"] as const,
     candidateSla: (candidateId: number) =>
       [...base, "hr", "candidateSla", candidateId] as const,
     atsKanban: () => [...base, "hr", "atsKanban"] as const,
@@ -497,8 +498,6 @@ export const queryKeys = {
     all: [...base, "reports"] as const,
     attendance: (params?: Record<string, unknown>) =>
       [...base, "reports", "attendance", params] as const,
-    payroll: (params?: Record<string, unknown>) =>
-      [...base, "reports", "payroll", params] as const,
     project: (params?: Record<string, unknown>) =>
       [...base, "reports", "project", params] as const,
     teamPerformance: (params?: Record<string, unknown>) =>
@@ -615,6 +614,7 @@ export const queryKeys = {
       [...base, "roles", "permissions", "matrix"] as const,
     members: (roleId: number) => [...base, "roles", "members", roleId] as const,
     analytics: () => [...base, "roles", "analytics"] as const,
+    departments: () => [...base, "roles", "departments"] as const,
   },
 
   branches: {
@@ -1538,6 +1538,13 @@ export const queryKeys = {
     reports: (kind: string, params?: Record<string, unknown>) =>
       [...base, "payroll", "reports", kind, params] as const,
     journal: (month: string) => [...base, "payroll", "journal", month] as const,
+    journalBatchesAll: [...base, "payroll", "journal-batches"] as const,
+    periodReconciliation: (periodKey: string) =>
+      [...base, "payroll", "period-reconciliation", periodKey] as const,
+    journalBatches: (params?: Record<string, unknown>) =>
+      [...base, "payroll", "journal-batches", "list", params] as const,
+    journalBatch: (batchId: number) =>
+      [...base, "payroll", "journal-batches", batchId] as const,
     accountingMappings: () =>
       [...base, "payroll", "accounting-mappings"] as const,
     calendar: (params?: Record<string, unknown>) =>

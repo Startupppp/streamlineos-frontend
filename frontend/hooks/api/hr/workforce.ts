@@ -27,6 +27,8 @@ export interface HiringPlanItem {
 }
 
 export interface BudgetVsActual {
+  planId: number;
+  fiscalYear: number;
   departmentId: number | null;
   departmentName: string;
   budgeted: number;

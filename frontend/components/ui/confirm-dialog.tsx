@@ -11,7 +11,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { cn } from "@/lib/utils";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -48,12 +47,10 @@ export function ConfirmDialog({
           <AlertDialogAction
             onClick={onConfirm}
             disabled={isPending}
-            className={cn(
-              destructive &&
-                "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-            )}
+            aria-busy={isPending || undefined}
+            variant={destructive ? "destructive" : "default"}
           >
-            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />}
             {confirmLabel}
           </AlertDialogAction>
         </AlertDialogFooter>

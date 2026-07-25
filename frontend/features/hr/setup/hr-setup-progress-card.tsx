@@ -11,7 +11,9 @@ export function HrSetupProgressCard() {
   const canView = useCan("hr:employees:view");
   const { data: checklist, isLoading } = useModuleChecklist("HR", canView);
 
-  if (!canView || isLoading || !checklist || checklist.status === "completed") return null;
+  if (!canView || isLoading || !checklist || checklist.status === "completed" || checklist.dismissedAt) {
+    return null;
+  }
 
   const remaining = checklist.items.filter((i) => i.status !== "done" && i.status !== "skipped").length;
 

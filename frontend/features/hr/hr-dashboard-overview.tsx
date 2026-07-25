@@ -288,6 +288,20 @@ const METRIC_CARDS = [
   href?: string;
 }>;
 
+export function HrDashboardWidgets() {
+  const { data: session } = useSession();
+  const role = session?.user?.role;
+
+  if (!role || !HR_ADMIN_ROLES.includes(role)) return null;
+
+  return (
+    <div className="grid sm:grid-cols-2 gap-3">
+      <LeaveCalendarWidget />
+      <OnboardingStatusWidget />
+    </div>
+  );
+}
+
 export function HrDashboardOverview() {
   const { data: session } = useSession();
   const role = session?.user?.role;
@@ -300,7 +314,7 @@ export function HrDashboardOverview() {
     : 0;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {isError ? (
         <div className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 flex items-center justify-between gap-3">
           <p className="text-xs text-destructive">Metrics couldn’t load.</p>
@@ -338,11 +352,6 @@ export function HrDashboardOverview() {
           })}
         </StatCardGrid>
       )}
-
-      <div className="grid sm:grid-cols-2 gap-3">
-        <LeaveCalendarWidget />
-        <OnboardingStatusWidget />
-      </div>
     </div>
   );
 }

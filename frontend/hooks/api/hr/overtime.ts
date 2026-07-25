@@ -21,11 +21,24 @@ export interface CompOffBalance {
   expiryDate: string | null;
 }
 
-export function useOvertimeRequests() {
+export interface OvertimeRequestsResponse {
+  items: OvertimeRequest[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export function useOvertimeRequests(params?: { page?: number; pageSize?: number }) {
   return useQuery({
-    queryKey: [...queryKeys.hr.all, "overtimeRequests"],
-    queryFn: () => apiClient.get<OvertimeRequest[]>("/hr/overtime"),
+    queryKey: [...queryKeys.hr.all, "overtimeRequests", params ?? {}],
+    queryFn: () =>
+      apiClient.get<OvertimeRequestsResponse>(
+        "/hr/overtime",
+        params as Record<string, unknown> | undefined,
+      ),
     staleTime: 30_000,
+    placeholderData: (prev) => prev,
   });
 }
 

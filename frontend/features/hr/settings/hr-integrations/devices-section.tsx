@@ -13,17 +13,17 @@ const LINK_CARDS: LinkCard[] = [
   {
     label: "Biometric Devices",
     description: "Configure fingerprint/face-scan devices for time & attendance capture.",
-    href: "/hr/attendance/biometric",
+    href: "/hr/biometric",
   },
   {
-    label: "E-Sign Providers",
-    description: "Manage electronic signature settings for offer letters and contracts.",
-    href: "/hr/documents/signatures",
+    label: "Attendance Devices",
+    description: "Manage registered clock-in devices and their health.",
+    href: "/hr/devices",
   },
   {
     label: "Background Verification",
     description: "Configure BGV vendor integrations for candidate screening.",
-    href: "/hr/recruitment/background-verification",
+    href: "/hr/background-verification",
   },
 ];
 

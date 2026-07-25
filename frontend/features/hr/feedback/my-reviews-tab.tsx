@@ -7,6 +7,7 @@ import { Star } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -155,6 +156,8 @@ export function MyReviewsTab() {
                       {[1, 2, 3, 4, 5].map((star) => (
                         <button
                           key={star}
+                          type="button"
+                          aria-label={`Rate ${star} star${star > 1 ? "s" : ""}`}
                           onClick={() =>
                             setAnswers((prev) => ({
                               ...prev,
@@ -191,7 +194,12 @@ export function MyReviewsTab() {
                 <Label>Overall Rating</Label>
                 <div className="flex gap-1">
                   {[1, 2, 3, 4, 5].map((star) => (
-                    <button key={star} onClick={() => setOverallRating(star)}>
+                    <button
+                      key={star}
+                      type="button"
+                      aria-label={`Rate ${star} star${star > 1 ? "s" : ""} overall`}
+                      onClick={() => setOverallRating(star)}
+                    >
                       <Star
                         className={`w-6 h-6 ${
                           overallRating >= star ? "fill-amber-400 text-amber-400" : "text-muted-foreground"
@@ -202,13 +210,14 @@ export function MyReviewsTab() {
                 </div>
               </div>
               <motion.div whileTap={{ scale: 0.97 }}>
-                <Button
+                <LoadingButton
                   className="w-full"
                   onClick={handleSubmitReview}
-                  disabled={submitFeedback.isPending}
+                  isPending={submitFeedback.isPending}
+                  loadingText="Submitting…"
                 >
-                  {submitFeedback.isPending ? "Submitting…" : "Submit Feedback"}
-                </Button>
+                  Submit Feedback
+                </LoadingButton>
               </motion.div>
             </div>
           )}

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { CopyIcon } from "@animateicons/react/lucide";
 import {
@@ -81,18 +82,17 @@ ${result.ratings.map((r) => `- ${r.category}: ${r.score}/5 — ${r.comment}`).jo
 
         <ScrollArea className="flex-1 min-h-0">
           <div className="px-5 py-4 space-y-4">
-            {!result && !generateMutation.isPending && (
-              <Button onClick={handleGenerate} className="w-full" size="sm">
+            {!result && (
+              <LoadingButton
+                onClick={handleGenerate}
+                className="w-full"
+                size="sm"
+                isPending={generateMutation.isPending}
+                loadingText="Drafting review..."
+              >
                 <Sparkles className="h-4 w-4 mr-2" />
                 Generate Review Draft
-              </Button>
-            )}
-
-            {generateMutation.isPending && (
-              <div className="flex items-center justify-center py-8 gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Drafting review...
-              </div>
+              </LoadingButton>
             )}
 
             {result && (
@@ -137,10 +137,17 @@ ${result.ratings.map((r) => `- ${r.category}: ${r.score}/5 — ${r.comment}`).jo
                   </div>
                 </div>
 
-                <Button onClick={handleGenerate} variant="outline" size="sm" className="w-full">
+                <LoadingButton
+                  onClick={handleGenerate}
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  isPending={generateMutation.isPending}
+                  loadingText="Regenerating..."
+                >
                   <Sparkles className="h-3.5 w-3.5 mr-1.5" />
                   Regenerate
-                </Button>
+                </LoadingButton>
               </div>
             )}
           </div>

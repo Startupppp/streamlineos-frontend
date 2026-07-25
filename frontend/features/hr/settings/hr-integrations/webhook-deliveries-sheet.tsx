@@ -11,7 +11,8 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -98,16 +99,21 @@ function DeliveryRow({
         </p>
       </div>
       {(delivery.status === "failed" || delivery.status === "dead") && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="shrink-0 h-7 w-7"
-          onClick={handleRedeliver}
-          disabled={redeliver.isPending}
-          title="Re-deliver"
-        >
-          <RotateCcw className="h-3.5 w-3.5" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <LoadingButton
+              variant="ghost"
+              size="icon"
+              className="shrink-0 h-7 w-7"
+              onClick={handleRedeliver}
+              isPending={redeliver.isPending}
+              aria-label="Re-deliver"
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+            </LoadingButton>
+          </TooltipTrigger>
+          <TooltipContent>Re-deliver</TooltipContent>
+        </Tooltip>
       )}
     </div>
   );

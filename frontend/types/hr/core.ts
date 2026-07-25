@@ -1,15 +1,20 @@
 export interface HrEmployment {
   id: number;
   orgId?: string;
-  personId?: string;
+  personId?: number | string;
   employeeNumber: string | null;
   lifecycleStatus: string;
   workerType: string;
   departmentId: number | null;
   designation: string | null;
   joiningDate: string | null;
+  probationEndDate?: string | null;
+  confirmationDate?: string | null;
   isPrimary?: boolean;
   createdAt?: string;
+  personFirstName?: string | null;
+  personLastName?: string | null;
+  personWorkEmail?: string | null;
 }
 
 export interface HrTimelineEntry {
@@ -39,6 +44,7 @@ export interface HrSensitiveBankDetails {
   swift?: string;
   accountHolder?: string;
   pfUanNumber?: string;
+  esiIpNumber?: string;
   iban?: string;
   routingNumber?: string;
 }

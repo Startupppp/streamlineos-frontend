@@ -71,10 +71,11 @@ export function OnboardingWizard() {
 
   const allDepartmentOptions = useMemo(() => {
     const dbNames = new Set(departments?.map((d) => d.name.toLowerCase()) ?? []);
+    const real = (departments ?? []).map((d) => ({ ...d, isCommon: false }));
     const extras = COMMON_DEPARTMENTS
       .filter((name) => !dbNames.has(name.toLowerCase()))
-      .map((name, i) => ({ id: -(i + 1), name, isCommon: true }));
-    return [...(departments ?? []), ...extras];
+      .map((name, i) => ({ id: `common-${i + 1}`, name, isCommon: true }));
+    return [...real, ...extras];
   }, [departments]);
 
   const form = useForm<FormValues>({
@@ -86,7 +87,15 @@ export function OnboardingWizard() {
       role: "ENGINEERING", employeeId: "", joiningDate: new Date(),
       dateOfBirth: undefined,
       taxId: "", monthlySalary: undefined,
-      bankDetails: { accountNumber: "", bankName: "", branch: "", ifsc: "", accountHolder: "", pfUanNumber: "" },
+      bankDetails: {
+        accountNumber: "",
+        bankName: "",
+        branch: "",
+        ifsc: "",
+        accountHolder: "",
+        pfUanNumber: "",
+        esiIpNumber: "",
+      },
     } as DefaultValues<FormValues>,
     mode: "onChange",
   });

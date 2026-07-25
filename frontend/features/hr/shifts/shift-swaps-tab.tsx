@@ -3,7 +3,7 @@
 import { useMemo, type ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/api-client";
@@ -79,24 +79,24 @@ export function ShiftSwapsTab({ canManage }: Props) {
         cell: (swap): ReactNode =>
           swap.status === "PENDING" ? (
             <div className="flex items-center gap-2">
-              <Button
+              <LoadingButton
                 size="sm"
                 variant="outline"
                 className="text-xs"
                 onClick={() => handleApprove(swap.id)}
-                disabled={updateStatus.isPending}
+                isPending={updateStatus.isPending}
               >
                 Approve
-              </Button>
-              <Button
+              </LoadingButton>
+              <LoadingButton
                 size="sm"
                 variant="outline"
                 className="text-xs text-destructive hover:text-destructive"
                 onClick={() => handleReject(swap.id)}
-                disabled={updateStatus.isPending}
+                isPending={updateStatus.isPending}
               >
                 Reject
-              </Button>
+              </LoadingButton>
             </div>
           ) : null,
       });

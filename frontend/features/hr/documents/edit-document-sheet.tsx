@@ -7,7 +7,9 @@ import { format } from "date-fns";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { Form } from "@/components/ui/form";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 import { useUpdateDocument, useHrEmployeeOptions } from "@/hooks/api/hr";
+import { hrDocumentListPrefix } from "@/hooks/api/hr/documents";
 import { formSchema, type DocumentFormData, DocumentFormFields } from "@/features/hr/documents/document-form-fields";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { Document } from "@/types/hr";
@@ -36,7 +38,8 @@ export function EditDocumentSheet({
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
 
-  const { employees } = useHrEmployeeOptions({ limit: 200 });
+  const qc = useQueryClient();
+  const { employees } = useHrEmployeeOptions();
   const updateDocument = useUpdateDocument();
 
   const filteredCategories = useMemo(
@@ -149,13 +152,14 @@ export function EditDocumentSheet({
         {
           onSuccess: () => {
             toast.success("Document updated");
+            void qc.invalidateQueries({ queryKey: hrDocumentListPrefix });
             onOpenChange(false);
           },
           onError: (e) => toast.error(getErrorMessage(e)),
         },
       );
     },
-    [document, updateDocument, onOpenChange],
+    [document, updateDocument, onOpenChange, qc],
   );
 
   return (

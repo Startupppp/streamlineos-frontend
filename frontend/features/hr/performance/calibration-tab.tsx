@@ -17,10 +17,13 @@ import {
 } from "@/features/projects/shared/resolve-user-name";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyChartIllustration } from "@/components/illustrations";
+import { calibrationEntrySchema } from "./calibration-schema";
+import { zodFieldErrors } from "./zod-field-errors";
 
 export function CalibrationTab() {
   const [selectedCycleId, setSelectedCycleId] = useState<number>(0);
   const [editingEntry, setEditingEntry] = useState<Record<string, { preRating: string; postRating: string; note: string }>>({});
+  const [rowErrors, setRowErrors] = useState<Record<string, Record<string, string>>>({});
 
   const { data: cycles = [] } = useReviewCycles();
   const { data: entries = [], isLoading } = useCalibrationEntries(selectedCycleId);
@@ -48,12 +51,34 @@ export function CalibrationTab() {
       const current = prev[employeeId] ?? { preRating: "", postRating: "", note: "" };
       return { ...prev, [employeeId]: { ...current, [field]: value } };
     });
+    setRowErrors((prev) => {
+      const current = prev[employeeId];
+      if (!current) return prev;
+      const nextRow = { ...current };
+      delete nextRow[field];
+      return { ...prev, [employeeId]: nextRow };
+    });
   }
 
   async function handleSave(employeeId: string) {
-    const data = editingEntry[employeeId] ?? {};
+    const row = entries.find((e) => e.employeeId === employeeId);
+    const data = editingEntry[employeeId] ?? {
+      preRating: row?.preRating ?? "",
+      postRating: row?.postRating ?? "",
+      note: row?.note ?? "",
+    };
+    const parsed = calibrationEntrySchema.safeParse(data);
+    if (!parsed.success) {
+      setRowErrors((prev) => ({ ...prev, [employeeId]: zodFieldErrors(parsed.error) }));
+      return;
+    }
+    setRowErrors((prev) => {
+      const next = { ...prev };
+      delete next[employeeId];
+      return next;
+    });
     try {
-      await upsert.mutateAsync({ employeeId, ...data });
+      await upsert.mutateAsync({ employeeId, ...parsed.data });
       toast.success("Calibration saved");
     } catch (err) {
       toast.error(getErrorMessage(err));
@@ -77,16 +102,20 @@ export function CalibrationTab() {
           postRating: row.postRating ?? "",
           note: row.note ?? "",
         };
+        const error = rowErrors[row.employeeId]?.preRating;
         return (
-          <Input
-            type="number"
-            min="1"
-            max="5"
-            step="0.5"
-            className="w-20 text-sm"
-            value={editing.preRating}
-            onChange={(e) => handleChange(row.employeeId, "preRating", e.target.value)}
-          />
+          <div className="space-y-1">
+            <Input
+              type="number"
+              min="1"
+              max="5"
+              step="0.5"
+              className="w-20 text-sm"
+              value={editing.preRating}
+              onChange={(e) => handleChange(row.employeeId, "preRating", e.target.value)}
+            />
+            {error && <p className="text-[10px] text-destructive max-w-[8rem]">{error}</p>}
+          </div>
         );
       },
     },
@@ -99,16 +128,20 @@ export function CalibrationTab() {
           postRating: row.postRating ?? "",
           note: row.note ?? "",
         };
+        const error = rowErrors[row.employeeId]?.postRating;
         return (
-          <Input
-            type="number"
-            min="1"
-            max="5"
-            step="0.5"
-            className="w-20 text-sm"
-            value={editing.postRating}
-            onChange={(e) => handleChange(row.employeeId, "postRating", e.target.value)}
-          />
+          <div className="space-y-1">
+            <Input
+              type="number"
+              min="1"
+              max="5"
+              step="0.5"
+              className="w-20 text-sm"
+              value={editing.postRating}
+              onChange={(e) => handleChange(row.employeeId, "postRating", e.target.value)}
+            />
+            {error && <p className="text-[10px] text-destructive max-w-[8rem]">{error}</p>}
+          </div>
         );
       },
     },
@@ -121,12 +154,16 @@ export function CalibrationTab() {
           postRating: row.postRating ?? "",
           note: row.note ?? "",
         };
+        const error = rowErrors[row.employeeId]?.note;
         return (
-          <Input
-            className="text-sm"
-            value={editing.note}
-            onChange={(e) => handleChange(row.employeeId, "note", e.target.value)}
-          />
+          <div className="space-y-1">
+            <Input
+              className="text-sm"
+              value={editing.note}
+              onChange={(e) => handleChange(row.employeeId, "note", e.target.value)}
+            />
+            {error && <p className="text-[10px] text-destructive">{error}</p>}
+          </div>
         );
       },
     },
@@ -144,7 +181,7 @@ export function CalibrationTab() {
         </LoadingButton>
       ),
     },
-  ], [editingEntry, resolveMemberName, upsert.isPending]);
+  ], [editingEntry, rowErrors, resolveMemberName, upsert.isPending]);
 
   return (
     <div className="space-y-4">

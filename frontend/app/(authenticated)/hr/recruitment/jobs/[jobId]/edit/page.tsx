@@ -2,6 +2,7 @@
 
 import { use, useMemo } from "react";
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CreateJobForm } from "@/features/hr/recruitment/jobs/create-job-form";
@@ -44,9 +45,7 @@ function EditJobContent({ jobId }: { jobId: number }) {
     <div className="flex items-center gap-3 px-6 py-3 border-b shrink-0">
       <Button variant="ghost" size="sm" asChild className="gap-1.5 text-muted-foreground">
         <Link href="/hr/recruitment/jobs">
-          <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="15 18 9 12 15 6" />
-          </svg>
+          <ArrowLeft className="h-3.5 w-3.5" />
           Back to Jobs
         </Link>
       </Button>
@@ -107,9 +106,7 @@ function EditJobContent({ jobId }: { jobId: number }) {
       <div className="flex items-center gap-3 px-6 py-3 border-b shrink-0">
         <Button variant="ghost" size="sm" asChild className="gap-1.5 text-muted-foreground">
           <Link href="/hr/recruitment/jobs">
-            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
+            <ArrowLeft className="h-3.5 w-3.5" />
             Back to Jobs
           </Link>
         </Button>
@@ -133,9 +130,7 @@ export default function EditJobPage({ params }: Props) {
           <div className="flex items-center gap-3 px-6 py-3 border-b shrink-0">
             <Button variant="ghost" size="sm" asChild className="gap-1.5 text-muted-foreground">
               <Link href="/hr/recruitment/jobs">
-                <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <polyline points="15 18 9 12 15 6" />
-                </svg>
+                <ArrowLeft className="h-3.5 w-3.5" />
                 Back to Jobs
               </Link>
             </Button>

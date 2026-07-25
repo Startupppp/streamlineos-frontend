@@ -88,7 +88,7 @@ export interface JobPosting {
   id: number;
   orgId: string;
   title: string;
-  departmentId: number | null;
+  departmentId: string | null;
   location: string | null;
   type: string | null;
   experience: string | null;
@@ -176,6 +176,7 @@ export interface AtsPipelineCandidate {
 
 export interface AtsPipelineStage {
   stage: CandidateStatus;
+  total: number;
   candidates: AtsPipelineCandidate[];
 }
 
@@ -229,7 +230,7 @@ export interface RecruitmentStats {
 
 export interface CreateJobPostingInput {
   title: string;
-  departmentId?: number;
+  departmentId?: string;
   hiringFlowId?: number;
   location?: string;
   type?: string;
@@ -247,7 +248,7 @@ export interface CreateJobPostingInput {
 
 export interface UpdateJobPostingInput {
   title?: string;
-  departmentId?: number;
+  departmentId?: string;
   hiringFlowId?: number | null;
   location?: string;
   type?: string;

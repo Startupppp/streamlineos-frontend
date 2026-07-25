@@ -30,6 +30,8 @@ import {
 } from "@/types/hr/policies";
 import type { HrPolicy, HrPolicyType } from "@/types/hr/policies";
 import { PolicyScopesEditor } from "./policy-scopes-editor";
+import { PolicyVersionHistory } from "./policy-version-history";
+import { useCan } from "@/hooks/api/access";
 import { PolicyRulesFields } from "./policy-rules-fields";
 import { policyFormSchema, type PolicyFormValues } from "./policy-form-types";
 
@@ -43,6 +45,7 @@ const LABEL_CLASS = "text-xs font-semibold text-foreground/80 uppercase tracking
 
 export function PolicyUpsertSheet({ open, onOpenChange, policy }: Props) {
   const isEdit = !!policy;
+  const canManage = useCan("hr:policies:manage");
   const create = useCreateHrPolicy();
   const update = useUpdateHrPolicy();
   const isPending = create.isPending || update.isPending;
@@ -306,6 +309,15 @@ export function PolicyUpsertSheet({ open, onOpenChange, policy }: Props) {
               )}
             />
           </div>
+
+          {policy && (
+            <div className="space-y-3 border-t border-border/70 pt-4">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Versions &amp; Activation
+              </p>
+              <PolicyVersionHistory policy={policy} canManage={canManage} />
+            </div>
+          )}
         </div>
       </Form>
     </HrSheet>

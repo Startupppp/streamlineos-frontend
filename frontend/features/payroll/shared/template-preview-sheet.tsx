@@ -10,7 +10,7 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Label } from "@/components/ui/label";
 import { usePreviewTemplate, usePayrollPolicyCurrent } from "@/hooks/api/payroll";
 import { formatMoney } from "./payroll-format";
@@ -85,9 +85,14 @@ export function TemplatePreviewSheet({
                 className="text-sm font-mono"
               />
             </div>
-            <Button onClick={handlePreview} disabled={preview.isPending} size="sm">
-              {preview.isPending ? "Calculating…" : "Calculate"}
-            </Button>
+            <LoadingButton
+              onClick={handlePreview}
+              isPending={preview.isPending}
+              loadingText="Calculating…"
+              size="sm"
+            >
+              Calculate
+            </LoadingButton>
           </div>
 
           {previewData && (

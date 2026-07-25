@@ -22,7 +22,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { downloadXlsx } from "@/lib/export/xlsx-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
-import { useBulkOnboardEmployees, useHrDepartments } from "@/hooks/api/hr";
+import { useBulkOnboardEmployees } from "@/hooks/api/hr";
 import { useOrgDepartments } from "@/hooks/api/org-hierarchy";
 import type { BulkOnboardEmployeeRow, BulkOnboardResult } from "@/types/hr";
 
@@ -194,12 +194,7 @@ function validateAndMap(
     else monthlySalary = n;
   }
 
-  let departmentId: number | undefined;
-  let departmentName: string | undefined = department || undefined;
-  if (/^\d+$/.test(department)) {
-    departmentId = Number(department);
-    departmentName = undefined;
-  }
+  const departmentName: string | undefined = department || undefined;
 
   const preview = {
     firstName,
@@ -225,7 +220,7 @@ function validateAndMap(
     lastName,
     email,
     designation,
-    ...(departmentId != null ? { departmentId } : { department: departmentName }),
+    ...(departmentName ? { department: departmentName } : {}),
     ...(phone ? { phone } : {}),
     ...(genderRaw ? { gender: genderRaw as "MALE" | "FEMALE" | "OTHER" } : {}),
     ...(role ? { role } : {}),
@@ -415,8 +410,7 @@ export async function downloadBulkOnboardTemplate(departmentNames: string[] = []
 
 export function BulkOnboardPanel() {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { data: departments } = useHrDepartments();
-  const { data: orgDepartments } = useOrgDepartments({ limit: 200, status: "ACTIVE" });
+  const { data: orgDepartments } = useOrgDepartments({ limit: 100, status: "ACTIVE" });
   const bulkOnboard = useBulkOnboardEmployees();
 
   const [step, setStep] = useState<Step>("upload");
@@ -428,26 +422,20 @@ export function BulkOnboardPanel() {
 
   const deptNames = useMemo(() => {
     const names = new Set<string>();
-    for (const d of departments ?? []) {
-      if (d.name?.trim()) names.add(d.name.trim().toLowerCase());
-    }
     for (const d of orgDepartments?.data ?? []) {
       if (d.name?.trim()) names.add(d.name.trim().toLowerCase());
       if (d.code?.trim()) names.add(d.code.trim().toLowerCase());
     }
     return names;
-  }, [departments, orgDepartments?.data]);
+  }, [orgDepartments?.data]);
 
   const deptNameList = useMemo(() => {
     const labels = new Set<string>();
-    for (const d of departments ?? []) {
-      if (d.name?.trim()) labels.add(d.name.trim());
-    }
     for (const d of orgDepartments?.data ?? []) {
       if (d.name?.trim()) labels.add(d.name.trim());
     }
     return [...labels].sort((a, b) => a.localeCompare(b));
-  }, [departments, orgDepartments?.data]);
+  }, [orgDepartments?.data]);
 
   const validCount = useMemo(() => previewRows.filter((r) => r.valid).length, [previewRows]);
   const invalidCount = previewRows.length - validCount;

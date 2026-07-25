@@ -2,17 +2,20 @@
 import { getErrorMessage } from "@/lib/get-error-message";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useRichDocument, useUpdateRichDocument, usePublishRichDocument } from "@/hooks/api/hr";
 import { TiptapEditor } from "@/components/editor/tiptap-editor";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { Save, Globe, GlobeLock, ArrowLeft } from "lucide-react";
+import { Save, Globe, GlobeLock } from "lucide-react";
 import Link from "next/link";
+import { UnsavedChangesDialog } from "@/components/ui/unsaved-changes-dialog";
+import { useUnsavedChangesGuard } from "@/hooks/common/use-unsaved-changes-guard";
 
 export default function DocumentEditorPage() {
   const params = useParams<{ documentId: string }>();
@@ -35,25 +38,18 @@ export default function DocumentEditorPage() {
     }
   }, [doc]);
 
-  const handleSave = useCallback(() => {
+  const handleSave = useCallback(async () => {
     if (!isDirty) return;
-    updateDoc.mutate(
-      { id: documentId, title, contentJson },
-      {
-        onSuccess: () => {
-          setIsDirty(false);
-          toast.success("Document saved");
-        },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      }
-    );
+    await updateDoc.mutateAsync({ id: documentId, title, contentJson });
+    setIsDirty(false);
+    toast.success("Document saved");
   }, [documentId, title, contentJson, isDirty, updateDoc]);
 
   useEffect(() => {
     if (!isDirty) return;
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     autoSaveTimer.current = setTimeout(() => {
-      handleSave();
+      void handleSave().catch((e) => toast.error(getErrorMessage(e)));
     }, 30_000);
     return () => {
       if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
@@ -77,6 +73,27 @@ export default function DocumentEditorPage() {
     });
   }, [documentId, publishDoc, doc?.isPublished]);
 
+  const router = useRouter();
+  const savedTitle = doc?.title ?? "";
+  const savedContent = doc?.contentJson ?? null;
+
+  const { requestLeave, dialogProps } = useUnsavedChangesGuard({
+    isDirty,
+    onDiscard: () => {
+      setTitle(savedTitle);
+      setContentJson(savedContent);
+      setIsDirty(false);
+    },
+    onSave: async () => {
+      try {
+        await handleSave();
+      } catch (e) {
+        toast.error(getErrorMessage(e));
+        throw e;
+      }
+    },
+  });
+
   if (isLoading) {
     return (
       <PageWrapper title="Document Editor" subtitle="Loading..." variant="display">
@@ -97,41 +114,62 @@ export default function DocumentEditorPage() {
   }
 
   return (
-    <PageWrapper
-      title="Document Editor"
-      subtitle={doc.templateType ? `Template: ${doc.templateType}` : undefined}
-      actions={
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/hr/documents"><ArrowLeft className="mr-1 h-4 w-4" />Back</Link>
-          </Button>
-          {isDirty && (
-            <Badge variant="outline" className="text-amber-600">Unsaved</Badge>
-          )}
-          <Button variant="outline" size="sm" onClick={handlePublish} disabled={publishDoc.isPending}>
-            {doc.isPublished ? <GlobeLock className="mr-1 h-4 w-4" /> : <Globe className="mr-1 h-4 w-4" />}
-            {doc.isPublished ? "Unpublish" : "Publish"}
-          </Button>
-          <Button size="sm" onClick={handleSave} disabled={!isDirty || updateDoc.isPending}>
-            <Save className="mr-1 h-4 w-4" />
-            {updateDoc.isPending ? "Saving..." : "Save"}
-          </Button>
+    <>
+      <PageWrapper
+        title="Document Editor"
+        subtitle={doc.templateType ? `Template: ${doc.templateType}` : undefined}
+        onBack={() => requestLeave(() => router.push("/hr/documents"))}
+        actions={
+          <div className="flex items-center gap-2">
+            {isDirty && (
+              <Badge variant="outline" className="text-amber-600">
+                Unsaved
+              </Badge>
+            )}
+            <LoadingButton
+              variant="outline"
+              size="sm"
+              onClick={handlePublish}
+              isPending={publishDoc.isPending}
+            >
+              {!publishDoc.isPending &&
+                (doc.isPublished ? (
+                  <GlobeLock className="mr-1 h-4 w-4" />
+                ) : (
+                  <Globe className="mr-1 h-4 w-4" />
+                ))}
+              {doc.isPublished ? "Unpublish" : "Publish"}
+            </LoadingButton>
+            <LoadingButton
+              size="sm"
+              onClick={() => {
+                void handleSave().catch((e) => toast.error(getErrorMessage(e)));
+              }}
+              disabled={!isDirty}
+              isPending={updateDoc.isPending}
+              loadingText="Saving..."
+            >
+              <Save className="mr-1 h-4 w-4" />
+              Save
+            </LoadingButton>
+          </div>
+        }
+      >
+        <div className="mx-auto max-w-4xl space-y-4">
+          <Input
+            value={title}
+            onChange={handleTitleChange}
+            placeholder="Document title"
+            className="rounded-none border-0 border-b px-0 text-lg font-semibold focus-visible:ring-0"
+          />
+          <TiptapEditor
+            content={contentJson}
+            onChange={handleContentChange}
+            placeholder="Start writing your document..."
+          />
         </div>
-      }
-    >
-      <div className="space-y-4 max-w-4xl mx-auto">
-        <Input
-          value={title}
-          onChange={handleTitleChange}
-          placeholder="Document title"
-          className="text-lg font-semibold border-0 border-b rounded-none px-0 focus-visible:ring-0"
-        />
-        <TiptapEditor
-          content={contentJson}
-          onChange={handleContentChange}
-          placeholder="Start writing your document..."
-        />
-      </div>
-    </PageWrapper>
+      </PageWrapper>
+      <UnsavedChangesDialog {...dialogProps} />
+    </>
   );
 }

@@ -40,6 +40,7 @@ export function useRunEmployee(runId: number, runEmployeeId: number) {
     queryFn: () =>
       apiClient.get<RunEmployeeDetail>(`/payroll/runs/${runId}/employees/${runEmployeeId}`),
     staleTime: 30_000,
+    enabled: runId > 0 && runEmployeeId > 0,
   });
 }
 
@@ -70,8 +71,10 @@ export function useSetEmployeeHold(runId: number, runEmployeeId: number) {
     mutationFn: (body: { hold: boolean; reason?: string }) =>
       apiClient.post<{ ok: boolean }>(`/payroll/runs/${runId}/employees/${runEmployeeId}/hold`, body),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.runEmployee(runId, runEmployeeId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.payroll.runEmployeesAll(runId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.payroll.runExceptionsAll(runId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.payroll.commandCenterAll });
     },
   });
 }

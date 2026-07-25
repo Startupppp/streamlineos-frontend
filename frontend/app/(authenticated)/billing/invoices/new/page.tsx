@@ -6,7 +6,7 @@ import { useCallback, useMemo } from "react";
 import { useForm, useFieldArray, useWatch, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ArrowLeft, Plus, Trash2, FileText } from "lucide-react";
+import { Plus, Trash2, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
@@ -297,13 +297,7 @@ export default function NewInvoicePage() {
     <PageWrapper
       title="New Invoice"
       subtitle="Create a new invoice for a client"
-      actions={
-        <Link href="/billing/invoices">
-          <Button variant="ghost" size="sm">
-            <ArrowLeft className="h-3.5 w-3.5 mr-1.5" /> Back
-          </Button>
-        </Link>
-      }
+      backHref="/billing/invoices"
     >
       <form
         onSubmit={handleSubmit(onSubmit, onInvalid)}

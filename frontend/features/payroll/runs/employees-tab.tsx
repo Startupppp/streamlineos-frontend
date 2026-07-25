@@ -122,6 +122,35 @@ export function EmployeesTab({ runId, isLocked }: EmployeesTabProps) {
           total: data?.total ?? 0,
           onPageChange: setPage,
         }}
+        mobileCard={(row) => (
+          <div className="space-y-1.5">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-sm font-medium truncate">{row.userName}</p>
+                <p className="text-[11px] text-muted-foreground truncate">{row.userEmail}</p>
+              </div>
+              <span className="text-[10px] text-muted-foreground shrink-0 capitalize">
+                {row.status.toLowerCase().replace(/_/g, " ")}
+              </span>
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-[11px]">
+              <div>
+                <p className="text-muted-foreground">Gross</p>
+                <p className="font-mono tabular-nums">{formatMoney(row.gross)}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Ded.</p>
+                <p className="font-mono tabular-nums text-red-600 dark:text-red-400">
+                  {row.totalDeductions ? `−${formatMoney(row.totalDeductions)}` : "—"}
+                </p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Net</p>
+                <p className="font-mono tabular-nums font-medium">{formatMoney(row.net)}</p>
+              </div>
+            </div>
+          </div>
+        )}
         emptyState={
           <EmptyState compact title="No employees in this run" description="Generate payroll to include employees" />
         }

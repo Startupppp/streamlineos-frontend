@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,10 +25,9 @@ import type { PayrollRun } from "@/types/payroll/runs";
 
 interface RunActionsSlotProps {
   run: PayrollRun;
-  onChanged: () => void;
 }
 
-export function RunActionsSlot({ run, onChanged }: RunActionsSlotProps) {
+export function RunActionsSlot({ run }: RunActionsSlotProps) {
   const [showRecalcConfirm, setShowRecalcConfirm] = useState(false);
   const canManage = useCan("payroll:runs:manage");
 
@@ -39,7 +38,6 @@ export function RunActionsSlot({ run, onChanged }: RunActionsSlotProps) {
     generateMutation.mutate(run.id, {
       onSuccess: () => {
         toast.success("Payroll generated successfully");
-        onChanged();
       },
       onError: (err) => {
         toast.error(getErrorMessage(err));
@@ -52,7 +50,6 @@ export function RunActionsSlot({ run, onChanged }: RunActionsSlotProps) {
       onSuccess: () => {
         toast.success("Payroll recalculated");
         setShowRecalcConfirm(false);
-        onChanged();
       },
       onError: (err) => {
         toast.error(getErrorMessage(err));
@@ -71,14 +68,14 @@ export function RunActionsSlot({ run, onChanged }: RunActionsSlotProps) {
 
   const recalcButton = canManage ? (
     <>
-      <Button
+      <LoadingButton
         size="sm"
         variant="outline"
         onClick={handleRecalcRequest}
-        disabled={recalcMutation.isPending}
+        isPending={recalcMutation.isPending}
       >
         Recalculate
-      </Button>
+      </LoadingButton>
       <AlertDialog open={showRecalcConfirm} onOpenChange={setShowRecalcConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -90,11 +87,14 @@ export function RunActionsSlot({ run, onChanged }: RunActionsSlotProps) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={handleRecalcCancel}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleRecalcConfirm}
-              disabled={recalcMutation.isPending}
-            >
-              Recalculate
+            <AlertDialogAction asChild>
+              <LoadingButton
+                onClick={handleRecalcConfirm}
+                isPending={recalcMutation.isPending}
+                loadingText="Recalculating…"
+              >
+                Recalculate
+              </LoadingButton>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -105,13 +105,14 @@ export function RunActionsSlot({ run, onChanged }: RunActionsSlotProps) {
   switch (run.status) {
     case "PREPARING":
       return canManage ? (
-        <Button
+        <LoadingButton
           size="sm"
           onClick={handleGenerate}
-          disabled={generateMutation.isPending}
+          isPending={generateMutation.isPending}
+          loadingText="Generating…"
         >
           Generate
-        </Button>
+        </LoadingButton>
       ) : null;
 
     case "DRAFT":
@@ -123,7 +124,7 @@ export function RunActionsSlot({ run, onChanged }: RunActionsSlotProps) {
       return (
         <>
           {recalcButton}
-          <SubmitApprovalAction runId={run.id} status={run.status} onChanged={onChanged} />
+          <SubmitApprovalAction runId={run.id} status={run.status} />
         </>
       );
 
@@ -133,10 +134,10 @@ export function RunActionsSlot({ run, onChanged }: RunActionsSlotProps) {
     case "APPROVED":
     case "LOCKED":
     case "PAYSLIPS_PUBLISHED":
-      return <LockActions runId={run.id} status={run.status} onChanged={onChanged} />;
+      return <LockActions runId={run.id} status={run.status} />;
 
     case "PAID":
-      return <PublishPayslipsAction runId={run.id} status={run.status} onChanged={onChanged} />;
+      return <PublishPayslipsAction runId={run.id} status={run.status} />;
 
     case "CLOSED":
     default:

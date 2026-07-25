@@ -28,3 +28,11 @@ export function formatDuration(hours: string | number | null | undefined): strin
 export function formatTimerSegment(val: number): string {
   return String(val).padStart(2, "0");
 }
+
+export function attendancePollInterval(
+  data:
+    | { todayLog?: { checkIn?: string | Date | null; checkOut?: string | Date | null } | null }
+    | undefined,
+): number | false {
+  return data?.todayLog?.checkIn && !data.todayLog.checkOut ? 60000 : false;
+}

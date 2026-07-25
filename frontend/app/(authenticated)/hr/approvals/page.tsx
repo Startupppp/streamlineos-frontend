@@ -135,9 +135,10 @@ function InstanceList({ instances, isLoading, onOpen, showActions, emptyTitle, e
 export default function ApprovalsPage() {
   const [selectedInstanceId, setSelectedInstanceId] = useState<number | null>(null);
   const [delegationOpen, setDelegationOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("pending");
 
   const { data: inboxData, isLoading: inboxLoading } = useWorkflowInbox();
-  const { data: actedData, isLoading: actedLoading } = useWorkflowActed();
+  const { data: actedData, isLoading: actedLoading } = useWorkflowActed(1, 50, { enabled: activeTab === "acted" });
 
   const inbox = inboxData?.data ?? [];
   const acted = actedData?.data ?? [];
@@ -163,7 +164,7 @@ export default function ApprovalsPage() {
         transition={{ duration: 0.22, ease: "easeOut" }}
         className="flex min-h-0 flex-1 flex-col"
       >
-        <Tabs defaultValue="pending" className="flex min-h-0 flex-1 flex-col gap-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex min-h-0 flex-1 flex-col gap-4">
           <PageTabsToolbar
             tabsDensity="labeled"
             tabs={

@@ -18,6 +18,10 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { DepartmentCombobox } from "@/components/hr/department-combobox";
 import { useCan } from "@/hooks/api/access";
+import { useSeedDefaultRoles } from "@/hooks/api/roles";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { LoadingButton } from "@/components/ui/loading-button";
 
 type FormValues = z.infer<typeof onboardEmployeeInputSchema>;
 
@@ -30,6 +34,24 @@ interface StepEmploymentProps {
 
 export function StepEmployment({ form, assignableRoles }: StepEmploymentProps) {
   const canCreateDept = useCan("hr:employees:manage");
+  const canManageRbac = useCan("settings:rbac:manage");
+  const seedRoles = useSeedDefaultRoles();
+  const onlyAdminAvailable =
+    assignableRoles.length > 0 &&
+    assignableRoles.every((r) => r.slug === "ADMINISTRATOR" || r.slug === "ADMIN");
+
+  function handleSeedRoles() {
+    seedRoles.mutate(undefined, {
+      onSuccess: (result) => {
+        toast.success(
+          result.created.length > 0
+            ? `Added ${result.created.length} standard roles`
+            : "Standard roles already exist",
+        );
+      },
+      onError: (err) => toast.error(getErrorMessage(err)),
+    });
+  }
 
   return (
     <div className="grid gap-4 sm:grid-cols-2">
@@ -96,6 +118,28 @@ export function StepEmployment({ form, assignableRoles }: StepEmploymentProps) {
               </SelectContent>
             </Select>
             <FormDescription className="text-xs">Permission level for system access</FormDescription>
+            {onlyAdminAvailable && (
+              <div className="flex flex-col gap-1.5 rounded-lg border border-amber-200/80 bg-amber-50/60 px-3 py-2 dark:border-amber-500/25 dark:bg-amber-500/10">
+                <p className="text-xs text-amber-800 dark:text-amber-200">
+                  Only the Administrator role exists — every hire would get full access.
+                  {canManageRbac
+                    ? " Add the standard department roles first."
+                    : " Ask an admin to add standard roles in Settings → Roles."}
+                </p>
+                {canManageRbac && (
+                  <LoadingButton
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="w-fit"
+                    isPending={seedRoles.isPending}
+                    onClick={handleSeedRoles}
+                  >
+                    Add standard roles
+                  </LoadingButton>
+                )}
+              </div>
+            )}
             <FormMessage />
           </FormItem>
         )}

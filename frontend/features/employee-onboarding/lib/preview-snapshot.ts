@@ -20,7 +20,6 @@ export type EmployeePreviewSnapshot = {
   accountNumber: string;
   bankCode: string;
   bankCodeLabel: string;
-  docsComplete: boolean;
 };
 
 export type PreviewIdentity = {
@@ -57,7 +56,6 @@ export function toPreviewSnapshot(
       : draft.bank.swift && !draft.bank.routingCode
         ? "SWIFT / BIC"
         : "Bank code",
-    docsComplete: draft.docsComplete,
   };
 }
 
@@ -84,8 +82,7 @@ export function previewSnapshotsEqual(
     a.bankName === b.bankName &&
     a.accountNumber === b.accountNumber &&
     a.bankCode === b.bankCode &&
-    a.bankCodeLabel === b.bankCodeLabel &&
-    a.docsComplete === b.docsComplete
+    a.bankCodeLabel === b.bankCodeLabel
   );
 }
 

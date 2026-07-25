@@ -319,7 +319,7 @@ export function AutomationUpsertSheet({ rule, onClose }: Props) {
                     placeholder="value"
                     className="text-xs"
                   />
-                  <AnimatedIconButton icon={XIcon} iconSize={14} type="button" variant="ghost" size="icon" className="w-8" onClick={() => removeCondition(idx)} />
+                  <AnimatedIconButton icon={XIcon} iconSize={14} type="button" variant="ghost" size="icon" className="w-8" onClick={() => removeCondition(idx)} aria-label="Remove condition" />
                 </div>
               ))}
             </div>
@@ -358,7 +358,7 @@ export function AutomationUpsertSheet({ rule, onClose }: Props) {
                           </Select>
                         )}
                       />
-                      <AnimatedIconButton icon={XIcon} iconSize={14} type="button" variant="ghost" size="icon" className="w-7 shrink-0" onClick={() => removeAction(idx)} />
+                      <AnimatedIconButton icon={XIcon} iconSize={14} type="button" variant="ghost" size="icon" className="w-7 shrink-0" onClick={() => removeAction(idx)} aria-label="Remove action" />
                     </div>
                     <div>
                       <Textarea

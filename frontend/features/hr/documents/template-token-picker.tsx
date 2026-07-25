@@ -52,6 +52,7 @@ function TokenButton({ token, colorClasses, onInsert }: TokenButtonProps) {
         colorClasses,
       )}
       title={`Insert {{${token}}}`}
+      aria-label={`Insert {{${token}}} token`}
     >
       {`{{${token}}}`}
     </button>

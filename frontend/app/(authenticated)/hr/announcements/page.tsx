@@ -4,6 +4,8 @@ import { useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { FilterPill, FilterPillGroup } from "@/components/ui/filter-pill";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,8 +27,6 @@ import { toast } from "sonner";
 import {
   Pin,
   Pencil,
-  Trash2,
-  Plus,
   ChevronDown,
   ChevronUp,
   Globe,
@@ -36,6 +36,7 @@ import {
   AlertTriangle,
   RefreshCw,
 } from "lucide-react";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useCan } from "@/hooks/api/access";
@@ -50,8 +51,38 @@ import {
   type HrAnnouncement,
   type CreateHrAnnouncementData,
 } from "@/hooks/api/hr/announcements";
+import { DatePicker } from "@/components/ui/date-picker";
+import {
+  buildAnnouncementSchema,
+  zodFieldErrors,
+} from "@/features/hr/announcements/announcement-schema";
+import { AnnouncementTargetPicker } from "@/features/hr/announcements/announcement-target-picker";
+import { useHrDepartments } from "@/hooks/api/hr/employees";
+import { useBranches } from "@/hooks/api/branches";
+import { useRoles } from "@/hooks/api/roles";
+import { cn } from "@/lib/utils";
 
 type ActiveTab = "published" | "all";
+
+function splitDateTime(value?: string): { date: string; time: string } {
+  if (!value) return { date: "", time: "" };
+  const parsed = new Date(value);
+  if (!Number.isNaN(parsed.getTime())) {
+    const y = parsed.getFullYear();
+    const m = String(parsed.getMonth() + 1).padStart(2, "0");
+    const d = String(parsed.getDate()).padStart(2, "0");
+    const hh = String(parsed.getHours()).padStart(2, "0");
+    const mm = String(parsed.getMinutes()).padStart(2, "0");
+    return { date: `${y}-${m}-${d}`, time: `${hh}:${mm}` };
+  }
+  const [date = "", timePart = ""] = value.split("T");
+  return { date, time: timePart.slice(0, 5) };
+}
+
+function joinDateTime(date: string, time: string): string | undefined {
+  if (!date) return undefined;
+  return `${date}T${time || "00:00"}`;
+}
 
 const TARGET_TYPE_ICONS: Record<HrAnnouncement["targetType"], React.ReactNode> = {
   ALL: <Globe className="h-3 w-3" />,
@@ -150,17 +181,19 @@ function AnnouncementCard({
                     size="icon"
                     className="w-7 text-muted-foreground hover:text-foreground"
                     onClick={handleEdit}
+                    aria-label="Edit announcement"
                   >
                     <Pencil className="h-3.5 w-3.5" />
                   </Button>
-                  <Button
+                  <AnimatedIconButton
+                    icon={Trash2Icon}
+                    iconSize={14}
                     variant="ghost"
                     size="icon"
                     className="w-7 text-muted-foreground hover:text-destructive"
                     onClick={handleDelete}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
+                    aria-label="Delete announcement"
+                  />
                 </>
               )}
             </div>
@@ -185,10 +218,11 @@ function AnnouncementCard({
             >
               {announcement.content}
             </p>
-            <button
+            <Button
               type="button"
+              variant="link"
               onClick={handleToggleExpand}
-              className="mt-1.5 flex items-center gap-1 text-[11px] font-medium text-primary hover:text-primary/80 transition-colors"
+              className="mt-1.5 h-auto p-0 gap-1 text-[11px] font-medium"
             >
               {expanded ? (
                 <>
@@ -201,7 +235,7 @@ function AnnouncementCard({
                   Read more
                 </>
               )}
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -235,6 +269,42 @@ function AnnouncementsContent() {
   const [editTarget, setEditTarget] = useState<HrAnnouncement | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [formData, setFormData] = useState<CreateHrAnnouncementData>(EMPTY_FORM);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const { data: departments } = useHrDepartments();
+  const { data: branches } = useBranches({
+    enabled: formData.targetType === "BRANCH",
+  });
+  const { data: roles } = useRoles({
+    enabled: formData.targetType === "ROLE",
+  });
+
+  const departmentOptions = useMemo(
+    () =>
+      (departments ?? []).map((d) => ({
+        value: String(d.id),
+        label: d.name,
+      })),
+    [departments],
+  );
+
+  const branchOptions = useMemo(
+    () =>
+      (branches ?? []).map((b) => ({
+        value: String(b.id),
+        label: b.name,
+      })),
+    [branches],
+  );
+
+  const roleOptions = useMemo(
+    () =>
+      (roles ?? []).map((r) => ({
+        value: String(r.id),
+        label: r.name,
+      })),
+    [roles],
+  );
 
   const displayedList = useMemo(() => {
     if (activeTab === "all" && canManage) return all ?? [];
@@ -247,6 +317,16 @@ function AnnouncementsContent() {
   const resetForm = useCallback(() => {
     setFormData(EMPTY_FORM);
     setEditTarget(null);
+    setFieldErrors({});
+  }, []);
+
+  const clearFieldError = useCallback((key: string) => {
+    setFieldErrors((prev) => {
+      if (!prev[key]) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
   }, []);
 
   const handleSheetOpenChange = useCallback(
@@ -268,13 +348,14 @@ function AnnouncementsContent() {
       title: a.title,
       content: a.content,
       targetType: a.targetType,
-      targetIds: a.targetIds,
+      targetIds: a.targetIds ?? [],
       isPinned: a.isPinned,
-      status: a.status,
-      publishAt: a.publishAt,
-      expiresAt: a.expiresAt,
-      attachmentUrls: a.attachmentUrls,
+      status: a.status === "EXPIRED" ? "PUBLISHED" : a.status,
+      publishAt: a.publishAt ?? undefined,
+      expiresAt: a.expiresAt ?? undefined,
+      attachmentUrls: a.attachmentUrls ?? [],
     });
+    setFieldErrors({});
     setSheetOpen(true);
   }, []);
 
@@ -293,45 +374,109 @@ function AnnouncementsContent() {
 
   const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({ ...prev, title: e.target.value }));
-  }, []);
+    clearFieldError("title");
+  }, [clearFieldError]);
 
   const handleContentChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setFormData((prev) => ({ ...prev, content: e.target.value }));
-  }, []);
+    clearFieldError("content");
+  }, [clearFieldError]);
 
   const handleTargetTypeChange = useCallback((value: string) => {
-    setFormData((prev) => ({ ...prev, targetType: value as HrAnnouncement["targetType"] }));
-  }, []);
+    setFormData((prev) => ({
+      ...prev,
+      targetType: value as HrAnnouncement["targetType"],
+      targetIds: [],
+    }));
+    clearFieldError("targetType");
+    clearFieldError("targetIds");
+  }, [clearFieldError]);
+
+  const handleTargetIdsChange = useCallback((ids: string[]) => {
+    setFormData((prev) => ({ ...prev, targetIds: ids }));
+    clearFieldError("targetIds");
+  }, [clearFieldError]);
 
   const handleStatusChange = useCallback((value: string) => {
     setFormData((prev) => ({ ...prev, status: value as HrAnnouncement["status"] }));
-  }, []);
+    clearFieldError("status");
+    clearFieldError("publishAt");
+  }, [clearFieldError]);
 
   const handlePinnedChange = useCallback((checked: boolean) => {
     setFormData((prev) => ({ ...prev, isPinned: checked }));
   }, []);
 
-  const handlePublishAtChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData((prev) => ({ ...prev, publishAt: e.target.value || undefined }));
-  }, []);
+  const publishParts = useMemo(() => splitDateTime(formData.publishAt), [formData.publishAt]);
+  const expiresParts = useMemo(() => splitDateTime(formData.expiresAt), [formData.expiresAt]);
 
-  const handleExpiresAtChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData((prev) => ({ ...prev, expiresAt: e.target.value || undefined }));
-  }, []);
+  const handlePublishDateChange = useCallback(
+    (date: string) => {
+      setFormData((prev) => {
+        const { time } = splitDateTime(prev.publishAt);
+        return { ...prev, publishAt: joinDateTime(date, time || "09:00") };
+      });
+      clearFieldError("publishAt");
+      clearFieldError("expiresAt");
+    },
+    [clearFieldError],
+  );
+
+  const handlePublishTimeChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const time = e.target.value;
+      setFormData((prev) => {
+        const { date } = splitDateTime(prev.publishAt);
+        if (!date && !time) return { ...prev, publishAt: undefined };
+        if (!date) return prev;
+        return { ...prev, publishAt: joinDateTime(date, time || "00:00") };
+      });
+      clearFieldError("publishAt");
+      clearFieldError("expiresAt");
+    },
+    [clearFieldError],
+  );
+
+  const handleExpiresDateChange = useCallback(
+    (date: string) => {
+      setFormData((prev) => {
+        const { time } = splitDateTime(prev.expiresAt);
+        return { ...prev, expiresAt: joinDateTime(date, time || "17:00") };
+      });
+      clearFieldError("expiresAt");
+    },
+    [clearFieldError],
+  );
+
+  const handleExpiresTimeChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const time = e.target.value;
+      setFormData((prev) => {
+        const { date } = splitDateTime(prev.expiresAt);
+        if (!date && !time) return { ...prev, expiresAt: undefined };
+        if (!date) return prev;
+        return { ...prev, expiresAt: joinDateTime(date, time || "00:00") };
+      });
+      clearFieldError("expiresAt");
+    },
+    [clearFieldError],
+  );
 
   const handleSave = useCallback(() => {
-    if (!formData.title.trim()) {
-      toast.error("Title is required");
+    const schema = buildAnnouncementSchema({ isEdit: Boolean(editTarget) });
+    const parsed = schema.safeParse(formData);
+    if (!parsed.success) {
+      setFieldErrors(zodFieldErrors(parsed.error));
+      toast.error("Please fix the highlighted fields");
       return;
     }
-    if (!formData.content.trim()) {
-      toast.error("Content is required");
-      return;
-    }
+
+    setFieldErrors({});
+    const payload = parsed.data as CreateHrAnnouncementData;
 
     if (editTarget) {
       toast.promise(
-        update.mutateAsync({ id: editTarget.id, ...formData }),
+        update.mutateAsync({ id: editTarget.id, ...payload }),
         {
           loading: "Updating announcement...",
           success: () => {
@@ -344,7 +489,7 @@ function AnnouncementsContent() {
       );
     } else {
       toast.promise(
-        create.mutateAsync(formData),
+        create.mutateAsync(payload),
         {
           loading: "Creating announcement...",
           success: () => {
@@ -390,42 +535,28 @@ function AnnouncementsContent() {
       badge={undefined}
       actions={
         canManage ? (
-          <Button
+          <AnimatedIconButton
+            icon={PlusIcon}
+            iconSize={14}
             size="sm"
             className="gap-1.5"
-            onClick={handleNewClick}>
-            <Plus className="h-3.5 w-3.5" />
+            onClick={handleNewClick}
+          >
             New Announcement
-          </Button>
+          </AnimatedIconButton>
         ) : undefined
       }
     >
       <div className="space-y-4">
         {canManage && (
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={handleTabPublished}
-              className={`px-3 py-1 text-xs font-medium rounded-full border transition-colors duration-200 ${
-                activeTab === "published"
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-transparent text-muted-foreground border-border hover:bg-muted"
-              }`}
-            >
+          <FilterPillGroup>
+            <FilterPill active={activeTab === "published"} onClick={handleTabPublished}>
               Published
-            </button>
-            <button
-              type="button"
-              onClick={handleTabAll}
-              className={`px-3 py-1 text-xs font-medium rounded-full border transition-colors duration-200 ${
-                activeTab === "all"
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-transparent text-muted-foreground border-border hover:bg-muted"
-              }`}
-            >
+            </FilterPill>
+            <FilterPill active={activeTab === "all"} onClick={handleTabAll}>
               All
-            </button>
-          </div>
+            </FilterPill>
+          </FilterPillGroup>
         )}
 
         {isLoading && (
@@ -527,8 +658,12 @@ function AnnouncementsContent() {
               placeholder="Announcement title"
               value={formData.title}
               onChange={handleTitleChange}
-              className="text-sm"
+              aria-invalid={Boolean(fieldErrors.title)}
+              className={cn("text-sm", fieldErrors.title && "border-destructive")}
             />
+            {fieldErrors.title && (
+              <p className="text-xs text-destructive">{fieldErrors.title}</p>
+            )}
           </div>
 
           <div className="space-y-1.5">
@@ -540,14 +675,24 @@ function AnnouncementsContent() {
               placeholder="Write your announcement here..."
               value={formData.content}
               onChange={handleContentChange}
-              className="min-h-[120px] text-sm resize-none"
+              aria-invalid={Boolean(fieldErrors.content)}
+              className={cn(
+                "min-h-[120px] text-sm resize-none",
+                fieldErrors.content && "border-destructive",
+              )}
             />
+            {fieldErrors.content && (
+              <p className="text-xs text-destructive">{fieldErrors.content}</p>
+            )}
           </div>
 
           <div className="space-y-1.5">
             <Label className="text-xs font-medium">Target Audience</Label>
             <Select value={formData.targetType} onValueChange={handleTargetTypeChange}>
-              <SelectTrigger className="text-sm">
+              <SelectTrigger
+                className={cn("text-sm", fieldErrors.targetType && "border-destructive")}
+                aria-invalid={Boolean(fieldErrors.targetType)}
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -557,12 +702,57 @@ function AnnouncementsContent() {
                 <SelectItem value="ROLE">Role</SelectItem>
               </SelectContent>
             </Select>
+            {fieldErrors.targetType && (
+              <p className="text-xs text-destructive">{fieldErrors.targetType}</p>
+            )}
           </div>
+
+          {formData.targetType === "DEPARTMENT" && (
+            <AnnouncementTargetPicker
+              label="Departments"
+              placeholder="Select departments"
+              searchPlaceholder="Search departments…"
+              emptyText="No departments found"
+              options={departmentOptions}
+              value={formData.targetIds}
+              onChange={handleTargetIdsChange}
+              error={fieldErrors.targetIds}
+            />
+          )}
+
+          {formData.targetType === "BRANCH" && (
+            <AnnouncementTargetPicker
+              label="Branches"
+              placeholder="Select branches"
+              searchPlaceholder="Search branches…"
+              emptyText="No branches found"
+              options={branchOptions}
+              value={formData.targetIds}
+              onChange={handleTargetIdsChange}
+              error={fieldErrors.targetIds}
+            />
+          )}
+
+          {formData.targetType === "ROLE" && (
+            <AnnouncementTargetPicker
+              label="Roles"
+              placeholder="Select roles"
+              searchPlaceholder="Search roles…"
+              emptyText="No roles found"
+              options={roleOptions}
+              value={formData.targetIds}
+              onChange={handleTargetIdsChange}
+              error={fieldErrors.targetIds}
+            />
+          )}
 
           <div className="space-y-1.5">
             <Label className="text-xs font-medium">Status</Label>
             <Select value={formData.status} onValueChange={handleStatusChange}>
-              <SelectTrigger className="text-sm">
+              <SelectTrigger
+                className={cn("text-sm", fieldErrors.status && "border-destructive")}
+                aria-invalid={Boolean(fieldErrors.status)}
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -571,32 +761,63 @@ function AnnouncementsContent() {
                 <SelectItem value="SCHEDULED">Scheduled</SelectItem>
               </SelectContent>
             </Select>
+            {fieldErrors.status && (
+              <p className="text-xs text-destructive">{fieldErrors.status}</p>
+            )}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="ann-publish-at" className="text-xs font-medium">
-              Publish At (optional)
+            <Label className="text-xs font-medium">
+              Publish At {formData.status === "SCHEDULED" ? "" : "(optional)"}
             </Label>
-            <Input
-              id="ann-publish-at"
-              type="datetime-local"
-              value={formData.publishAt ?? ""}
-              onChange={handlePublishAtChange}
-              className="text-sm"
-            />
+            <div className="grid grid-cols-1 gap-2 min-[380px]:grid-cols-[minmax(0,1fr)_7.5rem]">
+              <DatePicker
+                id="ann-publish-at"
+                value={publishParts.date}
+                onChange={handlePublishDateChange}
+                placeholder="Pick a date"
+                className={cn("text-sm", fieldErrors.publishAt && "border-destructive")}
+              />
+              <Input
+                id="ann-publish-time"
+                type="time"
+                value={publishParts.time}
+                onChange={handlePublishTimeChange}
+                disabled={!publishParts.date}
+                aria-label="Publish time"
+                aria-invalid={Boolean(fieldErrors.publishAt)}
+                className={cn("text-sm", fieldErrors.publishAt && "border-destructive")}
+              />
+            </div>
+            {fieldErrors.publishAt && (
+              <p className="text-xs text-destructive">{fieldErrors.publishAt}</p>
+            )}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="ann-expires-at" className="text-xs font-medium">
-              Expires At (optional)
-            </Label>
-            <Input
-              id="ann-expires-at"
-              type="datetime-local"
-              value={formData.expiresAt ?? ""}
-              onChange={handleExpiresAtChange}
-              className="text-sm"
-            />
+            <Label className="text-xs font-medium">Expires At (optional)</Label>
+            <div className="grid grid-cols-1 gap-2 min-[380px]:grid-cols-[minmax(0,1fr)_7.5rem]">
+              <DatePicker
+                id="ann-expires-at"
+                value={expiresParts.date}
+                onChange={handleExpiresDateChange}
+                placeholder="Pick a date"
+                className={cn("text-sm", fieldErrors.expiresAt && "border-destructive")}
+              />
+              <Input
+                id="ann-expires-time"
+                type="time"
+                value={expiresParts.time}
+                onChange={handleExpiresTimeChange}
+                disabled={!expiresParts.date}
+                aria-label="Expiry time"
+                aria-invalid={Boolean(fieldErrors.expiresAt)}
+                className={cn("text-sm", fieldErrors.expiresAt && "border-destructive")}
+              />
+            </div>
+            {fieldErrors.expiresAt && (
+              <p className="text-xs text-destructive">{fieldErrors.expiresAt}</p>
+            )}
           </div>
 
           <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-4 py-3">

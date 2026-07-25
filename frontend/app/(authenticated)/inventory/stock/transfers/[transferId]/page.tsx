@@ -3,8 +3,6 @@
 import { use, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Package } from "lucide-react";
-import { ChevronLeftIcon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { EmptyTransferIllustration } from "@/components/illustrations";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -27,7 +25,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import Link from "next/link";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import {
   useTransfer,
@@ -136,7 +133,7 @@ function buildLineColumns(isCompleted: boolean): DataTableColumn<TransferLine>[]
 
 function TransferDetailSkeleton() {
   return (
-    <PageWrapper title="Transfer">
+    <PageWrapper title="Transfer" backHref="/inventory/stock/transfers" backLabel="Back to Transfers">
       <div className="flex flex-1 min-h-0 flex-col gap-4">
         <Card>
           <CardContent className="p-4 space-y-4">
@@ -161,18 +158,6 @@ function TransferDetailSkeleton() {
         </Card>
       </div>
     </PageWrapper>
-  );
-}
-
-function BackToTransfersButton({ className }: { className?: string }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button variant="outline" size="sm" className={className} asChild>
-      <Link href="/inventory/stock/transfers" {...hoverHandlers}>
-        <ChevronLeftIcon ref={iconRef} size={14} aria-hidden="true" />
-        Back to Transfers
-      </Link>
-    </Button>
   );
 }
 
@@ -250,7 +235,8 @@ export default function TransferDetailPage({
     return (
       <PageWrapper
         title="Transfer"
-        actions={<BackToTransfersButton />}
+        backHref="/inventory/stock/transfers"
+        backLabel="Back to Transfers"
       >
         <div className="flex flex-1 min-h-0 flex-col gap-4">
         <ErrorState
@@ -267,7 +253,8 @@ export default function TransferDetailPage({
     return (
       <PageWrapper
         title="Transfer not found"
-        actions={<BackToTransfersButton />}
+        backHref="/inventory/stock/transfers"
+        backLabel="Back to Transfers"
       >
         <div className="flex flex-1 min-h-0 flex-col gap-4">
         <InventoryEmptyState
@@ -298,9 +285,10 @@ export default function TransferDetailPage({
           {TRANSFER_STATUS_LABEL[transfer.status]}
         </Badge>
       }
+      backHref="/inventory/stock/transfers"
+      backLabel="Back to Transfers"
       actions={
         <div className="flex items-center gap-2">
-          <BackToTransfersButton className="text-xs" />
           {transfer.status === "PENDING" && (
             <Button
               size="sm"

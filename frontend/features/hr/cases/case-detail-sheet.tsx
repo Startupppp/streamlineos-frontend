@@ -9,12 +9,18 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { LoadingButton } from "@/components/ui/loading-button";
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+  TABS_CONTENT_PAGE_BODY_CLASS,
+} from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { FileText, StickyNote, Lock, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -197,81 +203,80 @@ export function CaseDetailSheet({ caseId, open, onOpenChange }: Props) {
         </SheetHeader>
 
         {hrCase && (
-          <>
-            <div className="flex items-center gap-1 px-5 pt-3 shrink-0 border-b pb-0">
-              {(["details", "notes", "documents"] as const).map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={cn(
-                    "px-3 py-2 text-xs font-medium capitalize border-b-2 transition-colors",
-                    activeTab === tab
-                      ? "border-primary text-primary"
-                      : "border-transparent text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  {tab === "notes" && <StickyNote className="h-3 w-3 inline mr-1" />}
-                  {tab === "documents" && <FileText className="h-3 w-3 inline mr-1" />}
-                  {tab}
-                </button>
-              ))}
-            </div>
+          <Tabs
+            value={activeTab}
+            onValueChange={(v) => setActiveTab(v as "details" | "notes" | "documents")}
+            className="flex flex-1 min-h-0 flex-col"
+          >
+            <TabsList className="mx-5 mt-3 w-fit shrink-0">
+              <TabsTrigger value="details">Details</TabsTrigger>
+              <TabsTrigger value="notes">
+                <StickyNote className="h-3 w-3" />
+                Notes
+              </TabsTrigger>
+              <TabsTrigger value="documents">
+                <FileText className="h-3 w-3" />
+                Documents
+              </TabsTrigger>
+            </TabsList>
 
             <ScrollArea className="flex-1 min-h-0">
-              <div className="px-5 py-4 space-y-4">
-                {activeTab === "details" && (
-                  <>
-                    <div>
-                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
-                        Details
-                      </p>
-                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{hrCase.details}</p>
-                    </div>
+              <div className="px-5 py-4">
+                <TabsContent value="details" className={cn(TABS_CONTENT_PAGE_BODY_CLASS, "space-y-4")}>
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+                      Details
+                    </p>
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{hrCase.details}</p>
+                  </div>
 
-                    {hrCase.outcome && (
-                      <>
-                        <Separator />
-                        <div>
-                          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
-                            Outcome
-                          </p>
-                          <p className="text-sm leading-relaxed whitespace-pre-wrap">{hrCase.outcome}</p>
-                        </div>
-                      </>
+                  {hrCase.outcome && (
+                    <>
+                      <Separator />
+                      <div>
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+                          Outcome
+                        </p>
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap">{hrCase.outcome}</p>
+                      </div>
+                    </>
+                  )}
+
+                  <Separator />
+
+                  <div className="flex flex-wrap gap-3">
+                    {hrCase.status === "open" && (
+                      <LoadingButton
+                        size="sm"
+                        variant="outline"
+                        isPending={startInvestigation.isPending}
+                        onClick={handleStartInvestigation}
+                      >
+                        Start Investigation
+                      </LoadingButton>
                     )}
+                    {hrCase.status === "under_investigation" && (
+                      <LoadingButton
+                        size="sm"
+                        variant="outline"
+                        isPending={updateCase.isPending}
+                        onClick={handleMarkResolved}
+                      >
+                        Mark Resolved
+                      </LoadingButton>
+                    )}
+                  </div>
+                </TabsContent>
 
-                    <Separator />
-
-                    <div className="flex flex-wrap gap-3">
-                      {hrCase.status === "open" && (
-                        <LoadingButton
-                          size="sm"
-                          variant="outline"
-                          isPending={startInvestigation.isPending}
-                          onClick={handleStartInvestigation}
-                        >
-                          Start Investigation
-                        </LoadingButton>
-                      )}
-                      {hrCase.status === "under_investigation" && (
-                        <LoadingButton
-                          size="sm"
-                          variant="outline"
-                          isPending={updateCase.isPending}
-                          onClick={handleMarkResolved}
-                        >
-                          Mark Resolved
-                        </LoadingButton>
-                      )}
-                    </div>
-                  </>
-                )}
-
-                {activeTab === "notes" && <NoteThread caseId={caseId} />}
-                {activeTab === "documents" && <DocumentsList caseId={caseId} />}
+                <TabsContent value="notes" className={TABS_CONTENT_PAGE_BODY_CLASS}>
+                  <NoteThread caseId={caseId} />
+                </TabsContent>
+                <TabsContent value="documents" className={TABS_CONTENT_PAGE_BODY_CLASS}>
+                  <DocumentsList caseId={caseId} />
+                </TabsContent>
               </div>
             </ScrollArea>
-          </>
+          </Tabs>
         )}
       </SheetContent>
     </Sheet>

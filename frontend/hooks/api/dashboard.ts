@@ -411,7 +411,10 @@ export const usePublicDocuments = (limit = 6) => {
   const orgId = session?.orgId ?? "";
   return useQuery<PublicDoc[]>({
     queryKey: queryKeys.dashboard.publicDocuments(orgId, limit),
-    queryFn: () => apiClient.get<PublicDoc[]>("/hr/documents", { isPublic: true, limit }),
+    queryFn: async () => {
+      const res = await apiClient.get<{ data: PublicDoc[] }>("/hr/documents", { limit });
+      return res.data;
+    },
     staleTime: 5 * 60_000,
     enabled: !!orgId,
   });

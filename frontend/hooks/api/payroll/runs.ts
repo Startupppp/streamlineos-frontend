@@ -18,7 +18,11 @@ interface RunDetail {
   payoutHealth: { failedCount: number; heldCount: number } | null;
 }
 
-export function usePayrollRuns(params?: { page?: number; limit?: number }) {
+export function usePayrollRuns(params?: {
+  page?: number;
+  limit?: number;
+  entityId?: number;
+}) {
   return useQuery({
     queryKey: queryKeys.payroll.runs(params as Record<string, unknown> | undefined),
     queryFn: () =>
@@ -35,12 +39,31 @@ export function usePayrollRun(runId: number) {
   });
 }
 
+export type PayrollRunType =
+  | "REGULAR"
+  | "BONUS"
+  | "OFF_CYCLE"
+  | "CORRECTION"
+  | "FINAL_SETTLEMENT";
+
+export interface CreateRunInput {
+  month: string;
+  runType?: PayrollRunType;
+  /** Required for OFF_CYCLE, CORRECTION, and FINAL_SETTLEMENT — links to the source regular run. */
+  sourceRunId?: number;
+  /** Legal entity — scopes period ensure + statutory pack. */
+  entityId?: number;
+}
+
 export function useCreateRun() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["payroll", "runs", "create"],
-    mutationFn: (month: string) =>
-      apiClient.post<{ runId: number }>("/payroll/runs", { month }),
+    mutationFn: (input: string | CreateRunInput) => {
+      const body: CreateRunInput =
+        typeof input === "string" ? { month: input } : input;
+      return apiClient.post<{ runId: number }>("/payroll/runs", body);
+    },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "runs"] });
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.commandCenterAll });

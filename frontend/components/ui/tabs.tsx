@@ -26,7 +26,7 @@ function TabsList({
     <TabsPrimitive.List
       data-slot="tabs-list"
       className={cn(
-        "box-border flex h-9 min-h-9 w-full flex-nowrap items-center justify-stretch gap-1 overflow-x-auto rounded-lg border border-border bg-card p-1 text-muted-foreground scrollbar-hide",
+        "box-border flex h-9 min-h-9 w-full min-w-0 max-w-full flex-nowrap items-center gap-1 overflow-x-auto overscroll-x-contain rounded-lg border border-border bg-card p-1 text-muted-foreground scrollbar-hide",
         className,
       )}
       {...props}
@@ -42,7 +42,7 @@ function TabsTrigger({
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
       className={cn(
-        "box-border inline-flex h-7 min-h-7 min-w-0 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-md border border-transparent px-3 text-sm font-medium leading-none transition-[color,background-color] disabled:pointer-events-none disabled:opacity-50",
+        "box-border inline-flex h-7 min-h-7 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-md border border-transparent px-3 text-sm font-medium leading-none transition-[color,background-color] disabled:pointer-events-none disabled:opacity-50",
         "text-muted-foreground hover:text-foreground",
         "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground",
         "focus-visible:outline-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring",
@@ -55,7 +55,7 @@ function TabsTrigger({
 }
 
 export const TABS_CONTENT_PAGE_BODY_CLASS =
-  "mt-0 flex min-h-0 flex-1 flex-col data-[state=inactive]:hidden";
+  "mt-0 min-h-0 data-[state=inactive]:hidden data-[state=active]:flex data-[state=active]:flex-1 data-[state=active]:flex-col";
 
 function TabsContent({
   className,
@@ -65,7 +65,9 @@ function TabsContent({
     <TabsPrimitive.Content
       data-slot="tabs-content"
       className={cn(
-        "flex min-h-0 flex-1 flex-col outline-none data-[state=inactive]:hidden",
+        // Only apply flex when active — unconditional `flex` can override the
+        // HTML `hidden` attribute and stack inactive panels under the tab list.
+        "min-h-0 outline-none data-[state=inactive]:hidden data-[state=active]:flex data-[state=active]:flex-1 data-[state=active]:flex-col",
         className,
       )}
       {...props}

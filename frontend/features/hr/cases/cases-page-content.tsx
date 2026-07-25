@@ -17,6 +17,13 @@ import { DataTable } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { ShieldAlert } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+  TABS_CONTENT_PAGE_BODY_CLASS,
+} from "@/components/ui/tabs";
 import { StateIllustration } from "@/components/illustrations";
 import { useCan } from "@/hooks/api/access";
 import { useHrCases, useDisciplinaryActions } from "@/hooks/api/hr/cases";
@@ -144,15 +151,24 @@ export function CasesPageContent() {
 
   const filters = (
     <div className={FILTER_TOOLBAR_ROW}>
-      <SearchInput placeholder="Search cases..." value={search} onValueChange={handleSearchChange} className="w-48" />
+      <SearchInput
+        placeholder="Search cases..."
+        value={search}
+        onValueChange={handleSearchChange}
+        className="max-w-sm"
+        aria-label="Search cases"
+      />
       <Select
         value={status || SENTINEL}
         onValueChange={(v) => { setStatus(v === SENTINEL ? "" : (v as CaseStatus)); setPage(1); }}
       >
-        <SelectTrigger className={cn("w-44", FILTER_SELECT_TRIGGER)}>
+        <SelectTrigger
+          aria-label="Filter by status"
+          className={cn("w-[9.5rem]", FILTER_SELECT_TRIGGER)}
+        >
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent align="start">
           {STATUS_OPTIONS.map((o) => (
             <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
           ))}
@@ -162,10 +178,13 @@ export function CasesPageContent() {
         value={category || SENTINEL}
         onValueChange={(v) => { setCategory(v === SENTINEL ? "" : (v as CaseCategory)); setPage(1); }}
       >
-        <SelectTrigger className={cn("w-44", FILTER_SELECT_TRIGGER)}>
+        <SelectTrigger
+          aria-label="Filter by category"
+          className={cn("w-[10rem]", FILTER_SELECT_TRIGGER)}
+        >
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent align="start">
           {CATEGORY_OPTIONS.map((o) => (
             <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
           ))}
@@ -175,10 +194,13 @@ export function CasesPageContent() {
         value={severity || SENTINEL}
         onValueChange={(v) => { setSeverity(v === SENTINEL ? "" : (v as CaseSeverity)); setPage(1); }}
       >
-        <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)}>
+        <SelectTrigger
+          aria-label="Filter by severity"
+          className={cn("w-[9rem]", FILTER_SELECT_TRIGGER)}
+        >
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent align="start">
           {SEVERITY_OPTIONS.map((o) => (
             <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
           ))}
@@ -218,24 +240,17 @@ export function CasesPageContent() {
         </div>
       }
     >
-      <div className="flex min-h-0 flex-1 flex-col pb-6">
-        <div className="flex items-center gap-1 border-b mb-4">
-          {(["cases", "disciplinary"] as ActiveTab[]).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => { setActiveTab(tab); setPage(1); }}
-              className={`px-3 py-2 text-xs font-medium capitalize border-b-2 transition-colors ${
-                activeTab === tab
-                  ? "border-primary text-primary"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {tab === "cases" ? "Cases" : "Disciplinary Actions"}
-            </button>
-          ))}
-        </div>
+      <Tabs
+        value={activeTab}
+        onValueChange={(v) => { setActiveTab(v as ActiveTab); setPage(1); }}
+        className="flex min-h-0 flex-1 flex-col pb-6"
+      >
+        <TabsList className="mb-4 w-max max-w-full shrink-0">
+          <TabsTrigger value="cases">Cases</TabsTrigger>
+          <TabsTrigger value="disciplinary">Disciplinary Actions</TabsTrigger>
+        </TabsList>
 
-        {activeTab === "cases" && (
+        <TabsContent value="cases" className={TABS_CONTENT_PAGE_BODY_CLASS}>
           <DataTable
             columns={caseColumns}
             data={casesData?.data ?? []}
@@ -255,6 +270,7 @@ export function CasesPageContent() {
                     iconSize={14}
                     iconClassName="mr-1.5"
                     size="sm"
+                    variant="outline"
                     className="mt-1 gap-1.5 text-sm"
                     onClick={() => setShowNew(true)}
                   >
@@ -264,9 +280,9 @@ export function CasesPageContent() {
               </div>
             }
           />
-        )}
+        </TabsContent>
 
-        {activeTab === "disciplinary" && (
+        <TabsContent value="disciplinary" className={TABS_CONTENT_PAGE_BODY_CLASS}>
           <div className="flex flex-col gap-4">
             {canManage && (
               <div className="flex justify-end">
@@ -327,6 +343,7 @@ export function CasesPageContent() {
                       iconSize={14}
                       iconClassName="mr-1.5"
                       size="sm"
+                      variant="outline"
                       className="mt-1 gap-1.5 text-sm"
                       onClick={() => setShowWarning(true)}
                     >
@@ -337,8 +354,8 @@ export function CasesPageContent() {
               }
             />
           </div>
-        )}
-      </div>
+        </TabsContent>
+      </Tabs>
 
       {selectedCaseId !== null && (
         <CaseDetailSheet

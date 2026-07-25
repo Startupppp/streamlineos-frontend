@@ -16,10 +16,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { toast } from "sonner";
-import { Plus, Pencil, Clock, AlertCircle } from "lucide-react";
-import Link from "next/link";
+import { Pencil, Clock, AlertCircle } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 const CANDIDATE_STAGES = ["NEW", "SCREENING", "INTERVIEW", "OFFER", "HIRED", "REJECTED"] as const;
@@ -78,9 +79,15 @@ function SlaConfigureButton({ stage, onNew }: { stage: CandidateStage; onNew: (s
     onNew(stage);
   }
   return (
-    <Button variant="ghost" size="sm" className="w-7 p-0" aria-label={`Configure SLA for ${stage}`} onClick={handleClick}>
-      <Plus className="h-3.5 w-3.5" />
-    </Button>
+    <AnimatedIconButton
+      icon={PlusIcon}
+      iconSize={14}
+      variant="ghost"
+      size="sm"
+      className="w-7 p-0"
+      aria-label={`Configure SLA for ${stage}`}
+      onClick={handleClick}
+    />
   );
 }
 
@@ -215,11 +222,8 @@ export default function SlaConfigPage() {
     <PageWrapper
       title="SLA Configuration"
       subtitle="Set maximum hours allowed per recruitment stage before an SLA breach is triggered"
-      actions={
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/hr/recruitment">Back to Recruitment</Link>
-        </Button>
-      }
+      backHref="/hr/recruitment"
+      backLabel="Back to Recruitment"
     >
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-6">
         <Card>

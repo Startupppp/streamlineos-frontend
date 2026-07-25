@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useHydrated } from "@/hooks/common/use-hydrated";
 import dynamic from "next/dynamic";
@@ -8,6 +8,7 @@ import { EditEmployeeForm, type EmployeeData } from "./edit-employee-form";
 import { EmployeeAttendanceHistory } from "@/components/hr/employee-attendance-history";
 import { SelfEditProfileForm } from "@/components/hr/self-edit-profile-form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollEdgeFade } from "@/components/ui/scroll-edge-fade";
 import {
   useHrEmployeeStats,
   useHrEmployeeProjects,
@@ -15,6 +16,7 @@ import {
   useDirectReports,
   useManagerScorecard,
   useEmployeeAvailability,
+  useEmployeeEmployment,
 } from "@/hooks/api/hr";
 import { EmployeeProjectsList } from "@/components/hr/employee-projects-list";
 import { EmployeeTicketsList } from "@/components/hr/employee-tickets-list";
@@ -141,16 +143,16 @@ function StatBlock({
   colorClass?: string;
 }) {
   return (
-    <div className="text-center px-4 first:pl-0 last:pr-0">
+    <div className="min-w-0 flex-1 text-center px-2 sm:px-4 first:pl-0 last:pr-0">
       <p
         className={cn(
-          "text-3xl font-bold tabular-nums",
+          "text-2xl font-bold tabular-nums sm:text-3xl",
           colorClass ?? "text-foreground",
         )}
       >
         {value}
       </p>
-      <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mt-0.5">
+      <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground sm:text-[11px]">
         {label}
       </p>
     </div>
@@ -168,15 +170,15 @@ function InfoField({
 }) {
   if (!value) return null;
   return (
-    <div className="flex items-start gap-2 min-w-0">
+    <div className="flex min-w-0 items-start gap-2 sm:min-w-[10rem]">
       {Icon && (
-        <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />
+        <Icon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
       )}
-      <div className="min-w-0">
-        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+      <div className="min-w-0 space-y-0.5">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
           {label}
         </p>
-        <TruncatedText text={value} className="text-sm font-medium" />
+        <TruncatedText text={value} className="text-sm font-medium leading-snug" />
       </div>
     </div>
   );
@@ -312,6 +314,59 @@ function ManagerScorecardSection({ employeeId }: { employeeId: string }) {
   );
 }
 
+const LIFECYCLE_BADGE: Record<string, { label: string; className: string }> = {
+  CANDIDATE: {
+    label: "Candidate",
+    className:
+      "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-500/30",
+  },
+  PRE_JOINING: {
+    label: "Pre-joining",
+    className:
+      "bg-sky-100 text-sky-700 border-sky-200 dark:bg-sky-500/10 dark:text-sky-300 dark:border-sky-500/30",
+  },
+  ONBOARDING: {
+    label: "Onboarding",
+    className:
+      "bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-500/10 dark:text-violet-300 dark:border-violet-500/30",
+  },
+  ACTIVE: {
+    label: "Active",
+    className:
+      "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  },
+  PROBATION: {
+    label: "Probation",
+    className:
+      "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  },
+  CONFIRMED: {
+    label: "Confirmed",
+    className:
+      "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  },
+  NOTICE: {
+    label: "Notice",
+    className:
+      "bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-500/10 dark:text-orange-300 dark:border-orange-500/30",
+  },
+  EXITED: {
+    label: "Exited",
+    className:
+      "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/30",
+  },
+  ALUMNI: {
+    label: "Alumni",
+    className:
+      "bg-muted text-muted-foreground border-border",
+  },
+  SUSPENDED: {
+    label: "Suspended",
+    className:
+      "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/30",
+  },
+};
+
 export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
   const hydrated = useHydrated();
   const { data: stats, isLoading: statsLoading } = useHrEmployeeStats(
@@ -319,6 +374,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
   );
   const { data: projects } = useHrEmployeeProjects(employee.id);
   const { data: ticketsResult } = useHrEmployeeTickets(employee.id);
+  const { data: employmentRecord } = useEmployeeEmployment(employee.id);
   const router = useRouter();
   const { data: session } = useSession();
   const canManageEmployees = useCan("hr:employees:manage");
@@ -326,6 +382,24 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
   const canViewSensitive = useCan("hr:sensitive:view");
   const searchParams = useSearchParams();
   const defaultTab = searchParams.get("tab") ?? "overview";
+  const [activeTab, setActiveTab] = useState(defaultTab);
+  const tabsListRef = useRef<HTMLDivElement>(null);
+  const leaveGuardRef = useRef<{
+    isDirty: boolean;
+    requestLeave: (action: () => void) => void;
+  } | null>(null);
+
+  const registerLeaveGuard = useCallback(
+    (
+      api: {
+        isDirty: boolean;
+        requestLeave: (action: () => void) => void;
+      } | null,
+    ) => {
+      leaveGuardRef.current = api;
+    },
+    [],
+  );
 
   const isSelf = hydrated && session?.user?.id === employee.id;
   const showManageActions = hydrated && canManageEmployees;
@@ -334,16 +408,83 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
     `${employee.firstName ?? ""} ${employee.lastName ?? ""}`.trim() ||
     "Employee";
 
+  const scrollActiveTabIntoView = useCallback(() => {
+    const active = tabsListRef.current?.querySelector<HTMLElement>(
+      '[data-state="active"]',
+    );
+    active?.scrollIntoView({
+      inline: "nearest",
+      block: "nearest",
+      behavior: "smooth",
+    });
+  }, []);
+
+  useEffect(() => {
+    scrollActiveTabIntoView();
+  }, [activeTab, showSensitiveTab, isSelf, scrollActiveTabIntoView]);
+
+  const requestLeaveIfNeeded = useCallback((action: () => void) => {
+    const guard = leaveGuardRef.current;
+    if (guard?.isDirty) {
+      guard.requestLeave(action);
+      return;
+    }
+    action();
+  }, []);
+
   const skillsList: string[] = (employee.skills ?? []).map((s) => s.name);
 
   const { pct: completeness, missing: missingFields } =
     profileCompletenessScore(employee);
 
+  const nestedEmployment =
+    employee.employment && typeof employee.employment === "object"
+      ? (employee.employment as {
+          lifecycleStatus?: string;
+          employeeNumber?: string | null;
+          workerType?: string | null;
+        })
+      : null;
+  const lifecycleStatus =
+    employmentRecord?.lifecycleStatus ??
+    nestedEmployment?.lifecycleStatus ??
+    (typeof employee.employmentStatus === "string" ? employee.employmentStatus : null);
+  const rawEmployeeNumber =
+    employmentRecord?.employeeNumber ??
+    nestedEmployment?.employeeNumber ??
+    (typeof employee.employeeId === "string" ? employee.employeeId : null);
+  const employeeNumber =
+    typeof rawEmployeeNumber === "string" && rawEmployeeNumber.trim()
+      ? rawEmployeeNumber
+      : null;
+  const workerType =
+    employmentRecord?.workerType ??
+    nestedEmployment?.workerType ??
+    null;
+  const lifecycleBadge = lifecycleStatus
+    ? LIFECYCLE_BADGE[lifecycleStatus] ?? {
+        label: lifecycleStatus,
+        className: "bg-muted text-muted-foreground border-border",
+      }
+    : null;
+
   const handleTerminateClick = useCallback(() => {
     router.push(`/hr/termination?employeeId=${employee.id}`);
   }, [employee.id, router]);
 
-  const handleBack = useCallback(() => router.back(), [router]);
+  const handleBack = useCallback(() => {
+    requestLeaveIfNeeded(() => router.back());
+  }, [requestLeaveIfNeeded, router]);
+
+  const handleTabChange = useCallback(
+    (next: string) => {
+      requestLeaveIfNeeded(() => {
+        setActiveTab(next);
+        requestAnimationFrame(scrollActiveTabIntoView);
+      });
+    },
+    [requestLeaveIfNeeded, scrollActiveTabIntoView],
+  );
 
   const attritionRiskMutation = useAIAttritionRisk();
   const generateReviewMutation = useAIGenerateReview();
@@ -351,8 +492,25 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
   const exportPdfMutation = useMutation({
     mutationKey: ["hr", "employees", employee.id, "profile-pdf"],
     mutationFn: async () => {
-      const blob = await apiClient.download(`/hr/employees/${employee.id}/profile-pdf`);
-      const url = URL.createObjectURL(blob);
+      const blob = await apiClient.download(
+        `/hr/employees/${employee.id}/profile-pdf`,
+      );
+      const header = new Uint8Array(await blob.slice(0, 5).arrayBuffer());
+      const isPdf =
+        header.length >= 5 &&
+        header[0] === 0x25 &&
+        header[1] === 0x50 &&
+        header[2] === 0x44 &&
+        header[3] === 0x46 &&
+        header[4] === 0x2d; // %PDF-
+      if (!isPdf) {
+        throw new Error("Export did not return a valid PDF. Please try again.");
+      }
+      const pdfBlob =
+        blob.type === "application/pdf"
+          ? blob
+          : new Blob([blob], { type: "application/pdf" });
+      const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement("a");
       a.href = url;
       a.download = `employee-profile-${employeeName.replace(/\s+/g, "-").toLowerCase()}.pdf`;
@@ -420,43 +578,62 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
       canUpdateEmployee,
     );
 
+  // Prefer lifecycle status over a second "Active" employment badge when labels collide.
+  const showEmploymentActiveBadge =
+    !isAlreadyTerminated &&
+    (!lifecycleBadge || lifecycleBadge.label.toUpperCase() !== "ACTIVE");
+
+  const legacyEmployeeId =
+    typeof employee.employeeId === "string" ? employee.employeeId.trim() : "";
+  const showLegacyEmployeeId =
+    !!legacyEmployeeId &&
+    legacyEmployeeId !== (employeeNumber ?? "").trim();
+
   return (
       <PageWrapper
-        title={employeeName}
-        subtitle={employee.designation ?? employee.role ?? ""}
+        leading={
+          <Button
+            variant="ghost"
+            size="sm"
+            className="-ml-2 h-9 shrink-0 gap-1.5 px-2.5 sm:h-8"
+            onClick={handleBack}
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Back
+          </Button>
+        }
+        title={
+          <>
+            <span className="sr-only">{employeeName}</span>
+            <span className="hidden sm:inline">{employeeName}</span>
+          </>
+        }
+        actionsInline
         actions={
           <div className="flex items-center gap-1.5">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="gap-1.5"
-              onClick={handleBack}
-            >
-              <ArrowLeft className="h-3.5 w-3.5" />
-              Back
-            </Button>
             {showManageActions && (
               <LoadingButton
                 variant="outline"
                 size="sm"
-                className="gap-1.5"
+                className="h-9 gap-1.5 px-2.5 sm:h-8"
                 isPending={exportPdfMutation.isPending}
-                loadingText="Exporting…"
+                loadingText="…"
                 onClick={handleExportPdf}
               >
                 <Download className="h-3.5 w-3.5" />
-                Export PDF
+                <span className="hidden sm:inline">Export PDF</span>
+                <span className="sm:hidden">PDF</span>
               </LoadingButton>
             )}
             {canTerminate && (
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-1.5 text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
+                className="h-9 gap-1.5 border-destructive/30 px-2.5 text-destructive hover:bg-destructive/10 hover:text-destructive sm:h-8"
                 onClick={handleTerminateClick}
               >
                 <UserX className="h-3.5 w-3.5" />
-                Terminate
+                <span className="hidden sm:inline">Terminate</span>
               </Button>
             )}
             {showManageActions && aiActions.length > 0 && (
@@ -464,18 +641,18 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
             )}
           </div>
         }
-        contentClassName="flex flex-col gap-3"
+        contentClassName="flex flex-col gap-4"
       >
         <Card
           className={cn(
-            "rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden shrink-0 border-l-4",
+            "shrink-0 overflow-hidden rounded-2xl border border-border/70 border-l-4 bg-card/90 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] backdrop-blur-sm",
             isAlreadyTerminated ? "border-l-rose-500" : "border-l-emerald-500",
           )}
         >
-          <CardContent className="p-5">
-            <div className="flex flex-col sm:flex-row gap-5">
-              <div className="shrink-0">
-                <Avatar className="h-20 w-20">
+          <CardContent className="p-4 sm:p-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:gap-5">
+              <div className="flex items-start gap-3 sm:block sm:shrink-0">
+                <Avatar className="h-16 w-16 sm:h-20 sm:w-20">
                   <AvatarImage
                     src={resolveImageUrl(
                       typeof employee.image === "string"
@@ -483,14 +660,24 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                         : null,
                     )}
                   />
-                  <AvatarFallback className="text-xl bg-muted text-muted-foreground font-bold">
+                  <AvatarFallback className="bg-muted text-lg font-bold text-muted-foreground sm:text-xl">
                     {getInitials(employee.firstName, employee.lastName)}
                   </AvatarFallback>
                 </Avatar>
+                <div className="min-w-0 flex-1 sm:hidden">
+                  <h2 className="text-base font-bold leading-tight text-foreground">
+                    {employeeName}
+                  </h2>
+                  {employee.designation && (
+                    <p className="mt-0.5 text-sm text-muted-foreground">
+                      {employee.designation}
+                    </p>
+                  )}
+                </div>
               </div>
 
-              <div className="flex-1 min-w-0 space-y-3">
-                <div className="flex items-start gap-2 flex-wrap">
+              <div className="min-w-0 flex-1 space-y-3.5">
+                <div className="hidden items-start gap-2 sm:flex">
                   <div className="min-w-0 flex-1">
                     <h2 className="text-lg font-bold text-foreground">
                       {employeeName}
@@ -501,33 +688,55 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                       </p>
                     )}
                   </div>
-                  <div className="flex items-center gap-1.5 flex-wrap">
+                </div>
+
+                <div className="flex flex-wrap items-center gap-1.5">
+                    {lifecycleBadge && !isAlreadyTerminated && (
+                      <span
+                        className={cn(
+                          "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold",
+                          lifecycleBadge.className,
+                        )}
+                      >
+                        <Tag className="h-3 w-3" />
+                        {lifecycleBadge.label}
+                      </span>
+                    )}
+                    {employeeNumber && (
+                      <span className="inline-flex items-center rounded-full border border-border bg-muted px-2 py-0.5 font-mono text-[10px] font-semibold text-muted-foreground">
+                        {employeeNumber}
+                      </span>
+                    )}
+                    {workerType && (
+                      <span className="inline-flex items-center rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                        {workerType.replaceAll("_", " ")}
+                      </span>
+                    )}
                     {isAlreadyTerminated ? (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/30">
+                      <span className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-100 px-2 py-0.5 text-[10px] font-semibold text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
                         <XCircle className="h-3 w-3" />
                         Terminated
                       </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
+                    ) : showEmploymentActiveBadge ? (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
                         <CheckCircle2 className="h-3 w-3" />
                         Active
                       </span>
-                    )}
+                    ) : null}
                     {employee.role && (
-                      <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border">
+                      <span className="inline-flex items-center rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
                         {employee.role}
                       </span>
                     )}
-                    {typeof employee.employeeId === "string" &&
-                      employee.employeeId && (
-                        <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border border-border bg-muted text-muted-foreground">
-                          ID: {employee.employeeId}
+                    {showLegacyEmployeeId && (
+                        <span className="inline-flex items-center rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                          ID: {legacyEmployeeId}
                         </span>
                       )}
-                  </div>
+                  <AvailabilityBadge userId={employee.id} />
                 </div>
 
-                <div className="flex flex-wrap gap-x-5 gap-y-2.5">
+                <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2 sm:flex sm:flex-wrap sm:gap-x-5 sm:gap-y-2.5">
                   <InfoField icon={Mail} label="Email" value={employee.email} />
                   <InfoField
                     icon={Phone}
@@ -557,10 +766,6 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                   />
                 </div>
 
-                <div className="flex items-center gap-2 flex-wrap">
-                  <AvailabilityBadge userId={employee.id} />
-                </div>
-
                 {typeof employee.bio === "string" && employee.bio && (
                   <TruncatedText
                     text={employee.bio}
@@ -570,17 +775,17 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                 )}
 
                 {isSelf && completeness < 100 && (
-                  <div className="space-y-1.5 pt-1">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  <div className="space-y-2 border-t border-border/60 pt-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                         Profile Completeness
                       </span>
-                      <span className="text-[11px] font-bold text-foreground">
+                      <span className="text-[11px] font-bold tabular-nums text-foreground">
                         {completeness}%
                       </span>
                     </div>
                     <Progress value={completeness} className="h-1.5" />
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-[11px] leading-relaxed text-muted-foreground">
                       Missing: {missingFields.slice(0, 3).join(", ")}
                       {missingFields.length > 3
                         ? ` +${missingFields.length - 3} more`
@@ -591,7 +796,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
               </div>
 
               {!statsLoading && stats && (
-                <div className="flex items-center shrink-0 border-l border-border pl-5 divide-x divide-border">
+                <div className="flex items-center divide-x divide-border rounded-xl border border-border/60 bg-muted/20 py-3 sm:shrink-0 sm:border-0 sm:border-l sm:border-border sm:bg-transparent sm:py-0 sm:pl-5 sm:rounded-none">
                   <StatBlock
                     label="Present"
                     value={stats.attendance?.daysPresent ?? 0}
@@ -610,11 +815,11 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                 </div>
               )}
               {statsLoading && (
-                <div className="flex items-center shrink-0 border-l border-border pl-5 divide-x divide-border">
-                  {Array.from({ length: 8 }).map((_, i) => (
-                    <div key={i} className="text-center px-4 space-y-1.5">
-                      <Skeleton className="h-10 w-10 mx-auto" />
-                      <Skeleton className="h-3 w-14" />
+                <div className="flex items-center divide-x divide-border rounded-xl border border-border/60 bg-muted/20 py-3 sm:shrink-0 sm:border-0 sm:border-l sm:border-border sm:bg-transparent sm:py-0 sm:pl-5 sm:rounded-none">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="flex-1 space-y-1.5 px-3 text-center sm:px-4">
+                      <Skeleton className="mx-auto h-8 w-10 sm:h-10" />
+                      <Skeleton className="mx-auto h-3 w-12" />
                     </div>
                   ))}
                 </div>
@@ -624,63 +829,67 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
         </Card>
 
         <Tabs
-          defaultValue={defaultTab}
-          className="flex flex-col gap-3"
+          value={activeTab}
+          onValueChange={handleTabChange}
+          className="flex flex-col gap-4"
         >
-          <div className="overflow-x-auto shrink-0">
-          <TabsList className="rounded-lg border p-1 w-max min-w-full">
-            <TabsTrigger
-              value="overview"
-              className="text-xs gap-1.5 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+          <ScrollEdgeFade className="shrink-0">
+            <TabsList
+              ref={tabsListRef}
+              className="h-auto min-h-9 w-max min-w-full justify-start gap-1 overflow-visible rounded-lg border p-1"
             >
-              <Briefcase className="h-3 w-3" />
-              Overview
-            </TabsTrigger>
-            <TabsTrigger
-              value="attendance"
-              className="text-xs gap-1.5 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-            >
-              <Clock className="h-3 w-3" />
-              Attendance
-            </TabsTrigger>
-            <TabsTrigger
-              value="timeline"
-              className="text-xs gap-1.5 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-            >
-              <Clock className="h-3 w-3" />
-              Timeline
-            </TabsTrigger>
-            <TabsTrigger
-              value="sensitive"
-              hidden={!showSensitiveTab}
-              className="text-xs gap-1.5 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-            >
-              <Shield className="h-3 w-3" />
-              Sensitive
-            </TabsTrigger>
-            <TabsTrigger
-              value="my-profile"
-              hidden={!isSelf}
-              className="text-xs gap-1.5 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-            >
-              <UserCircle className="h-3 w-3" />
-              My Profile
-            </TabsTrigger>
-            <TabsTrigger
-              value="profile"
-              className="text-xs gap-1.5 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-            >
-              <FileCheck className="h-3 w-3" />
-              Edit
-            </TabsTrigger>
-          </TabsList>
-          </div>
+              <TabsTrigger
+                value="overview"
+                className="h-8 min-h-8 flex-none shrink-0 gap-1.5 rounded-md px-2.5 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                <Briefcase className="h-3 w-3" />
+                Overview
+              </TabsTrigger>
+              <TabsTrigger
+                value="attendance"
+                className="h-8 min-h-8 flex-none shrink-0 gap-1.5 rounded-md px-2.5 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                <Clock className="h-3 w-3" />
+                Attendance
+              </TabsTrigger>
+              <TabsTrigger
+                value="timeline"
+                className="h-8 min-h-8 flex-none shrink-0 gap-1.5 rounded-md px-2.5 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                <Clock className="h-3 w-3" />
+                Timeline
+              </TabsTrigger>
+              <TabsTrigger
+                value="sensitive"
+                hidden={!showSensitiveTab}
+                className="h-8 min-h-8 flex-none shrink-0 gap-1.5 rounded-md px-2.5 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                <Shield className="h-3 w-3" />
+                Sensitive
+              </TabsTrigger>
+              <TabsTrigger
+                value="my-profile"
+                hidden={!isSelf}
+                className="h-8 min-h-8 flex-none shrink-0 gap-1.5 rounded-md px-2.5 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                <UserCircle className="h-3 w-3" />
+                My Profile
+              </TabsTrigger>
+              <TabsTrigger
+                value="profile"
+                className="h-8 min-h-8 flex-none shrink-0 gap-1.5 rounded-md px-2.5 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                <FileCheck className="h-3 w-3" />
+                Edit
+              </TabsTrigger>
+            </TabsList>
+          </ScrollEdgeFade>
 
           <TabsContent
             value="overview"
             className="mt-0 flex-none"
           >
-            <div className="space-y-3 pb-4">
+            <div className="space-y-4 pb-4">
               {skillsList.length > 0 && (
                 <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
                   <CardContent className="p-4">
@@ -710,11 +919,11 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
 
               <DirectReportsSection employeeId={employee.id} />
 
-              <div className="grid gap-3 lg:grid-cols-2">
+              <div className="grid gap-4 lg:grid-cols-2">
                 <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <CardContent className="p-4 sm:p-5">
+                    <div className="mb-3 flex items-center gap-2">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
                         <Briefcase className="h-3.5 w-3.5 text-primary" />
                       </div>
                       <h3 className="text-sm font-semibold text-foreground">
@@ -739,9 +948,9 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                   </CardContent>
                 </Card>
                 <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <CardContent className="p-4 sm:p-5">
+                    <div className="mb-3 flex items-center gap-2">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
                         <FileCheck className="h-3.5 w-3.5 text-primary" />
                       </div>
                       <h3 className="text-sm font-semibold text-foreground">
@@ -804,6 +1013,9 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                     skills: employee.skills,
                   }}
                   onSaved={() => router.refresh()}
+                  registerLeaveGuard={
+                    activeTab === "my-profile" ? registerLeaveGuard : undefined
+                  }
                 />
               </div>
             </TabsContent>
@@ -813,7 +1025,12 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
             value="profile"
             className="mt-0 flex-none pb-4"
           >
-            <EditEmployeeForm employee={employee} />
+            <EditEmployeeForm
+              employee={employee}
+              registerLeaveGuard={
+                activeTab === "profile" ? registerLeaveGuard : undefined
+              }
+            />
           </TabsContent>
         </Tabs>
       </PageWrapper>

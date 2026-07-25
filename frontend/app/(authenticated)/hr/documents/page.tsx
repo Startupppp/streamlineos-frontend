@@ -22,20 +22,22 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 import {
-  useHrDocuments,
+  useHrDocumentList,
   useDeleteDocument,
   useRichDocuments,
   useDeleteRichDocument,
 } from "@/hooks/api/hr";
+import { hrDocumentListPrefix } from "@/hooks/api/hr/documents";
 import { useLetters } from "@/hooks/api/hr/letters";
-import { useCertifications } from "@/hooks/api/hr/certifications";
 import { CreateEnvelopeDialog } from "@/features/sign";
 import { UploadDocumentDialog } from "@/features/hr/documents/components/upload-document-dialog";
 import { LetterGenerationSheet } from "@/features/hr/documents/letter-generation-sheet";
@@ -88,13 +90,13 @@ export default function DocumentsPage() {
   const [signatureDocument, setSignatureDocument] = useState<Document | null>(null);
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [page, setPage] = useState(1);
-  const pageSize = 5;
+  const pageSize = 20;
 
   const isAdmin = useCan("hr:employees:manage");
   const canManageDocs = useCan("hr:documents:manage");
   const [isLetterGenOpen, setIsLetterGenOpen] = useState(false);
 
-  const { data: employeesRaw } = useHrEmployees({ limit: 200 });
+  const { data: employeesRaw } = useHrEmployees({ limit: 100 });
   const employees = useMemo(
     () => unwrapEmployees(employeesRaw),
     [employeesRaw],
@@ -117,12 +119,21 @@ export default function DocumentsPage() {
 
   const typeFilter = selectedType !== "all" ? (selectedType as Document["type"]) : undefined;
 
-  const { data: rawDocuments = [], isLoading, isError, refetch } = useHrDocuments(undefined, typeFilter);
-  const { data: rawPolicies = [] } = useHrDocuments(undefined, "POLICY");
+  const qc = useQueryClient();
+  const { data: documentsPage, isLoading, isError, refetch } = useHrDocumentList({
+    page,
+    limit: pageSize,
+    type: typeFilter,
+  });
+  const { data: policiesPage } = useHrDocumentList({ type: "POLICY", limit: 100 });
   const deleteMutation = useDeleteDocument();
 
-  const documents = rawDocuments;
-  const policies = rawPolicies.filter((d) => d.isPublic);
+  const documents = useMemo(() => documentsPage?.data ?? [], [documentsPage]);
+  const policies = useMemo(
+    () => (policiesPage?.data ?? []).filter((d) => d.isPublic),
+    [policiesPage],
+  );
+  const totalDocuments = documentsPage?.pagination.total ?? 0;
 
   const categoryTabs = useMemo(
     () => [...DEFAULT_CATEGORY_TABS, ...customFolders],
@@ -157,9 +168,9 @@ export default function DocumentsPage() {
     });
   }, [documents, searchTerm, selectedCategory, customFolders]);
 
-  const totalFiltered = filteredDocuments.length;
-  const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize));
-  const paginatedDocuments = filteredDocuments.slice((page - 1) * pageSize, page * pageSize);
+  const totalFiltered = totalDocuments;
+  const totalPages = Math.max(1, documentsPage?.pagination.totalPages ?? 1);
+  const paginatedDocuments = filteredDocuments;
 
   const folders: FolderItem[] = [
     { name: "Employee Contracts", count: documents.filter((d) => d.type === "CONTRACT" || d.type === "OFFER_LETTER").length, colorIdx: 0 },
@@ -182,7 +193,8 @@ export default function DocumentsPage() {
         error: "Failed to delete document",
       },
     );
-  }, [deleteMutation]);
+    void qc.invalidateQueries({ queryKey: hrDocumentListPrefix });
+  }, [deleteMutation, qc]);
 
   const handleSearchChange = useCallback((value: string) => { setSearchTerm(value); setPage(1); }, []);
   const handleTypeChange = useCallback((value: string) => { setSelectedType(value); setPage(1); }, []);
@@ -207,7 +219,10 @@ export default function DocumentsPage() {
   }, [foldersKey]);
 
   const handleEdit = useCallback((doc: Document) => setEditingDocument(doc), []);
-  const handleUploadSuccess = useCallback(() => { void refetch(); setIsUploadOpen(false); }, [refetch]);
+  const handleUploadSuccess = useCallback(() => {
+    void qc.invalidateQueries({ queryKey: hrDocumentListPrefix });
+    setIsUploadOpen(false);
+  }, [qc]);
   const handleEditSheetChange = useCallback((open: boolean) => { if (!open) setEditingDocument(null); }, []);
   const handleSendForSignature = useCallback((doc: Document) => setSignatureDocument(doc), []);
   const handleSignatureDialogChange = useCallback((open: boolean) => { if (!open) setSignatureDocument(null); }, []);
@@ -255,6 +270,7 @@ export default function DocumentsPage() {
     <div className="flex items-center gap-2">
       <div className="rounded-lg border border-border p-1 flex items-center gap-0.5">
         <button
+          type="button"
           onClick={handleViewList}
           className={cn(
             "h-7 w-7 rounded-md flex items-center justify-center transition-colors duration-200",
@@ -267,6 +283,7 @@ export default function DocumentsPage() {
           <List className="h-3.5 w-3.5" />
         </button>
         <button
+          type="button"
           onClick={handleViewGrid}
           className={cn(
             "h-7 w-7 rounded-md flex items-center justify-center transition-colors duration-200",
@@ -328,7 +345,7 @@ export default function DocumentsPage() {
     >
       <div className="flex flex-1 min-h-0 flex-col gap-4">
         <StatCardGrid cols={4}>
-          <StatCard label="Total Documents" value={documents.length} icon={FileText} color="blue" />
+          <StatCard label="Total Documents" value={totalDocuments} icon={FileText} color="blue" />
           <StatCard label="Folders" value={folders.length + customFolders.length} icon={FolderOpen} color="amber" />
           <StatCard
             label={`Storage (${maxStorageGB}GB)`}
@@ -453,24 +470,29 @@ function RichDocumentRow({ doc, onDelete, isDeletePending }: RichDocumentRowProp
             <Pencil className="h-3.5 w-3.5" />
           </Link>
         </Button>
-        <Button
+        <LoadingButton
           variant="ghost"
           size="icon"
           className="w-7 text-muted-foreground hover:text-rose-600"
           onClick={handleDelete}
-          disabled={isDeletePending}
+          isPending={isDeletePending}
           aria-label="Delete document"
         >
-          <Trash2 className="h-3.5 w-3.5" />
-        </Button>
+          {!isDeletePending && <Trash2 className="h-3.5 w-3.5" />}
+        </LoadingButton>
       </div>
     </div>
   );
 }
 
 function RichDocumentsSection() {
-  const { data: richDocs, isLoading } = useRichDocuments();
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useRichDocuments({ page, limit: 20 });
   const deleteMutation = useDeleteRichDocument();
+
+  const richDocs = data?.data ?? [];
+  const total = data?.pagination.total ?? 0;
+  const totalPages = data?.pagination.totalPages ?? 1;
 
   const handleDelete = useCallback((id: number) => {
     deleteMutation.mutate(id, {
@@ -478,6 +500,14 @@ function RichDocumentsSection() {
       onError: (e) => toast.error(getErrorMessage(e)),
     });
   }, [deleteMutation]);
+
+  const handlePrevPage = useCallback(() => {
+    setPage((prev) => Math.max(1, prev - 1));
+  }, []);
+
+  const handleNextPage = useCallback(() => {
+    setPage((prev) => prev + 1);
+  }, []);
 
   if (isLoading) {
     return (
@@ -497,7 +527,7 @@ function RichDocumentsSection() {
     );
   }
 
-  if (!richDocs?.length) return null;
+  if (richDocs.length === 0) return null;
 
   return (
     <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
@@ -510,7 +540,7 @@ function RichDocumentsSection() {
             <h3 className="text-sm font-semibold text-foreground">Created Documents</h3>
           </div>
           <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border">
-            {richDocs.length}
+            {total}
           </span>
         </div>
         <div className="space-y-1.5">
@@ -523,6 +553,33 @@ function RichDocumentsSection() {
             />
           ))}
         </div>
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between pt-3">
+            <span className="text-[11px] text-muted-foreground">
+              Page {page} of {totalPages}
+            </span>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs"
+                disabled={page <= 1}
+                onClick={handlePrevPage}
+              >
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs"
+                disabled={page >= totalPages}
+                onClick={handleNextPage}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -530,8 +587,8 @@ function RichDocumentsSection() {
 
 function DocumentsExtendedSection() {
   const { data: letters = [], isLoading: lettersLoading } = useLetters();
-  const { data: expiringCerts = [], isLoading: certsLoading } = useCertifications({ expiringSoon: true });
-  const { data: allDocs = [], isLoading: docsLoading } = useHrDocuments();
+  const { data: allDocsPage, isLoading: docsLoading } = useHrDocumentList({ limit: 100 });
+  const allDocs = allDocsPage?.data ?? [];
 
   const expiringDocs = allDocs.filter(
     (d) => d.expiryDate && new Date(d.expiryDate) <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
@@ -569,15 +626,8 @@ function DocumentsExtendedSection() {
                 expiryDate: d.expiryDate ?? "",
                 userId: d.userId ?? null,
               }))}
-              expiringCertifications={expiringCerts
-                .filter((c) => !!c.expiryDate)
-                .map((c) => ({
-                  id: c.id,
-                  name: c.name,
-                  expiryDate: c.expiryDate!,
-                  user: c.user,
-                }))}
-              isLoading={docsLoading || certsLoading}
+              expiringCertifications={[]}
+              isLoading={docsLoading}
             />
           </TabsContent>
 

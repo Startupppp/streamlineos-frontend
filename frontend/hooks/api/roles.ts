@@ -82,6 +82,18 @@ export function useRoleTemplates() {
   });
 }
 
+export function useSeedDefaultRoles() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["roles", "seed-defaults"],
+    mutationFn: () =>
+      apiClient.post<{ created: string[]; skipped: string[] }>("/roles/seed-defaults"),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.roles.all });
+    },
+  });
+}
+
 export function useCloneRoleTemplate() {
   const queryClient = useQueryClient();
   return useMutation<Role, Error, { templateId: string; name?: string; slug?: string }>({
@@ -210,6 +222,22 @@ export function useRolesAnalytics(
     queryKey: queryKeys.roles.analytics(),
     queryFn: () => apiClient.get<RolesAnalytics>("/roles/analytics"),
     staleTime: 2 * 60_000,
+    ...options,
+  });
+}
+
+export interface AssignableDepartment {
+  id: number;
+  name: string;
+}
+
+export function useAssignableDepartments(
+  options?: Omit<UseQueryOptions<AssignableDepartment[], Error>, "queryKey" | "queryFn">
+) {
+  return useQuery<AssignableDepartment[], Error>({
+    queryKey: queryKeys.roles.departments(),
+    queryFn: () => apiClient.get<AssignableDepartment[]>("/roles/departments"),
+    staleTime: 5 * 60_000,
     ...options,
   });
 }

@@ -10,9 +10,8 @@ import {
   SheetDescription,
   SheetBody,
 } from "@/components/ui/sheet";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { useHrAutomationRuns } from "@/hooks/api/hr/hr-automations";
 import type { HrAutomationRun, HrAutomationRunStatus } from "@/types/hr/automations";
 import { ChevronDown, ChevronRight } from "lucide-react";
@@ -34,9 +33,10 @@ function RunRow({ run }: { run: HrAutomationRun }) {
 
   return (
     <div className="border border-border rounded-lg overflow-hidden">
-      <button
+      <Button
         type="button"
-        className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-muted/50 transition-colors"
+        variant="ghost"
+        className="h-auto w-full items-center justify-start gap-3 rounded-none px-3 py-2.5 text-left text-sm font-normal hover:bg-muted/50"
         onClick={handleToggle}
         aria-expanded={expanded}
       >
@@ -58,7 +58,7 @@ function RunRow({ run }: { run: HrAutomationRun }) {
         <span className="text-[10px] text-muted-foreground shrink-0">
           {format(new Date(run.createdAt), "MMM d, HH:mm:ss")}
         </span>
-      </button>
+      </Button>
 
       {expanded && (
         <div className="px-3 pb-3 pt-1 border-t border-border space-y-2">

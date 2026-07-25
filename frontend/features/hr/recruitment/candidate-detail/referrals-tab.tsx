@@ -28,9 +28,9 @@ interface MarkPaidButtonProps {
 function MarkPaidButton({ referralId, isPending, onMarkPaid }: MarkPaidButtonProps) {
   function handleClick() { onMarkPaid(referralId); }
   return (
-    <Button size="sm" variant="outline" className="text-xs" onClick={handleClick} disabled={isPending}>
-      Mark paid
-    </Button>
+    <LoadingButton size="sm" variant="outline" className="text-xs" onClick={handleClick} isPending={isPending} loadingText="Marking…">
+      Mark Paid
+    </LoadingButton>
   );
 }
 

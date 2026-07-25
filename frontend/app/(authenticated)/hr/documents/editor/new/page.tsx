@@ -5,7 +5,6 @@ import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useCreateRichDocument } from "@/hooks/api/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import {
@@ -24,13 +23,11 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import {
-  ArrowLeft,
   FileText,
   FileCheck,
   FileClock,
   FileKey,
 } from "lucide-react";
-import Link from "next/link";
 
 const TEMPLATES = [
   {
@@ -350,14 +347,7 @@ export default function NewDocumentPage() {
     <PageWrapper
       title="Create Document"
       subtitle="Choose a template and start writing"
-      actions={
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/hr/documents">
-            <ArrowLeft className="mr-1 h-4 w-4" />
-            Back
-          </Link>
-        </Button>
-      }
+      backHref="/hr/documents"
     >
       <div className="w-full">
         <div className="grid gap-4 lg:grid-cols-3 xl:gap-5">

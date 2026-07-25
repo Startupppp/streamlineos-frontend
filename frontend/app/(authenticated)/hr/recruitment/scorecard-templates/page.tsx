@@ -5,6 +5,9 @@ import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -85,7 +88,9 @@ function CriterionRow({ criterion, onUpdate, onRemove, canRemove }: CriterionRow
           onChange={handleWeightChange}
         />
       </div>
-      <Button
+      <AnimatedIconButton
+        icon={Trash2Icon}
+        iconSize={14}
         variant="ghost"
         size="icon"
         className={cn("w-7 text-destructive opacity-0 group-hover:opacity-100 transition-opacity", !canRemove && "invisible")}
@@ -93,12 +98,7 @@ function CriterionRow({ criterion, onUpdate, onRemove, canRemove }: CriterionRow
         aria-label="Remove criterion"
         disabled={!canRemove}
         type="button"
-      >
-        <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6M14 11v6" />
-          <path d="M9 6V4h6v2" />
-        </svg>
-      </Button>
+      />
     </div>
   );
 }
@@ -205,18 +205,17 @@ function TemplateSheet({ open, onClose, editTemplate }: TemplateSheetProps) {
                 />
               ))}
             </div>
-            <Button
+            <AnimatedIconButton
+              icon={PlusIcon}
+              iconSize={14}
               variant="outline"
               size="sm"
               className="w-full border-dashed"
               onClick={handleAdd}
               type="button"
             >
-              <svg className="h-3.5 w-3.5 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-              </svg>
               Add Criterion
-            </Button>
+            </AnimatedIconButton>
           </div>
         </SheetBody>
         <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
@@ -263,23 +262,17 @@ function TemplateCard({ template, onEdit, onDelete }: TemplateCardProps) {
             onClick={handleEdit}
             aria-label="Edit template"
           >
-            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-            </svg>
+            <Pencil className="h-3.5 w-3.5" />
           </Button>
-          <Button
+          <AnimatedIconButton
+            icon={Trash2Icon}
+            iconSize={14}
             variant="ghost"
             size="icon"
             className="w-7 text-destructive hover:text-destructive"
             onClick={handleDelete}
             aria-label="Delete template"
-          >
-            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14H6L5 6" />
-              <path d="M10 11v6M14 11v6" /><path d="M9 6V4h6v2" />
-            </svg>
-          </Button>
+          />
         </div>
       </CardHeader>
       <CardContent className="p-4 pt-2">
@@ -341,12 +334,9 @@ export default function ScorecardTemplatesPage() {
         title="Scorecard Templates"
         subtitle="Define evaluation criteria for each interview round"
         actions={
-          <Button size="sm" onClick={handleOpenCreate}>
-            <svg className="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
+          <AnimatedIconButton icon={PlusIcon} iconSize={16} size="sm" onClick={handleOpenCreate}>
             New Template
-          </Button>
+          </AnimatedIconButton>
         }
       >
         <div className="flex flex-1 min-h-0 flex-col">

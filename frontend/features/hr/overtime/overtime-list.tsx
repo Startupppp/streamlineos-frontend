@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/api-client";
@@ -20,8 +20,12 @@ const STATUS_VARIANTS: Record<string, "default" | "secondary" | "destructive" | 
   REJECTED: "destructive",
 };
 
+const PAGE_SIZE = 20;
+
 export function OvertimeList({ canManage }: Props) {
-  const { data: requests, isLoading } = useOvertimeRequests();
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useOvertimeRequests({ page, pageSize: PAGE_SIZE });
+  const requests = data?.items;
   const approve = useApproveOvertime();
   const reject = useRejectOvertime();
 
@@ -93,24 +97,26 @@ export function OvertimeList({ canManage }: Props) {
         cell: (req): ReactNode =>
           req.status === "PENDING" ? (
             <div className="flex items-center gap-2">
-              <Button
+              <LoadingButton
                 size="sm"
                 variant="outline"
                 className="text-xs"
                 onClick={() => handleApprove(req.id)}
-                disabled={approve.isPending || reject.isPending}
+                disabled={reject.isPending}
+                isPending={approve.isPending}
               >
                 Approve
-              </Button>
-              <Button
+              </LoadingButton>
+              <LoadingButton
                 size="sm"
                 variant="outline"
                 className="text-xs text-destructive hover:text-destructive"
                 onClick={() => handleReject(req.id)}
-                disabled={approve.isPending || reject.isPending}
+                disabled={approve.isPending}
+                isPending={reject.isPending}
               >
                 Reject
-              </Button>
+              </LoadingButton>
             </div>
           ) : null,
       });
@@ -125,6 +131,13 @@ export function OvertimeList({ canManage }: Props) {
       columns={columns}
       getRowKey={(req) => req.id}
       isLoading={isLoading}
+      pagination={{
+        mode: "server",
+        page,
+        pageSize: PAGE_SIZE,
+        total: data?.total ?? 0,
+        onPageChange: setPage,
+      }}
       emptyState={
         <EmptyState
           illustrationPreset="approval"

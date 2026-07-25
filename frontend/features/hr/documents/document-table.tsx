@@ -460,6 +460,7 @@ export function DocumentTable({
         label: "Upload Document",
         onClick: onOpenUpload,
       }}
+      actionVariant="outline"
     />
   );
 
@@ -491,6 +492,7 @@ export function DocumentTable({
             {folders.map((folder) => (
               <button
                 key={folder.name}
+                type="button"
                 className="flex items-center gap-2.5 p-2.5 rounded-xl border border-border bg-card hover:bg-muted/40 transition-colors duration-200 text-left"
               >
                 <div

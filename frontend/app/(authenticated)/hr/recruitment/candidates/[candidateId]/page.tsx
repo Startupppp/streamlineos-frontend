@@ -26,7 +26,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ErrorState } from "@/components/shared/error-state";
 import { toast } from "sonner";
 import {
-  ArrowLeft,
   Briefcase,
   Calendar,
   FileText,
@@ -225,6 +224,7 @@ export default function CandidateDetailPage() {
 
   const handleInterviewOpen = useCallback(() => setInterviewOpen(true), []);
   const handleApplyOpen = useCallback(() => setApplyOpen(true), []);
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   const displayAiScore: AiScoreResult | null = useMemo(() => {
     if (latestAiScore) return latestAiScore;
@@ -264,7 +264,7 @@ export default function CandidateDetailPage() {
         <ErrorState
           title="Unable to load candidate"
           description="This candidate may no longer exist, or you do not have permission to view them. Try again."
-          onRetry={() => void refetch()}
+          onRetry={handleRetry}
         />
       </PageWrapper>
     );
@@ -296,14 +296,9 @@ export default function CandidateDetailPage() {
           ? `${candidate.currentRole}${candidate.currentCompany ? ` at ${candidate.currentCompany}` : ""}`
           : undefined
       }
+      backHref="/hr/recruitment/candidates"
       actions={
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/hr/recruitment/candidates">
-              <ArrowLeft className="mr-1 h-3.5 w-3.5" />
-              Back
-            </Link>
-          </Button>
           <Button size="sm" onClick={handleInterviewOpen}>
             Schedule Interview
           </Button>

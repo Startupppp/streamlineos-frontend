@@ -4,7 +4,6 @@ import { useState, useCallback } from "react";
 import { Shield } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PlusIcon } from "@animateicons/react/lucide";
-import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -182,26 +181,26 @@ export function AccessRequestsTab({ employees, canManage }: AccessRequestsTabPro
                     {meta.label}
                   </span>
                   {canManage && req.status === "requested" && (
-                    <Button
+                    <LoadingButton
                       size="sm"
                       variant="outline"
                       className="h-6 text-[10px] px-2"
                       onClick={() => handleGrant(req.id)}
-                      disabled={updateMutation.isPending}
+                      isPending={updateMutation.isPending}
                     >
                       Grant
-                    </Button>
+                    </LoadingButton>
                   )}
                   {canManage && req.status === "granted" && (
-                    <Button
+                    <LoadingButton
                       size="sm"
                       variant="outline"
                       className="h-6 text-[10px] px-2 text-destructive border-destructive/30 hover:bg-destructive/10"
                       onClick={() => handleRevoke(req.id)}
-                      disabled={updateMutation.isPending}
+                      isPending={updateMutation.isPending}
                     >
                       Revoke
-                    </Button>
+                    </LoadingButton>
                   )}
                 </div>
               </div>

@@ -1,11 +1,9 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import {
-  ArrowLeft,
   Download,
   Send,
   Check,
@@ -128,6 +126,7 @@ function InvoiceDetailSkeleton() {
     <PageWrapper
       title="Invoice"
       badge={<Skeleton className="h-4 w-14" />}
+      backHref="/billing/invoices"
       actions={
         <div className="flex items-center gap-2">
           <Skeleton className="h-8 w-20 rounded-md" />
@@ -339,7 +338,7 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
 
   if (error || !invoice) {
     return (
-      <PageWrapper title="Invoice">
+      <PageWrapper title="Invoice" backHref="/billing/invoices">
         <ErrorState
           title={error ? "Failed to load invoice" : "Invoice not found"}
           description={
@@ -371,6 +370,7 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
           {badge.label}
         </span>
       }
+      backHref="/billing/invoices"
       actions={
         <div className="flex items-center gap-2 flex-wrap">
           {invoice.status === "DRAFT" && (
@@ -456,12 +456,6 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
-
-          <Link href="/billing/invoices">
-            <Button size="sm" variant="ghost">
-              <ArrowLeft className="h-3.5 w-3.5 mr-1.5" /> Back
-            </Button>
-          </Link>
         </div>
       }
     >

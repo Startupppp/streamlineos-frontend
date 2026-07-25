@@ -94,13 +94,14 @@ export function DevicesTable({ canManage, onAdd, onEdit }: Props) {
             header: "",
             cell: (r) => canManage ? (
               <div className="flex items-center gap-1 justify-end">
-                <Button variant="ghost" size="icon" className="w-7" onClick={(e) => { e.stopPropagation(); onEdit(r); }}>
+                <Button variant="ghost" size="icon" className="w-7" aria-label={`Edit ${r.name}`} onClick={(e) => { e.stopPropagation(); onEdit(r); }}>
                   <Edit2 className="h-3.5 w-3.5" />
                 </Button>
                 <LoadingButton
                   variant="ghost"
                   size="icon"
                   className="w-7 text-red-500 hover:text-red-600"
+                  aria-label={`Delete ${r.name}`}
                   isPending={deletingId === r.id}
                   onClick={(e) => { e.stopPropagation(); handleDelete(r); }}
                 >

@@ -206,24 +206,24 @@ function ExternalReferralCard({ referral, onStatusChange, onMarkReward, isUpdati
           </div>
           <div className="flex items-center gap-2 shrink-0">
             {referral.status === "SUBMITTED" && (
-              <Button variant="outline" size="sm" onClick={handleStartReview} disabled={isUpdating}>
+              <LoadingButton variant="outline" size="sm" onClick={handleStartReview} isPending={isUpdating}>
                 Start Review
-              </Button>
+              </LoadingButton>
             )}
             {referral.status === "REVIEWING" && (
               <>
-                <Button variant="outline" size="sm" onClick={handleMarkHired} disabled={isUpdating}>
+                <LoadingButton variant="outline" size="sm" onClick={handleMarkHired} isPending={isUpdating}>
                   Mark Hired
-                </Button>
-                <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={handleReject} disabled={isUpdating}>
+                </LoadingButton>
+                <LoadingButton variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={handleReject} isPending={isUpdating}>
                   Reject
-                </Button>
+                </LoadingButton>
               </>
             )}
             {referral.status === "HIRED" && (
-              <Button variant="outline" size="sm" onClick={handleRewardPending} disabled={isUpdating}>
+              <LoadingButton variant="outline" size="sm" onClick={handleRewardPending} isPending={isUpdating}>
                 Queue Reward
-              </Button>
+              </LoadingButton>
             )}
             {referral.status === "REWARD_PENDING" && (
               <Button size="sm" onClick={handleMarkReward}>

@@ -2,10 +2,9 @@
 
 import { use, useState, useCallback } from "react";
 import Link from "next/link";
-import { ChevronLeft, Receipt, Wallet, AlertCircle } from "lucide-react";
+import { Receipt, Wallet, AlertCircle } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { LoadingState, ErrorState } from "@/components/shared";
@@ -168,14 +167,7 @@ export default function CustomerLedgerDetailPage({
         (clientId > 0 ? "Customer ledger" : "Invalid customer")
       }
       subtitle={subtitle}
-      actions={
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/accounting/customers">
-            <ChevronLeft className="mr-1 h-4 w-4" />
-            Back
-          </Link>
-        </Button>
-      }
+      backHref="/accounting/customers"
     >
       <div className="space-y-6">
         <StatCardGrid cols={3}>

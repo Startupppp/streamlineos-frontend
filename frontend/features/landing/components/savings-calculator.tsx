@@ -29,7 +29,10 @@ export function SavingsCalculator() {
   );
   const vsStack = useMemo(() => calculateSavingsVsStack(seats), [seats]);
 
-  const startupAnnual = PRICING_TIERS[1].annual ?? 399;
+  const starterAnnual =
+    PRICING_TIERS.find((t) => t.id === "starter")?.annual ??
+    PRICING_TIERS[1].annual ??
+    0;
 
   return (
     <div className="rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-6 md:p-8 shadow-sm min-w-0">
@@ -93,8 +96,8 @@ export function SavingsCalculator() {
           amount={INR(vsAllInOne.competitorAnnual)}
         />
         <ComparisonCard
-          label="StreamlineOS Startup"
-          subtitle={`${INR(startupAnnual)} × ${seats} × 12 mo`}
+          label="StreamlineOS Starter"
+          subtitle={`${INR(starterAnnual)} / mo × 12 (org plan)`}
           amount={INR(vsAllInOne.streamlineAnnual)}
           highlight
         />

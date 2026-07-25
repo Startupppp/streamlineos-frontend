@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo } from "react";
 import { useHrSlaReport } from "@/hooks/api/hr/recruitment";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -9,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, AlertTriangle, TrendingUp, AlertCircle } from "lucide-react";
+import { AlertTriangle, TrendingUp, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
@@ -132,14 +131,8 @@ export default function SlaReportPage() {
     <PageWrapper
       title="SLA Breach Report"
       subtitle="Monthly % of candidates who breached SLA per recruitment stage"
-      actions={
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/hr/recruitment/sla">
-            <ArrowLeft className="mr-1 h-3.5 w-3.5" />
-            SLA Config
-          </Link>
-        </Button>
-      }
+      backHref="/hr/recruitment/sla"
+      backLabel="SLA Config"
     >
       {isLoading ? (
         <div className="flex flex-1 min-h-0 flex-col gap-4">

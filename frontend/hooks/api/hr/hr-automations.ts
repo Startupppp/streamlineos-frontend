@@ -97,17 +97,19 @@ export function useToggleHrAutomation() {
     mutationFn: ({ id, isEnabled }: { id: number; isEnabled: boolean }) =>
       apiClient.post<HrAutomationRule>(`/hr/automations/${id}/toggle`, { isEnabled }),
     onMutate: async ({ id, isEnabled }) => {
-      await qc.cancelQueries({ queryKey: hrAutomationKeys.list() });
-      const previous = qc.getQueryData<HrAutomationRule[]>(hrAutomationKeys.list());
-      if (previous) {
-        qc.setQueryData<HrAutomationRule[]>(hrAutomationKeys.list(), (old) =>
-          (old ?? []).map((r) => (r.id === id ? { ...r, isEnabled } : r)),
-        );
-      }
+      await qc.cancelQueries({ queryKey: hrAutomationKeys.all });
+      const previous = qc.getQueriesData<HrAutomationRule[]>({ queryKey: hrAutomationKeys.all });
+      qc.setQueriesData<HrAutomationRule[]>({ queryKey: hrAutomationKeys.all }, (old) =>
+        Array.isArray(old)
+          ? old.map((r) => (r.id === id ? { ...r, isEnabled } : r))
+          : old,
+      );
       return { previous };
     },
     onError: (_err, _vars, ctx) => {
-      if (ctx?.previous) qc.setQueryData(hrAutomationKeys.list(), ctx.previous);
+      for (const [key, data] of ctx?.previous ?? []) {
+        qc.setQueryData(key, data);
+      }
     },
     onSettled: () => qc.invalidateQueries({ queryKey: hrAutomationKeys.all }),
   });

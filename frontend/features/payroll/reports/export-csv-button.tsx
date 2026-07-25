@@ -1,7 +1,7 @@
 "use client";
 
-import { Download, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
+import { LoadingButton } from "@/components/ui/loading-button";
 
 interface ExportCsvButtonProps {
   onExport: () => void;
@@ -11,19 +11,16 @@ interface ExportCsvButtonProps {
 
 export function ExportCsvButton({ onExport, isLoading, disabled }: ExportCsvButtonProps) {
   return (
-    <Button
+    <LoadingButton
       variant="outline"
       size="sm"
       onClick={onExport}
-      disabled={disabled ?? isLoading}
+      disabled={disabled}
+      isPending={isLoading}
       className="gap-1.5 text-xs"
     >
-      {isLoading ? (
-        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-      ) : (
-        <Download className="h-3.5 w-3.5" />
-      )}
+      <Download className="h-3.5 w-3.5" />
       Export CSV
-    </Button>
+    </LoadingButton>
   );
 }

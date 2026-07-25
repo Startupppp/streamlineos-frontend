@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 
 type NavButtonsProps = {
@@ -36,14 +37,15 @@ export function NavButtons({
         <div />
       )}
       {onNext && (
-        <Button
+        <LoadingButton
           onClick={onNext}
-          disabled={disableNext || isLoading}
+          disabled={disableNext}
+          isPending={isLoading}
           className="gap-1.5"
         >
           {nextLabel}
           {nextLabel === "Continue" && <ArrowRight className="h-3.5 w-3.5" />}
-        </Button>
+        </LoadingButton>
       )}
     </div>
   );

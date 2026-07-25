@@ -144,7 +144,7 @@ export interface DiversityReport {
 export interface DiversityFilters {
   from: string;
   to: string;
-  departmentIds: number[];
+  departmentIds: string[];
 }
 
 export function useDiversityReport(filters: DiversityFilters) {

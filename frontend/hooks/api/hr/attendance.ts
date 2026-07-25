@@ -13,7 +13,8 @@ import type {
   UpsertWorkLogInput,
   UpdateWorkLogStatusInput,
   GetWorkLogsInput,
-  TeamAttendanceEntry,
+  TeamAttendanceStatusQuery,
+  TeamAttendanceStatusResponse,
 } from "@/types/hr";
 
 export function useHrAttendanceStatus(
@@ -243,12 +244,17 @@ export function useUpdateWorkLogStatus(
   });
 }
 
-export function useHrTeamAttendanceStatus() {
+export function useHrTeamAttendanceStatus(params?: TeamAttendanceStatusQuery) {
   return useQuery({
-    queryKey: [...queryKeys.hr.all, "team-attendance-status"] as const,
-    queryFn: () => apiClient.get<TeamAttendanceEntry[]>("/hr/attendance/team-status"),
+    queryKey: [...queryKeys.hr.all, "team-attendance-status", params ?? {}] as const,
+    queryFn: () =>
+      apiClient.get<TeamAttendanceStatusResponse>(
+        "/hr/attendance/team-status",
+        params as Record<string, unknown> | undefined,
+      ),
     staleTime: 65_000,
     refetchInterval: 60_000,
+    placeholderData: (prev) => prev,
   });
 }
 

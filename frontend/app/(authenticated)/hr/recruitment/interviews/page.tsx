@@ -2,24 +2,25 @@
 
 import { useState, useMemo, useCallback } from "react";
 import Link from "next/link";
-import { useInterviews } from "@/hooks/api/hr";
+import { useInterviews, useInterviewStats } from "@/hooks/api/hr";
 import type { Interview } from "@/types/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { ViewToggle, type ViewOption } from "@/components/ui/view-toggle";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import {
   Settings,
   List,
   CalendarDays,
-  ChevronLeft,
-  ChevronRight,
+  CalendarRange,
   CalendarClock,
   BarChart2,
   CheckCircle2,
   XCircle,
-  Plus,
 } from "lucide-react";
+import { ChevronLeftIcon, ChevronRightIcon, PlusIcon } from "@animateicons/react/lucide";
 import dynamic from "next/dynamic";
 import type {
   BigCalEvent,
@@ -43,13 +44,27 @@ import {
 import { InterviewFeedbackForm } from "@/features/hr/recruitment/interview-feedback-form";
 import { InterviewList } from "@/features/hr/recruitment/interviews/interview-list";
 import { InterviewFormSheet } from "@/features/hr/recruitment/interviews/interview-form-sheet";
-import { cn } from "@/lib/utils";
 import { ErrorState } from "@/components/shared/error-state";
+
+type PageViewMode = "list" | "calendar";
+
+const PAGE_VIEW_OPTIONS: ViewOption<PageViewMode>[] = [
+  { value: "list", icon: List, label: "List View" },
+  { value: "calendar", icon: CalendarDays, label: "Calendar View" },
+];
+
+type CalSubView = "month" | "week";
+
+const CAL_SUB_VIEW_OPTIONS: ViewOption<CalSubView>[] = [
+  { value: "month", icon: CalendarDays, label: "Month" },
+  { value: "week", icon: CalendarRange, label: "Week" },
+];
 
 export default function InterviewsPage() {
   const { data: interviews, isLoading, isError, refetch } = useInterviews({
     pageSize: 100,
   });
+  const { data: stats } = useInterviewStats();
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [feedbackInterview, setFeedbackInterview] = useState<Interview | null>(
@@ -59,12 +74,12 @@ export default function InterviewsPage() {
   const [calView, setCalView] = useState<View>("month");
   const [calDate, setCalDate] = useState(new Date());
 
-  const interviewStats = useMemo(() => ({
-    total: interviews?.length ?? 0,
-    pending: interviews?.filter((i) => i.result === "PENDING").length ?? 0,
-    passed: interviews?.filter((i) => i.result === "PASSED").length ?? 0,
-    failed: interviews?.filter((i) => i.result === "FAILED").length ?? 0,
-  }), [interviews]);
+  const interviewStats = {
+    total: stats?.total ?? 0,
+    pending: stats?.pending ?? 0,
+    passed: stats?.passed ?? 0,
+    failed: stats?.failed ?? 0,
+  };
 
   const calEvents = useMemo(
     () =>
@@ -109,11 +124,7 @@ export default function InterviewsPage() {
     if (!open) setFeedbackInterview(null);
   }, []);
 
-  const handlePageViewList = useCallback(() => setPageView("list"), []);
-  const handlePageViewCalendar = useCallback(() => setPageView("calendar"), []);
   const handleOpenSchedule = useCallback(() => setSheetOpen(true), []);
-  const handleMonthView = useCallback(() => setCalView("month"), []);
-  const handleWeekView = useCallback(() => setCalView("week"), []);
 
   if (isError) {
     return (
@@ -149,32 +160,36 @@ export default function InterviewsPage() {
     <PageWrapper
       title="Interviews"
       subtitle={subtitle}
+      backHref="/hr/recruitment"
       actions={
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/hr/recruitment">Back</Link>
-          </Button>
           <Button variant="outline" size="sm" asChild>
             <Link href="/hr/recruitment/interviewer-performance">
-              <BarChart2 className="mr-1.5 h-3.5 w-3.5" />
-              Performance
+              <BarChart2 className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Performance</span>
             </Link>
           </Button>
           <Button variant="outline" size="sm" asChild>
             <Link href="/hr/recruitment/sla-report">
-              <CalendarClock className="mr-1.5 h-3.5 w-3.5" />
-              SLA Report
+              <CalendarClock className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">SLA Report</span>
             </Link>
           </Button>
           <Button variant="outline" size="sm" asChild>
             <Link href="/hr/recruitment/sla">
-              <Settings className="mr-1.5 h-3.5 w-3.5" />
-              SLA Config
+              <Settings className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">SLA Config</span>
             </Link>
           </Button>
-          <Button size="sm" className="gap-1.5" onClick={handleOpenSchedule}>
-            <Plus className="h-4 w-4" /> Schedule
-          </Button>
+          <AnimatedIconButton
+            icon={PlusIcon}
+            iconSize={16}
+            size="sm"
+            className="gap-1.5"
+            onClick={handleOpenSchedule}
+          >
+            <span className="hidden sm:inline">Schedule</span>
+          </AnimatedIconButton>
           <InterviewFormSheet open={sheetOpen} onOpenChange={setSheetOpen} />
         </div>
       }
@@ -188,75 +203,43 @@ export default function InterviewsPage() {
       </StatCardGrid>
 
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1 rounded-lg border p-1">
-          <button
-            className={cn(
-              "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
-              pageView === "list"
-                ? "bg-primary text-primary-foreground"
-                : "hover:bg-muted",
-            )}
-            onClick={handlePageViewList}
-          >
-            <List className="h-3.5 w-3.5" />
-            List
-          </button>
-          <button
-            className={cn(
-              "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
-              pageView === "calendar"
-                ? "bg-primary text-primary-foreground"
-                : "hover:bg-muted",
-            )}
-            onClick={handlePageViewCalendar}
-          >
-            <CalendarDays className="h-3.5 w-3.5" />
-            Calendar
-          </button>
-        </div>
+        <ViewToggle<PageViewMode>
+          value={pageView}
+          options={PAGE_VIEW_OPTIONS}
+          onChange={setPageView}
+          showLabel
+        />
         {pageView === "calendar" && (
           <div className="flex items-center gap-2">
-            <button
+            <AnimatedIconButton
+              icon={ChevronLeftIcon}
+              iconSize={16}
+              variant="outline"
+              size="icon"
+              className="h-7 w-7"
+              aria-label="Previous"
               onClick={handleCalNavigatePrev}
-              className="rounded-md border p-1 hover:bg-muted"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
+            />
             <span className="text-sm font-medium tabular-nums min-w-[120px] text-center">
               {calView === "month"
                 ? fmtDate(calDate, "MMMM yyyy")
                 : `Week of ${fmtDate(calDate, "MMM d")}`}
             </span>
-            <button
+            <AnimatedIconButton
+              icon={ChevronRightIcon}
+              iconSize={16}
+              variant="outline"
+              size="icon"
+              className="h-7 w-7"
+              aria-label="Next"
               onClick={handleCalNavigateNext}
-              className="rounded-md border p-1 hover:bg-muted"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-            <div className="flex items-center gap-1 rounded-lg border p-1">
-              <button
-                className={cn(
-                  "rounded px-2 py-0.5 text-xs capitalize",
-                  calView === "month"
-                    ? "bg-primary text-primary-foreground"
-                    : "hover:bg-muted",
-                )}
-                onClick={handleMonthView}
-              >
-                month
-              </button>
-              <button
-                className={cn(
-                  "rounded px-2 py-0.5 text-xs capitalize",
-                  calView === "week"
-                    ? "bg-primary text-primary-foreground"
-                    : "hover:bg-muted",
-                )}
-                onClick={handleWeekView}
-              >
-                week
-              </button>
-            </div>
+            />
+            <ViewToggle<CalSubView>
+              value={calView === "week" ? "week" : "month"}
+              options={CAL_SUB_VIEW_OPTIONS}
+              onChange={setCalView}
+              showLabel
+            />
           </div>
         )}
       </div>

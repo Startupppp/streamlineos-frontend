@@ -5,6 +5,8 @@ import { useOfferTemplates, useCreateOfferTemplate, useUpdateOfferTemplate, useD
 import type { OfferLetterTemplate } from "@/hooks/api/hr/recruitment/offer-templates";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -20,16 +22,7 @@ import {
   SheetDescription,
   SheetBody,
 } from "@/components/ui/sheet";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
@@ -37,6 +30,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { format } from "date-fns";
+import { Pencil } from "lucide-react";
+import { PlusIcon, TrashIcon, DownloadIcon } from "@animateicons/react/lucide";
 import { ErrorState } from "@/components/shared/error-state";
 
 const DEFAULT_TEMPLATE = `<h1>Offer Letter</h1>
@@ -260,19 +255,7 @@ function PreviewSheet({ template, onClose }: PreviewSheetProps) {
             Close
           </Button>
           <LoadingButton onClick={handleDownloadPdf} isPending={generatePdf.isPending} loadingText="Generating...">
-            <svg
-              className="h-4 w-4 mr-1.5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
+            <DownloadIcon size={14} />
             Download Sample PDF
           </LoadingButton>
         </SheetFooter>
@@ -314,16 +297,17 @@ function TemplateCard({ template, onPreview, onEdit, onDelete }: TemplateCardPro
             <Button variant="ghost" size="sm" className="px-2 text-xs" onClick={handlePreview}>
               Preview
             </Button>
-            <Button variant="ghost" size="sm" className="w-8 p-0" onClick={handleEdit}>
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-            </Button>
-            <Button variant="ghost" size="sm" className="w-8 p-0 text-destructive hover:text-destructive" onClick={handleDelete}>
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            </Button>
+            <TooltipIconButton label="Edit template" variant="ghost" size="sm" className="w-8" onClick={handleEdit}>
+              <Pencil className="h-4 w-4" />
+            </TooltipIconButton>
+            <TooltipIconButton
+              icon={TrashIcon}
+              label="Delete template"
+              variant="ghost"
+              size="sm"
+              className="w-8 text-destructive hover:text-destructive"
+              onClick={handleDelete}
+            />
           </div>
         </div>
       </CardContent>
@@ -363,22 +347,9 @@ export default function OfferTemplatesPage() {
   function handleConfirmDelete() { if (deletingId !== null) void handleDelete(deletingId); }
 
   const pageActions = (
-    <Button size="sm" onClick={handleOpenCreate}>
-      <svg
-        className="h-4 w-4 mr-1.5"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M12 4v16m8-8H4"
-        />
-      </svg>
+    <AnimatedIconButton icon={PlusIcon} iconSize={14} size="sm" onClick={handleOpenCreate}>
       New Template
-    </Button>
+    </AnimatedIconButton>
   );
 
   if (isLoading) {
@@ -463,26 +434,16 @@ export default function OfferTemplatesPage() {
         />
       )}
 
-      <AlertDialog open={deletingId !== null} onOpenChange={handleCloseDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Template</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete this offer letter template.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={handleConfirmDelete}
-              disabled={deleteMutation.isPending}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmSheet
+        open={deletingId !== null}
+        onOpenChange={handleCloseDeleteDialog}
+        title="Delete Template"
+        description="This will permanently delete this offer letter template."
+        confirmLabel="Delete"
+        destructive
+        isPending={deleteMutation.isPending}
+        onConfirm={handleConfirmDelete}
+      />
     </PageWrapper>
   );
 }

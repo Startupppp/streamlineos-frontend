@@ -13,56 +13,27 @@ import {
   useCreateSubscriptionOrder,
   useVerifySubscription,
   useValidateCoupon,
+  useBillingPlans,
   type SubscriptionPlan,
   type BillingCycle,
   type CouponValidationResult,
+  type PlanDefinition,
 } from "@/hooks/api/subscription";
 import { PlanCard } from "@/features/subscription/components/plan-card";
 import { CouponSection } from "@/features/subscription/components/coupon-section";
 import { SeatsBlock } from "@/features/billing/components/seats-block";
 import { PlanUsageMeters } from "@/features/billing/components/plan-usage-meters";
+import { PRICING } from "@/lib/pricing";
 
-
-const PLAN_CONFIG: Record<
-  SubscriptionPlan,
-  { monthlyPrice: number; label: string; features: string[] }
-> = {
-  STARTER: {
-    monthlyPrice: 999,
-    label: "Starter",
-    features: [
-      "Up to 10 employees",
-      "Core HR & Attendance",
-      "Payroll management",
-      "Leave management",
-      "Email support",
-    ],
-  },
-  PROFESSIONAL: {
-    monthlyPrice: 2499,
-    label: "Professional",
-    features: [
-      "Up to 50 employees",
-      "Everything in Starter",
-      "Recruitment module",
-      "Performance & OKRs",
-      "CRM & Sales tools",
-      "Priority support",
-    ],
-  },
-  ENTERPRISE: {
-    monthlyPrice: 4999,
-    label: "Enterprise",
-    features: [
-      "Unlimited employees",
-      "Everything in Professional",
-      "Advanced analytics",
-      "Custom integrations",
-      "Dedicated account manager",
-      "SLA-backed support",
-    ],
-  },
-};
+function planConfigFromDefinition(
+  plan: PlanDefinition,
+): { monthlyPrice: number; label: string; features: string[] } {
+  return {
+    monthlyPrice: plan.monthlyPrice,
+    label: plan.name,
+    features: plan.features,
+  };
+}
 
 const STATUS_BADGE: Record<
   string,
@@ -92,10 +63,23 @@ function PlanTabSkeleton() {
 export function PlanTab() {
   const { data: session } = useSession();
   const { data, isLoading, isError, refetch } = useSubscription();
+  const {
+    data: plansResponse,
+    isLoading: plansLoading,
+    isError: plansError,
+    refetch: refetchPlans,
+  } = useBillingPlans();
   const { mutateAsync: createOrder, isPending: isCreatingOrder } =
     useCreateSubscriptionOrder();
   const { mutateAsync: verifySubscription, isPending: isVerifying } =
     useVerifySubscription();
+
+  const planCatalog = plansResponse?.plans ?? [];
+  const planConfigById = Object.fromEntries(
+    planCatalog.map((p) => [p.id, planConfigFromDefinition(p)]),
+  ) as Partial<
+    Record<SubscriptionPlan, { monthlyPrice: number; label: string; features: string[] }>
+  >;
 
   const [upgradingPlan, setUpgradingPlan] = useState<SubscriptionPlan | null>(null);
   const [billingCycle, setBillingCycle] = useState<BillingCycle>("monthly");
@@ -121,6 +105,11 @@ export function PlanTab() {
 
   function handleRetry() {
     void refetch();
+    void refetchPlans();
+  }
+
+  function planLabel(plan: SubscriptionPlan): string {
+    return planConfigById[plan]?.label ?? plan;
   }
 
   function handleSetMonthly() {
@@ -172,7 +161,7 @@ export function PlanTab() {
           amount: order.amount,
           currency: "INR",
           name: "StreamlineOS",
-          description: `${PLAN_CONFIG[plan].label} Plan – ${billingCycle === "annual" ? "Annual" : "Monthly"}`,
+          description: `${planLabel(plan)} Plan – ${billingCycle === "annual" ? "Annual" : "Monthly"}`,
           prefill: { email: session?.user?.email ?? undefined },
           handler: async (response: RazorpayPaymentResponse) => {
             try {
@@ -183,7 +172,7 @@ export function PlanTab() {
                 plan,
               });
               toast.success(
-                `Upgraded to ${PLAN_CONFIG[plan].label} plan successfully!`,
+                `Upgraded to ${planLabel(plan)} plan successfully!`,
               );
             } catch (err) {
               toast.error(getErrorMessage(err));
@@ -199,7 +188,7 @@ export function PlanTab() {
         setUpgradingPlan(null);
       }
     },
-    [data?.isConfigured, createOrder, verifySubscription, session, billingCycle, appliedCoupon],
+    [data?.isConfigured, createOrder, verifySubscription, session, billingCycle, appliedCoupon, planConfigById],
   );
 
   const [now] = useState(Date.now);
@@ -215,11 +204,11 @@ export function PlanTab() {
       )
     : null;
 
-  if (isLoading) {
+  if (isLoading || plansLoading) {
     return <PlanTabSkeleton />;
   }
 
-  if (isError) {
+  if (isError || plansError) {
     return (
       <ErrorState
         title="Couldn't load subscription"
@@ -237,7 +226,7 @@ export function PlanTab() {
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-foreground">
             {currentPlan
-              ? `Current plan: ${PLAN_CONFIG[currentPlan].label}`
+              ? `Current plan: ${planLabel(currentPlan)}`
               : "No active plan"}
           </p>
           {currentStatus === "TRIAL" && trialEndsAt && (
@@ -308,27 +297,33 @@ export function PlanTab() {
         >
           Annual
           <span className="inline-flex items-center rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
-            Save 20%
+            Save {PRICING.annualDiscountPct}%
           </span>
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {(Object.keys(PLAN_CONFIG) as SubscriptionPlan[]).map((plan) => (
-          <PlanCard
-            key={plan}
-            plan={plan}
-            config={PLAN_CONFIG[plan]}
-            billingCycle={billingCycle}
-            currentPlan={currentPlan}
-            currentStatus={currentStatus}
-            upgradingPlan={upgradingPlan}
-            isBusy={isBusy}
-            isConfigured={data?.isConfigured}
-            onUpgrade={handleUpgrade}
-          />
-        ))}
-      </div>
+      {planCatalog.length === 0 ? (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+          Plan catalog is unavailable. Refresh the page or contact support to upgrade.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {planCatalog.map((plan) => (
+            <PlanCard
+              key={plan.id}
+              plan={plan.id}
+              config={planConfigFromDefinition(plan)}
+              billingCycle={billingCycle}
+              currentPlan={currentPlan}
+              currentStatus={currentStatus}
+              upgradingPlan={upgradingPlan}
+              isBusy={isBusy}
+              isConfigured={data?.isConfigured}
+              onUpgrade={handleUpgrade}
+            />
+          ))}
+        </div>
+      )}
 
       <CouponSection
         couponInput={couponInput}

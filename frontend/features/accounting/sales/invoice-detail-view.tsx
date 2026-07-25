@@ -1,8 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -311,13 +309,8 @@ function getLineItemRowKey(item: IndexedLineItem): number {
 }
 
 export function InvoiceDetailContent({ invoiceId }: InvoiceDetailContentProps) {
-  const router = useRouter();
   const { data: invoice, isLoading, error, refetch } = useInvoice(invoiceId);
   const [paymentOpen, setPaymentOpen] = useState(false);
-
-  function handleBack(): void {
-    router.push("/accounting/invoices");
-  }
 
   function handleRetry(): void {
     void refetch();
@@ -406,10 +399,6 @@ export function InvoiceDetailContent({ invoiceId }: InvoiceDetailContentProps) {
       actions={
         <div className="flex items-center gap-2">
           <InvoiceAiActions invoice={invoice} />
-          <Button variant="outline" size="sm" onClick={handleBack}>
-            <ArrowLeft className="size-3.5 mr-1" />
-            Back
-          </Button>
           {balance > 0 && invoice.status !== "VOIDED" && (
             <Button size="sm" onClick={handleOpenPayment}>
               Record Payment

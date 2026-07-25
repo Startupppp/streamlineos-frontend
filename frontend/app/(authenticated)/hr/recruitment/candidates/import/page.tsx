@@ -4,6 +4,7 @@ import { useState, useCallback, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -350,9 +351,9 @@ export default function BulkImportPage() {
             </div>
             <div className="flex gap-2">
               <Button variant="outline" onClick={handleGoToMap}>Back</Button>
-              <Button onClick={handleImport} disabled={importing}>
-                {importing ? "Importing…" : `Import ${rows.length} Candidates`}
-              </Button>
+              <LoadingButton onClick={handleImport} isPending={importing} loadingText="Importing…">
+                {`Import ${rows.length} Candidates`}
+              </LoadingButton>
             </div>
           </CardContent>
         </Card>

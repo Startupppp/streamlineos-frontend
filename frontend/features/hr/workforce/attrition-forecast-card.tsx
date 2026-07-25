@@ -24,17 +24,20 @@ import {
 export function AttritionForecastCard() {
   const { data, isLoading } = useHrAttritionForecast();
 
-  const combined = [
-    ...(data?.historical.map((h) => ({ month: h.month, historical: h.rate, projected: null })) ?? []),
-    ...(data?.forecast.map((f) => ({ month: f.month, historical: null, projected: f.projectedRate })) ?? []),
-  ];
+  const hasHistory = (data?.historical.length ?? 0) > 0;
+  const combined = hasHistory
+    ? [
+        ...(data?.historical.map((h) => ({ month: h.month, historical: h.rate, projected: null })) ?? []),
+        ...(data?.forecast.map((f) => ({ month: f.month, historical: null, projected: f.projectedRate })) ?? []),
+      ]
+    : [];
 
   return (
     <AnalyticsChartCard title="Attrition Forecast (Trend-Based Estimate — Not a Prediction)">
       {isLoading ? (
         <SectionSkeleton rows={8} />
       ) : !combined.length ? (
-        <EmptyChart label="No forecast data" />
+        <EmptyChart label="No exits recorded in the last 12 months — a trend appears once attrition history exists" />
       ) : (
         <>
           <ResponsiveContainer width="100%" height={180}>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -16,6 +16,8 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { X, Plus, Linkedin, Twitter, Github, Globe, User } from "lucide-react";
 import { useUpdateProfile } from "@/hooks/api/hr";
 import { resolveImageUrl } from "@/lib/utils";
+import { UnsavedChangesDialog } from "@/components/ui/unsaved-changes-dialog";
+import { useUnsavedChangesGuard } from "@/hooks/common/use-unsaved-changes-guard";
 
 const schema = z
   .object({
@@ -85,14 +87,22 @@ interface EmployeeWithSkills {
 interface SelfEditProfileFormProps {
   employee: EmployeeWithSkills;
   onSaved?: () => void;
+  registerLeaveGuard?: (api: {
+    isDirty: boolean;
+    requestLeave: (action: () => void) => void;
+  } | null) => void;
 }
 
 export function SelfEditProfileForm({
   employee,
   onSaved,
+  registerLeaveGuard,
 }: SelfEditProfileFormProps) {
   const updateProfile = useUpdateProfile();
-  const initialSkillNames = (employee.skills ?? []).map((s) => s.name);
+  const initialSkillNames = useMemo(
+    () => (employee.skills ?? []).map((s) => s.name),
+    [employee.skills],
+  );
   const [skills, setSkills] = useState<string[]>(initialSkillNames);
   const [skillError, setSkillError] = useState<string | null>(null);
 
@@ -106,15 +116,8 @@ export function SelfEditProfileForm({
       .toUpperCase()
       .slice(0, 2) || "?";
 
-  const {
-    register,
-    handleSubmit,
-    watch,
-    setValue,
-    formState: { errors, isDirty },
-  } = useForm<FormValues>({
-    resolver: zodResolver(schema),
-    defaultValues: {
+  const defaultValues = useMemo<FormValues>(
+    () => ({
       image: employee.image ?? "",
       bio: employee.bio ?? "",
       linkedinUrl: employee.linkedinUrl ?? "",
@@ -122,8 +125,27 @@ export function SelfEditProfileForm({
       githubUrl: employee.githubUrl ?? "",
       websiteUrl: employee.websiteUrl ?? "",
       newSkill: "",
-    },
+    }),
+    [employee],
+  );
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    reset,
+    getValues,
+    trigger,
+    formState: { errors, isDirty: formDirty },
+  } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues,
   });
+
+  const skillsDirty =
+    skills.join("\0") !== initialSkillNames.join("\0");
+  const isDirty = formDirty || skillsDirty;
 
   const imageValue = watch("image");
   const newSkill = watch("newSkill");
@@ -165,29 +187,49 @@ export function SelfEditProfileForm({
     }
   }
 
+  async function persist(values: FormValues) {
+    await updateProfile.mutateAsync({
+      userId: employee.id,
+      image: values.image || undefined,
+      bio: values.bio,
+      linkedinUrl: values.linkedinUrl,
+      twitterUrl: values.twitterUrl,
+      githubUrl: values.githubUrl,
+      websiteUrl: values.websiteUrl,
+      skills,
+    });
+    reset({ ...values, newSkill: "" });
+    onSaved?.();
+  }
+
+  const { requestLeave, dialogProps } = useUnsavedChangesGuard({
+    isDirty,
+    onDiscard: () => {
+      reset(defaultValues);
+      setSkills(initialSkillNames);
+      setSkillError(null);
+    },
+    onSave: async () => {
+      const valid = await trigger();
+      if (!valid) throw new Error("Validation failed");
+      await persist(getValues());
+      toast.success("Profile updated successfully");
+    },
+  });
+
+  useEffect(() => {
+    registerLeaveGuard?.({ isDirty, requestLeave });
+    return () => registerLeaveGuard?.(null);
+  }, [isDirty, registerLeaveGuard, requestLeave]);
+
   const onSubmit = (values: FormValues) => {
-    updateProfile.mutate(
-      {
-        userId: employee.id,
-        image: values.image || undefined,
-        bio: values.bio,
-        linkedinUrl: values.linkedinUrl,
-        twitterUrl: values.twitterUrl,
-        githubUrl: values.githubUrl,
-        websiteUrl: values.websiteUrl,
-        skills,
-      },
-      {
-        onSuccess: () => {
-          toast.success("Profile updated successfully");
-          onSaved?.();
-        },
-        onError: (err) => toast.error(getErrorMessage(err)),
-      },
-    );
+    void persist(values)
+      .then(() => toast.success("Profile updated successfully"))
+      .catch((err) => toast.error(getErrorMessage(err)));
   };
 
   return (
+    <>
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pb-4">
       <Card>
         <CardContent className="p-4 space-y-3">
@@ -351,12 +393,14 @@ export function SelfEditProfileForm({
         className="w-full"
         disabled={
           updateProfile.isPending ||
-          (!isDirty && skills.join(",") === initialSkillNames.join(","))
+          (!formDirty && !skillsDirty)
         }
       >
         {updateProfile.isPending ? "Saving…" : "Save Profile"}
       </Button>
     </form>
+    <UnsavedChangesDialog {...dialogProps} />
+    </>
   );
 }
 

@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { format } from "date-fns";
 
+export const WFH_NOTES_MAX_LENGTH = 500;
+
 export const wfhFormSchema = z.object({
   date: z
     .string()
@@ -12,7 +14,10 @@ export const wfhFormSchema = z.object({
     )
     .refine((v) => new Date(v).getDay() !== 0, "Cannot select a Sunday"),
   reason: z.string().min(1, "Reason is required"),
-  notes: z.string().max(500).optional(),
+  notes: z
+    .string()
+    .max(WFH_NOTES_MAX_LENGTH, `Notes must be ${WFH_NOTES_MAX_LENGTH} characters or fewer`)
+    .optional(),
   approverId: z.string().min(1, "Approver is required"),
 });
 

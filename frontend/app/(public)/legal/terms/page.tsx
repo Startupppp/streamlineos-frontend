@@ -114,8 +114,11 @@ export default function TermsPage() {
           <Link href="/#pricing" className="text-blue-600 hover:underline">
             {BRAND_DOMAIN}/#pricing
           </Link>
-          . The Scaleup plan is {PRICING.currency}
-          {PRICING.scaleupPriceInr} per seat per month. Enterprise pricing is bespoke.
+          . Starter is {PRICING.currency}
+          {PRICING.starterMonthlyInr}/month, Professional is {PRICING.currency}
+          {PRICING.professionalMonthlyInr}/month, and Enterprise pricing starts from{" "}
+          {PRICING.currency}
+          {PRICING.enterpriseMonthlyInr}/month (negotiated seats and terms available).
         </p>
         <ul className="list-disc pl-5 space-y-2">
           <li>

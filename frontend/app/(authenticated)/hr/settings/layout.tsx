@@ -3,20 +3,26 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useHrSettingsMode } from "@/features/hr/settings-hub/use-hr-settings-mode";
 
-const TABS = [
+const TABS: { label: string; href: string; advanced?: boolean }[] = [
   { label: "Overview", href: "/hr/settings" },
   { label: "Policies", href: "/hr/settings/policies" },
-  { label: "Workflows", href: "/hr/settings/workflows" },
-  { label: "Automations", href: "/hr/settings/automations" },
+  { label: "Workflows", href: "/hr/settings/workflows", advanced: true },
+  { label: "Automations", href: "/hr/settings/automations", advanced: true },
   { label: "Templates", href: "/hr/settings/templates" },
-  { label: "Forms", href: "/hr/settings/forms" },
-  { label: "Custom Fields", href: "/hr/settings/custom-fields" },
+  { label: "Forms", href: "/hr/settings/forms", advanced: true },
+  { label: "Custom Fields", href: "/hr/settings/custom-fields", advanced: true },
   { label: "Import / Export", href: "/hr/settings/import-export" },
-  { label: "Integrations", href: "/hr/settings/integrations" },
-  { label: "Preview", href: "/hr/settings/preview" },
-  { label: "Versions", href: "/hr/settings/versions" },
-] as const;
+  { label: "Integrations", href: "/hr/settings/integrations", advanced: true },
+  { label: "Preview", href: "/hr/settings/preview", advanced: true },
+  { label: "Versions", href: "/hr/settings/versions", advanced: true },
+];
+
+function isTabActive(tabHref: string, pathname: string): boolean {
+  if (tabHref === "/hr/settings") return pathname === "/hr/settings";
+  return pathname === tabHref || pathname.startsWith(`${tabHref}/`);
+}
 
 export default function HrSettingsLayout({
   children,
@@ -24,6 +30,10 @@ export default function HrSettingsLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const [isAdvanced] = useHrSettingsMode();
+  const visibleTabs = TABS.filter(
+    (tab) => isAdvanced || !tab.advanced || isTabActive(tab.href, pathname),
+  );
 
   return (
     <div className="flex flex-col h-full">
@@ -32,11 +42,8 @@ export default function HrSettingsLayout({
           className="inline-flex h-9 w-full items-center gap-1 rounded-lg border border-border bg-card p-1 overflow-x-auto scrollbar-hide sm:w-fit"
           aria-label="HR Settings"
         >
-          {TABS.map((tab) => {
-            const isActive =
-              tab.href === "/hr/settings"
-                ? pathname === "/hr/settings"
-                : pathname === tab.href || pathname.startsWith(`${tab.href}/`);
+          {visibleTabs.map((tab) => {
+            const isActive = isTabActive(tab.href, pathname);
             return (
               <Link
                 key={tab.href}

@@ -72,8 +72,11 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
   const isHost = huddle.startedBy === currentUserId;
 
   const { data: entitlements } = useEntitlements();
-  const groupHuddlesAllowed = entitlements?.features.chatGroupHuddles ?? true;
-  const inviteBlockedByPlan = !groupHuddlesAllowed && huddle.participants.length >= 2;
+  // Default false until entitlements load so free orgs never briefly enable group invites.
+  const groupHuddlesAllowed = entitlements?.features.chatGroupHuddles ?? false;
+  const freeHuddleCap = 2; // mirrors FREE_HUDDLE_MAX_PARTICIPANTS on the backend
+  const inviteBlockedByPlan =
+    !groupHuddlesAllowed && huddle.participants.length >= freeHuddleCap;
 
   const { localStream, remoteStreams, remoteScreenStreams, screenStream, isMuted, isSharingScreen, micError, realtimeError, toggleMute, switchAudioDevice, getPeerConnection, startScreenShare, stopScreenShare, pauseScreenShare, resumeScreenShare, cleanup } = useWebRTCHuddle(
     huddle.id,

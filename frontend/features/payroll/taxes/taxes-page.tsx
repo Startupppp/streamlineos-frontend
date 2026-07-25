@@ -6,6 +6,7 @@ import { TaxWindowsTab } from "./tax-windows-tab";
 import { DeclarationsTab } from "./declarations-tab";
 import { StatutoryOverviewTab } from "./statutory-overview-tab";
 import { TaxReportTab } from "./tax-report-tab";
+import { FilingsTab } from "./filings-tab";
 
 export function TaxesPageContent() {
   return (
@@ -18,6 +19,7 @@ export function TaxesPageContent() {
           <TabsTrigger value="windows">Declaration Windows</TabsTrigger>
           <TabsTrigger value="declarations">Declarations</TabsTrigger>
           <TabsTrigger value="statutory">Statutory</TabsTrigger>
+          <TabsTrigger value="filings">Filings</TabsTrigger>
           <TabsTrigger value="report">Tax Report</TabsTrigger>
         </TabsList>
         <TabsContent value="windows" className="flex flex-1 min-h-0 flex-col mt-0">
@@ -28,6 +30,9 @@ export function TaxesPageContent() {
         </TabsContent>
         <TabsContent value="statutory" className="mt-0">
           <StatutoryOverviewTab />
+        </TabsContent>
+        <TabsContent value="filings" className="flex flex-1 min-h-0 flex-col mt-0">
+          <FilingsTab />
         </TabsContent>
         <TabsContent value="report" className="flex flex-1 min-h-0 flex-col mt-0">
           <TaxReportTab />

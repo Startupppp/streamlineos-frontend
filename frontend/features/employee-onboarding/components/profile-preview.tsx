@@ -5,7 +5,6 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   Briefcase,
   Building2,
-  FileText,
   Landmark,
   Mail,
   MapPin,
@@ -88,8 +87,7 @@ function ProfilePreviewInner({
     .join(" · ");
 
   const showPayroll =
-    stepId === "bank" || stepId === "docs" || stepId === "finish";
-  const showDocs = stepId === "docs" || stepId === "finish";
+    stepId === "bank" || stepId === "finish";
   const bankFilled =
     snapshot.bankName.trim().length > 0 ||
     snapshot.accountNumber.trim().length > 0;
@@ -300,30 +298,6 @@ function ProfilePreviewInner({
             ) : null}
           </AnimatePresence>
 
-          <AnimatePresence initial={false}>
-            {showDocs ? (
-              <motion.section
-                key="docs"
-                initial={{ opacity: 0, height: reduceMotion ? "auto" : 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: reduceMotion ? "auto" : 0 }}
-                transition={{ duration: 0.22, ease: WIZARD_EASE }}
-                className="space-y-2.5 overflow-hidden rounded-xl border border-border/70 bg-background/60 p-3"
-              >
-                <div className="flex items-center gap-1.5 text-[11px] font-semibold text-foreground">
-                  <FileText
-                    className="h-3.5 w-3.5 text-brand-core"
-                    aria-hidden
-                  />
-                  Documents
-                </div>
-                <div className="space-y-2">
-                  <DocChip label="Identity" ready={snapshot.docsComplete} />
-                  <DocChip label="Employment" ready={snapshot.docsComplete} />
-                </div>
-              </motion.section>
-            ) : null}
-          </AnimatePresence>
         </div>
 
         <div className="flex items-center gap-2 border-t border-border/60 px-4 py-2.5">
@@ -337,21 +311,6 @@ function ProfilePreviewInner({
   );
 }
 
-function DocChip({ label, ready }: { label: string; ready: boolean }) {
-  return (
-    <div
-      className={cn(
-        "flex items-center justify-between rounded-lg border px-2.5 py-1.5 text-[11px]",
-        ready
-          ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300"
-          : "border-dashed border-border/80 text-muted-foreground/70",
-      )}
-    >
-      <span className="font-medium">{label}</span>
-      <span className="tabular-nums">{ready ? "Attached" : "Waiting"}</span>
-    </div>
-  );
-}
 
 export const ProfilePreview = memo(ProfilePreviewInner, (prev, next) => {
   return (

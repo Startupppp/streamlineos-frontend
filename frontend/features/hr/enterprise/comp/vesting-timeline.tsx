@@ -3,6 +3,7 @@
 import { format, isPast } from "date-fns";
 import { CheckCircle2, Clock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useVestingSchedule } from "@/hooks/api/hr/enterprise-comp";
 
 interface Props {
@@ -21,7 +22,14 @@ export function VestingTimeline({ grantId }: Props) {
   }
 
   if (!events?.length) {
-    return <p className="text-sm text-muted-foreground text-center py-8">No vesting schedule generated.</p>;
+    return (
+      <EmptyState
+        illustrationPreset="chart"
+        title="No vesting schedule"
+        description="A vesting schedule will appear here once it has been generated for this grant."
+        compact
+      />
+    );
   }
 
   return (

@@ -43,7 +43,7 @@ export const onboardEmployeeInputSchema = z.object({
     .min(1, "Designation is required")
     .max(120, "Designation must be at most 120 characters")
     .refine(hasLetterOrDigit, "Designation must contain a letter or number"),
-  departmentId: z.number().int().positive({ message: "Department is required" }),
+  departmentId: z.string().min(1, "Department is required"),
   role: z.string().min(1),
   employeeId: z
     .string()
@@ -120,6 +120,12 @@ export const onboardEmployeeInputSchema = z.object({
         .string()
         .trim()
         .refine((v) => v === "" || /^\d{12}$/.test(v), "UAN must be exactly 12 digits")
+        .optional()
+        .or(z.literal("")),
+      esiIpNumber: z
+        .string()
+        .trim()
+        .max(20)
         .optional()
         .or(z.literal("")),
     })

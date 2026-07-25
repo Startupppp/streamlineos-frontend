@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -43,23 +44,24 @@ export function OrgHubClient() {
   const initialTab = (VALID_TABS as readonly string[]).includes(requestedTab ?? "")
     ? (requestedTab as (typeof VALID_TABS)[number])
     : "departments";
+  const [activeTab, setActiveTab] = useState<string>(initialTab);
 
-  const locations = useOrgLocations();
+  const locations = useOrgLocations({ enabled: activeTab === "locations" });
   const createLocation = useCreateLocation();
   const updateLocation = useUpdateLocation();
   const deleteLocation = useDeleteLocation();
 
-  const roles = useOrgJobRoles();
+  const roles = useOrgJobRoles({ enabled: activeTab === "roles" });
   const createRole = useCreateJobRole();
   const updateRole = useUpdateJobRole();
   const deleteRole = useDeleteJobRole();
 
-  const levels = useOrgJobLevels();
+  const levels = useOrgJobLevels({ enabled: activeTab === "levels" });
   const createLevel = useCreateJobLevel();
   const updateLevel = useUpdateJobLevel();
   const deleteLevel = useDeleteJobLevel();
 
-  const teams = useOrgTeams();
+  const teams = useOrgTeams({ enabled: activeTab === "teams" });
   const createTeam = useCreateTeam();
   const updateTeam = useUpdateTeam();
   const deleteTeam = useDeleteTeam();
@@ -73,7 +75,7 @@ export function OrgHubClient() {
       contentClassName="flex flex-col gap-4 sm:gap-5"
     >
       <HeadcountStats groupBy="department" />
-      <Tabs defaultValue={initialTab} className="flex flex-col flex-1 min-h-0">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
         <TabsList className="shrink-0">
           <TabsTrigger value="departments" className="gap-1.5">
             <Building2 className="h-3 w-3" />

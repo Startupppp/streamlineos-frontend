@@ -41,6 +41,7 @@ export function ValidationPanel({ runId }: ValidationPanelProps) {
       <button
         type="button"
         onClick={handleToggle}
+        aria-expanded={isExpanded}
         className="flex items-center gap-1.5 text-sm font-semibold text-foreground hover:text-foreground/80 transition-colors"
         {...chevronHoverHandlers}
       >

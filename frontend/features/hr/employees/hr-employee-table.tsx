@@ -33,6 +33,27 @@ interface HrEmployeeTableProps {
   onRequestDelete: (employee: Employee) => void;
 }
 
+function EmployeeStatusChip({ isActive }: { isActive: boolean }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+        isActive
+          ? "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800"
+          : "bg-muted text-muted-foreground border-border",
+      )}
+    >
+      <span
+        className={cn(
+          "h-1.5 w-1.5 rounded-full",
+          isActive ? "bg-emerald-500" : "bg-muted-foreground/50",
+        )}
+      />
+      {isActive ? "Active" : "Inactive"}
+    </span>
+  );
+}
+
 function TerminateButton({
   displayName,
   onClick,
@@ -135,27 +156,7 @@ export function HrEmployeeTable({
       {
         key: "status",
         header: "Status",
-        cell: (user) => {
-          const isActive = user.isActive !== false;
-          return (
-            <span
-              className={cn(
-                "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
-                isActive
-                  ? "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800"
-                  : "bg-muted text-muted-foreground border-border",
-              )}
-            >
-              <span
-                className={cn(
-                  "h-1.5 w-1.5 rounded-full",
-                  isActive ? "bg-emerald-500" : "bg-muted-foreground/50",
-                )}
-              />
-              {isActive ? "Active" : "Inactive"}
-            </span>
-          );
-        },
+        cell: (user) => <EmployeeStatusChip isActive={user.isActive !== false} />,
       },
       {
         key: "actions",
@@ -210,6 +211,32 @@ export function HrEmployeeTable({
       columns={columns}
       getRowKey={(user) => user.id}
       minWidth="700px"
+      mobileCard={(user) => {
+        const displayName = getDisplayName(user);
+        const initials = getInitials(user);
+        return (
+          <Link href={`/hr/employees/${user.id}`} className="flex items-center gap-3">
+            <Avatar className="h-10 w-10 shrink-0">
+              <AvatarImage src={resolveImageUrl(user.image)} alt="" />
+              <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between gap-2">
+                <TruncatedText
+                  text={displayName}
+                  className="text-sm font-semibold text-foreground"
+                />
+                <EmployeeStatusChip isActive={user.isActive !== false} />
+              </div>
+              <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                {[user.designation, user.department?.name].filter(Boolean).join(" · ") || "—"}
+              </p>
+            </div>
+          </Link>
+        );
+      }}
       pagination={{
         mode: "server",
         page,

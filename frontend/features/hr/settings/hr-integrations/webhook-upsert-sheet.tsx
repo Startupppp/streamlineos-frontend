@@ -26,6 +26,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Button } from "@/components/ui/button";
+import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useCreateHrWebhook,
@@ -145,22 +146,20 @@ export function WebhookUpsertSheet({ open, onOpenChange, subscription }: Props) 
               <div className="flex-1 font-mono text-xs bg-muted rounded-md px-3 py-2 break-all">
                 {showSecret ? revealedSecret : "•".repeat(64)}
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
+              <TooltipIconButton
+                icon={showSecret ? EyeOffIcon : EyeIcon}
+                iconSize={16}
+                label={showSecret ? "Hide Secret" : "Show Secret"}
                 onClick={() => setShowSecret((p) => !p)}
                 className="shrink-0"
-              >
-                {showSecret ? <EyeOffIcon size={16} /> : <EyeIcon size={16} />}
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
+              />
+              <TooltipIconButton
+                icon={CopyIcon}
+                iconSize={16}
+                label="Copy Secret"
                 onClick={handleCopySecret}
                 className="shrink-0"
-              >
-                <CopyIcon size={16} />
-              </Button>
+              />
             </div>
             <Button onClick={() => onOpenChange(false)} className="mt-auto">
               Done

@@ -7,7 +7,6 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { EmptyInboxIllustration } from "@/components/illustrations";
-import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -50,6 +49,7 @@ function ThreadItem({
 
   return (
     <button
+      type="button"
       onClick={handleClick}
       className={cn(
         "w-full text-left px-3 py-2.5 rounded-lg transition-colors hover:bg-muted/60",

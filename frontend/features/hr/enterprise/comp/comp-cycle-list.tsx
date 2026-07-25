@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -60,6 +59,14 @@ export function CompCycleList({ onSelect }: Props) {
           transition={{ duration: 0.2, delay: idx * 0.05 }}
           className="flex items-center justify-between p-4 rounded-xl border bg-card hover:shadow-md transition-shadow cursor-pointer"
           onClick={() => onSelect(cycle)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              onSelect(cycle);
+            }
+          }}
         >
           <div className="min-w-0">
             <div className="flex items-center gap-2 min-w-0">
@@ -68,9 +75,7 @@ export function CompCycleList({ onSelect }: Props) {
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">FY {cycle.fiscalYear} · Budget {formatCents(cycle.budgetPoolCents)}</p>
           </div>
-          <Button variant="ghost" size="icon" className="w-8 shrink-0">
-            <ArrowRight className="h-4 w-4" />
-          </Button>
+          <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
         </motion.div>
       ))}
     </div>

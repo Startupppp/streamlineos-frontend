@@ -92,9 +92,67 @@ export function useActivatePolicy() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["hr", "policies", "activate"],
-    mutationFn: (policyId: number) =>
-      apiClient.post<HrPolicy>(`/hr/policies/${policyId}/activate`, {}),
-    onSuccess: () => qc.invalidateQueries({ queryKey: POLICIES_KEY }),
+    mutationFn: (input: number | { policyId: number; force?: boolean }) => {
+      const policyId = typeof input === "number" ? input : input.policyId;
+      const force = typeof input === "number" ? false : Boolean(input.force);
+      return apiClient.post<HrPolicy>(`/hr/policies/${policyId}/activate`, { force });
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: POLICIES_KEY });
+      void qc.invalidateQueries({ queryKey: ["hr", "settings-hub", "versions"] });
+    },
+  });
+}
+
+export type PolicyConflict = {
+  severity: "blocking" | "warning";
+  reason: string;
+  policyId: number;
+  policyName: string;
+  otherPolicyId: number;
+  otherPolicyName: string;
+  scopeOverlap: Array<{ scopeType: string; scopeValue: string }>;
+};
+
+export function usePolicyConflicts(policyId: number) {
+  return useQuery({
+    queryKey: [...POLICIES_KEY, "conflicts", policyId],
+    queryFn: () =>
+      apiClient.get<{ conflicts: PolicyConflict[]; canActivate: boolean }>(
+        `/hr/policies/${policyId}/conflicts`,
+      ),
+    enabled: policyId > 0,
+    staleTime: 30_000,
+  });
+}
+
+export function useOrgPolicyConflicts(type?: HrPolicyType) {
+  const qs = type ? `?type=${encodeURIComponent(type)}` : "";
+  return useQuery({
+    queryKey: [...POLICIES_KEY, "org-conflicts", type],
+    queryFn: () =>
+      apiClient.get<{ conflicts: PolicyConflict[] }>(`/hr/policies/conflicts${qs}`),
+    staleTime: 30_000,
+  });
+}
+
+export function useSimulatePolicy() {
+  return useMutation({
+    mutationKey: ["hr", "policies", "simulate"],
+    mutationFn: (data: {
+      employeeId: string;
+      policyType: HrPolicyType;
+      date: string;
+      rules?: Record<string, unknown>;
+    }) =>
+      apiClient.post<{
+        date: string;
+        employeeId: string;
+        policyType: string;
+        matched: PolicyPreviewResult | null;
+        simulatedRules: Record<string, unknown> | null;
+        explanation: string;
+      }>("/hr/policies/simulate", data),
   });
 }
 

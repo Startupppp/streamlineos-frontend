@@ -102,6 +102,7 @@ export function PayrollSimulator() {
                   size="icon"
                   variant="outline"
                   onClick={addComponent}
+                  aria-label="Add component"
                 />
               </div>
               {components.map((c, i) => (
@@ -119,6 +120,7 @@ export function PayrollSimulator() {
                       variant="ghost"
                       className="h-5 w-5 text-red-500"
                       onClick={() => setComponents((cs) => cs.filter((_, idx) => idx !== i))}
+                      aria-label={`Remove ${c.name}`}
                     />
                   </div>
                 </div>
