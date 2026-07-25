@@ -38,7 +38,6 @@ import {
 } from "@/hooks/api/hr";
 import { hrDocumentListPrefix } from "@/hooks/api/hr/documents";
 import { useLetters } from "@/hooks/api/hr/letters";
-import { useCertifications } from "@/hooks/api/hr/certifications";
 import { CreateEnvelopeDialog } from "@/features/sign";
 import { UploadDocumentDialog } from "@/features/hr/documents/components/upload-document-dialog";
 import { LetterGenerationSheet } from "@/features/hr/documents/letter-generation-sheet";
@@ -588,7 +587,6 @@ function RichDocumentsSection() {
 
 function DocumentsExtendedSection() {
   const { data: letters = [], isLoading: lettersLoading } = useLetters();
-  const { data: expiringCerts = [], isLoading: certsLoading } = useCertifications({ expiringSoon: true });
   const { data: allDocsPage, isLoading: docsLoading } = useHrDocumentList({ limit: 100 });
   const allDocs = allDocsPage?.data ?? [];
 
@@ -628,15 +626,8 @@ function DocumentsExtendedSection() {
                 expiryDate: d.expiryDate ?? "",
                 userId: d.userId ?? null,
               }))}
-              expiringCertifications={expiringCerts
-                .filter((c) => !!c.expiryDate)
-                .map((c) => ({
-                  id: c.id,
-                  name: c.name,
-                  expiryDate: c.expiryDate!,
-                  user: c.user,
-                }))}
-              isLoading={docsLoading || certsLoading}
+              expiringCertifications={[]}
+              isLoading={docsLoading}
             />
           </TabsContent>
 

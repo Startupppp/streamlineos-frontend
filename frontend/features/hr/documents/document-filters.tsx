@@ -49,15 +49,18 @@ export function DocumentFilters({
         placeholder="Search documents..."
         value={searchTerm}
         onValueChange={onSearchChange}
-        className="w-48"
+        className="max-w-sm"
         aria-label="Search documents"
       />
 
       <Select value={selectedType} onValueChange={onTypeChange}>
-        <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)}>
+        <SelectTrigger
+          aria-label="Filter by document type"
+          className={cn("w-[9.5rem]", FILTER_SELECT_TRIGGER)}
+        >
           <SelectValue placeholder="All types" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent align="start">
           <SelectItem value="all" className="text-xs">All types</SelectItem>
           {DOCUMENT_TYPES.map((type) => (
             <SelectItem key={type.value} value={type.value} className="text-xs">

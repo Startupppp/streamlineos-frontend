@@ -100,6 +100,8 @@ export function OvertimeRequestSheet({ open, onOpenChange }: Props) {
       submitLabel="Submit Request"
       isPending={createRequest.isPending}
       submitDisabled={isDirty && !isValid}
+      isDirty={isDirty}
+      onDiscard={() => form.reset()}
     >
       <Form {...form}>
         <div className="space-y-5">

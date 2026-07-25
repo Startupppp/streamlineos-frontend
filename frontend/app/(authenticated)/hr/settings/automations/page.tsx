@@ -25,6 +25,7 @@ import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
+  useHrAutomationEvents,
   useHrAutomations,
   useToggleHrAutomation,
   useDeleteHrAutomation,
@@ -40,14 +41,6 @@ import { PlayIcon, Trash2Icon, PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { TruncatedText } from "@/components/ui/truncated-text";
-
-const HR_TRIGGER_EVENTS = [
-  "employee.created", "employee.onboarded", "employee.probation_due", "employee.confirmed",
-  "employee.transferred", "employee.promoted", "employee.salary_revised",
-  "leave.requested", "leave.approved", "attendance.late", "attendance.missed_punch",
-  "document.expiring", "asset.assigned", "asset.return_due", "review.cycle_started",
-  "goal.overdue", "course.assigned", "resignation.submitted", "exit.completed",
-] as const;
 
 function RuleCard({
   rule,
@@ -103,9 +96,9 @@ function RuleCard({
               <TooltipIconButton label="View Runs" className="w-7" onClick={onViewRuns}>
                 <History className="h-3.5 w-3.5" />
               </TooltipIconButton>
-              <TooltipIconButton icon={PlayIcon} iconSize={14} label="Dry-Run Test" className="w-7" onClick={onTest} />
               {canManage && (
                 <>
+                  <TooltipIconButton icon={PlayIcon} iconSize={14} label="Dry-Run Test" className="w-7" onClick={onTest} />
                   <TooltipIconButton label="Edit" className="w-7" onClick={onEdit}>
                     <Pencil className="h-3.5 w-3.5" />
                   </TooltipIconButton>
@@ -148,6 +141,8 @@ export default function HrAutomationsPage() {
     triggerEvent: triggerFilter === "all" ? undefined : triggerFilter,
     isEnabled: enabledFilter,
   });
+  const { data: eventCatalog } = useHrAutomationEvents();
+  const triggerEvents = eventCatalog?.events.map((e) => e.value) ?? [];
 
   const toggle = useToggleHrAutomation();
   const remove = useDeleteHrAutomation();
@@ -244,7 +239,7 @@ export default function HrAutomationsPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All triggers</SelectItem>
-              {HR_TRIGGER_EVENTS.map((e) => (
+              {triggerEvents.map((e) => (
                 <SelectItem key={e} value={e}>{e}</SelectItem>
               ))}
             </SelectContent>

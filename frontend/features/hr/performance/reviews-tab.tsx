@@ -13,7 +13,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -29,13 +28,20 @@ import { AIGenerateReviewButton } from "@/features/hr/performance/ai-generate-re
 import { toast } from "sonner";
 import { resolveImageUrl, cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
+import {
+  clearEndIfInvalid,
+  planningEndPickerProps,
+  planningStartPickerProps,
+} from "@/lib/date-constraints";
 import { Star, CheckCircle2, ChevronsUpDown, Check, Pencil } from "lucide-react";
 import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { Employee, PerformanceReview, ReviewCycle } from "@/types/hr";
+import type { PerformanceReview, ReviewCycle } from "@/types/hr";
 import { EmptyLeaderboardIllustration } from "@/components/illustrations";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { reviewFormSchema } from "./review-schema";
+import { zodFieldErrors } from "./zod-field-errors";
 
 export function ReviewsTab() {
   const { data: reviews, isLoading } = useHrPerformanceReviews();
@@ -53,6 +59,7 @@ export function ReviewsTab() {
   const [cycleId, setCycleId] = useState("none");
   const [periodStart, setPeriodStart] = useState("");
   const [periodEnd, setPeriodEnd] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const employees = useMemo(
     () => unwrapEmployees(employeesRaw).filter((e) => !!e.id),
@@ -71,6 +78,12 @@ export function ReviewsTab() {
         }
         setPeriodStart(cycle.periodStart ?? "");
         setPeriodEnd(cycle.periodEnd ?? "");
+        setFieldErrors((prev) => {
+          const next = { ...prev };
+          delete next.periodStart;
+          delete next.periodEnd;
+          return next;
+        });
       }
     }
   }, [cycles]);
@@ -81,26 +94,32 @@ export function ReviewsTab() {
     setPeriodStart("");
     setPeriodEnd("");
     setEditReview(null);
+    setFieldErrors({});
   }, []);
 
   const handleCreate = useCallback(() => {
-    if (!periodStart || !periodEnd) {
-      toast.error("Period dates are required");
+    const parsed = reviewFormSchema.safeParse({
+      employeeId,
+      cycleId,
+      periodStart,
+      periodEnd,
+      isEdit: !!editReview,
+    });
+    if (!parsed.success) {
+      setFieldErrors(zodFieldErrors(parsed.error));
       return;
     }
-    if (periodEnd <= periodStart) {
-      toast.error("Period end date must be after period start date");
-      return;
-    }
+    setFieldErrors({});
+
     if (cycleId !== "none") {
       const selectedCycle = (Array.isArray(cycles) ? cycles : []).find((c: ReviewCycle) => String(c.id) === cycleId);
       if (selectedCycle) {
         if (periodStart < selectedCycle.periodStart) {
-          toast.error("Period start must be on or after the selected cycle's start date");
+          setFieldErrors({ periodStart: "Period start must be on or after the selected cycle's start date" });
           return;
         }
         if (periodEnd > selectedCycle.periodEnd) {
-          toast.error("Period end must be on or before the selected cycle's end date");
+          setFieldErrors({ periodEnd: "Period end must be on or before the selected cycle's end date" });
           return;
         }
       }
@@ -123,13 +142,9 @@ export function ReviewsTab() {
       return;
     }
 
-    if (!employeeId) {
-      toast.error("Please select an employee");
-      return;
-    }
     const selectedEmployee = employees.find((e) => e.id === employeeId);
     if (selectedEmployee?.joiningDate && periodStart < selectedEmployee.joiningDate.toString().slice(0, 10)) {
-      toast.error("Period start date cannot be earlier than the employee's joining date");
+      setFieldErrors({ periodStart: "Period start cannot be earlier than the employee's joining date" });
       return;
     }
     createReview.mutate({
@@ -152,6 +167,7 @@ export function ReviewsTab() {
     setCycleId(review.cycleId ? String(review.cycleId) : "none");
     setPeriodStart(review.periodStart ?? "");
     setPeriodEnd(review.periodEnd ?? "");
+    setFieldErrors({});
     setSheetOpen(true);
   }, []);
 
@@ -172,8 +188,33 @@ export function ReviewsTab() {
 
   const handleOpenSheet = useCallback(() => { resetForm(); setSheetOpen(true); }, [resetForm]);
 
-  const handlePeriodStartChange = useCallback((value: string) => setPeriodStart(value), []);
-  const handlePeriodEndChange = useCallback((value: string) => setPeriodEnd(value), []);
+  const periodStartBounds = planningStartPickerProps({
+    existingValue: editReview ? periodStart : undefined,
+  });
+  const periodEndBounds = planningEndPickerProps({
+    startDate: periodStart,
+    mode: "after",
+    existingValue: editReview ? periodEnd : undefined,
+  });
+
+  const handlePeriodStartChange = useCallback((value: string) => {
+    setPeriodStart(value);
+    setPeriodEnd((prev) => clearEndIfInvalid(value, prev, "after"));
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next.periodStart;
+      delete next.periodEnd;
+      return next;
+    });
+  }, []);
+  const handlePeriodEndChange = useCallback((value: string) => {
+    setPeriodEnd(value);
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next.periodEnd;
+      return next;
+    });
+  }, []);
 
   if (isLoading) {
     return <LoadingState variant="cards" rows={9} />;
@@ -309,7 +350,15 @@ export function ReviewsTab() {
             <label className="text-sm font-medium">Employee</label>
             <Popover open={employeePickerOpen} onOpenChange={setEmployeePickerOpen}>
               <PopoverTrigger asChild>
-                <Button variant="outline" role="combobox" aria-expanded={employeePickerOpen} className="w-full justify-between font-normal">
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={employeePickerOpen}
+                  className={cn(
+                    "w-full justify-between font-normal",
+                    fieldErrors.employeeId && "border-destructive",
+                  )}
+                >
                   <span className="truncate">{employees.find((e) => e.id === employeeId)?.name ?? employees.find((e) => e.id === employeeId)?.email ?? "Select employee"}</span>
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
@@ -321,7 +370,19 @@ export function ReviewsTab() {
                     <CommandEmpty>No employee found.</CommandEmpty>
                     <CommandGroup>
                       {employees.map((e) => (
-                        <CommandItem key={e.id} value={`${e.name ?? ""} ${e.email}`} onSelect={() => { setEmployeeId(e.id); setEmployeePickerOpen(false); }}>
+                        <CommandItem
+                          key={e.id}
+                          value={`${e.name ?? ""} ${e.email}`}
+                          onSelect={() => {
+                            setEmployeeId(e.id);
+                            setEmployeePickerOpen(false);
+                            setFieldErrors((prev) => {
+                              const next = { ...prev };
+                              delete next.employeeId;
+                              return next;
+                            });
+                          }}
+                        >
                           <Check className={cn("mr-2 h-4 w-4", employeeId === e.id ? "opacity-100" : "opacity-0")} />
                           {e.name ?? e.email}
                         </CommandItem>
@@ -331,6 +392,9 @@ export function ReviewsTab() {
                 </Command>
               </PopoverContent>
             </Popover>
+            {fieldErrors.employeeId && (
+              <p className="text-xs text-destructive">{fieldErrors.employeeId}</p>
+            )}
           </div>
         )}
         <div className="space-y-1.5">
@@ -352,11 +416,33 @@ export function ReviewsTab() {
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Period Start</label>
-            <DatePicker value={periodStart ?? ""} onChange={handlePeriodStartChange} placeholder="Pick a date" className="text-sm" />
+            <DatePicker
+              value={periodStart ?? ""}
+              onChange={handlePeriodStartChange}
+              placeholder="Pick a date"
+              className="text-sm"
+              fromDate={periodStartBounds.fromDate}
+              fromYear={periodStartBounds.fromYear}
+              toYear={periodStartBounds.toYear}
+            />
+            {fieldErrors.periodStart && (
+              <p className="text-xs text-destructive">{fieldErrors.periodStart}</p>
+            )}
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Period End</label>
-            <DatePicker value={periodEnd ?? ""} onChange={handlePeriodEndChange} placeholder="Pick a date" className="text-sm" />
+            <DatePicker
+              value={periodEnd ?? ""}
+              onChange={handlePeriodEndChange}
+              placeholder="Pick a date"
+              className="text-sm"
+              fromDate={periodEndBounds.fromDate}
+              fromYear={periodEndBounds.fromYear}
+              toYear={periodEndBounds.toYear}
+            />
+            {fieldErrors.periodEnd && (
+              <p className="text-xs text-destructive">{fieldErrors.periodEnd}</p>
+            )}
           </div>
         </div>
         {employeeId && periodStart && periodEnd && (

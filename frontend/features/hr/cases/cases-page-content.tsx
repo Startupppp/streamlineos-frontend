@@ -151,15 +151,24 @@ export function CasesPageContent() {
 
   const filters = (
     <div className={FILTER_TOOLBAR_ROW}>
-      <SearchInput placeholder="Search cases..." value={search} onValueChange={handleSearchChange} className="w-48" />
+      <SearchInput
+        placeholder="Search cases..."
+        value={search}
+        onValueChange={handleSearchChange}
+        className="max-w-sm"
+        aria-label="Search cases"
+      />
       <Select
         value={status || SENTINEL}
         onValueChange={(v) => { setStatus(v === SENTINEL ? "" : (v as CaseStatus)); setPage(1); }}
       >
-        <SelectTrigger className={cn("w-44", FILTER_SELECT_TRIGGER)}>
+        <SelectTrigger
+          aria-label="Filter by status"
+          className={cn("w-[9.5rem]", FILTER_SELECT_TRIGGER)}
+        >
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent align="start">
           {STATUS_OPTIONS.map((o) => (
             <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
           ))}
@@ -169,10 +178,13 @@ export function CasesPageContent() {
         value={category || SENTINEL}
         onValueChange={(v) => { setCategory(v === SENTINEL ? "" : (v as CaseCategory)); setPage(1); }}
       >
-        <SelectTrigger className={cn("w-44", FILTER_SELECT_TRIGGER)}>
+        <SelectTrigger
+          aria-label="Filter by category"
+          className={cn("w-[10rem]", FILTER_SELECT_TRIGGER)}
+        >
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent align="start">
           {CATEGORY_OPTIONS.map((o) => (
             <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
           ))}
@@ -182,10 +194,13 @@ export function CasesPageContent() {
         value={severity || SENTINEL}
         onValueChange={(v) => { setSeverity(v === SENTINEL ? "" : (v as CaseSeverity)); setPage(1); }}
       >
-        <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)}>
+        <SelectTrigger
+          aria-label="Filter by severity"
+          className={cn("w-[9rem]", FILTER_SELECT_TRIGGER)}
+        >
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent align="start">
           {SEVERITY_OPTIONS.map((o) => (
             <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
           ))}
@@ -230,7 +245,7 @@ export function CasesPageContent() {
         onValueChange={(v) => { setActiveTab(v as ActiveTab); setPage(1); }}
         className="flex min-h-0 flex-1 flex-col pb-6"
       >
-        <TabsList className="w-fit mb-4">
+        <TabsList className="mb-4 w-max max-w-full shrink-0">
           <TabsTrigger value="cases">Cases</TabsTrigger>
           <TabsTrigger value="disciplinary">Disciplinary Actions</TabsTrigger>
         </TabsList>

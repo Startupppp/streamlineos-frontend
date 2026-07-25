@@ -162,15 +162,24 @@ export function SafetyPageContent() {
 
   const filters = (
     <div className={FILTER_TOOLBAR_ROW}>
-      <SearchInput placeholder="Search..." value={search} onValueChange={handleSearchChange} className="w-44" />
+      <SearchInput
+        placeholder="Search..."
+        value={search}
+        onValueChange={handleSearchChange}
+        className="max-w-sm"
+        aria-label="Search incidents"
+      />
       <Select
         value={status || SENTINEL}
         onValueChange={(v) => { setStatus(v === SENTINEL ? "" : (v as IncidentStatus)); setPage(1); }}
       >
-        <SelectTrigger className={cn("w-40", FILTER_SELECT_TRIGGER)}>
+        <SelectTrigger
+          aria-label="Filter by status"
+          className={cn("w-[9.5rem]", FILTER_SELECT_TRIGGER)}
+        >
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent align="start">
           {STATUS_OPTIONS.map((o) => (
             <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
           ))}
@@ -180,10 +189,13 @@ export function SafetyPageContent() {
         value={type || SENTINEL}
         onValueChange={(v) => { setType(v === SENTINEL ? "" : (v as IncidentType)); setPage(1); }}
       >
-        <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)}>
+        <SelectTrigger
+          aria-label="Filter by type"
+          className={cn("w-[9rem]", FILTER_SELECT_TRIGGER)}
+        >
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent align="start">
           {TYPE_OPTIONS.map((o) => (
             <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
           ))}
@@ -193,10 +205,13 @@ export function SafetyPageContent() {
         value={severity || SENTINEL}
         onValueChange={(v) => { setSeverity(v === SENTINEL ? "" : (v as IncidentSeverity)); setPage(1); }}
       >
-        <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)}>
+        <SelectTrigger
+          aria-label="Filter by severity"
+          className={cn("w-[9rem]", FILTER_SELECT_TRIGGER)}
+        >
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent align="start">
           {SEVERITY_OPTIONS.map((o) => (
             <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
           ))}

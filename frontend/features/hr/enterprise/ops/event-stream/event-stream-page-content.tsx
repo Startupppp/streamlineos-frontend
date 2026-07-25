@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Database } from "lucide-react";
 import { DownloadIcon } from "@animateicons/react/lucide";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useCan } from "@/hooks/api/access";
 import {
   useHrEvents,
@@ -155,7 +156,14 @@ export function EventStreamPageContent() {
             columns={eventColumns}
             getRowKey={(r) => r.id}
             isLoading={isLoading}
-            emptyState={<p className="text-sm text-muted-foreground text-center py-8">No events in the stream</p>}
+            emptyState={
+              <EmptyState
+                illustrationPreset="documents"
+                title="No events in the stream"
+                description="HR events will appear here as an append-only audit log."
+                compact
+              />
+            }
             pagination={
               data
                 ? {
@@ -175,7 +183,14 @@ export function EventStreamPageContent() {
             data={dictionary?.catalog ?? []}
             columns={catalogColumns}
             getRowKey={(e) => e.eventType}
-            emptyState={<p className="text-sm text-muted-foreground text-center py-8">No catalog entries</p>}
+            emptyState={
+              <EmptyState
+                illustrationPreset="documents"
+                title="No catalog entries"
+                description="Event types from the data dictionary will show up here."
+                compact
+              />
+            }
           />
           {dictionary?.immutable && (
             <p className="mt-3 text-xs text-muted-foreground">

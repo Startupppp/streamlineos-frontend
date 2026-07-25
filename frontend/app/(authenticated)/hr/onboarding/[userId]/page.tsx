@@ -1,9 +1,8 @@
 "use client";
 
 import { use, useCallback } from "react";
-import Link from "next/link";
 import { toast } from "sonner";
-import { ArrowLeft, CheckCircle2, Circle, Clock, AlertCircle, CheckCheck, ListTodo, Timer } from "lucide-react";
+import { CheckCircle2, Circle, Clock, AlertCircle, CheckCheck, ListTodo, Timer } from "lucide-react";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -226,14 +225,7 @@ export default function UserOnboardingPage({
     <PageWrapper
       title={`${employeeName} — Onboarding`}
       subtitle="Track and manage onboarding tasks for this employee."
-      actions={
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/hr/onboarding">
-            <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
-            Back
-          </Link>
-        </Button>
-      }
+      backHref="/hr/onboarding"
     >
       {isLoading ? (
         <LoadingSkeleton />

@@ -135,6 +135,78 @@ export function useRevertLeave() {
   });
 }
 
+export interface HrLeaveType {
+  id: number;
+  name: string;
+  daysPerYear: number;
+  carryForward: boolean;
+}
+
+const LEAVE_TYPES_KEY = [...queryKeys.hr.all, "leaveTypesAdmin"] as const;
+
+export function useLeaveTypesAdmin(options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: LEAVE_TYPES_KEY,
+    queryFn: () => apiClient.get<HrLeaveType[]>("/hr/leaves/types"),
+    staleTime: 2 * 60_000,
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useSeedLeaveTypes() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["hr", "leaves", "seed-types"],
+    mutationFn: () =>
+      apiClient.post<{ seeded: number; skipped: number }>("/hr/leaves/types/seed-defaults"),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: LEAVE_TYPES_KEY });
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() });
+    },
+  });
+}
+
+export function useUpdateLeaveType() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["hr", "leaves", "update-type"],
+    mutationFn: ({ id, ...patch }: { id: number; name?: string; daysPerYear?: number; carryForward?: boolean }) =>
+      apiClient.patch<HrLeaveType>(`/hr/leaves/types/${id}`, patch),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: LEAVE_TYPES_KEY });
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() });
+    },
+  });
+}
+
+export function useDeleteLeaveType() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["hr", "leaves", "delete-type"],
+    mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/hr/leaves/types/${id}`),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: LEAVE_TYPES_KEY });
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() });
+    },
+  });
+}
+
+export function useCreateLeaveType() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["hr", "leaves", "create-type"],
+    mutationFn: (data: { name: string; daysPerYear: number; carryForward?: boolean }) =>
+      apiClient.post<{ id: number; name: string; daysPerYear: number }>(
+        "/hr/leaves/types",
+        data,
+      ),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: LEAVE_TYPES_KEY });
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() });
+    },
+  });
+}
+
 export function useHrLeaveContext() {
   return useQuery({
     queryKey: queryKeys.hr.leaves(),

@@ -2,11 +2,10 @@
 
 import { use, useState, useCallback } from "react";
 import Link from "next/link";
-import { Receipt, Wallet, AlertCircle, ArrowLeft } from "lucide-react";
+import { Receipt, Wallet, AlertCircle } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -168,21 +167,10 @@ export default function VendorLedgerDetailPage({ params }: PageProps) {
         (vendorId > 0 ? "Vendor ledger" : "Invalid vendor")
       }
       subtitle={subtitle}
+      backHref="/accounting/vendors"
+      backLabel="Back to vendors"
     >
       <div className="space-y-6">
-        <div>
-          <Button
-            variant="ghost"
-            size="sm"
-            asChild
-            className="-ml-2 text-muted-foreground hover:text-foreground"
-          >
-            <Link href="/accounting/vendors">
-              <ArrowLeft className="h-4 w-4 mr-1.5" />
-              Back to vendors
-            </Link>
-          </Button>
-        </div>
         <StatCardGrid cols={3}>
           <StatCard
             label="Total Billed"

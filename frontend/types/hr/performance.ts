@@ -154,7 +154,7 @@ export interface CreateGoalInput {
   title: string;
   description?: string;
   type?: string;
-  targetValue?: number;
+  targetValue: number;
   currentValue: number;
   unit?: string;
   startDate: Date | string;

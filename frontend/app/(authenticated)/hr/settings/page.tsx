@@ -1,40 +1,35 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { HubGrid } from "@/features/hr/settings-hub/hub-grid";
-
-const STORAGE_KEY = "hr-settings-mode";
+import { useHrSettingsMode } from "@/features/hr/settings-hub/use-hr-settings-mode";
 
 export default function HrSettingsHubPage() {
-  const [isAdvanced, setIsAdvanced] = useState(false);
+  const [isAdvanced, setMode] = useHrSettingsMode();
 
-  useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored !== null) {
-      try {
-        setIsAdvanced(JSON.parse(stored) as boolean);
-      } catch {
-        // ignore malformed value
-      }
-    }
-  }, []);
+  function handleSelectSimple() {
+    setMode(false);
+  }
 
-  function handleToggle(next: boolean) {
-    setIsAdvanced(next);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  function handleSelectAdvanced() {
+    setMode(true);
   }
 
   return (
     <PageWrapper
       title="HR Configuration"
-      subtitle="Configure policies, workflows, automations, and org settings"
+      subtitle={
+        isAdvanced
+          ? "All configuration surfaces, including workflows, automations, and versioning tools"
+          : "Guided essentials — switch to Advanced for workflows, automations, and versioning tools"
+      }
       variant="display"
       actions={
         <div className="bg-muted/40 border border-border/70 rounded-xl p-0.5 flex backdrop-blur-sm">
           <button
             type="button"
-            onClick={() => handleToggle(false)}
+            onClick={handleSelectSimple}
+            aria-pressed={!isAdvanced}
             className={
               !isAdvanced
                 ? "rounded-lg px-3 py-1.5 text-xs font-medium transition-colors bg-background shadow-sm text-foreground"
@@ -45,7 +40,8 @@ export default function HrSettingsHubPage() {
           </button>
           <button
             type="button"
-            onClick={() => handleToggle(true)}
+            onClick={handleSelectAdvanced}
+            aria-pressed={isAdvanced}
             className={
               isAdvanced
                 ? "rounded-lg px-3 py-1.5 text-xs font-medium transition-colors bg-background shadow-sm text-foreground"
@@ -57,7 +53,7 @@ export default function HrSettingsHubPage() {
         </div>
       }
     >
-      <HubGrid isAdvanced={isAdvanced} />
+      <HubGrid isAdvanced={isAdvanced} onSwitchToAdvanced={handleSelectAdvanced} />
     </PageWrapper>
   );
 }

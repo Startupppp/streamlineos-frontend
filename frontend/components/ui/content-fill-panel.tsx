@@ -12,10 +12,10 @@ export const PAGE_CHROME_X = "px-4 sm:px-6 lg:px-8";
 export const PAGE_CHROME_BOTTOM = "pb-2";
 
 export const FILTER_SELECT_TRIGGER =
-  "border-input bg-card text-foreground [&_svg]:text-muted-foreground";
+  "min-w-0 border-input bg-card text-foreground [&_svg]:text-muted-foreground [&_[data-slot=select-value]]:min-w-0 [&_[data-slot=select-value]]:truncate";
 
 export const FILTER_TOOLBAR_ROW =
-  "flex w-full min-w-0 max-w-full flex-nowrap items-center gap-2 overflow-x-auto overscroll-x-contain scrollbar-hide touch-pan-x [&>*:first-child]:min-w-0 [&>*:first-child]:flex-1 [&>*:not(:first-child)]:shrink-0 sm:[&>*]:shrink-0 sm:[&>*:first-child]:flex-none";
+  "flex w-full min-w-0 max-w-full flex-nowrap items-center gap-2 overflow-x-auto overscroll-x-contain scrollbar-hide touch-pan-x [&>[data-slot=search-input]]:min-w-[12rem] [&>[data-slot=search-input]]:flex-1 [&>[data-slot=search-input]]:basis-[12rem] [&>[data-slot=select-trigger]]:shrink-0 [&>*:not([data-slot=search-input])]:shrink-0";
 
 export const CONTENT_PANEL_SOLID =
   "rounded-xl border border-border bg-card shadow-sm";

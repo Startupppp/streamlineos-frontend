@@ -31,7 +31,6 @@ import {
   Bell,
   PackageMinus,
   Award,
-  GraduationCap,
   ClipboardCheck,
   Sparkles,
   HeartHandshake,
@@ -417,56 +416,6 @@ export const NAV_GROUPS: NavGroup[] = [
             label: "Analytics",
             icon: TrendingUp,
             href: "/hr/performance/analytics",
-            requiredPermission: "hr:performance:view",
-          },
-        ],
-      },
-      {
-        label: "Learning",
-        icon: GraduationCap,
-        href: "/hr/courses",
-        requiredPermission: "hr:performance:view",
-        children: [
-          {
-            label: "Courses",
-            icon: BookOpen,
-            href: "/hr/courses",
-            requiredPermission: "hr:performance:view",
-          },
-          {
-            label: "Training Programs",
-            icon: ClipboardCheck,
-            href: "/hr/training",
-            requiredPermission: "hr:performance:manage",
-          },
-          {
-            label: "Learning Paths",
-            icon: Map,
-            href: "/hr/learning-paths",
-            requiredPermission: "hr:performance:view",
-          },
-          {
-            label: "Skills",
-            icon: Zap,
-            href: "/hr/skills",
-            requiredPermission: "hr:performance:view",
-          },
-          {
-            label: "Certifications",
-            icon: Award,
-            href: "/hr/certifications",
-            requiredPermission: "hr:performance:view",
-          },
-          {
-            label: "Career Development",
-            icon: TrendingUp,
-            href: "/hr/career-development",
-            requiredPermission: "hr:performance:view",
-          },
-          {
-            label: "Analytics",
-            icon: BarChart3,
-            href: "/hr/learning/analytics",
             requiredPermission: "hr:performance:view",
           },
         ],
@@ -2614,6 +2563,15 @@ const PRODUCT_NAV_GROUP_LABELS: Record<ProductKey, string[]> = {
   payroll: ["Payroll"],
   sign: ["SignOS"],
 };
+
+export function withoutHrSetupRoute(groups: NavGroup[]): NavGroup[] {
+  return groups
+    .map((group) => ({
+      ...group,
+      routes: group.routes.filter((route) => route.href !== "/hr/setup"),
+    }))
+    .filter((group) => group.routes.length > 0);
+}
 
 export function getNavGroupsForProduct(
   productKey: ProductKey,

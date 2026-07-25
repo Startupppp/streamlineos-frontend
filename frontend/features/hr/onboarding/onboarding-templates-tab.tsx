@@ -68,7 +68,7 @@ function CreateTemplateSheet({ open, onOpenChange }: { open: boolean; onOpenChan
     createTemplate.mutate(
       {
         name: name.trim(),
-        departmentId: departmentId ? Number(departmentId) : undefined,
+        departmentId: departmentId || undefined,
         description: description.trim() || undefined,
         steps: validSteps,
       },
@@ -101,13 +101,17 @@ function CreateTemplateSheet({ open, onOpenChange }: { open: boolean; onOpenChan
 
         <div className="space-y-1.5">
           <Label>Department (optional)</Label>
-          <Select value={departmentId} onValueChange={setDepartmentId}>
+          <Select
+            value={departmentId || "all"}
+            onValueChange={(v) => setDepartmentId(v === "all" ? "" : v)}
+          >
             <SelectTrigger>
               <SelectValue placeholder="All departments (default plan)" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="all">All departments (default plan)</SelectItem>
               {(departments ?? []).map((d) => (
-                <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>
+                <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -208,8 +212,8 @@ export function OnboardingTemplatesTab() {
   const { data: departments } = useOnboardingTemplateDepartments();
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  const departmentName = (id: number | null) =>
-    id ? (departments ?? []).find((d) => d.id === id)?.name : "All departments";
+  const departmentName = (id: string | null) =>
+    id ? (departments ?? []).find((d) => d.id === id)?.name ?? "Department" : "All departments";
 
   return (
     <div className="space-y-4">

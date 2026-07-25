@@ -86,7 +86,7 @@ export interface OnboardingTemplate {
   id: number;
   orgId: string;
   name: string;
-  departmentId: number | null;
+  departmentId: string | null;
   description: string | null;
   isActive: boolean;
   createdBy: string;
@@ -97,13 +97,13 @@ export interface OnboardingTemplate {
 
 export interface CreateOnboardingTemplateInput {
   name: string;
-  departmentId?: number;
+  departmentId?: string;
   description?: string;
   steps: OnboardingTemplateStep[];
 }
 
 export interface OnboardingTemplateDepartment {
-  id: number;
+  id: string;
   name: string;
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -16,6 +16,8 @@ import { useRoles } from "@/hooks/api/roles";
 import { PersonalInfoSection } from "@/features/hr/employees/detail/personal-info-section";
 import { ProfessionalInfoSection } from "@/features/hr/employees/detail/professional-info-section";
 import { BankDetailsSection } from "@/features/hr/employees/detail/bank-details-section";
+import { UnsavedChangesDialog } from "@/components/ui/unsaved-changes-dialog";
+import { useUnsavedChangesGuard } from "@/hooks/common/use-unsaved-changes-guard";
 
 const hasLetterOrDigit = (v: string) => /[\p{L}\p{N}]/u.test(v);
 
@@ -121,9 +123,19 @@ export interface EmployeeData {
 
 interface EditEmployeeFormProps {
   employee: EmployeeData;
+  onDirtyChange?: (dirty: boolean) => void;
+  /** Parent can register leave interception (Back / tab change). */
+  registerLeaveGuard?: (api: {
+    isDirty: boolean;
+    requestLeave: (action: () => void) => void;
+  } | null) => void;
 }
 
-export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
+export function EditEmployeeForm({
+  employee,
+  onDirtyChange,
+  registerLeaveGuard,
+}: EditEmployeeFormProps) {
   const router = useRouter();
   const updateProfileMutation = useUpdateProfile();
   const { data: orgRoles } = useRoles();
@@ -132,9 +144,8 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
     [orgRoles],
   );
 
-  const form = useForm<EmployeeFormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
+  const defaultValues = useMemo<EmployeeFormValues>(
+    () => ({
       firstName: employee.firstName || "",
       lastName: employee.lastName || "",
       role: employee.role || "ENGINEERING",
@@ -154,48 +165,82 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
       branch: employee.bankDetails?.branch || "",
       ifsc: employee.bankDetails?.ifsc || "",
       accountHolder: employee.bankDetails?.accountHolder || "",
+    }),
+    [employee],
+  );
+
+  const form = useForm<EmployeeFormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues,
+  });
+
+  const isDirty = form.formState.isDirty;
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
+
+  const persist = useCallback(
+    async (values: EmployeeFormValues) => {
+      await updateProfileMutation.mutateAsync({
+        userId: employee.id,
+        firstName: values.firstName,
+        lastName: values.lastName,
+        role: values.role as string,
+        designation: values.designation,
+        departmentId: values.departmentId,
+        phone: values.phone,
+        gender: values.gender,
+        joiningDate: values.joiningDate?.toISOString().slice(0, 10),
+        taxId: values.taxId,
+        monthlySalary: values.monthlySalary,
+        bankDetails: values.bankAccount
+          ? {
+              accountNumber: values.bankAccount,
+              bankName: values.bankName || "",
+              branch: values.branch || "",
+              ifsc: values.ifsc || "",
+              accountHolder: values.accountHolder || "",
+            }
+          : undefined,
+      });
+      form.reset(values);
+      router.refresh();
+    },
+    [employee.id, form, router, updateProfileMutation],
+  );
+
+  const { requestLeave, dialogProps } = useUnsavedChangesGuard({
+    isDirty,
+    onDiscard: () => form.reset(defaultValues),
+    onSave: async () => {
+      const valid = await form.trigger();
+      if (!valid) throw new Error("Validation failed");
+      await persist(form.getValues());
+      toast.success("Employee updated successfully!");
     },
   });
 
+  useEffect(() => {
+    registerLeaveGuard?.({ isDirty, requestLeave });
+    return () => registerLeaveGuard?.(null);
+  }, [isDirty, registerLeaveGuard, requestLeave]);
+
   const onSubmit = useCallback(
     async (values: EmployeeFormValues) => {
-      toast.promise(
-        updateProfileMutation.mutateAsync({
-          userId: employee.id,
-          firstName: values.firstName,
-          lastName: values.lastName,
-          role: values.role as string,
-          designation: values.designation,
-          departmentId: values.departmentId,
-          phone: values.phone,
-          gender: values.gender,
-          joiningDate: values.joiningDate?.toISOString().slice(0, 10),
-          taxId: values.taxId,
-          monthlySalary: values.monthlySalary,
-          bankDetails: values.bankAccount
-            ? {
-                accountNumber: values.bankAccount,
-                bankName: values.bankName || "",
-                branch: values.branch || "",
-                ifsc: values.ifsc || "",
-                accountHolder: values.accountHolder || "",
-              }
-            : undefined,
-        }),
-        {
-          loading: "Updating employee...",
-          success: () => {
-            router.refresh();
-            return "Employee updated successfully!";
-          },
-          error: (err: unknown) => getErrorMessage(err),
-        },
-      );
+      try {
+        await persist(values);
+        toast.success("Employee updated successfully!");
+      } catch (err) {
+        toast.error(getErrorMessage(err));
+      }
     },
-    [employee.id, router, updateProfileMutation],
+    [persist],
   );
 
-  const handleCancel = useCallback(() => router.back(), [router]);
+  const handleCancel = useCallback(() => {
+    requestLeave(() => router.back());
+  }, [requestLeave, router]);
 
   return (
     <FormProvider {...form}>
@@ -215,7 +260,7 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
           <div className="p-5">
             <BankDetailsSection />
           </div>
-          <div className="shrink-0 flex justify-end gap-2 px-5 py-3.5 bg-muted/30 border-t border-border">
+          <div className="flex shrink-0 justify-end gap-2 border-t border-border bg-muted/30 px-5 py-3.5">
             <Button
               variant="outline"
               size="sm"
@@ -239,6 +284,7 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
           </div>
         </div>
       </form>
+      <UnsavedChangesDialog {...dialogProps} />
     </FormProvider>
   );
 }

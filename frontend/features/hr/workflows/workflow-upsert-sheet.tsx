@@ -85,9 +85,9 @@ export function WorkflowUpsertSheet({ open, onOpenChange, editDefinition }: Prop
         name: editDefinition.name,
         isDefault: editDefinition.isDefault,
         settings: {
-          rejectionCommentRequired: editDefinition.settings.rejectionCommentRequired ?? false,
-          allowDelegation: editDefinition.settings.allowDelegation ?? true,
-          allowReopen: editDefinition.settings.allowReopen ?? false,
+          rejectionCommentRequired: editDefinition.settings?.rejectionCommentRequired ?? false,
+          allowDelegation: editDefinition.settings?.allowDelegation ?? true,
+          allowReopen: editDefinition.settings?.allowReopen ?? false,
         },
         steps: editDefinition.steps?.map((s) => ({
           stepOrder: s.stepOrder,

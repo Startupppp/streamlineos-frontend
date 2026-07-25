@@ -4,7 +4,6 @@ import { useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { format } from "date-fns";
 import {
-  ArrowLeft,
   Shield,
   Calendar,
   Users,
@@ -46,12 +45,17 @@ function RoleEditorContent() {
   }, [roleQuery]);
 
   if (roleQuery.isLoading) {
-    return <RoleEditorSkeleton onBack={handleBack} />;
+    return <RoleEditorSkeleton />;
   }
 
   if (roleQuery.isError || !roleQuery.data) {
     return (
-      <PageWrapper title="Role not found" subtitle="This role could not be loaded.">
+      <PageWrapper
+        title="Role not found"
+        subtitle="This role could not be loaded."
+        backHref="/settings/roles"
+        backLabel="Back to Roles"
+      >
         <div className="flex flex-col items-center justify-center flex-1 py-20 gap-4 text-center">
           <AlertTriangle className="h-10 w-10 text-muted-foreground" />
           <div>
@@ -66,7 +70,6 @@ function RoleEditorContent() {
               Retry
             </Button>
             <Button variant="outline" onClick={handleBack} className="gap-2">
-              <ArrowLeft className="h-4 w-4" />
               Back to Roles
             </Button>
           </div>
@@ -83,12 +86,8 @@ function RoleEditorContent() {
       title={role.name}
       subtitle="Manage permissions for this role"
       noInternalScroll
-      actions={
-        <Button variant="outline" onClick={handleBack} className="gap-2">
-          <ArrowLeft className="h-4 w-4" />
-          Roles
-        </Button>
-      }
+      backHref="/settings/roles"
+      backLabel="Roles"
     >
       <div className="flex flex-col gap-4 lg:h-full lg:min-h-0">
         <Card>
@@ -160,22 +159,14 @@ function RoleEditorContent() {
   );
 }
 
-interface RoleEditorSkeletonProps {
-  onBack: () => void;
-}
-
-function RoleEditorSkeleton({ onBack }: RoleEditorSkeletonProps) {
+function RoleEditorSkeleton() {
   return (
     <PageWrapper
       title="Loading…"
       subtitle="Manage permissions for this role"
       noInternalScroll
-      actions={
-        <Button variant="outline" onClick={onBack} className="gap-2" disabled>
-          <ArrowLeft className="h-4 w-4" />
-          Roles
-        </Button>
-      }
+      backHref="/settings/roles"
+      backLabel="Roles"
     >
       <div className="flex flex-col gap-4 lg:h-full lg:min-h-0">
         <Card>

@@ -12,7 +12,13 @@ interface PageWrapperProps {
   title: React.ReactNode;
   subtitle?: React.ReactNode;
   badge?: React.ReactNode;
+  /** Labeled Back link on the left of the title. */
   backHref?: string;
+  /** Labeled Back button on the left (click handler). Ignored when `leading` is set. */
+  onBack?: () => void;
+  /** Visible label for `backHref` / `onBack`. Defaults to "Back". */
+  backLabel?: string;
+  /** Custom left control; takes precedence over `backHref` / `onBack`. */
   leading?: React.ReactNode;
   actions?: React.ReactNode;
   filters?: React.ReactNode;
@@ -25,11 +31,16 @@ interface PageWrapperProps {
   variant?: "default" | "display";
 }
 
+const backButtonClassName =
+  "-ml-2 h-9 shrink-0 gap-1.5 px-2.5 sm:h-8";
+
 export function PageWrapper({
   title,
   subtitle,
   badge,
   backHref,
+  onBack,
+  backLabel = "Back",
   leading,
   actions,
   filters,
@@ -45,6 +56,28 @@ export function PageWrapper({
     variant === "display"
       ? "font-display text-xl sm:text-2xl lg:text-[1.7rem] font-extrabold tracking-[-0.02em] text-foreground leading-tight"
       : "text-base sm:text-lg font-semibold tracking-tight text-foreground leading-tight";
+
+  const builtInBack =
+    !leading &&
+    (onBack ? (
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        className={backButtonClassName}
+        onClick={onBack}
+      >
+        <ArrowLeft className="h-3.5 w-3.5" />
+        {backLabel}
+      </Button>
+    ) : backHref ? (
+      <Button variant="ghost" size="sm" className={backButtonClassName} asChild>
+        <Link href={backHref}>
+          <ArrowLeft className="h-3.5 w-3.5" />
+          {backLabel}
+        </Link>
+      </Button>
+    ) : null);
 
   return (
     <div className={cn("flex flex-col flex-1 min-h-0 min-w-0 overflow-x-hidden", className)}>
@@ -68,14 +101,7 @@ export function PageWrapper({
               actionsInline ? "items-center" : "items-start",
             )}
           >
-            {leading}
-            {!leading && backHref && (
-              <Button variant="ghost" size="icon" className="w-8 shrink-0 mt-0.5" aria-label="Back" asChild>
-                <Link href={backHref}>
-                  <ArrowLeft className="h-4 w-4" />
-                </Link>
-              </Button>
-            )}
+            {leading ?? builtInBack}
             <div className="min-w-0 flex-1">
               <div className="flex min-w-0 items-center gap-2 flex-wrap">
                 {typeof title === "string" ? (
@@ -92,10 +118,9 @@ export function PageWrapper({
                 )}
               </div>
               {subtitle && typeof subtitle === "string" ? (
-                <TruncatedText
-                  text={subtitle}
-                  className="mt-1 text-[13px] text-muted-foreground leading-snug max-w-2xl"
-                />
+                <p className="mt-1 text-[13px] text-muted-foreground leading-snug max-w-2xl">
+                  {subtitle}
+                </p>
               ) : subtitle ? (
                 <div className="mt-1 text-[13px] text-muted-foreground leading-snug max-w-2xl">
                   {subtitle}
@@ -121,7 +146,10 @@ export function PageWrapper({
       {filters && (
         <div
           className={cn(
-            "shrink-0 w-full min-w-0 flex flex-nowrap items-center gap-2 overflow-x-auto overscroll-x-contain scrollbar-hide touch-pan-x pb-3 sm:gap-2.5 [&>*:first-child]:min-w-0 [&>*:first-child]:flex-1 sm:[&>*:first-child]:flex-none",
+            // Match FILTER_TOOLBAR_ROW: grow search only, never crush selects into overlaps.
+            "shrink-0 w-full min-w-0 flex flex-nowrap items-center gap-2 overflow-x-auto overscroll-x-contain scrollbar-hide touch-pan-x pb-3 sm:gap-2.5",
+            "[&>[data-slot=search-input]]:min-w-[12rem] [&>[data-slot=search-input]]:flex-1 [&>[data-slot=search-input]]:basis-[12rem]",
+            "[&>[data-slot=select-trigger]]:shrink-0 [&>*:not([data-slot=search-input])]:shrink-0",
             PAGE_CHROME_X,
             filtersClassName,
           )}

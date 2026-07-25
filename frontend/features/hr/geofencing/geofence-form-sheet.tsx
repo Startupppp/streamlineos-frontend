@@ -91,6 +91,8 @@ export function GeofenceFormSheet({ open, onOpenChange, fence }: Props) {
       onSubmit={form.handleSubmit(onSubmit)}
       submitLabel={isEdit ? "Save Changes" : "Add Location"}
       isPending={createFence.isPending || updateFence.isPending}
+      isDirty={form.formState.isDirty}
+      onDiscard={() => form.reset()}
     >
       <Form {...form}>
         <div className="space-y-5">

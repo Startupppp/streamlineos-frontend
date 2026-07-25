@@ -41,7 +41,8 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { Employee } from "@/types/hr";
+import { buildPipSchema } from "./pip-schema";
+import { zodFieldErrors } from "./zod-field-errors";
 
 export function PIPTab() {
   const { data: pips, isLoading } = usePIPs();
@@ -60,6 +61,7 @@ export function PIPTab() {
   const [notes, setNotes] = useState("");
   const [managerRating, setManagerRating] = useState("");
   const [objectives, setObjectives] = useState([{ objective: "", metric: "", deadline: "" }]);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const employees = useMemo(
     () => unwrapEmployees(employeesRaw).filter((e) => !!e.id),
@@ -83,6 +85,7 @@ export function PIPTab() {
     setManagerRating("");
     setObjectives([{ objective: "", metric: "", deadline: "" }]);
     setEditingPip(null);
+    setFieldErrors({});
   }, []);
 
   const handleManagerRatingChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
@@ -102,42 +105,44 @@ export function PIPTab() {
     setNotes(pip.notes ?? "");
     setManagerRating("");
     setObjectives(pip.objectives && pip.objectives.length > 0 ? pip.objectives : [{ objective: "", metric: "", deadline: "" }]);
+    setFieldErrors({});
     setSheetOpen(true);
   }, []);
 
   const handleSubmit = useCallback(() => {
-    if (!pipUserId) { toast.error("Please select an employee"); return; }
-    const trimmedReason = reason.trim();
-    if (!trimmedReason) { toast.error("Reason is required"); return; }
-    if (trimmedReason.length < 10) { toast.error("Reason must be at least 10 characters"); return; }
-    if (trimmedReason.length > 1000) { toast.error("Reason must be at most 1000 characters"); return; }
-    if (!startDate) { toast.error("Start date is required"); return; }
-    if (!endDate) { toast.error("End date is required"); return; }
-    if (endDate <= startDate) { toast.error("End date must be after start date"); return; }
-    if (hrRepId && hrRepId === pipUserId) { toast.error("HR representative cannot be the same as the employee"); return; }
-
-    const validObjectives = objectives.filter((o) => o.objective.trim() && o.metric.trim() && o.deadline);
-    if (validObjectives.length === 0) { toast.error("At least one complete objective (goal, metric, deadline) is required"); return; }
-    for (const o of validObjectives) {
-      const obj = o.objective.trim();
-      const met = o.metric.trim();
-      if (obj.length < 3) { toast.error("Each objective must be at least 3 characters"); return; }
-      if (obj.length > 500) { toast.error("Each objective must be at most 500 characters"); return; }
-      if (met.length < 3) { toast.error("Each success metric must be at least 3 characters"); return; }
-      if (met.length > 200) { toast.error("Each success metric must be at most 200 characters"); return; }
-      if (o.deadline < startDate) { toast.error("Objective deadlines must be within the PIP period (after start date)"); return; }
-    }
-    const lateDeadline = validObjectives.find((o) => o.deadline > endDate);
-    if (lateDeadline) { toast.error("Objective deadlines cannot exceed the PIP end date"); return; }
-    const trimmedNotes = notes.trim();
-    if (trimmedNotes.length > 2000) { toast.error("Notes must be at most 2000 characters"); return; }
-
-    const payload = {
-      reason: trimmedReason,
-      objectives: validObjectives.map((o) => ({ objective: o.objective.trim(), metric: o.metric.trim(), deadline: o.deadline })),
+    const completeObjectives = objectives.filter(
+      (o) => o.objective.trim() && o.metric.trim() && o.deadline,
+    );
+    const schema = buildPipSchema({ enforceFutureStart: !editingPip });
+    const parsed = schema.safeParse({
+      userId: pipUserId,
+      hrRepId,
+      reason,
+      startDate,
       endDate,
-      notes: trimmedNotes || undefined,
-      hrRepId: hrRepId || undefined,
+      notes,
+      objectives:
+        completeObjectives.length > 0
+          ? completeObjectives
+          : [{ objective: "", metric: "", deadline: "" }],
+    });
+    if (!parsed.success) {
+      setFieldErrors(zodFieldErrors(parsed.error));
+      return;
+    }
+    setFieldErrors({});
+
+    const data = parsed.data;
+    const payload = {
+      reason: data.reason,
+      objectives: data.objectives.map((o) => ({
+        objective: o.objective,
+        metric: o.metric,
+        deadline: o.deadline,
+      })),
+      endDate: data.endDate,
+      notes: data.notes || undefined,
+      hrRepId: data.hrRepId || undefined,
     };
 
     if (editingPip) {
@@ -150,10 +155,13 @@ export function PIPTab() {
       );
     } else {
       const existingActive = pipsList.find((p) => p.userId === pipUserId && (p.status === "ACTIVE" || p.status === "EXTENDED"));
-      if (existingActive) { toast.error("This employee already has an active PIP"); return; }
+      if (existingActive) {
+        setFieldErrors({ userId: "This employee already has an active PIP" });
+        return;
+      }
 
       createPIP.mutate(
-        { userId: pipUserId, startDate, ...payload },
+        { userId: data.userId, startDate: data.startDate, ...payload },
         {
           onSuccess: () => { toast.success("PIP created"); setSheetOpen(false); resetForm(); },
           onError: (e) => toast.error(getErrorMessage(e)),
@@ -302,7 +310,16 @@ export function PIPTab() {
           <label className="text-sm font-medium">Employee <span className="text-destructive">*</span></label>
           <Popover open={pipUserPickerOpen} onOpenChange={(o) => { if (!editingPip) setPipUserPickerOpen(o); }}>
             <PopoverTrigger asChild>
-              <Button variant="outline" role="combobox" aria-expanded={pipUserPickerOpen} className="w-full justify-between font-normal" disabled={!!editingPip}>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={pipUserPickerOpen}
+                className={cn(
+                  "w-full justify-between font-normal",
+                  fieldErrors.userId && "border-destructive",
+                )}
+                disabled={!!editingPip}
+              >
                 <span className="truncate">
                   {pipUserId
                     ? (() => { const e = employees.find((x) => x.id === pipUserId); return e ? ([e.firstName, e.lastName].filter(Boolean).join(" ") || e.email) : "Select employee"; })()
@@ -320,7 +337,19 @@ export function PIPTab() {
                     {employees.filter((e) => e.isActive).map((e) => {
                       const label = [e.firstName, e.lastName].filter(Boolean).join(" ") || e.email;
                       return (
-                        <CommandItem key={e.id} value={`${label} ${e.email}`} onSelect={() => { setPipUserId(e.id); setPipUserPickerOpen(false); }}>
+                        <CommandItem
+                          key={e.id}
+                          value={`${label} ${e.email}`}
+                          onSelect={() => {
+                            setPipUserId(e.id);
+                            setPipUserPickerOpen(false);
+                            setFieldErrors((prev) => {
+                              const next = { ...prev };
+                              delete next.userId;
+                              return next;
+                            });
+                          }}
+                        >
                           <Check className={cn("mr-2 h-4 w-4", pipUserId === e.id ? "opacity-100" : "opacity-0")} />
                           {label}
                         </CommandItem>
@@ -331,12 +360,21 @@ export function PIPTab() {
               </Command>
             </PopoverContent>
           </Popover>
+          {fieldErrors.userId && <p className="text-xs text-destructive">{fieldErrors.userId}</p>}
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">HR Representative <span className="text-muted-foreground font-normal">(optional)</span></label>
           <Popover open={hrRepPickerOpen} onOpenChange={setHrRepPickerOpen}>
             <PopoverTrigger asChild>
-              <Button variant="outline" role="combobox" aria-expanded={hrRepPickerOpen} className="w-full justify-between font-normal">
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={hrRepPickerOpen}
+                className={cn(
+                  "w-full justify-between font-normal",
+                  fieldErrors.hrRepId && "border-destructive",
+                )}
+              >
                 <span className="truncate">
                   {hrRepId
                     ? (() => { const e = hrEmployees.find((x) => x.id === hrRepId); return e ? ([e.firstName, e.lastName].filter(Boolean).join(" ") || e.email) : "Select HR representative"; })()
@@ -358,7 +396,19 @@ export function PIPTab() {
                     {hrEmployees.filter((e) => e.id !== pipUserId).map((e) => {
                       const label = [e.firstName, e.lastName].filter(Boolean).join(" ") || e.email;
                       return (
-                        <CommandItem key={e.id} value={`${label} ${e.email}`} onSelect={() => { setHrRepId(e.id); setHrRepPickerOpen(false); }}>
+                        <CommandItem
+                          key={e.id}
+                          value={`${label} ${e.email}`}
+                          onSelect={() => {
+                            setHrRepId(e.id);
+                            setHrRepPickerOpen(false);
+                            setFieldErrors((prev) => {
+                              const next = { ...prev };
+                              delete next.hrRepId;
+                              return next;
+                            });
+                          }}
+                        >
                           <Check className={cn("mr-2 h-4 w-4", hrRepId === e.id ? "opacity-100" : "opacity-0")} />
                           {label}
                         </CommandItem>
@@ -369,10 +419,12 @@ export function PIPTab() {
               </Command>
             </PopoverContent>
           </Popover>
+          {fieldErrors.hrRepId && <p className="text-xs text-destructive">{fieldErrors.hrRepId}</p>}
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Reason <span className="text-destructive">*</span></label>
           <Textarea placeholder="Describe the performance concerns..." value={reason} onChange={handleReasonChange} rows={3} maxLength={1000} />
+          {fieldErrors.reason && <p className="text-xs text-destructive">{fieldErrors.reason}</p>}
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
@@ -387,6 +439,7 @@ export function PIPTab() {
               fromYear={pipStartBounds.fromYear}
               toYear={pipStartBounds.toYear}
             />
+            {fieldErrors.startDate && <p className="text-xs text-destructive">{fieldErrors.startDate}</p>}
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">End Date <span className="text-destructive">*</span></label>
@@ -399,6 +452,7 @@ export function PIPTab() {
               fromYear={pipEndBounds.fromYear}
               toYear={pipEndBounds.toYear}
             />
+            {fieldErrors.endDate && <p className="text-xs text-destructive">{fieldErrors.endDate}</p>}
           </div>
         </div>
         <div className="space-y-2">
@@ -408,6 +462,7 @@ export function PIPTab() {
               <Plus className="h-3 w-3 mr-1" />Add
             </Button>
           </div>
+          {fieldErrors.objectives && <p className="text-xs text-destructive">{fieldErrors.objectives}</p>}
           <div className="space-y-3">
             {objectives.map((obj, idx) => (
               <div key={idx} className="space-y-2 p-3 border rounded-lg bg-muted/20">
@@ -420,7 +475,13 @@ export function PIPTab() {
                   )}
                 </div>
                 <Input placeholder="Goal / objective" value={obj.objective} onChange={(e) => updateObjectiveField(idx, "objective", e.target.value)} className="text-xs" />
+                {fieldErrors[`objectives.${idx}.objective`] && (
+                  <p className="text-xs text-destructive">{fieldErrors[`objectives.${idx}.objective`]}</p>
+                )}
                 <Input placeholder="Success metric" value={obj.metric} onChange={(e) => updateObjectiveField(idx, "metric", e.target.value)} className="text-xs" />
+                {fieldErrors[`objectives.${idx}.metric`] && (
+                  <p className="text-xs text-destructive">{fieldErrors[`objectives.${idx}.metric`]}</p>
+                )}
                 <DatePicker
                   value={obj.deadline ?? ""}
                   onChange={(v) => updateObjectiveField(idx, "deadline", v)}
@@ -431,6 +492,9 @@ export function PIPTab() {
                   toYear={objectiveDeadlineBounds.toYear}
                   toDate={endDate ? new Date(`${endDate}T00:00:00`) : undefined}
                 />
+                {fieldErrors[`objectives.${idx}.deadline`] && (
+                  <p className="text-xs text-destructive">{fieldErrors[`objectives.${idx}.deadline`]}</p>
+                )}
               </div>
             ))}
           </div>
@@ -439,6 +503,7 @@ export function PIPTab() {
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Notes (optional)</label>
           <Textarea placeholder="Additional context or manager notes..." value={notes} onChange={handleNotesChange} rows={2} maxLength={2000} />
+          {fieldErrors.notes && <p className="text-xs text-destructive">{fieldErrors.notes}</p>}
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Manager Rating <span className="text-muted-foreground font-normal">(1–5, optional)</span></label>

@@ -5,10 +5,13 @@ import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { usePermissions } from "@/lib/rbac/hooks";
 import { useEnabledModules } from "@/hooks/api/access/org-modules";
+import { useCan } from "@/hooks/api/access";
+import { useModuleChecklist } from "@/hooks/api/onboarding-flow";
 import {
   getNavGroupsForProduct,
-  getProductFromPathname,
   shouldHideProductSidebar,
+  getProductFromPathname,
+  withoutHrSetupRoute,
   type NavGroup,
   type ProductKey,
 } from "./sidebar-nav-items";
@@ -23,6 +26,8 @@ export function useProductSidebarVisibility(): {
   const pathname = usePathname();
   const { permissions } = usePermissions();
   const enabledModules = useEnabledModules();
+  const canViewHr = useCan("hr:employees:view");
+  const { data: hrChecklist } = useModuleChecklist("HR", canViewHr);
 
   const role = session?.user?.role;
   const isOrgOwner =
@@ -30,22 +35,26 @@ export function useProductSidebarVisibility(): {
     session?.user?.isPlatformAdmin === true;
 
   const [lastKnownRole, setLastKnownRole] = useState<string | undefined>(role);
-  if (role && role !== lastKnownRole) { setLastKnownRole(role); }
+  if (role && role !== lastKnownRole) {
+    setLastKnownRole(role);
+  }
   const rawRole = role || lastKnownRole;
   const effectiveRole = isOrgOwner ? "OWNER" : rawRole;
 
   const activeProduct = getProductFromPathname(pathname);
 
-  const navGroups = useMemo(
-    () =>
-      getNavGroupsForProduct(
-        activeProduct,
-        effectiveRole,
-        permissions,
-        enabledModules,
-      ),
-    [activeProduct, effectiveRole, permissions, enabledModules],
-  );
+  const hideHrSetup =
+    hrChecklist?.status === "completed" || Boolean(hrChecklist?.dismissedAt);
+
+  const navGroups = useMemo(() => {
+    const groups = getNavGroupsForProduct(
+      activeProduct,
+      effectiveRole,
+      permissions,
+      enabledModules,
+    );
+    return hideHrSetup ? withoutHrSetupRoute(groups) : groups;
+  }, [activeProduct, effectiveRole, permissions, enabledModules, hideHrSetup]);
 
   const hideSidebar =
     status !== "loading" && shouldHideProductSidebar(navGroups);

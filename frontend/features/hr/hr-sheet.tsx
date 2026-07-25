@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import {
   Sheet,
   SheetContent,
@@ -11,6 +12,8 @@ import {
 } from "@/components/ui/sheet";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Button } from "@/components/ui/button";
+import { UnsavedChangesDialog } from "@/components/ui/unsaved-changes-dialog";
+import { useUnsavedChangesGuard } from "@/hooks/common/use-unsaved-changes-guard";
 
 interface HrSheetProps {
   open: boolean;
@@ -18,7 +21,7 @@ interface HrSheetProps {
   title: string;
   description?: string;
   children: React.ReactNode;
-  onSubmit?: () => void;
+  onSubmit?: () => void | Promise<void>;
   onCancel?: () => void;
   submitLabel?: React.ReactNode;
   cancelLabel?: React.ReactNode;
@@ -26,6 +29,10 @@ interface HrSheetProps {
   submitDisabled?: boolean;
   side?: "right" | "left";
   showSubmit?: boolean;
+  /** When true, closing asks Save / Discard / Keep editing. */
+  isDirty?: boolean;
+  /** Called before discard-close so callers can reset form state. */
+  onDiscard?: () => void;
 }
 
 export function HrSheet({
@@ -42,55 +49,86 @@ export function HrSheet({
   submitDisabled = false,
   side = "right",
   showSubmit = true,
+  isDirty = false,
+  onDiscard,
 }: HrSheetProps) {
+  const closeSheet = useCallback(() => {
+    if (onCancel) onCancel();
+    else onOpenChange(false);
+  }, [onCancel, onOpenChange]);
+
+  const { requestLeave, dialogProps } = useUnsavedChangesGuard({
+    isDirty: open && isDirty,
+    saveMode: "stay",
+    onSave: onSubmit
+      ? async () => {
+          await onSubmit();
+        }
+      : undefined,
+    onDiscard: () => {
+      onDiscard?.();
+    },
+  });
+
   function handleSubmit() {
     if (onSubmit) onSubmit();
   }
 
   function handleCancel() {
-    if (onCancel) {
-      onCancel();
-    } else {
-      onOpenChange(false);
+    requestLeave(closeSheet);
+  }
+
+  function handleOpenChange(next: boolean) {
+    if (next) {
+      onOpenChange(true);
+      return;
     }
+    // Intercept close — only propagate when leave is allowed / confirmed.
+    requestLeave(() => onOpenChange(false));
   }
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        side={side}
-        className="flex w-full max-w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-md"
-      >
-        <SheetHeader className="shrink-0 border-b border-border px-5 pb-4 pt-5 text-left">
-          <SheetTitle className="text-base font-semibold">{title}</SheetTitle>
-          {description && (
-            <SheetDescription className="text-xs text-muted-foreground">{description}</SheetDescription>
+    <>
+      <Sheet open={open} onOpenChange={handleOpenChange}>
+        <SheetContent
+          side={side}
+          className="flex w-full max-w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-md"
+        >
+          <SheetHeader className="shrink-0 border-b border-border px-5 pb-4 pt-5 text-left">
+            <SheetTitle className="text-base font-semibold">{title}</SheetTitle>
+            {description && (
+              <SheetDescription className="text-xs text-muted-foreground">
+                {description}
+              </SheetDescription>
+            )}
+          </SheetHeader>
+
+          <SheetBody className="space-y-5 px-5 py-5">{children}</SheetBody>
+
+          {showSubmit && (
+            <SheetFooter className="shrink-0 flex-col gap-2 border-t border-border bg-muted/30 px-5 py-4">
+              <LoadingButton
+                className="h-9 w-full gap-1.5 transition-colors duration-200"
+                onClick={handleSubmit}
+                disabled={!onSubmit || submitDisabled}
+                isPending={isPending}
+              >
+                {submitLabel}
+              </LoadingButton>
+              <Button
+                variant="outline"
+                className="h-9 w-full transition-colors duration-200"
+                onClick={handleCancel}
+                disabled={isPending}
+              >
+                {cancelLabel}
+              </Button>
+            </SheetFooter>
           )}
-        </SheetHeader>
+        </SheetContent>
+      </Sheet>
 
-        <SheetBody className="space-y-5 px-5 py-5">{children}</SheetBody>
-
-        {showSubmit && (
-          <SheetFooter className="shrink-0 flex-col gap-2 border-t border-border bg-muted/30 px-5 py-4">
-            <LoadingButton
-              className="h-9 w-full gap-1.5 transition-colors duration-200"
-              onClick={handleSubmit}
-              disabled={!onSubmit || submitDisabled}
-              isPending={isPending}
-            >
-              {submitLabel}
-            </LoadingButton>
-            <Button
-              variant="outline"
-              className="h-9 w-full transition-colors duration-200"
-              onClick={handleCancel}
-              disabled={isPending}
-            >
-              {cancelLabel}
-            </Button>
-          </SheetFooter>
-        )}
-      </SheetContent>
-    </Sheet>
+      <UnsavedChangesDialog {...dialogProps} />
+    </>
   );
 }

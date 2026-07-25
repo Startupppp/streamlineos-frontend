@@ -14,7 +14,12 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { WelcomeIllustration } from "@/components/illustrations";
 import { useCan } from "@/hooks/api/access";
-import { useModuleChecklist, useGuidedTours, useDismissTour } from "@/hooks/api/onboarding-flow";
+import {
+  useModuleChecklist,
+  useGuidedTours,
+  useDismissTour,
+  useDismissModuleChecklist,
+} from "@/hooks/api/onboarding-flow";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 
@@ -23,18 +28,26 @@ const HR_SETUP_TOUR_KEY = "hr_setup";
 export function HrWelcomeDialog() {
   const router = useRouter();
   const canView = useCan("hr:employees:view");
+  const canManage = useCan("hr:employees:manage");
   const { data: checklist } = useModuleChecklist("HR", canView);
   const { data: tours } = useGuidedTours(canView);
   const dismissTour = useDismissTour();
+  const dismissChecklist = useDismissModuleChecklist();
 
   const tour = tours?.find((t) => t.tourKey === HR_SETUP_TOUR_KEY);
   const shouldShow =
-    canView && !!checklist && checklist.status !== "completed" && !!tour && tour.progress === null;
+    canView &&
+    !!checklist &&
+    checklist.status !== "completed" &&
+    !checklist.dismissedAt &&
+    !!tour &&
+    tour.progress === null;
 
   if (!shouldShow || !checklist) return null;
 
   const total = checklist.items.length;
   const completed = checklist.items.filter((i) => i.status === "done").length;
+  const isDismissing = dismissTour.isPending || dismissChecklist.isPending;
 
   function handleStart() {
     // The animated spotlight walkthrough auto-opens on /hr/setup (HrSetupTourProvider's
@@ -42,7 +55,7 @@ export function HrWelcomeDialog() {
     router.push("/hr/setup?tour=1");
   }
 
-  async function handleDismiss() {
+  async function handleRemindLater() {
     try {
       await dismissTour.mutateAsync(HR_SETUP_TOUR_KEY);
     } catch (err) {
@@ -50,8 +63,20 @@ export function HrWelcomeDialog() {
     }
   }
 
+  async function handleSkip() {
+    try {
+      // Full skip: stop nagging and hide HR Setup from the sidebar.
+      if (canManage) {
+        await dismissChecklist.mutateAsync("HR");
+      }
+      await dismissTour.mutateAsync(HR_SETUP_TOUR_KEY);
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    }
+  }
+
   function handleOpenChange(open: boolean) {
-    if (!open) void handleDismiss();
+    if (!open) void handleRemindLater();
   }
 
   return (
@@ -91,16 +116,16 @@ export function HrWelcomeDialog() {
             <LoadingButton
               variant="outline"
               className="h-11 min-w-0 flex-1 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm"
-              isPending={dismissTour.isPending}
-              onClick={handleDismiss}
+              isPending={isDismissing}
+              onClick={handleRemindLater}
             >
               <span className="truncate">Remind Me Later</span>
             </LoadingButton>
             <LoadingButton
               variant="ghost"
               className="h-11 min-w-0 flex-1 px-2 text-xs text-muted-foreground sm:h-9 sm:px-3 sm:text-sm"
-              isPending={dismissTour.isPending}
-              onClick={handleDismiss}
+              isPending={isDismissing}
+              onClick={handleSkip}
             >
               Skip
             </LoadingButton>

@@ -482,17 +482,13 @@ export default function JobPostingsPage() {
       <PageWrapper
         title="Job Postings"
         subtitle={subtitle}
+        backHref="/hr/recruitment"
         actions={
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/hr/recruitment">Back</Link>
-            </Button>
-            <Button size="sm" asChild>
-              <Link href="/hr/recruitment/jobs/new">
-                <Plus className="mr-1.5 h-4 w-4" /> New Job
-              </Link>
-            </Button>
-          </div>
+          <Button size="sm" asChild>
+            <Link href="/hr/recruitment/jobs/new">
+              <Plus className="mr-1.5 h-4 w-4" /> New Job
+            </Link>
+          </Button>
         }
         filters={
           <div className={FILTER_TOOLBAR_ROW}>

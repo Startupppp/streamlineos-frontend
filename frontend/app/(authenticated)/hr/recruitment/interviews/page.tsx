@@ -160,11 +160,9 @@ export default function InterviewsPage() {
     <PageWrapper
       title="Interviews"
       subtitle={subtitle}
+      backHref="/hr/recruitment"
       actions={
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/hr/recruitment">Back</Link>
-          </Button>
           <Button variant="outline" size="sm" asChild>
             <Link href="/hr/recruitment/interviewer-performance">
               <BarChart2 className="h-3.5 w-3.5" />

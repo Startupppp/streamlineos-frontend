@@ -156,6 +156,8 @@ export function ShiftFormSheet({ open, onOpenChange, shift }: Props) {
         onSubmit={form.handleSubmit(requestConfirm)}
         submitLabel={isEdit ? "Save Changes" : "Create Shift"}
         isPending={isPending}
+        isDirty={form.formState.isDirty}
+        onDiscard={() => form.reset()}
       >
         <Form {...form}>
           <div className="space-y-5">

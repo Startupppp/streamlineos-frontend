@@ -16,9 +16,6 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import {
-  Download,
-  Upload,
-  UserPlus,
   CalendarOff,
   ClipboardList,
   ClipboardCheck,
@@ -30,7 +27,6 @@ import {
 } from "@/components/illustrations";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import {
@@ -161,35 +157,6 @@ export default function HRDashboardPage() {
     [updateParams],
   );
 
-  const handleExport = useCallback(async () => {
-    try {
-      const { downloadXlsx } = await import("@/lib/export/xlsx-utils");
-      const {
-        fetchAllEmployeesForExport,
-        mapEmployeesToExportRows,
-        EMPLOYEE_EXPORT_COLUMNS,
-      } = await import("@/features/hr/employees/export-employees");
-      const rows = mapEmployeesToExportRows(
-        await fetchAllEmployeesForExport({
-          search: apiParams.search,
-          departmentId: apiParams.departmentId,
-          isActive: apiParams.isActive,
-          role: apiParams.role,
-        }),
-      );
-      await downloadXlsx(`employees-${new Date().toISOString().slice(0, 10)}.xlsx`, [
-        {
-          name: "Employees",
-          columns: [...EMPLOYEE_EXPORT_COLUMNS],
-          rows,
-        },
-      ]);
-      toast.success(`Exported ${rows.length} employee${rows.length === 1 ? "" : "s"}`);
-    } catch {
-      toast.error("Export failed");
-    }
-  }, [apiParams]);
-
   const handleClearFilters = useCallback(() => {
     setSearchTermLocal("");
     updateParams({
@@ -261,41 +228,7 @@ export default function HRDashboardPage() {
     <PageWrapper
       title="People Hub"
       subtitle="Directory, headcount, and day-to-day people ops"
- variant="display"
-      actions={
-        <div className="flex w-full sm:w-auto flex-wrap items-center gap-2">
-          <Button size="sm" className="gap-2 h-9 shadow-sm flex-1 sm:flex-none" asChild>
-            <Link href="/hr/onboarding?tab=wizard">
-              <UserPlus className="h-4 w-4" aria-hidden="true" />
-              <span className="sm:hidden">Add</span>
-              <span className="hidden sm:inline">Add Employee</span>
-            </Link>
-          </Button>
-          <div className="flex flex-1 items-center gap-px overflow-hidden rounded-md border border-input shadow-xs sm:flex-none">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-9 flex-1 gap-2 rounded-none border-0 sm:flex-none"
-              asChild
-            >
-              <Link href="/hr/settings/import-export">
-                <Upload className="h-4 w-4" aria-hidden="true" />
-                Import
-              </Link>
-            </Button>
-            <div className="h-5 w-px shrink-0 bg-border" aria-hidden="true" />
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-9 flex-1 gap-2 rounded-none border-0 sm:flex-none"
-              onClick={handleExport}
-            >
-              <Download className="h-4 w-4" aria-hidden="true" />
-              Export
-            </Button>
-          </div>
-        </div>
-      }
+      variant="display"
     >
       <HrPageContent>
         <HrHero

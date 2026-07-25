@@ -38,7 +38,10 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
     }
 
     return (
-      <div data-slot="search-input" className={cn("relative w-full min-w-0", className)}>
+      <div
+        data-slot="search-input"
+        className={cn("relative w-full min-w-[12rem]", className)}
+      >
         <Search
           className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
           aria-hidden="true"
@@ -52,7 +55,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
           placeholder={placeholder}
           disabled={disabled}
           className={cn(
-            "pl-9 pr-9 [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden",
+            "min-w-0 pl-9 pr-9 [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden",
             inputClassName,
           )}
           {...props}

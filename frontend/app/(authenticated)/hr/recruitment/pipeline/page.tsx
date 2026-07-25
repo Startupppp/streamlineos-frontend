@@ -6,15 +6,13 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useAtsKanban, useUpdateCandidateStage } from "@/hooks/api/hr";
 import { ErrorState } from "@/components/shared/error-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PipelineKanban } from "@/components/hr/recruitment/pipeline-kanban";
 import { PipelineTable } from "@/components/hr/recruitment/pipeline-table";
 import { AddCandidateSheet } from "@/features/hr/recruitment/candidates-list/add-candidate-sheet";
 import { ViewToggle, type ViewOption } from "@/components/ui/view-toggle";
 import { toast } from "sonner";
-import Link from "next/link";
-import { ArrowLeft, KanbanSquare, TableIcon } from "lucide-react";
+import { KanbanSquare, TableIcon } from "lucide-react";
 import { UserPlusIcon } from "@animateicons/react/lucide";
 import type { CandidateStatus } from "@/types/hr";
 
@@ -83,6 +81,7 @@ export default function PipelinePage() {
       title="Recruitment Pipeline"
       subtitle="Drag candidates between stages to update their status"
       noInternalScroll
+      backHref="/hr/recruitment"
       filters={
         <ViewToggle<PipelineViewMode>
           value={view}
@@ -92,17 +91,9 @@ export default function PipelinePage() {
         />
       }
       actions={
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/hr/recruitment">
-              <ArrowLeft className="mr-1 h-3.5 w-3.5" />
-              Back
-            </Link>
-          </Button>
-          <AnimatedIconButton icon={UserPlusIcon} iconSize={14} size="sm" onClick={handleOpenAdd}>
-            New Candidate
-          </AnimatedIconButton>
-        </div>
+        <AnimatedIconButton icon={UserPlusIcon} iconSize={14} size="sm" onClick={handleOpenAdd}>
+          New Candidate
+        </AnimatedIconButton>
       }
     >
       {view === "table" ? (

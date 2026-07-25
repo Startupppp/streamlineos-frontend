@@ -24,9 +24,11 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
 import { FileUpload } from "@/components/storage/file-upload";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { AlertCircle } from "lucide-react";
+import Link from "next/link";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   clearEndIfInvalid,
@@ -201,10 +203,6 @@ export function LeaveRequestSheet({
         return;
       }
       const approverId = data.approverId || approvers[0]?.id;
-      if (!approverId) {
-        toast.error("No approver available");
-        return;
-      }
 
       requestLeaveMutation.mutate(
         {
@@ -213,7 +211,7 @@ export function LeaveRequestSheet({
           endDate: data.endDate,
           reason: data.reason,
           priority: data.priority,
-          approverId,
+          approverId: approverId || undefined,
           attachmentUrl: attachmentUrl || undefined,
           isHalfDay: data.halfDay,
           halfDayPeriod: data.halfDay ? data.halfDayPeriod : undefined,
@@ -251,7 +249,9 @@ export function LeaveRequestSheet({
       onSubmit={form.handleSubmit(onSubmit)}
       submitLabel="Submit Request"
       isPending={requestLeaveMutation.isPending}
-      submitDisabled={!isValid && isDirty}
+      submitDisabled={(!isValid && isDirty) || leaveTypes.length === 0}
+      isDirty={isDirty}
+      onDiscard={() => form.reset()}
     >
       <Form {...form}>
         <div className="space-y-5">
@@ -263,20 +263,38 @@ export function LeaveRequestSheet({
                 <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
                   Leave Type
                 </FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger className="text-sm">
-                      <SelectValue placeholder="Select leave type" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-                    {leaveTypes.map((t) => (
-                      <SelectItem key={t.id} value={t.id.toString()}>
-                        {t.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {leaveTypes.length === 0 ? (
+                  <div className="space-y-2 rounded-lg border border-dashed border-amber-300/80 bg-amber-50/80 px-3 py-3 dark:border-amber-500/30 dark:bg-amber-500/10">
+                    <p className="text-sm font-medium text-foreground">
+                      No leave types configured
+                    </p>
+                    <p className="text-xs leading-relaxed text-muted-foreground">
+                      Set up leave types (for example Casual, Sick, Unpaid) before
+                      employees can request leave.
+                    </p>
+                    <Button variant="outline" size="sm" className="h-8 w-full sm:w-auto" asChild>
+                      <Link href="/hr/leave-policies">Configure leave types</Link>
+                    </Button>
+                  </div>
+                ) : (
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="text-sm">
+                        <SelectValue placeholder="Select leave type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent
+                      position="popper"
+                      className="z-[200] max-h-60 min-w-[var(--radix-select-trigger-width)]"
+                    >
+                      {leaveTypes.map((t) => (
+                        <SelectItem key={t.id} value={t.id.toString()}>
+                          {t.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
                 <FormMessage />
               </FormItem>
             )}

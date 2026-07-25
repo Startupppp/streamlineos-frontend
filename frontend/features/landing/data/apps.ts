@@ -17,7 +17,6 @@ import {
   HeartHandshake,
   Shield,
   GitBranch,
-  GraduationCap,
   ClipboardList,
   type LucideIcon,
 } from "lucide-react";
@@ -44,7 +43,6 @@ export const LANDING_APPS: LandingApp[] = [
   { id: "attendance", name: "Attendance", icon: Clock, category: "people" },
   { id: "payroll", name: "Payroll", icon: Wallet, category: "people" },
   { id: "performance", name: "Performance", icon: Target, category: "people" },
-  { id: "learning", name: "Learning", icon: GraduationCap, category: "people" },
   { id: "crm", name: "CRM", icon: TrendingUp, category: "revenue" },
   { id: "sales", name: "Sales", icon: BarChart3, category: "revenue" },
   { id: "quotes", name: "Quotes", icon: FileText, category: "revenue" },

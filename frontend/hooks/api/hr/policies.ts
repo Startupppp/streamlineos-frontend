@@ -97,7 +97,10 @@ export function useActivatePolicy() {
       const force = typeof input === "number" ? false : Boolean(input.force);
       return apiClient.post<HrPolicy>(`/hr/policies/${policyId}/activate`, { force });
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: POLICIES_KEY }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: POLICIES_KEY });
+      void qc.invalidateQueries({ queryKey: ["hr", "settings-hub", "versions"] });
+    },
   });
 }
 

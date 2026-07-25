@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -49,6 +49,11 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
+  clearEndIfInvalid,
+  planningEndPickerProps,
+  planningStartPickerProps,
+} from "@/lib/date-constraints";
+import {
   Plus,
   Calendar,
   Trash2,
@@ -66,8 +71,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { Employee } from "@/types/hr";
-import { goalSchema, type GoalFormValues } from "./goal-schema";
+import { buildGoalSchema, type GoalFormValues } from "./goal-schema";
 
 export function GoalsTab() {
   const { data: goals, isLoading } = useHrGoals();
@@ -79,9 +83,17 @@ export function GoalsTab() {
   const [editGoal, setEditGoal] = useState<HrGoal | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [userPickerOpen, setUserPickerOpen] = useState(false);
+  const isEditRef = useRef(false);
+  isEditRef.current = !!editGoal;
 
   const goalForm = useForm<GoalFormValues>({
-    resolver: zodResolver(goalSchema),
+    resolver: (values, context, options) =>
+      zodResolver(
+        buildGoalSchema({
+          requireEmployee: !isEditRef.current,
+          enforceFutureDates: !isEditRef.current,
+        }),
+      )(values, context, options),
     defaultValues: {
       userId: "",
       title: "",
@@ -113,7 +125,7 @@ export function GoalsTab() {
     (goal: HrGoal) => {
       setEditGoal(goal);
       goalForm.reset({
-        userId: "",
+        userId: goal.userId ?? "",
         title: goal.title,
         description: goal.description ?? "",
         targetValue: goal.targetValue != null ? String(goal.targetValue) : "",
@@ -129,21 +141,9 @@ export function GoalsTab() {
 
   const handleSave = useCallback(
     (data: GoalFormValues) => {
-      if (!editGoal && !data.userId) {
-        goalForm.setError("userId", { message: "Please select an employee" });
-        return;
-      }
-
-      if (!editGoal) {
-        const today = new Date().toISOString().slice(0, 10);
-        if (data.startDate < today) {
-          toast.error("Start date cannot be in the past");
-          return;
-        }
-      }
-
       const trimmedTitle = data.title.trim();
       const trimmedDesc = data.description?.trim();
+      const targetValue = Number(data.targetValue);
 
       if (editGoal) {
         updateGoal.mutate(
@@ -151,8 +151,7 @@ export function GoalsTab() {
             goalId: editGoal.id,
             title: trimmedTitle,
             description: trimmedDesc || undefined,
-            targetValue:
-              data.targetValue ? Number(data.targetValue) : undefined,
+            targetValue,
             startDate: data.startDate,
             endDate: data.endDate,
           },
@@ -173,8 +172,7 @@ export function GoalsTab() {
           userId: data.userId,
           title: trimmedTitle,
           description: trimmedDesc || undefined,
-          targetValue:
-            data.targetValue ? Number(data.targetValue) : undefined,
+          targetValue,
           currentValue: 0,
           startDate: data.startDate,
           endDate: data.endDate,
@@ -189,7 +187,30 @@ export function GoalsTab() {
         },
       );
     },
-    [editGoal, createGoal, updateGoal, resetForm, goalForm],
+    [editGoal, createGoal, updateGoal, resetForm],
+  );
+
+  const watchedStartDate = goalForm.watch("startDate");
+  const watchedEndDate = goalForm.watch("endDate");
+  const startBounds = planningStartPickerProps({
+    existingValue: editGoal ? watchedStartDate : undefined,
+  });
+  const endBounds = planningEndPickerProps({
+    startDate: watchedStartDate,
+    mode: "after",
+    existingValue: editGoal ? watchedEndDate : undefined,
+  });
+
+  const handleStartDateChange = useCallback(
+    (value: string) => {
+      goalForm.setValue("startDate", value, { shouldValidate: true });
+      const currentEnd = goalForm.getValues("endDate") ?? "";
+      const nextEnd = clearEndIfInvalid(value, currentEnd, "after");
+      if (nextEnd !== currentEnd) {
+        goalForm.setValue("endDate", nextEnd, { shouldValidate: true });
+      }
+    },
+    [goalForm],
   );
 
   const handleProgressUpdate = useCallback(
@@ -415,7 +436,9 @@ export function GoalsTab() {
                             key={e.id}
                             value={`${e.name ?? ""} ${e.email}`}
                             onSelect={() => {
-                              goalForm.setValue("userId", e.id);
+                              goalForm.setValue("userId", e.id, {
+                                shouldValidate: true,
+                              });
                               setUserPickerOpen(false);
                             }}
                           >
@@ -495,9 +518,12 @@ export function GoalsTab() {
                   <FormControl>
                     <DatePicker
                       value={field.value}
-                      onChange={field.onChange}
+                      onChange={handleStartDateChange}
                       placeholder="Pick a date"
                       className="text-sm"
+                      fromDate={startBounds.fromDate}
+                      fromYear={startBounds.fromYear}
+                      toYear={startBounds.toYear}
                     />
                   </FormControl>
                   <FormMessage />
@@ -516,6 +542,9 @@ export function GoalsTab() {
                       onChange={field.onChange}
                       placeholder="Pick a date"
                       className="text-sm"
+                      fromDate={endBounds.fromDate}
+                      fromYear={endBounds.fromYear}
+                      toYear={endBounds.toYear}
                     />
                   </FormControl>
                   <FormMessage />

@@ -12,12 +12,16 @@ function cfDefsKey(entityType: string) {
   return ["hr", "custom-fields", "definitions", entityType] as const;
 }
 
-export function useHrCustomFields(entityType: string = "employee") {
+export function useHrCustomFields(
+  entityType: string = "employee",
+  options?: { enabled?: boolean },
+) {
   return useQuery<HrCustomFieldDefinition[]>({
     queryKey: cfDefsKey(entityType),
     queryFn: () =>
       apiClient.get<HrCustomFieldDefinition[]>("/hr/custom-fields/definitions", { entityType }),
     staleTime: 60_000,
+    enabled: options?.enabled ?? true,
   });
 }
 

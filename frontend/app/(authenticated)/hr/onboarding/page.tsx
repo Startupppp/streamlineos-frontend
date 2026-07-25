@@ -6,7 +6,6 @@ import Link from "next/link";
 import {
   Settings,
   ClipboardCheck,
-  ArrowLeft,
   ShieldCheck,
   UserPlus,
   Users,
@@ -163,18 +162,10 @@ export default function OnboardingPage() {
           ? "Hire one person or a whole cohort — then track documents and probation"
           : "Complete your onboarding steps"
       }
- variant="display"
+      variant="display"
       noInternalScroll={!isHROrCEO}
-      actions={
-        isHROrCEO ? (
-          <Button variant="ghost" size="sm" asChild className="gap-1.5">
-            <Link href="/hr">
-              <ArrowLeft className="h-3.5 w-3.5" />
-              Back to Employees
-            </Link>
-          </Button>
-        ) : undefined
-      }
+      backHref={isHROrCEO ? "/hr" : undefined}
+      backLabel="Back to Employees"
     >
       {isHROrCEO ? (
         <Tabs defaultValue={initialTab} className="space-y-4">

@@ -21,7 +21,6 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { toast } from "sonner";
 import { Pencil, Clock, AlertCircle } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
-import Link from "next/link";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 const CANDIDATE_STAGES = ["NEW", "SCREENING", "INTERVIEW", "OFFER", "HIRED", "REJECTED"] as const;
@@ -223,11 +222,8 @@ export default function SlaConfigPage() {
     <PageWrapper
       title="SLA Configuration"
       subtitle="Set maximum hours allowed per recruitment stage before an SLA breach is triggered"
-      actions={
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/hr/recruitment">Back to Recruitment</Link>
-        </Button>
-      }
+      backHref="/hr/recruitment"
+      backLabel="Back to Recruitment"
     >
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-6">
         <Card>

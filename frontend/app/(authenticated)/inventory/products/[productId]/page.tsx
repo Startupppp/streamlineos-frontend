@@ -1,11 +1,9 @@
 "use client";
 
 import { use, useState, type ReactNode } from "react";
-import Link from "next/link";
 import { Pencil } from "lucide-react";
-import { ChevronLeftIcon, PlusIcon } from "@animateicons/react/lucide";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -92,18 +90,6 @@ function ProductStatusBadge({
   );
 }
 
-function BackLink() {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button variant="ghost" size="sm" asChild>
-      <Link href="/inventory/products" {...hoverHandlers}>
-        <ChevronLeftIcon ref={iconRef} size={14} className="mr-1" aria-hidden="true" />
-        Back to Products
-      </Link>
-    </Button>
-  );
-}
-
 interface VariantEditCellProps {
   variant: ProductVariantForSheet;
   onEdit: (v: ProductVariantForSheet) => void;
@@ -169,7 +155,8 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     return (
       <PageWrapper
         title="Product"
-        actions={<BackLink />}
+        backHref="/inventory/products"
+        backLabel="Back to Products"
       >
         <div className="flex flex-1 min-h-0 flex-col gap-4">
           <LoadingState variant="page" />
@@ -182,7 +169,8 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     return (
       <PageWrapper
         title="Product"
-        actions={<BackLink />}
+        backHref="/inventory/products"
+        backLabel="Back to Products"
       >
         <div className="flex flex-1 min-h-0 flex-col gap-4">
           <ErrorState
@@ -283,6 +271,8 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     <PageWrapper
       title={product.name}
       subtitle={`SKU: ${product.sku}`}
+      backHref="/inventory/products"
+      backLabel="Back to Products"
       actions={
         <div className="flex items-center gap-2">
           {!editing && (
@@ -292,7 +282,6 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
             </Button>
           )}
           <ProductAiActions product={product} />
-          {<BackLink />}
         </div>
       }
     >

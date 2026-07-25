@@ -42,8 +42,8 @@ const CARD_GROUPS: CardGroup[] = [
       },
       {
         title: "Notifications",
-        description: "Delivery providers and events",
-        href: "/admin/notifications",
+        description: "Delivery providers, templates, and events",
+        href: "/notifications",
         permission: "hr:employees:view",
       },
     ],
@@ -62,12 +62,14 @@ const CARD_GROUPS: CardGroup[] = [
         description: "See which rule applies to an employee on a date",
         href: "/hr/settings/preview",
         permission: "hr:policies:view",
+        advanced: true,
       },
       {
         title: "Version History",
         description: "Browse and rollback policy, template, and workflow versions",
         href: "/hr/settings/versions",
         permission: "hr:policies:view",
+        advanced: true,
       },
     ],
   },
@@ -90,8 +92,8 @@ const CARD_GROUPS: CardGroup[] = [
       },
       {
         title: "Webhooks",
-        description: "HR event webhooks",
-        href: "/hr/settings/integrations",
+        description: "Outbound event webhooks and delivery logs",
+        href: "/settings/webhooks",
         permission: "hr:automations:view",
         advanced: true,
       },
@@ -111,12 +113,14 @@ const CARD_GROUPS: CardGroup[] = [
         description: "Dynamic HR forms and intake",
         href: "/hr/settings/forms",
         permission: "hr:templates:view",
+        advanced: true,
       },
       {
         title: "Custom Fields",
         description: "Employee attribute extensions",
         href: "/hr/settings/custom-fields",
         permission: "hr:employees:view",
+        advanced: true,
       },
     ],
   },
@@ -131,16 +135,16 @@ const CARD_GROUPS: CardGroup[] = [
       },
       {
         title: "Integrations",
-        description: "Connected HR systems and apps",
+        description: "Job boards and connected recruiting apps",
         href: "/hr/settings/integrations",
         permission: "hr:automations:view",
         advanced: true,
       },
       {
-        title: "Config Sandbox",
-        description: "Test workflows and automations",
-        href: "/hr/settings/automations",
-        permission: "hr:automations:view",
+        title: "Policy & Workflow Simulator",
+        description: "Dry-run policies and approval flows on sample employees",
+        href: "/hr/simulator",
+        permission: "hr:policies:view",
         advanced: true,
       },
     ],
@@ -195,11 +199,37 @@ function CardItem({ card }: { card: CardDef }) {
 
 interface Props {
   isAdvanced: boolean;
+  onSwitchToAdvanced?: () => void;
 }
 
-export function HubGrid({ isAdvanced }: Props) {
+export function HubGrid({ isAdvanced, onSwitchToAdvanced }: Props) {
+  const hiddenCount = isAdvanced
+    ? 0
+    : CARD_GROUPS.reduce(
+        (count, group) => count + group.cards.filter((c) => c.advanced).length,
+        0,
+      );
+
   return (
     <div className="space-y-8 pb-6">
+      {!isAdvanced && hiddenCount > 0 && (
+        <div className="flex flex-col gap-2 rounded-xl border border-blue-200/70 bg-blue-50/60 px-4 py-3 dark:border-blue-500/25 dark:bg-blue-500/10 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-blue-800 dark:text-blue-200">
+            Simple view shows the guided essentials. {hiddenCount} advanced tools — workflows,
+            automations, simulator, versioning, and integrations — are hidden.
+          </p>
+          {onSwitchToAdvanced && (
+            <button
+              type="button"
+              onClick={onSwitchToAdvanced}
+              className="inline-flex w-fit shrink-0 items-center gap-1 text-xs font-semibold text-blue-700 hover:text-blue-800 dark:text-blue-300 dark:hover:text-blue-200"
+            >
+              Switch to Advanced
+              <ArrowRight className="h-3 w-3" />
+            </button>
+          )}
+        </div>
+      )}
       {CARD_GROUPS.map((group) => {
         const visibleCards = group.cards.filter((c) => isAdvanced || !c.advanced);
         if (visibleCards.length === 0) return null;

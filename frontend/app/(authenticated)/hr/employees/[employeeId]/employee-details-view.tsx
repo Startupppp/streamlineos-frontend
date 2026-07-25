@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useHydrated } from "@/hooks/common/use-hydrated";
 import dynamic from "next/dynamic";
@@ -382,7 +382,24 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
   const canViewSensitive = useCan("hr:sensitive:view");
   const searchParams = useSearchParams();
   const defaultTab = searchParams.get("tab") ?? "overview";
+  const [activeTab, setActiveTab] = useState(defaultTab);
   const tabsListRef = useRef<HTMLDivElement>(null);
+  const leaveGuardRef = useRef<{
+    isDirty: boolean;
+    requestLeave: (action: () => void) => void;
+  } | null>(null);
+
+  const registerLeaveGuard = useCallback(
+    (
+      api: {
+        isDirty: boolean;
+        requestLeave: (action: () => void) => void;
+      } | null,
+    ) => {
+      leaveGuardRef.current = api;
+    },
+    [],
+  );
 
   const isSelf = hydrated && session?.user?.id === employee.id;
   const showManageActions = hydrated && canManageEmployees;
@@ -404,7 +421,16 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
 
   useEffect(() => {
     scrollActiveTabIntoView();
-  }, [defaultTab, showSensitiveTab, isSelf, scrollActiveTabIntoView]);
+  }, [activeTab, showSensitiveTab, isSelf, scrollActiveTabIntoView]);
+
+  const requestLeaveIfNeeded = useCallback((action: () => void) => {
+    const guard = leaveGuardRef.current;
+    if (guard?.isDirty) {
+      guard.requestLeave(action);
+      return;
+    }
+    action();
+  }, []);
 
   const skillsList: string[] = (employee.skills ?? []).map((s) => s.name);
 
@@ -446,7 +472,19 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
     router.push(`/hr/termination?employeeId=${employee.id}`);
   }, [employee.id, router]);
 
-  const handleBack = useCallback(() => router.back(), [router]);
+  const handleBack = useCallback(() => {
+    requestLeaveIfNeeded(() => router.back());
+  }, [requestLeaveIfNeeded, router]);
+
+  const handleTabChange = useCallback(
+    (next: string) => {
+      requestLeaveIfNeeded(() => {
+        setActiveTab(next);
+        requestAnimationFrame(scrollActiveTabIntoView);
+      });
+    },
+    [requestLeaveIfNeeded, scrollActiveTabIntoView],
+  );
 
   const attritionRiskMutation = useAIAttritionRisk();
   const generateReviewMutation = useAIGenerateReview();
@@ -791,12 +829,9 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
         </Card>
 
         <Tabs
-          defaultValue={defaultTab}
+          value={activeTab}
+          onValueChange={handleTabChange}
           className="flex flex-col gap-4"
-          onValueChange={() => {
-            // Let Radix update data-state before scrolling.
-            requestAnimationFrame(scrollActiveTabIntoView);
-          }}
         >
           <ScrollEdgeFade className="shrink-0">
             <TabsList
@@ -978,6 +1013,9 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                     skills: employee.skills,
                   }}
                   onSaved={() => router.refresh()}
+                  registerLeaveGuard={
+                    activeTab === "my-profile" ? registerLeaveGuard : undefined
+                  }
                 />
               </div>
             </TabsContent>
@@ -987,7 +1025,12 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
             value="profile"
             className="mt-0 flex-none pb-4"
           >
-            <EditEmployeeForm employee={employee} />
+            <EditEmployeeForm
+              employee={employee}
+              registerLeaveGuard={
+                activeTab === "profile" ? registerLeaveGuard : undefined
+              }
+            />
           </TabsContent>
         </Tabs>
       </PageWrapper>

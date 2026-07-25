@@ -19,6 +19,7 @@ import {
   useArchiveWorkflow,
   useDuplicateWorkflow,
   useDeleteWorkflow,
+  useHrWorkflowDefinition,
 } from "@/hooks/api/hr/hr-workflows";
 import { WorkflowUpsertSheet } from "@/features/hr/workflows/workflow-upsert-sheet";
 import { WorkflowSimulateDialog } from "@/features/hr/workflows/workflow-simulate-dialog";
@@ -49,7 +50,8 @@ export default function WorkflowSettingsPage() {
   const canManage = useCan("hr:workflows:manage");
   const canView = useCan("hr:workflows:view");
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [editDefinition, setEditDefinition] = useState<HrWorkflowDefinition | null>(null);
+  const [editId, setEditId] = useState<number | null>(null);
+  const { data: editDefinition } = useHrWorkflowDefinition(editId);
   const [simulateTarget, setSimulateTarget] = useState<HrWorkflowDefinition | null>(null);
   const [filterObjectType, setFilterObjectType] = useState<HrWorkflowObjectType | "all">("all");
   const [filterStatus, setFilterStatus] = useState<HrWorkflowStatus | "all">("all");
@@ -65,12 +67,12 @@ export default function WorkflowSettingsPage() {
   const deleteWf = useDeleteWorkflow();
 
   function handleOpenCreate() {
-    setEditDefinition(null);
+    setEditId(null);
     setSheetOpen(true);
   }
 
   function handleEdit(def: HrWorkflowDefinition) {
-    setEditDefinition(def);
+    setEditId(def.id);
     setSheetOpen(true);
   }
 
@@ -266,9 +268,9 @@ export default function WorkflowSettingsPage() {
       </motion.div>
 
       <WorkflowUpsertSheet
-        open={sheetOpen}
+        open={sheetOpen && (editId === null || editDefinition !== undefined)}
         onOpenChange={setSheetOpen}
-        editDefinition={editDefinition}
+        editDefinition={editId !== null ? editDefinition ?? null : null}
       />
 
       <WorkflowSimulateDialog

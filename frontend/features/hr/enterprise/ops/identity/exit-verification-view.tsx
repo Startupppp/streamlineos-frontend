@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { UserCombobox } from "@/components/ui/user-combobox";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import { AlertCircle, CheckCircle, Search } from "lucide-react";
 import { useExitVerification } from "@/hooks/api/hr/enterprise-ops-identity";
 
@@ -41,6 +42,15 @@ export function ExitVerificationView() {
 
       {isLoading && (
         <div className="animate-pulse h-16 bg-muted rounded-xl" />
+      )}
+
+      {!queryId && !isLoading && (
+        <EmptyState
+          illustrationPreset="security"
+          title="Select an employee to verify"
+          description="Choose an employee above to check whether all system access has been revoked and verified."
+          compact
+        />
       )}
 
       {data && !isLoading && (

@@ -82,6 +82,18 @@ export function useRoleTemplates() {
   });
 }
 
+export function useSeedDefaultRoles() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["roles", "seed-defaults"],
+    mutationFn: () =>
+      apiClient.post<{ created: string[]; skipped: string[] }>("/roles/seed-defaults"),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.roles.all });
+    },
+  });
+}
+
 export function useCloneRoleTemplate() {
   const queryClient = useQueryClient();
   return useMutation<Role, Error, { templateId: string; name?: string; slug?: string }>({
