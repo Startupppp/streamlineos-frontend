@@ -2496,7 +2496,7 @@ export const PRODUCT_DEFINITIONS: ProductDefinition[] = [
   { key: "home", label: "Home", href: "/dashboard", icon: LayoutDashboard },
   { key: "crm", label: "CRM", href: "/crm", icon: Handshake },
   { key: "hrms", label: "HRMS", href: "/hr", icon: Users },
-  { key: "projects", label: "Projects", href: "/projects", icon: Briefcase },
+  { key: "projects", label: "Product Management", href: "/projects", icon: Briefcase },
   { key: "timesheets", label: "Timesheets", href: "/timesheets", icon: Timer },
   { key: "inventory", label: "Inventory", href: "/inventory", icon: Package },
   { key: "finance", label: "Finance", href: "/accounting", icon: Calculator },
@@ -2510,7 +2510,7 @@ export const PRODUCT_DEFINITIONS: ProductDefinition[] = [
   { key: "surveys", label: "Surveys", href: "/surveys", icon: ClipboardList },
   {
     key: "administration",
-    label: "Settings",
+    label: "Administration",
     href: "/organization",
     icon: Building2,
   },

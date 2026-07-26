@@ -255,7 +255,7 @@ function ProductGrid({
   return (
     <>
       <p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mb-1.5 px-1">
-        Products
+        Modules
       </p>
       <div className="grid grid-cols-2 gap-1">
         {visibleProducts.map((product, index) => {
@@ -408,12 +408,12 @@ export function ProductSwitcherMenu({
       };
 
   const isSidebarVariant = variant === "sidebar";
-  const activeLabel = activeDefinition?.label ?? "Products";
+  const activeLabel = activeDefinition?.label ?? "Modules";
 
   const triggerButton = (
     <button
       type="button"
-      aria-label="Switch product"
+      aria-label="Switch module"
       onClick={triggerOnly ? handleTriggerClick : undefined}
       onMouseEnter={enableHoverOpen ? handleHoverEnter : undefined}
       onMouseLeave={enableHoverOpen ? handleHoverLeave : undefined}
@@ -455,7 +455,7 @@ export function ProductSwitcherMenu({
 
   const drawerContent = (
     <DrawerContent className="flex h-[min(96dvh,40rem)] max-h-[96dvh] w-full flex-col gap-0 overflow-hidden rounded-t-xl border-t bg-sidebar p-4 pb-[env(safe-area-inset-bottom)] shadow-2xl">
-      <DrawerTitle className="sr-only">Products</DrawerTitle>
+      <DrawerTitle className="sr-only">Modules</DrawerTitle>
       <AnimatePresence>
         {open && (
           <ProductGrid
