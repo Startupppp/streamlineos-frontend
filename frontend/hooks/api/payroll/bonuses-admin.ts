@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useCan } from "@/hooks/api/access";
 
 export type BonusType =
   | "PERFORMANCE"
@@ -86,10 +87,12 @@ export function useCreateBonus() {
 }
 
 export function useBonuses() {
+  const canView = useCan("hr:payroll:view");
   return useQuery({
     queryKey: bonusKeys.list(),
     queryFn: () => apiClient.get<Bonus[]>("/hr/bonuses"),
     staleTime: 60_000,
+    enabled: canView,
   });
 }
 
@@ -109,12 +112,14 @@ export function useIncentives(params?: { status?: string; page?: number; limit?:
   if (params?.page !== undefined) queryParams["page"] = params.page;
   if (params?.limit !== undefined) queryParams["limit"] = params.limit;
   const hasParams = Object.keys(queryParams).length > 0;
+  const canView = useCan("hr:payroll:view");
 
   return useQuery({
     queryKey: incentiveKeys.list(hasParams ? queryParams : undefined),
     queryFn: () =>
       apiClient.get<IncentivesResponse>("/hr/incentives", hasParams ? queryParams : undefined),
     staleTime: 60_000,
+    enabled: canView,
   });
 }
 

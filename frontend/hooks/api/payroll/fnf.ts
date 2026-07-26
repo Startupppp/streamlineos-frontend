@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useCan } from "@/hooks/api/access";
 import type { FnfSettlement, FnfStatement } from "@/types/payroll/reports";
 
 export const fnfKeys = {
@@ -12,27 +13,33 @@ export const fnfKeys = {
 };
 
 export function useFnfSettlements() {
+  const canView = useCan("payroll:fnf:view");
   return useQuery({
     queryKey: fnfKeys.list(),
     queryFn: () => apiClient.get<FnfSettlement[]>("/payroll/fnf"),
     staleTime: 60_000,
+    enabled: canView,
   });
 }
 
 export function useFnfSettlement(settlementId: number) {
+  const canView = useCan("payroll:fnf:view");
   return useQuery({
     queryKey: fnfKeys.settlement(settlementId),
     queryFn: () => apiClient.get<FnfSettlement>(`/payroll/fnf/${settlementId}`),
     staleTime: 60_000,
+    enabled: canView && settlementId > 0,
   });
 }
 
 export function useFnfStatement(settlementId: number) {
+  const canView = useCan("payroll:fnf:view");
   return useQuery({
     queryKey: fnfKeys.statement(settlementId),
     queryFn: () =>
       apiClient.get<FnfStatement>(`/payroll/fnf/${settlementId}/statement`),
     staleTime: 60_000,
+    enabled: canView && settlementId > 0,
   });
 }
 

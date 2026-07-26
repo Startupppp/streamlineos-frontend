@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   JournalBatch,
   JournalBatchDetail,
@@ -13,6 +14,7 @@ import type {
 } from "@/types/payroll/journal-batches";
 
 export function useJournalBatches(params?: { periodKey?: string; page?: number; limit?: number }) {
+  const canView = useCan("payroll:accounting:view");
   return useQuery({
     queryKey: queryKeys.payroll.journalBatches(params as Record<string, unknown> | undefined),
     queryFn: () =>
@@ -21,10 +23,12 @@ export function useJournalBatches(params?: { periodKey?: string; page?: number; 
         params as Record<string, string | number> | undefined,
       ),
     staleTime: 60_000,
+    enabled: canView,
   });
 }
 
 export function usePeriodReconciliation(periodKey: string, enabled = true) {
+  const canView = useCan("payroll:accounting:view");
   return useQuery({
     queryKey: queryKeys.payroll.periodReconciliation(periodKey),
     queryFn: () =>
@@ -32,7 +36,7 @@ export function usePeriodReconciliation(periodKey: string, enabled = true) {
         "/payroll/accounting/journal-batches/period-reconciliation",
         { periodKey },
       ),
-    enabled: enabled && /^\d{4}-\d{2}$/.test(periodKey),
+    enabled: enabled && canView && /^\d{4}-\d{2}$/.test(periodKey),
     staleTime: 30_000,
   });
 }

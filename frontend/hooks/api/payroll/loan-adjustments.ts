@@ -1,10 +1,12 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 import type { CreateLoanAdjustmentInput } from "@/types/payroll/reports";
 
 export function useCreateLoanAdjustment() {
+  const qc = useQueryClient();
   return useMutation({
     mutationKey: ["payroll", "loan-adjustments", "create"],
     mutationFn: ({ runId, ...data }: { runId: number } & CreateLoanAdjustmentInput) =>
@@ -12,5 +14,11 @@ export function useCreateLoanAdjustment() {
         `/payroll/runs/${runId}/loan-adjustments`,
         data,
       ),
+    onSuccess: (_data, { runId }) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.payroll.runEmployeesAll(runId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.payroll.runExceptionsAll(runId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.payroll.commandCenterAll });
+    },
   });
 }

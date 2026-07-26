@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type { PayrollRun, PayrollRunListItem, PayrollChecklistItem } from "@/types/payroll/runs";
 
 interface PaginatedRuns {
@@ -23,19 +24,23 @@ export function usePayrollRuns(params?: {
   limit?: number;
   entityId?: number;
 }) {
+  const canView = useCan("payroll:runs:view");
   return useQuery({
     queryKey: queryKeys.payroll.runs(params as Record<string, unknown> | undefined),
     queryFn: () =>
       apiClient.get<PaginatedRuns>("/payroll/runs", params as Record<string, string | number> | undefined),
     staleTime: 60_000,
+    enabled: canView,
   });
 }
 
 export function usePayrollRun(runId: number) {
+  const canView = useCan("payroll:runs:view");
   return useQuery({
     queryKey: queryKeys.payroll.run(runId),
     queryFn: () => apiClient.get<RunDetail>(`/payroll/runs/${runId}`),
     staleTime: 30_000,
+    enabled: canView && runId > 0,
   });
 }
 

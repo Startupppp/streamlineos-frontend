@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useCan } from "@/hooks/api/access";
 
 export interface CountryPackDescriptor {
   countryCode: string;
@@ -52,14 +53,17 @@ export const entityKeys = {
 };
 
 export function usePayrollEntities() {
+  const canView = useCan("payroll:policies:view");
   return useQuery({
     queryKey: entityKeys.all,
     queryFn: () => apiClient.get<PayrollEntity[]>("/payroll/entities"),
     staleTime: 60_000,
+    enabled: canView,
   });
 }
 
 export function useCountryPacks() {
+  const canView = useCan("payroll:policies:view");
   return useQuery({
     queryKey: entityKeys.packs,
     queryFn: () =>
@@ -69,15 +73,17 @@ export function useCountryPacks() {
         packs: CountryPackDescriptor[];
       }>("/payroll/entities/country-packs"),
     staleTime: 5 * 60_000,
+    enabled: canView,
   });
 }
 
 export function useEntityContext(entityId: number | null) {
+  const canView = useCan("payroll:policies:view");
   return useQuery({
     queryKey: entityKeys.context(entityId ?? 0),
     queryFn: () =>
       apiClient.get<EntityContext>(`/payroll/entities/${entityId}/context`),
-    enabled: entityId != null && entityId > 0,
+    enabled: canView && entityId != null && entityId > 0,
     staleTime: 60_000,
   });
 }

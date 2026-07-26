@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   PayrollApprovalRow,
   SubmitApprovalResult,
@@ -10,11 +11,12 @@ import type {
 } from "@/types/payroll";
 
 export function useRunApprovals(runId: number, options?: { enabled?: boolean }) {
+  const canView = useCan("payroll:runs:view");
   return useQuery<PayrollApprovalRow[]>({
     queryKey: queryKeys.payroll.runApprovals(runId),
     queryFn: () => apiClient.get<PayrollApprovalRow[]>(`/payroll/runs/${runId}/approvals`),
     staleTime: 30_000,
-    enabled: runId > 0 && (options?.enabled ?? true),
+    enabled: canView && runId > 0 && (options?.enabled ?? true),
   });
 }
 

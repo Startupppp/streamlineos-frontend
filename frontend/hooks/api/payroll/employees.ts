@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type { EmployeeSalaryProfile, EmployeeProfileDetail } from "@/types/payroll/runs";
 
 interface PaginatedProfiles {
@@ -34,6 +35,7 @@ export function useEmployeeProfiles(params?: {
   workerType?: string;
   status?: string;
 }) {
+  const canView = useCan("payroll:salaries:view");
   return useQuery({
     queryKey: queryKeys.payroll.employees(params as Record<string, unknown> | undefined),
     queryFn: () =>
@@ -42,24 +44,29 @@ export function useEmployeeProfiles(params?: {
         params as Record<string, string | number> | undefined,
       ),
     staleTime: 60_000,
+    enabled: canView,
   });
 }
 
 export function useEmployeeProfile(employeeUserId: string) {
+  const canView = useCan("payroll:salaries:view");
   return useQuery({
     queryKey: queryKeys.payroll.employee(employeeUserId),
     queryFn: () =>
       apiClient.get<EmployeeProfileDetail>(`/payroll/employees/${employeeUserId}`),
     staleTime: 60_000,
+    enabled: canView && !!employeeUserId,
   });
 }
 
 export function useEmployeeProfileHistory(employeeUserId: string) {
+  const canView = useCan("payroll:salaries:view");
   return useQuery({
     queryKey: queryKeys.payroll.employeeHistory(employeeUserId),
     queryFn: () =>
       apiClient.get<EmployeeSalaryProfile[]>(`/payroll/employees/${employeeUserId}/history`),
     staleTime: 60_000,
+    enabled: canView && !!employeeUserId,
   });
 }
 

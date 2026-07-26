@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useCan } from "@/hooks/api/access";
 import type {
   TaxWindow,
   CreateTaxWindowInput,
@@ -13,10 +14,12 @@ export const taxWindowKeys = {
 };
 
 export function useTaxWindows() {
+  const canManage = useCan("payroll:tax:manage");
   return useQuery({
     queryKey: taxWindowKeys.all,
     queryFn: () => apiClient.get<TaxWindow[]>("/payroll/tax-windows"),
     staleTime: 5 * 60_000,
+    enabled: canManage,
   });
 }
 

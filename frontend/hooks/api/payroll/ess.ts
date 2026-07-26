@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useCan } from "@/hooks/api/access";
 import type {
   EssOverview,
   EssPayslip,
@@ -34,23 +35,27 @@ export const essKeys = {
 };
 
 export function useEssTotalRewards() {
+  const canSelf = useCan("self:payroll");
   return useQuery({
     queryKey: essKeys.totalRewards(),
     queryFn: () => apiClient.get<TotalRewardsStatement>("/payroll/me/total-rewards"),
     staleTime: 60_000,
+    enabled: canSelf,
   });
 }
 
 export function useManagerTeamRewards(enabled = true) {
+  const canSelf = useCan("self:payroll");
   return useQuery({
     queryKey: essKeys.teamRewards(),
     queryFn: () => apiClient.get<TeamRewardsResult>("/payroll/manager/team-rewards"),
     staleTime: 60_000,
-    enabled,
+    enabled: enabled && canSelf,
   });
 }
 
 export function useOrgPayCompression(enabled = true) {
+  const canView = useCan("payroll:salaries:view");
   return useQuery({
     queryKey: essKeys.orgPayCompression(),
     queryFn: () =>
@@ -58,16 +63,17 @@ export function useOrgPayCompression(enabled = true) {
         "/payroll/analytics/pay-compression",
       ),
     staleTime: 60_000,
-    enabled,
+    enabled: enabled && canView,
   });
 }
 
 export function useManagerInbox(enabled = true) {
+  const canSelf = useCan("self:payroll");
   return useQuery({
     queryKey: essKeys.managerInbox(),
     queryFn: () => apiClient.get<ManagerInbox>("/payroll/manager/inbox"),
     staleTime: 30_000,
-    enabled,
+    enabled: enabled && canSelf,
   });
 }
 
@@ -121,66 +127,82 @@ export function useManagerRejectLoan() {
 }
 
 export function useEssOverview() {
+  const canSelf = useCan("self:payroll");
   return useQuery({
     queryKey: essKeys.overview(),
     queryFn: () => apiClient.get<EssOverview>("/payroll/me/overview"),
     staleTime: 30_000,
+    enabled: canSelf,
   });
 }
 
 export function useEssPayslips() {
+  const canSelf = useCan("self:payslips");
   return useQuery({
     queryKey: essKeys.payslips(),
     queryFn: () => apiClient.get<EssPayslip[]>("/payroll/me/payslips"),
     staleTime: 300_000,
+    enabled: canSelf,
   });
 }
 
 export function useEssSalaryStructure() {
+  const canSelf = useCan("self:payroll");
   return useQuery({
     queryKey: essKeys.salaryStructure(),
     queryFn: () => apiClient.get<EssSalaryStructure>("/payroll/me/salary-structure"),
     staleTime: 300_000,
+    enabled: canSelf,
   });
 }
 
 export function useEssReimbursements() {
+  const canSelf = useCan("self:payroll");
   return useQuery({
     queryKey: essKeys.reimbursements(),
     queryFn: () => apiClient.get<EssReimbursement[]>("/payroll/me/reimbursements"),
     staleTime: 60_000,
+    enabled: canSelf,
   });
 }
 
 export function useEssLoans() {
+  const canSelf = useCan("self:payroll");
   return useQuery({
     queryKey: essKeys.loans(),
     queryFn: () => apiClient.get<EssLoan[]>("/payroll/me/loans"),
     staleTime: 60_000,
+    enabled: canSelf,
   });
 }
 
 export function useEssTaxDeclaration() {
+  const canSelf = useCan("self:payroll");
   return useQuery({
     queryKey: essKeys.taxDeclaration(),
     queryFn: () => apiClient.get<EssTaxDeclarationResponse>("/payroll/me/tax-declaration"),
     staleTime: 60_000,
+    enabled: canSelf,
   });
 }
 
 export function useEssBank() {
+  const canSelf = useCan("self:payroll");
   return useQuery({
     queryKey: essKeys.bank(),
     queryFn: () => apiClient.get<EssBankDetails>("/payroll/me/bank"),
     staleTime: 300_000,
+    enabled: canSelf,
   });
 }
 
 export function useEssFnf() {
+  const canSelf = useCan("self:payroll");
   return useQuery({
     queryKey: essKeys.fnf(),
     queryFn: () => apiClient.get<EssFnfSettlement | null>("/payroll/me/fnf"),
     staleTime: 120_000,
+    enabled: canSelf,
   });
 }
 

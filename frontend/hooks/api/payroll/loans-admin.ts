@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useCan } from "@/hooks/api/access";
 
 export type LoanStatus = "PENDING" | "APPROVED" | "ACTIVE" | "REPAID" | "REJECTED";
 
@@ -34,10 +35,12 @@ export const loansAdminKeys = {
 };
 
 export function useAdminLoans() {
+  const canView = useCan("hr:payroll:view");
   return useQuery({
     queryKey: loansAdminKeys.list(),
     queryFn: () => apiClient.get<LoanAdminItem[]>("/hr/loans"),
     staleTime: 30_000,
+    enabled: canView,
   });
 }
 

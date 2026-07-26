@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useCan } from "@/hooks/api/access";
 import type {
   AccountingMapping,
   CreateAccountingMappingInput,
@@ -13,10 +14,12 @@ export const accountingMappingKeys = {
 };
 
 export function useAccountingMappings() {
+  const canManage = useCan("payroll:settings:manage");
   return useQuery({
     queryKey: accountingMappingKeys.all,
     queryFn: () => apiClient.get<AccountingMapping[]>("/payroll/accounting-mappings"),
     staleTime: 5 * 60_000,
+    enabled: canManage,
   });
 }
 

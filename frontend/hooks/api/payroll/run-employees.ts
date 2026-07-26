@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type { RunEmployee, RunEmployeeDetail, VarianceData } from "@/types/payroll/runs";
 
 interface PaginatedRunEmployees {
@@ -23,6 +24,7 @@ export function useRunEmployees(
   runId: number,
   params?: { page?: number; limit?: number; search?: string; status?: string; workerType?: string },
 ) {
+  const canView = useCan("payroll:runs:view");
   return useQuery({
     queryKey: queryKeys.payroll.runEmployeesList(runId, params as Record<string, unknown> | undefined),
     queryFn: () =>
@@ -31,24 +33,28 @@ export function useRunEmployees(
         params as Record<string, string | number> | undefined,
       ),
     staleTime: 30_000,
+    enabled: canView && runId > 0,
   });
 }
 
 export function useRunEmployee(runId: number, runEmployeeId: number) {
+  const canView = useCan("payroll:runs:view");
   return useQuery({
     queryKey: queryKeys.payroll.runEmployee(runId, runEmployeeId),
     queryFn: () =>
       apiClient.get<RunEmployeeDetail>(`/payroll/runs/${runId}/employees/${runEmployeeId}`),
     staleTime: 30_000,
-    enabled: runId > 0 && runEmployeeId > 0,
+    enabled: canView && runId > 0 && runEmployeeId > 0,
   });
 }
 
 export function useRunVariance(runId: number) {
+  const canView = useCan("payroll:runs:view");
   return useQuery({
     queryKey: queryKeys.payroll.runVariance(runId),
     queryFn: () => apiClient.get<VarianceData>(`/payroll/runs/${runId}/variance`),
     staleTime: 60_000,
+    enabled: canView && runId > 0,
   });
 }
 

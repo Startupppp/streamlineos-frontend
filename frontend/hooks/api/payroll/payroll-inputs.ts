@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCan } from "@/hooks/api/access";
 
 export type HrPayrollInputStatus = "open" | "building" | "built" | "locked";
 
@@ -93,11 +94,13 @@ interface SectionParams {
 }
 
 export function usePayrollInputPeriods(params?: { page?: number; limit?: number; status?: HrPayrollInputStatus }) {
+  const canView = useCan("hr:payroll:view");
   return useQuery({
     queryKey: queryKeys.hrPayrollInputs.periods(params as Record<string, unknown> | undefined),
     queryFn: () =>
       apiClient.get<PaginatedPeriods>("/hr/payroll-inputs/periods", params as Record<string, string | number> | undefined),
     staleTime: 30_000,
+    enabled: canView,
   });
 }
 
@@ -162,6 +165,7 @@ export function useUnlockPayrollInputPeriod() {
 
 function makeSectionHook(section: string) {
   return function useSectionSnapshot(periodId: number, params?: SectionParams, enabled = true) {
+    const canView = useCan("hr:payroll:view");
     const queryParams = {
       ...(params?.page !== undefined && { page: params.page }),
       ...(params?.limit !== undefined && { limit: params.limit }),
@@ -172,7 +176,7 @@ function makeSectionHook(section: string) {
       queryFn: () =>
         apiClient.get<PaginatedSnapshots>(`/hr/payroll-inputs/periods/${periodId}/${section}`, queryParams as Record<string, string | number>),
       staleTime: 60_000,
-      enabled: enabled && periodId > 0,
+      enabled: enabled && periodId > 0 && canView,
     });
   };
 }
@@ -183,6 +187,7 @@ export const useOvertimeSnapshot = makeSectionHook("overtime");
 export const useReimbursementSnapshot = makeSectionHook("reimbursements");
 
 export function usePayrollAdjustments(periodId: number, params?: { page?: number; limit?: number }) {
+  const canView = useCan("hr:payroll:view");
   return useQuery({
     queryKey: queryKeys.hrPayrollInputs.adjustments(periodId, params as Record<string, unknown> | undefined),
     queryFn: () =>
@@ -191,7 +196,7 @@ export function usePayrollAdjustments(periodId: number, params?: { page?: number
         params as Record<string, string | number> | undefined,
       ),
     staleTime: 30_000,
-    enabled: periodId > 0,
+    enabled: canView && periodId > 0,
   });
 }
 

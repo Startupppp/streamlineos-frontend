@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useCan } from "@/hooks/api/access";
 import type { TaxDeclarationAdmin } from "@/types/payroll/reports";
 
 export const taxAdminKeys = {
@@ -14,10 +15,12 @@ export function useTaxDeclarationsAdmin(params: {
   financialYear?: string;
   status?: string;
 }) {
+  const canView = useCan("payroll:tax:view");
   return useQuery({
     queryKey: taxAdminKeys.list(params as Record<string, string | undefined>),
     queryFn: () => apiClient.get<TaxDeclarationAdmin[]>("/payroll/tax/declarations", params),
     staleTime: 60_000,
+    enabled: canView,
   });
 }
 

@@ -3,13 +3,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type { PayslipTemplate, PayslipLayout, PayslipTemplateConfig } from "@/types/payroll";
 
 export function usePayslipTemplates() {
+  const canView = useCan("payroll:payslips:view");
   return useQuery<PayslipTemplate[]>({
     queryKey: queryKeys.payroll.payslipTemplates(),
     queryFn: () => apiClient.get<PayslipTemplate[]>("/payroll/payslip-templates"),
     staleTime: 2 * 60_000,
+    enabled: canView,
   });
 }
 

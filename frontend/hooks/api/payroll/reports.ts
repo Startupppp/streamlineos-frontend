@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useCan } from "@/hooks/api/access";
 import type {
   PayrollSummaryReport,
   PayrollRegisterReport,
@@ -36,94 +37,112 @@ export const reportKeys = {
 };
 
 export function usePayrollSummary(params: ReportFilterParams) {
+  const canView = useCan("payroll:reports:view");
   return useQuery({
     queryKey: reportKeys.summary(params),
     queryFn: () => apiClient.get<PayrollSummaryReport>("/payroll/reports/summary", params),
     staleTime: 60_000,
+    enabled: canView,
   });
 }
 
 export function usePayrollRegister(params: ReportFilterParams) {
+  const canView = useCan("payroll:reports:view");
   return useQuery({
     queryKey: reportKeys.register(params),
     queryFn: () => apiClient.get<PayrollRegisterReport>("/payroll/reports/register", params),
     staleTime: 60_000,
+    enabled: canView,
   });
 }
 
 export function usePayrollDeptCost(params: Omit<ReportFilterParams, "costCenter">) {
+  const canView = useCan("payroll:reports:view");
   return useQuery({
     queryKey: reportKeys.deptCost(params),
     queryFn: () => apiClient.get<PayrollDeptCostReport>("/payroll/reports/department-cost", params),
     staleTime: 60_000,
+    enabled: canView,
   });
 }
 
 export function usePayrollCostCenter(params: Omit<ReportFilterParams, "department">) {
+  const canView = useCan("payroll:reports:view");
   return useQuery({
     queryKey: reportKeys.costCenter(params),
     queryFn: () => apiClient.get<PayrollCostCenterReport>("/payroll/reports/cost-center", params),
     staleTime: 60_000,
+    enabled: canView,
   });
 }
 
 export function usePayrollEarnings(params: ReportFilterParams, options?: { enabled?: boolean }) {
+  const canView = useCan("payroll:reports:view");
   return useQuery({
     queryKey: reportKeys.earnings(params),
     queryFn: () => apiClient.get<ComponentPivotReport>("/payroll/reports/earnings", params),
     staleTime: 60_000,
-    enabled: options?.enabled ?? true,
+    enabled: canView && (options?.enabled ?? true),
   });
 }
 
 export function usePayrollDeductions(params: ReportFilterParams, options?: { enabled?: boolean }) {
+  const canView = useCan("payroll:reports:view");
   return useQuery({
     queryKey: reportKeys.deductions(params),
     queryFn: () => apiClient.get<ComponentPivotReport>("/payroll/reports/deductions", params),
     staleTime: 60_000,
-    enabled: options?.enabled ?? true,
+    enabled: canView && (options?.enabled ?? true),
   });
 }
 
 export function usePayrollReimbursementsReport(params: ReportFilterParams, options?: { enabled?: boolean }) {
+  const canView = useCan("payroll:reports:view");
   return useQuery({
     queryKey: reportKeys.reimbursements(params),
     queryFn: () => apiClient.get<ComponentPivotReport>("/payroll/reports/reimbursements", params),
     staleTime: 60_000,
-    enabled: options?.enabled ?? true,
+    enabled: canView && (options?.enabled ?? true),
   });
 }
 
 export function usePayrollTaxReport(params: ReportFilterParams, options?: { enabled?: boolean }) {
+  const canView = useCan("payroll:reports:view");
   return useQuery({
     queryKey: reportKeys.tax(params),
     queryFn: () => apiClient.get<ComponentPivotReport>("/payroll/reports/tax", params),
     staleTime: 60_000,
-    enabled: options?.enabled ?? true,
+    enabled: canView && (options?.enabled ?? true),
   });
 }
 
 export function usePayrollBankPayout(month: string) {
+  const canView = useCan("payroll:reports:view");
   return useQuery({
     queryKey: reportKeys.bankPayout(month),
     queryFn: () => apiClient.get<BankPayoutReport>("/payroll/reports/bank-payout", { month }),
     staleTime: 60_000,
+    enabled: canView,
   });
 }
 
 export function usePayrollVariance(month: string) {
+  const canView = useCan("payroll:reports:view");
   return useQuery({
     queryKey: reportKeys.variance(month),
     queryFn: () => apiClient.get<VarianceReport>("/payroll/reports/variance", { month }),
     staleTime: 60_000,
+    enabled: canView,
   });
 }
 
 export function usePayrollJournal(month: string) {
+  const canView = useCan("payroll:reports:view");
   return useQuery({
     queryKey: reportKeys.journal(month),
     queryFn: () => apiClient.get<JournalReport>("/payroll/reports/journal", { month }),
     staleTime: 60_000,
+    enabled: canView,
   });
 }
 

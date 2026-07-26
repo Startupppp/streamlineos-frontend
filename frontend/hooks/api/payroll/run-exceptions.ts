@@ -3,17 +3,20 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type { PayrollException, PayrollExceptionSeverity, PayrollExceptionStatus } from "@/types/payroll/runs";
 
 export function useRunExceptions(
   runId: number,
   params?: { severity?: PayrollExceptionSeverity; status?: PayrollExceptionStatus },
 ) {
+  const canView = useCan("payroll:runs:view");
   return useQuery({
     queryKey: queryKeys.payroll.runExceptions(runId, params as Record<string, unknown> | undefined),
     queryFn: () =>
       apiClient.get<PayrollException[]>(`/payroll/runs/${runId}/exceptions`, params),
     staleTime: 30_000,
+    enabled: canView && runId > 0,
   });
 }
 

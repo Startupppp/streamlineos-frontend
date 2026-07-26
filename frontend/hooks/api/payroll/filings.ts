@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useCan } from "@/hooks/api/access";
 
 export type FilingType = "PF_ECR" | "ESI" | "PT" | "TDS_24Q" | "FORM16" | "LWF";
 
@@ -61,18 +62,22 @@ export const filingsKeys = {
 };
 
 export function usePayrollFilings() {
+  const canView = useCan("payroll:tax:view");
   return useQuery({
     queryKey: filingsKeys.all,
     queryFn: () => apiClient.get<PayrollFiling[]>("/payroll/filings"),
     staleTime: 60_000,
+    enabled: canView,
   });
 }
 
 export function useFilingCapabilities() {
+  const canView = useCan("payroll:tax:view");
   return useQuery({
     queryKey: filingsKeys.capabilities,
     queryFn: () => apiClient.get<FilingCapability>("/payroll/filings/capabilities"),
     staleTime: 5 * 60_000,
+    enabled: canView,
   });
 }
 

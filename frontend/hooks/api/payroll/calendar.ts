@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useCan } from "@/hooks/api/access";
 import type {
   PayrollCalendarEvent,
   CreateCalendarEventInput,
@@ -14,10 +15,12 @@ export const calendarKeys = {
 };
 
 export function usePayrollCalendar(params: { from: string; to: string }) {
+  const canView = useCan("payroll:runs:view");
   return useQuery({
     queryKey: calendarKeys.list(params.from, params.to),
     queryFn: () => apiClient.get<PayrollCalendarEvent[]>("/payroll/calendar", params),
     staleTime: 5 * 60_000,
+    enabled: canView && !!params.from && !!params.to,
   });
 }
 
