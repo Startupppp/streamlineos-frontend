@@ -90,3 +90,24 @@ export function useDeleteManagedProduct() {
     },
   });
 }
+
+export function useLinkProjectToProduct() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["projects", "managed-products", "link-project"],
+    mutationFn: ({
+      projectId,
+      managedProductId,
+    }: {
+      projectId: number;
+      managedProductId: number | null;
+    }) =>
+      apiClient.patch<{ id: number; managedProductId: number | null }>(
+        `/projects/${projectId}/managed-product`,
+        { managedProductId },
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.projects.managedProducts.list() });
+    },
+  });
+}
