@@ -9,7 +9,6 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
-import { DS } from "@/lib/design-system";
 import { useVendorLedger } from "@/hooks/api/accounting";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { type VendorLedgerLine } from "@/types/accounting";
