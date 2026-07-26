@@ -67,6 +67,21 @@ export const useDeleteRole = () => {
   });
 };
 
+export const useUpdateRole = (roleId: number) => {
+  const queryClient = useQueryClient();
+  return useMutation<{ success: boolean }, Error, { name: string }>({
+    mutationKey: ["roles", "update", roleId],
+    mutationFn: ({ name }) =>
+      apiClient.patch<{ success: boolean }>(`/roles/${roleId}`, { name }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.roles.all });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.roles.detail(roleId),
+      });
+    },
+  });
+};
+
 export interface RoleTemplate {
   id: string;
   name: string;

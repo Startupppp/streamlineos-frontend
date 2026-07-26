@@ -4,6 +4,7 @@ import { useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import {
   Loader2,
+  Pencil,
   Shield,
   ClipboardList,
   ShieldCheck,
@@ -51,6 +52,7 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import type { Role } from "@/types/organization";
 import { PermissionMatrix } from "@/components/rbac/permission-matrix";
 import { CreateRoleDialog } from "@/components/rbac/create-role-dialog";
+import { RenameRoleDialog } from "@/components/rbac/rename-role-dialog";
 import { RoleAssignmentsSheet } from "@/components/rbac/role-assignments-sheet";
 import { RoleTemplateDialog } from "@/features/settings/roles/role-dialogs";
 
@@ -85,6 +87,7 @@ function RolesContent() {
   const [templateOpen, setTemplateOpen] = useState(false);
   const [assignmentsOpen, setAssignmentsOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Role | null>(null);
+  const [renameTarget, setRenameTarget] = useState<Role | null>(null);
   const [search, setSearch] = useState("");
 
   const selectedRole =
@@ -104,6 +107,10 @@ function RolesContent() {
     [],
   );
   const handleDeleteDialogClose = useCallback(() => setDeleteTarget(null), []);
+  const handleRenameDialogClose = useCallback(
+    (open: boolean) => { if (!open) setRenameTarget(null); },
+    [],
+  );
   const handleRetryRoles = useCallback(() => {
     void refetchRoles();
   }, [refetchRoles]);
@@ -276,6 +283,7 @@ function RolesContent() {
                         isSelected={selectedRoleId === role.id}
                         onSelect={handleSelectRole}
                         onDelete={setDeleteTarget}
+                        onRename={setRenameTarget}
                         permCount={permCountByRoleId.get(role.id) ?? 0}
                       />
                     ))}
@@ -307,6 +315,11 @@ function RolesContent() {
       </div>
 
       <CreateRoleDialog open={createOpen} onOpenChange={setCreateOpen} />
+      <RenameRoleDialog
+        role={renameTarget}
+        open={!!renameTarget}
+        onOpenChange={handleRenameDialogClose}
+      />
       <RoleTemplateDialog open={templateOpen} onOpenChange={setTemplateOpen} />
       <RoleAssignmentsSheet
         role={selectedRole}
@@ -343,6 +356,22 @@ function RolesContent() {
   );
 }
 
+function RenameRoleButton({
+  onClick,
+}: {
+  onClick: (e: React.MouseEvent) => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="inline-flex h-9 w-9 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+      aria-label="Rename role"
+    >
+      <Pencil className="h-3.5 w-3.5" />
+    </button>
+  );
+}
+
 function DeleteRoleButton({
   onClick,
 }: {
@@ -366,6 +395,7 @@ interface RoleListItemProps {
   isSelected: boolean;
   onSelect: (roleId: number) => void;
   onDelete: (role: Role) => void;
+  onRename: (role: Role) => void;
   permCount: number;
 }
 
@@ -374,6 +404,7 @@ function RoleListItem({
   isSelected,
   onSelect,
   onDelete,
+  onRename,
   permCount,
 }: RoleListItemProps) {
   const handleSelect = useCallback(
@@ -396,6 +427,13 @@ function RoleListItem({
     },
     [role, onDelete],
   );
+  const handleRename = useCallback(
+    (event: React.MouseEvent) => {
+      event.stopPropagation();
+      onRename(role);
+    },
+    [role, onRename],
+  );
 
   return (
     <div
@@ -414,13 +452,18 @@ function RoleListItem({
           {permCount} permissions
         </p>
       </div>
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex items-center gap-1 shrink-0">
         {role.isSystem && (
           <Badge variant="outline" className="text-[9px] px-1.5">
             System
           </Badge>
         )}
-        {!role.isSystem && <DeleteRoleButton onClick={handleDelete} />}
+        {!role.isSystem && (
+          <>
+            <RenameRoleButton onClick={handleRename} />
+            <DeleteRoleButton onClick={handleDelete} />
+          </>
+        )}
       </div>
     </div>
   );
