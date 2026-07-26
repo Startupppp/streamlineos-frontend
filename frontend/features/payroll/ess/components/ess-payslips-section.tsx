@@ -113,7 +113,7 @@ const ExplainMenu = memo(function ExplainMenu({ payslip }: ExplainMenuProps) {
               ? `${c.path}: ${typeof c.value === "string" ? c.value : String(c.value)}`
               : c.path,
         }));
-        return { text: result.explanation, citations };
+        return { text: result.explanation, citations, aiUsage: result.aiUsage };
       },
     },
   ];

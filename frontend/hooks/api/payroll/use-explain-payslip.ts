@@ -4,6 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
+import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
 
 export interface PayslipEvidenceCitation {
   path: string;
@@ -22,6 +23,7 @@ export interface PayslipExplanationResult {
     honestyLabel: string;
   };
   forbiddenActions?: string[];
+  aiUsage?: AiUsageMeta;
 }
 
 export function useExplainPayslip(publicationId: number) {
