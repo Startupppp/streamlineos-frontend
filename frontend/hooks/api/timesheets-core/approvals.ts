@@ -8,11 +8,18 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import type { PeriodStatus, TimesheetPeriod } from "@/features/timesheets-core/types";
 
+export interface ApprovalsPage {
+  data: TimesheetPeriod[];
+  pagination: { page: number; limit: number; total: number };
+}
+
 interface ApprovalsQuery {
   status?: PeriodStatus;
   userId?: string;
   startDate?: string;
   endDate?: string;
+  page?: number;
+  limit?: number;
 }
 
 export function useApprovals(query: ApprovalsQuery = {}, enabled = true) {
@@ -22,14 +29,28 @@ export function useApprovals(query: ApprovalsQuery = {}, enabled = true) {
     userId: query.userId,
     startDate: query.startDate,
     endDate: query.endDate,
+    page: query.page,
+    limit: query.limit,
   };
   return useQuery({
     queryKey: queryKeys.timesheets.approvals(params),
-    queryFn: () => apiClient.get<TimesheetPeriod[]>("/timesheets/approvals", params),
+    queryFn: () => apiClient.get<ApprovalsPage>("/timesheets/approvals", params),
     staleTime: 60_000,
     placeholderData: (prev) => prev,
     enabled: enabled && canView,
   });
+}
+
+function patchPeriodInPages(
+  prev: ApprovalsPage | undefined,
+  periodId: number,
+  patch: Partial<TimesheetPeriod>,
+): ApprovalsPage | undefined {
+  if (!prev) return prev;
+  return {
+    ...prev,
+    data: prev.data.map((p) => (p.id === periodId ? { ...p, ...patch } : p)),
+  };
 }
 
 export function useApprovePeriod() {
@@ -40,17 +61,16 @@ export function useApprovePeriod() {
       apiClient.post<TimesheetPeriod>(`/timesheets/approvals/${periodId}/approve`),
     onMutate: async (periodId) => {
       await qc.cancelQueries({ queryKey: queryKeys.timesheets.approvals() });
-      const snapshots = qc.getQueriesData<TimesheetPeriod[]>({
+      const snapshots = qc.getQueriesData<ApprovalsPage>({
         queryKey: queryKeys.timesheets.approvals(),
       });
-      qc.setQueriesData<TimesheetPeriod[]>(
+      qc.setQueriesData<ApprovalsPage>(
         { queryKey: queryKeys.timesheets.approvals() },
         (prev) =>
-          prev?.map((p) =>
-            p.id === periodId
-              ? { ...p, status: "APPROVED" as const, approvedAt: new Date().toISOString() }
-              : p,
-          ) ?? prev,
+          patchPeriodInPages(prev, periodId, {
+            status: "APPROVED",
+            approvedAt: new Date().toISOString(),
+          }),
       );
       return { snapshots };
     },
@@ -80,22 +100,17 @@ export function useRejectPeriod() {
       apiClient.post<TimesheetPeriod>(`/timesheets/approvals/${periodId}/reject`, { reason }),
     onMutate: async ({ periodId, reason }) => {
       await qc.cancelQueries({ queryKey: queryKeys.timesheets.approvals() });
-      const snapshots = qc.getQueriesData<TimesheetPeriod[]>({
+      const snapshots = qc.getQueriesData<ApprovalsPage>({
         queryKey: queryKeys.timesheets.approvals(),
       });
-      qc.setQueriesData<TimesheetPeriod[]>(
+      qc.setQueriesData<ApprovalsPage>(
         { queryKey: queryKeys.timesheets.approvals() },
         (prev) =>
-          prev?.map((p) =>
-            p.id === periodId
-              ? {
-                  ...p,
-                  status: "REJECTED" as const,
-                  rejectedAt: new Date().toISOString(),
-                  rejectionReason: reason,
-                }
-              : p,
-          ) ?? prev,
+          patchPeriodInPages(prev, periodId, {
+            status: "REJECTED",
+            rejectedAt: new Date().toISOString(),
+            rejectionReason: reason,
+          }),
       );
       return { snapshots };
     },

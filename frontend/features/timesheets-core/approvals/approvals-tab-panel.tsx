@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { format, parseISO } from "date-fns";
 import { CheckCircle, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +30,8 @@ const TAB_EMPTY: Record<ApprovalTab, string> = {
   REJECTED: "No rejected timesheets for this period.",
 };
 
+const PAGE_SIZE = 25;
+
 interface ApprovalsTableProps {
   periods: TimesheetPeriod[];
   isLoading: boolean;
@@ -43,6 +45,9 @@ interface ApprovalsTableProps {
   onBulkReject: () => void;
   tab: ApprovalTab;
   isBulkPending: boolean;
+  page: number;
+  total: number;
+  onPageChange: (page: number) => void;
 }
 
 function ApprovalsTable({
@@ -58,6 +63,9 @@ function ApprovalsTable({
   onBulkReject,
   tab,
   isBulkPending,
+  page,
+  total,
+  onPageChange,
 }: ApprovalsTableProps) {
   const columns = useMemo<DataTableColumn<TimesheetPeriod>[]>(
     () => [
@@ -192,6 +200,13 @@ function ApprovalsTable({
       isLoading={isLoading}
       toolbar={toolbar}
       minWidth="700px"
+      pagination={{
+        mode: "server",
+        page,
+        pageSize: PAGE_SIZE,
+        total,
+        onPageChange,
+      }}
       emptyState={
         <EmptyState
           illustrationPreset="approval"
@@ -233,8 +248,14 @@ export function ApprovalsTabPanel({
   onBulkReject,
   isBulkPending,
 }: ApprovalsTabPanelProps) {
+  const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    setPage(1);
+  }, [memberFilter, dateFrom, dateTo, status]);
+
   const {
-    data: periods,
+    data,
     isLoading,
     isError,
     refetch,
@@ -244,19 +265,22 @@ export function ApprovalsTabPanel({
       userId: memberFilter !== "all" ? memberFilter : undefined,
       startDate: dateFrom || undefined,
       endDate: dateTo || undefined,
+      page,
+      limit: PAGE_SIZE,
     },
     canAccess,
   );
 
-  function handleRetry() {
+  const handleRetry = useCallback(() => {
     void refetch();
-  }
+  }, [refetch]);
+  const handlePageChange = useCallback((p: number) => setPage(p), []);
 
   return (
     <Card>
       <CardContent className="p-0">
         <ApprovalsTable
-          periods={periods ?? []}
+          periods={data?.data ?? []}
           isLoading={isLoading}
           isError={isError}
           onRetry={handleRetry}
@@ -268,6 +292,9 @@ export function ApprovalsTabPanel({
           onBulkReject={onBulkReject}
           tab={status}
           isBulkPending={isBulkPending}
+          page={page}
+          total={data?.pagination.total ?? 0}
+          onPageChange={handlePageChange}
         />
       </CardContent>
     </Card>

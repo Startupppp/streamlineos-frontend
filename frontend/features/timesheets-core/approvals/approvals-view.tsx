@@ -54,7 +54,7 @@ export function ApprovalsView() {
     endDate: dateTo || undefined,
   };
 
-  const { data: pendingPeriods } = useApprovals(
+  const { data: pendingData } = useApprovals(
     { status: "SUBMITTED", ...sharedFilters },
     canAccess,
   );
@@ -65,7 +65,7 @@ export function ApprovalsView() {
   const bulkApproveMutation = useBulkApprove();
   const bulkRejectMutation = useBulkReject();
 
-  const pendingCount = pendingPeriods?.length ?? 0;
+  const pendingCount = pendingData?.pagination.total ?? 0;
 
   const handleRowClick = useCallback((period: TimesheetPeriod) => {
     setDetailPeriod(period);
