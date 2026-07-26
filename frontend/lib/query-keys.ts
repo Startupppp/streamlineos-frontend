@@ -1497,6 +1497,8 @@ export const queryKeys = {
       [...base, "timesheets", "billing", "rate-preview", params] as const,
     reportsOverview: (params?: Record<string, unknown>) =>
       [...base, "timesheets", "reports", "overview", params] as const,
+    teamWeekSummary: (params: Record<string, unknown>) =>
+      [...base, "timesheets", "team", "week-summary", params] as const,
     settings: () => [...base, "timesheets", "settings"] as const,
     rates: () => [...base, "timesheets", "rates"] as const,
     budgets: () => [...base, "timesheets", "budgets"] as const,
@@ -1815,5 +1817,17 @@ export const queryKeys = {
       [...base, "party", "parties", partyId] as const,
     contacts: (partyId: string) =>
       [...base, "party", "parties", partyId, "contacts"] as const,
+  },
+
+  portalAccess: {
+    all: [...base, "portalAccess"] as const,
+    memberships: (params?: Record<string, unknown>) =>
+      [...base, "portalAccess", "memberships", params] as const,
+    membership: (portalMembershipId: string) =>
+      [...base, "portalAccess", "memberships", portalMembershipId] as const,
+    grants: (params?: Record<string, unknown>) =>
+      [...base, "portalAccess", "grants", params] as const,
+    grant: (projectClientGrantId: string) =>
+      [...base, "portalAccess", "grants", projectClientGrantId] as const,
   },
 } as const;

@@ -19,12 +19,11 @@ import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { useCan } from "@/hooks/api/access";
-import { usePeriods } from "@/hooks/api/timesheets-core/periods";
-import { useTimesheetEntries } from "@/hooks/api/timesheets-core/entries";
+import { useTeamWeekSummary, type TeamMemberWeekSummary } from "@/hooks/api/timesheets-core/team";
 import { useReportsOverview } from "@/hooks/api/timesheets-core/reports";
 import { useHrEmployees, unwrapEmployees } from "@/hooks/api/hr";
 import { PERIOD_STATUS_LABEL } from "@/features/timesheets-core/types";
-import type { PeriodStatus, TimesheetPeriod } from "@/features/timesheets-core/types";
+import type { PeriodStatus } from "@/features/timesheets-core/types";
 import type { Employee } from "@/types/hr";
 import { TeamStats } from "./team-stats";
 import { TeamTable, type TeamMemberRow } from "./team-table";
@@ -67,63 +66,49 @@ export function TeamView() {
     [weekOffset],
   );
 
-  const {
-    data: periodsData,
-    isLoading: periodsLoading,
-    isError: periodsError,
-    refetch: refetchPeriods,
-  } = usePeriods({ limit: 200 }, canView);
-
-  const { data: entriesData, isLoading: entriesLoading } = useTimesheetEntries(
-    { startDate: startStr, endDate: endStr, limit: 500 },
-    canView,
+  const { data: employeesRaw } = useHrEmployees({ limit: 100 });
+  const employees = useMemo<Employee[]>(
+    () => unwrapEmployees(employeesRaw),
+    [employeesRaw],
   );
+
+  const employeeIds = useMemo(() => employees.map((e) => e.id), [employees]);
+
+  const {
+    data: summaryData,
+    isLoading: summaryLoading,
+    isError: summaryError,
+    refetch: refetchSummary,
+  } = useTeamWeekSummary(employeeIds, startStr, endStr, canView);
 
   const { data: overview, isLoading: overviewLoading } = useReportsOverview(
     { startDate: startStr, endDate: endStr },
     canView,
   );
 
-  const { data: employeesRaw } = useHrEmployees({ limit: 100 });
-  const employees = useMemo<Employee[]>(
-    () => (unwrapEmployees(employeesRaw)),
-    [employeesRaw],
-  );
-
-  const periodsForWeek = useMemo<TimesheetPeriod[]>(() => {
-    if (!periodsData) return [];
-    return periodsData.filter(
-      (p) => p.periodStart <= endStr && p.periodEnd >= startStr,
-    );
-  }, [periodsData, startStr, endStr]);
-
-  const periodsByUser = useMemo<Map<string, TimesheetPeriod>>(() => {
-    const map = new Map<string, TimesheetPeriod>();
-    for (const p of periodsForWeek) map.set(p.userId, p);
+  const summaryByUser = useMemo<Map<string, TeamMemberWeekSummary>>(() => {
+    const map = new Map<string, TeamMemberWeekSummary>();
+    for (const summary of summaryData?.summaries ?? []) map.set(summary.userId, summary);
     return map;
-  }, [periodsForWeek]);
-
-  const dailyHoursByUser = useMemo<Map<string, Record<string, number>>>(() => {
-    const map = new Map<string, Record<string, number>>();
-    if (!entriesData) return map;
-    for (const entry of entriesData) {
-      const userHours = map.get(entry.userId) ?? {};
-      userHours[entry.date] = (userHours[entry.date] ?? 0) + parseFloat(entry.hours);
-      map.set(entry.userId, userHours);
-    }
-    return map;
-  }, [entriesData]);
+  }, [summaryData]);
 
   const allRows = useMemo<TeamMemberRow[]>(
     () =>
       employees.map((emp) => {
-        const period = periodsByUser.get(emp.id) ?? null;
-        const dailyHours = dailyHoursByUser.get(emp.id) ?? {};
-        const totalHours = Object.values(dailyHours).reduce((s, h) => s + h, 0);
+        const summary = summaryByUser.get(emp.id);
+        const period = summary?.period ?? null;
         const status: TeamMemberRow["status"] = period?.status ?? "MISSING";
-        return { userId: emp.id, name: emp.name ?? "", email: emp.email, period, totalHours, dailyHours, status };
+        return {
+          userId: emp.id,
+          name: emp.name ?? "",
+          email: emp.email,
+          period,
+          totalHours: summary?.totalHours ?? 0,
+          dailyHours: summary?.dailyHours ?? {},
+          status,
+        };
       }),
-    [employees, periodsByUser, dailyHoursByUser],
+    [employees, summaryByUser],
   );
 
   const filteredRows = useMemo<TeamMemberRow[]>(() => {
@@ -161,9 +146,9 @@ export function TeamView() {
   const handlePrevWeek = useCallback(() => setWeekOffset((o) => o - 1), []);
   const handleNextWeek = useCallback(() => setWeekOffset((o) => o + 1), []);
   const handleThisWeek = useCallback(() => setWeekOffset(0), []);
-  const handleRetry = useCallback(() => { void refetchPeriods(); }, [refetchPeriods]);
+  const handleRetry = useCallback(() => { void refetchSummary(); }, [refetchSummary]);
 
-  const isLoading = periodsLoading || entriesLoading;
+  const isLoading = summaryLoading;
   const subtitle = `${format(weekStart, "MMM d")} – ${format(weekEnd, "MMM d, yyyy")} · ${employees.length} member${employees.length === 1 ? "" : "s"}`;
 
   const motionProps = shouldReduceMotion
@@ -263,7 +248,7 @@ export function TeamView() {
           isLoading={isLoading || overviewLoading}
         />
 
-        {periodsError ? (
+        {summaryError ? (
           <ErrorState
             title="Couldn't load team timesheets"
             description="Something went wrong while fetching team data."
