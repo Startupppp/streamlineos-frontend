@@ -19,6 +19,9 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { AppSheet } from "@/components/shared/app-sheet";
 import { ProjectTicketSelect } from "./project-ticket-select";
+import { AiActionsMenu, type AiAction } from "@/components/ai/ai-actions-menu";
+import { describeTimesheetEntry } from "@/hooks/api/timesheets-core/ai";
+import { useCan } from "@/hooks/api/access";
 import {
   useCreateTimesheetEntry,
   useUpdateTimesheetEntry,
@@ -77,6 +80,37 @@ export function LogTimeSheet({
   const handleTicketChange = useCallback(
     (id: number | null) => form.setValue("ticketId", id),
     [form],
+  );
+
+  const canUseAi = useCan("timesheets:entries:create");
+  const descriptionValue = form.watch("description");
+
+  const descriptionAiActions = useMemo<AiAction[]>(
+    () => [
+      {
+        key: "polish-description",
+        label: "Polish description",
+        description: "Rewrite your note into a clear, professional line",
+        surface: "popover",
+        applyLabel: "Use this",
+        disabledReason:
+          (descriptionValue ?? "").trim().length === 0
+            ? "Write a note first"
+            : undefined,
+        run: async () => {
+          const values = form.getValues();
+          const hoursNum = Number(values.hours);
+          const res = await describeTimesheetEntry({
+            description: (values.description ?? "").trim(),
+            hours: Number.isFinite(hoursNum) && hoursNum > 0 ? hoursNum : undefined,
+            billable: values.isBillable,
+          });
+          return { text: res.text, aiUsage: res.aiUsage };
+        },
+        onApply: (text) => form.setValue("description", text, { shouldDirty: true }),
+      },
+    ],
+    [descriptionValue, form],
   );
 
   const handleFormSubmit = useCallback(
@@ -182,7 +216,17 @@ export function LogTimeSheet({
             name="description"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-xs">Description</FormLabel>
+                <div className="flex items-center justify-between gap-2">
+                  <FormLabel className="text-xs">Description</FormLabel>
+                  {canUseAi ? (
+                    <AiActionsMenu
+                      actions={descriptionAiActions}
+                      triggerLabel="Polish"
+                      menuLabel="AI assist"
+                      align="end"
+                    />
+                  ) : null}
+                </div>
                 <FormControl>
                   <Input
                     placeholder="What did you work on?"

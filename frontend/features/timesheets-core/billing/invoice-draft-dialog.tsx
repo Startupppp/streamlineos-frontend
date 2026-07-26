@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { AlertTriangle, FileText } from "lucide-react";
 import {
   Dialog,
@@ -12,6 +12,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useCreateInvoiceDraft } from "@/hooks/api/timesheets-core/billing";
+import { AiActionsMenu, type AiAction } from "@/components/ai/ai-actions-menu";
+import { generateBillingNarrative } from "@/hooks/api/timesheets-core/ai";
+import { useCan } from "@/hooks/api/access";
 import { formatMoney } from "./lib/format-money";
 import type { BillingGroup } from "@/features/timesheets-core/types";
 
@@ -49,11 +52,43 @@ export function InvoiceDraftDialog({
 
   const handleClose = useCallback(() => onOpenChange(false), [onOpenChange]);
 
+  const canViewBilling = useCan("timesheets:billing:view");
+  const narrativeActions = useMemo<AiAction[]>(
+    () => [
+      {
+        key: "invoice-narrative",
+        label: "Generate invoice narrative",
+        description: "Draft a client-facing summary of the billable work",
+        surface: "sheet",
+        disabledReason: groups.length === 0 ? "No billable work in range" : undefined,
+        run: async () => {
+          const res = await generateBillingNarrative({
+            projectId: projectId ?? undefined,
+            startDate,
+            endDate,
+          });
+          return { text: res.text, aiUsage: res.aiUsage };
+        },
+      },
+    ],
+    [groups.length, projectId, startDate, endDate],
+  );
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle>Create Invoice Draft</DialogTitle>
+          <div className="flex items-center justify-between gap-2">
+            <DialogTitle>Create Invoice Draft</DialogTitle>
+            {canViewBilling ? (
+              <AiActionsMenu
+                actions={narrativeActions}
+                triggerLabel="Narrative"
+                menuLabel="AI assist"
+                align="end"
+              />
+            ) : null}
+          </div>
         </DialogHeader>
 
         <div className="space-y-3 py-1">

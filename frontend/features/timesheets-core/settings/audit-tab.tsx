@@ -24,23 +24,44 @@ const SELECT_ALL = "__all__";
 const PAGE_LIMIT = 20;
 
 const ENTITY_TYPE_OPTIONS = [
-  "timesheet_entry",
-  "timesheet_period",
-  "timesheet_settings",
-  "timesheet_rate",
-  "timesheet_approval",
+  "entry",
+  "period",
+  "timer",
+  "rate",
+  "budget",
+  "billing",
+  "settings",
 ];
 
 const ACTION_OPTIONS = [
-  "create",
-  "update",
-  "delete",
-  "approve",
-  "reject",
-  "submit",
-  "lock",
-  "unlock",
+  "entry.created",
+  "entry.updated",
+  "entry.voided",
+  "period.submitted",
+  "period.recalled",
+  "period.approved",
+  "period.rejected",
+  "period.reopened",
+  "period.locked",
+  "period.unlocked",
+  "timer.converted",
+  "rate.created",
+  "rate.updated",
+  "rate.deleted",
+  "budget.created",
+  "budget.updated",
+  "budget.deleted",
+  "billing.exported",
+  "billing.invoice_drafted",
+  "settings.updated",
 ];
+
+function humanizeToken(token: string): string {
+  return token
+    .split(/[._]/)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
 
 const COLUMNS: DataTableColumn<AuditEvent>[] = [
   {
@@ -150,13 +171,13 @@ export function AuditTab() {
         <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-44")}>
           <SelectValue placeholder="All entity types" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
           <SelectItem value={SELECT_ALL} className="text-xs">
             All entity types
           </SelectItem>
           {ENTITY_TYPE_OPTIONS.map((et) => (
-            <SelectItem key={et} value={et} className="text-xs font-mono">
-              {et}
+            <SelectItem key={et} value={et} className="text-xs">
+              {humanizeToken(et)}
             </SelectItem>
           ))}
         </SelectContent>
@@ -166,13 +187,13 @@ export function AuditTab() {
         <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-36")}>
           <SelectValue placeholder="All actions" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
           <SelectItem value={SELECT_ALL} className="text-xs">
             All actions
           </SelectItem>
           {ACTION_OPTIONS.map((a) => (
-            <SelectItem key={a} value={a} className="text-xs font-mono">
-              {a}
+            <SelectItem key={a} value={a} className="text-xs">
+              {humanizeToken(a)}
             </SelectItem>
           ))}
         </SelectContent>

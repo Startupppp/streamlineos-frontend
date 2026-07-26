@@ -24,6 +24,8 @@ import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 import { useCan } from "@/hooks/api/access";
 import { useReportsOverview } from "@/hooks/api/timesheets-core/reports";
+import { AiActionsMenu, type AiAction } from "@/components/ai/ai-actions-menu";
+import { generateReportsNarrative } from "@/hooks/api/timesheets-core/ai";
 import { OverviewReport } from "./overview-report";
 import { ProjectBudgetsTab } from "./project-budgets-tab";
 
@@ -109,6 +111,28 @@ export function ReportsView() {
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
+  const narrativeActions = useMemo<AiAction[]>(
+    () => [
+      {
+        key: "reports-narrative",
+        label: "Summarize this report",
+        description: "Plain-language read of the team's timesheet overview",
+        surface: "sheet",
+        disabledReason:
+          activeTab !== "overview"
+            ? "Switch to the Overview tab"
+            : !data
+              ? "No data to summarize yet"
+              : undefined,
+        run: async () => {
+          const res = await generateReportsNarrative({ startDate, endDate, userId });
+          return { text: res.text, aiUsage: res.aiUsage };
+        },
+      },
+    ],
+    [activeTab, data, startDate, endDate, userId],
+  );
+
   const subtitle = buildSubtitle(startDate, endDate);
 
   const motionProps = shouldReduceMotion
@@ -154,6 +178,14 @@ export function ReportsView() {
       title="Reports"
       subtitle={subtitle}
       filters={pageFilters}
+      actions={
+        <AiActionsMenu
+          actions={narrativeActions}
+          triggerLabel="AI summary"
+          menuLabel="AI assist"
+          align="end"
+        />
+      }
     >
       <motion.div {...motionProps} className="flex flex-1 min-h-0 flex-col gap-4">
         <Tabs value={activeTab} onValueChange={handleTabChange} className="flex min-h-0 flex-1 flex-col gap-4">
