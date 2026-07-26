@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { MonthPicker } from "@/features/payroll/shared/month-picker";
+import { MobileFilterDrawer } from "@/features/payroll/shared/mobile-filter-drawer";
 import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { ReimbursementStatusBadge } from "./reimbursement-status-badge";
 import { formatMoney, formatMonth } from "@/features/payroll/shared/payroll-format";
@@ -212,7 +213,7 @@ export function ReimbursementsPageContent() {
     <div className={FILTER_TOOLBAR_ROW}>
       <MonthPicker value={month} onChange={handleMonthChange} yearRange={[-1, 0]} className="w-44" />
       <Select value={status} onValueChange={handleStatusChange}>
-        <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-36`}>
+        <SelectTrigger className={`${FILTER_SELECT_TRIGGER} hidden sm:flex w-36`}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -224,7 +225,7 @@ export function ReimbursementsPageContent() {
         </SelectContent>
       </Select>
       <Select value={category} onValueChange={handleCategoryChange}>
-        <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-44`}>
+        <SelectTrigger className={`${FILTER_SELECT_TRIGGER} hidden sm:flex w-44`}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -235,6 +236,13 @@ export function ReimbursementsPageContent() {
           ))}
         </SelectContent>
       </Select>
+      <MobileFilterDrawer
+        ariaLabel="Filter reimbursements"
+        groups={[
+          { label: "Status", value: status, options: STATUS_OPTIONS, onChange: handleStatusChange },
+          { label: "Category", value: category, options: CATEGORIES, onChange: handleCategoryChange },
+        ]}
+      />
     </div>
   );
 
