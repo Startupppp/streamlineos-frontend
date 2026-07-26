@@ -64,7 +64,6 @@ export interface UpdateMembershipStatusInput {
 
 export interface CreateGrantInput {
   portalMembershipId: string;
-  partyContactId: string;
   projectId: number;
   pmWorkspaceId?: string;
   canViewMilestones?: boolean;

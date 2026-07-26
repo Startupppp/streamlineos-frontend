@@ -12,7 +12,6 @@ import {
   FormLabel,
   FormControl,
   FormMessage,
-  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
@@ -36,7 +35,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 
 const grantSchema = z.object({
   portalMembershipId: z.string().min(1, "Membership is required"),
-  partyContactId: z.string().min(1, "Party contact ID is required"),
   projectId: z.string().regex(/^\d+$/, "Project ID must be a number"),
   canViewMilestones: z.boolean(),
   canViewTasks: z.boolean(),
@@ -49,7 +47,6 @@ type GrantFormValues = z.infer<typeof grantSchema>;
 
 const EMPTY_DEFAULTS: GrantFormValues = {
   portalMembershipId: "",
-  partyContactId: "",
   projectId: "",
   canViewMilestones: false,
   canViewTasks: false,
@@ -61,7 +58,6 @@ const EMPTY_DEFAULTS: GrantFormValues = {
 function toFormValues(grant: ProjectClientGrant): GrantFormValues {
   return {
     portalMembershipId: grant.portalMembershipId,
-    partyContactId: grant.partyContactId,
     projectId: String(grant.projectId),
     canViewMilestones: grant.canViewMilestones,
     canViewTasks: grant.canViewTasks,
@@ -119,7 +115,6 @@ function GrantFormDialogInner({ open, onOpenChange, mode, defaultValues }: Props
       createGrant.mutate(
         {
           portalMembershipId: values.portalMembershipId,
-          partyContactId: values.partyContactId,
           projectId: Number(values.projectId),
           canViewMilestones: values.canViewMilestones,
           canViewTasks: values.canViewTasks,
@@ -238,27 +233,6 @@ function GrantFormDialogInner({ open, onOpenChange, mode, defaultValues }: Props
                     })}
                   </SelectContent>
                 </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="partyContactId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Party contact ID</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    placeholder="UUID of the party contact"
-                    disabled={mode === "edit"}
-                  />
-                </FormControl>
-                <FormDescription>
-                  The UUID of the contact record from Business Parties.
-                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
