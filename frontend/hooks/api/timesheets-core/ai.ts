@@ -54,3 +54,13 @@ export async function generateReportsNarrative(
 ): Promise<AiTextDraftResponse> {
   return apiClient.post<AiTextDraftResponse>("/timesheets/ai/reports-narrative", input);
 }
+
+export async function draftRejectionReason(
+  periodId: number,
+  note?: string,
+): Promise<AiTextDraftResponse> {
+  return apiClient.post<AiTextDraftResponse>(
+    `/timesheets/periods/${periodId}/ai/rejection-reason`,
+    { note },
+  );
+}

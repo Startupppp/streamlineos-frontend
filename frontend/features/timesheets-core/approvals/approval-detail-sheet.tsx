@@ -20,9 +20,10 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { AiActionsMenu, type AiAction } from "@/components/ai";
+import { useCan } from "@/hooks/api/access";
 import { usePeriod } from "@/hooks/api/timesheets-core/periods";
 import { useApprovePeriod, useRejectPeriod } from "@/hooks/api/timesheets-core/approvals";
-import { fetchTimesheetPeriodSummary } from "@/hooks/api/timesheets-core/ai";
+import { fetchTimesheetPeriodSummary, draftRejectionReason } from "@/hooks/api/timesheets-core/ai";
 import {
   PERIOD_STATUS_BADGE,
   PERIOD_STATUS_LABEL,
@@ -112,6 +113,8 @@ export function ApprovalDetailSheet({
   const isActionable = period?.status === "SUBMITTED";
   const isPending = approveMutation.isPending || rejectMutation.isPending;
 
+  const canManageApprovals = useCan("timesheets:approvals:manage");
+
   const aiActions = useMemo<AiAction[]>(() => {
     if (!period) return [];
     const periodId = period.id;
@@ -127,6 +130,25 @@ export function ApprovalDetailSheet({
       },
     ];
   }, [period]);
+
+  const rejectionActions = useMemo<AiAction[]>(() => {
+    if (!period) return [];
+    const periodId = period.id;
+    return [
+      {
+        key: "draft-rejection",
+        label: "Draft rejection reason",
+        description: "Constructive feedback grounded in this timesheet",
+        surface: "popover",
+        applyLabel: "Use this",
+        run: async () => {
+          const res = await draftRejectionReason(periodId, rejectReason.trim() || undefined);
+          return { text: res.text, aiUsage: res.aiUsage };
+        },
+        onApply: (text) => setRejectReason(text),
+      },
+    ];
+  }, [period, rejectReason]);
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
@@ -266,9 +288,19 @@ export function ApprovalDetailSheet({
           <SheetFooter className="flex-col items-stretch gap-3 border-t px-6 py-4">
             {rejectMode ? (
               <div className="space-y-2">
-                <Label htmlFor="reject-reason" className="text-xs">
-                  Rejection reason <span className="text-destructive">*</span>
-                </Label>
+                <div className="flex items-center justify-between gap-2">
+                  <Label htmlFor="reject-reason" className="text-xs">
+                    Rejection reason <span className="text-destructive">*</span>
+                  </Label>
+                  {canManageApprovals ? (
+                    <AiActionsMenu
+                      actions={rejectionActions}
+                      triggerLabel="Draft"
+                      menuLabel="AI assist"
+                      align="end"
+                    />
+                  ) : null}
+                </div>
                 <Textarea
                   id="reject-reason"
                   value={rejectReason}
