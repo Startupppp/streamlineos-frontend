@@ -26,6 +26,11 @@ import { useCan } from "@/hooks/api/access";
 import { useReportsOverview } from "@/hooks/api/timesheets-core/reports";
 import { OverviewReport } from "./overview-report";
 import { ProjectBudgetsTab } from "./project-budgets-tab";
+import { UtilizationTab } from "./utilization-tab";
+import { ClientProfitabilityTab } from "./client-profitability-tab";
+import { ComplianceTab } from "./compliance-tab";
+import { ApprovalSlaTab } from "./approval-sla-tab";
+import { BillingLeakageTab } from "./billing-leakage-tab";
 
 const REPORT_TABS = [
   { value: "overview", label: "Overview" },
@@ -103,12 +108,16 @@ export function ReportsView() {
   }, [router]);
 
   const queryEnabled = canView && !!startDate && !!endDate;
+  const rangeParams = useMemo(() => ({ startDate, endDate }), [startDate, endDate]);
 
   const {
     data,
     isLoading,
     isError,
-  } = useReportsOverview({ startDate, endDate, userId }, queryEnabled);
+  } = useReportsOverview(
+    { startDate, endDate, userId },
+    queryEnabled && activeTab === "overview",
+  );
 
   const subtitle = buildSubtitle(startDate, endDate);
 
@@ -178,20 +187,44 @@ export function ReportsView() {
             )}
           </TabsContent>
 
-          {REPORT_TABS.slice(1).map((tab) => (
-            <TabsContent key={tab.value} value={tab.value} className="mt-0">
-              {tab.value === "project-budgets" ? (
-                <ProjectBudgetsTab />
-              ) : (
-                <EmptyState
-                  illustrationPreset="chart"
-                  title="Coming Soon"
-                  description="This report is currently under development."
-                  compact
-                />
-              )}
-            </TabsContent>
-          ))}
+          <TabsContent value="utilization" className="mt-0">
+            <UtilizationTab
+              params={rangeParams}
+              enabled={queryEnabled && activeTab === "utilization"}
+            />
+          </TabsContent>
+
+          <TabsContent value="project-budgets" className="mt-0">
+            <ProjectBudgetsTab />
+          </TabsContent>
+
+          <TabsContent value="client-profitability" className="mt-0">
+            <ClientProfitabilityTab
+              params={rangeParams}
+              enabled={queryEnabled && activeTab === "client-profitability"}
+            />
+          </TabsContent>
+
+          <TabsContent value="compliance" className="mt-0">
+            <ComplianceTab
+              params={rangeParams}
+              enabled={queryEnabled && activeTab === "compliance"}
+            />
+          </TabsContent>
+
+          <TabsContent value="approval-sla" className="mt-0">
+            <ApprovalSlaTab
+              params={rangeParams}
+              enabled={queryEnabled && activeTab === "approval-sla"}
+            />
+          </TabsContent>
+
+          <TabsContent value="billing-leakage" className="mt-0">
+            <BillingLeakageTab
+              params={rangeParams}
+              enabled={queryEnabled && activeTab === "billing-leakage"}
+            />
+          </TabsContent>
         </Tabs>
       </motion.div>
     </PageWrapper>

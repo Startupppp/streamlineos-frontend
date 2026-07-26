@@ -24,8 +24,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { UserCombobox } from "@/components/ui/user-combobox";
-import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateRate, useUpdateRate } from "@/hooks/api/timesheets-core/rates";
 import { useProjects } from "@/hooks/api/projects";
 import type { TimesheetRate, CreateRateInput, BillingType } from "@/features/timesheets-core/types";
@@ -35,8 +33,13 @@ const BILLING_TYPE_OPTIONS: BillingType[] = ["BILLABLE", "NON_BILLABLE", "INTERN
 
 const SELECT_NONE = "__none__";
 
-function toInput(values: RateFormValues): CreateRateInput {
-  return {
+type RateSubmitInput = CreateRateInput & {
+  effectiveFrom?: string | null;
+  effectiveTo?: string | null;
+};
+
+function toInput(values: RateFormValues, isEdit: boolean): RateSubmitInput {
+  const base: RateSubmitInput = {
     billingType: values.billingType,
     billRate: parseFloat(values.billRate),
     costRate: values.costRate ? parseFloat(values.costRate) : undefined,
@@ -49,6 +52,14 @@ function toInput(values: RateFormValues): CreateRateInput {
     userId:
       values.userId && values.userId !== SELECT_NONE ? values.userId : undefined,
   };
+  const effectiveFrom = values.effectiveFrom || null;
+  const effectiveTo = values.effectiveTo || null;
+  if (isEdit) {
+    return { ...base, effectiveFrom, effectiveTo };
+  }
+  if (effectiveFrom) base.effectiveFrom = effectiveFrom;
+  if (effectiveTo) base.effectiveTo = effectiveTo;
+  return base;
 }
 
 interface RateFormSheetProps {
@@ -76,6 +87,8 @@ export function RateFormSheet({ open, onOpenChange, rate }: RateFormSheetProps) 
       costRate: "",
       currency: "USD",
       priority: "0",
+      effectiveFrom: "",
+      effectiveTo: "",
     },
   });
 
@@ -91,6 +104,8 @@ export function RateFormSheet({ open, onOpenChange, rate }: RateFormSheetProps) 
             costRate: rate.costRate ?? "",
             currency: rate.currency,
             priority: String(rate.priority),
+            effectiveFrom: rate.effectiveFrom ?? "",
+            effectiveTo: rate.effectiveTo ?? "",
           }
         : {
             projectId: SELECT_NONE,
@@ -100,6 +115,8 @@ export function RateFormSheet({ open, onOpenChange, rate }: RateFormSheetProps) 
             costRate: "",
             currency: "USD",
             priority: "0",
+            effectiveFrom: "",
+            effectiveTo: "",
           },
     );
   }, [open, rate, reset]);
@@ -107,7 +124,7 @@ export function RateFormSheet({ open, onOpenChange, rate }: RateFormSheetProps) 
   const handleClose = useCallback(() => onOpenChange(false), [onOpenChange]);
 
   const handleSave = handleSubmit((values) => {
-    const input = toInput(values);
+    const input = toInput(values, Boolean(rate));
     if (rate) {
       updateRate.mutate(
         { rateId: rate.id, data: input },
@@ -253,6 +270,31 @@ export function RateFormSheet({ open, onOpenChange, rate }: RateFormSheetProps) 
                     />
                   </div>
                 </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium">Effective from</Label>
+                    <Input
+                      type="date"
+                      className="h-9 text-sm"
+                      {...register("effectiveFrom")}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium">Effective to</Label>
+                    <Input
+                      type="date"
+                      className="h-9 text-sm"
+                      {...register("effectiveTo")}
+                    />
+                  </div>
+                </div>
+                {errors.effectiveTo && (
+                  <p className="text-xs text-destructive">{errors.effectiveTo.message}</p>
+                )}
+                <p className="text-[11px] text-muted-foreground">
+                  Leave the effective dates blank to apply this rate always.
+                </p>
               </div>
             </div>
           </SheetBody>

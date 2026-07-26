@@ -224,6 +224,26 @@ export function useEmployeeAvailability(userIds?: string[]) {
 }
 
 
+export interface SkillsMatrixEmployee {
+  userId: string;
+  name: string | null;
+  image: string | null;
+  skills: Record<string, number>;
+}
+
+export interface SkillsMatrixResponse {
+  employees: SkillsMatrixEmployee[];
+  skills: string[];
+}
+
+export function useSkillsMatrix() {
+  return useQuery({
+    queryKey: [...queryKeys.hr.all, "skillsMatrix"] as const,
+    queryFn: () => apiClient.get<SkillsMatrixResponse>("/hr/employees/skills-matrix"),
+    staleTime: 5 * 60_000,
+  });
+}
+
 export interface ExpertResult {
   userId: string;
   name: string | null;

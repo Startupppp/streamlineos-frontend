@@ -1765,6 +1765,7 @@ export const NAV_GROUPS: NavGroup[] = [
       "timesheets:entries:view",
       "timesheets:team:view",
       "timesheets:approvals:view",
+      "timesheets:exceptions:view",
       "timesheets:billing:view",
       "timesheets:payroll:view",
       "timesheets:reports:view",
@@ -1789,6 +1790,12 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: ListChecks,
         href: "/timesheets/approvals",
         requiredPermission: "timesheets:approvals:view",
+      },
+      {
+        label: "Exceptions",
+        icon: ShieldAlert,
+        href: "/timesheets/exceptions",
+        requiredPermission: "timesheets:exceptions:view",
       },
       {
         label: "Billing",

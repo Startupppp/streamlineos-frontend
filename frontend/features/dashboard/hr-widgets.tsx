@@ -1,7 +1,9 @@
 "use client";
 
+import { useMemo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { WidgetCard } from "@/components/ui/widget-card";
+import { Badge } from "@/components/ui/badge";
 import { resolveImageUrl } from "@/lib/utils";
 import { format } from "date-fns";
 import {
@@ -19,6 +21,7 @@ import {
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useDashboardAccess } from "@/features/dashboard/use-dashboard-access";
+import { useHrMyLeaveRequests } from "@/hooks/api/hr";
 import {
   useLeavesToday,
   useUpcomingHolidays,
@@ -31,6 +34,37 @@ import {
   type LeaveBalance,
   type BirthdayEntry,
 } from "@/hooks/api/dashboard";
+
+interface MyLeaveRequestSummary {
+  id: number;
+  status: string;
+  startDate: string;
+  endDate: string;
+  leaveTypeName: string;
+}
+
+const LEAVE_STATUS_TONE: Record<string, string> = {
+  PENDING: "text-amber-600",
+  APPROVED: "text-emerald-600",
+  REJECTED: "text-red-600",
+  CANCELLED: "text-muted-foreground",
+};
+
+function toMyLeaveRequestSummary(raw: unknown): MyLeaveRequestSummary | null {
+  if (typeof raw !== "object" || raw === null) return null;
+  const row = raw as Record<string, unknown>;
+  const leaveType = row.leaveType as Record<string, unknown> | null | undefined;
+  const id = Number(row.id);
+  if (!Number.isFinite(id)) return null;
+  return {
+    id,
+    status: typeof row.status === "string" ? row.status : "PENDING",
+    startDate: String(row.startDate ?? ""),
+    endDate: String(row.endDate ?? ""),
+    leaveTypeName:
+      leaveType && typeof leaveType.name === "string" ? leaveType.name : "Leave",
+  };
+}
 
 function EmptyWidget({ message }: { message: string }) {
   return (
@@ -109,13 +143,31 @@ export function UpcomingHolidaysWidget() {
 
 export function LeaveBalanceWidget() {
   const { data, isLoading } = useMyLeaveBalance();
+  const { data: myRequestsData } = useHrMyLeaveRequests();
   const balances = data ?? [];
+
+  const requests = useMemo(
+    () =>
+      (myRequestsData?.requests ?? [])
+        .map(toMyLeaveRequestSummary)
+        .filter((r): r is MyLeaveRequestSummary => r !== null),
+    [myRequestsData],
+  );
+
+  const latestRequest = requests[0] ?? null;
+  const upcomingLeave = useMemo(() => {
+    const today = format(new Date(), "yyyy-MM-dd");
+    return requests
+      .filter((r) => r.status === "APPROVED" && r.endDate >= today)
+      .sort((a, b) => a.startDate.localeCompare(b.startDate))[0] ?? null;
+  }, [requests]);
 
   return (
     <WidgetCard
       icon={Clock}
       iconClassName="text-primary"
       title="My Leave Balance"
+      link={{ href: "/hr/leaves", label: "Apply" }}
       isLoading={isLoading}
       loadingRows={2}
       isEmpty={!balances.length}
@@ -150,6 +202,32 @@ export function LeaveBalanceWidget() {
           );
         })}
       </div>
+      {(upcomingLeave || latestRequest) && (
+        <div className="mt-2.5 space-y-1.5 border-t border-border/60 pt-2.5">
+          {upcomingLeave && (
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-muted-foreground">Upcoming leave</span>
+              <span className="font-medium">
+                {upcomingLeave.leaveTypeName} ·{" "}
+                {format(new Date(upcomingLeave.startDate), "MMM d")}
+                {upcomingLeave.startDate !== upcomingLeave.endDate &&
+                  ` – ${format(new Date(upcomingLeave.endDate), "MMM d")}`}
+              </span>
+            </div>
+          )}
+          {latestRequest && (
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-muted-foreground">Latest request</span>
+              <Badge
+                variant="outline"
+                className={`text-[10px] px-1.5 py-0 ${LEAVE_STATUS_TONE[latestRequest.status] ?? ""}`}
+              >
+                {latestRequest.status}
+              </Badge>
+            </div>
+          )}
+        </div>
+      )}
     </WidgetCard>
   );
 }

@@ -17,7 +17,7 @@ export function useActiveTimer() {
     queryKey: queryKeys.timesheets.timerActive(),
     queryFn: () => apiClient.get<TimerSession | null>("/timesheets/timer/active"),
     staleTime: 30_000,
-    refetchInterval: 30_000,
+    refetchInterval: (query) => (query.state.data ? 30_000 : 120_000),
     refetchIntervalInBackground: false,
   });
 }

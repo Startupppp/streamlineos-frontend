@@ -13,16 +13,18 @@ export interface WeekState {
   goToCurrent: () => void;
 }
 
-export function useWeek(): WeekState {
+export type WeekStartDay = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
+export function useWeek(weekStartsOn: WeekStartDay = 1): WeekState {
   const [weekOffset, setWeekOffset] = useState(0);
 
   const { weekStart, weekEnd, days } = useMemo(() => {
-    const base = addDays(startOfWeek(new Date(), { weekStartsOn: 1 }), weekOffset * 7);
+    const base = addDays(startOfWeek(new Date(), { weekStartsOn }), weekOffset * 7);
     const ws = format(base, "yyyy-MM-dd");
     const we = format(addDays(base, 6), "yyyy-MM-dd");
     const d = Array.from({ length: 7 }, (_, i) => format(addDays(base, i), "yyyy-MM-dd"));
     return { weekStart: ws, weekEnd: we, days: d };
-  }, [weekOffset]);
+  }, [weekOffset, weekStartsOn]);
 
   const goToPrev = () => setWeekOffset((o) => o - 1);
   const goToNext = () => setWeekOffset((o) => o + 1);

@@ -407,13 +407,13 @@ function AnnouncementsContent() {
     setFormData((prev) => ({ ...prev, isPinned: checked }));
   }, []);
 
-  const publishParts = useMemo(() => splitDateTime(formData.publishAt), [formData.publishAt]);
-  const expiresParts = useMemo(() => splitDateTime(formData.expiresAt), [formData.expiresAt]);
+  const publishParts = useMemo(() => splitDateTime(formData.publishAt ?? undefined), [formData.publishAt]);
+  const expiresParts = useMemo(() => splitDateTime(formData.expiresAt ?? undefined), [formData.expiresAt]);
 
   const handlePublishDateChange = useCallback(
     (date: string) => {
       setFormData((prev) => {
-        const { time } = splitDateTime(prev.publishAt);
+        const { time } = splitDateTime(prev.publishAt ?? undefined);
         return { ...prev, publishAt: joinDateTime(date, time || "09:00") };
       });
       clearFieldError("publishAt");
@@ -426,7 +426,7 @@ function AnnouncementsContent() {
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const time = e.target.value;
       setFormData((prev) => {
-        const { date } = splitDateTime(prev.publishAt);
+        const { date } = splitDateTime(prev.publishAt ?? undefined);
         if (!date && !time) return { ...prev, publishAt: undefined };
         if (!date) return prev;
         return { ...prev, publishAt: joinDateTime(date, time || "00:00") };
@@ -440,7 +440,7 @@ function AnnouncementsContent() {
   const handleExpiresDateChange = useCallback(
     (date: string) => {
       setFormData((prev) => {
-        const { time } = splitDateTime(prev.expiresAt);
+        const { time } = splitDateTime(prev.expiresAt ?? undefined);
         return { ...prev, expiresAt: joinDateTime(date, time || "17:00") };
       });
       clearFieldError("expiresAt");
@@ -452,7 +452,7 @@ function AnnouncementsContent() {
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const time = e.target.value;
       setFormData((prev) => {
-        const { date } = splitDateTime(prev.expiresAt);
+        const { date } = splitDateTime(prev.expiresAt ?? undefined);
         if (!date && !time) return { ...prev, expiresAt: undefined };
         if (!date) return prev;
         return { ...prev, expiresAt: joinDateTime(date, time || "00:00") };

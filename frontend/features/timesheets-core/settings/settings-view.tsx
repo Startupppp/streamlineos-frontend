@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -17,16 +18,35 @@ const tabMotion = {
   transition: { duration: 0.18, ease: "easeOut" as const },
 };
 
+const VALID_TABS = ["general", "rates", "audit"] as const;
+
 export function SettingsView() {
   const canViewSettings = useCan("timesheets:settings:view");
   const canViewRates = useCan("timesheets:rates:view");
   const shouldReduceMotion = useReducedMotion();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const tabParam = searchParams.get("tab");
+  const activeTab =
+    tabParam && (VALID_TABS as readonly string[]).includes(tabParam) && (tabParam !== "rates" || canViewRates)
+      ? tabParam
+      : "general";
 
   const motionProps = shouldReduceMotion
     ? { initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { duration: 0.1 } }
     : tabMotion;
 
-  const handleTabChange = useCallback((_value: string) => {}, []);
+  const handleTabChange = useCallback(
+    (value: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (value === "general") params.delete("tab");
+      else params.set("tab", value);
+      const qs = params.toString();
+      router.replace(qs ? `?${qs}` : "/timesheets/settings", { scroll: false });
+    },
+    [searchParams, router],
+  );
 
   if (!canViewSettings) {
     return (
@@ -50,7 +70,7 @@ export function SettingsView() {
       noInternalScroll
       className="flex-none"
     >
-      <Tabs defaultValue="general" onValueChange={handleTabChange}>
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList className="mb-4">
           <TabsTrigger value="general">
             General

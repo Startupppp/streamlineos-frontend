@@ -12,7 +12,9 @@ import type {
   CreateExportResponse,
   ExportHistoryResponse,
   ExportRowsResponse,
+  AckExportResponse,
 } from "@/features/timesheets/payroll/types";
+import type { AckExportInput } from "@/features/timesheets/payroll/ack-export-schema";
 
 interface SummaryParams {
   start: string;
@@ -81,6 +83,20 @@ export function useTimesheetPayrollExports(page: number, pageSize = 20) {
     queryFn: () =>
       apiClient.get<ExportHistoryResponse>("/timesheets/payroll/exports", { page, pageSize }),
     staleTime: 30_000,
+  });
+}
+
+export function useAckPayrollExport() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["timesheets", "payroll", "ackExport"],
+    mutationFn: ({ exportId, data }: { exportId: number; data: AckExportInput }) =>
+      apiClient.patch<AckExportResponse>(`/timesheets/payroll/exports/${exportId}/ack`, data),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: [...queryKeys.timesheets.all, "payroll", "exports"] });
+      toast.success("Acknowledgement recorded");
+    },
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 }
 

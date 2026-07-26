@@ -10,7 +10,12 @@ import {
   useUpdateTimesheetSettings,
 } from "@/hooks/api/timesheets-core/settings";
 import { useCan } from "@/hooks/api/access";
-import type { RoundingRule, ApprovalMode, TimesheetSettings } from "@/features/timesheets-core/types";
+import type {
+  RoundingRule,
+  ApprovalMode,
+  TimesheetSettings,
+  UpdateTimesheetSettingsInput,
+} from "@/features/timesheets-core/types";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -77,19 +82,29 @@ function toFormValues(s: TimesheetSettings): GeneralSettingsFormValues {
     clientApprovalEnabled: s.clientApprovalEnabled,
     lockAfterApproval: s.lockAfterApproval,
     lockAfterInvoice: s.lockAfterInvoice,
+    allowFutureEntries: s.allowFutureEntries,
+    expectedDailyHours: s.expectedDailyHours != null ? String(parseFloat(s.expectedDailyHours)) : "",
+    expectedWeeklyHours: s.expectedWeeklyHours != null ? String(parseFloat(s.expectedWeeklyHours)) : "",
+    submissionGraceDays: s.submissionGraceDays != null ? String(s.submissionGraceDays) : "",
   };
+}
+
+function parseOptionalNumber(value: string): number | null {
+  if (!value.trim()) return null;
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0 ? n : null;
 }
 
 function buildChanges(
   values: GeneralSettingsFormValues,
   orig: TimesheetSettings,
-): Partial<TimesheetSettings> {
-  const changes: Partial<TimesheetSettings> = {};
+): UpdateTimesheetSettingsInput {
+  const changes: UpdateTimesheetSettingsInput = {};
 
   if (String(orig.workWeekStart) !== values.workWeekStart)
     changes.workWeekStart = parseInt(values.workWeekStart);
-  if (orig.maxHoursPerDay !== values.maxHoursPerDay)
-    changes.maxHoursPerDay = values.maxHoursPerDay;
+  if (parseFloat(orig.maxHoursPerDay) !== Number(values.maxHoursPerDay))
+    changes.maxHoursPerDay = Number(values.maxHoursPerDay);
   if (orig.allowOverlappingEntries !== values.allowOverlappingEntries)
     changes.allowOverlappingEntries = values.allowOverlappingEntries;
   if (orig.allowBackdatedEntries !== values.allowBackdatedEntries)
@@ -121,6 +136,22 @@ function buildChanges(
     changes.lockAfterApproval = values.lockAfterApproval;
   if (orig.lockAfterInvoice !== values.lockAfterInvoice)
     changes.lockAfterInvoice = values.lockAfterInvoice;
+  if (orig.allowFutureEntries !== values.allowFutureEntries)
+    changes.allowFutureEntries = values.allowFutureEntries;
+
+  const newExpectedDaily = parseOptionalNumber(values.expectedDailyHours);
+  if ((orig.expectedDailyHours != null ? parseFloat(orig.expectedDailyHours) : null) !== newExpectedDaily)
+    changes.expectedDailyHours = newExpectedDaily;
+
+  const newExpectedWeekly = parseOptionalNumber(values.expectedWeeklyHours);
+  if ((orig.expectedWeeklyHours != null ? parseFloat(orig.expectedWeeklyHours) : null) !== newExpectedWeekly)
+    changes.expectedWeeklyHours = newExpectedWeekly;
+
+  const newGraceDays = values.submissionGraceDays.trim()
+    ? parseInt(values.submissionGraceDays) || null
+    : null;
+  if (orig.submissionGraceDays !== newGraceDays)
+    changes.submissionGraceDays = newGraceDays;
 
   return changes;
 }
@@ -144,6 +175,10 @@ export function GeneralSettingsForm() {
       clientApprovalEnabled: false,
       lockAfterApproval: false,
       lockAfterInvoice: false,
+      allowFutureEntries: false,
+      expectedDailyHours: "",
+      expectedWeeklyHours: "",
+      submissionGraceDays: "",
     },
   });
 
@@ -253,6 +288,20 @@ export function GeneralSettingsForm() {
             />
           </div>
           <div className="flex items-center justify-between py-0.5">
+            <Label className="text-xs font-medium">Allow future-dated entries</Label>
+            <Controller
+              control={control}
+              name="allowFutureEntries"
+              render={({ field }) => (
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                  disabled={!canManage}
+                />
+              )}
+            />
+          </div>
+          <div className="flex items-center justify-between py-0.5">
             <Label className="text-xs font-medium">Allow backdated entries</Label>
             <Controller
               control={control}
@@ -279,6 +328,45 @@ export function GeneralSettingsForm() {
               />
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-3 pt-4 px-5">
+          <CardTitle className="text-sm font-medium">Expected hours</CardTitle>
+        </CardHeader>
+        <CardContent className="px-5 pb-4 space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Expected hours per day (blank = not enforced)</Label>
+              <Input
+                type="number"
+                min={0}
+                max={24}
+                step={0.5}
+                className="w-28"
+                placeholder="e.g. 8"
+                disabled={!canManage}
+                {...register("expectedDailyHours")}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Expected hours per week (blank = not enforced)</Label>
+              <Input
+                type="number"
+                min={0}
+                max={168}
+                step={0.5}
+                className="w-28"
+                placeholder="e.g. 40"
+                disabled={!canManage}
+                {...register("expectedWeeklyHours")}
+              />
+            </div>
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            Used to detect missing and under-logged timesheets in the exceptions queue.
+          </p>
         </CardContent>
       </Card>
 
@@ -414,6 +502,18 @@ export function GeneralSettingsForm() {
                   disabled={!canManage}
                 />
               )}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium">Submission grace period (days after week end)</Label>
+            <Input
+              type="number"
+              min={0}
+              max={30}
+              className="w-28"
+              placeholder="e.g. 3"
+              disabled={!canManage}
+              {...register("submissionGraceDays")}
             />
           </div>
           <div className="flex items-center justify-between py-0.5">

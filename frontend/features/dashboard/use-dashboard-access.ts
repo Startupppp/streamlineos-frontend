@@ -10,6 +10,8 @@ export interface DashboardAccess {
   hrEnabled: boolean;
   crmEnabled: boolean;
   projectsEnabled: boolean;
+  payrollEnabled: boolean;
+  signEnabled: boolean;
   canViewEmployees: boolean;
   canCreateEmployees: boolean;
   canViewAttendance: boolean;
@@ -19,6 +21,9 @@ export interface DashboardAccess {
   canViewCrmLeads: boolean;
   canViewCrmReports: boolean;
   canViewTickets: boolean;
+  canViewPayrollSelf: boolean;
+  canViewPayrollAdmin: boolean;
+  canViewOnboardingDocsSummary: boolean;
 }
 
 export function useDashboardAccess(): DashboardAccess {
@@ -37,6 +42,8 @@ export function useDashboardAccess(): DashboardAccess {
       hrEnabled: moduleOn("HR"),
       crmEnabled: moduleOn("CRM"),
       projectsEnabled: moduleOn("PROJECTS"),
+      payrollEnabled: moduleOn("PAYROLL"),
+      signEnabled: moduleOn("SIGN"),
       canViewEmployees: can("hr:employees:view"),
       canCreateEmployees: can("hr:employees:create"),
       canViewAttendance: can("hr:attendance:view"),
@@ -46,6 +53,9 @@ export function useDashboardAccess(): DashboardAccess {
       canViewCrmLeads: can("crm:leads:view"),
       canViewCrmReports: can("crm:reports:view"),
       canViewTickets: can("projects:tickets:view"),
+      canViewPayrollSelf: can("self:payroll"),
+      canViewPayrollAdmin: can("payroll:runs:view"),
+      canViewOnboardingDocsSummary: can("hr:onboarding:manage"),
     };
   }, [data, isLoading, enabledModules]);
 }

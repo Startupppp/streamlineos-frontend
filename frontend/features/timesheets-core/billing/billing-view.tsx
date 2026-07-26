@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import { format, startOfMonth, endOfMonth } from "date-fns";
@@ -178,8 +179,19 @@ export function BillingView() {
   const handleInvoiceOpen = useCallback(() => setInvoiceOpen(true), []);
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
+  const totalsAmountLabel = totals
+    ? totals.mixed
+      ? totals.byCurrency.map((c) => formatMoney(c.amount, c.currency)).join(" + ")
+      : formatMoney(totals.amount ?? 0, totals.currency ?? "USD")
+    : formatMoney(0, "USD");
+
+  const convertedLabel =
+    totals?.mixed && totals.converted
+      ? `≈ ${formatMoney(totals.converted.convertedTotal, totals.converted.baseCurrency)}`
+      : null;
+
   const subtitle = totals
-    ? `${totals.hours.toFixed(1)} h · ${formatMoney(totals.amount, totals.currency)}`
+    ? `${totals.hours.toFixed(1)} h · ${totalsAmountLabel}${convertedLabel ? ` (${convertedLabel})` : ""}`
     : undefined;
 
   const motionProps = shouldReduceMotion
@@ -274,7 +286,7 @@ export function BillingView() {
           />
           <StatCard
             label="Uninvoiced Amount"
-            value={isLoading ? "-" : formatMoney(totals?.amount ?? 0, totals?.currency ?? "USD")}
+            value={isLoading ? "-" : totalsAmountLabel}
             icon={DollarSign}
             tone="emerald"
             isLoading={isLoading}
@@ -301,9 +313,9 @@ export function BillingView() {
             <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
             <span>
               Some projects are missing bill rates.{" "}
-              <a href="/timesheets/settings/rates" className="underline font-medium">
+              <Link href="/timesheets/settings?tab=rates" className="underline font-medium">
                 Set rates in Settings → Rates
-              </a>{" "}
+              </Link>{" "}
               to include them in exports.
             </span>
           </div>

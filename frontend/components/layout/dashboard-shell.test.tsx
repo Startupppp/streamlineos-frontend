@@ -83,6 +83,16 @@ jest.mock("@/components/ui/drawer", () => ({
   DrawerTitle: ({ children }: PropsWithChildren) => <>{children}</>,
 }));
 
+jest.mock("@/hooks/api/access", () => ({
+  useAccess: () => ({
+    isLoading: false,
+    isError: false,
+    error: null,
+    refetch: jest.fn(),
+  }),
+  useCan: () => true,
+}));
+
 jest.mock("@/hooks/common/use-push-subscription", () => ({
   usePushSubscription: jest.fn(),
 }));

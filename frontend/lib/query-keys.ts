@@ -80,6 +80,7 @@ export const queryKeys = {
       [...base, "hr", "onboardingDocs", params] as const,
     onboardingDocsSummary: (params?: Record<string, unknown>) =>
       [...base, "hr", "onboardingDocs", "summary", params] as const,
+    documentsStats: () => [...base, "hr", "documentsStats"] as const,
     myOnboardingDocs: () => [...base, "hr", "myOnboardingDocs"] as const,
     teams: (teamId?: string) => [...base, "hr", "teams", teamId] as const,
     diversityReport: () => [...base, "hr", "diversityReport"] as const,
@@ -1496,6 +1497,14 @@ export const queryKeys = {
       [...base, "timesheets", "billing", "rate-preview", params] as const,
     reportsOverview: (params?: Record<string, unknown>) =>
       [...base, "timesheets", "reports", "overview", params] as const,
+    report: (tab: string, params?: Record<string, unknown>) =>
+      [...base, "timesheets", "reports", tab, params] as const,
+    exceptions: (params?: Record<string, unknown>) =>
+      [...base, "timesheets", "exceptions", "list", params] as const,
+    exceptionsSummary: () =>
+      [...base, "timesheets", "exceptions", "summary"] as const,
+    settingsHistory: () =>
+      [...base, "timesheets", "settings", "history"] as const,
     settings: () => [...base, "timesheets", "settings"] as const,
     rates: () => [...base, "timesheets", "rates"] as const,
     budgets: () => [...base, "timesheets", "budgets"] as const,

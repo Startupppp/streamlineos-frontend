@@ -20,6 +20,10 @@ export const generalSettingsSchema = z.object({
   clientApprovalEnabled: z.boolean(),
   lockAfterApproval: z.boolean(),
   lockAfterInvoice: z.boolean(),
+  allowFutureEntries: z.boolean(),
+  expectedDailyHours: z.string(),
+  expectedWeeklyHours: z.string(),
+  submissionGraceDays: z.string(),
 });
 
 export type GeneralSettingsFormValues = z.infer<typeof generalSettingsSchema>;

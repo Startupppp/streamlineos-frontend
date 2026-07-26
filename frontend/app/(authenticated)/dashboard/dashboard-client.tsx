@@ -53,6 +53,8 @@ import {
   UpcomingHolidaysWidget,
 } from "@/features/dashboard/hr-widgets";
 import { PublicDocumentsCard } from "@/features/dashboard/public-documents-card";
+import { MyAttendanceWidget } from "@/features/dashboard/my-attendance-widget";
+import { PayrollWidget } from "@/features/dashboard/payroll-widget";
 import { MyTasksWidget } from "@/components/dashboard/my-tasks-widget";
 import { TimesheetWidget } from "@/components/dashboard/timesheet-widget";
 import { AnnouncementsWidget } from "@/components/dashboard/announcements-widget";
@@ -345,6 +347,8 @@ export function DashboardClient() {
           <AnnouncementsWidget />
           <UpcomingEventsWidget />
           {canViewExecutive && <BusinessPulseWidget />}
+          {hrEnabled && canViewAttendance && <MyAttendanceWidget />}
+          <PayrollWidget />
         </motion.div>
 
         {showHrTeamRow && (

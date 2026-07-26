@@ -13,18 +13,28 @@ import { ErrorState } from "@/components/shared/error-state";
 import { AiActionsMenu, type AiAction } from "@/components/ai";
 import { useCurrentPeriod, useSubmitPeriod, useRecallPeriod, useTimesheetEntries, fetchTimesheetPeriodSummary } from "@/hooks/api/timesheets-core";
 import { PERIOD_STATUS_BADGE, PERIOD_STATUS_LABEL } from "@/features/timesheets-core";
-import { useWeek } from "./use-week";
+import { useWeek, type WeekStartDay } from "./use-week";
 import { TimerPanel } from "./timer-panel";
 import { WeekGrid } from "./week-grid";
 import { DayTimeline } from "./day-timeline";
 import { cn } from "@/lib/utils";
 
+const WEEK_START_DAYS: readonly WeekStartDay[] = [0, 1, 2, 3, 4, 5, 6];
+
 export function MyTimeView() {
-  const { weekStart, weekEnd, days, isCurrentWeek, goToPrev, goToNext, goToCurrent } = useWeek();
   const shouldReduceMotion = useReducedMotion();
   const [rejectionDismissed, setRejectionDismissed] = useState(false);
 
   const { data: periodDetail, isLoading: periodLoading, isError: periodError, refetch: refetchPeriod } = useCurrentPeriod();
+
+  const weekStartsOn = useMemo<WeekStartDay>(() => {
+    const start = periodDetail?.period?.periodStart;
+    if (!start) return 1;
+    const dow = parseISO(start).getDay();
+    return WEEK_START_DAYS.find((d) => d === dow) ?? 1;
+  }, [periodDetail?.period?.periodStart]);
+
+  const { weekStart, weekEnd, days, isCurrentWeek, goToPrev, goToNext, goToCurrent } = useWeek(weekStartsOn);
   const { data: entriesData, isLoading: entriesLoading } = useTimesheetEntries(
     { startDate: weekStart, endDate: weekEnd },
     true,

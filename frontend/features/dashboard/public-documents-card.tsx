@@ -2,7 +2,7 @@
 
 import { memo } from "react";
 import Link from "next/link";
-import { FileText } from "lucide-react";
+import { FileText, AlertTriangle, PenLine, UserX, type LucideIcon } from "lucide-react";
 import { EyeIcon, DownloadIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +15,53 @@ import { usePublicDocuments, type PublicDoc } from "@/hooks/api/dashboard";
 import { format } from "date-fns";
 import { viewFile, downloadFile } from "@/hooks/common/use-file-url";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { useCan } from "@/hooks/api/access";
+import { useDashboardAccess } from "@/features/dashboard/use-dashboard-access";
+import {
+  useHrDocumentStats,
+  useMissingOnboardingDocsCount,
+} from "@/hooks/api/hr/documents";
+import { useSignDashboard } from "@/hooks/api/sign/reports";
+import { cn } from "@/lib/utils";
+
+function SummaryChip({
+  icon: Icon,
+  label,
+  value,
+  href,
+  tone,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: number;
+  href: string;
+  tone: string;
+}) {
+  if (!value) return null;
+  return (
+    <Link
+      href={href}
+      className="flex items-center gap-1.5 rounded-full border border-border/60 px-2 py-1 text-[11px] hover:bg-muted/50 transition-colors"
+    >
+      <Icon className={cn("h-3 w-3", tone)} aria-hidden="true" />
+      <span className="font-medium">{value}</span>
+      <span className="text-muted-foreground">{label}</span>
+    </Link>
+  );
+}
+
+function AwaitingSignatureChip() {
+  const { data } = useSignDashboard();
+  return (
+    <SummaryChip
+      icon={PenLine}
+      label="awaiting your signature"
+      value={data?.awaitingMe ?? 0}
+      href="/sign"
+      tone="text-primary"
+    />
+  );
+}
 
 const DOC_TYPE_LABELS: Record<string, string> = {
   CONTRACT: "Contract",
@@ -89,6 +136,20 @@ function DocumentItem({ doc }: DocumentItemProps) {
 
 export const PublicDocumentsCard = memo(function PublicDocumentsCard() {
   const { data: documents, isLoading } = usePublicDocuments(6);
+  const canViewDocStats = useCan("hr:documents:view");
+  const canViewSignEnvelopes = useCan("sign:envelope:view");
+  const { signEnabled, canViewOnboardingDocsSummary } = useDashboardAccess();
+
+  const { data: docStats } = useHrDocumentStats({ enabled: canViewDocStats });
+  const { missingCount } = useMissingOnboardingDocsCount({
+    enabled: canViewOnboardingDocsSummary,
+  });
+
+  const showSignatureChip = signEnabled && canViewSignEnvelopes;
+  const showSummaryStrip =
+    (canViewDocStats && !!docStats?.expiringIn30Days) ||
+    showSignatureChip ||
+    (canViewOnboardingDocsSummary && !!missingCount);
 
   return (
     <Card className="bg-card border-border shadow-noir">
@@ -109,6 +170,29 @@ export const PublicDocumentsCard = memo(function PublicDocumentsCard() {
         </Link>
       </CardHeader>
       <CardContent className="px-4 pt-0 pb-4" aria-live="polite">
+        {showSummaryStrip && (
+          <div className="flex flex-wrap gap-1.5 mb-3">
+            {canViewDocStats && (
+              <SummaryChip
+                icon={AlertTriangle}
+                label="expiring soon"
+                value={docStats?.expiringIn30Days ?? 0}
+                href="/hr/documents"
+                tone="text-amber-600"
+              />
+            )}
+            {showSignatureChip && <AwaitingSignatureChip />}
+            {canViewOnboardingDocsSummary && (
+              <SummaryChip
+                icon={UserX}
+                label="missing docs"
+                value={missingCount ?? 0}
+                href="/hr/document-review"
+                tone="text-red-600"
+              />
+            )}
+          </div>
+        )}
         {isLoading ? (
           <div className="space-y-3">
             {Array.from({ length: 3 }).map((_, i) => (

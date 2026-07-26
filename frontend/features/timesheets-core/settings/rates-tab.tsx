@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
+import { format, parseISO } from "date-fns";
 import { Pencil } from "lucide-react";
 import { useRates, useDeleteRate } from "@/hooks/api/timesheets-core/rates";
 import { useCan } from "@/hooks/api/access";
@@ -33,6 +34,21 @@ function formatCurrency(value: string | null, currency = "USD"): string {
     style: "currency",
     currency,
   }).format(num);
+}
+
+function formatEffectiveMonth(value: string): string {
+  try {
+    return format(parseISO(value), "MMM yyyy");
+  } catch {
+    return value;
+  }
+}
+
+function formatEffectiveWindow(from: string | null, to: string | null): string {
+  if (from && to) return `${formatEffectiveMonth(from)} → ${formatEffectiveMonth(to)}`;
+  if (from) return `${formatEffectiveMonth(from)} →`;
+  if (to) return `→ ${formatEffectiveMonth(to)}`;
+  return "Always";
 }
 
 function ScopeBadges({ rate }: { rate: TimesheetRate }) {
@@ -139,6 +155,21 @@ export function RatesTab() {
         cell: (row) => (
           <span className="text-xs tabular-nums text-muted-foreground">
             {formatCurrency(row.costRate, row.currency)}
+          </span>
+        ),
+      },
+      {
+        key: "effective",
+        header: "Effective",
+        cell: (row) => (
+          <span
+            className={
+              row.effectiveFrom || row.effectiveTo
+                ? "text-xs whitespace-nowrap"
+                : "text-xs text-muted-foreground"
+            }
+          >
+            {formatEffectiveWindow(row.effectiveFrom, row.effectiveTo)}
           </span>
         ),
       },

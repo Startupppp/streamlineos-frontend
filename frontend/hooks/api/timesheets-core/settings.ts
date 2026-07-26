@@ -5,7 +5,10 @@ import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
-import type { TimesheetSettings } from "@/features/timesheets-core/types";
+import type {
+  TimesheetSettings,
+  UpdateTimesheetSettingsInput,
+} from "@/features/timesheets-core/types";
 
 export function useTimesheetSettings(enabled = true) {
   return useQuery({
@@ -20,7 +23,7 @@ export function useUpdateTimesheetSettings() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["timesheets", "settings", "update"],
-    mutationFn: (data: Partial<TimesheetSettings>) =>
+    mutationFn: (data: UpdateTimesheetSettingsInput) =>
       apiClient.patch<TimesheetSettings>("/timesheets/settings", data),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.timesheets.settings() });

@@ -2,6 +2,7 @@ export * from "./entries";
 export * from "./timer";
 export * from "./periods";
 export * from "./approvals";
+export * from "./exceptions";
 export * from "./billing";
 export * from "./reports";
 export * from "./settings";

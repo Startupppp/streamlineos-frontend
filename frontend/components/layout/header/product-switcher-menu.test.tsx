@@ -39,6 +39,7 @@ jest.mock("@/hooks/api/access/org-modules", () => ({
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => false,
+  useAccess: () => ({ data: undefined, isLoading: false }),
 }));
 
 jest.mock("framer-motion", () => {

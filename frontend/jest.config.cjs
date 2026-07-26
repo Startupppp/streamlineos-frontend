@@ -14,4 +14,14 @@ const config = {
   },
 };
 
-module.exports = createJestConfig(config);
+module.exports = async () => {
+  const jestConfig = await createJestConfig(config)();
+  // next/jest only exempts transpilePackages from its node_modules transform
+  // ignore; next-auth v5 ships untranspiled ESM, so tests importing it fail
+  // with "Cannot use import statement outside a module" unless it (and
+  // @auth/core) are spliced into the generated allowlists.
+  jestConfig.transformIgnorePatterns = (jestConfig.transformIgnorePatterns ?? []).map(
+    (pattern) => pattern.replace(/\(geist/g, "(geist|next-auth|@auth|@auth\\+core"),
+  );
+  return jestConfig;
+};

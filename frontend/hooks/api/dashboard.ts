@@ -356,7 +356,7 @@ export const useCreateAnnouncement = () => {
   const orgId = session?.orgId ?? "";
   return useMutation({
     mutationKey: ["dashboard", "announcements", "create"],
-    mutationFn: (body: { content: string; isPinned?: boolean; expiresAt?: string }) =>
+    mutationFn: (body: { title: string; content: string; isPinned?: boolean; expiresAt?: string }) =>
       apiClient.post<Announcement>("/dashboard/announcements", body),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.dashboard.announcements(orgId) });
