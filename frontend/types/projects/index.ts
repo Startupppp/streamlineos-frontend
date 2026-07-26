@@ -22,3 +22,4 @@ export * from "./workflow";
 export * from "./agent-tokens";
 export * from "./teams";
 export * from "./managed-products";
+export * from "./pm-workspaces";

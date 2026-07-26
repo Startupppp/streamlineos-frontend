@@ -1905,6 +1905,7 @@ export const NAV_GROUPS: NavGroup[] = [
       "projects:goals:view",
       "projects:portfolios:view",
       "projects:managed-products:view",
+      "projects:workspaces:view",
       "projects:approvals:view",
       "projects:create",
       "settings:manage",
@@ -1933,6 +1934,12 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: Layers,
         href: "/projects/managed-products",
         requiredPermission: "projects:managed-products:view",
+      },
+      {
+        label: "PM Workspaces",
+        icon: Boxes,
+        href: "/projects/pm-workspaces",
+        requiredPermission: "projects:workspaces:view",
       },
       {
         label: "Approvals",

@@ -420,6 +420,12 @@ export const queryKeys = {
       detail: (id: number) =>
         [...base, "projects", "managed-products", "detail", id] as const,
     },
+    pmWorkspaces: {
+      list: (params?: Record<string, unknown>) =>
+        [...base, "projects", "pm-workspaces", "list", params] as const,
+      detail: (id: string) =>
+        [...base, "projects", "pm-workspaces", "detail", id] as const,
+    },
     workflow: {
       transitions: (projectId: number) =>
         [...base, "projects", projectId, "workflow", "transitions"] as const,

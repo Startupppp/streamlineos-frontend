@@ -38,3 +38,4 @@ export * from "./teams";
 export * from "./roster";
 export * from "./comment-drafts";
 export * from "./managed-products";
+export * from "./pm-workspaces";
