@@ -16,17 +16,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { AppSheet } from "@/components/shared";
-import { useWarehouses } from "@/hooks/api/inventory/warehouses";
-import { useProductVariants } from "@/hooks/api/inventory/products";
-import { useVendors } from "@/hooks/api/inventory/vendors";
+import { WarehouseSelect } from "@/components/inventory/warehouse-select";
+import { VendorSelect } from "@/components/inventory/vendor-select";
+import { ProductVariantCombobox } from "@/components/inventory/product-variant-combobox";
 import {
   useCreateReplenishmentRule,
   useUpdateReplenishmentRule,
@@ -98,10 +91,6 @@ function toFormDefaults(rule?: ReplenishmentRule): RuleFormValues {
 export function ReplenishmentRuleForm({ open, onOpenChange, editRule }: ReplenishmentRuleFormProps) {
   const create = useCreateReplenishmentRule();
   const update = useUpdateReplenishmentRule();
-  const { data: warehouses = [] } = useWarehouses();
-  const { data: variants = [] } = useProductVariants({ activeOnly: true });
-  const { data: vendorsPage } = useVendors();
-  const vendors = vendorsPage?.items ?? [];
 
   const form = useForm<RuleFormValues>({
     resolver: zodResolver(ruleSchema),
@@ -194,24 +183,14 @@ export function ReplenishmentRuleForm({ open, onOpenChange, editRule }: Replenis
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Product Variant <span className="text-destructive">*</span></FormLabel>
-                <Select
-                  value={field.value}
-                  onValueChange={field.onChange}
-                  disabled={!!editRule}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select variant..." />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {variants.map((v) => (
-                      <SelectItem key={v.id} value={String(v.id)}>
-                        {v.productName} — {v.sku}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <ProductVariantCombobox
+                    value={field.value}
+                    onChange={field.onChange}
+                    activeOnly
+                    disabled={!!editRule}
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -223,24 +202,13 @@ export function ReplenishmentRuleForm({ open, onOpenChange, editRule }: Replenis
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Warehouse <span className="text-destructive">*</span></FormLabel>
-                <Select
-                  value={field.value}
-                  onValueChange={field.onChange}
-                  disabled={!!editRule}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select warehouse..." />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {warehouses.map((w) => (
-                      <SelectItem key={w.id} value={String(w.id)}>
-                        {w.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <WarehouseSelect
+                    value={field.value}
+                    onChange={field.onChange}
+                    disabled={!!editRule}
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -323,21 +291,12 @@ export function ReplenishmentRuleForm({ open, onOpenChange, editRule }: Replenis
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Preferred Vendor</FormLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select vendor (optional)..." />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value={SENTINEL}>None</SelectItem>
-                    {vendors.map((v) => (
-                      <SelectItem key={v.id} value={String(v.id)}>
-                        {v.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <VendorSelect
+                    value={field.value === SENTINEL ? "" : field.value}
+                    onChange={(v) => field.onChange(v || SENTINEL)}
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}

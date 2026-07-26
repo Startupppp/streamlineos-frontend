@@ -67,6 +67,9 @@ interface QualityHold {
   createdBy?: string | null;
   createdAt: string;
   updatedAt: string;
+  variantName?: string;
+  variantSku?: string;
+  productName?: string;
 }
 
 type HoldListResponse = {

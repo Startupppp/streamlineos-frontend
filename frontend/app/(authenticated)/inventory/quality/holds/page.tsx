@@ -1,13 +1,12 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { forwardRef, Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -25,12 +24,66 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { cn } from "@/lib/utils";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 
 const PAGE_LIMIT = 20;
 
 const HOLD_STATUSES: QualityHoldStatus[] = ["ACTIVE", "RELEASED", "EXPIRED"];
+
+function resolveVariantLabel(hold: QualityHold): string {
+  if (hold.productName && hold.variantSku) return `${hold.productName} — ${hold.variantSku}`;
+  if (hold.productName && hold.variantName) return `${hold.productName} — ${hold.variantName}`;
+  if (hold.variantSku) return hold.variantSku;
+  return `Variant #${hold.productVariantId}`;
+}
+
+interface HoldReleaseActionProps {
+  hold: QualityHold;
+  isPending: boolean;
+  onRelease: (holdId: number) => void;
+}
+
+const HoldReleaseAction = forwardRef<HTMLDivElement, HoldReleaseActionProps>(
+  function HoldReleaseAction({ hold, isPending, onRelease }, ref) {
+    function handleRelease(): void {
+      onRelease(hold.id);
+    }
+
+    if (hold.status !== "ACTIVE") return null;
+
+    return (
+      <div ref={ref}>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <LoadingButton
+              size="sm"
+              variant="outline"
+              className="h-6 text-xs px-2"
+              isPending={isPending}
+              loadingText="Releasing…"
+            >
+              Release
+            </LoadingButton>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Release this hold?</AlertDialogTitle>
+              <AlertDialogDescription>
+                The inventory will be returned to available stock.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleRelease}>Release</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    );
+  },
+);
 
 function HoldsPageInner() {
   const router = useRouter();
@@ -117,8 +170,10 @@ function HoldsPageInner() {
   const columns: DataTableColumn<QualityHold>[] = [
     {
       key: "variant",
-      header: "Variant ID",
-      cell: (r) => r.productVariantId,
+      header: "Variant",
+      cell: (r) => (
+        <span className="text-sm">{resolveVariantLabel(r)}</span>
+      ),
     },
     {
       key: "qty",
@@ -156,28 +211,13 @@ function HoldsPageInner() {
       key: "actions",
       header: "",
       headerClassName: "w-[80px]",
-      cell: (r) =>
-        r.status === "ACTIVE" ? (
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button size="sm" variant="outline" className="h-6 text-xs px-2" disabled={releaseMut.isPending}>
-                Release
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Release this hold?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  The inventory will be returned to available stock.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={() => handleRelease(r.id)}>Release</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        ) : null,
+      cell: (r) => (
+        <HoldReleaseAction
+          hold={r}
+          isPending={releaseMut.isPending}
+          onRelease={handleRelease}
+        />
+      ),
     },
   ];
 
@@ -258,7 +298,7 @@ function HoldsPageInner() {
 
 export default function HoldsPage() {
   return (
-    <Suspense>
+    <Suspense fallback={null}>
       <HoldsPageInner />
     </Suspense>
   );

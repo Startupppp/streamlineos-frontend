@@ -58,6 +58,7 @@ import {
   useDeleteProduct,
 } from "@/hooks/api/inventory";
 import { useCan } from "@/hooks/api/access";
+import { MobileFilterDrawer } from "@/features/payroll/shared/mobile-filter-drawer";
 import type { InventoryProduct, TrackingMethod } from "@/types/inventory";
 
 const PAGE_LIMIT = 20;
@@ -481,7 +482,7 @@ function ProductsPageInner() {
           >
             <SelectValue placeholder="All categories" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
             <SelectItem value="all">All categories</SelectItem>
             {categories.map((cat) => (
               <SelectItem key={cat.id} value={String(cat.id)}>
@@ -507,6 +508,44 @@ function ProductsPageInner() {
           </SelectContent>
         </Select>
       </div>
+      <MobileFilterDrawer
+        ariaLabel="Filter products"
+        groups={[
+          {
+            label: "Status",
+            value: statusParam || "all",
+            options: [
+              { value: "all", label: "All statuses" },
+              { value: "ACTIVE", label: "Active" },
+              { value: "INACTIVE", label: "Inactive" },
+            ],
+            onChange: handleStatusChange,
+          },
+          {
+            label: "Category",
+            value: categoryIdParam || "all",
+            options: [
+              { value: "all", label: "All categories" },
+              ...categories.map((cat) => ({
+                value: String(cat.id),
+                label: cat.name,
+              })),
+            ],
+            onChange: handleCategoryChange,
+          },
+          {
+            label: "Type",
+            value: productTypeParam || "all",
+            options: [
+              { value: "all", label: "All types" },
+              { value: "STOCKABLE", label: "Stockable" },
+              { value: "CONSUMABLE", label: "Consumable" },
+              { value: "SERVICE", label: "Service" },
+            ],
+            onChange: handleProductTypeChange,
+          },
+        ]}
+      />
     </div>
   );
 

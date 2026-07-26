@@ -9,8 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DatePicker } from "@/components/ui/date-picker";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import {
   Select,
   SelectContent,
@@ -271,7 +271,7 @@ function SalesOrdersContent() {
               compact
             />
           ) : (
-            <EmptyState
+            <InventoryEmptyState
               illustration={
                 hasFilters ? <EmptySearchIllustration /> : <EmptyOrdersIllustration />
               }

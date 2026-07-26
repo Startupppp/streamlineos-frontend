@@ -8,6 +8,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Textarea } from "@/components/ui/textarea";
 import {
   AlertDialog,
@@ -312,9 +313,9 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
                   </Button>
                 )}
                 {canConfirm && (
-                  <Button size="sm" onClick={handleConfirm} disabled={isMutating}>
-                    {confirmMutation.isPending ? "Confirming…" : "Confirm"}
-                  </Button>
+                  <LoadingButton size="sm" onClick={handleConfirm} isPending={confirmMutation.isPending} loadingText="Confirming…" disabled={isMutating}>
+                    Confirm
+                  </LoadingButton>
                 )}
                 {canUpdate && (
                   <Button size="sm" variant="ghost" onClick={handleOpenCancelDialog} disabled={isMutating}>
@@ -326,9 +327,9 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
             {status === "CONFIRMED" && (
               <>
                 {canConfirm && (
-                  <Button size="sm" onClick={handleReserve} disabled={isMutating}>
-                    {reserveMutation.isPending ? "Reserving…" : "Reserve"}
-                  </Button>
+                  <LoadingButton size="sm" onClick={handleReserve} isPending={reserveMutation.isPending} loadingText="Reserving…" disabled={isMutating}>
+                    Reserve
+                  </LoadingButton>
                 )}
                 {canUpdate && (
                   <Button size="sm" variant="ghost" onClick={handleOpenCancelDialog} disabled={isMutating}>
@@ -340,9 +341,9 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
             {status === "PARTIALLY_RESERVED" && (
               <>
                 {canConfirm && (
-                  <Button size="sm" variant="outline" onClick={handleReserve} disabled={isMutating}>
+                  <LoadingButton size="sm" variant="outline" onClick={handleReserve} isPending={reserveMutation.isPending} loadingText="Reserving…" disabled={isMutating}>
                     Reserve Again
-                  </Button>
+                  </LoadingButton>
                 )}
                 {canShip && (
                   <Button size="sm" onClick={handleOpenPickSheet}>Pick</Button>
@@ -355,9 +356,9 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
             {status === "PICKED" && (
               <>
                 {canShip && (
-                  <Button size="sm" onClick={handleOpenPackDialog} disabled={isMutating}>
-                    {packMutation.isPending ? "Packing…" : "Pack"}
-                  </Button>
+                  <LoadingButton size="sm" onClick={handleOpenPackDialog} isPending={packMutation.isPending} loadingText="Packing…" disabled={isMutating}>
+                    Pack
+                  </LoadingButton>
                 )}
                 {canUpdate && (
                   <Button size="sm" variant="ghost" onClick={handleOpenCancelDialog} disabled={isMutating}>
@@ -382,9 +383,9 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
               <Button size="sm" onClick={handleOpenShipSheet}>Ship Remaining</Button>
             )}
             {status === "SHIPPED" && canInvoice && (
-              <Button size="sm" onClick={handleInvoice} disabled={isMutating}>
-                {invoiceMutation.isPending ? "Invoicing…" : "Invoice"}
-              </Button>
+              <LoadingButton size="sm" onClick={handleInvoice} isPending={invoiceMutation.isPending} loadingText="Invoicing…" disabled={isMutating}>
+                Invoice
+              </LoadingButton>
             )}
             {so.invoiceId && (
               <Button size="sm" variant="outline" asChild>
@@ -468,14 +469,15 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
           />
           <AlertDialogFooter>
             <AlertDialogCancel>Back</AlertDialogCancel>
-            <Button
+            <LoadingButton
               size="sm"
               variant="destructive"
-              disabled={cancelMutation.isPending}
+              isPending={cancelMutation.isPending}
+              loadingText="Cancelling…"
               onClick={handleCancelConfirm}
             >
-              {cancelMutation.isPending ? "Cancelling…" : "Cancel Order"}
-            </Button>
+              Cancel Order
+            </LoadingButton>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -488,9 +490,9 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Back</AlertDialogCancel>
-            <Button size="sm" disabled={packMutation.isPending} onClick={handlePackConfirm}>
-              {packMutation.isPending ? "Packing…" : "Confirm Pack"}
-            </Button>
+            <LoadingButton size="sm" isPending={packMutation.isPending} loadingText="Packing…" onClick={handlePackConfirm}>
+              Confirm Pack
+            </LoadingButton>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

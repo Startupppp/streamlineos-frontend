@@ -3,14 +3,13 @@
 import { use, useMemo, useState } from "react";
 import Link from "next/link";
 import { PackageCheck, CheckCircle, XCircle, Pencil } from "lucide-react";
-import { SendIcon, LockIcon } from "@animateicons/react/lucide";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   AlertDialog,
@@ -34,6 +33,7 @@ import {
 import { ReceiveGoodsSheet } from "@/features/inventory/components/receive-goods-sheet";
 import { GrnDetailSheet } from "@/features/inventory/components/procurement/grn-detail-sheet";
 import { PoEditSheet } from "@/features/inventory/components/procurement/po-edit-sheet";
+import { VendorAiActions } from "@/features/inventory/components/vendor-ai-actions";
 import { PO_STATUS_BADGE, PO_STATUS_LABEL } from "@/features/inventory/lib";
 import type { PurchaseOrderLine, PurchaseOrderStatus } from "@/types/inventory";
 
@@ -281,8 +281,11 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
       subtitle={`${po.vendor?.name ?? "Unknown vendor"} · ${formatDate(po.orderDate)}`}
       backHref="/inventory/purchase-orders"
       actions={
-        canEdit || canApprove || canSend || canReceive || canClose || canCancel ? (
+        canEdit || canApprove || canSend || canReceive || canClose || canCancel || po.vendor ? (
           <div className="flex items-center gap-2 flex-wrap">
+            {po.vendor && (
+              <VendorAiActions vendorId={po.vendor.id} vendorName={po.vendor.name} />
+            )}
             {canEdit && (
               <Button size="sm" variant="outline" onClick={handleOpenEdit}>
                 <Pencil className="mr-1 h-3.5 w-3.5" />
@@ -290,20 +293,26 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
               </Button>
             )}
             {canApprove && (
-              <Button
+              <LoadingButton
                 size="sm"
                 variant="outline"
                 onClick={handleApprovePO}
-                disabled={approveMutation.isPending}
+                isPending={approveMutation.isPending}
+                loadingText="Approving…"
               >
                 <CheckCircle className="mr-1 h-3.5 w-3.5" />
-                {approveMutation.isPending ? "Approving…" : "Approve"}
-              </Button>
+                Approve
+              </LoadingButton>
             )}
             {canSend && (
-              <AnimatedIconButton icon={SendIcon} iconSize={14} iconClassName="mr-1" size="sm" onClick={handleSendPO} disabled={sendMutation.isPending}>
-                {sendMutation.isPending ? "Sending…" : "Send PO"}
-              </AnimatedIconButton>
+              <LoadingButton
+                size="sm"
+                onClick={handleSendPO}
+                isPending={sendMutation.isPending}
+                loadingText="Sending…"
+              >
+                Send PO
+              </LoadingButton>
             )}
             {canReceive && (
               <Button size="sm" variant="outline" onClick={handleOpenReceive}>
@@ -312,21 +321,30 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
               </Button>
             )}
             {canClose && (
-              <AnimatedIconButton icon={LockIcon} iconSize={14} iconClassName="mr-1" size="sm" variant="outline" onClick={handleRequestClose} disabled={anyPending}>
+              <LoadingButton
+                size="sm"
+                variant="outline"
+                onClick={handleRequestClose}
+                isPending={closeMutation.isPending}
+                loadingText="Closing…"
+                disabled={anyPending}
+              >
                 Close PO
-              </AnimatedIconButton>
+              </LoadingButton>
             )}
             {canCancel && (
-              <Button
+              <LoadingButton
                 size="sm"
                 variant="outline"
                 onClick={handleRequestCancel}
+                isPending={cancelMutation.isPending}
+                loadingText="Cancelling…"
                 disabled={anyPending}
                 className="text-destructive border-destructive/30 hover:bg-destructive/10"
               >
                 <XCircle className="mr-1 h-3.5 w-3.5" />
                 Cancel
-              </Button>
+              </LoadingButton>
             )}
           </div>
         ) : undefined

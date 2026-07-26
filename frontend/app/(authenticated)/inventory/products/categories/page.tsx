@@ -3,7 +3,6 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  Plus,
   Pencil,
   Archive,
   RotateCcw,
@@ -15,16 +14,10 @@ import {
   EmptySearchIllustration,
 } from "@/components/illustrations";
 import { toast } from "sonner";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -32,16 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { LoadingButton } from "@/components/ui/loading-button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -52,174 +36,15 @@ import { Badge } from "@/components/ui/badge";
 import { ErrorState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
+import { CategoryCreateForm } from "@/features/inventory/components/category-create-form";
+import { CategoryEditSheet } from "@/features/inventory/components/category-edit-sheet";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 import {
   useCategories,
-  useCreateCategory,
   useUpdateCategory,
 } from "@/hooks/api/inventory";
-import { CategoryEditSheet } from "@/features/inventory/components/category-edit-sheet";
 import type { InventoryCategory } from "@/types/inventory";
-
-const NO_PARENT = "none";
-
-const CATEGORY_NAME_MIN = 2;
-const CATEGORY_NAME_MAX = 100;
-const CATEGORY_DESC_MAX = 500;
-const VALID_NAME_RE = /[a-zA-Z0-9]/;
-
-const categorySchema = z.object({
-  name: z
-    .string()
-    .min(1, "Category name is required.")
-    .max(
-      CATEGORY_NAME_MAX,
-      `Name must be ${CATEGORY_NAME_MAX} characters or fewer.`,
-    )
-    .refine(
-      (v) => v.trim().length >= CATEGORY_NAME_MIN,
-      `Name must be at least ${CATEGORY_NAME_MIN} characters.`,
-    )
-    .refine(
-      (v) => VALID_NAME_RE.test(v.trim()),
-      "Name must contain at least one letter or number.",
-    ),
-  description: z
-    .string()
-    .max(
-      CATEGORY_DESC_MAX,
-      `Description must be ${CATEGORY_DESC_MAX} characters or fewer.`,
-    )
-    .optional(),
-  parentId: z.string().optional(),
-});
-
-type CategoryFormValues = z.infer<typeof categorySchema>;
-
-function CreateCategoryForm({
-  categories,
-  onSuccess,
-}: {
-  categories: InventoryCategory[];
-  onSuccess: () => void;
-}) {
-  const createMutation = useCreateCategory();
-
-  const form = useForm<CategoryFormValues>({
-    resolver: zodResolver(categorySchema),
-    defaultValues: { name: "", description: "", parentId: NO_PARENT },
-  });
-
-  async function onSubmit(values: CategoryFormValues): Promise<void> {
-    const trimmedName = values.name.trim();
-    try {
-      await createMutation.mutateAsync({
-        name: trimmedName,
-        description: values.description?.trim() || undefined,
-        parentCategoryId:
-          values.parentId === NO_PARENT ? undefined : Number(values.parentId),
-      });
-      toast.success(`Category "${trimmedName}" created`);
-      form.reset();
-      onSuccess();
-    } catch (error) {
-      toast.error(getErrorMessage(error));
-    }
-  }
-
-  return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <div className="flex items-center justify-between">
-                  <FormLabel>Name</FormLabel>
-                  <span className="text-[10px] text-muted-foreground tabular-nums">
-                    {field.value.length}/{CATEGORY_NAME_MAX}
-                  </span>
-                </div>
-                <FormControl>
-                  <Input
-                    placeholder="e.g. Electronics"
-                    maxLength={CATEGORY_NAME_MAX}
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="parentId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Parent Category</FormLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="None (top-level)" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value={NO_PARENT}>None (top-level)</SelectItem>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat.id} value={String(cat.id)}>
-                        {cat.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <div className="sm:col-span-2">
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <div className="flex items-center justify-between">
-                    <FormLabel>Description</FormLabel>
-                    <span className="text-[10px] text-muted-foreground tabular-nums">
-                      {(field.value ?? "").length}/{CATEGORY_DESC_MAX}
-                    </span>
-                  </div>
-                  <FormControl>
-                    <Textarea
-                      rows={2}
-                      placeholder="Optional description"
-                      maxLength={CATEGORY_DESC_MAX}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        </div>
-        <div className="flex justify-end">
-          <LoadingButton
-            type="submit"
-            size="sm"
-            isPending={createMutation.isPending}
-            loadingText="Creating…"
-          >
-            <Plus className="mr-1 h-3.5 w-3.5" />
-            Add Category
-          </LoadingButton>
-        </div>
-      </form>
-    </Form>
-  );
-}
 
 function categoriesColumns(
   categoryNameById: Map<number, string>,
@@ -404,11 +229,17 @@ function CategoriesPageInner() {
   const filtersRow = (
     <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
       <div className="min-w-0 flex-1 lg:max-w-sm w-full">
-          <SearchInput value={searchInput} onValueChange={handleSearchChange} placeholder="Search categories..." />
-        </div>
+        <SearchInput
+          value={searchInput}
+          onValueChange={handleSearchChange}
+          placeholder="Search categories..."
+        />
+      </div>
       <div className="hidden min-w-0 items-center gap-2 sm:flex">
         <Select value={statusParam} onValueChange={handleStatusChange}>
-          <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[140px] text-xs")}>
+          <SelectTrigger
+            className={cn(FILTER_SELECT_TRIGGER, "w-[140px] text-xs")}
+          >
             <SelectValue placeholder="All" />
           </SelectTrigger>
           <SelectContent>
@@ -435,7 +266,7 @@ function CategoriesPageInner() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <CreateCategoryForm
+            <CategoryCreateForm
               key={formKey}
               categories={categories}
               onSuccess={handleFormSuccess}
@@ -465,24 +296,22 @@ function CategoriesPageInner() {
                     <EmptyProductsIllustration />
                   )
                 }
-                title={
-                  hasFilters ? "No categories found" : "No categories yet"
-                }
+                title={hasFilters ? "No categories found" : "No categories yet"}
                 description={
                   hasFilters
                     ? "Try adjusting your search or filters."
-                        : "Use the form above to add your first product category."
-                    }
-                    className="border-0 bg-transparent"
-                  />
+                    : "Use the form above to add your first product category."
                 }
-                columns={categoriesColumns(
-                  categoryNameById,
-                  handleEditOpen,
-                  handleArchiveToggle,
-                )}
-                minWidth="560px"
+                className="border-0 bg-transparent"
               />
+            }
+            columns={categoriesColumns(
+              categoryNameById,
+              handleEditOpen,
+              handleArchiveToggle,
+            )}
+            minWidth="560px"
+          />
         )}
       </div>
 

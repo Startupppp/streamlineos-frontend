@@ -1,5 +1,3 @@
-"use client";
-
 import { SoQueuePage } from "@/features/inventory/components/operations/so-queue-page";
 
 export default function ShippingQueuePage() {

@@ -1,12 +1,9 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
-import { useForm, useFieldArray, useWatch, Controller, type Control } from "react-hook-form";
+import { useMemo } from "react";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { toast } from "sonner";
-import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,56 +25,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { useProductVariants, useWarehouses } from "@/hooks/api/inventory";
+import { useProductVariants } from "@/hooks/api/inventory";
+import { WarehouseSelect } from "@/components/inventory/warehouse-select";
 import { useUpdateSalesOrder, type SalesOrderDetail } from "@/hooks/api/inventory/sales-orders";
 import { getErrorMessage } from "@/lib/get-error-message";
-
-const lineSchema = z.object({
-  variantId: z.string().min(1, "Select a variant"),
-  quantity: z.string().min(1),
-  unitPrice: z.string().min(1),
-  taxRate: z.string(),
-});
-
-const schema = z.object({
-  orderDate: z.string().min(1, "Required"),
-  requiredDate: z.string().optional(),
-  warehouseId: z.string().optional(),
-  currency: z.string(),
-  shippingAddress: z.string().optional(),
-  notes: z.string().optional(),
-  lines: z.array(lineSchema).min(1),
-});
-
-type FormValues = z.infer<typeof schema>;
-
-type FieldRow = { id: string; index: number };
-
-function toNum(v: string): number {
-  const n = parseFloat(v);
-  return Number.isFinite(n) && n >= 0 ? n : 0;
-}
-
-function round2(n: number): number {
-  return Math.round(n * 100) / 100;
-}
-
-function SoLineAmountCell({ index, control }: { index: number; control: Control<FormValues> }) {
-  const quantity = useWatch({ control, name: `lines.${index}.quantity` });
-  const unitPrice = useWatch({ control, name: `lines.${index}.unitPrice` });
-  const taxRate = useWatch({ control, name: `lines.${index}.taxRate` });
-  const sub = round2(toNum(quantity ?? "") * toNum(unitPrice ?? ""));
-  const lineTotal = round2(sub + round2(sub * (toNum(taxRate ?? "") / 100)));
-  return <span>{lineTotal.toFixed(2)}</span>;
-}
+import { OrderLineTable } from "@/features/inventory/components/order-line-table";
+import { soEditSchema, type SoEditFormValues } from "@/features/inventory/lib/so-schema";
+import { toNum, round2 } from "@/features/inventory/lib/order-line-helpers";
 
 interface SoEditSheetProps {
   open: boolean;
@@ -88,14 +42,22 @@ interface SoEditSheetProps {
 
 export function SoEditSheet({ open, onOpenChange, soId, so }: SoEditSheetProps) {
   const variantsQuery = useProductVariants({ activeOnly: true });
-  const warehousesQuery = useWarehouses();
   const updateMutation = useUpdateSalesOrder();
 
   const variants = variantsQuery.data ?? [];
-  const warehouses = warehousesQuery.data ?? [];
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+  const orderLineVariants = useMemo(
+    () => variants.map((v) => ({
+      id: v.id,
+      productName: v.productName,
+      name: v.name ?? "",
+      sku: v.sku,
+    })),
+    [variants],
+  );
+
+  const form = useForm<SoEditFormValues>({
+    resolver: zodResolver(soEditSchema),
     values: {
       orderDate: so.orderDate ?? "",
       requiredDate: so.expectedShipDate ?? "",
@@ -113,16 +75,6 @@ export function SoEditSheet({ open, onOpenChange, soId, so }: SoEditSheetProps) 
   });
 
   const { control, handleSubmit, reset } = form;
-
-  const { fields, append, remove } = useFieldArray({ control, name: "lines" });
-
-  function handleAddLine(): void {
-    append({ variantId: "", quantity: "1", unitPrice: "0", taxRate: "0" });
-  }
-
-  const handleRemoveAt = useCallback((index: number): void => {
-    remove(index);
-  }, [remove]);
 
   function handleClose(): void {
     reset();
@@ -146,117 +98,13 @@ export function SoEditSheet({ open, onOpenChange, soId, so }: SoEditSheetProps) 
     );
   }, [watchedLines]);
 
-  const lineColumns = useMemo((): DataTableColumn<FieldRow>[] => [
-    {
-      key: "variantId",
-      header: "Variant",
-      cell: (row) => (
-        <Controller
-          control={control}
-          name={`lines.${row.index}.variantId`}
-          render={({ field: f }) => (
-            <Select value={f.value} onValueChange={f.onChange}>
-              <SelectTrigger className="text-xs">
-                <SelectValue placeholder="Select variant" />
-              </SelectTrigger>
-              <SelectContent className="max-h-72">
-                {variants.map((v) => (
-                  <SelectItem key={v.id} value={String(v.id)}>
-                    {v.productName} – {v.name} ({v.sku})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-        />
-      ),
-    },
-    {
-      key: "quantity",
-      header: "Qty",
-      headerClassName: "text-right",
-      className: "w-[80px]",
-      cell: (row) => (
-        <Controller
-          control={control}
-          name={`lines.${row.index}.quantity`}
-          render={({ field: f }) => (
-            <Input type="number" min="1" step="1" className="text-right tabular-nums text-xs" {...f} />
-          )}
-        />
-      ),
-    },
-    {
-      key: "unitPrice",
-      header: "Unit Price",
-      headerClassName: "text-right",
-      className: "w-[100px]",
-      cell: (row) => (
-        <Controller
-          control={control}
-          name={`lines.${row.index}.unitPrice`}
-          render={({ field: f }) => (
-            <Input type="number" min="0" step="0.01" className="text-right tabular-nums text-xs" {...f} />
-          )}
-        />
-      ),
-    },
-    {
-      key: "taxRate",
-      header: "Tax %",
-      headerClassName: "text-right",
-      className: "w-[80px]",
-      cell: (row) => (
-        <Controller
-          control={control}
-          name={`lines.${row.index}.taxRate`}
-          render={({ field: f }) => (
-            <Input type="number" min="0" max="100" step="0.01" className="text-right tabular-nums text-xs" {...f} />
-          )}
-        />
-      ),
-    },
-    {
-      key: "total",
-      header: "Total",
-      headerClassName: "text-right",
-      className: "text-xs text-right font-mono tabular-nums w-[90px]",
-      cell: (row) => <SoLineAmountCell index={row.index} control={control} />,
-    },
-    {
-      key: "remove",
-      header: "",
-      className: "w-[40px]",
-      cell: (row) => {
-        function handleRemove(): void {
-          handleRemoveAt(row.index);
-        }
-        return (
-          <AnimatedIconButton
-            type="button"
-            icon={Trash2Icon}
-            iconSize={14}
-            variant="ghost"
-            size="icon"
-            className="w-7"
-            onClick={handleRemove}
-            disabled={fields.length === 1}
-            aria-label={`Remove line ${row.index + 1}`}
-          />
-        );
-      },
-    },
-  ], [control, variants, fields.length, handleRemoveAt]);
-
-  const lineTableData: FieldRow[] = fields.map((f, i) => ({ id: f.id, index: i }));
-
   const tableFooter = (
-    <div className="text-right text-sm font-medium">
+    <div className="text-right text-sm font-medium mt-1">
       Total: <span className="font-mono tabular-nums">{grandTotal.toFixed(2)}</span>
     </div>
   );
 
-  async function onSubmit(values: FormValues): Promise<void> {
+  async function onSubmit(values: SoEditFormValues): Promise<void> {
     try {
       await updateMutation.mutateAsync({
         soId,
@@ -287,126 +135,112 @@ export function SoEditSheet({ open, onOpenChange, soId, so }: SoEditSheetProps) 
           <SheetTitle>Edit Sales Order</SheetTitle>
         </SheetHeader>
         <Form {...form}>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <SheetBody className="space-y-4 px-6 py-4">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <FormField
-                control={control}
-                name="orderDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Order Date <span className="text-destructive">*</span></FormLabel>
-                    <FormControl>
-                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={control}
-                name="requiredDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Required Date</FormLabel>
-                    <FormControl>
-                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={control}
-                name="warehouseId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Warehouse</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
+          <form onSubmit={handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col overflow-hidden">
+            <SheetBody className="space-y-4 px-6 py-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <FormField
+                  control={control}
+                  name="orderDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Order Date <span className="text-destructive">*</span></FormLabel>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Keep current" />
-                        </SelectTrigger>
+                        <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
                       </FormControl>
-                      <SelectContent className="max-h-72">
-                        {warehouses.map((w) => (
-                          <SelectItem key={w.id} value={String(w.id)}>
-                            {w.name} ({w.code})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={control}
+                  name="requiredDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Required Date</FormLabel>
+                      <FormControl>
+                        <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={control}
+                  name="warehouseId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Warehouse</FormLabel>
+                      <FormControl>
+                        <WarehouseSelect
+                          value={field.value ?? ""}
+                          onChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={control}
+                  name="currency"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Currency</FormLabel>
+                      <FormControl>
+                        <Input placeholder="INR" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <FormField
+                control={control}
+                name="shippingAddress"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Shipping Address</FormLabel>
+                    <FormControl>
+                      <Textarea rows={2} {...field} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               <FormField
                 control={control}
-                name="currency"
+                name="notes"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Currency</FormLabel>
+                    <FormLabel>Notes</FormLabel>
                     <FormControl>
-                      <Input placeholder="INR" {...field} />
+                      <Textarea rows={2} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            </div>
-            <FormField
-              control={control}
-              name="shippingAddress"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Shipping Address</FormLabel>
-                  <FormControl>
-                    <Textarea rows={2} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Notes</FormLabel>
-                  <FormControl>
-                    <Textarea rows={2} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
+              <div className="space-y-2">
                 <FormLabel className="text-[13px] font-medium">
                   Lines <span className="text-destructive">*</span>
                 </FormLabel>
-                <AnimatedIconButton type="button" icon={PlusIcon} iconSize={14} iconClassName="mr-1" variant="outline" size="sm" className="text-xs" onClick={handleAddLine}>
-                  Add line
-                </AnimatedIconButton>
+                <OrderLineTable
+                  variants={orderLineVariants}
+                  mode="so"
+                  footer={tableFooter}
+                />
               </div>
-              <DataTable
-                data={lineTableData}
-                columns={lineColumns}
-                getRowKey={(row) => row.id}
-                footer={tableFooter}
-              />
-            </div>
-          </SheetBody>
-          <SheetFooter className="shrink-0 gap-2 border-t border-border bg-muted/30 px-6 py-4">
-            <Button type="button" variant="outline" className="flex-1" onClick={handleClose}>
-              Cancel
-            </Button>
-            <LoadingButton type="submit" isPending={updateMutation.isPending} loadingText="Saving…" className="flex-1">
-              Save Changes
-            </LoadingButton>
-          </SheetFooter>
-        </form>
+            </SheetBody>
+            <SheetFooter className="shrink-0 gap-2 border-t border-border bg-muted/30 px-6 py-4">
+              <Button type="button" variant="outline" className="flex-1" onClick={handleClose}>
+                Cancel
+              </Button>
+              <LoadingButton type="submit" isPending={updateMutation.isPending} loadingText="Saving…" className="flex-1">
+                Save Changes
+              </LoadingButton>
+            </SheetFooter>
+          </form>
         </Form>
       </SheetContent>
     </Sheet>

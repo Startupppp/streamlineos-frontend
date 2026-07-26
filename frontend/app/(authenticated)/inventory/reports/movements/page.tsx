@@ -8,8 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { EmptyState } from "@/components/ui/empty-state";
-import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyActivityIllustration } from "@/components/illustrations";
 import { DownloadIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -277,11 +276,10 @@ export default function MovementsReportPage() {
         )}
 
         {!query.isLoading && !query.error && rows.length === 0 && (
-          <EmptyState
+          <InventoryEmptyState
             illustration={<EmptyActivityIllustration />}
             title="No movements found"
             description="No stock movements match the selected filters."
-            className={CONTENT_FILL_PANEL}
           />
         )}
 

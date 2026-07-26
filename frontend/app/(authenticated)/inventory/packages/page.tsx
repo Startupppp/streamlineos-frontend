@@ -7,13 +7,9 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { LoadingButton } from "@/components/ui/loading-button";
 import { EmptyOrdersIllustration } from "@/components/illustrations";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -24,15 +20,15 @@ import {
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
-import { ErrorState, AppDialog } from "@/components/shared";
+import { ErrorState } from "@/components/shared";
 import { PackageDetailSheet } from "@/features/inventory/components/shipping/package-detail-sheet";
+import { PackageCreateDialog } from "@/features/inventory/components/shipping/package-create-dialog";
 import {
   PACKAGE_STATUS_BADGE,
   PACKAGE_STATUS_LABEL,
   type PackageStatus,
 } from "@/features/inventory/lib";
-import { usePackages, useCreatePackage, type Package } from "@/hooks/api/inventory/shipping";
-import { toast } from "sonner";
+import { usePackages, type Package } from "@/hooks/api/inventory/shipping";
 
 const PAGE_LIMIT = 20;
 
@@ -47,7 +43,6 @@ function PackagesPageInner() {
   const [detailOpen, setDetailOpen] = useState<boolean>(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [createOpen, setCreateOpen] = useState<boolean>(false);
-  const [newShipmentId, setNewShipmentId] = useState<string>("");
 
   const statusParam = searchParams.get("status") ?? "";
   const page = Math.max(1, Number(searchParams.get("page") ?? "1"));
@@ -85,30 +80,7 @@ function PackagesPageInner() {
   }
 
   function handleNewPackage(): void {
-    setNewShipmentId("");
     setCreateOpen(true);
-  }
-
-  function handleCreateClose(): void {
-    setCreateOpen(false);
-    setNewShipmentId("");
-  }
-
-  function handleShipmentIdChange(e: React.ChangeEvent<HTMLInputElement>): void {
-    setNewShipmentId(e.target.value);
-  }
-
-  const createMutation = useCreatePackage();
-
-  async function handleCreateSubmit(): Promise<void> {
-    const shipmentId = newShipmentId ? Number(newShipmentId) : undefined;
-    try {
-      await createMutation.mutateAsync({ shipmentId });
-      toast.success("Package created");
-      handleCreateClose();
-    } catch (error) {
-      toast.error(getErrorMessage(error));
-    }
   }
 
   const statusFilter = (statusParam in PACKAGE_STATUS_BADGE ? statusParam as PackageStatus : undefined);
@@ -244,42 +216,7 @@ function PackagesPageInner() {
         packageId={selectedId}
       />
 
-      <AppDialog
-        open={createOpen}
-        onOpenChange={handleCreateClose}
-        title="New Package"
-        description="Create an empty package. You can add lines after creation."
-        footer={
-          <div className="grid grid-cols-2 gap-2 w-full">
-            <Button variant="outline" size="sm" onClick={handleCreateClose}>
-              Cancel
-            </Button>
-            <LoadingButton
-              size="sm"
-              onClick={handleCreateSubmit}
-              isPending={createMutation.isPending}
-              loadingText="Creating…"
-            >
-              Create
-            </LoadingButton>
-          </div>
-        }
-      >
-        <div className="space-y-3">
-          <div className="space-y-1.5">
-            <Label htmlFor="new-pkg-shipment" className="text-xs">Shipment ID (optional)</Label>
-            <Input
-              id="new-pkg-shipment"
-              type="number"
-              min="1"
-              placeholder="Leave blank if unassigned"
-              value={newShipmentId}
-              onChange={handleShipmentIdChange}
-              className="text-sm"
-            />
-          </div>
-        </div>
-      </AppDialog>
+      <PackageCreateDialog open={createOpen} onOpenChange={setCreateOpen} />
     </>
   );
 }

@@ -3,58 +3,16 @@
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Input } from "@/components/ui/input";
-import { PhoneInput } from "@/components/ui/phone-input";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { AppSheet } from "@/components/shared/app-sheet";
 import { useUpdateVendor } from "@/hooks/api/inventory";
-import type { InventoryVendor, UpdateVendorInput } from "@/types/inventory";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { VendorFormFields } from "@/features/inventory/components/vendor-form-fields";
+import { vendorEditSchema, type VendorEditFormValues } from "@/features/inventory/lib/vendor-schema";
+import type { InventoryVendor, UpdateVendorInput } from "@/types/inventory";
 
-const VENDOR_NAME_RE = /^[A-Za-z][A-Za-z0-9 &.,\-'()]+$/;
-const GSTIN_RE = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
-
-const editVendorSchema = z.object({
-  name: z
-    .string()
-    .min(2, "Vendor name must be at least 2 characters")
-    .max(255, "Vendor name must be at most 255 characters")
-    .refine((v) => VENDOR_NAME_RE.test(v.trim()), {
-      message: "Name must start with a letter and contain only letters, numbers, spaces, & . , - ' ()",
-    }),
-  code: z.string().max(50, "Code must be at most 50 characters"),
-  email: z.string().refine(
-    (val) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim()),
-    { message: "Invalid email address" },
-  ),
-  phone: z.string().max(30, "Phone must be at most 30 characters"),
-  address: z.string().max(500, "Address must be at most 500 characters"),
-  gstin: z
-    .string()
-    .refine((v) => !v || GSTIN_RE.test(v.trim().toUpperCase()), {
-      message: "Invalid GSTIN format (must be 15 characters, e.g. 22AAAAA0000A1Z5)",
-    }),
-  leadTimeDays: z
-    .string()
-    .refine((v) => { const n = parseInt(v, 10); return Number.isInteger(n) && n >= 0 && n <= 365; }, {
-      message: "Lead time must be between 0 and 365 days",
-    }),
-  paymentTermsDays: z
-    .string()
-    .refine((v) => { const n = parseInt(v, 10); return Number.isInteger(n) && n >= 0 && n <= 365; }, {
-      message: "Payment terms must be between 0 and 365 days",
-    }),
-  currency: z.string().min(1, "Currency is required").max(3, "Currency must be 3 characters"),
-  notes: z.string().max(2000, "Notes must be at most 2000 characters"),
-  isActive: z.boolean(),
-});
-
-type EditVendorFormValues = z.infer<typeof editVendorSchema>;
+const FORM_ID = "edit-vendor-form";
 
 interface EditVendorSheetProps {
   vendor: InventoryVendor;
@@ -65,7 +23,7 @@ interface EditVendorSheetProps {
 export function EditVendorSheet({ vendor, open, onOpenChange }: EditVendorSheetProps) {
   const updateMutation = useUpdateVendor(vendor.id);
 
-  const vendorDefaults: EditVendorFormValues = {
+  const vendorDefaults: VendorEditFormValues = {
     name: vendor.name,
     code: vendor.code,
     email: vendor.email ?? "",
@@ -79,8 +37,8 @@ export function EditVendorSheet({ vendor, open, onOpenChange }: EditVendorSheetP
     isActive: vendor.isActive,
   };
 
-  const form = useForm<EditVendorFormValues>({
-    resolver: zodResolver(editVendorSchema),
+  const form = useForm<VendorEditFormValues>({
+    resolver: zodResolver(vendorEditSchema),
     defaultValues: vendorDefaults,
   });
 
@@ -93,7 +51,7 @@ export function EditVendorSheet({ vendor, open, onOpenChange }: EditVendorSheetP
     handleOpenChange(false);
   }
 
-  async function onSubmit(values: EditVendorFormValues): Promise<void> {
+  async function onSubmit(values: VendorEditFormValues): Promise<void> {
     const payload: UpdateVendorInput = {
       name: values.name.trim(),
       code: values.code.trim() || undefined,
@@ -129,7 +87,7 @@ export function EditVendorSheet({ vendor, open, onOpenChange }: EditVendorSheetP
           </Button>
           <LoadingButton
             type="submit"
-            form="edit-vendor-form"
+            form={FORM_ID}
             size="sm"
             isPending={updateMutation.isPending}
             loadingText="Saving…"
@@ -139,162 +97,12 @@ export function EditVendorSheet({ vendor, open, onOpenChange }: EditVendorSheetP
         </div>
       }
     >
-      <Form {...form}>
-        <form id="edit-vendor-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Name *</FormLabel>
-                <FormControl>
-                  <Input placeholder="Acme Supplies" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <div className="grid grid-cols-2 gap-3">
-            <FormField
-              control={form.control}
-              name="code"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Code</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Auto-generated" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="currency"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Currency <span className="text-destructive">*</span></FormLabel>
-                  <FormControl>
-                    <Input placeholder="INR" maxLength={3} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input type="email" placeholder="orders@supplier.com" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="phone"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Phone</FormLabel>
-                <FormControl>
-                  <PhoneInput defaultCountry="IN" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="gstin"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>GSTIN</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="22AAAAA0000A1Z5"
-                    maxLength={15}
-                    className="uppercase"
-                    {...field}
-                    onChange={(e) => field.onChange(e.target.value.toUpperCase())}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <div className="grid grid-cols-2 gap-3">
-            <FormField
-              control={form.control}
-              name="leadTimeDays"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Lead time (days)</FormLabel>
-                  <FormControl>
-                    <Input type="number" min="0" max="365" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="paymentTermsDays"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Payment terms (days)</FormLabel>
-                  <FormControl>
-                    <Input type="number" min="0" max="365" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          <FormField
-            control={form.control}
-            name="address"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Address</FormLabel>
-                <FormControl>
-                  <Textarea rows={3} placeholder="Street, city, state, PIN" className="resize-none" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="notes"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Notes</FormLabel>
-                <FormControl>
-                  <Textarea rows={2} placeholder="Any internal notes" className="resize-none" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="isActive"
-            render={({ field }) => (
-              <FormItem className="flex items-center justify-between rounded-lg border border-border/60 px-4 py-3">
-                <FormLabel className="mb-0 cursor-pointer">Active</FormLabel>
-                <FormControl>
-                  <Switch checked={field.value} onCheckedChange={field.onChange} />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-        </form>
-      </Form>
+      <VendorFormFields
+        form={form}
+        formId={FORM_ID}
+        onSubmit={form.handleSubmit(onSubmit)}
+        showIsActive
+      />
     </AppSheet>
   );
 }

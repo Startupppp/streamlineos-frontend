@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -24,6 +25,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { useCreateCustomerReturn } from "@/hooks/api/inventory/operations";
 import { useSalesOrders } from "@/hooks/api/inventory/sales-orders";
 import { useProductVariants } from "@/hooks/api/inventory/products";
+import { useWarehouses, useLocations } from "@/hooks/api/inventory/warehouses";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 const DISPOSITIONS = [
@@ -80,6 +82,10 @@ export function CustomerReturnSheet({ open, onOpenChange }: CustomerReturnSheetP
   const createMutation = useCreateCustomerReturn();
   const salesOrdersQuery = useSalesOrders({ limit: 100 });
   const variantsQuery = useProductVariants({ activeOnly: true });
+  const warehousesQuery = useWarehouses();
+  const [selectedWarehouseId, setSelectedWarehouseId] = useState<number>(0);
+  const locationsQuery = useLocations(selectedWarehouseId);
+  const activeLocations = (locationsQuery.data ?? []).filter((l) => l.isActive);
 
   const soOptions: ComboboxOption[] = (salesOrdersQuery.data?.items ?? []).map((so) => ({
     value: String(so.id),
@@ -188,6 +194,24 @@ export function CustomerReturnSheet({ open, onOpenChange }: CustomerReturnSheetP
             )}
           />
 
+          <div>
+            <label className="text-sm font-medium">Warehouse (for target locations)</label>
+            <Select
+              value={selectedWarehouseId ? String(selectedWarehouseId) : ""}
+              onValueChange={(v) => setSelectedWarehouseId(Number(v))}
+              disabled={warehousesQuery.isLoading}
+            >
+              <SelectTrigger className="mt-1.5">
+                <SelectValue placeholder="Select warehouse" />
+              </SelectTrigger>
+              <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+                {(warehousesQuery.data ?? []).map((wh) => (
+                  <SelectItem key={wh.id} value={String(wh.id)}>{wh.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Return Lines</span>
@@ -272,15 +296,25 @@ export function CustomerReturnSheet({ open, onOpenChange }: CustomerReturnSheetP
                     render={({ field: f }) => (
                       <FormItem>
                         <FormLabel className="text-xs">Target Location</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            min="1"
-                            placeholder="Optional"
-                            value={f.value ?? ""}
-                            onChange={(e) => f.onChange(e.target.value ? Number(e.target.value) : undefined)}
-                          />
-                        </FormControl>
+                        <Select
+                          value={f.value ? String(f.value) : "none"}
+                          onValueChange={(v) => f.onChange(v && v !== "none" ? Number(v) : undefined)}
+                          disabled={locationsQuery.isLoading || !selectedWarehouseId}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="text-xs">
+                              <SelectValue placeholder={selectedWarehouseId ? "Select location" : "Pick a warehouse first"} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="max-h-60 min-w-[var(--radix-select-trigger-width)]">
+                            <SelectItem value="none">None</SelectItem>
+                            {activeLocations.map((loc) => (
+                              <SelectItem key={loc.id} value={String(loc.id)}>
+                                {loc.name} ({loc.code})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}

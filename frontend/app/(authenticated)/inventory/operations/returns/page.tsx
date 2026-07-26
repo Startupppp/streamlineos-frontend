@@ -9,6 +9,7 @@ import { InventoryEmptyState } from "@/features/inventory/components/inventory-e
 import { ErrorState } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import {
@@ -154,15 +155,16 @@ export default function ReturnsPage() {
         function handleCancel(): void { handleCancelVendorReturn(r.id); }
         return r.status === "DRAFT" ? (
           <div className="flex items-center gap-1.5">
-            <Button
+            <LoadingButton
               variant="outline"
               size="sm"
               className="h-6 text-[10px] px-2"
               onClick={handlePost}
-              disabled={postVendorMutation.isPending}
+              isPending={postVendorMutation.isPending}
+              loadingText="Posting…"
             >
               Post
-            </Button>
+            </LoadingButton>
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2 text-red-600">
@@ -227,15 +229,16 @@ export default function ReturnsPage() {
         function handleCancel(): void { handleCancelCustomerReturn(r.id); }
         return r.status === "DRAFT" ? (
           <div className="flex items-center gap-1.5">
-            <Button
+            <LoadingButton
               variant="outline"
               size="sm"
               className="h-6 text-[10px] px-2"
               onClick={handlePost}
-              disabled={postCustomerMutation.isPending}
+              isPending={postCustomerMutation.isPending}
+              loadingText="Posting…"
             >
               Post
-            </Button>
+            </LoadingButton>
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2 text-red-600">

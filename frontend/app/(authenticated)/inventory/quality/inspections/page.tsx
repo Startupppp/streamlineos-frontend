@@ -233,7 +233,7 @@ function InspectionsPageInner() {
 
 export default function InspectionsPage() {
   return (
-    <Suspense>
+    <Suspense fallback={null}>
       <InspectionsPageInner />
     </Suspense>
   );
