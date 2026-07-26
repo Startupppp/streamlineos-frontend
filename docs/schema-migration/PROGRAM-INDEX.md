@@ -83,6 +83,43 @@ authority: docs/schema-change-plan.md §9 (waves 0–9) is canonical
 - **User, in parallel:** billing int→text (`0c8e21b`); delegations + team fail-closed (`9c78440`); CRM↔Inventory fulfillment bridge (`016d016`); PM Workspaces module (`7fcc9b9`, `08b07dc`); Administration IA rename; module-switcher renames.
 - **Design surface:** 8 Wave-0 gate docs + 8 execution plans + this index — every wave specified to step/SQL level.
 
+## 3b. Session progress — 2026-07-27 (honest state vs. gates)
+
+**Code authored + APPLIED TO THE DEV BRANCH `ep-autumn-truth-aot9sina` (not gate-passed):**
+- Wave 4 tenant-integrity: 735 candidate keys, ~770 composite FKs, 79 self-maintaining
+  `org_id` triggers on line-item tables, ~100 bare-column `.references()`. (4.A/B/C/D applied to branch.)
+- Wave 6: party overlays (`crm_party_accounts`, `inv_party_vendor_profiles`), `support_tickets`
+  moved to `support/tickets.ts`, `deal.closed`→SO consumer (publish clean; draft-SO due to
+  deals having no line items), `<PartySelect>`, projects↔CRM decouple (T6.5).
+- Wave 7: G1 composite membership FK, G4 provisioning-on-enable, G5 managed-product fields.
+- Wave 8: managed-product link endpoint/hook/detail page; PAGES.md.
+- Wave 9: outbox worker+inbox (both parties), email `organization_id`, deprecation telemetry.
+- Wave 1: org/invitation status enums + purge + lifecycle columns; invitation soft-revoke/expire
+  + org purge worker.
+- Dead-code sweep: 7 backend + 3 frontend dead items removed.
+
+**GATE 0.2 (journal reconciliation) — DONE (`f25b51f`):** journal was 21 entries / 26 files with
+~10 session changes applied only via ad-hoc SQL. Now journaled to 27=27: the 5 orphaned files
+(0007/0008/0300/0305/0306) + `0307_wave_1_4_6_7_9_reconciliation.sql` (idempotent, dependency-ordered,
+validated as a no-op re-apply against the branch). `db:migrate` can now replay the session's schema.
+*Residual:* meta snapshots are still incomplete (pre-existing — only 0000/0016 exist), so `db:generate`
+stays TTY/snapshot-blocked; and `branch-sync-project-teams` + full snapshot regen are not done.
+
+**BLOCKED — only the user/operator can do these (no agent can):**
+- **0.1** create `prod-recon-baseline` backup branch.
+- **0.4** run `pnpm -C backend db:migrate` on a CLEAN Neon branch and prove it reaches the same head
+  (the reproducibility exit criterion — this is the real "is it migrated?" test; if 0307's ordering is
+  wrong it surfaces HERE).
+- **0.5** Neon pooler transaction-locality test (hard gate for all RLS).
+- **`db:generate`** needs a TTY (hits `promptNamedWithSchemasConflict`) — run it locally to regenerate
+  snapshots and produce clean future migrations.
+- All **cutover** steps need ≥7-day shadow-read parity; all **contract/DROP** steps need ≥30 days / 2
+  releases. These are elapsed-time and cannot be compressed.
+
+**Bottom line:** the buildable CODE across Waves 1/4/6/7/8/9 is authored + branch-applied + now journaled,
+but the program's DEFINITION OF DONE (GATE 0 proof + RLS pooler test + multi-release observation windows)
+is gated on operator DB actions and calendar time by design (§5). That gap is not closable by more code.
+
 ## 4. Verified findings (medium; already sequenced, no emergency)
 - **Module-gate inconsistency** — `@RequireModule` denies-on-absent (JWT array) vs `@RequirePermission` allows-on-absent (`org_modules`, `entitlements.service.ts:132`). Not a bypass/BOLA; closed by Wave 2 backfill.
 - **Portal-auth runtime absent** — portal schema complete but no `PortalJwtAuthGuard`/`aud` claim; internal guard doesn't reject portal tokens. Sequenced in Wave 9.
