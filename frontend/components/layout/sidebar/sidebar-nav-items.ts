@@ -2205,6 +2205,42 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    label: "Directory",
+    requiredPermission: [
+      "directory:people:view",
+      "workforce:workers:view",
+      "party:parties:view",
+      "projects:portal:view",
+    ],
+    routes: [
+      {
+        label: "People Directory",
+        icon: Contact2,
+        href: "/directory",
+        exact: true,
+        requiredPermission: "directory:people:view",
+      },
+      {
+        label: "Workers",
+        icon: Briefcase,
+        href: "/directory/workers",
+        requiredPermission: "workforce:workers:view",
+      },
+      {
+        label: "Business Parties",
+        icon: Building2,
+        href: "/parties",
+        requiredPermission: "party:parties:view",
+      },
+      {
+        label: "Client Access",
+        icon: ShieldCheck,
+        href: "/client-access",
+        requiredPermission: "projects:portal:view",
+      },
+    ],
+  },
+  {
     label: "Access Control",
     requiredPermission: ["settings:rbac:manage", "settings:manage"],
     routes: [
@@ -2581,6 +2617,7 @@ const PRODUCT_NAV_GROUP_LABELS: Record<ProductKey, string[]> = {
   administration: [
     "Organization",
     "People",
+    "Directory",
     "Access Control",
     "Subscription",
     "Platform",
@@ -2702,7 +2739,10 @@ export function getProductFromPathname(pathname: string): ProductKey {
     pathname.startsWith("/organization") ||
     pathname.startsWith("/users") ||
     pathname.startsWith("/settings") ||
-    pathname.startsWith("/billing")
+    pathname.startsWith("/billing") ||
+    pathname.startsWith("/directory") ||
+    pathname.startsWith("/parties") ||
+    pathname.startsWith("/client-access")
   )
     return "administration";
   return "home";
