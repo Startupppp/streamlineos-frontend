@@ -161,7 +161,6 @@ export function TemplatesPageContent() {
   }, [refetch]);
 
   const templates = data?.items ?? [];
-  const total = data?.total ?? 0;
   const hasActiveFilters = !!(search || category !== "all" || complexity !== "all");
 
   const filters = (
@@ -198,9 +197,7 @@ export function TemplatesPageContent() {
     <>
       <PageWrapper
         title="Template Library"
-        subtitle={
-          isLoading ? "Loading…" : `${total} template${total !== 1 ? "s" : ""}`
-        }
+        subtitle="Reusable payroll configuration templates"
         filters={filters}
       >
         {isError ? (

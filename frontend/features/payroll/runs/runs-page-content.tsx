@@ -193,7 +193,6 @@ export function RunsPageContent() {
     <PageWrapper
       title="Payroll Runs"
       subtitle="View and manage payroll runs by month"
-      backHref="/payroll"
       actions={
         canManage ? (
           <Button size="sm" onClick={handleNewRunOpen}>
