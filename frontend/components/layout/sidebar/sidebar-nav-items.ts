@@ -2142,7 +2142,7 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    label: "Organization",
+    label: "Structure",
     module: "hrms",
     requiredPermission: ["settings:manage", "settings:view"],
     routes: [
@@ -2643,6 +2643,7 @@ const PRODUCT_NAV_GROUP_LABELS: Record<ProductKey, string[]> = {
     "People",
     "Directory",
     "Access Control",
+    "Structure",
     "Subscription",
     "Platform",
     "Security",
