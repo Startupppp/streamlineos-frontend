@@ -47,6 +47,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { PmWorkspaceStatusBadge } from "./pm-workspace-status-badge";
 import { PmWorkspaceFormSheet } from "./pm-workspace-form-sheet";
+import { PmWorkspaceMembersSheet } from "./pm-workspace-members-sheet";
 import type {
   PmWorkspace,
   CreatePmWorkspaceInput,
@@ -79,18 +80,23 @@ function WorkspaceRowActions({
   workspace,
   canUpdate,
   canDelete,
+  canViewMembers,
   onEdit,
   onDelete,
+  onMembers,
 }: {
   workspace: PmWorkspace;
   canUpdate: boolean;
   canDelete: boolean;
+  canViewMembers: boolean;
   onEdit: (w: PmWorkspace) => void;
   onDelete: (w: PmWorkspace) => void;
+  onMembers: (w: PmWorkspace) => void;
 }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   const handleEdit = useCallback(() => onEdit(workspace), [workspace, onEdit]);
   const handleDelete = useCallback(() => onDelete(workspace), [workspace, onDelete]);
+  const handleMembers = useCallback(() => onMembers(workspace), [workspace, onMembers]);
   const canDeleteRow = canDelete && !workspace.isDefault;
   return (
     <DropdownMenu>
@@ -109,6 +115,9 @@ function WorkspaceRowActions({
         {canUpdate ? (
           <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem>
         ) : null}
+        {canViewMembers ? (
+          <DropdownMenuItem onClick={handleMembers}>Members</DropdownMenuItem>
+        ) : null}
         {canDeleteRow ? (
           <DropdownMenuItem variant="destructive" onClick={handleDelete}>
             Delete
@@ -123,6 +132,7 @@ export function PmWorkspacesPage() {
   const canCreate = useCan("projects:workspaces:create");
   const canUpdate = useCan("projects:workspaces:update");
   const canDelete = useCan("projects:workspaces:delete");
+  const canViewMembers = useCan("projects:workspaces:members:view");
 
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState("all");
@@ -131,6 +141,7 @@ export function PmWorkspacesPage() {
     useQueryParamOpen("create");
   const [editTarget, setEditTarget] = useState<PmWorkspace | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<PmWorkspace | null>(null);
+  const [membersTarget, setMembersTarget] = useState<PmWorkspace | null>(null);
 
   const { data, isLoading, isError, refetch } = usePmWorkspaces({
     page,
@@ -227,7 +238,15 @@ export function PmWorkspacesPage() {
     setDeleteTarget(row);
   }
 
-  const canManageRow = canUpdate || canDelete;
+  function handleMembersRow(row: PmWorkspace) {
+    setMembersTarget(row);
+  }
+
+  function handleMembersSheetChange(open: boolean) {
+    if (!open) setMembersTarget(null);
+  }
+
+  const canManageRow = canUpdate || canDelete || canViewMembers;
 
   const columns: DataTableColumn<PmWorkspace>[] = [
     {
@@ -272,8 +291,10 @@ export function PmWorkspacesPage() {
             workspace={row}
             canUpdate={canUpdate}
             canDelete={canDelete}
+            canViewMembers={canViewMembers}
             onEdit={handleEditRow}
             onDelete={handleDeleteRow}
+            onMembers={handleMembersRow}
           />
         ) : null,
     },
@@ -382,6 +403,14 @@ export function PmWorkspacesPage() {
           defaultValues={editTarget}
           onSubmitEdit={handleEdit}
           isPending={updateWorkspace.isPending}
+        />
+      )}
+
+      {membersTarget && (
+        <PmWorkspaceMembersSheet
+          workspace={membersTarget}
+          open={!!membersTarget}
+          onOpenChange={handleMembersSheetChange}
         />
       )}
 

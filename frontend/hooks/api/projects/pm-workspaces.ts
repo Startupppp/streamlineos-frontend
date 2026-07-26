@@ -9,6 +9,9 @@ import type {
   PmWorkspacesPage,
   CreatePmWorkspaceInput,
   UpdatePmWorkspaceInput,
+  PmWorkspaceMember,
+  PmWorkspaceMembersPage,
+  AddPmWorkspaceMemberInput,
 } from "@/types/projects";
 
 const BASE = "/product-management/workspaces";
@@ -84,6 +87,65 @@ export function useDeletePmWorkspace() {
       apiClient.delete<void>(`${BASE}/${pmWorkspaceId}`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.projects.pmWorkspaces.list() });
+    },
+  });
+}
+
+interface ListMembersParams {
+  page?: number;
+  limit?: number;
+}
+
+export function usePmWorkspaceMembers(
+  pmWorkspaceId: string | null,
+  params?: ListMembersParams,
+) {
+  const canView = useCan("projects:workspaces:members:view");
+  const queryParams: Record<string, string> = {};
+  if (params?.page) queryParams["page"] = String(params.page);
+  if (params?.limit) queryParams["limit"] = String(params.limit);
+
+  return useQuery<PmWorkspaceMembersPage>({
+    queryKey: queryKeys.projects.pmWorkspaces.members(
+      pmWorkspaceId ?? "",
+      Object.keys(queryParams).length > 0 ? queryParams : undefined,
+    ),
+    queryFn: () =>
+      apiClient.get<PmWorkspaceMembersPage>(
+        `${BASE}/${pmWorkspaceId}/members`,
+        queryParams,
+      ),
+    enabled: canView && !!pmWorkspaceId,
+    staleTime: 60_000,
+  });
+}
+
+export function useAddPmWorkspaceMember(pmWorkspaceId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["projects", "pm-workspaces", "members", "add"],
+    mutationFn: (data: AddPmWorkspaceMemberInput) =>
+      apiClient.post<PmWorkspaceMember>(`${BASE}/${pmWorkspaceId}/members`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({
+        queryKey: queryKeys.projects.pmWorkspaces.members(pmWorkspaceId),
+      });
+    },
+  });
+}
+
+export function useRemovePmWorkspaceMember(pmWorkspaceId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["projects", "pm-workspaces", "members", "remove"],
+    mutationFn: (pmWorkspaceMembershipId: string) =>
+      apiClient.delete<{ success: true }>(
+        `${BASE}/${pmWorkspaceId}/members/${pmWorkspaceMembershipId}`,
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({
+        queryKey: queryKeys.projects.pmWorkspaces.members(pmWorkspaceId),
+      });
     },
   });
 }

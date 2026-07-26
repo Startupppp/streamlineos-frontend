@@ -425,6 +425,8 @@ export const queryKeys = {
         [...base, "projects", "pm-workspaces", "list", params] as const,
       detail: (id: string) =>
         [...base, "projects", "pm-workspaces", "detail", id] as const,
+      members: (id: string, params?: Record<string, unknown>) =>
+        [...base, "projects", "pm-workspaces", "members", id, params] as const,
     },
     workflow: {
       transitions: (projectId: number) =>

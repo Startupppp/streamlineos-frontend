@@ -31,3 +31,30 @@ export interface UpdatePmWorkspaceInput {
   name?: string;
   status?: PmWorkspaceStatus;
 }
+
+export type PmWorkspaceMemberRole = "member" | "admin";
+
+export interface PmWorkspaceMember {
+  pmWorkspaceMembershipId: string;
+  orgId: string;
+  pmWorkspaceId: string;
+  organizationMembershipId: number;
+  userId: string;
+  role: PmWorkspaceMemberRole;
+  addedAt: string;
+}
+
+export interface PmWorkspaceMembersPage {
+  data: PmWorkspaceMember[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export interface AddPmWorkspaceMemberInput {
+  userId: string;
+  role: PmWorkspaceMemberRole;
+}
