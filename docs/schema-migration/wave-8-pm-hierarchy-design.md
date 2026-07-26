@@ -1,11 +1,22 @@
 ---
 wave: 8
 title: PM Hierarchy — managed_products + product_management_members rename
-status: DESIGN (not yet executing)
+status: SUPERSEDED (see wave-0-pm-reconciliation-adr.md)
+superseded_by: wave-0-pm-reconciliation-adr.md
 depends_on: waves 0–7 stable; refactoring-hrms Projects Members/Teams work landed
 date: 2026-07-26
 author: architecture review
 ---
+
+> **⚠️ SUPERSEDED 2026-07-26 — DO NOT IMPLEMENT §2 (no-container) or §3 (product_management_members rename).**
+> The PM hierarchy decision is now the **PM Workspace container** model; see
+> [`wave-0-pm-reconciliation-adr.md`](./wave-0-pm-reconciliation-adr.md). That ADR is authoritative.
+> The container (`pm_workspaces` + `pm_workspace_memberships`) is already implemented (commit `08b07dc`).
+> **Retained** from this doc (still valid guidance): the expand→contract migration discipline (§3.2, §9),
+> the Managed Product concept + `UNIQUE(org_id, key)` (§4), RBAC additions (§8), the frontend
+> "strip legacy workspace symbols" list (§7), and the collision gate (§6) — but read them through the
+> ADR's decided rules (roster = `pm_workspace_memberships` keyed on Organization Membership, every PM
+> child carries `pm_workspace_id`).
 
 # Wave 8 — Product Management Hierarchy Design
 
