@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import Link from "next/link";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { toast } from "sonner";
 import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
@@ -243,12 +244,13 @@ export function ManagedProductsPage() {
       sortValue: (r) => r.name,
       className: TABLE_TITLE_CELL,
       cell: (row) => (
-        <span
-          className={cn("font-medium text-foreground", TEXT_ONE_LINE)}
+        <Link
+          href={`/projects/managed-products/${row.managedProductId}`}
+          className={cn("font-medium text-foreground hover:text-primary hover:underline", TEXT_ONE_LINE)}
           title={row.name}
         >
           {row.name}
-        </span>
+        </Link>
       ),
     },
     {
