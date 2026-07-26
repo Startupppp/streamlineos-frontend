@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { downloadBlob } from "@/lib/download-blob";
 import type { TaxDeclarationAdmin } from "@/types/payroll/reports";
 
 export function useTaxDeclarationsAdmin(params: {
@@ -56,14 +57,7 @@ export function useExportTaxReport() {
         financialYear,
         format: "csv",
       });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `tax-declarations-${financialYear}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      downloadBlob(blob, `tax-declarations-${financialYear}.csv`);
     },
   });
 }

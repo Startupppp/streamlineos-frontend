@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { downloadBlob } from "@/lib/download-blob";
 import type { FnfSettlement, FnfStatement } from "@/types/payroll/reports";
 
 export function useFnfSettlements() {
@@ -39,14 +40,7 @@ export function useFnfStatement(settlementId: number) {
 
 export async function downloadFnfStatement(settlementId: number): Promise<void> {
   const blob = await apiClient.download(`/payroll/fnf/${settlementId}/statement/download`);
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `FNF_Statement_${settlementId}.pdf`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+  downloadBlob(blob, `FNF_Statement_${settlementId}.pdf`);
 }
 
 export function useApproveFnf() {

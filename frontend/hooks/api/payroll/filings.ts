@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { downloadBlob } from "@/lib/download-blob";
 
 export type FilingType = "PF_ECR" | "ESI" | "PT" | "TDS_24Q" | "FORM16" | "LWF";
 
@@ -119,12 +120,5 @@ export function useAttachAcknowledgement() {
 
 export async function downloadFilingExport(filingId: number): Promise<void> {
   const blob = await apiClient.download(`/payroll/filings/${filingId}/export`);
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `filing_${filingId}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+  downloadBlob(blob, `filing_${filingId}.csv`);
 }

@@ -4,6 +4,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { downloadBlob } from "@/lib/download-blob";
 import type {
   PayrollSummaryReport,
   PayrollRegisterReport,
@@ -151,14 +152,7 @@ export function useExportPayrollReport() {
         ...(costCenter !== undefined && { costCenter }),
         ...(workerType !== undefined && { workerType }),
       });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `payroll-${reportType}-${month}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      downloadBlob(blob, `payroll-${reportType}-${month}.csv`);
     },
   });
 }
@@ -168,14 +162,7 @@ export function useExportJournal() {
     mutationKey: ["payroll", "export-journal"],
     mutationFn: async ({ month }: { month: string }) => {
       const blob = await apiClient.download("/payroll/reports/journal", { month, format: "csv" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `payroll-journal-${month}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      downloadBlob(blob, `payroll-journal-${month}.csv`);
     },
   });
 }
