@@ -662,6 +662,12 @@ export const NAV_GROUPS: NavGroup[] = [
         requiredPermission: "hr:employees:view",
       },
       {
+        label: "Access",
+        icon: ShieldCheck,
+        href: "/hr/access",
+        requiredPermission: "hr:access:view",
+      },
+      {
         label: "Settings",
         icon: SlidersHorizontal,
         href: "/hr/settings/import-export",
@@ -1082,6 +1088,12 @@ export const NAV_GROUPS: NavGroup[] = [
             href: "/crm/analytics",
           },
         ],
+      },
+      {
+        label: "Access",
+        icon: ShieldCheck,
+        href: "/crm/access",
+        requiredPermission: "crm:access:view",
       },
       {
         label: "Settings",
@@ -1756,6 +1768,12 @@ export const NAV_GROUPS: NavGroup[] = [
         href: "/inventory/settings",
         requiredPermission: "inventory:settings:manage",
       },
+      {
+        label: "Access",
+        icon: ShieldCheck,
+        href: "/inventory/access",
+        requiredPermission: "inventory:access:view",
+      },
     ],
   },
   {
@@ -1933,6 +1951,12 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: Plug,
         href: "/projects/settings/integrations",
         requiredPermission: "settings:manage",
+      },
+      {
+        label: "Access",
+        icon: ShieldCheck,
+        href: "/projects/access",
+        requiredPermission: "projects:access:view",
       },
     ],
   },

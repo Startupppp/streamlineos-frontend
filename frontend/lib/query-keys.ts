@@ -1830,4 +1830,12 @@ export const queryKeys = {
     grant: (projectClientGrantId: string) =>
       [...base, "portalAccess", "grants", projectClientGrantId] as const,
   },
+
+  moduleAccess: {
+    all: [...base, "moduleAccess"] as const,
+    catalog: (moduleKey: string) =>
+      [...base, "moduleAccess", moduleKey, "catalog"] as const,
+    roles: (moduleKey: string) =>
+      [...base, "moduleAccess", moduleKey, "roles"] as const,
+  },
 } as const;

@@ -573,4 +573,12 @@ export type PermissionKey =
   | "party:parties:update"
   | "party:parties:delete"
   | "party:contacts:view"
-  | "party:contacts:manage";
+  | "party:contacts:manage"
+  | "hr:access:view"
+  | "hr:access:manage"
+  | "crm:access:view"
+  | "crm:access:manage"
+  | "inventory:access:view"
+  | "inventory:access:manage"
+  | "projects:access:view"
+  | "projects:access:manage";
