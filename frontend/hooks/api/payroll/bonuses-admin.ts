@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 
 export type BonusType =
@@ -56,17 +57,6 @@ interface IncentivesResponse {
   totalPages: number;
 }
 
-const bonusKeys = {
-  all: ["payroll", "bonuses"] as const,
-  list: () => ["payroll", "bonuses", "list"] as const,
-};
-
-const incentiveKeys = {
-  all: ["payroll", "incentives"] as const,
-  list: (params?: Record<string, string | number>) =>
-    ["payroll", "incentives", "list", params ?? {}] as const,
-};
-
 interface CreateBonusBody {
   userId: string;
   type: BonusType;
@@ -82,14 +72,14 @@ export function useCreateBonus() {
     mutationKey: ["payroll", "bonuses", "create"],
     mutationFn: (body: CreateBonusBody) =>
       apiClient.post<Bonus>("/hr/bonuses", body),
-    onSuccess: () => qc.invalidateQueries({ queryKey: bonusKeys.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.payroll.bonuses() }),
   });
 }
 
 export function useBonuses() {
   const canView = useCan("hr:payroll:view");
   return useQuery({
-    queryKey: bonusKeys.list(),
+    queryKey: queryKeys.payroll.bonuses(),
     queryFn: () => apiClient.get<Bonus[]>("/hr/bonuses"),
     staleTime: 60_000,
     enabled: canView,
@@ -102,7 +92,7 @@ export function useUpdateBonus() {
     mutationKey: ["payroll", "bonuses", "update"],
     mutationFn: ({ id, status }: { id: number; status: "APPROVED" | "REJECTED" | "PAID" }) =>
       apiClient.patch<Bonus>(`/hr/bonuses/${id}`, { status }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: bonusKeys.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.payroll.bonuses() }),
   });
 }
 
@@ -115,7 +105,7 @@ export function useIncentives(params?: { status?: string; page?: number; limit?:
   const canView = useCan("hr:payroll:view");
 
   return useQuery({
-    queryKey: incentiveKeys.list(hasParams ? queryParams : undefined),
+    queryKey: queryKeys.payroll.incentives(hasParams ? queryParams : undefined),
     queryFn: () =>
       apiClient.get<IncentivesResponse>("/hr/incentives", hasParams ? queryParams : undefined),
     staleTime: 60_000,
@@ -129,7 +119,7 @@ export function useApproveIncentive() {
     mutationKey: ["payroll", "incentives", "approve"],
     mutationFn: ({ id, approvedAmount, notes }: { id: number; approvedAmount: string; notes?: string }) =>
       apiClient.patch<{ success: boolean }>(`/hr/incentives/${id}/approve`, { approvedAmount, notes }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: incentiveKeys.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.payroll.incentivesAll }),
   });
 }
 
@@ -139,6 +129,6 @@ export function useRejectIncentive() {
     mutationKey: ["payroll", "incentives", "reject"],
     mutationFn: (id: number) =>
       apiClient.patch<{ success: boolean }>(`/hr/incentives/${id}/reject`, {}),
-    onSuccess: () => qc.invalidateQueries({ queryKey: incentiveKeys.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.payroll.incentivesAll }),
   });
 }

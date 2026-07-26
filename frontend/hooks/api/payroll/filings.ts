@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 
 export type FilingType = "PF_ECR" | "ESI" | "PT" | "TDS_24Q" | "FORM16" | "LWF";
@@ -56,15 +57,10 @@ export interface FilingCapability {
   formLabels?: { quarterlyReturn: string; annualCertificate: string };
 }
 
-export const filingsKeys = {
-  all: ["payroll", "filings"] as const,
-  capabilities: ["payroll", "filings", "capabilities"] as const,
-};
-
 export function usePayrollFilings() {
   const canView = useCan("payroll:tax:view");
   return useQuery({
-    queryKey: filingsKeys.all,
+    queryKey: queryKeys.payroll.filingsAll,
     queryFn: () => apiClient.get<PayrollFiling[]>("/payroll/filings"),
     staleTime: 60_000,
     enabled: canView,
@@ -74,7 +70,7 @@ export function usePayrollFilings() {
 export function useFilingCapabilities() {
   const canView = useCan("payroll:tax:view");
   return useQuery({
-    queryKey: filingsKeys.capabilities,
+    queryKey: queryKeys.payroll.filingCapabilities(),
     queryFn: () => apiClient.get<FilingCapability>("/payroll/filings/capabilities"),
     staleTime: 5 * 60_000,
     enabled: canView,
@@ -93,7 +89,7 @@ export function usePrepareFilingExport() {
       entityId?: number;
     }) => apiClient.post<PayrollFiling>("/payroll/filings/export", body),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: filingsKeys.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.payroll.filingsAll });
     },
   });
 }
@@ -116,7 +112,7 @@ export function useAttachAcknowledgement() {
         { challanRef, acknowledgementRef },
       ),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: filingsKeys.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.payroll.filingsAll });
     },
   });
 }

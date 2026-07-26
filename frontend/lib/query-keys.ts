@@ -414,6 +414,12 @@ export const queryKeys = {
       detail: (id: number) =>
         [...base, "projects", "portfolios", "detail", id] as const,
     },
+    managedProducts: {
+      list: (params?: Record<string, unknown>) =>
+        [...base, "projects", "managed-products", "list", params] as const,
+      detail: (id: number) =>
+        [...base, "projects", "managed-products", "detail", id] as const,
+    },
     workflow: {
       transitions: (projectId: number) =>
         [...base, "projects", projectId, "workflow", "transitions"] as const,
@@ -1539,8 +1545,12 @@ export const queryKeys = {
     taxWindows: () => [...base, "payroll", "tax-windows"] as const,
     taxDeclarations: (params?: Record<string, unknown>) =>
       [...base, "payroll", "tax-declarations", params] as const,
-    fnf: (params?: Record<string, unknown>) =>
-      [...base, "payroll", "fnf", params] as const,
+    fnfAll: [...base, "payroll", "fnf"] as const,
+    fnfList: () => [...base, "payroll", "fnf", "list"] as const,
+    fnfSettlement: (settlementId: number) =>
+      [...base, "payroll", "fnf", settlementId] as const,
+    fnfStatement: (settlementId: number) =>
+      [...base, "payroll", "fnf", settlementId, "statement"] as const,
     loanAdjustments: () => [...base, "payroll", "loan-adjustments"] as const,
     commandCenterAll: [...base, "payroll", "command-center"] as const,
     commandCenter: (month: string) =>
@@ -1567,6 +1577,39 @@ export const queryKeys = {
       [...base, "payroll", "run-inputs", runId] as const,
     runInputs: (runId: number, params?: Record<string, unknown>) =>
       [...base, "payroll", "run-inputs", runId, "list", params] as const,
+    calendarAll: [...base, "payroll", "calendar"] as const,
+    taxDeclarationsAll: [...base, "payroll", "tax-declarations"] as const,
+    entitiesAll: [...base, "payroll", "entities"] as const,
+    entityCountryPacks: () =>
+      [...base, "payroll", "entities", "country-packs"] as const,
+    entityContext: (entityId: number) =>
+      [...base, "payroll", "entities", entityId, "context"] as const,
+    filingsAll: [...base, "payroll", "filings"] as const,
+    filingCapabilities: () =>
+      [...base, "payroll", "filings", "capabilities"] as const,
+    loansAdmin: () => [...base, "payroll", "loans-admin"] as const,
+    bonuses: () => [...base, "payroll", "bonuses"] as const,
+    incentivesAll: [...base, "payroll", "incentives"] as const,
+    incentives: (params?: Record<string, unknown>) =>
+      [...base, "payroll", "incentives", "list", params] as const,
+    essAll: [...base, "payroll", "ess"] as const,
+    essOverview: () => [...base, "payroll", "ess", "overview"] as const,
+    essPayslips: () => [...base, "payroll", "ess", "payslips"] as const,
+    essSalaryStructure: () =>
+      [...base, "payroll", "ess", "salary-structure"] as const,
+    essReimbursements: () =>
+      [...base, "payroll", "ess", "reimbursements"] as const,
+    essLoans: () => [...base, "payroll", "ess", "loans"] as const,
+    essTaxDeclaration: () =>
+      [...base, "payroll", "ess", "tax-declaration"] as const,
+    essBank: () => [...base, "payroll", "ess", "bank"] as const,
+    essFnf: () => [...base, "payroll", "ess", "fnf"] as const,
+    essTotalRewards: () =>
+      [...base, "payroll", "ess", "total-rewards"] as const,
+    managerInbox: () => [...base, "payroll", "manager", "inbox"] as const,
+    teamRewards: () => [...base, "payroll", "manager", "team-rewards"] as const,
+    orgPayCompression: () =>
+      [...base, "payroll", "analytics", "pay-compression"] as const,
   },
 
   hrPayrollInputs: {
@@ -1740,5 +1783,13 @@ export const queryKeys = {
       [...base, "mail", "thread", accountId, threadId] as const,
     message: (accountId: number, messageId: string) =>
       [...base, "mail", "message", accountId, messageId] as const,
+  },
+
+  directory: {
+    all: [...base, "directory"] as const,
+    people: (params?: Record<string, unknown>) =>
+      [...base, "directory", "people", params] as const,
+    person: (organizationPersonId: string) =>
+      [...base, "directory", "people", organizationPersonId] as const,
   },
 } as const;
