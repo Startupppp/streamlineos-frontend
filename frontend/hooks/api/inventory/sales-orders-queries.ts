@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   SalesOrderFilters,
   SalesOrdersListResponse,
@@ -15,6 +16,7 @@ import type {
 import { mapListItem, mapDetail, mapAtp } from "./sales-orders-types";
 
 export function useSalesOrders(filters?: SalesOrderFilters) {
+  const canView = useCan("inventory:sales-orders:read");
   return useQuery<SalesOrdersListResponse, Error>({
     queryKey: queryKeys.inventory.salesOrders(
       filters
@@ -45,22 +47,25 @@ export function useSalesOrders(filters?: SalesOrderFilters) {
       };
     },
     staleTime: 2 * 60_000,
+    enabled: canView,
   });
 }
 
 export function useSalesOrder(soId: number) {
+  const canView = useCan("inventory:sales-orders:read");
   return useQuery<SalesOrderDetail, Error>({
     queryKey: queryKeys.inventory.salesOrder(soId),
     queryFn: async () =>
       mapDetail(
         await apiClient.get<RawDetailSalesOrder>(`/inventory/sales-orders/${soId}`),
       ),
-    enabled: soId > 0,
     staleTime: 2 * 60_000,
+    enabled: canView && soId > 0,
   });
 }
 
 export function useSoAtp(soId: number) {
+  const canView = useCan("inventory:sales-orders:read");
   return useQuery<AtpEntry[], Error>({
     queryKey: [...queryKeys.inventory.salesOrder(soId), "atp"] as const,
     queryFn: async () => {
@@ -69,7 +74,7 @@ export function useSoAtp(soId: number) {
       );
       return raw.map(mapAtp);
     },
-    enabled: soId > 0,
     staleTime: 1 * 60_000,
+    enabled: canView && soId > 0,
   });
 }

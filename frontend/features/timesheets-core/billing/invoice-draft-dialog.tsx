@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { AlertTriangle, FileText, Loader2 } from "lucide-react";
+import { AlertTriangle, FileText } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -10,7 +10,9 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { useCreateInvoiceDraft } from "@/hooks/api/timesheets-core/billing";
+import { formatMoney } from "./lib/format-money";
 import type { BillingGroup } from "@/features/timesheets-core/types";
 
 interface InvoiceDraftDialogProps {
@@ -20,14 +22,6 @@ interface InvoiceDraftDialogProps {
   endDate: string;
   projectId: number | null;
   groups: BillingGroup[];
-}
-
-function formatMoney(amount: number, currency: string): string {
-  return new Intl.NumberFormat("en", {
-    style: "currency",
-    currency,
-    minimumFractionDigits: 2,
-  }).format(amount);
 }
 
 export function InvoiceDraftDialog({
@@ -96,18 +90,16 @@ export function InvoiceDraftDialog({
           <Button variant="outline" onClick={handleClose}>
             Cancel
           </Button>
-          <Button
+          <LoadingButton
             className="gap-1.5"
             onClick={handleConfirm}
+            isPending={createDraft.isPending}
+            loadingText="Creating…"
             disabled={hasMissingRates || createDraft.isPending}
           >
-            {createDraft.isPending ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <FileText className="h-3.5 w-3.5" />
-            )}
+            <FileText className="h-3.5 w-3.5" />
             Create draft
-          </Button>
+          </LoadingButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>

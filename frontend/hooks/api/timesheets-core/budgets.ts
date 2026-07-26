@@ -5,14 +5,16 @@ import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCan } from "@/hooks/api/access";
 import type { CreateBudgetInput, TimesheetBudget } from "@/features/timesheets-core/types";
 
 export function useBudgets(enabled = true) {
+  const canView = useCan("timesheets:budgets:view");
   return useQuery({
     queryKey: queryKeys.timesheets.budgets(),
     queryFn: () => apiClient.get<TimesheetBudget[]>("/timesheets/budgets"),
     staleTime: 60_000,
-    enabled,
+    enabled: enabled && canView,
   });
 }
 

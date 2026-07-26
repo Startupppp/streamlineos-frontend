@@ -162,7 +162,7 @@ export function ApprovalsView() {
         <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-44")}>
           <SelectValue placeholder="All members" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
           <SelectItem value="all">All members</SelectItem>
           {employees.map((emp) => (
             <SelectItem key={emp.id} value={emp.id}>

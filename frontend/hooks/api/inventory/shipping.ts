@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type { PackageStatus, ShipmentStatus, LoadStatus } from "@/features/inventory/lib";
 
 interface PackageLine {
@@ -105,6 +106,7 @@ interface PackageQueryParams {
 }
 
 export function usePackages(params?: PackageQueryParams) {
+  const canView = useCan("inventory:packages:manage");
   return useQuery<PackageListResponse, Error>({
     queryKey: queryKeys.inventory.packages(params),
     queryFn: () =>
@@ -115,14 +117,16 @@ export function usePackages(params?: PackageQueryParams) {
         ...(params?.limit ? { limit: String(params.limit) } : {}),
       }),
     staleTime: 30_000,
+    enabled: canView,
   });
 }
 
 export function usePackageDetail(packageId: number) {
+  const canView = useCan("inventory:packages:manage");
   return useQuery<Package, Error>({
     queryKey: queryKeys.inventory.packageDetail(packageId),
     queryFn: () => apiClient.get<Package>(`/inventory/packages/${packageId}`),
-    enabled: packageId > 0,
+    enabled: canView && packageId > 0,
     staleTime: 60_000,
   });
 }
@@ -137,7 +141,7 @@ export function useCreatePackage() {
     mutationKey: ["inventory", "package", "create"],
     mutationFn: (data) => apiClient.post<Package>("/inventory/packages", data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.packages() });
     },
   });
 }
@@ -196,6 +200,7 @@ interface ShipmentQueryParams {
 }
 
 export function useShipments(params?: ShipmentQueryParams) {
+  const canView = useCan("inventory:shipments:manage");
   return useQuery<ShipmentListResponse, Error>({
     queryKey: queryKeys.inventory.shipments(params),
     queryFn: () =>
@@ -208,14 +213,16 @@ export function useShipments(params?: ShipmentQueryParams) {
         ...(params?.limit ? { limit: String(params.limit) } : {}),
       }),
     staleTime: 30_000,
+    enabled: canView,
   });
 }
 
 export function useShipment(shipmentId: number) {
+  const canView = useCan("inventory:shipments:manage");
   return useQuery<Shipment, Error>({
     queryKey: queryKeys.inventory.shipment(shipmentId),
     queryFn: () => apiClient.get<Shipment>(`/inventory/shipments/${shipmentId}`),
-    enabled: shipmentId > 0,
+    enabled: canView && shipmentId > 0,
     staleTime: 60_000,
   });
 }
@@ -230,7 +237,8 @@ export function useCreateShipment() {
     mutationKey: ["inventory", "shipment", "create"],
     mutationFn: (data) => apiClient.post<Shipment>("/inventory/shipments", data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.shipments() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
     },
   });
 }
@@ -261,6 +269,7 @@ export function useShipShipment() {
     onSuccess: (_res, shipmentId) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.shipment(shipmentId) });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.shipments() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
     },
   });
 }
@@ -285,6 +294,7 @@ interface LoadsQueryParams {
 }
 
 export function useLoads(params?: LoadsQueryParams) {
+  const canView = useCan("inventory:loads:manage");
   return useQuery<LoadListResponse, Error>({
     queryKey: queryKeys.inventory.loads(params),
     queryFn: () =>
@@ -293,14 +303,16 @@ export function useLoads(params?: LoadsQueryParams) {
         ...(params?.limit ? { limit: String(params.limit) } : {}),
       }),
     staleTime: 30_000,
+    enabled: canView,
   });
 }
 
 export function useLoad(loadId: number) {
+  const canView = useCan("inventory:loads:manage");
   return useQuery<Load, Error>({
     queryKey: queryKeys.inventory.load(loadId),
     queryFn: () => apiClient.get<Load>(`/inventory/loads/${loadId}`),
-    enabled: loadId > 0,
+    enabled: canView && loadId > 0,
     staleTime: 60_000,
   });
 }
@@ -315,7 +327,7 @@ export function useCreateLoad() {
     mutationKey: ["inventory", "load", "create"],
     mutationFn: (data) => apiClient.post<Load>("/inventory/loads", data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.loads() });
     },
   });
 }
@@ -360,10 +372,12 @@ export function useCancelLoad() {
 }
 
 export function useCarriers() {
+  const canView = useCan("inventory:shipments:manage");
   return useQuery<Carrier[], Error>({
     queryKey: queryKeys.inventory.carriers(),
     queryFn: () => apiClient.get<Carrier[]>("/inventory/carriers"),
     staleTime: 30_000,
+    enabled: canView,
   });
 }
 

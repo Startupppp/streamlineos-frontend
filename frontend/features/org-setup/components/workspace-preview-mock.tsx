@@ -28,7 +28,7 @@ function WorkspacePreviewMockInner({
   compact = false,
 }: WorkspacePreviewMockProps) {
   const modules = useMemo(() => resolvePreviewModules(snapshot), [snapshot]);
-  const companyLabel = snapshot.companyName.trim() || "Your workspace";
+  const companyLabel = snapshot.companyName.trim() || "Your organization";
   const industryLabel = snapshot.industry.trim();
   const goalChips = useMemo(
     () => buildGoalChips(snapshot.goals),

@@ -191,7 +191,7 @@ export default function WebhooksPage() {
   return (
     <PageWrapper
       title="Webhooks"
-      subtitle="Send real-time events to external systems when actions occur in your workspace."
+      subtitle="Send real-time events to external systems when actions occur in your organization."
       actions={
         <AnimatedIconButton icon={PlusIcon} iconSize={16} iconClassName="mr-2" onClick={handleOpenCreate}>
           Add Webhook
@@ -216,7 +216,7 @@ export default function WebhooksPage() {
               <EmptyState
                 illustration={<EmptyDevicesIllustration />}
                 title="No webhooks configured"
-                description="Webhooks let external services receive real-time notifications when events happen in your workspace."
+                description="Webhooks let external services receive real-time notifications when events happen in your organization."
                 action={{ label: "Add Webhook", onClick: handleOpenCreate }}
               />
             </motion.div>

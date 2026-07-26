@@ -49,7 +49,7 @@ export const STEP_GUIDE: Record<StepId, StepGuide> = {
     minutes: 2,
   },
   finish: {
-    why: "After you submit, HR reviews this file while you explore the workspace.",
+    why: "After you submit, HR reviews this file while you explore the organization.",
     minutes: 1,
   },
 };

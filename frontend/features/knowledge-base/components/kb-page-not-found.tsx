@@ -28,7 +28,7 @@ const VARIANTS = {
   "access-denied": {
     title: "You don't have access",
     description:
-      "You don't have permission to view this page. Contact the page owner or a workspace admin to request access.",
+      "You don't have permission to view this page. Contact the page owner or an organization admin to request access.",
   },
   error: {
     title: "Couldn't load this page",

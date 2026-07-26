@@ -16,7 +16,7 @@ function WorkspaceWelcomeTeaserInner({
   className,
 }: WorkspaceWelcomeTeaserProps) {
   const reduceMotion = useReducedMotion();
-  const workspaceLabel = companyName.trim() || "your workspace";
+  const workspaceLabel = companyName.trim() || "your organization";
 
   return (
     <div

@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type { LotStatus, SerialStatus } from "@/features/inventory/lib";
 
 interface LotListItem {
@@ -140,6 +141,7 @@ type SerialsParams = {
 };
 
 export function useLots(params?: LotsParams) {
+  const canView = useCan("inventory:stock:read");
   return useQuery<LotListResponse, Error>({
     queryKey: queryKeys.inventory.lots(params),
     queryFn: () =>
@@ -153,15 +155,17 @@ export function useLots(params?: LotsParams) {
       }),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
+    enabled: canView,
   });
 }
 
 export function useLot(id: number) {
+  const canView = useCan("inventory:stock:read");
   return useQuery<LotDetail, Error>({
     queryKey: queryKeys.inventory.lot(id),
     queryFn: () => apiClient.get<LotDetail>(`/inventory/lots/${id}`),
-    enabled: id > 0,
     staleTime: 60_000,
+    enabled: canView && id > 0,
   });
 }
 
@@ -172,13 +176,14 @@ export function useUpdateLotStatus() {
     mutationFn: ({ lotId, status }) =>
       apiClient.patch<void>(`/inventory/lots/${lotId}/status`, { status }),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.lot(vars.lotId) });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.lots() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.lot(vars.lotId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.lots() });
     },
   });
 }
 
 export function useSerials(params?: SerialsParams) {
+  const canView = useCan("inventory:stock:read");
   return useQuery<SerialListResponse, Error>({
     queryKey: queryKeys.inventory.serials(params),
     queryFn: () =>
@@ -191,28 +196,33 @@ export function useSerials(params?: SerialsParams) {
       }),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
+    enabled: canView,
   });
 }
 
 export function useSerial(id: number) {
+  const canView = useCan("inventory:stock:read");
   return useQuery<SerialDetail, Error>({
     queryKey: queryKeys.inventory.serial(id),
     queryFn: () => apiClient.get<SerialDetail>(`/inventory/serials/${id}`),
-    enabled: id > 0,
     staleTime: 60_000,
+    enabled: canView && id > 0,
   });
 }
 
 export function useExpiryItems(params?: { days?: number }) {
+  const canView = useCan("inventory:stock:read");
   return useQuery<ExpiryItem[], Error>({
     queryKey: queryKeys.inventory.expiry(params),
     queryFn: () =>
       apiClient.get<ExpiryItem[]>("/inventory/expiry", { days: params?.days }),
     staleTime: 30_000,
+    enabled: canView,
   });
 }
 
 export function useTraceability(params: { lotId?: number; serialId?: number }) {
+  const canView = useCan("inventory:stock:read");
   return useQuery<TraceabilityResult, Error>({
     queryKey: queryKeys.inventory.traceability(params),
     queryFn: () =>
@@ -220,7 +230,7 @@ export function useTraceability(params: { lotId?: number; serialId?: number }) {
         lotId: params.lotId,
         serialId: params.serialId,
       }),
-    enabled: params.lotId !== undefined || params.serialId !== undefined,
     staleTime: 60_000,
+    enabled: canView && (params.lotId !== undefined || params.serialId !== undefined),
   });
 }

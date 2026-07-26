@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   InventoryProduct,
   InventoryCategory,
@@ -69,6 +70,7 @@ function serializeVariantWrite(data: CreateProductVariantInput) {
 }
 
 export function useProducts(filters?: ProductFilters) {
+  const canView = useCan("inventory:products:read");
   return useQuery<ProductListResponse, Error>({
     queryKey: queryKeys.inventory.products(filters),
     queryFn: () =>
@@ -82,31 +84,37 @@ export function useProducts(filters?: ProductFilters) {
       }),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
+    enabled: canView,
   });
 }
 
 export function useProduct(productId: number) {
+  const canView = useCan("inventory:products:read");
   return useQuery<InventoryProduct, Error>({
     queryKey: queryKeys.inventory.product(productId),
     queryFn: () => apiClient.get<InventoryProduct>(`/inventory/products/${productId}`),
-    enabled: productId > 0,
+    enabled: canView && productId > 0,
     staleTime: 2 * 60_000,
   });
 }
 
 export function useCategories() {
+  const canView = useCan("inventory:products:read");
   return useQuery<InventoryCategory[], Error>({
     queryKey: queryKeys.inventory.categories(),
     queryFn: () => apiClient.get<InventoryCategory[]>("/inventory/products/categories"),
     staleTime: 5 * 60_000,
+    enabled: canView,
   });
 }
 
 export function useUom() {
+  const canView = useCan("inventory:products:read");
   return useQuery<InventoryUom[], Error>({
     queryKey: queryKeys.inventory.uom(),
     queryFn: () => apiClient.get<InventoryUom[]>("/inventory/products/uom"),
     staleTime: 5 * 60_000,
+    enabled: canView,
   });
 }
 
@@ -117,7 +125,7 @@ export function useCreateProduct() {
     mutationFn: (data) =>
       apiClient.post<InventoryProduct>("/inventory/products", serializeProductWrite(data)),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.products() });
     },
   });
 }
@@ -136,9 +144,9 @@ export function useUpdateProduct(id?: number) {
     },
     onSuccess: (_res, vars) => {
       const resolvedId = id ?? vars.productId;
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.products() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.products() });
       if (resolvedId !== undefined) {
-        qc.invalidateQueries({ queryKey: queryKeys.inventory.product(resolvedId) });
+        void qc.invalidateQueries({ queryKey: queryKeys.inventory.product(resolvedId) });
       }
     },
   });
@@ -151,7 +159,7 @@ export function useDeleteProduct() {
     mutationFn: (productId) =>
       apiClient.delete<void>(`/inventory/products/${productId}`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.products() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.products() });
     },
   });
 }
@@ -163,8 +171,8 @@ export function useArchiveProduct() {
     mutationFn: (productId) =>
       apiClient.post<InventoryProduct>(`/inventory/products/${productId}/archive`, {}),
     onSuccess: (_res, productId) => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.products() });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.product(productId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.products() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.product(productId) });
     },
   });
 }
@@ -176,13 +184,14 @@ export function useRestoreProduct() {
     mutationFn: (productId) =>
       apiClient.post<InventoryProduct>(`/inventory/products/${productId}/restore`, {}),
     onSuccess: (_res, productId) => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.products() });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.product(productId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.products() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.product(productId) });
     },
   });
 }
 
 export function useProductVariants(filters?: ProductVariantFilters) {
+  const canView = useCan("inventory:products:read");
   return useQuery<ProductVariantFlat[], Error>({
     queryKey: queryKeys.inventory.productVariants(filters),
     queryFn: () =>
@@ -190,6 +199,7 @@ export function useProductVariants(filters?: ProductVariantFilters) {
         ...(filters?.activeOnly ? { activeOnly: "true" } : {}),
       }),
     staleTime: 2 * 60_000,
+    enabled: canView,
   });
 }
 
@@ -203,8 +213,8 @@ export function useCreateProductVariant(productId: number) {
         serializeVariantWrite(data),
       ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.product(productId) });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.productVariants() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.product(productId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.productVariants() });
     },
   });
 }
@@ -216,7 +226,7 @@ export function useCreateCategory() {
     mutationFn: (data) =>
       apiClient.post<InventoryCategory>("/inventory/products/categories", data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.categories() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.categories() });
     },
   });
 }
@@ -228,7 +238,7 @@ export function useCreateUom() {
     mutationFn: (data) =>
       apiClient.post<InventoryUom>("/inventory/products/uom", data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.uom() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.uom() });
     },
   });
 }
@@ -244,7 +254,7 @@ export function useUpdateCategory() {
     mutationFn: ({ categoryId, data }) =>
       apiClient.patch(`/inventory/products/categories/${categoryId}`, data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.categories() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.categories() });
     },
   });
 }
@@ -260,7 +270,7 @@ export function useUpdateProductVariant(productId: number) {
     mutationFn: ({ variantId, data }) =>
       apiClient.patch(`/inventory/products/${productId}/variants/${variantId}`, data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.product(productId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.product(productId) });
     },
   });
 }

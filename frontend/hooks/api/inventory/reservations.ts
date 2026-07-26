@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type { StockReservation, StockReservationStatus } from "@/types/inventory";
 
 interface ReservationsFilters {
@@ -34,6 +35,7 @@ interface OpeningStockInput {
 }
 
 export function useReservations(filters?: ReservationsFilters) {
+  const canView = useCan("inventory:stock:read");
   return useQuery<ReservationsResult, Error>({
     queryKey: queryKeys.inventory.reservations(filters as Record<string, unknown>),
     queryFn: () =>
@@ -42,12 +44,13 @@ export function useReservations(filters?: ReservationsFilters) {
         ...(filters?.status ? { status: filters.status } : {}),
         ...(filters?.variantId ? { variantId: filters.variantId } : {}),
         ...(filters?.warehouseId ? { warehouseId: filters.warehouseId } : {}),
-        page: filters?.page ?? 1,
-        limit: filters?.limit ?? 50,
+        ...(filters?.page !== undefined ? { page: filters.page } : {}),
+        ...(filters?.limit !== undefined ? { limit: filters.limit } : {}),
       }),
     staleTime: 60_000,
     refetchInterval: 60_000,
     refetchIntervalInBackground: false,
+    enabled: canView,
   });
 }
 
@@ -58,8 +61,8 @@ export function useReleaseReservation() {
     mutationFn: (reservationId) =>
       apiClient.post<void>("/inventory/stock/release-reservation", { reservationId }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: [...queryKeys.inventory.all, "reservations"] });
-      qc.invalidateQueries({ queryKey: [...queryKeys.inventory.all, "stockLevels"] });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.reservations() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
     },
   });
 }
@@ -73,8 +76,8 @@ export function useOpeningStock() {
         headers: { "Idempotency-Key": crypto.randomUUID() },
       }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: [...queryKeys.inventory.all, "stockLevels"] });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.dashboard() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.dashboard() });
     },
   });
 }

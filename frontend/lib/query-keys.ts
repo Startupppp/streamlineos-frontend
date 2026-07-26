@@ -1299,9 +1299,9 @@ export const queryKeys = {
     dashboard: () => [...base, "inventory", "dashboard"] as const,
     stockSummary: (params?: object) =>
       [...base, "inventory", "stockSummary", params] as const,
-    reorderReport: (params?: Record<string, unknown>) =>
+    reorderReport: (params?: object) =>
       [...base, "inventory", "reorderReport", params] as const,
-    movementsReport: (params?: Record<string, unknown>) =>
+    movementsReport: (params?: object) =>
       [...base, "inventory", "movementsReport", params] as const,
     lots: (params?: Record<string, unknown>) =>
       [...base, "inventory", "lots", params] as const,
@@ -1341,6 +1341,14 @@ export const queryKeys = {
       [...base, "inventory", "forecasting", params] as const,
     valuationReport: (params?: Record<string, unknown>) =>
       [...base, "inventory", "valuationReport", params] as const,
+    valuationLayers: (variantId: number, page?: number) =>
+      [...base, "inventory", "valuationLayers", variantId, page] as const,
+    costingProducts: (params?: Record<string, unknown>) =>
+      [...base, "inventory", "costingProducts", params] as const,
+    slowMovingReport: (params?: object) =>
+      [...base, "inventory", "slowMovingReport", params] as const,
+    expiryReport: (params?: object) =>
+      [...base, "inventory", "expiryReport", params] as const,
     qualityInspections: (params?: Record<string, unknown>) =>
       [...base, "inventory", "qualityInspections", params] as const,
     qualityInspection: (id: number) =>
@@ -1791,5 +1799,21 @@ export const queryKeys = {
       [...base, "directory", "people", params] as const,
     person: (organizationPersonId: string) =>
       [...base, "directory", "people", organizationPersonId] as const,
+    workers: (params?: Record<string, unknown>) =>
+      [...base, "directory", "workers", params] as const,
+    worker: (workerId: string) =>
+      [...base, "directory", "workers", workerId] as const,
+    engagements: (workerId: string) =>
+      [...base, "directory", "workers", workerId, "engagements"] as const,
+  },
+
+  party: {
+    all: [...base, "party"] as const,
+    parties: (params?: Record<string, unknown>) =>
+      [...base, "party", "parties", params] as const,
+    party: (partyId: string) =>
+      [...base, "party", "parties", partyId] as const,
+    contacts: (partyId: string) =>
+      [...base, "party", "parties", partyId, "contacts"] as const,
   },
 } as const;

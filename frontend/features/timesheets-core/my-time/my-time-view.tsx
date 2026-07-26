@@ -190,9 +190,18 @@ export function MyTimeView() {
         )}
 
         {periodLoading ? (
-          <div className="space-y-3">
-            <Skeleton className="h-9 w-64" />
-            <Skeleton className="h-48 w-full rounded-xl" />
+          <div className="space-y-4">
+            <div className="flex gap-1">
+              <Skeleton className="h-9 w-16 rounded-md" />
+              <Skeleton className="h-9 w-16 rounded-md" />
+              <Skeleton className="h-9 w-16 rounded-md" />
+            </div>
+            <div className="space-y-2">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="h-10 w-full rounded-md" />
+              ))}
+            </div>
+            <Skeleton className="h-8 w-28 rounded-md" />
           </div>
         ) : (
           <Tabs defaultValue="week">

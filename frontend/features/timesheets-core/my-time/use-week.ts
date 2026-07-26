@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { addDays, format, startOfWeek } from "date-fns";
 
 export interface WeekState {
@@ -24,9 +24,9 @@ export function useWeek(): WeekState {
     return { weekStart: ws, weekEnd: we, days: d };
   }, [weekOffset]);
 
-  const goToPrev = () => setWeekOffset((o) => o - 1);
-  const goToNext = () => setWeekOffset((o) => o + 1);
-  const goToCurrent = () => setWeekOffset(0);
+  const goToPrev = useCallback(() => setWeekOffset((o) => o - 1), []);
+  const goToNext = useCallback(() => setWeekOffset((o) => o + 1), []);
+  const goToCurrent = useCallback(() => setWeekOffset(0), []);
 
   return { weekOffset, weekStart, weekEnd, days, isCurrentWeek: weekOffset === 0, goToPrev, goToNext, goToCurrent };
 }

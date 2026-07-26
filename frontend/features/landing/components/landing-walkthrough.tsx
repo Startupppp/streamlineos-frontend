@@ -188,7 +188,7 @@ function OnboardVisual() {
     { label: "Documents collected", done: true },
     { label: "Offer letter signed", done: true },
     { label: "Bank details added", done: true },
-    { label: "Workspace provisioned", done: false, current: true },
+    { label: "Organization provisioned", done: false, current: true },
     { label: "Welcome email sent", done: false },
   ];
   return (

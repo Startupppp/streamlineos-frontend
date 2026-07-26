@@ -31,7 +31,7 @@ const VISIBILITY_OPTIONS: Array<{
   description: string;
 }> = [
   { value: "private", icon: KbLockIcon, label: "Private", description: "Only you can access" },
-  { value: "org", icon: KbBuilding2Icon, label: "Team", description: "Everyone in the workspace" },
+  { value: "org", icon: KbBuilding2Icon, label: "Team", description: "Everyone in the organization" },
   { value: "public", icon: KbGlobeIcon, label: "Public", description: "Anyone with the link" },
 ];
 

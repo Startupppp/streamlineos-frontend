@@ -181,7 +181,7 @@ export function DashboardShell({
         {accessError ? (
           <ErrorState
             className="flex-1"
-            title="Couldn't load your workspace"
+            title="Couldn't load your organization"
             description={getErrorMessage(accessErr)}
             onRetry={handleRetryAccess}
           />

@@ -98,17 +98,16 @@ export function ReportsView() {
     [updateParams],
   );
 
-  const handleRetry = useCallback(() => {
-    router.refresh();
-  }, [router]);
-
   const queryEnabled = canView && !!startDate && !!endDate;
 
   const {
     data,
     isLoading,
     isError,
+    refetch,
   } = useReportsOverview({ startDate, endDate, userId }, queryEnabled);
+
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   const subtitle = buildSubtitle(startDate, endDate);
 
@@ -131,7 +130,7 @@ export function ReportsView() {
         <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[160px]")} aria-label="Filter by member">
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
           <SelectItem value="ALL">All members</SelectItem>
         </SelectContent>
       </Select>

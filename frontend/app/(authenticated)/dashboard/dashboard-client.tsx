@@ -237,7 +237,7 @@ export function DashboardClient() {
     })
   ) {
     return (
-      <PageWrapper title={pageTitle} subtitle="Loading your workspace…">
+      <PageWrapper title={pageTitle} subtitle="Loading your organization…">
         <div
           className="space-y-4"
           role="status"

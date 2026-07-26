@@ -3,7 +3,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { format, startOfWeek, endOfWeek, addWeeks } from "date-fns";
 import { motion, useReducedMotion } from "framer-motion";
-import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -162,9 +161,6 @@ export function TeamView() {
   const handlePrevWeek = useCallback(() => setWeekOffset((o) => o - 1), []);
   const handleNextWeek = useCallback(() => setWeekOffset((o) => o + 1), []);
   const handleThisWeek = useCallback(() => setWeekOffset(0), []);
-  const handleRemindAll = useCallback(() => {
-    toast.success("Reminders sent to all members with missing submissions");
-  }, []);
   const handleRetry = useCallback(() => { void refetchPeriods(); }, [refetchPeriods]);
 
   const isLoading = periodsLoading || entriesLoading;
@@ -226,7 +222,7 @@ export function TeamView() {
         <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-44")}>
           <SelectValue placeholder="All members" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
           <SelectItem value="all">All members</SelectItem>
           {employees.map((emp) => (
             <SelectItem key={emp.id} value={emp.id}>
@@ -280,7 +276,6 @@ export function TeamView() {
             weekStart={weekStart}
             isLoading={isLoading}
             onRowClick={handleRowClick}
-            onRemindAll={handleRemindAll}
           />
         )}
       </motion.div>

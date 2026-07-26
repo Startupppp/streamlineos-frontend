@@ -103,7 +103,7 @@ export interface TimerSession {
   status: TimerStatus;
   elapsedSeconds: number;
   project: ProjectRef | null;
-  ticket: { id: number; title: string } | null;
+  ticket: { id: number; title: string; ticketNumber: number | null } | null;
 }
 
 export interface TimesheetSettings {
@@ -328,13 +328,13 @@ export interface InvoiceDraftInput {
 }
 
 export const PERIOD_STATUS_BADGE: Record<PeriodStatus, string> = {
-  OPEN: "bg-slate-100 text-slate-700 border-slate-200",
-  DRAFT: "bg-blue-50 text-blue-700 border-blue-200",
-  SUBMITTED: "bg-amber-50 text-amber-700 border-amber-200",
-  APPROVED: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  REJECTED: "bg-red-50 text-red-700 border-red-200",
-  LOCKED: "bg-slate-100 text-slate-700 border-slate-200",
-  REOPENED: "bg-blue-50 text-blue-700 border-blue-200",
+  OPEN: "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-500/30",
+  DRAFT: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  SUBMITTED: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  APPROVED: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  REJECTED: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  LOCKED: "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-500/30",
+  REOPENED: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
 };
 
 export const PERIOD_STATUS_LABEL: Record<PeriodStatus, string> = {
@@ -348,9 +348,9 @@ export const PERIOD_STATUS_LABEL: Record<PeriodStatus, string> = {
 };
 
 export const ENTRY_STATUS_BADGE: Record<EntryStatus, string> = {
-  PENDING: "bg-amber-50 text-amber-700 border-amber-200",
-  APPROVED: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  REJECTED: "bg-red-50 text-red-700 border-red-200",
+  PENDING: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  APPROVED: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  REJECTED: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
 };
 
 export const BILLING_TYPE_LABEL: Record<BillingType, string> = {

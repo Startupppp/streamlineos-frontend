@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCan } from "@/hooks/api/access";
 import type {
   PayrollSummaryResponse,
   PayrollSettings,
@@ -22,6 +23,7 @@ interface SummaryParams {
 }
 
 export function useTimesheetPayrollSummary(params: SummaryParams, enabled: boolean) {
+  const canView = useCan("timesheets:payroll:view");
   const queryParams: Record<string, unknown> = {
     start: params.start,
     end: params.end,
@@ -35,15 +37,17 @@ export function useTimesheetPayrollSummary(params: SummaryParams, enabled: boole
       apiClient.get<PayrollSummaryResponse>("/timesheets/payroll/period-summary", queryParams),
     staleTime: 30_000,
     placeholderData: (prev) => prev,
-    enabled,
+    enabled: enabled && canView,
   });
 }
 
 export function useTimesheetPayrollSettings() {
+  const canView = useCan("timesheets:payroll:view");
   return useQuery({
     queryKey: queryKeys.timesheets.payroll.settings(),
     queryFn: () => apiClient.get<PayrollSettings>("/timesheets/payroll/settings"),
     staleTime: 5 * 60_000,
+    enabled: canView,
   });
 }
 
@@ -68,19 +72,25 @@ export function useCreateTimesheetPayrollExport() {
     mutationFn: (data: CreateExportBody) =>
       apiClient.post<CreateExportResponse>("/timesheets/payroll/export", data),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: [...queryKeys.timesheets.all, "payroll", "summary"] });
-      void qc.invalidateQueries({ queryKey: [...queryKeys.timesheets.all, "payroll", "exports"] });
+      void qc.invalidateQueries({
+        queryKey: ["streamlineos", "timesheets", "payroll", "summary"],
+      });
+      void qc.invalidateQueries({
+        queryKey: ["streamlineos", "timesheets", "payroll", "exports"],
+      });
     },
     onError: (error) => toast.error(getErrorMessage(error)),
   });
 }
 
 export function useTimesheetPayrollExports(page: number, pageSize = 20) {
+  const canView = useCan("timesheets:payroll:view");
   return useQuery({
     queryKey: queryKeys.timesheets.payroll.exports(page, pageSize),
     queryFn: () =>
       apiClient.get<ExportHistoryResponse>("/timesheets/payroll/exports", { page, pageSize }),
     staleTime: 30_000,
+    enabled: canView,
   });
 }
 

@@ -5,14 +5,16 @@ import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCan } from "@/hooks/api/access";
 import type { TimesheetSettings } from "@/features/timesheets-core/types";
 
 export function useTimesheetSettings(enabled = true) {
+  const canView = useCan("timesheets:settings:view");
   return useQuery({
     queryKey: queryKeys.timesheets.settings(),
     queryFn: () => apiClient.get<TimesheetSettings>("/timesheets/settings"),
     staleTime: 5 * 60_000,
-    enabled,
+    enabled: enabled && canView,
   });
 }
 

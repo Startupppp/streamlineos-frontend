@@ -36,7 +36,7 @@ const featureMatrix: { feature: string; tiers: (boolean | string)[] }[] = [
   { feature: "Accounting & billing", tiers: [true, true, true, true] },
   { feature: "Helpdesk & knowledge base", tiers: [true, true, true, true] },
   { feature: "Real-time chat & calendar", tiers: [true, true, true, true] },
-  { feature: "Storage per workspace", tiers: ["5 GB", "100 GB", "1 TB", "Unlimited"] },
+  { feature: "Storage per organization", tiers: ["5 GB", "100 GB", "1 TB", "Unlimited"] },
   { feature: "Workflow automation", tiers: [false, true, true, true] },
   { feature: "Custom roles & permissions", tiers: [false, true, true, true] },
   { feature: "Public API access", tiers: [false, true, true, true] },

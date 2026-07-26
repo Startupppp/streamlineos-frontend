@@ -3,6 +3,7 @@
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 type CostingMethod = "FIFO" | "LIFO" | "WEIGHTED_AVG" | "STANDARD";
 
@@ -72,6 +73,7 @@ interface CostingParams {
 }
 
 export function useValuationReport(params?: ValuationReportParams) {
+  const canView = useCan("inventory:valuation:read");
   return useQuery<ValuationSummary, Error>({
     queryKey: queryKeys.inventory.valuationReport(params),
     queryFn: () =>
@@ -80,25 +82,28 @@ export function useValuationReport(params?: ValuationReportParams) {
         ...(params?.categoryId ? { categoryId: String(params.categoryId) } : {}),
       }),
     staleTime: 5 * 60_000,
+    enabled: canView,
   });
 }
 
 export function useValuationLayers(variantId: number, page?: number) {
+  const canView = useCan("inventory:valuation:read");
   return useQuery<ValuationLayersResponse, Error>({
-    queryKey: [...queryKeys.inventory.all, "valuationLayers", variantId, page],
+    queryKey: queryKeys.inventory.valuationLayers(variantId, page),
     queryFn: () =>
       apiClient.get<ValuationLayersResponse>("/inventory/valuation/layers", {
         variantId: String(variantId),
         ...(page ? { page: String(page) } : {}),
       }),
-    enabled: variantId > 0,
+    enabled: canView && variantId > 0,
     staleTime: 2 * 60_000,
   });
 }
 
 export function useCostingProducts(params?: CostingParams) {
+  const canView = useCan("inventory:valuation:read");
   return useQuery<CostingListResponse, Error>({
-    queryKey: queryKeys.inventory.productVariants(params),
+    queryKey: queryKeys.inventory.costingProducts(params),
     queryFn: () =>
       apiClient.get<CostingListResponse>("/inventory/products/variants", {
         ...(params?.search ? { search: params.search } : {}),
@@ -106,5 +111,6 @@ export function useCostingProducts(params?: CostingParams) {
       }),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
+    enabled: canView,
   });
 }

@@ -149,7 +149,7 @@ export function OrgDangerZoneSection({ org }: Props) {
   async function handleConfirmLeave() {
     leaveMutation.mutate(undefined, {
       onSuccess: async (data) => {
-        toast.success("You have left the workspace");
+        toast.success("You have left the organization");
         setLeaveOpen(false);
         clearBackendTokenCache();
         if (data.nextOrgId) {
@@ -174,7 +174,7 @@ export function OrgDangerZoneSection({ org }: Props) {
       { confirmation: deleteConfirmation },
       {
         onSuccess: () => {
-          toast.success("Workspace deleted");
+          toast.success("Organization deleted");
           setDeleteOpen(false);
           clearBackendTokenCache();
           queryClient.clear();
@@ -223,9 +223,9 @@ export function OrgDangerZoneSection({ org }: Props) {
           {!isOwner && (
             <div className="flex items-center justify-between py-3 border-b">
               <div>
-                <p className="text-sm font-medium">Leave Workspace</p>
+                <p className="text-sm font-medium">Leave Organization</p>
                 <p className="text-xs text-muted-foreground">
-                  Remove yourself from this workspace. This cannot be undone.
+                  Remove yourself from this organization. This cannot be undone.
                 </p>
               </div>
               <Button
@@ -279,9 +279,9 @@ export function OrgDangerZoneSection({ org }: Props) {
 
               <div className="flex items-center justify-between py-3">
                 <div>
-                  <p className="text-sm font-medium">Delete Workspace</p>
+                  <p className="text-sm font-medium">Delete Organization</p>
                   <p className="text-xs text-muted-foreground">
-                    Permanently delete this workspace and all its data. This cannot be undone.
+                    Permanently delete this organization and all its data. This cannot be undone.
                   </p>
                 </div>
                 <Button
@@ -336,9 +336,9 @@ export function OrgDangerZoneSection({ org }: Props) {
         <ConfirmDialog
           open={leaveOpen}
           onOpenChange={handleLeaveOpenChange}
-          title="Leave Workspace"
-          description="Are you sure you want to leave this workspace? You will lose access immediately and need a new invitation to rejoin."
-          confirmLabel="Leave Workspace"
+          title="Leave Organization"
+          description="Are you sure you want to leave this organization? You will lose access immediately and need a new invitation to rejoin."
+          confirmLabel="Leave Organization"
           isPending={leaveMutation.isPending}
           onConfirm={handleConfirmLeave}
           destructive
@@ -369,7 +369,7 @@ export function OrgDangerZoneSection({ org }: Props) {
           <Dialog open={deleteOpen} onOpenChange={handleDeleteOpenChange}>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle className="text-destructive">Delete Workspace</DialogTitle>
+                <DialogTitle className="text-destructive">Delete Organization</DialogTitle>
                 <DialogDescription>
                   This will permanently delete <strong>{org.name ?? org.slug}</strong> and all its data including members, projects, and settings. This action cannot be undone.
                 </DialogDescription>
@@ -397,7 +397,7 @@ export function OrgDangerZoneSection({ org }: Props) {
                   loadingText="Deleting…"
                   onClick={handleConfirmDelete}
                 >
-                  Delete Workspace
+                  Delete Organization
                 </LoadingButton>
               </DialogFooter>
             </DialogContent>

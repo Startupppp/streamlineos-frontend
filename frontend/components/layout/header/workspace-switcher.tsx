@@ -76,7 +76,7 @@ function WorkspaceSwitcherPanel({
       <>
         <div className="px-2 py-1.5">
           <p className="text-[10px] uppercase tracking-wider font-semibold text-foreground/70">
-            Workspaces
+            Organizations
           </p>
         </div>
         <DropdownMenuItem className="gap-2 text-foreground data-[disabled]:opacity-100" disabled>
@@ -107,7 +107,7 @@ function WorkspaceSwitcherPanel({
               onSelect={handleCreate}
             >
               <Plus className="h-3.5 w-3.5 shrink-0 text-foreground/70" />
-              <span className="text-sm">Create workspace</span>
+              <span className="text-sm">Create organization</span>
             </DropdownMenuItem>
           </>
         )}
@@ -119,7 +119,7 @@ function WorkspaceSwitcherPanel({
     <div className="flex flex-col gap-0.5 pb-2">
       <div className="px-1 py-1.5">
         <p className="text-[10px] uppercase tracking-wider font-semibold text-foreground/70">
-          Workspaces
+          Organizations
         </p>
       </div>
       <div className="flex items-center gap-2 rounded-md px-2 py-2 text-sm text-foreground">
@@ -145,7 +145,7 @@ function WorkspaceSwitcherPanel({
           className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm text-foreground/80 hover:bg-muted hover:text-foreground transition-colors"
         >
           <Plus className="h-3.5 w-3.5 shrink-0 text-foreground/70" />
-          <span>Create workspace</span>
+          <span>Create organization</span>
         </button>
       )}
     </div>
@@ -210,7 +210,7 @@ export function WorkspaceSwitcher({
 
   const isSidebar = variant === "sidebar"
   const isLabelHidden = isSidebar && iconOnly
-  const workspaceName = activeOrg?.name ?? "Workspace"
+  const workspaceName = activeOrg?.name ?? "Organization"
 
   const panelProps = {
     activeOrg,
@@ -263,7 +263,7 @@ export function WorkspaceSwitcher({
       <>
         <Drawer open={open} onOpenChange={handleOpenChange} direction="bottom">
           <DrawerContent className="flex h-[min(96dvh,40rem)] max-h-[96dvh] w-full flex-col gap-0 overflow-hidden rounded-t-xl border-t bg-sidebar p-4 pb-[env(safe-area-inset-bottom)] shadow-2xl">
-            <DrawerTitle className="sr-only">Workspaces</DrawerTitle>
+            <DrawerTitle className="sr-only">Organizations</DrawerTitle>
             <WorkspaceSwitcherPanel {...panelProps} layout="drawer" />
           </DrawerContent>
         </Drawer>

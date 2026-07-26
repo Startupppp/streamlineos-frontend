@@ -1,4 +1,5 @@
 "use client";
+import { useCallback } from "react";
 import { useProjects } from "@/hooks/api/projects/projects";
 import { useTickets } from "@/hooks/api/projects/tickets";
 import {
@@ -32,14 +33,20 @@ export function ProjectTicketSelect({
   const tickets = ticketsResult.data?.data ?? [];
   const ticketsLoading = ticketsResult.isLoading;
 
-  const handleProjectChange = (val: string) => {
-    onProjectChange(val === "none" ? null : parseInt(val, 10));
-    onTicketChange(null);
-  };
+  const handleProjectChange = useCallback(
+    (val: string) => {
+      onProjectChange(val === "none" ? null : parseInt(val, 10));
+      onTicketChange(null);
+    },
+    [onProjectChange, onTicketChange],
+  );
 
-  const handleTicketChange = (val: string) => {
-    onTicketChange(val === "none" ? null : parseInt(val, 10));
-  };
+  const handleTicketChange = useCallback(
+    (val: string) => {
+      onTicketChange(val === "none" ? null : parseInt(val, 10));
+    },
+    [onTicketChange],
+  );
 
   return (
     <div className="flex flex-col gap-2">
@@ -51,7 +58,7 @@ export function ProjectTicketSelect({
         <SelectTrigger className="h-9">
           <SelectValue placeholder="Select project" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
           <SelectItem value="none" className="text-xs text-muted-foreground">
             No project
           </SelectItem>
@@ -72,7 +79,7 @@ export function ProjectTicketSelect({
           <SelectTrigger className="h-9">
             <SelectValue placeholder={ticketsLoading ? "Loading…" : "Select ticket"} />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
             <SelectItem value="none" className="text-xs text-muted-foreground">
               No ticket
             </SelectItem>

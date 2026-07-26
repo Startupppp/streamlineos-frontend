@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type { CycleCountStatus } from "@/features/inventory/lib/inventory-status";
 
 export interface CycleCountLine {
@@ -108,20 +109,23 @@ function toApiParams(params?: CountsParams): Record<string, unknown> {
 }
 
 export function useCycleCounts(params?: CountsParams) {
+  const canView = useCan("inventory:stock:read");
   return useQuery<CycleCountListResponse, Error>({
     queryKey: queryKeys.inventory.cycleCounts(toApiParams(params)),
     queryFn: () =>
       apiClient.get<CycleCountListResponse>("/inventory/cycle-counts", toApiParams(params)),
     staleTime: 2 * 60_000,
+    enabled: canView,
   });
 }
 
 export function useCycleCount(id: number) {
+  const canView = useCan("inventory:stock:read");
   return useQuery<CycleCount, Error>({
     queryKey: queryKeys.inventory.cycleCount(id),
     queryFn: () => apiClient.get<CycleCount>(`/inventory/cycle-counts/${id}`),
-    enabled: id > 0,
     staleTime: 60_000,
+    enabled: canView && id > 0,
   });
 }
 
@@ -134,7 +138,7 @@ export function useCreateCycleCount() {
         headers: { "Idempotency-Key": crypto.randomUUID() },
       }),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.cycleCounts() });
     },
   });
 }
@@ -146,8 +150,8 @@ export function useStartCycleCount() {
     mutationFn: (countId) =>
       apiClient.post<CycleCount>(`/inventory/cycle-counts/${countId}/start`),
     onSuccess: (_data, countId) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.all });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.cycleCount(countId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.cycleCounts() });
     },
   });
 }
@@ -171,8 +175,8 @@ export function useReviewCycleCount() {
     mutationFn: (countId) =>
       apiClient.post<CycleCount>(`/inventory/cycle-counts/${countId}/review`),
     onSuccess: (_data, countId) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.all });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.cycleCount(countId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.cycleCounts() });
     },
   });
 }
@@ -186,8 +190,10 @@ export function usePostCycleCount() {
         headers: { "Idempotency-Key": crypto.randomUUID() },
       }),
     onSuccess: (_data, countId) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.all });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.cycleCount(countId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.cycleCounts() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.dashboard() });
     },
   });
 }
@@ -199,27 +205,30 @@ export function useCancelCycleCount() {
     mutationFn: (countId) =>
       apiClient.post<CycleCount>(`/inventory/cycle-counts/${countId}/cancel`),
     onSuccess: (_data, countId) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.all });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.cycleCount(countId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.cycleCounts() });
     },
   });
 }
 
 export function usePhysicalAudits(params?: CountsParams) {
+  const canView = useCan("inventory:stock:read");
   return useQuery<PhysicalAuditListResponse, Error>({
     queryKey: queryKeys.inventory.physicalAudits(toApiParams(params)),
     queryFn: () =>
       apiClient.get<PhysicalAuditListResponse>("/inventory/physical-audits", toApiParams(params)),
     staleTime: 2 * 60_000,
+    enabled: canView,
   });
 }
 
 export function usePhysicalAudit(id: number) {
+  const canView = useCan("inventory:stock:read");
   return useQuery<PhysicalAudit, Error>({
     queryKey: queryKeys.inventory.physicalAudit(id),
     queryFn: () => apiClient.get<PhysicalAudit>(`/inventory/physical-audits/${id}`),
-    enabled: id > 0,
     staleTime: 60_000,
+    enabled: canView && id > 0,
   });
 }
 
@@ -232,7 +241,7 @@ export function useCreatePhysicalAudit() {
         headers: { "Idempotency-Key": crypto.randomUUID() },
       }),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.physicalAudits() });
     },
   });
 }
@@ -244,8 +253,8 @@ export function useStartPhysicalAudit() {
     mutationFn: (auditId) =>
       apiClient.post<PhysicalAudit>(`/inventory/physical-audits/${auditId}/start`),
     onSuccess: (_data, auditId) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.all });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.physicalAudit(auditId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.physicalAudits() });
     },
   });
 }
@@ -269,8 +278,8 @@ export function useReviewPhysicalAudit() {
     mutationFn: (auditId) =>
       apiClient.post<PhysicalAudit>(`/inventory/physical-audits/${auditId}/review`),
     onSuccess: (_data, auditId) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.all });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.physicalAudit(auditId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.physicalAudits() });
     },
   });
 }
@@ -284,8 +293,10 @@ export function usePostPhysicalAudit() {
         headers: { "Idempotency-Key": crypto.randomUUID() },
       }),
     onSuccess: (_data, auditId) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.all });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.physicalAudit(auditId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.physicalAudits() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.dashboard() });
     },
   });
 }
@@ -297,8 +308,8 @@ export function useCancelPhysicalAudit() {
     mutationFn: (auditId) =>
       apiClient.post<PhysicalAudit>(`/inventory/physical-audits/${auditId}/cancel`),
     onSuccess: (_data, auditId) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.all });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.physicalAudit(auditId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.physicalAudits() });
     },
   });
 }

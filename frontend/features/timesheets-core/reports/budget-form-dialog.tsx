@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { budgetFormSchema, type BudgetFormValues } from "./budget-form-schema";
 import {
   Dialog,
   DialogContent,
@@ -36,17 +36,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateBudget, useUpdateBudget } from "@/hooks/api/timesheets-core/budgets";
 import type { TimesheetBudget } from "@/features/timesheets-core/types";
 
-const schema = z.object({
-  projectId: z.string().min(1, "Select a project"),
-  budgetType: z.enum(["HOURS", "AMOUNT"]),
-  budgetValue: z.string().min(1, "Enter a budget amount"),
-  currency: z.string().optional(),
-  startsAt: z.string().optional(),
-  endsAt: z.string().optional(),
-});
-
-type FormValues = z.infer<typeof schema>;
-
 interface BudgetFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -60,8 +49,8 @@ export function BudgetFormDialog({ open, onOpenChange, budget }: BudgetFormDialo
   const updateBudget = useUpdateBudget();
   const isEdit = !!budget;
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+  const form = useForm<BudgetFormValues>({
+    resolver: zodResolver(budgetFormSchema),
     defaultValues: {
       projectId: "",
       budgetType: "HOURS",
@@ -91,7 +80,9 @@ export function BudgetFormDialog({ open, onOpenChange, budget }: BudgetFormDialo
   const budgetType = form.watch("budgetType");
   const isPending = createBudget.isPending || updateBudget.isPending;
 
-  const handleSubmit = form.handleSubmit((values) => {
+  const handleClose = useCallback(() => onOpenChange(false), [onOpenChange]);
+
+  const handleSubmit = form.handleSubmit((values: BudgetFormValues) => {
     const value = Number(values.budgetValue);
     const payload = {
       projectId: Number(values.projectId),
@@ -131,7 +122,7 @@ export function BudgetFormDialog({ open, onOpenChange, budget }: BudgetFormDialo
                         <SelectValue placeholder="Select a project" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
+                    <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                       {projectList.map((p) => (
                         <SelectItem key={p.id} value={String(p.id)}>
                           {p.name}
@@ -229,7 +220,7 @@ export function BudgetFormDialog({ open, onOpenChange, budget }: BudgetFormDialo
             </div>
 
             <DialogFooter className="gap-2">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              <Button type="button" variant="outline" onClick={handleClose}>
                 Cancel
               </Button>
               <LoadingButton type="submit" isPending={isPending} loadingText={isEdit ? "Saving…" : "Creating…"}>

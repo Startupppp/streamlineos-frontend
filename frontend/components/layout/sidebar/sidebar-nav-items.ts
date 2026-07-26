@@ -1886,6 +1886,7 @@ export const NAV_GROUPS: NavGroup[] = [
       "projects:roadmap:view",
       "projects:goals:view",
       "projects:portfolios:view",
+      "projects:managed-products:view",
       "projects:approvals:view",
       "projects:create",
       "settings:manage",
@@ -1908,6 +1909,12 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: LayoutGrid,
         href: "/projects/portfolios",
         requiredPermission: "projects:portfolios:view",
+      },
+      {
+        label: "Managed Products",
+        icon: Layers,
+        href: "/projects/managed-products",
+        requiredPermission: "projects:managed-products:view",
       },
       {
         label: "Approvals",
@@ -2099,11 +2106,11 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    label: "Workspace",
+    label: "Organization",
     requiredPermission: "settings:manage",
     routes: [
       {
-        label: "Workspace Settings",
+        label: "Organization Settings",
         icon: Building2,
         href: "/settings/organization",
         requiredPermission: "settings:manage",
@@ -2572,7 +2579,6 @@ const PRODUCT_NAV_GROUP_LABELS: Record<ProductKey, string[]> = {
   documents: [],
   surveys: ["Surveys"],
   administration: [
-    "Workspace",
     "Organization",
     "People",
     "Access Control",

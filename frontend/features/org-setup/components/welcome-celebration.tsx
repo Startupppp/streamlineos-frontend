@@ -20,15 +20,15 @@ export function WelcomeCelebration({
   onContinue,
   isContinuing = false,
 }: WelcomeCelebrationProps) {
-  const displayName = companyName?.trim() || "your workspace";
+  const displayName = companyName?.trim() || "your organization";
 
   return (
     <CompletionCelebration
       icon={PartyPopper}
       title={`Welcome to ${displayName}!`}
-      description="Your workspace is ready. Jump in and start running HR, CRM, projects, and more from one place."
+      description="Your organization is ready. Jump in and start running HR, CRM, projects, and more from one place."
       highlights={HIGHLIGHTS}
-      ctaLabel="Open my workspace"
+      ctaLabel="Open my organization"
       onContinue={onContinue}
       isContinuing={isContinuing}
       footnote="You can invite teammates and finish setup tips anytime."

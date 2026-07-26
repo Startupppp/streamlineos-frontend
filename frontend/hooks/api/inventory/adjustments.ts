@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type { AdjustmentDetail } from "@/types/inventory";
 import type { AdjustmentStatus } from "@/features/inventory/lib";
 
@@ -82,6 +83,7 @@ function signedQuantity(type: AdjustmentType, quantity: number): number {
 }
 
 export function useAdjustments(filters?: { page?: number; limit?: number; status?: string }) {
+  const canView = useCan("inventory:stock:read");
   return useQuery<AdjustmentsResult, Error>({
     queryKey: queryKeys.inventory.adjustments(filters),
     queryFn: async () => {
@@ -98,14 +100,16 @@ export function useAdjustments(filters?: { page?: number; limit?: number; status
       };
     },
     staleTime: 2 * 60_000,
+    enabled: canView,
   });
 }
 
 export function useAdjustmentDetail(adjustmentId: number) {
+  const canView = useCan("inventory:stock:read");
   return useQuery<AdjustmentDetail, Error>({
-    queryKey: [...queryKeys.inventory.adjustments(), adjustmentId],
+    queryKey: [...queryKeys.inventory.adjustments(), adjustmentId] as const,
     queryFn: () => apiClient.get<AdjustmentDetail>(`/inventory/stock/adjustments/${adjustmentId}`),
-    enabled: adjustmentId > 0,
+    enabled: canView && adjustmentId > 0,
     staleTime: 60_000,
   });
 }
@@ -128,7 +132,9 @@ export function useCreateAdjustment() {
         ],
       }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.adjustments() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.dashboard() });
     },
   });
 }
@@ -140,7 +146,7 @@ export function useApproveAdjustment() {
     mutationFn: (adjustmentId) =>
       apiClient.post<AdjustmentDetail>(`/inventory/stock/adjustments/${adjustmentId}/approve`, {}),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.adjustments() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.adjustments() });
     },
   });
 }
@@ -156,9 +162,9 @@ export function usePostAdjustment() {
         { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.adjustments() });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.dashboard() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.adjustments() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.dashboard() });
     },
   });
 }
@@ -170,7 +176,7 @@ export function useCancelAdjustment() {
     mutationFn: (adjustmentId) =>
       apiClient.post<AdjustmentDetail>(`/inventory/stock/adjustments/${adjustmentId}/cancel`, {}),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.adjustments() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.adjustments() });
     },
   });
 }

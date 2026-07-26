@@ -1,10 +1,8 @@
 "use client";
 
-import { memo, useMemo, useCallback } from "react";
+import { memo, useMemo } from "react";
 import { format, addDays } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { BellIcon } from "@animateicons/react/lucide";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -27,7 +25,6 @@ interface TeamTableProps {
   weekStart: Date;
   isLoading: boolean;
   onRowClick: (row: TeamMemberRow) => void;
-  onRemindAll: () => void;
 }
 
 const DayCell = memo(function DayCell({ hours }: { hours: number }) {
@@ -44,12 +41,13 @@ const DayCell = memo(function DayCell({ hours }: { hours: number }) {
   );
 });
 
-export function TeamTable({ rows, weekStart, isLoading, onRowClick, onRemindAll }: TeamTableProps) {
+export function TeamTable({ rows, weekStart, isLoading, onRowClick }: TeamTableProps) {
   const days = useMemo(
     () => Array.from({ length: 7 }).map((_, i) => addDays(weekStart, i)),
     [weekStart],
   );
 
+  // TODO: server-side pagination (limit: 500 / limit: 200 needs coordinated backend+hook change)
   const missingCount = rows.filter(
     (r) => r.status === "MISSING" || r.status === "OPEN" || r.status === "DRAFT",
   ).length;
@@ -112,22 +110,7 @@ export function TeamTable({ rows, weekStart, isLoading, onRowClick, onRemindAll 
     [days],
   );
 
-  const handleRemindAll = useCallback(() => onRemindAll(), [onRemindAll]);
-
-  const toolbar =
-    missingCount > 0 ? (
-      <AnimatedIconButton
-        icon={BellIcon}
-        iconSize={14}
-        iconClassName="mr-1.5"
-        size="sm"
-        variant="outline"
-        className="h-7 text-xs"
-        onClick={handleRemindAll}
-      >
-        Remind {missingCount} not submitted
-      </AnimatedIconButton>
-    ) : undefined;
+  const toolbar = undefined;
 
   return (
     <DataTable

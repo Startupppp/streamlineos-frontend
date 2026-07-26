@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type { WarehouseStockResult } from "@/types/inventory";
 
 export type LocationType =
@@ -92,6 +93,7 @@ interface CreateLocationInput {
 }
 
 export function useWarehouses(filters?: WarehouseListFilters) {
+  const canView = useCan("inventory:warehouses:read");
   const params: Record<string, unknown> = {};
   if (filters?.q) params.q = filters.q;
   if (filters?.status && filters.status !== "all") params.status = filters.status;
@@ -108,24 +110,27 @@ export function useWarehouses(filters?: WarehouseListFilters) {
     queryFn: () => apiClient.get<Warehouse[]>("/inventory/warehouses", hasActiveFilters ? params : undefined),
     staleTime: 5 * 60_000,
     placeholderData: keepPreviousData,
+    enabled: canView,
   });
 }
 
 export function useWarehouse(warehouseId: number) {
+  const canView = useCan("inventory:warehouses:read");
   return useQuery<Warehouse, Error>({
     queryKey: queryKeys.inventory.warehouse(warehouseId),
     queryFn: () => apiClient.get<Warehouse>(`/inventory/warehouses/${warehouseId}`),
-    enabled: warehouseId > 0,
+    enabled: canView && warehouseId > 0,
     staleTime: 5 * 60_000,
   });
 }
 
 export function useLocations(warehouseId: number) {
+  const canView = useCan("inventory:warehouses:read");
   return useQuery<WarehouseLocation[], Error>({
     queryKey: queryKeys.inventory.locations(warehouseId),
     queryFn: () =>
       apiClient.get<WarehouseLocation[]>(`/inventory/warehouses/${warehouseId}/locations`),
-    enabled: warehouseId > 0,
+    enabled: canView && warehouseId > 0,
     staleTime: 5 * 60_000,
   });
 }
@@ -136,7 +141,7 @@ export function useCreateWarehouse() {
     mutationKey: ["inventory", "warehouses", "create"],
     mutationFn: (data) => apiClient.post<Warehouse>("/inventory/warehouses", data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.warehouses() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.warehouses() });
     },
   });
 }
@@ -148,8 +153,8 @@ export function useUpdateWarehouse() {
     mutationFn: ({ warehouseId, ...data }) =>
       apiClient.patch<Warehouse>(`/inventory/warehouses/${warehouseId}`, data),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.warehouses() });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.warehouse(vars.warehouseId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.warehouses() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.warehouse(vars.warehouseId) });
     },
   });
 }
@@ -161,10 +166,10 @@ export function useCreateLocation() {
     mutationFn: ({ warehouseId, ...data }) =>
       apiClient.post<WarehouseLocation>(`/inventory/warehouses/${warehouseId}/locations`, data),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({
+      void qc.invalidateQueries({
         queryKey: queryKeys.inventory.locations(vars.warehouseId),
       });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.warehouse(vars.warehouseId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.warehouse(vars.warehouseId) });
     },
   });
 }
@@ -172,7 +177,7 @@ export function useCreateLocation() {
 export function useUpdateLocation() {
   const qc = useQueryClient();
   return useMutation<
-    unknown,
+    WarehouseLocation,
     Error,
     {
       warehouseId: number;
@@ -191,10 +196,10 @@ export function useUpdateLocation() {
   >({
     mutationKey: ["inventory", "location", "update"],
     mutationFn: ({ warehouseId, locationId, data }) =>
-      apiClient.patch(`/inventory/warehouses/${warehouseId}/locations/${locationId}`, data),
+      apiClient.patch<WarehouseLocation>(`/inventory/warehouses/${warehouseId}/locations/${locationId}`, data),
     onSuccess: (_data, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.locations(vars.warehouseId) });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.warehouses() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.locations(vars.warehouseId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.warehouses() });
     },
   });
 }
@@ -202,14 +207,14 @@ export function useUpdateLocation() {
 export function useSetDefaultWarehouse() {
   const qc = useQueryClient();
   return useMutation<
-    unknown,
+    Warehouse,
     Error,
     { warehouseId: number },
     { previous: Warehouse[] | undefined }
   >({
     mutationKey: ["inventory", "warehouse", "set-default"],
     mutationFn: ({ warehouseId }) =>
-      apiClient.patch(`/inventory/warehouses/${warehouseId}`, { isDefault: true }),
+      apiClient.patch<Warehouse>(`/inventory/warehouses/${warehouseId}`, { isDefault: true }),
     onMutate: async ({ warehouseId }) => {
       await qc.cancelQueries({ queryKey: queryKeys.inventory.warehouses() });
       const previous = qc.getQueryData<Warehouse[]>(queryKeys.inventory.warehouses());
@@ -225,7 +230,7 @@ export function useSetDefaultWarehouse() {
       }
     },
     onSettled: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.warehouses() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.warehouses() });
     },
   });
 }
@@ -234,14 +239,15 @@ export function useWarehouseStock(
   warehouseId: number,
   filters?: { page?: number; limit?: number },
 ) {
+  const canView = useCan("inventory:stock:read");
   return useQuery<WarehouseStockResult, Error>({
-    queryKey: [...queryKeys.inventory.warehouse(warehouseId), "stock", filters],
+    queryKey: [...queryKeys.inventory.warehouse(warehouseId), "stock", filters] as const,
     queryFn: () =>
       apiClient.get<WarehouseStockResult>(`/inventory/warehouses/${warehouseId}/stock`, {
         page: filters?.page,
         limit: filters?.limit,
       }),
-    enabled: warehouseId > 0,
+    enabled: canView && warehouseId > 0,
     staleTime: 60_000,
   });
 }

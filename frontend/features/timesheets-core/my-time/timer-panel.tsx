@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { format } from "date-fns";
-import { Square, Timer, Loader2, Play } from "lucide-react";
+import { Square, Timer, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -171,7 +171,11 @@ export function TimerPanel({ weekStart, weekEnd }: TimerPanelProps) {
               <div className="min-w-0 flex-1">
                 <p className="text-[11px] text-muted-foreground font-medium mb-0.5">
                   {timer.project?.name ?? "No project"}
-                  {timer.ticket && <span className="ml-1.5 text-muted-foreground/70">· #{timer.ticket.id}</span>}
+                  {timer.ticket && (
+                  <span className="ml-1.5 text-muted-foreground/70">
+                    · {timer.ticket.ticketNumber != null ? `#${timer.ticket.ticketNumber}` : timer.ticket.title}
+                  </span>
+                )}
                 </p>
                 <TruncatedText text={timer.description ?? "No description"} className="text-sm text-foreground" />
                 <div className="flex items-center gap-2 mt-1">
@@ -243,8 +247,15 @@ export function TimerPanel({ weekStart, weekEnd }: TimerPanelProps) {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel onClick={handleCloseDiscard}>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleConfirmDiscard} className="bg-destructive hover:bg-destructive/90">
-                {discardTimer.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Discard"}
+              <AlertDialogAction asChild>
+                <LoadingButton
+                  onClick={handleConfirmDiscard}
+                  className="bg-destructive hover:bg-destructive/90"
+                  isPending={discardTimer.isPending}
+                  loadingText="Discarding…"
+                >
+                  Discard
+                </LoadingButton>
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

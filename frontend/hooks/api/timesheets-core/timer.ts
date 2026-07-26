@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCan } from "@/hooks/api/access";
 import type {
   ConvertTimerInput,
   StartTimerInput,
@@ -13,12 +14,14 @@ import type {
 } from "@/features/timesheets-core/types";
 
 export function useActiveTimer() {
+  const canView = useCan("timesheets:entries:view");
   return useQuery({
     queryKey: queryKeys.timesheets.timerActive(),
     queryFn: () => apiClient.get<TimerSession | null>("/timesheets/timer/active"),
     staleTime: 30_000,
     refetchInterval: 30_000,
     refetchIntervalInBackground: false,
+    enabled: canView,
   });
 }
 
@@ -81,7 +84,9 @@ export function useConvertTimer() {
     mutationFn: ({ timerId, data }: { timerId: number; data: ConvertTimerInput }) =>
       apiClient.post<TimesheetEntry>(`/timesheets/timer/${timerId}/convert`, data),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.timesheets.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.timesheets.timerActive() });
+      void qc.invalidateQueries({ queryKey: queryKeys.timesheets.entries() });
+      void qc.invalidateQueries({ queryKey: queryKeys.timesheets.periodCurrent() });
       toast.success("Timer saved as time entry");
     },
     onError: (error) => toast.error(getErrorMessage(error)),

@@ -30,7 +30,7 @@ import { getErrorMessage } from "@/lib/get-error-message"
 import { clearBackendTokenCache } from "@/lib/api-client"
 
 const schema = z.object({
-  name: z.string().trim().min(1, "Workspace name is required").max(100),
+  name: z.string().trim().min(1, "Organization name is required").max(100),
   billingEmail: z.string().max(255).refine(
     (v) => v === "" || z.string().email().safeParse(v).success,
     "Must be a valid email address",
@@ -96,7 +96,7 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: CreateWorkspaceDia
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[400px]">
         <DialogHeader>
-          <DialogTitle>Create workspace</DialogTitle>
+          <DialogTitle>Create organization</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form id={formId} onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 py-2">
@@ -105,7 +105,7 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: CreateWorkspaceDia
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Workspace name</FormLabel>
+                  <FormLabel>Organization name</FormLabel>
                   <FormControl>
                     <Input placeholder="Acme Corp" autoFocus {...field} />
                   </FormControl>

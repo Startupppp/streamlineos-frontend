@@ -31,19 +31,12 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { useBillingUninvoiced } from "@/hooks/api/timesheets-core/billing";
 import { BillingExportDialog } from "./billing-export-dialog";
 import { InvoiceDraftDialog } from "./invoice-draft-dialog";
+import { formatMoney } from "./lib/format-money";
 import type { BillingGroup } from "@/features/timesheets-core/types";
 
 const now = new Date();
 const DEFAULT_START = format(startOfMonth(now), "yyyy-MM-dd");
 const DEFAULT_END = format(endOfMonth(now), "yyyy-MM-dd");
-
-function formatMoney(amount: number, currency: string): string {
-  return new Intl.NumberFormat("en", {
-    style: "currency",
-    currency,
-    minimumFractionDigits: 2,
-  }).format(amount);
-}
 
 const BILLING_COLUMNS: DataTableColumn<BillingGroup>[] = [
   {
@@ -244,7 +237,7 @@ export function BillingView() {
         <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[160px]")} aria-label="Filter by project">
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
           <SelectItem value="ALL">All projects</SelectItem>
           {projectOptions.map((p) => (
             <SelectItem key={p.id} value={String(p.id)}>

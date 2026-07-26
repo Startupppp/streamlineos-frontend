@@ -143,9 +143,9 @@ export const STEP_TITLES: Record<StepId, string> = {
 };
 
 export const STEP_SUBTITLES: Record<StepId, string> = {
-  welcome: "Let's get your workspace ready to run your business.",
+  welcome: "Let's get your organization ready to run your business.",
   basics: "Goals unlock modules. Add industry and company, then launch.",
-  invite: "Bring your team in, then build your workspace.",
+  invite: "Bring your team in, then build your organization.",
 };
 
 export const ESTIMATED_MINUTES_REMAINING: Record<StepId, number> = {

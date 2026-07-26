@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type { AiInsight } from "./reports";
 
 interface InsightsParams {
@@ -24,6 +25,7 @@ interface UpdateInsightInput {
 }
 
 export function useInventoryInsights(params?: InsightsParams) {
+  const canView = useCan("inventory:reports:read");
   return useQuery<InsightsPaginatedResponse, Error>({
     queryKey: queryKeys.inventory.aiInsights(params),
     queryFn: () =>
@@ -34,6 +36,7 @@ export function useInventoryInsights(params?: InsightsParams) {
         ...(params?.limit !== undefined ? { limit: String(params.limit) } : {}),
       }),
     staleTime: 2 * 60_000,
+    enabled: canView,
   });
 }
 
@@ -57,7 +60,6 @@ export function useUpdateInsight() {
       apiClient.patch<AiInsight>(`/inventory/ai/insights/${insightId}`, data),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.aiInsights() });
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.dashboard() });
     },
   });
 }

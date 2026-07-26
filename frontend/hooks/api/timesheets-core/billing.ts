@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCan } from "@/hooks/api/access";
 import type {
   BillingExportInput,
   BillingUninvoiced,
@@ -19,13 +20,14 @@ interface UninvoicedQuery {
 }
 
 export function useBillingUninvoiced(query: UninvoicedQuery = {}, enabled = true) {
+  const canView = useCan("timesheets:billing:view");
   const params = { startDate: query.startDate, endDate: query.endDate, projectId: query.projectId };
   return useQuery({
     queryKey: queryKeys.timesheets.billingUninvoiced(params),
     queryFn: () => apiClient.get<BillingUninvoiced>("/timesheets/billing/uninvoiced", params),
     staleTime: 30_000,
     placeholderData: (prev) => prev,
-    enabled,
+    enabled: enabled && canView,
   });
 }
 
@@ -36,6 +38,7 @@ interface RatePreviewQuery {
 }
 
 export function useRatePreview(query: RatePreviewQuery, enabled = true) {
+  const canView = useCan("timesheets:billing:view");
   const params: Record<string, unknown> = {
     projectId: query.projectId,
     userId: query.userId,
@@ -45,7 +48,7 @@ export function useRatePreview(query: RatePreviewQuery, enabled = true) {
     queryKey: queryKeys.timesheets.ratePreview(params),
     queryFn: () => apiClient.get<RatePreview>("/timesheets/billing/rate-preview", params),
     staleTime: 60_000,
-    enabled,
+    enabled: enabled && canView,
   });
 }
 
@@ -71,7 +74,8 @@ export function useCreateInvoiceDraft() {
         data,
       ),
     onSuccess: (res) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.timesheets.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.timesheets.billingUninvoiced() });
+      void qc.invalidateQueries({ queryKey: queryKeys.timesheets.entries() });
       toast.success(`Invoice draft created for ${res.entryCount} entries`);
     },
     onError: (error) => toast.error(getErrorMessage(error)),

@@ -19,6 +19,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useBillingExport } from "@/hooks/api/timesheets-core/billing";
 import { downloadBillingFile } from "./lib/build-billing-file";
+import { formatMoney } from "./lib/format-money";
 import type { BillingGroup } from "@/features/timesheets-core/types";
 
 const exportSchema = z.object({ format: z.enum(["CSV", "XLSX"]) });
@@ -32,14 +33,6 @@ interface BillingExportDialogProps {
   endDate: string;
   groups: BillingGroup[];
   projectId: number | null;
-}
-
-function formatMoney(amount: number, currency: string): string {
-  return new Intl.NumberFormat("en", {
-    style: "currency",
-    currency,
-    minimumFractionDigits: 2,
-  }).format(amount);
 }
 
 const billingPreviewColumns: DataTableColumn<BillingGroup>[] = [

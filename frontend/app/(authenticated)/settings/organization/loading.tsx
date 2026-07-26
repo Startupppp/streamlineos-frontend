@@ -24,8 +24,8 @@ function SectionCardSkeleton({ fields = 2 }: { fields?: number }) {
 export default function OrganizationSettingsLoading() {
   return (
     <PageWrapper
-      title="Workspace"
-      subtitle="Manage your workspace profile, branding, and lifecycle settings."
+      title="Organization"
+      subtitle="Manage your organization profile, branding, and lifecycle settings."
     >
       <div className="space-y-4">
         <SectionCardSkeleton fields={3} />

@@ -112,7 +112,7 @@ export function GenerationProgressStage({
             aria-valuenow={progress}
             aria-valuemin={0}
             aria-valuemax={100}
-            aria-label="Workspace setup progress"
+            aria-label="Organization setup progress"
           >
             <svg
               width={RING_SIZE}

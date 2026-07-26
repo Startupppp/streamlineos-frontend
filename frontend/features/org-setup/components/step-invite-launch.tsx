@@ -72,10 +72,10 @@ export function StepInviteLaunch({
         <NavButtons
           onBack={onBack}
           onNext={handleLaunch}
-          nextLabel="Build my workspace"
+          nextLabel="Build my organization"
           nextIcon={RocketIcon}
           isPending={isPending}
-          loadingText="Building workspace…"
+          loadingText="Building organization…"
         />
       }
     >

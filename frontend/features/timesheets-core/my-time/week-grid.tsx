@@ -1,8 +1,9 @@
 "use client";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { addDays, differenceInCalendarDays, format, parseISO } from "date-fns";
-import { Copy, Lock, Plus, Loader2 } from "lucide-react";
+import { Copy, Lock, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { ProjectTicketSelect } from "./project-ticket-select";
@@ -221,10 +222,10 @@ export function WeekGrid({ entries, isLoading, days, weekStart, weekEnd }: WeekG
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-end">
-        <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={handleCopyLastWeek} disabled={isCopying}>
-          {isCopying ? <Loader2 className="h-3 w-3 animate-spin" /> : <Copy className="h-3 w-3" />}
+        <LoadingButton variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={handleCopyLastWeek} isPending={isCopying} loadingText="Copying…">
+          <Copy className="h-3 w-3" />
           Copy last week
-        </Button>
+        </LoadingButton>
       </div>
 
       <div className="overflow-x-auto rounded-lg border border-border">
