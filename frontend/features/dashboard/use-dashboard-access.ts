@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo } from "react";
 import { useAccess } from "@/hooks/api/access";
@@ -45,7 +45,7 @@ export function useDashboardAccess(): DashboardAccess {
       canViewExecutive: can("hr:analytics:read"),
       canViewCrmLeads: can("crm:leads:view"),
       canViewCrmReports: can("crm:reports:view"),
-      canViewTickets: can("projects:tickets:view"),
+      canViewTickets: can("build:tickets:view"),
     };
   }, [data, isLoading, enabledModules]);
 }

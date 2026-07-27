@@ -1,4 +1,4 @@
-
+﻿
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FolderKanban } from "lucide-react";
@@ -44,7 +44,7 @@ export function EmployeeProjectsList({ projects }: { projects: ProjectItem[] }) 
 
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
                 {projects.map((item) => (
-                    <Link key={item.id} href={`/projects/${item.id}`} className="block group">
+                    <Link key={item.id} href={`/build/${item.id}`} className="block group">
                         <Card className="h-full border-border hover:border-primary/50 hover:shadow-md transition-all duration-200">
                             <CardContent className="p-4 flex flex-col h-full">
 

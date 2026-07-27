@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -25,7 +25,7 @@ import { useOrgMembers } from "@/hooks/api/organization";
 import {
   getUserDisplayName,
   type NamedUser,
-} from "@/features/projects/shared/resolve-user-name";
+} from "@/features/build/shared/resolve-user-name";
 
 export function EventStreamPageContent() {
   const canExport = useCan("hr:analytics:read");

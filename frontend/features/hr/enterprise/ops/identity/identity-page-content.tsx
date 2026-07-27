@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -29,7 +29,7 @@ import { useOrgMembers } from "@/hooks/api/organization";
 import {
   getUserDisplayName,
   type NamedUser,
-} from "@/features/projects/shared/resolve-user-name";
+} from "@/features/build/shared/resolve-user-name";
 import { StateIllustration } from "@/components/illustrations";
 
 const STATUS_COLORS: Record<ProvisioningStatus, string> = {

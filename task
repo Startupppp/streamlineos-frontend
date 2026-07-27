@@ -3,7 +3,7 @@ task summary :-
 Review the code and you should fix the bugs, schema, api, refactoring UI and UX etc 
 
 task flow :- 
-you should understand the TimeSheets in that you should 
+you should understand the RBAC and ORG in that you should 
 check the each and every api, schema, components, pages, everything without missing the single point and you should make a proper map of what are need to change based on the rules mentioned below format 
 
 1. now you should understand the schemas and you should make the schema should be efficient and easy to manage the large data like Millions of users, so keeping that in the mind you should  remove the unnecessary schema and you should create the best schema possible 

@@ -9,7 +9,7 @@ export type ScopeMap = Partial<Record<string, EditableScope>>;
 export const MODULE_LABELS: Record<string, string> = {
   hr: "Human Resources",
   crm: "CRM & Sales",
-  projects: "Projects",
+  build: "Build",
   settings: "Settings",
   reports: "Reports",
   accounting: "Accounting",
@@ -27,7 +27,7 @@ export const MODULE_LABELS: Record<string, string> = {
 export const SCOPABLE_MODULES = new Set([
   "hr",
   "crm",
-  "projects",
+  "build",
   "inventory",
   "support",
   "kb",

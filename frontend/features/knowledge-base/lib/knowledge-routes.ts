@@ -1,11 +1,11 @@
-export const KNOWLEDGE_BASE = "/knowledge";
+﻿export const KNOWLEDGE_BASE = "/knowledge";
 
 export function pageHref(id: number): string {
   return `${KNOWLEDGE_BASE}/pages/${id}`;
 }
 
 export function projectPageHref(projectId: number, pageId: number): string {
-  return `/projects/${projectId}/wiki/${pageId}`;
+  return `/build/${projectId}/wiki/${pageId}`;
 }
 
 export function pageHistoryHref(id: number): string {

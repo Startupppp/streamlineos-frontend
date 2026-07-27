@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback } from "react";
 import { motion, useReducedMotion } from "framer-motion";
@@ -24,7 +24,7 @@ const ENTITY_PATHS: Record<TaskEntityType, string> = {
   LEAD: "/crm/leads",
   DEAL: "/crm/deals",
   CONTACT: "/crm/contacts",
-  PROJECT: "/projects/all",
+  PROJECT: "/build/all",
 };
 
 const ENTITY_LABELS: Record<TaskEntityType, string> = {

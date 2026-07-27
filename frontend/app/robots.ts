@@ -1,4 +1,4 @@
-import type { MetadataRoute } from "next";
+﻿import type { MetadataRoute } from "next";
 import { BRAND_URL } from "@/lib/branding";
 
 export default function robots(): MetadataRoute.Robots {
@@ -26,7 +26,7 @@ export default function robots(): MetadataRoute.Robots {
           "/employee-onboarding/",
           "/organization/",
           "/payroll/",
-          "/projects/",
+          "/build/",
           "/settings/",
           "/sign/",
           "/signin",

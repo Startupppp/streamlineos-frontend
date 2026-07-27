@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
@@ -101,7 +101,7 @@ export function useTicketGitLinks(projectId: number, ticketId: number) {
     queryKey: queryKeys.gitIntegration.ticketLinks(ticketId),
     queryFn: () =>
       apiClient.get<TicketGitLink[]>(
-        `/projects/${projectId}/tickets/${ticketId}/git-links`,
+        `/build/${projectId}/tickets/${ticketId}/git-links`,
       ),
     enabled: !!projectId && !!ticketId,
     staleTime: 30_000,

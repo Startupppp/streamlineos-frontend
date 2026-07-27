@@ -1,8 +1,8 @@
-import { format, isToday, isYesterday } from "date-fns";
+﻿import { format, isToday, isYesterday } from "date-fns";
 import {
   getUserDisplayName,
   type NamedUser,
-} from "@/features/projects/shared/resolve-user-name";
+} from "@/features/build/shared/resolve-user-name";
 
 export type ChatOrgUser = {
   id: string;

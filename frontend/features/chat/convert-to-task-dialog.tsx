@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -30,7 +30,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { useProjects } from "@/hooks/api/projects/projects";
+import { useProjects } from "@/hooks/api/build/projects";
 import { useCreateTaskFromMessage } from "@/hooks/api/chat";
 import { getErrorMessage } from "@/lib/get-error-message";
 

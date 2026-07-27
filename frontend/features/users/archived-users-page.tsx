@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useCallback, useMemo } from "react";
 import { keepPreviousData } from "@tanstack/react-query";
@@ -35,7 +35,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { formatDistanceToNow } from "date-fns";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
+import { getUserDisplayName, getUserInitials } from "@/features/build/shared/resolve-user-name";
 
 interface ArchivedActionsMenuProps {
   user: User;

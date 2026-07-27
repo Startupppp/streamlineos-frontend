@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { memo } from "react";
 import Link from "next/link";
@@ -34,7 +34,7 @@ export const RecentProjectsCard = memo(function RecentProjectsCard({ projects, i
           <Folder className="h-4 w-4 text-primary" aria-hidden="true" />
           Recent Projects
         </CardTitle>
-        <Link href="/projects/all">
+        <Link href="/build/all">
           <Button variant="ghost" size="sm" className="hover:bg-primary/10 hover:text-primary" aria-label="View all projects">View All</Button>
         </Link>
       </CardHeader>
@@ -51,7 +51,7 @@ export const RecentProjectsCard = memo(function RecentProjectsCard({ projects, i
           <ScrollArea className="h-full pr-3">
           <div className="space-y-1.5">
             {projects.map((project) => (
-              <Link key={project.id} href={`/projects/${project.id}`}>
+              <Link key={project.id} href={`/build/${project.id}`}>
                 <div className="flex items-center justify-between p-2 rounded-lg border border-border hover:bg-muted/50 hover:border-primary/30 transition-colors cursor-pointer">
                   <div className="flex items-center gap-3">
                     <div className="w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">

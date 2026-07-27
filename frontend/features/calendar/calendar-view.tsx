@@ -221,7 +221,7 @@ export function CalendarView() {
         event.resource.entityId != null
       ) {
         router.push(
-          `/projects/${event.resource.projectId}?ticket=${event.resource.entityId}`,
+          `/build/${event.resource.projectId}?ticket=${event.resource.entityId}`,
         );
         return;
       }

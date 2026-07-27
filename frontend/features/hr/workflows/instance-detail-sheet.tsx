@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useState, type ReactNode } from "react";
 import { useForm } from "react-hook-form";
@@ -25,7 +25,7 @@ import {
   type HrWorkflowAction,
   type HrWorkflowInstanceStatus,
 } from "@/types/hr/workflows";
-import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
+import { getUserDisplayName } from "@/features/build/shared/resolve-user-name";
 
 const rejectSchema = z.object({ comment: z.string().min(1, "Comment is required") });
 type RejectForm = z.infer<typeof rejectSchema>;

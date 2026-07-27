@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useState, useCallback, useMemo } from "react";
@@ -13,7 +13,7 @@ import { Plus } from "lucide-react";
 import { useCan } from "@/hooks/api/access";
 import { useHrEmployees, useHrAssetList, unwrapEmployees } from "@/hooks/api/hr";
 import { cn } from "@/lib/utils";
-import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
+import { getUserDisplayName } from "@/features/build/shared/resolve-user-name";
 import type { ComboboxOption } from "@/components/ui/combobox";
 import type { Asset } from "@/types/hr";
 import {

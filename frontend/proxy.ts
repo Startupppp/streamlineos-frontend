@@ -1,4 +1,4 @@
-import { NextResponse, NextRequest } from "next/server";
+﻿import { NextResponse, NextRequest } from "next/server";
 import { getToken, type JWT } from "next-auth/jwt";
 import { PLATFORM_OWNER_ROLE, OWNER_HOME } from "@/lib/platform/role";
 import { ROLES } from "@/lib/constants/roles";
@@ -72,7 +72,7 @@ function isLoopbackHostname(hostname: string): boolean {
 
 const PROTECTED_ROUTES = [
   "/dashboard",
-  "/projects",
+  "/build",
   "/hr",
   "/settings",
   "/onboarding",
@@ -162,6 +162,11 @@ export async function proxy(req: NextRequest) {
 
   if (matchesRoute(pathname, "/signup"))
     return redirectTo(req, "/signin", req.nextUrl.search);
+
+  if (matchesRoute(pathname, "/projects")) {
+    const rest = pathname.slice("/projects".length);
+    return redirectTo(req, "/build" + rest, req.nextUrl.search);
+  }
 
   if (pathname.startsWith("/api/")) return NextResponse.next();
 

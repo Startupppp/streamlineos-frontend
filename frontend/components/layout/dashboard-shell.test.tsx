@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+﻿import { fireEvent, render, screen } from "@testing-library/react";
 import type { PropsWithChildren } from "react";
 import { DashboardShell } from "./dashboard-shell";
 
@@ -23,7 +23,7 @@ jest.mock("next/link", () => {
 });
 
 jest.mock("next/navigation", () => ({
-  usePathname: () => "/projects",
+  usePathname: () => "/build",
 }));
 
 jest.mock("./app-sidebar", () => ({
@@ -112,8 +112,8 @@ jest.mock("./sidebar/use-product-sidebar-visibility", () => ({
       {
         label: "Projects",
         routes: [
-          { label: "Home", href: "/projects/command-center", icon: () => null },
-          { label: "Inbox", href: "/projects/inbox", icon: () => null },
+          { label: "Home", href: "/build/command-center", icon: () => null },
+          { label: "Inbox", href: "/build/inbox", icon: () => null },
         ],
       },
     ],

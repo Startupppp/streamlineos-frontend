@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useCallback } from "react";
 import { ChevronsUpDown } from "lucide-react";
@@ -17,7 +17,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { useProjectBoardTickets } from "@/hooks/api/projects";
+import { useProjectBoardTickets } from "@/hooks/api/build";
 import { cn } from "@/lib/utils";
 
 interface TicketComboboxProps {

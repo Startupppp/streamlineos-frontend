@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState, useCallback } from "react";
-import { useProjects, useProject } from "@/hooks/api/projects/projects";
+import { useProjects, useProject } from "@/hooks/api/build/projects";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { Combobox } from "@/components/ui/combobox";
 

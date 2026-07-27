@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useRef } from "react";
 import { format } from "date-fns";
@@ -32,7 +32,7 @@ import {
   HELPDESK_CATEGORY_LABELS,
   type TicketStatus,
 } from "@/hooks/api/hr/helpdesk";
-import { getUserInitials } from "@/features/projects/shared/resolve-user-name";
+import { getUserInitials } from "@/features/build/shared/resolve-user-name";
 
 const STATUS_LABELS: Record<TicketStatus, string> = {
   TODO: "Open",

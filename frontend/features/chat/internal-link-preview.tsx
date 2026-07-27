@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
@@ -11,10 +11,10 @@ import { isApiError } from "@/lib/api-client";
 import {
   commentPermalinkQueryOptions,
   ticketPermalinkQueryOptions,
-} from "@/hooks/api/projects/comment-permalink";
+} from "@/hooks/api/build/comment-permalink";
 import { LinkPreviewCard } from "./link-preview-card";
-import { getStatusBadgeClass } from "@/features/projects/shared/status-badge";
-import { formatTicketKey } from "@/features/projects/shared/format-ticket-key";
+import { getStatusBadgeClass } from "@/features/build/shared/status-badge";
+import { formatTicketKey } from "@/features/build/shared/format-ticket-key";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 type InternalLink =

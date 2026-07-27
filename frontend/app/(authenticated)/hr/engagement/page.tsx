@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -31,7 +31,7 @@ import {
   getUserDisplayName,
   getUserInitials,
   type NamedUser,
-} from "@/features/projects/shared/resolve-user-name";
+} from "@/features/build/shared/resolve-user-name";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { MoodCheckinWidget } from "@/features/hr/engagement/mood-checkin-widget";
 import {

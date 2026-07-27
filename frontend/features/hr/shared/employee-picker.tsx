@@ -1,9 +1,9 @@
-"use client";
+﻿"use client";
 
 import { useMemo } from "react";
 import { Combobox } from "@/components/ui/combobox";
 import { useHrEmployeeOptions } from "@/hooks/api/hr/employees";
-import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
+import { getUserDisplayName } from "@/features/build/shared/resolve-user-name";
 import { cn } from "@/lib/utils";
 
 interface EmployeePickerProps {

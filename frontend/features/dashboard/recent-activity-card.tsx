@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { memo } from "react";
 import Link from "next/link";
@@ -63,7 +63,7 @@ export const RecentActivityCard = memo(function RecentActivityCard({ items, isLo
               {items.map((item) => {
                 const TypeIcon = isTicketType(item.type) ? typeIcons[item.type] : DEFAULT_TICKET_ICON;
                 return (
-                  <Link key={item.id} href={item.projectId ? `/projects/${item.projectId}` : "/projects/all"}>
+                  <Link key={item.id} href={item.projectId ? `/build/${item.projectId}` : "/build/all"}>
                     <div className="flex items-start gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
                       <TypeIcon className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" aria-hidden="true" />
                       <div className="flex-1 min-w-0">

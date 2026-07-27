@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
@@ -173,7 +173,7 @@ function RevokeGrantAction({
 }
 
 export function ClientAccessPage() {
-  const canManage = useCan("projects:clientvisibility:manage");
+  const canManage = useCan("build:clientvisibility:manage");
 
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");

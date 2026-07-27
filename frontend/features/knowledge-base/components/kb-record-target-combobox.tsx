@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState, useCallback } from "react";
 import { Combobox } from "@/components/ui/combobox";
@@ -9,8 +9,8 @@ import { useLeads, useLeadDetail } from "@/hooks/api/leads";
 import { useDeals, useDealDetail } from "@/hooks/api/crm/deals";
 import { useContacts, useContactDetail } from "@/hooks/api/crm/contacts";
 import { useHrEmployees } from "@/hooks/api/hr/employees";
-import { useTicketSearch } from "@/hooks/api/projects/ticket-search";
-import { formatTicketKey } from "@/features/projects/shared/format-ticket-key";
+import { useTicketSearch } from "@/hooks/api/build/ticket-search";
+import { formatTicketKey } from "@/features/build/shared/format-ticket-key";
 import type { Employee } from "@/types/hr";
 
 export type KbRecordTargetType =

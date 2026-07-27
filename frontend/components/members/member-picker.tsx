@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useMemo, useCallback, type ReactNode } from "react";
 import { Check, User } from "lucide-react";
@@ -21,15 +21,15 @@ import {
   FIELD_SEARCH_POPOVER_CONTENT_CLASS,
 } from "@/components/ui/field-control";
 import { useOrgMembers, useOrgMembersByIds } from "@/hooks/api/organization";
-import { useProjectMembers } from "@/hooks/api/projects/projects";
-import { useProjectWorkspaceMembers } from "@/hooks/api/projects/workspace-members";
+import { useProjectMembers } from "@/hooks/api/build/projects";
+import { useProjectWorkspaceMembers } from "@/hooks/api/build/workspace-members";
 import { useCan } from "@/hooks/api/access";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import {
   getUserDisplayName,
   getUserInitials,
   type NamedUser,
-} from "@/features/projects/shared/resolve-user-name";
+} from "@/features/build/shared/resolve-user-name";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface MemberOption extends NamedUser {
@@ -75,7 +75,7 @@ function useMemberOptions(
   selectedIds: string[],
 ): { options: MemberOption[]; selectedMembers: MemberOption[] } {
   const canViewOrgMembers = useCan("settings:view");
-  const canViewProjectWorkspaceMembers = useCan("projects:members:view");
+  const canViewProjectWorkspaceMembers = useCan("build:members:view");
   const useOrgDirectory = projectId === undefined && canViewOrgMembers;
   const useWorkspaceDirectory =
     projectId === undefined && !canViewOrgMembers && canViewProjectWorkspaceMembers;

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
@@ -27,7 +27,7 @@ import { UserCombobox } from "@/components/ui/user-combobox";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateRate, useUpdateRate } from "@/hooks/api/timesheets-core/rates";
-import { useProjects } from "@/hooks/api/projects";
+import { useProjects } from "@/hooks/api/build";
 import type { TimesheetRate, CreateRateInput, BillingType } from "@/features/timesheets-core/types";
 import { BILLING_TYPE_LABEL } from "@/features/timesheets-core/types";
 

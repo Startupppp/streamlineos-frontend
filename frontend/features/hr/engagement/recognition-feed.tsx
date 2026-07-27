@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { memo, useState, useCallback, useMemo } from "react";
 import { toast } from "sonner";
@@ -26,7 +26,7 @@ import {
   getUserDisplayName,
   getUserInitials,
   type NamedUser,
-} from "@/features/projects/shared/resolve-user-name";
+} from "@/features/build/shared/resolve-user-name";
 
 interface Recognition {
   id: number;

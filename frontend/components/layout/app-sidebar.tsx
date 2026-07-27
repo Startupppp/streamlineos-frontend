@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Fragment, useMemo, useCallback, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
@@ -20,7 +20,7 @@ import {
 } from "./sidebar/sidebar-nav-items";
 import { SidebarSection } from "./sidebar/sidebar-section";
 import { SidebarWorkspaceRow } from "./sidebar/sidebar-workspace-row";
-import { ProjectNavTree } from "@/features/projects/sidebar/project-nav-tree";
+import { ProjectNavTree } from "@/features/build/sidebar/project-nav-tree";
 import { ProductSwitcherMenu } from "./header/product-switcher-menu";
 import { usePermissions } from "@/lib/rbac/hooks";
 import { useAccess, useCan } from "@/hooks/api/access";
@@ -91,7 +91,7 @@ export function AppSidebar({
   const activeProduct = getProductFromPathname(pathname);
   const accent: ModuleAccent = MODULE_ACCENTS[activeProduct];
   const activeProjectId = useMemo(() => {
-    const match = /^\/projects\/(\d+)(?:\/|$)/.exec(pathname ?? "");
+    const match = /^\/build\/(\d+)(?:\/|$)/.exec(pathname ?? "");
     return match ? match[1] : null;
   }, [pathname]);
 
@@ -251,9 +251,9 @@ export function AppSidebar({
                     onNavigate={onNavigate}
                     accent={accent}
                   />
-                  {activeProduct === "projects" &&
+                  {activeProduct === "build" &&
                   activeProjectId &&
-                  group.label === "Projects" ? (
+                  group.label === "Build" ? (
                     <ProjectNavTree
                       projectId={activeProjectId}
                       collapsed={effectiveCollapsed}

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
@@ -16,7 +16,7 @@ import type {
 } from "@/types/portal-access/grants";
 
 export function usePortalMemberships(params?: { page?: number; limit?: number; status?: string }) {
-  const canView = useCan("projects:portal:view");
+  const canView = useCan("build:portal:view");
   return useQuery<PortalMembershipsPage>({
     queryKey: queryKeys.portalAccess.memberships(params),
     queryFn: () => apiClient.get<PortalMembershipsPage>("/portal-access/memberships", { params }),
@@ -54,7 +54,7 @@ export function useSetMembershipStatus(portalMembershipId: string) {
 }
 
 export function useProjectClientGrants(params?: { page?: number; limit?: number; projectId?: number }) {
-  const canView = useCan("projects:portal:view");
+  const canView = useCan("build:portal:view");
   return useQuery<ProjectClientGrantsPage>({
     queryKey: queryKeys.portalAccess.grants(params),
     queryFn: () => apiClient.get<ProjectClientGrantsPage>("/portal-access/grants", { params }),

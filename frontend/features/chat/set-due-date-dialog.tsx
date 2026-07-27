@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
@@ -24,7 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Form } from "@/components/ui/form";
-import { useProjects } from "@/hooks/api/projects/projects";
+import { useProjects } from "@/hooks/api/build/projects";
 import { useSetDueDateFromChat } from "@/hooks/api/chat";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TicketCombobox } from "./ticket-combobox";

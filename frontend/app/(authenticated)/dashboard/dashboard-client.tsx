@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
@@ -190,7 +190,7 @@ export function DashboardClient() {
 
   const handleRefresh = useCallback(() => void refetch(), [refetch]);
   const handleGoToProjects = useCallback(
-    () => router.push("/projects/all"),
+    () => router.push("/build/all"),
     [router],
   );
 

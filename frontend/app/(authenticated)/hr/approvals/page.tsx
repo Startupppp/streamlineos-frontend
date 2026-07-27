@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
@@ -22,7 +22,7 @@ import {
   type HrWorkflowInstance,
   type HrWorkflowInstanceStatus,
 } from "@/types/hr/workflows";
-import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
+import { getUserDisplayName } from "@/features/build/shared/resolve-user-name";
 
 const STATUS_CHIP: Record<HrWorkflowInstanceStatus, { label: string; icon: ReactNode; className: string }> = {
   pending: { label: "Pending", icon: <Clock className="h-3 w-3" />, className: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30" },

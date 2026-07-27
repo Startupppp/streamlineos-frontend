@@ -36,7 +36,7 @@ export const GOALS = [
   { id: "inventory", label: "Manage Inventory", outcome: "Track stock across warehouses" },
   { id: "finance", label: "Finance & Accounting", outcome: "Invoice, reconcile, and get paid faster" },
   { id: "support", label: "Customer Support", outcome: "Resolve tickets with SLAs" },
-  { id: "projects", label: "Projects", outcome: "Plan and deliver work on time" },
+  { id: "build", label: "Build", outcome: "Plan and deliver work on time" },
   { id: "ai", label: "AI Automation", outcome: "Automate busywork across your team" },
   { id: "everything", label: "Build Everything", outcome: "Enable the full StreamlineOS suite" },
 ] as const;
@@ -51,14 +51,14 @@ export const GOAL_TO_APPS: Record<string, string[]> = {
   inventory: ["INVENTORY"],
   finance: ["FINANCE"],
   support: ["HELPDESK"],
-  projects: ["PROJECTS"],
-  ai: ["CRM", "HR", "PROJECTS"],
-  everything: ["CRM", "HR", "PROJECTS", "FINANCE", "INVENTORY", "HELPDESK"],
+  build: ["BUILD"],
+  ai: ["CRM", "HR", "BUILD"],
+  everything: ["CRM", "HR", "BUILD", "FINANCE", "INVENTORY", "HELPDESK"],
 };
 
 export const ALWAYS_ENABLED_MODULES = ["CHAT", "KNOWLEDGE"] as const;
 
-export const DEFAULT_APPS = ["CRM", "HR", "PROJECTS", ...ALWAYS_ENABLED_MODULES];
+export const DEFAULT_APPS = ["CRM", "HR", "BUILD", ...ALWAYS_ENABLED_MODULES];
 
 export function deriveAppsFromGoals(goals: string[]): string[] {
   if (goals.length === 0) return [...DEFAULT_APPS];
@@ -159,7 +159,7 @@ export const MODULE_CATALOG: Record<string, { label: string; description: string
   HR: { label: "HR", description: "Employees, leave, and payroll", setupTasks: ["Add departments", "Invite employees"] },
   INVENTORY: { label: "Inventory", description: "Stock, warehouses, and products", setupTasks: ["Create warehouse", "Import products"] },
   FINANCE: { label: "Accounting", description: "Invoices, taxes, and reports", setupTasks: ["Set fiscal year", "Configure taxes"] },
-  PROJECTS: { label: "Projects", description: "Tasks and delivery tracking", setupTasks: ["Create first project", "Invite team"] },
+  BUILD: { label: "Build", description: "Tasks and delivery tracking", setupTasks: ["Create first project", "Invite team"] },
   HELPDESK: { label: "Support", description: "Tickets and customer SLAs", setupTasks: ["Configure SLA policy"] },
   KNOWLEDGE: { label: "Knowledge", description: "SOPs and team docs", setupTasks: ["Create team space"] },
   CHAT: { label: "Chat", description: "Team messaging", setupTasks: ["Create first channel"] },

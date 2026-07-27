@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -53,7 +53,7 @@ const TICKET_COLUMNS: DataTableColumn<Ticket>[] = [
     cell: (row) =>
       row.project ? (
         <Link
-          href={"/projects/" + row.project.id}
+          href={"/build/" + row.project.id}
           className="hover:underline text-primary"
         >
           {row.project.name}

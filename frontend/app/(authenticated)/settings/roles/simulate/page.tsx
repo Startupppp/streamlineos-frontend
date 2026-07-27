@@ -38,7 +38,7 @@ import type { DataScope } from "@/types/access";
 const MODULE_LABELS: Record<string, string> = {
   hr: "Human Resources",
   crm: "CRM & Sales",
-  projects: "Projects",
+  build: "Build",
   settings: "Settings",
   reports: "Reports",
   accounting: "Accounting",

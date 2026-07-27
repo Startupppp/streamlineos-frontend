@@ -1,4 +1,4 @@
-import {
+﻿import {
   LayoutDashboard,
   Users,
   Briefcase,
@@ -1835,135 +1835,135 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    label: "Projects",
-    module: "projects",
-    requiredPermission: ["projects:view", "projects:tickets:view"],
+    label: "Build",
+    module: "build",
+    requiredPermission: ["build:view", "build:tickets:view"],
     routes: [
       {
         label: "Home",
         icon: LayoutDashboard,
-        href: "/projects/command-center",
-        requiredPermission: "projects:view",
+        href: "/build/command-center",
+        requiredPermission: "build:view",
       },
       {
         label: "Inbox",
         icon: Inbox,
-        href: "/projects/inbox",
-        requiredPermission: "projects:tickets:view",
+        href: "/build/inbox",
+        requiredPermission: "build:tickets:view",
       },
       {
         label: "My issues",
         icon: CheckSquare,
-        href: "/projects/my-work",
-        requiredPermission: "projects:tickets:view",
+        href: "/build/my-work",
+        requiredPermission: "build:tickets:view",
       },
       {
         label: "Drafts",
         icon: FileText,
-        href: "/projects/drafts",
-        requiredPermission: "projects:tickets:view",
+        href: "/build/drafts",
+        requiredPermission: "build:tickets:view",
       },
       {
         label: "All issues",
         icon: Layers,
-        href: "/projects/all-work",
-        requiredPermission: "projects:tickets:view",
+        href: "/build/all-work",
+        requiredPermission: "build:tickets:view",
       },
       {
         label: "Projects",
         icon: Briefcase,
-        href: "/projects",
+        href: "/build",
         exact: true,
-        requiredPermission: "projects:view",
+        requiredPermission: "build:view",
       },
       {
         label: "Teams",
         icon: Network,
-        href: "/projects/teams",
-        requiredPermission: "projects:teams:view",
+        href: "/build/teams",
+        requiredPermission: "build:teams:view",
       },
       {
         label: "Members",
         icon: Users,
-        href: "/projects/members",
-        requiredPermission: "projects:view",
+        href: "/build/members",
+        requiredPermission: "build:view",
       },
       {
         label: "Customers",
         icon: Building2,
-        href: "/projects/customers",
+        href: "/build/customers",
         requiredPermission: "crm:leads:view",
       },
     ],
   },
   {
     label: "More",
-    module: "projects",
+    module: "build",
     defaultCollapsed: true,
     requiredPermission: [
-      "projects:roadmap:view",
-      "projects:goals:view",
-      "projects:portfolios:view",
-      "projects:managed-products:view",
-      "projects:workspaces:view",
-      "projects:approvals:view",
-      "projects:create",
+      "build:roadmap:view",
+      "build:goals:view",
+      "build:portfolios:view",
+      "build:managed-products:view",
+      "build:workspaces:view",
+      "build:approvals:view",
+      "build:create",
       "settings:manage",
     ],
     routes: [
       {
         label: "Roadmap",
         icon: Map,
-        href: "/projects/roadmap",
-        requiredPermission: "projects:roadmap:view",
+        href: "/build/roadmap",
+        requiredPermission: "build:roadmap:view",
       },
       {
         label: "Goals",
         icon: Target,
-        href: "/projects/goal",
-        requiredPermission: "projects:goals:view",
+        href: "/build/goal",
+        requiredPermission: "build:goals:view",
       },
       {
         label: "Portfolios",
         icon: LayoutGrid,
-        href: "/projects/portfolios",
-        requiredPermission: "projects:portfolios:view",
+        href: "/build/portfolios",
+        requiredPermission: "build:portfolios:view",
       },
       {
         label: "Managed Products",
         icon: Layers,
-        href: "/projects/managed-products",
-        requiredPermission: "projects:managed-products:view",
+        href: "/build/managed-products",
+        requiredPermission: "build:managed-products:view",
       },
       {
         label: "PM Workspaces",
         icon: Boxes,
-        href: "/projects/pm-workspaces",
-        requiredPermission: "projects:workspaces:view",
+        href: "/build/pm-workspaces",
+        requiredPermission: "build:workspaces:view",
       },
       {
         label: "Approvals",
         icon: ClipboardCheck,
-        href: "/projects/approvals",
-        requiredPermission: "projects:approvals:view",
+        href: "/build/approvals",
+        requiredPermission: "build:approvals:view",
       },
       {
         label: "Templates",
         icon: LayoutTemplate,
-        href: "/projects/templates",
-        requiredPermission: "projects:create",
+        href: "/build/templates",
+        requiredPermission: "build:create",
       },
       {
         label: "Settings",
         icon: Plug,
-        href: "/projects/settings/integrations",
+        href: "/build/settings/integrations",
         requiredPermission: "settings:manage",
       },
       {
         label: "Access",
         icon: ShieldCheck,
-        href: "/projects/access",
-        requiredPermission: "projects:access:view",
+        href: "/build/access",
+        requiredPermission: "build:access:view",
       },
     ],
   },
@@ -1971,7 +1971,7 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "Support",
     module: "helpdesk",
     requiredPermission: [
-      "projects:tickets:view",
+      "build:tickets:view",
       "support:kb:view",
       "support:portal:tickets:view",
     ],
@@ -1980,13 +1980,13 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "All Tickets",
         icon: LifeBuoy,
         href: "/support",
-        requiredPermission: "projects:tickets:view",
+        requiredPermission: "build:tickets:view",
         children: [
           {
             label: "Support Inbox",
             icon: Inbox,
             href: "/support/inbox",
-            requiredPermission: "projects:tickets:view",
+            requiredPermission: "build:tickets:view",
           },
         ],
       },
@@ -2241,7 +2241,7 @@ export const NAV_GROUPS: NavGroup[] = [
       "directory:people:view",
       "workforce:workers:view",
       "party:parties:view",
-      "projects:portal:view",
+      "build:portal:view",
     ],
     routes: [
       {
@@ -2267,7 +2267,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Client Access",
         icon: ShieldCheck,
         href: "/client-access",
-        requiredPermission: "projects:portal:view",
+        requiredPermission: "build:portal:view",
       },
     ],
   },
@@ -2481,7 +2481,7 @@ export type ProductKey =
   | "home"
   | "crm"
   | "hrms"
-  | "projects"
+  | "build"
   | "timesheets"
   | "inventory"
   | "finance"
@@ -2503,7 +2503,7 @@ export const PRODUCT_DEFINITIONS: ProductDefinition[] = [
   { key: "home", label: "Home", href: "/dashboard", icon: LayoutDashboard },
   { key: "crm", label: "CRM", href: "/crm", icon: Handshake },
   { key: "hrms", label: "HRMS", href: "/hr", icon: Users },
-  { key: "projects", label: "Product Management", href: "/projects", icon: Briefcase },
+  { key: "build", label: "Build", href: "/build", icon: Briefcase },
   { key: "timesheets", label: "Timesheets", href: "/timesheets", icon: Timer },
   { key: "inventory", label: "Inventory", href: "/inventory", icon: Package },
   { key: "finance", label: "Finance", href: "/accounting", icon: Calculator },
@@ -2534,7 +2534,7 @@ export const PRODUCT_DESCRIPTIONS: Record<ProductKey, string> = {
   home: "Overview & activity",
   crm: "Leads, deals & contacts",
   hrms: "People & payroll",
-  projects: "Plan & deliver work",
+  build: "Plan & deliver work",
   timesheets: "Track, approve & bill time",
   inventory: "Stock & orders",
   finance: "Accounts & books",
@@ -2572,7 +2572,7 @@ export const MODULE_ACCENTS: Record<ProductKey, ModuleAccent> = {
     indicator: "bg-emerald-600 dark:bg-emerald-500",
     border: "border-emerald-600 dark:border-emerald-500",
   },
-  projects: {
+  build: {
     text: "!text-violet-600 dark:!text-violet-400",
     bg: "bg-violet-50 dark:bg-violet-950/40",
     indicator: "bg-violet-600 dark:bg-violet-500",
@@ -2638,7 +2638,7 @@ const PRODUCT_NAV_GROUP_LABELS: Record<ProductKey, string[]> = {
   home: [],
   crm: ["CRM"],
   hrms: ["HR – People", "Recruitment"],
-  projects: ["Projects", "More"],
+  build: ["Build", "More"],
   timesheets: ["Timesheets"],
   inventory: ["Inventory"],
   finance: ["Accounting & Finance"],
@@ -2719,7 +2719,7 @@ export function getNavGroupsForProduct(
 const MODULE_KEY_MAP: Partial<Record<ProductKey, string>> = {
   crm: "CRM",
   hrms: "HR",
-  projects: "PROJECTS",
+  build: "BUILD",
   inventory: "INVENTORY",
   finance: "FINANCE",
   helpdesk: "HELPDESK",
@@ -2758,7 +2758,7 @@ export function getProductFromPathname(pathname: string): ProductKey {
   if (pathname.startsWith("/hr") || pathname.startsWith("/recruitment"))
     return "hrms";
   if (pathname.startsWith("/timesheets")) return "timesheets";
-  if (pathname.startsWith("/projects")) return "projects";
+  if (pathname.startsWith("/build")) return "build";
   if (pathname.startsWith("/inventory")) return "inventory";
   if (pathname.startsWith("/accounting")) return "finance";
   if (pathname.startsWith("/support/kb")) return "documents";

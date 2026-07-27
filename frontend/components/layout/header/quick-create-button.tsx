@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import Link from "next/link"
 import {
@@ -54,8 +54,8 @@ export function useQuickCreateGroups(): CreateGroup[] {
   const canMail = useCan("mail:messages:send")
   const canCalendar = useCan("calendar:write")
   const canChat = useCan("chat:channels:write")
-  const canProject = useCan("projects:create")
-  const canIssue = useCan("projects:tickets:create")
+  const canProject = useCan("build:create")
+  const canIssue = useCan("build:tickets:create")
   const canSupport = useCan("support:tickets:create")
   const canLead = useCan("crm:leads:create")
   const canContact = useCan("crm:contacts:manage")
@@ -76,8 +76,8 @@ export function useQuickCreateGroups(): CreateGroup[] {
       ["mail:messages:send", canMail],
       ["calendar:write", canCalendar],
       ["chat:channels:write", canChat],
-      ["projects:create", canProject],
-      ["projects:tickets:create", canIssue],
+      ["build:create", canProject],
+      ["build:tickets:create", canIssue],
       ["support:tickets:create", canSupport],
       ["crm:leads:create", canLead],
       ["crm:contacts:manage", canContact],

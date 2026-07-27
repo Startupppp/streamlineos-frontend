@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -26,7 +26,7 @@ export function MyTasksWidget() {
       icon={ListChecks}
       title="My Tasks"
       link={{
-        href: "/projects/my-work",
+        href: "/build/my-work",
         label: "View all",
         ariaLabel: "View all tasks",
       }}

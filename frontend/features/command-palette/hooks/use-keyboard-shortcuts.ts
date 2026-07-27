@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useCallback } from "react";
 import { usePathname, useRouter } from "next/navigation";
@@ -52,12 +52,12 @@ export function useKeyboardShortcuts() {
         clearChord();
         if (e.key === "b") {
           e.preventDefault();
-          router.push(`/projects/${projectId}`);
+          router.push(`/build/${projectId}`);
           return;
         }
         if (e.key === "i") {
           e.preventDefault();
-          router.push(`/projects/${projectId}/my-tickets`);
+          router.push(`/build/${projectId}/my-tickets`);
           return;
         }
         return;
