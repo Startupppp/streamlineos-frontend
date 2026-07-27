@@ -334,7 +334,7 @@ export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }:
                       className="fill-muted-foreground"
                       fontSize={10}
                     >
-                      {day.toLocaleDateString("en-US", { weekday: "short" })}
+                      {day.toLocaleDateString("en-IN", { weekday: "short" })}
                     </text>
                     <text
                       x={x + dayWidth / 2}

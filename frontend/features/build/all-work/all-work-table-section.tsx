@@ -72,7 +72,7 @@ function buildTableColumns(onTicketClick: (id: number) => void): DataTableColumn
       className: "font-mono text-[11px] tabular-nums",
       cell: (row) =>
         row.dueDate
-          ? new Date(row.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+          ? new Date(row.dueDate).toLocaleDateString("en-IN", { month: "short", day: "numeric" })
           : "—",
     },
   ];

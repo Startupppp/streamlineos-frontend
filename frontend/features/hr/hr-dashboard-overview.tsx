@@ -27,7 +27,7 @@ const HR_ADMIN_ROLES = ["CEO", "HR", "ADMIN", "BRANCH_HR", "BRANCH_MANAGER"];
 
 function formatDateLabel(dateStr: string) {
   const d = new Date(dateStr);
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return d.toLocaleDateString("en-IN", { month: "short", day: "numeric" });
 }
 
 function LeaveCalendarWidget() {

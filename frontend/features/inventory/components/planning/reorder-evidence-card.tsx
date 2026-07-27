@@ -7,7 +7,7 @@ import type { ReorderEvidence, ReorderProposalResponse } from "@/hooks/api/inv-a
 
 function formatDate(dateStr: string | null): string {
   if (!dateStr) return "—";
-  return new Date(dateStr).toLocaleDateString("en-US", {
+  return new Date(dateStr).toLocaleDateString("en-IN", {
     month: "short",
     day: "numeric",
     year: "numeric",

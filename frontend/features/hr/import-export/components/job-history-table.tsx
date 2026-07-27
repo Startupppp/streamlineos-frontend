@@ -40,7 +40,7 @@ const ENTITY_LABELS: Record<HrImportEntity, string> = {
 };
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-US", {
+  return new Date(iso).toLocaleDateString("en-IN", {
     month: "short",
     day: "numeric",
     year: "numeric",

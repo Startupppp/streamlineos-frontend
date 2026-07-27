@@ -73,7 +73,7 @@ const MODULE_STATUS_STYLES: Record<ModuleStatus, ModuleStatusStyle> = {
 
 function formatModuleDate(value: string | null): string {
   if (!value) return "TBD";
-  return new Date(value).toLocaleDateString("en-US", {
+  return new Date(value).toLocaleDateString("en-IN", {
     month: "numeric",
     day: "numeric",
     year: "numeric",

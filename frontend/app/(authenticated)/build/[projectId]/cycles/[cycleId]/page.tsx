@@ -144,7 +144,7 @@ export default function CycleDetailPage({ params }: PageProps) {
 
   const cycleTitle = cycle?.name ?? "Cycle";
   const cycleDateRange = cycle
-    ? `${new Date(cycle.startDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })} — ${new Date(cycle.endDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`
+    ? `${new Date(cycle.startDate).toLocaleDateString("en-IN", { month: "short", day: "numeric" })} — ${new Date(cycle.endDate).toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" })}`
     : undefined;
 
   return (

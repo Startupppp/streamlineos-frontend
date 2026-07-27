@@ -229,7 +229,7 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
             <InlineDueDate ticketId={ticket.id} projectId={projectId} currentDueDate={ticket.dueDate} />
           ) : ticket.dueDate ? (
             <span className={cn("font-mono text-[11px] tabular-nums", isOverdue(ticket) && "text-destructive font-medium")}>
-              {new Date(ticket.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+              {new Date(ticket.dueDate).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}
             </span>
           ) : (
             <span className="font-mono text-[11px] tabular-nums">—</span>

@@ -43,7 +43,7 @@ const BUCKETS: BucketConfig[] = [
 ];
 
 function formatCloseDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("en-US", {
+  return new Date(dateStr).toLocaleDateString("en-IN", {
     month: "short",
     day: "numeric",
     year: "numeric",

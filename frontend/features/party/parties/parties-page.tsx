@@ -71,7 +71,7 @@ const PARTY_TYPE_TONES: Record<PartyType, BadgeTone> = {
 type PartyTypeFilter = PartyType | "ALL";
 
 function formatDate(iso: string): string {
-  return new Intl.DateTimeFormat("en-GB", {
+  return new Intl.DateTimeFormat("en-IN", {
     day: "numeric",
     month: "short",
     year: "numeric",
