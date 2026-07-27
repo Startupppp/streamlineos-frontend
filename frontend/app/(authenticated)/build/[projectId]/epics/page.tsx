@@ -7,7 +7,7 @@ import {
   useDeleteTicket,
   useCreateTicket,
   useProjectBoardTickets,
-} from "@/hooks/api/projects";
+} from "@/hooks/api/build";
 import { CreateEpicDialog } from "@/features/build/epics/create-epic-dialog";
 import { EpicCard } from "@/features/build/epics/epic-card";
 import { EpicStoryRow } from "@/features/build/epics/epic-story-row";

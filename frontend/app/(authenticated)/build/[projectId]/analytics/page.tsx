@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { use, useMemo } from "react";
-import { useProjectAnalytics } from "@/hooks/api/projects";
+import { useProjectAnalytics } from "@/hooks/api/build";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";

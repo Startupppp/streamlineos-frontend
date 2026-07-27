@@ -3,7 +3,7 @@
 import { use, useState, useCallback, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useProject, useUpdateProject } from "@/hooks/api/projects";
+import { useProject, useUpdateProject } from "@/hooks/api/build";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";

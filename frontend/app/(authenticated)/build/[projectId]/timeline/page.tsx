@@ -2,7 +2,7 @@
 
 import { use, useMemo, useCallback } from "react";
 import { useRouter, notFound } from "next/navigation";
-import { useProject, useProjectBoardTickets } from "@/hooks/api/projects";
+import { useProject, useProjectBoardTickets } from "@/hooks/api/build";
 import { GanttView } from "@/features/build/views/gantt-view";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PAGE_CHROME_X } from "@/components/ui/content-fill-panel";

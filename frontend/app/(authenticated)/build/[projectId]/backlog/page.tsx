@@ -2,8 +2,8 @@
 
 import { use, useMemo, useCallback, useState, useEffect } from "react";
 import { useProject, useSprints } from "@/hooks/api";
-import { useBulkUpdateTickets, useProjectBoardTickets } from "@/hooks/api/projects";
-import type { BulkUpdateTicketsInput } from "@/hooks/api/projects";
+import { useBulkUpdateTickets, useProjectBoardTickets } from "@/hooks/api/build";
+import type { BulkUpdateTicketsInput } from "@/hooks/api/build";
 import { notFound, useRouter, useSearchParams } from "next/navigation";
 import { CreateTicketDialog } from "@/features/build/tickets/create-ticket-dialog";
 import { TicketFilterBar } from "@/features/build/shared/ticket-filter-bar";

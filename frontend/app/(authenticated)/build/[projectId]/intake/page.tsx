@@ -4,7 +4,7 @@ import { use, useState, useCallback } from "react";
 import {
   useIntakeRequests, useCreateIntakeRequest, useUpdateIntakeRequest,
   useProjectMembers, useCycles, useModules,
-} from "@/hooks/api/projects";
+} from "@/hooks/api/build";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

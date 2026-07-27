@@ -4,7 +4,7 @@ import { use, useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useProject, useSprints, useBulkUpdateTickets } from "@/hooks/api";
 import type { BulkUpdateTicketsInput } from "@/hooks/api";
-import { useViews, useCreateView, useProjectBoardTickets } from "@/hooks/api/projects";
+import { useViews, useCreateView, useProjectBoardTickets } from "@/hooks/api/build";
 import dynamic from "next/dynamic";
 import { KanbanBoardSkeleton as KanbanBoardSkeletonInline } from "@/components/ui/kanban-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";

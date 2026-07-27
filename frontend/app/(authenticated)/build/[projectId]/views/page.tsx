@@ -2,7 +2,7 @@
 
 import { use, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
-import { useViews, useUpdateView, useDeleteView } from "@/hooks/api/projects";
+import { useViews, useUpdateView, useDeleteView } from "@/hooks/api/build";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";

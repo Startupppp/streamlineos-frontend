@@ -2,7 +2,7 @@ export * from "./hr";
 export * from "./leads";
 export * from "./crm";
 export * from "./crm-settings";
-export * from "./projects";
+export * from "./build";
 export * from "./chat";
 export * from "./chat-huddles";
 export * from "./chat-ai-assistant";

@@ -3,7 +3,7 @@
 import { use, useState, useMemo, useCallback } from "react";
 import { notFound, useRouter, useSearchParams } from "next/navigation";
 import { useProject } from "@/hooks/api";
-import { useCycles, useProjectBoardTickets } from "@/hooks/api/projects";
+import { useCycles, useProjectBoardTickets } from "@/hooks/api/build";
 import { KanbanBoard } from "@/features/build/views/kanban-board";
 import { ListView } from "@/features/build/views/list-view";
 import { ViewSwitcher, parseViewType, type ViewType } from "@/features/build/views/view-switcher";

@@ -75,7 +75,7 @@ import {
   TRIGGER_EVENTS,
   ACTION_TYPES,
   type ProjectAutomation,
-} from "@/hooks/api/projects/automations";
+} from "@/hooks/api/build/automations";
 
 const conditionSchema = z.object({
   field: z.string().min(1),

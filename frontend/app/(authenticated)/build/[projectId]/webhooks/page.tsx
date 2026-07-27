@@ -53,7 +53,7 @@ import {
   useSendTestWebhook,
   type ProjectWebhook,
   type WebhookDelivery,
-} from "@/hooks/api/projects/webhooks";
+} from "@/hooks/api/build/webhooks";
 import { cn } from "@/lib/utils";
 import {
   PmPageShell,

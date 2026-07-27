@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { IndianRupee, TrendingUp, Pencil } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
-import { useProjectBudget, useUpdateProjectBudget, useProjectMembers } from "@/hooks/api/projects";
+import { useProjectBudget, useUpdateProjectBudget, useProjectMembers } from "@/hooks/api/build";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { getUserDisplayName, getUserInitials, type NamedUser } from "@/features/build/shared/resolve-user-name";
 import { resolveImageUrl } from "@/lib/utils";

@@ -38,7 +38,7 @@ import {
   useUpdateWhiteboard,
   type WhiteboardSummary,
   type ExcalidrawSceneData,
-} from "@/hooks/api/projects";
+} from "@/hooks/api/build";
 import { useCan } from "@/hooks/api/access";
 import { toast } from "sonner";
 import { CreateBoardDialog } from "@/features/build/whiteboard/create-board-dialog";

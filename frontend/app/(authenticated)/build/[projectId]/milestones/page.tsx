@@ -22,7 +22,7 @@ import {
   useProjectMilestones,
   useDeleteMilestone,
   type ProjectMilestone,
-} from "@/hooks/api/projects";
+} from "@/hooks/api/build";
 import { MilestoneUpsertSheet } from "@/features/build/milestones/milestone-upsert-sheet";
 import { MilestoneCard } from "@/features/build/milestones/milestone-card";
 import { toast } from "sonner";

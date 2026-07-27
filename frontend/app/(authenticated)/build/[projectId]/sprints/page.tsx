@@ -7,7 +7,7 @@ import {
   useUpdateSprint,
   useUpdateTicket,
   useProjectBoardTickets,
-} from "@/hooks/api/projects";
+} from "@/hooks/api/build";
 import { CreateSprintDialog } from "@/features/build/sprints/create-sprint-dialog";
 import { VelocityChart } from "@/features/build/sprints/velocity-chart";
 import { Skeleton } from "@/components/ui/skeleton";
