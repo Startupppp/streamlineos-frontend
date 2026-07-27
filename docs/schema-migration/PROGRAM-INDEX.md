@@ -98,18 +98,40 @@ authority: docs/schema-change-plan.md §9 (waves 0–9) is canonical
   + org purge worker.
 - Dead-code sweep: 7 backend + 3 frontend dead items removed.
 
-**GATE 0.2 (journal reconciliation) — DONE (`f25b51f`):** journal was 21 entries / 26 files with
-~10 session changes applied only via ad-hoc SQL. Now journaled to 27=27: the 5 orphaned files
-(0007/0008/0300/0305/0306) + `0307_wave_1_4_6_7_9_reconciliation.sql` (idempotent, dependency-ordered,
-validated as a no-op re-apply against the branch). `db:migrate` can now replay the session's schema.
+**GATE 0.2 (journal reconciliation) — DONE (`f25b51f` → superseded by `28dbfe4`+`2baf093`):**
+journal was 21 entries / 26 files with ~10 session changes applied only via ad-hoc SQL. The first
+pass folded everything into a monolithic `0307_wave_1_4_6_7_9_reconciliation.sql` — but a clean-DB
+replay proved that migration ECONNRESET on Neon (~2000 ops in one connection) AND that an entire
+**un-journaled additive FOUNDATION layer** (`managed_products`, directory `organization_people`/
+`workers`/`worker_engagements`, `business_parties`+contacts+addresses, portal tables) was never
+journaled at all. Reconciled properly into **21 discrete, dependency-ordered, idempotent migrations
+`0307`–`0327`** (foundation → idempotency → project_teams → owner pointer/trigger → org_modules(+backfill)
+→ org/invitation lifecycle → pm_workspaces → offer_fulfillment → party_overlays → managed_product_fields
+→ email_orgid → phase_a_orgid → defect_fks → phase_c_candidate_keys → phase_d_composite_fks →
+directory_party_fks → membership_fk → owner_not_null → decouple_projects_crm). **Journal now 47 entries
+= 47 files, consistent.** `db:migrate` can now replay the whole session's schema from empty.
 *Residual:* meta snapshots are still incomplete (pre-existing — only 0000/0016 exist), so `db:generate`
-stays TTY/snapshot-blocked; and `branch-sync-project-teams` + full snapshot regen are not done.
+stays TTY/snapshot-blocked.
+
+**GATE 0.4 (clean-DB reproducibility) — proven in a throwaway DB; surfaced + FIXED two real cold-build
+defects:** replaying all 47 migrations against a fresh `streamline_recon_test` DB (Neon **direct**
+endpoint, per-migration reconnect) proved the base (0000–0306) + the full **766-table foundation**
+(0307–0321) build cleanly. Two genuine reproducibility bugs were found and fixed (they were invisible on
+the warm dev branch because constraints already existed):
+- **Extension bootstrap missing:** no migration creates `vector`/`pg_trgm`/`btree_gist`/`pgcrypto`/
+  `uuid-ossp`, so 0000 fails on `type vector does not exist`. A fresh DB must `CREATE EXTENSION` these
+  before `db:migrate` (documented in the Wave-0 runbook; not folded into 0000 to avoid rehashing an
+  applied migration).
+- **`statement_timeout` cancels cold catalog DO blocks (`2baf093`):** phase-a/c/d + directory-fk +
+  owner-pointer run their entire ADD-CONSTRAINT/ADD-FK loop as one server-side PL/pgSQL `DO`; on a cold
+  DB that single statement adds 600+ constraints and exceeds Neon's default `statement_timeout`, which
+  cancels it. Prepended `SET statement_timeout = 0;` (transaction-local under drizzle-kit) to all five.
 
 **BLOCKED — only the user/operator can do these (no agent can):**
 - **0.1** create `prod-recon-baseline` backup branch.
-- **0.4** run `pnpm -C backend db:migrate` on a CLEAN Neon branch and prove it reaches the same head
-  (the reproducibility exit criterion — this is the real "is it migrated?" test; if 0307's ordering is
-  wrong it surfaces HERE).
+- **0.4 (final)** run `pnpm -C backend db:migrate` on a CLEAN Neon branch (after the extension bootstrap)
+  and confirm it reaches head. The throwaway-DB replay above is a strong pre-check, but the plan's exit
+  criterion is the operator running the real `db:migrate` on a real fresh branch.
 - **0.5** Neon pooler transaction-locality test (hard gate for all RLS).
 - **`db:generate`** needs a TTY (hits `promptNamedWithSchemasConflict`) — run it locally to regenerate
   snapshots and produce clean future migrations.

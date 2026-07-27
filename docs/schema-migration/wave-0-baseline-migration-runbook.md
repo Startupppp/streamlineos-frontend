@@ -35,6 +35,15 @@ prerequisite: wave-0-control-plane.md (read first — contains the drift report 
 | Side-channel DDL (never journaled) | `docs/schema-migration/branch-sync-project-teams.sql` (applied via `apply-migration-file.mjs`) |
 | Schema in code with NO migration | `directory/` tables (`organization_people`, `workers`, `worker_engagements`), `projects/pm-workspaces.ts`, `projects/pm-workspace-memberships.ts` |
 
+### ✅ Drift RECONCILED (2026-07-27, commits `28dbfe4` + `2baf093`)
+
+The drift above is now fixed **in the journal**. The 5 orphaned files were journaled and the entire
+un-journaled session/foundation layer was folded into 21 discrete, dependency-ordered, idempotent
+migrations `0307`–`0327`. **Journal is now 47 entries = 47 `.sql` files, consistent.** A throwaway-DB
+replay of all 47 confirmed the base + 766-table foundation build cleanly. What remains for you (operator):
+the extension bootstrap below, then the real `db:migrate`-to-head on a fresh branch (GATE 0.4), the
+backup branch (0.1), and the pooler locality test (0.5).
+
 ---
 
 ## Safety Rules (non-negotiable throughout)
@@ -50,6 +59,24 @@ prerequisite: wave-0-control-plane.md (read first — contains the drift report 
 ---
 
 ## Phase 0 — Pre-flight Checks
+
+### Step 0.0 — Extension bootstrap (REQUIRED before `db:migrate` on any fresh branch)
+
+Migration `0000` uses the `vector` type and later migrations use `pg_trgm`, `btree_gist`, `pgcrypto`,
+and `uuid-ossp`, but **no migration creates these extensions** (they pre-existed on the dev branch). A
+clean branch therefore fails at `0000` with `type "vector" does not exist` unless you create them first.
+Run once against the fresh branch (direct, non-pooler connection) before `db:migrate`:
+
+```sql
+CREATE EXTENSION IF NOT EXISTS vector;
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE EXTENSION IF NOT EXISTS btree_gist;
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+```
+
+> Not folded into `0000` on purpose — `0000` is already applied everywhere and editing it would change
+> its hash and risk re-run divergence. Keep it as a documented pre-flight step.
 
 ### Step 0.1 — Confirm tooling versions
 
