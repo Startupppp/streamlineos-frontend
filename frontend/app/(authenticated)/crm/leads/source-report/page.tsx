@@ -21,6 +21,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useLeadSourceReport } from "@/hooks/api/crm/leads";
+import { formatCurrency } from "@/features/crm/lib/format-currency";
 
 const SOURCE_LABELS: Record<string, string> = {
   referral: "Referral",
@@ -48,11 +49,6 @@ function getSourceColor(index: number) {
   return SOURCE_COLORS[index % SOURCE_COLORS.length] ?? FALLBACK_COLOR;
 }
 
-function formatCurrency(val: number) {
-  if (val >= 1_00_00_000) return `₹${(val / 1_00_00_000).toFixed(1)}Cr`;
-  if (val >= 1_00_000) return `₹${(val / 1_00_000).toFixed(1)}L`;
-  return `₹${val.toLocaleString("en-IN")}`;
-}
 
 export default function LeadSourceReportPage() {
   const shouldReduceMotion = useReducedMotion();

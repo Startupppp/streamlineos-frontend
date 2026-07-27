@@ -15,6 +15,7 @@ import { useTaxDeclarationsAdmin, useExportTaxReport } from "@/hooks/api/payroll
 import { useCan } from "@/hooks/api/access";
 import type { TaxDeclarationAdmin, TaxDeclarationStatus } from "@/types/payroll/reports";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
+import { formatShortDate } from "@/lib/date-utils";
 import { DeclarationReviewSheet } from "./declaration-review-sheet";
 
 const STATUS_BADGE: Record<TaxDeclarationStatus, string> = {
@@ -52,13 +53,6 @@ function getFYOptions(): string[] {
   ];
 }
 
-function formatDateShort(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
 
 function calcTotal(d: TaxDeclarationAdmin): number {
   return d.hra + d.lta + d.section80c + d.section80d + d.section80g + d.homeLoanInterest;
@@ -179,7 +173,7 @@ export function DeclarationsTab() {
       key: "submittedAt",
       header: "Submitted",
       cell: (row) => (
-        <span className="text-[11px] text-muted-foreground">{formatDateShort(row.createdAt)}</span>
+        <span className="text-[11px] text-muted-foreground">{formatShortDate(row.createdAt)}</span>
       ),
     },
   ];

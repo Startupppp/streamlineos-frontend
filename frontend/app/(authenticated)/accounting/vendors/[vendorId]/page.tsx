@@ -12,16 +12,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { useVendorLedger } from "@/hooks/api/accounting";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { type VendorLedgerLine } from "@/types/accounting";
-
-function formatCurrency(value: string): string {
-  const n = Number(value);
-  if (!Number.isFinite(n)) return value;
-  return n.toLocaleString(undefined, {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 2,
-  });
-}
+import { formatCurrency } from "@/features/accounting/lib/format-currency";
 
 function formatDate(value: string): string {
   if (!value) return "";

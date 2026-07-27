@@ -18,4 +18,15 @@ export function getTodayString(): string {
   return formatDateOnly(new Date());
 }
 
+export function formatShortDate(value: string | Date | null | undefined): string {
+  if (!value) return "";
+  const d = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 

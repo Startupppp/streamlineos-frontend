@@ -12,6 +12,7 @@ import { UploadIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
+import { formatShortDate } from "@/lib/date-utils";
 import type { HrDocumentType } from "@/hooks/api/hr/document-types";
 
 import { DocumentFileRow } from "./onboarding-document-file-row";
@@ -199,11 +200,7 @@ export function DocumentChecklistRow({
             {submission?.reviewedAt && isApproved ? (
               <p className="mt-0.5 text-xs text-muted-foreground">
                 Approved{" "}
-                {new Date(submission.reviewedAt).toLocaleDateString("en-IN", {
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                })}
+                {formatShortDate(submission.reviewedAt)}
                 {submission.reviewerName ? ` by ${submission.reviewerName}` : ""}
               </p>
             ) : null}

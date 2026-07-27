@@ -32,6 +32,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyCalendarIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
+import { formatShortDate } from "@/lib/date-utils";
 import {
   usePayrollCalendar,
   useGenerateCalendarMonth,
@@ -82,13 +83,6 @@ function getDateRange(selectedMonth: string): { from: string; to: string } {
   };
 }
 
-function formatEventDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
 
 interface EventFormProps {
   editing: PayrollCalendarEvent | null;
@@ -357,7 +351,7 @@ export function CalendarManager({ month }: CalendarManagerProps) {
                   </span>
                 </div>
                 <p className="text-[10px] text-muted-foreground">
-                  {formatEventDate(event.date)} · {event.type.replace(/_/g, " ")}
+                  {formatShortDate(event.date)} · {event.type.replace(/_/g, " ")}
                 </p>
               </div>
               <div className="flex gap-1 shrink-0">

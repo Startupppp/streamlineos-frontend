@@ -255,6 +255,7 @@ export function useCandidateReferrals(candidateId: number) {
     queryFn: () =>
       apiClient.get<CandidateReferral[]>(`/hr/recruitment/candidates/${candidateId}/referral`),
     enabled: candidateId > 0,
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -298,6 +299,7 @@ export function useCalibrationSessions(candidateId: number) {
     queryFn: () =>
       apiClient.get<CalibrationSession[]>(`/hr/recruitment/candidates/${candidateId}/calibration`),
     enabled: candidateId > 0,
+    staleTime: 2 * 60_000,
   });
 }
 

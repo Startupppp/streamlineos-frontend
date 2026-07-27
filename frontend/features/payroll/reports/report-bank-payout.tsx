@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import { usePayrollBankPayout } from "@/hooks/api/payroll/reports";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
+import { formatShortDate } from "@/lib/date-utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import type { BankPayoutBatch, BankPayoutItem } from "@/types/payroll/reports";
@@ -94,11 +95,7 @@ function BatchCard({ batch }: { batch: BankPayoutBatch }) {
           </div>
           {batch.generatedAt && (
             <p className="text-[10px] text-muted-foreground">
-              {new Date(batch.generatedAt).toLocaleDateString("en-IN", {
-                day: "numeric",
-                month: "short",
-                year: "numeric",
-              })}
+              {formatShortDate(batch.generatedAt)}
             </p>
           )}
         </div>

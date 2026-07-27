@@ -16,9 +16,19 @@
 BEGIN;
 
 DROP TABLE IF EXISTS service_accounts;
-DROP TABLE IF EXISTS course_enrollments;         -- referenced courses/users; nothing referenced it
-DROP TABLE IF EXISTS training_attendance;        -- referenced training_programs/users; nothing referenced it
 DROP TABLE IF EXISTS allowance_types;
 DROP TABLE IF EXISTS payroll_statutory_rule_sets; -- referenced payroll_entities; nothing referenced it
+
+-- Abandoned HR Learning + Training feature cluster (schema-only, no controller/service).
+-- Drop children before parents. course_enrollments -> courses -> course_categories;
+-- training_attendance -> training_programs.
+DROP TABLE IF EXISTS course_enrollments;
+DROP TABLE IF EXISTS courses;
+DROP TABLE IF EXISTS course_categories;
+DROP TABLE IF EXISTS training_attendance;
+DROP TABLE IF EXISTS training_programs;
+
+-- Orphaned RBAC grants for the removed hr:learning feature (keys removed from the catalog).
+DELETE FROM role_permission_grants WHERE permission LIKE 'hr:learning:%';
 
 COMMIT;

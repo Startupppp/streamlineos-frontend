@@ -14,12 +14,7 @@ import { EmptyTeamIllustration } from "@/components/illustrations";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCustomersOutstanding } from "@/hooks/api/accounting";
 import type { CustomerOutstanding } from "@/types/accounting";
-
-function formatCurrency(value: string): string {
-  const n = Number(value);
-  if (!Number.isFinite(n)) return value;
-  return n.toLocaleString(undefined, { style: "currency", currency: "INR", maximumFractionDigits: 2 });
-}
+import { formatCurrency } from "@/features/accounting/lib/format-currency";
 
 const columns: DataTableColumn<CustomerOutstanding>[] = [
   {

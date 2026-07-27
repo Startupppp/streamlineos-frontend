@@ -25,11 +25,11 @@ import {
 } from "@/components/ui/alert-dialog";
 import { RateFormSheet } from "./rate-form-sheet";
 
-function formatCurrency(value: string | null, currency = "USD"): string {
+function formatCurrency(value: string | null, currency = "INR"): string {
   if (!value) return "—";
   const num = parseFloat(value);
   if (isNaN(num)) return "—";
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency,
   }).format(num);
