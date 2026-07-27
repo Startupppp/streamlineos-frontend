@@ -383,7 +383,7 @@ export default function AccountingInvoicesPage() {
           <StatCardGrid cols={4}>
             <StatCard
               label="Total Outstanding"
-              value={stats ? stats.totalOutstanding.toLocaleString(undefined, { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 0 }) : "—"}
+              value={stats ? stats.totalOutstanding.toLocaleString(undefined, { style: "currency", currency: "INR", minimumFractionDigits: 0, maximumFractionDigits: 0 }) : "—"}
               tone="blue"
               isLoading={statsQuery.isLoading}
             />

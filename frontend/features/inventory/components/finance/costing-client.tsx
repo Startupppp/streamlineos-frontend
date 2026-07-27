@@ -39,7 +39,7 @@ const METHOD_BADGE_CLASS: Record<CostingMethod, string> = {
 
 function formatCents(cents: number | null): string {
   if (cents === null) return "—";
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
+  return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(cents / 100);
 }
 
 const METHOD_EXPLANATIONS: { method: CostingMethod; label: string; description: string }[] = [

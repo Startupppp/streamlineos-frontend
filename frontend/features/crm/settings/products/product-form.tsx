@@ -57,7 +57,7 @@ export const defaultProductValues: ProductFormValues = {
   sku: "",
   category: "",
   unitPrice: "0",
-  currency: "USD",
+  currency: "INR",
   taxRate: "0",
 };
 

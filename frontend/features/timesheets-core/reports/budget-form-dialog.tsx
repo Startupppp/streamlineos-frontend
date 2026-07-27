@@ -55,7 +55,7 @@ export function BudgetFormDialog({ open, onOpenChange, budget }: BudgetFormDialo
       projectId: "",
       budgetType: "HOURS",
       budgetValue: "",
-      currency: "USD",
+      currency: "INR",
       startsAt: "",
       endsAt: "",
     },
