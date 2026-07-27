@@ -2244,13 +2244,8 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    label: "Directory",
-    requiredPermission: [
-      "directory:people:view",
-      "workforce:workers:view",
-      "party:parties:view",
-      "build:portal:view",
-    ],
+    label: "People",
+    requiredPermission: "directory:people:view",
     routes: [
       {
         label: "People Directory",
@@ -2259,6 +2254,16 @@ export const NAV_GROUPS: NavGroup[] = [
         exact: true,
         requiredPermission: "directory:people:view",
       },
+    ],
+  },
+  {
+    label: "Directory",
+    requiredPermission: [
+      "workforce:workers:view",
+      "party:parties:view",
+      "build:portal:view",
+    ],
+    routes: [
       {
         label: "Workers",
         icon: Briefcase,
@@ -2655,10 +2660,11 @@ const PRODUCT_NAV_GROUP_LABELS: Record<ProductKey, string[]> = {
   surveys: ["Surveys"],
   administration: [
     "Organization",
+    "Structure",
+    "People",
     "Membership",
     "Directory",
     "Access Control",
-    "Structure",
     "Subscription",
     "Platform",
     "Security",

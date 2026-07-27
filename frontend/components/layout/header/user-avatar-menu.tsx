@@ -9,6 +9,7 @@ import {
   CreditCard,
   Key,
   LayoutGrid,
+  Link2,
   LogOut,
   Shield,
   ShieldAlert,
@@ -74,6 +75,7 @@ function buildMenuEntries(opts: {
 
   const accountLinks: MenuLink[] = [
     { href: "/settings", label: "My Account", icon: CircleUser },
+    { href: "/settings/connected-accounts", label: "Connected Accounts", icon: Link2 },
   ];
   if (canManageSettings) {
     accountLinks.push({
