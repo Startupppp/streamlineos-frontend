@@ -11,9 +11,9 @@
 BEGIN;
 
 UPDATE role_permission_grants
-SET    permission = 'build:' || substr(permission, 10)
-WHERE  permission LIKE 'projects:%'
-  AND  permission NOT LIKE 'build:%';
+SET    permission_key = 'build:' || substr(permission_key, 10)
+WHERE  permission_key LIKE 'projects:%'
+  AND  permission_key NOT LIKE 'build:%';
 
 -- 2. org_modules: module_key 'projects' → 'build'
 --    Table: org_modules, column: module_key (varchar 64)
@@ -36,12 +36,23 @@ UPDATE user_module_access
 SET    module_key = 'build'
 WHERE  module_key = 'projects';
 
--- 4. module_checklist_progress (onboarding): module_key 'projects' → 'build'
---    Table: module_checklist_progress, column: module_key
---    (Only if this table stores the module key string; inspect before running.)
-UPDATE module_checklist_progress
-SET    module_key = 'build'
-WHERE  module_key = 'projects';
+-- 4. onboarding checklists: module_key 'projects' → 'build'
+--    VERIFIED 2026-07-27: the real table is `module_setup_checklists` (there is no
+--    `module_checklist_progress`). Guarded by a table-existence check so this file stays
+--    safe on any branch where either table is absent — an unguarded UPDATE against a
+--    missing table aborts the whole transaction.
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables
+             WHERE table_schema = 'public' AND table_name = 'module_setup_checklists') THEN
+    UPDATE module_setup_checklists SET module_key = 'build' WHERE module_key = 'projects';
+  END IF;
+
+  IF EXISTS (SELECT 1 FROM information_schema.tables
+             WHERE table_schema = 'public' AND table_name = 'module_checklist_progress') THEN
+    EXECUTE $q$UPDATE module_checklist_progress SET module_key = 'build' WHERE module_key = 'projects'$q$;
+  END IF;
+END $$;
 
 COMMIT;
 

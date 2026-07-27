@@ -17,7 +17,15 @@ BEGIN;
 
 DROP TABLE IF EXISTS service_accounts;
 DROP TABLE IF EXISTS allowance_types;
-DROP TABLE IF EXISTS payroll_statutory_rule_sets; -- referenced payroll_entities; nothing referenced it
+
+-- payroll_statutory_rule_sets: DELIBERATELY NOT DROPPED (verified 2026-07-27).
+-- It is code-dead (zero references) BUT NOT data-empty: it holds 8 seeded
+-- system-default Indian statutory rule sets (PF, ESI, PT, LWF, TDS, GRATUITY, HRA,
+-- MIN_WAGE; FY2025-04; is_system_default=true, org_id NULL/global). That is
+-- intentional compliance reference data for a payroll-statutory feature, so dropping
+-- it would destroy seeded configuration. Code-dead != safe-to-drop.
+-- Re-evaluate only after confirming the statutory-rules feature is abandoned.
+-- DROP TABLE IF EXISTS payroll_statutory_rule_sets;
 
 -- Abandoned HR Learning + Training feature cluster (schema-only, no controller/service).
 -- Drop children before parents. course_enrollments -> courses -> course_categories;
@@ -29,6 +37,6 @@ DROP TABLE IF EXISTS training_attendance;
 DROP TABLE IF EXISTS training_programs;
 
 -- Orphaned RBAC grants for the removed hr:learning feature (keys removed from the catalog).
-DELETE FROM role_permission_grants WHERE permission LIKE 'hr:learning:%';
+DELETE FROM role_permission_grants WHERE permission_key LIKE 'hr:learning:%';
 
 COMMIT;

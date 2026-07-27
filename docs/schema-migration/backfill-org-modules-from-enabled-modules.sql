@@ -45,4 +45,8 @@ JOIN (VALUES
   ('SIGN',      'sign'),
   ('KB',        'kb')
 ) AS map(legacy_key, module_key) ON map.legacy_key = raw_key
-ON CONFLICT ON CONSTRAINT org_modules_unique_idx DO NOTHING;
+-- NOTE: (org_id, module_key) uniqueness is enforced by a unique INDEX
+-- (`org_modules_unique_idx`), not a named CONSTRAINT, so ON CONFLICT must use
+-- column inference. `ON CONFLICT ON CONSTRAINT org_modules_unique_idx` errors with
+-- "constraint ... does not exist" (verified 2026-07-27).
+ON CONFLICT (org_id, module_key) DO NOTHING;
