@@ -5,6 +5,7 @@ import { Building2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useEnabledModules } from "@/hooks/api/access/org-modules";
+import { matchesOrgModule } from "@/lib/module-vocabulary";
 
 interface RequireModuleProps {
   module: string;
@@ -34,10 +35,8 @@ function ModuleDisabledState({ module }: { module: string }) {
 
 export function RequireModule({ module, children }: RequireModuleProps) {
   const enabledModules = useEnabledModules();
-  const upperModule = module.toUpperCase();
   const isEnabled =
-    enabledModules.length === 0 ||
-    enabledModules.some((m) => m.toUpperCase() === upperModule);
+    enabledModules.length === 0 || matchesOrgModule(enabledModules, module);
 
   if (!isEnabled) return <ModuleDisabledState module={module} />;
 

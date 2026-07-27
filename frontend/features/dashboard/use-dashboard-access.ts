@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { useAccess } from "@/hooks/api/access";
 import { useEnabledModules } from "@/hooks/api/access/org-modules";
+import { matchesOrgModule } from "@/lib/module-vocabulary";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 
 export interface DashboardAccess {
@@ -27,7 +28,7 @@ export function useDashboardAccess(): DashboardAccess {
 
   return useMemo(() => {
     const moduleOn = (name: string) =>
-      enabledModules.length === 0 || enabledModules.includes(name);
+      enabledModules.length === 0 || matchesOrgModule(enabledModules, name);
     const owner = data?.isOrgOwner ?? false;
     const permissions = data?.permissions ?? [];
     const can = (key: PermissionKey) => owner || permissions.includes(key);

@@ -6,25 +6,13 @@ import { useSession } from "next-auth/react";
 import { apiClient, clearBackendTokenCache } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAccess } from "@/hooks/api/access";
+import { ORG_MODULE_NAME } from "@/lib/module-vocabulary";
 
 interface OrgModule {
   moduleKey: string;
   enabled: boolean;
   core?: boolean;
 }
-
-const BACKEND_MODULE_NAMES: Record<string, string> = {
-  hr: "HR",
-  crm: "CRM",
-  projects: "PROJECTS",
-  accounting: "FINANCE",
-  inventory: "INVENTORY",
-  support: "HELPDESK",
-  kb: "KB",
-  surveys: "SURVEYS",
-  payroll: "PAYROLL",
-  sign: "SIGN",
-};
 
 const EMPTY_MODULES: string[] = [];
 
@@ -37,7 +25,7 @@ export function useEnabledModules(): string[] {
       return session?.enabledModules ?? EMPTY_MODULES;
     }
 
-    return Object.entries(BACKEND_MODULE_NAMES)
+    return Object.entries(ORG_MODULE_NAME)
       .filter(([key]) => data.modules[key])
       .map(([, name]) => name);
   }, [data?.modules, session?.enabledModules]);

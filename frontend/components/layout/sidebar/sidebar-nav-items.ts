@@ -99,6 +99,7 @@
   PackageCheck,
   DollarSign,
 } from "lucide-react";
+import { matchesOrgModule } from "@/lib/module-vocabulary";
 
 export interface NavRoute {
   label: string;
@@ -2716,16 +2717,16 @@ export function getNavGroupsForProduct(
   return allGroups.filter((g) => labels.includes(g.label));
 }
 
-const MODULE_KEY_MAP: Partial<Record<ProductKey, string>> = {
-  crm: "CRM",
-  hrms: "HR",
-  build: "BUILD",
-  inventory: "INVENTORY",
-  finance: "FINANCE",
-  helpdesk: "HELPDESK",
-  surveys: "SURVEYS",
-  payroll: "PAYROLL",
-  sign: "SIGN",
+const PRODUCT_MODULE_KEY: Partial<Record<ProductKey, string>> = {
+  crm: "crm",
+  hrms: "hr",
+  build: "build",
+  inventory: "inventory",
+  finance: "accounting",
+  helpdesk: "support",
+  surveys: "surveys",
+  payroll: "payroll",
+  sign: "sign",
 };
 
 export function isModuleEnabled(
@@ -2734,9 +2735,9 @@ export function isModuleEnabled(
 ): boolean {
   if (key === "home" || key === "administration") return true;
   if (enabledModules.length === 0) return true;
-  const moduleName = MODULE_KEY_MAP[key];
-  if (!moduleName) return true;
-  return enabledModules.map((m) => m.toUpperCase()).includes(moduleName);
+  const moduleKey = PRODUCT_MODULE_KEY[key];
+  if (!moduleKey) return true;
+  return matchesOrgModule(enabledModules, moduleKey);
 }
 
 export function getProductFromPathname(pathname: string): ProductKey {

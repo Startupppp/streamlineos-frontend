@@ -36,6 +36,7 @@ import { PlusIcon } from "@animateicons/react/lucide";
 import type { IconHandle } from "@animateicons/react";
 import type { ReactNode, RefObject } from "react";
 import { cn } from "@/lib/utils";
+import { matchesOrgModule } from "@/lib/module-vocabulary";
 import {
   COMMAND_CENTER_JUMP_LINKS,
   type CommandCenterJumpLink,
@@ -94,8 +95,7 @@ function isOrgModuleEnabled(
 ): boolean {
   if (!moduleKey) return true;
   if (enabledModules.length === 0) return true;
-  const upper = moduleKey.toUpperCase();
-  return enabledModules.some((moduleName) => moduleName.toUpperCase() === upper);
+  return matchesOrgModule(enabledModules, moduleKey);
 }
 
 function hasJumpLinkPermission(

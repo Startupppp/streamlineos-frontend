@@ -31,6 +31,7 @@ import { useCan } from "@/hooks/api/access"
 import { useEnabledModules } from "@/hooks/api/access/org-modules"
 import { useCommandPalette } from "@/features/command-palette/hooks/use-command-palette"
 import { cn } from "@/lib/utils"
+import { matchesOrgModule } from "@/lib/module-vocabulary"
 import type { PermissionKey } from "@/lib/rbac/permissions"
 import {
   QUICK_CREATE_GROUPS,
@@ -45,8 +46,7 @@ export { QUICK_CREATE_GROUPS } from "./quick-create-groups"
 function isModuleEnabled(enabledModules: string[], moduleKey?: string): boolean {
   if (!moduleKey) return true
   if (enabledModules.length === 0) return true
-  const upper = moduleKey.toUpperCase()
-  return enabledModules.some((m) => m.toUpperCase() === upper)
+  return matchesOrgModule(enabledModules, moduleKey)
 }
 
 export function useQuickCreateGroups(): CreateGroup[] {

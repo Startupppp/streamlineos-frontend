@@ -43,6 +43,7 @@ import {
 } from "@/components/automations/automation-meta";
 import { AutomationBuilderSheet } from "@/components/automations/automation-builder-sheet";
 import { AutomationRunsDialog } from "@/components/automations/automation-runs-dialog";
+import { matchesOrgModule } from "@/lib/module-vocabulary";
 
 export type SectionModule = "hr" | "support" | "finance";
 
@@ -218,7 +219,7 @@ export function ModuleAutomationsSettings({ config }: { config: ModuleAutomation
   const [togglingId, setTogglingId] = useState<number | null>(null);
 
   const moduleEnabled =
-    enabledModules.length === 0 || enabledModules.includes(moduleEnabledKey.toUpperCase());
+    enabledModules.length === 0 || matchesOrgModule(enabledModules, moduleEnabledKey);
 
   const moduleRules = (rules ?? []).filter(
     (r) => getModuleForTrigger(r.triggerEvent) === sectionModule,
