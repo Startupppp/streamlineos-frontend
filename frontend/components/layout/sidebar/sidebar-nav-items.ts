@@ -2213,11 +2213,11 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    label: "People",
+    label: "Membership",
     requiredPermission: "hr:employees:view",
     routes: [
       {
-        label: "Users",
+        label: "Members",
         icon: UserCog,
         href: "/users",
         exact: true,
@@ -2230,13 +2230,13 @@ export const NAV_GROUPS: NavGroup[] = [
         requiredPermission: "hr:employees:view",
       },
       {
-        label: "Suspended Users",
+        label: "Suspended",
         icon: ShieldAlert,
         href: "/users/suspended",
         requiredPermission: "hr:employees:view",
       },
       {
-        label: "Archived Users",
+        label: "Archived",
         icon: UserX,
         href: "/users/archived",
         requiredPermission: "hr:employees:view",
@@ -2655,7 +2655,7 @@ const PRODUCT_NAV_GROUP_LABELS: Record<ProductKey, string[]> = {
   surveys: ["Surveys"],
   administration: [
     "Organization",
-    "People",
+    "Membership",
     "Directory",
     "Access Control",
     "Structure",

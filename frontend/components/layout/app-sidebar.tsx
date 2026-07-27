@@ -14,6 +14,7 @@ import {
   getNavGroupsForProduct,
   getProductFromPathname,
   flattenNavRoutes,
+  isModuleEnabled,
   withoutHrSetupRoute,
   MODULE_ACCENTS,
   type ModuleAccent,
@@ -99,8 +100,7 @@ export function AppSidebar({
   const canApproveLeaves = useCan("hr:leaves:approve");
   const canViewHr = useCan("hr:employees:view");
   const enabledModules = useEnabledModules();
-  const isHrModuleEnabled =
-    enabledModules.length === 0 || enabledModules.includes("HR");
+  const isHrModuleEnabled = isModuleEnabled("hrms", enabledModules);
   const { data: hrChecklist } = useModuleChecklist("HR", canViewHr);
   const hideHrSetup =
     hrChecklist?.status === "completed" || Boolean(hrChecklist?.dismissedAt);

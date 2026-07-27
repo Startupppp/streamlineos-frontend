@@ -103,7 +103,7 @@ function buildMenuEntries(opts: {
             label: "Organization",
             icon: Building2,
           },
-          { href: "/users", label: "People", icon: Users },
+          { href: "/users", label: "Members", icon: Users },
         ],
       },
     );

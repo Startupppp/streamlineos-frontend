@@ -28,6 +28,7 @@ export interface Project {
   key: string;
   clientId: string | null;
   managerId: string | null;
+  managedProductId: number | null;
   startDate: string | Date | null;
   endDate: string | Date | null;
   status: ProjectStatusValue | null;
@@ -90,6 +91,7 @@ export interface ProjectListItem {
   status: ProjectStatusValue | null;
   priority: ProjectPriority | null;
   health: ProjectHealth;
+  managedProductId: number | null;
   startDate: string | Date | null;
   endDate: string | Date | null;
   manager: {
