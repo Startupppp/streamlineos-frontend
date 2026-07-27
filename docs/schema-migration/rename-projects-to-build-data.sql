@@ -21,6 +21,15 @@ UPDATE org_modules
 SET    module_key = 'build'
 WHERE  module_key = 'projects';
 
+-- 2b. organizations.enabled_modules: 'PROJECTS' → 'BUILD'  (CRITICAL)
+--     SEPARATE vocabulary from org_modules — this text[] array (UPPERCASE) is projected into
+--     the JWT and is what `@RequireModule` checks via module.guard.ts (case-insensitive compare).
+--     Without this, `@RequireModule("build")` finds only 'PROJECTS' in the array and the Build
+--     module gate — plus everything riding it (e.g. Timesheets) — fails for all non-owner users.
+UPDATE organizations
+SET    enabled_modules = array_replace(enabled_modules, 'PROJECTS', 'BUILD')
+WHERE  'PROJECTS' = ANY(enabled_modules);
+
 -- 3. user_module_access: module_key 'projects' → 'build'
 --    Table: user_module_access, column: module_key
 UPDATE user_module_access

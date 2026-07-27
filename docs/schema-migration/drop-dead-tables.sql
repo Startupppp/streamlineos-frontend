@@ -1,0 +1,24 @@
+-- Operator migration: DROP 5 dead tables (code: 2026-07-27)
+-- These 5 tables had ZERO references anywhere — no service/controller/query, no raw SQL,
+-- no FK from any other table, no Drizzle relation. Their schema definitions were removed
+-- from backend/src/db/schema (typecheck stayed green, proving no code path used them).
+--
+-- DESTRUCTIVE (drops the tables + any rows). All 5 are unused, but confirm they are empty
+-- in your environment before running if you want to be cautious:
+--   SELECT 'service_accounts' t, count(*) FROM service_accounts
+--   UNION ALL SELECT 'allowance_types', count(*) FROM allowance_types
+--   UNION ALL SELECT 'course_enrollments', count(*) FROM course_enrollments
+--   UNION ALL SELECT 'training_attendance', count(*) FROM training_attendance
+--   UNION ALL SELECT 'payroll_statutory_rule_sets', count(*) FROM payroll_statutory_rule_sets;
+--
+-- Idempotent (IF EXISTS). RESTRICT (default) — they are leaf tables with no inbound FKs,
+-- so no CASCADE is needed; if a drop is unexpectedly blocked, STOP and investigate.
+BEGIN;
+
+DROP TABLE IF EXISTS service_accounts;
+DROP TABLE IF EXISTS course_enrollments;         -- referenced courses/users; nothing referenced it
+DROP TABLE IF EXISTS training_attendance;        -- referenced training_programs/users; nothing referenced it
+DROP TABLE IF EXISTS allowance_types;
+DROP TABLE IF EXISTS payroll_statutory_rule_sets; -- referenced payroll_entities; nothing referenced it
+
+COMMIT;
