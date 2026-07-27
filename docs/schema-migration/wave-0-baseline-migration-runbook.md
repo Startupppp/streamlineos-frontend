@@ -58,6 +58,39 @@ backup branch (0.1), and the pooler locality test (0.5).
 
 ---
 
+## Fresh Database Bootstrap
+
+> **If you are building against a completely empty database** (no tables, no `__drizzle_migrations`
+> ledger), use `pnpm db:bootstrap` instead of running `pnpm db:migrate` directly. Two confirmed
+> issues prevent a clean cold run with `db:migrate` alone:
+>
+> 1. **`migrations/0295_hrms_perf_indexes.sql`** originally contained `CREATE INDEX CONCURRENTLY`
+>    statements with no `--> statement-breakpoint` markers. `CONCURRENTLY` cannot execute inside a
+>    transaction, and drizzle-kit wraps each migration in one. (Fixed in 0295: `CONCURRENTLY`
+>    removed, breakpoints added — but the fix only helps on the current checkout.)
+>
+> 2. **Migration `0000`** is a large migration (~4 500 statements). Over the Neon **pooler**
+>    endpoint the connection-window is exceeded and the migration rolls back mid-run. It requires
+>    the **direct** (non-pooler) endpoint — the hostname without the `-pooler.` segment.
+>
+> `pnpm db:bootstrap` solves both automatically:
+> - Derives the direct endpoint from `DATABASE_URL` by stripping `-pooler.`.
+> - Creates required Postgres extensions before any migration runs.
+> - Applies each migration on a fresh connection with up to 4 retries on connection errors.
+> - Records each migration hash into `drizzle.__drizzle_migrations` so a subsequent
+>   `pnpm db:migrate` is a clean no-op (sha256-of-file-content, matching drizzle-kit's own hashing).
+>
+> ```bash
+> # Run from backend/ with DATABASE_URL pointing to the fresh Neon branch
+> pnpm db:bootstrap
+> # After this completes: pnpm db:migrate must report no pending migrations.
+> ```
+>
+> If `DATABASE_URL` is already a direct (non-pooler) URL the replace is a no-op and the script
+> works unchanged.
+
+---
+
 ## Phase 0 — Pre-flight Checks
 
 ### Step 0.0 — Extension bootstrap (REQUIRED before `db:migrate` on any fresh branch)
@@ -65,7 +98,10 @@ backup branch (0.1), and the pooler locality test (0.5).
 Migration `0000` uses the `vector` type and later migrations use `pg_trgm`, `btree_gist`, `pgcrypto`,
 and `uuid-ossp`, but **no migration creates these extensions** (they pre-existed on the dev branch). A
 clean branch therefore fails at `0000` with `type "vector" does not exist` unless you create them first.
-Run once against the fresh branch (direct, non-pooler connection) before `db:migrate`:
+
+**`pnpm db:bootstrap` handles this automatically** — if you ran it above, this step is already done.
+If you need to apply extensions manually (e.g. re-running on an existing branch), run once against
+the fresh branch via the direct (non-pooler) connection:
 
 ```sql
 CREATE EXTENSION IF NOT EXISTS vector;

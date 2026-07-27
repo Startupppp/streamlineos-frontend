@@ -33,3 +33,11 @@ export function useCan(permissionKey: PermissionKey): boolean {
   if (data.isOrgOwner || data.isPlatformAdmin) return true;
   return data.permissions.includes(permissionKey);
 }
+
+export function useModuleEnabled(moduleKey: string): boolean {
+  const { data } = useAccess();
+  if (!data) return true;
+  if (data.isOrgOwner || data.isPlatformAdmin) return true;
+  const enabled = data.modules[moduleKey];
+  return enabled !== false;
+}

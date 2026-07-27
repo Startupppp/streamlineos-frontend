@@ -17,18 +17,17 @@ interface OrgModule {
 const EMPTY_MODULES: string[] = [];
 
 export function useEnabledModules(): string[] {
-  const { data: session } = useSession();
   const { data } = useAccess();
 
   return useMemo(() => {
     if (!data?.modules) {
-      return session?.enabledModules ?? EMPTY_MODULES;
+      return EMPTY_MODULES;
     }
 
     return Object.entries(ORG_MODULE_NAME)
       .filter(([key]) => data.modules[key])
       .map(([, name]) => name);
-  }, [data?.modules, session?.enabledModules]);
+  }, [data?.modules]);
 }
 
 export function useOrgModules() {
