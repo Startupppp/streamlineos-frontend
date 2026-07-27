@@ -28,6 +28,11 @@ import { AiActionsMenu, type AiAction } from "@/components/ai/ai-actions-menu";
 import { generateReportsNarrative } from "@/hooks/api/timesheets-core/ai";
 import { OverviewReport } from "./overview-report";
 import { ProjectBudgetsTab } from "./project-budgets-tab";
+import { UtilizationTab } from "./utilization-tab";
+import { ClientProfitabilityTab } from "./client-profitability-tab";
+import { ComplianceTab } from "./compliance-tab";
+import { ApprovalSlaTab } from "./approval-sla-tab";
+import { BillingLeakageTab } from "./billing-leakage-tab";
 
 const REPORT_TABS = [
   { value: "overview", label: "Overview" },
@@ -96,20 +101,25 @@ export function ReportsView() {
   );
 
   const handleTabChange = useCallback(
-    (value: string) => updateParams({ tab: value === "overview" ? null : value }),
+    (value: string) =>
+      updateParams({ tab: value === "overview" ? null : value }),
     [updateParams],
   );
 
   const queryEnabled = canView && !!startDate && !!endDate;
+  const rangeParams = useMemo(
+    () => ({ startDate, endDate }),
+    [startDate, endDate],
+  );
 
-  const {
-    data,
-    isLoading,
-    isError,
-    refetch,
-  } = useReportsOverview({ startDate, endDate, userId }, queryEnabled);
+  const { data, isLoading, isError, refetch } = useReportsOverview(
+    { startDate, endDate, userId },
+    queryEnabled && activeTab === "overview",
+  );
 
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const narrativeActions = useMemo<AiAction[]>(
     () => [
@@ -125,7 +135,11 @@ export function ReportsView() {
               ? "No data to summarize yet"
               : undefined,
         run: async () => {
-          const res = await generateReportsNarrative({ startDate, endDate, userId });
+          const res = await generateReportsNarrative({
+            startDate,
+            endDate,
+            userId,
+          });
           return { text: res.text, aiUsage: res.aiUsage };
         },
       },
@@ -151,7 +165,10 @@ export function ReportsView() {
         onChange={handleDateRangeChange}
       />
       <Select value={userId ?? "ALL"} onValueChange={handleUserChange}>
-        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[160px]")} aria-label="Filter by member">
+        <SelectTrigger
+          className={cn(FILTER_SELECT_TRIGGER, "w-[160px]")}
+          aria-label="Filter by member"
+        >
           <SelectValue />
         </SelectTrigger>
         <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
@@ -187,8 +204,15 @@ export function ReportsView() {
         />
       }
     >
-      <motion.div {...motionProps} className="flex flex-1 min-h-0 flex-col gap-4">
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="flex min-h-0 flex-1 flex-col gap-4">
+      <motion.div
+        {...motionProps}
+        className="flex flex-1 min-h-0 flex-col gap-4"
+      >
+        <Tabs
+          value={activeTab}
+          onValueChange={handleTabChange}
+          className="flex min-h-0 flex-1 flex-col gap-4"
+        >
           <TabsList className="overflow-x-auto scrollbar-hide">
             {REPORT_TABS.map((tab) => (
               <TabsTrigger key={tab.value} value={tab.value}>
@@ -209,20 +233,44 @@ export function ReportsView() {
             )}
           </TabsContent>
 
-          {REPORT_TABS.slice(1).map((tab) => (
-            <TabsContent key={tab.value} value={tab.value} className="mt-0">
-              {tab.value === "project-budgets" ? (
-                <ProjectBudgetsTab />
-              ) : (
-                <EmptyState
-                  illustrationPreset="chart"
-                  title="Coming Soon"
-                  description="This report is currently under development."
-                  compact
-                />
-              )}
-            </TabsContent>
-          ))}
+          <TabsContent value="utilization" className="mt-0">
+            <UtilizationTab
+              params={rangeParams}
+              enabled={queryEnabled && activeTab === "utilization"}
+            />
+          </TabsContent>
+
+          <TabsContent value="project-budgets" className="mt-0">
+            <ProjectBudgetsTab />
+          </TabsContent>
+
+          <TabsContent value="client-profitability" className="mt-0">
+            <ClientProfitabilityTab
+              params={rangeParams}
+              enabled={queryEnabled && activeTab === "client-profitability"}
+            />
+          </TabsContent>
+
+          <TabsContent value="compliance" className="mt-0">
+            <ComplianceTab
+              params={rangeParams}
+              enabled={queryEnabled && activeTab === "compliance"}
+            />
+          </TabsContent>
+
+          <TabsContent value="approval-sla" className="mt-0">
+            <ApprovalSlaTab
+              params={rangeParams}
+              enabled={queryEnabled && activeTab === "approval-sla"}
+            />
+          </TabsContent>
+
+          <TabsContent value="billing-leakage" className="mt-0">
+            <BillingLeakageTab
+              params={rangeParams}
+              enabled={queryEnabled && activeTab === "billing-leakage"}
+            />
+          </TabsContent>
         </Tabs>
       </motion.div>
     </PageWrapper>

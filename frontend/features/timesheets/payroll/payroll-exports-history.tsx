@@ -4,7 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import { format, parseISO } from "date-fns";
 import { toast } from "sonner";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { DownloadIcon } from "@animateicons/react/lucide";
+import { CircleCheckIcon, DownloadIcon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -16,7 +16,10 @@ import {
   payrollExportRowsQueryOptions,
 } from "@/hooks/api/timesheets/payroll";
 import { applyMapping, downloadPayrollFile } from "./lib/build-payroll-file";
+import { ACK_STATUS_BADGE, ACK_STATUS_LABEL, isAckStatus } from "./types";
 import type { TimesheetExportDto, PayrollMapping } from "./types";
+import { AckExportDialog } from "./ack-export-dialog";
+import { useCan } from "@/hooks/api/access";
 import { useQueryClient } from "@tanstack/react-query";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -28,6 +31,21 @@ function formatDate(iso: string): string {
   }
 }
 
+function AckStatusBadge({ row }: { row: TimesheetExportDto }) {
+  if (!row.ackStatus || !isAckStatus(row.ackStatus)) {
+    return <span className="text-[11px] text-muted-foreground">—</span>;
+  }
+  return (
+    <Badge
+      variant="outline"
+      className={`text-[10px] ${ACK_STATUS_BADGE[row.ackStatus]}`}
+      title={row.ackAt ? `Acknowledged ${formatDate(row.ackAt)}` : undefined}
+    >
+      {ACK_STATUS_LABEL[row.ackStatus]}
+    </Badge>
+  );
+}
+
 interface PayrollExportsHistoryProps {
   fallbackMapping: PayrollMapping;
 }
@@ -37,6 +55,14 @@ export function PayrollExportsHistory({ fallbackMapping }: PayrollExportsHistory
   const pageSize = 20;
   const { data, isLoading } = useTimesheetPayrollExports(page, pageSize);
   const qc = useQueryClient();
+  const canAck = useCan("timesheets:payroll:export");
+  const [ackTarget, setAckTarget] = useState<TimesheetExportDto | null>(null);
+
+  const handleAckOpen = useCallback((row: TimesheetExportDto) => setAckTarget(row), []);
+
+  const handleAckOpenChange = useCallback((open: boolean) => {
+    if (!open) setAckTarget(null);
+  }, []);
 
   const handleDownload = useCallback(
     async (row: TimesheetExportDto) => {
@@ -101,6 +127,11 @@ export function PayrollExportsHistory({ fallbackMapping }: PayrollExportsHistory
         ),
       },
       {
+        key: "ack",
+        header: "Ack",
+        cell: (row) => <AckStatusBadge row={row} />,
+      },
+      {
         key: "createdByName",
         header: "By",
         cell: (row) => (
@@ -117,13 +148,29 @@ export function PayrollExportsHistory({ fallbackMapping }: PayrollExportsHistory
         sortValue: (r) => r.createdAt,
       },
       {
-        key: "download",
+        key: "actions",
         header: "",
-        cell: (row) => <DownloadButton row={row} onDownload={handleDownload} />,
-        className: "w-8",
+        cell: (row) => (
+          <div className="flex items-center justify-end gap-0.5">
+            {canAck && (
+              <AnimatedIconButton
+                icon={CircleCheckIcon}
+                iconSize={14}
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => handleAckOpen(row)}
+                aria-label="Record acknowledgement"
+                title="Record acknowledgement"
+              />
+            )}
+            <DownloadButton row={row} onDownload={handleDownload} />
+          </div>
+        ),
+        className: "w-16",
       },
     ],
-    [handleDownload],
+    [handleDownload, canAck, handleAckOpen],
   );
 
   const emptyState = (
@@ -135,25 +182,35 @@ export function PayrollExportsHistory({ fallbackMapping }: PayrollExportsHistory
   );
 
   return (
-    <DataTable
-      data={data?.items ?? []}
-      columns={columns}
-      getRowKey={(r) => r.id}
-      isLoading={isLoading}
-      emptyState={emptyState}
-      pagination={
-        data && data.total > pageSize
-          ? {
-              mode: "server",
-              page,
-              pageSize,
-              total: data.total,
-              onPageChange: setPage,
-            }
-          : undefined
-      }
-      minWidth="700px"
-    />
+    <>
+      <DataTable
+        data={data?.items ?? []}
+        columns={columns}
+        getRowKey={(r) => r.id}
+        isLoading={isLoading}
+        emptyState={emptyState}
+        pagination={
+          data && data.total > pageSize
+            ? {
+                mode: "server",
+                page,
+                pageSize,
+                total: data.total,
+                onPageChange: setPage,
+              }
+            : undefined
+        }
+        minWidth="760px"
+      />
+
+      {ackTarget && (
+        <AckExportDialog
+          exportRow={ackTarget}
+          open
+          onOpenChange={handleAckOpenChange}
+        />
+      )}
+    </>
   );
 }
 

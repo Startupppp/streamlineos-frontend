@@ -33,3 +33,57 @@ export function useHrDocumentList(params?: HrDocumentListParams) {
     placeholderData: keepPreviousData,
   });
 }
+
+export interface HrDocumentStats {
+  total: number;
+  byType: Record<string, number>;
+  expiringIn30Days: number;
+}
+
+export function useHrDocumentStats(options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: queryKeys.hr.documentsStats(),
+    queryFn: () => apiClient.get<HrDocumentStats>("/hr/documents/stats"),
+    staleTime: 2 * 60_000,
+    enabled: options?.enabled ?? true,
+  });
+}
+
+interface OnboardingDocsSummaryTotals {
+  pagination: { total: number };
+}
+
+export function useMissingOnboardingDocsCount(options?: { enabled?: boolean }) {
+  const enabled = options?.enabled ?? true;
+
+  const totalQuery = useQuery({
+    queryKey: queryKeys.hr.onboardingDocsSummary({ limit: 1 }),
+    queryFn: () =>
+      apiClient.get<OnboardingDocsSummaryTotals>("/hr/onboarding-docs/summary", {
+        limit: 1,
+      }),
+    staleTime: 2 * 60_000,
+    enabled,
+  });
+  const approvedQuery = useQuery({
+    queryKey: queryKeys.hr.onboardingDocsSummary({ limit: 1, status: "APPROVED" }),
+    queryFn: () =>
+      apiClient.get<OnboardingDocsSummaryTotals>("/hr/onboarding-docs/summary", {
+        limit: 1,
+        status: "APPROVED",
+      }),
+    staleTime: 2 * 60_000,
+    enabled,
+  });
+
+  const total = totalQuery.data?.pagination.total;
+  const approved = approvedQuery.data?.pagination.total;
+
+  return {
+    missingCount:
+      total !== undefined && approved !== undefined
+        ? Math.max(total - approved, 0)
+        : undefined,
+    isLoading: totalQuery.isLoading || approvedQuery.isLoading,
+  };
+}

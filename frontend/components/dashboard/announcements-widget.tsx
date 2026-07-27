@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useCan } from "@/hooks/api/access";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -86,25 +87,30 @@ export function AnnouncementsWidget() {
   const deleteMutation = useDeleteAnnouncement();
 
   const [showForm, setShowForm] = useState(false);
+  const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [isPinned, setIsPinned] = useState(false);
 
   const handleToggleForm = () => setShowForm((v) => !v);
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setTitle(e.target.value);
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) =>
     setContent(e.target.value);
   const handlePinnedChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setIsPinned(e.target.checked);
   const handleCancelForm = () => {
     setShowForm(false);
+    setTitle("");
     setContent("");
   };
 
   const handleSubmit = () => {
-    if (!content.trim()) return;
+    if (!title.trim() || !content.trim()) return;
     createMutation.mutate(
-      { content: content.trim(), isPinned },
+      { title: title.trim(), content: content.trim(), isPinned },
       {
         onSuccess: () => {
+          setTitle("");
           setContent("");
           setIsPinned(false);
           setShowForm(false);
@@ -149,6 +155,14 @@ export function AnnouncementsWidget() {
       <CardContent className="flex-1 overflow-hidden space-y-3">
         {showForm && isAdmin && (
           <div className="space-y-2 rounded-lg border border-amber-200 dark:border-amber-700 bg-amber-50/40 dark:bg-amber-950/40 p-3">
+            <Input
+              placeholder="Title"
+              value={title}
+              onChange={handleTitleChange}
+              maxLength={200}
+              className="text-sm bg-transparent border-amber-200 dark:border-amber-700 focus-visible:ring-amber-400"
+              aria-label="Announcement title"
+            />
             <Textarea
               placeholder="Write an announcement..."
               value={content}
@@ -182,7 +196,9 @@ export function AnnouncementsWidget() {
                   size="sm"
                   className="px-3 text-xs bg-amber-600 hover:bg-amber-700 text-white"
                   onClick={handleSubmit}
-                  disabled={createMutation.isPending || !content.trim()}
+                  disabled={
+                    createMutation.isPending || !title.trim() || !content.trim()
+                  }
                   aria-label="Post announcement"
                 >
                   {createMutation.isPending ? "Posting..." : "Post"}

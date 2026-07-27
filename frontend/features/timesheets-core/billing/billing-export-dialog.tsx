@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -69,6 +69,11 @@ export function BillingExportDialog({
 }: BillingExportDialogProps) {
   const billingExport = useBillingExport();
 
+  const idempotencyKey = useMemo(
+    () => (open ? crypto.randomUUID() : ""),
+    [open],
+  );
+
   const form = useForm<ExportFormValues>({
     resolver: zodResolver(exportSchema),
     defaultValues: { format: "CSV" },
@@ -90,7 +95,13 @@ export function BillingExportDialog({
 
   const handleSubmit = form.handleSubmit((values) => {
     billingExport.mutate(
-      { startDate, endDate, format: values.format, projectId: projectId ?? undefined },
+      {
+        startDate,
+        endDate,
+        format: values.format,
+        projectId: projectId ?? undefined,
+        idempotencyKey: idempotencyKey || undefined,
+      },
       {
         onSuccess: (result) => {
           const filename = `billing-export_${startDate}_${endDate}.${values.format.toLowerCase()}`;

@@ -80,6 +80,7 @@ export const queryKeys = {
       [...base, "hr", "onboardingDocs", params] as const,
     onboardingDocsSummary: (params?: Record<string, unknown>) =>
       [...base, "hr", "onboardingDocs", "summary", params] as const,
+    documentsStats: () => [...base, "hr", "documentsStats"] as const,
     myOnboardingDocs: () => [...base, "hr", "myOnboardingDocs"] as const,
     teams: (teamId?: string) => [...base, "hr", "teams", teamId] as const,
     diversityReport: () => [...base, "hr", "diversityReport"] as const,
@@ -903,7 +904,8 @@ export const queryKeys = {
     all: [...base, "kb"] as const,
     kbPages: () => [...base, "kb", "pages"] as const,
     pagesTree: () => [...base, "kb", "pages", "tree"] as const,
-    pagesTreeByProject: (projectId: number) => [...base, "kb", "pages", "tree", "project", projectId] as const,
+    pagesTreeByProject: (projectId: number) =>
+      [...base, "kb", "pages", "tree", "project", projectId] as const,
     pagesRecent: () => [...base, "kb", "pages", "recent"] as const,
     pagesFavorites: () => [...base, "kb", "pages", "favorites"] as const,
     pagesTrash: () => [...base, "kb", "pages", "trash"] as const,
@@ -1507,6 +1509,14 @@ export const queryKeys = {
       [...base, "timesheets", "reports", "overview", params] as const,
     teamWeekSummary: (params: Record<string, unknown>) =>
       [...base, "timesheets", "team", "week-summary", params] as const,
+    report: (tab: string, params?: Record<string, unknown>) =>
+      [...base, "timesheets", "reports", tab, params] as const,
+    exceptions: (params?: Record<string, unknown>) =>
+      [...base, "timesheets", "exceptions", "list", params] as const,
+    exceptionsSummary: () =>
+      [...base, "timesheets", "exceptions", "summary"] as const,
+    settingsHistory: () =>
+      [...base, "timesheets", "settings", "history"] as const,
     settings: () => [...base, "timesheets", "settings"] as const,
     rates: () => [...base, "timesheets", "rates"] as const,
     budgets: () => [...base, "timesheets", "budgets"] as const,
@@ -1821,8 +1831,7 @@ export const queryKeys = {
     all: [...base, "party"] as const,
     parties: (params?: Record<string, unknown>) =>
       [...base, "party", "parties", params] as const,
-    party: (partyId: string) =>
-      [...base, "party", "parties", partyId] as const,
+    party: (partyId: string) => [...base, "party", "parties", partyId] as const,
     contacts: (partyId: string) =>
       [...base, "party", "parties", partyId, "contacts"] as const,
   },

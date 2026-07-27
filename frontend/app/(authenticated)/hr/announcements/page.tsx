@@ -31,8 +31,18 @@ type ActiveTab = "published" | "all";
 function AnnouncementsContent() {
   const canManage = useCan("hr:announcements:manage");
 
-  const { data: published, isLoading: loadingPublished, isError: errorPublished, refetch: refetchPublished } = useHrAnnouncements();
-  const { data: all, isLoading: loadingAll, isError: errorAll, refetch: refetchAll } = useAllHrAnnouncements({ enabled: canManage });
+  const {
+    data: published,
+    isLoading: loadingPublished,
+    isError: errorPublished,
+    refetch: refetchPublished,
+  } = useHrAnnouncements();
+  const {
+    data: all,
+    isLoading: loadingAll,
+    isError: errorAll,
+    refetch: refetchAll,
+  } = useAllHrAnnouncements({ enabled: canManage });
 
   const remove = useDeleteHrAnnouncement();
   const markRead = useMarkHrAnnouncementRead();
@@ -67,7 +77,9 @@ function AnnouncementsContent() {
   }, []);
 
   const handleMarkRead = useCallback(
-    (id: number) => { markRead.mutate(id); },
+    (id: number) => {
+      markRead.mutate(id);
+    },
     [markRead],
   );
 
@@ -82,17 +94,14 @@ function AnnouncementsContent() {
 
   const handleConfirmDelete = useCallback(() => {
     if (!deleteId) return;
-    toast.promise(
-      remove.mutateAsync(deleteId),
-      {
-        loading: "Deleting announcement...",
-        success: () => {
-          setDeleteId(null);
-          return "Announcement deleted";
-        },
-        error: getErrorMessage,
+    toast.promise(remove.mutateAsync(deleteId), {
+      loading: "Deleting announcement...",
+      success: () => {
+        setDeleteId(null);
+        return "Announcement deleted";
       },
-    );
+      error: getErrorMessage,
+    });
   }, [deleteId, remove]);
 
   const handleTabPublished = useCallback(() => setActiveTab("published"), []);
@@ -125,7 +134,10 @@ function AnnouncementsContent() {
       <div className="space-y-4">
         {canManage && (
           <FilterPillGroup>
-            <FilterPill active={activeTab === "published"} onClick={handleTabPublished}>
+            <FilterPill
+              active={activeTab === "published"}
+              onClick={handleTabPublished}
+            >
               Published
             </FilterPill>
             <FilterPill active={activeTab === "all"} onClick={handleTabAll}>
@@ -162,8 +174,12 @@ function AnnouncementsContent() {
           <div className="flex flex-col items-center justify-center gap-4 py-20">
             <AlertTriangle className="h-10 w-10 text-muted-foreground" />
             <div className="text-center space-y-1">
-              <p className="text-sm font-medium text-foreground">Failed to load announcements</p>
-              <p className="text-xs text-muted-foreground">Something went wrong. Please try again.</p>
+              <p className="text-sm font-medium text-foreground">
+                Failed to load announcements
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Something went wrong. Please try again.
+              </p>
             </div>
             <Button size="sm" variant="outline" onClick={handleRetry}>
               <RefreshCw className="h-3.5 w-3.5 mr-1.5" />

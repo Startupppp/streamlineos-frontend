@@ -121,8 +121,31 @@ export interface TimesheetSettings {
   lockAfterApproval: boolean;
   lockAfterInvoice: boolean;
   reminderRules: Record<string, unknown> | null;
+  allowFutureEntries: boolean;
+  expectedDailyHours: string | null;
+  expectedWeeklyHours: string | null;
+  submissionGraceDays: number | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface UpdateTimesheetSettingsInput {
+  workWeekStart?: number;
+  requiredFields?: string[];
+  roundingRule?: RoundingRule;
+  maxHoursPerDay?: number;
+  allowOverlappingEntries?: boolean;
+  allowBackdatedEntries?: boolean;
+  backdateLimitDays?: number | null;
+  approvalMode?: ApprovalMode;
+  clientApprovalEnabled?: boolean;
+  lockAfterApproval?: boolean;
+  lockAfterInvoice?: boolean;
+  allowFutureEntries?: boolean;
+  expectedDailyHours?: number | null;
+  expectedWeeklyHours?: number | null;
+  submissionGraceDays?: number | null;
+  changeReason?: string;
 }
 
 export interface TimesheetRate {
@@ -138,6 +161,8 @@ export interface TimesheetRate {
   costRate: string | null;
   currency: string;
   priority: number;
+  effectiveFrom: string | null;
+  effectiveTo: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -218,9 +243,35 @@ export interface BillingGroup {
   missingRate: boolean;
 }
 
+export interface BillingCurrencyTotal {
+  currency: string;
+  amount: number;
+  hours: number;
+}
+
+export interface BillingConvertedTotals {
+  baseCurrency: string;
+  convertedTotal: number;
+  conversions: {
+    currency: string;
+    amount: number;
+    rate: number;
+    rateDate: string | null;
+    converted: number;
+  }[];
+  missingRates: string[];
+}
+
 export interface BillingUninvoiced {
   groups: BillingGroup[];
-  totals: { hours: number; amount: number; currency: string };
+  totals: {
+    hours: number;
+    amount: number | null;
+    currency: string | null;
+    mixed: boolean;
+    byCurrency: BillingCurrencyTotal[];
+    converted?: BillingConvertedTotals | null;
+  };
 }
 
 export interface ReportOverview {
@@ -319,6 +370,7 @@ export interface BillingExportInput {
   endDate: string;
   format: "CSV" | "XLSX";
   projectId?: number;
+  idempotencyKey?: string;
 }
 
 export interface InvoiceDraftInput {
@@ -357,4 +409,93 @@ export const BILLING_TYPE_LABEL: Record<BillingType, string> = {
   BILLABLE: "Billable",
   NON_BILLABLE: "Non-billable",
   INTERNAL: "Internal",
+};
+
+export type ExceptionSeverity = "ERROR" | "WARNING";
+export type ExceptionStatus = "OPEN" | "RESOLVED" | "DISMISSED";
+export type ExceptionRule =
+  | "MISSING_TIMESHEET"
+  | "UNDER_HOURS"
+  | "OVER_MAX_DAILY"
+  | "UNRESOLVED_TIMER"
+  | "MISSING_RATE";
+
+export interface TimesheetExceptionRecord {
+  id: number;
+  orgId: string;
+  userId: string;
+  periodId: number | null;
+  entryId: number | null;
+  rule: ExceptionRule;
+  severity: ExceptionSeverity;
+  status: ExceptionStatus;
+  message: string;
+  details: Record<string, unknown> | null;
+  ownerUserId: string | null;
+  dueDate: string | null;
+  resolutionReason: string | null;
+  resolvedBy: string | null;
+  resolvedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TimesheetException extends TimesheetExceptionRecord {
+  user: { id: string; name: string | null; email: string | null };
+}
+
+export interface ExceptionsSummary {
+  total: number;
+  byStatus: Record<string, number>;
+  bySeverity: Record<string, number>;
+  openBySeverity: Record<string, number>;
+}
+
+export interface ExceptionsQueryInput {
+  status?: ExceptionStatus;
+  severity?: ExceptionSeverity;
+  rule?: ExceptionRule;
+  userId?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface RunDetectionResult {
+  week: { start: string; end: string };
+  candidates: number;
+  created: number;
+}
+
+export const EXCEPTION_RULE_LABEL: Record<ExceptionRule, string> = {
+  MISSING_TIMESHEET: "Missing timesheet",
+  UNDER_HOURS: "Under hours",
+  OVER_MAX_DAILY: "Over max daily",
+  UNRESOLVED_TIMER: "Unresolved timer",
+  MISSING_RATE: "Missing rate",
+};
+
+export const EXCEPTION_SEVERITY_LABEL: Record<ExceptionSeverity, string> = {
+  ERROR: "Error",
+  WARNING: "Warning",
+};
+
+export const EXCEPTION_SEVERITY_BADGE: Record<ExceptionSeverity, string> = {
+  ERROR:
+    "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  WARNING:
+    "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+};
+
+export const EXCEPTION_STATUS_LABEL: Record<ExceptionStatus, string> = {
+  OPEN: "Open",
+  RESOLVED: "Resolved",
+  DISMISSED: "Dismissed",
+};
+
+export const EXCEPTION_STATUS_BADGE: Record<ExceptionStatus, string> = {
+  OPEN: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  RESOLVED:
+    "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  DISMISSED:
+    "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-500/30",
 };

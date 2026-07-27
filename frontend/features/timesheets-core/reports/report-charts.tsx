@@ -74,6 +74,65 @@ export const ByDayChart = memo(function ByDayChart({ data, isLoading }: ByDayCha
   );
 });
 
+interface ByMemberChartProps {
+  data: { name: string; billableHours: number; nonBillableHours: number }[];
+  isLoading?: boolean;
+}
+
+export const ByMemberChart = memo(function ByMemberChart({ data, isLoading }: ByMemberChartProps) {
+  const sorted = useMemo(
+    () =>
+      [...data]
+        .sort((a, b) => b.billableHours + b.nonBillableHours - (a.billableHours + a.nonBillableHours))
+        .slice(0, 10),
+    [data],
+  );
+
+  const chartHeight = Math.max(140, Math.min(sorted.length, 10) * 36);
+
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-medium">Hours by Member</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <Skeleton className="h-[140px] w-full rounded-md" />
+        ) : sorted.length === 0 ? (
+          <EmptyState compact illustrationPreset="chart" title="No data" />
+        ) : (
+          <ResponsiveContainer width="100%" height={chartHeight}>
+            <BarChart data={sorted} layout="vertical" margin={{ left: 8, right: 16 }}>
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="hsl(var(--border))"
+                horizontal={false}
+              />
+              <XAxis type="number" tick={AXIS_TICK} />
+              <YAxis type="category" dataKey="name" tick={AXIS_TICK} width={100} />
+              <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
+              <Bar
+                dataKey="billableHours"
+                name="Billable"
+                stackId="hours"
+                fill="#3b82f6"
+                radius={[0, 0, 0, 0]}
+              />
+              <Bar
+                dataKey="nonBillableHours"
+                name="Non-billable"
+                stackId="hours"
+                fill="#93c5fd"
+                radius={[0, 4, 4, 0]}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
+      </CardContent>
+    </Card>
+  );
+});
+
 interface ByProjectChartProps {
   data: { projectId: number | null; projectName: string; hours: number }[];
   isLoading?: boolean;

@@ -1,3 +1,5 @@
+import type { AckStatus } from "./ack-export-schema";
+
 export type PayPeriod = "WEEKLY" | "BIWEEKLY" | "SEMIMONTHLY" | "MONTHLY";
 export type ExportFormat = "CSV" | "XLSX";
 export type PayrollProvider = "GENERIC" | "ZOHO_PAYROLL" | "RAZORPAYX" | "ADP" | "GUSTO";
@@ -81,9 +83,37 @@ export interface TimesheetExportDto {
   entryCount: number;
   totalHours: number;
   note: string | null;
+  ackStatus: string | null;
+  ackAt: string | null;
   createdBy: string | null;
   createdByName: string | null;
   createdAt: string;
+}
+
+export interface AckExportResponse {
+  export: TimesheetExportDto;
+}
+
+export const ACK_STATUS_LABEL: Record<AckStatus, string> = {
+  RECEIVED: "Received",
+  ACCEPTED: "Accepted",
+  REJECTED: "Rejected",
+  FAILED: "Failed",
+};
+
+export const ACK_STATUS_BADGE: Record<AckStatus, string> = {
+  RECEIVED:
+    "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  ACCEPTED:
+    "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  REJECTED:
+    "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  FAILED:
+    "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+};
+
+export function isAckStatus(value: string): value is AckStatus {
+  return value in ACK_STATUS_LABEL;
 }
 
 export interface PayrollExportRow {
