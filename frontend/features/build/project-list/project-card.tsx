@@ -22,7 +22,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useCan } from "@/hooks/api/access";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { TEXT_TWO_LINES, TEXT_FLEX_CHILD } from "@/features/build/shared/text-overflow";
+import { TEXT_TWO_LINES, TEXT_FLEX_CHILD } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import type { ProjectListItem } from "@/types/projects/projects";
 import { ProjectCardDialogs } from "./project-card-dialogs";

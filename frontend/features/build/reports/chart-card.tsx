@@ -2,7 +2,7 @@
 
 import { Gauge } from "lucide-react";
 import { PmPanel } from "@/features/build/shared/pm-chrome";
-import { TEXT_ONE_LINE } from "@/features/build/shared/text-overflow";
+import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
 
 export const TOOLTIP_STYLE = {

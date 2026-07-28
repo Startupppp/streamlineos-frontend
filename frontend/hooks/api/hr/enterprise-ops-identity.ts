@@ -49,10 +49,10 @@ interface PaginatedResult<T> {
 const BASE = "/hr/enterprise/ops/identity";
 
 const identityKeys = {
-  all: ["hr-identity"] as const,
-  provisioning: (p: Record<string, unknown>) => ["hr-identity", "provisioning", p] as const,
-  templates: ["hr-identity", "templates"] as const,
-  exitVerification: (userId: string) => ["hr-identity", "exit-verification", userId] as const,
+  all: ["streamlineos", "hr-identity"] as const,
+  provisioning: (p: Record<string, unknown>) => ["streamlineos", "hr-identity", "provisioning", p] as const,
+  templates: ["streamlineos", "hr-identity", "templates"] as const,
+  exitVerification: (userId: string) => ["streamlineos", "hr-identity", "exit-verification", userId] as const,
 };
 
 export function useAccessProvisioning(params: {

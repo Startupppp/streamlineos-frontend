@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useId, cloneElement, isValidElement } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -216,9 +216,9 @@ export function BlogPostForm({
               name="status"
               render={({ field }) => (
                 <div className="flex-1">
-                  <Label className="mb-1.5">Status</Label>
+                  <Label id="blog-post-status-label" className="mb-1.5">Status</Label>
                   <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger>
+                    <SelectTrigger aria-labelledby="blog-post-status-label">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -280,9 +280,9 @@ export function BlogPostForm({
             name="categoryId"
             render={({ field }) => (
               <div>
-                <Label className="mb-1.5">Category</Label>
+                <Label id="blog-post-category-label" className="mb-1.5">Category</Label>
                 <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger>
+                  <SelectTrigger aria-labelledby="blog-post-category-label">
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
                   <SelectContent>
@@ -332,12 +332,21 @@ function Field({
   hint?: string;
   children: React.ReactNode;
 }) {
+  const fieldId = useId();
+  const errorId = error ? `${fieldId}-error` : undefined;
+  const childWithId =
+    isValidElement(children)
+      ? cloneElement(children as React.ReactElement<Record<string, unknown>>, {
+          id: fieldId,
+          ...(errorId ? { "aria-describedby": errorId, "aria-invalid": true } : {}),
+        })
+      : children;
   return (
     <div className="space-y-1.5">
-      <Label>{label}</Label>
-      {children}
+      <Label htmlFor={fieldId}>{label}</Label>
+      {childWithId}
       {hint && !error && <p className="text-xs text-muted-foreground">{hint}</p>}
-      {error && <p className="text-xs text-destructive">{error}</p>}
+      {error && <p id={errorId} className="text-xs text-destructive">{error}</p>}
     </div>
   );
 }

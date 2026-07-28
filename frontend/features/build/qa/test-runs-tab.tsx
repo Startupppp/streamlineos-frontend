@@ -34,7 +34,7 @@ import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
-import { TABLE_TITLE_CELL } from "@/features/build/shared/text-overflow";
+import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { TestRunSheet } from "./test-run-sheet";
 

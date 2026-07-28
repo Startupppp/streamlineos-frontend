@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
+import { queryKeys } from "@/lib/query-keys";
 
 export type SubscriptionPlan = "STARTER" | "PROFESSIONAL" | "ENTERPRISE";
 type SubscriptionStatus = "TRIAL" | "ACTIVE" | "PAST_DUE" | "CANCELLED" | "EXPIRED";
@@ -70,15 +71,12 @@ interface VerifySubscriptionResponse {
   status: "ACTIVE";
 }
 
-const SUBSCRIPTION_QUERY_KEY = ["billing", "subscription"] as const;
-const BILLING_SUMMARY_QUERY_KEY = ["billing", "summary"] as const;
-
 export function useSubscription() {
   const { data: session } = useSession();
   const orgId = session?.orgId;
   const canViewBilling = useCan("settings:view");
   return useQuery<SubscriptionResponse, Error>({
-    queryKey: SUBSCRIPTION_QUERY_KEY,
+    queryKey: queryKeys.billing.subscription(),
     queryFn: () => apiClient.get<SubscriptionResponse>("/billing/razorpay"),
     staleTime: 5 * 60_000,
     enabled: !!orgId && canViewBilling,
@@ -98,10 +96,10 @@ export function useVerifySubscription() {
     mutationKey: ["billing", "razorpay", "verify"],
     mutationFn: (data) => apiClient.patch<VerifySubscriptionResponse>("/billing/razorpay", data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: SUBSCRIPTION_QUERY_KEY });
-      queryClient.invalidateQueries({ queryKey: BILLING_SUMMARY_QUERY_KEY });
-      queryClient.invalidateQueries({ queryKey: ["billing", "entitlements"] });
-      queryClient.invalidateQueries({ queryKey: ["billing", "seats"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.billing.subscription() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.billing.summary() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.billing.entitlements() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.billing.seats() });
     },
   });
 }
@@ -150,7 +148,7 @@ export interface BillingSummary {
 
 export function useBillingPlans() {
   return useQuery<{ plans: PlanDefinition[] }, Error>({
-    queryKey: ["billing", "plans"],
+    queryKey: queryKeys.billing.plans(),
     queryFn: () => apiClient.get<{ plans: PlanDefinition[] }>("/billing/plans"),
     staleTime: 60 * 60_000,
   });
@@ -159,7 +157,7 @@ export function useBillingPlans() {
 export function useBillingSummary() {
   const canViewBilling = useCan("settings:view");
   return useQuery<BillingSummary, Error>({
-    queryKey: BILLING_SUMMARY_QUERY_KEY,
+    queryKey: queryKeys.billing.summary(),
     queryFn: () => apiClient.get<BillingSummary>("/billing/summary"),
     staleTime: 5 * 60_000,
     enabled: canViewBilling,
@@ -168,7 +166,7 @@ export function useBillingSummary() {
 
 export function useValidateCoupon(code: string, plan: SubscriptionPlan | null) {
   return useQuery<CouponValidationResult, Error>({
-    queryKey: ["billing", "coupon", code, plan],
+    queryKey: queryKeys.billing.coupon(code, plan),
     queryFn: () =>
       apiClient.get<CouponValidationResult>(
         `/billing/coupons/validate?code=${encodeURIComponent(code)}&plan=${plan ?? ""}`,
@@ -204,7 +202,7 @@ export interface SeatInfo {
 export function useBillingProfile() {
   const canManageSettings = useCan("settings:manage");
   return useQuery<BillingProfile>({
-    queryKey: ["billing", "profile"],
+    queryKey: queryKeys.billing.profile(),
     queryFn: () => apiClient.get<BillingProfile>("/billing/profile"),
     staleTime: 5 * 60 * 1000,
     enabled: canManageSettings,
@@ -218,7 +216,7 @@ export function useUpdateBillingProfile() {
     mutationFn: (data: Partial<BillingProfile>) =>
       apiClient.patch<BillingProfile>("/billing/profile", data),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ["billing", "profile"] });
+      void qc.invalidateQueries({ queryKey: queryKeys.billing.profile() });
       toast.success("Billing profile updated");
     },
     onError: (e: Error) =>
@@ -229,7 +227,7 @@ export function useUpdateBillingProfile() {
 export function useSeatInfo() {
   const canManageSettings = useCan("settings:manage");
   return useQuery<SeatInfo>({
-    queryKey: ["billing", "seats"],
+    queryKey: queryKeys.billing.seats(),
     queryFn: () => apiClient.get<SeatInfo>("/billing/seats"),
     staleTime: 2 * 60 * 1000,
     enabled: canManageSettings,

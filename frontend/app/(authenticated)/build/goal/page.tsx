@@ -60,7 +60,7 @@ import {
   pmSnappy,
   pmStagger,
 } from "@/features/build/shared/pm-motion";
-import { TEXT_TWO_LINES } from "@/features/build/shared/text-overflow";
+import { TEXT_TWO_LINES } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 

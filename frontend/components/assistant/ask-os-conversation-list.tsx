@@ -149,7 +149,7 @@ export function AskOsConversationList({
                     {editingId === conv.id ? (
                       <input autoFocus data-id={String(conv.id)} value={editValue}
                         onChange={handleRenameChange} onKeyDown={handleRenameKeyDown} onBlur={handleRenameBlur}
-                        className="w-full bg-muted px-3 py-2 text-xs text-foreground focus-visible:outline-none" />
+                        className="w-full bg-muted px-3 py-2 text-xs text-foreground outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-sm" />
                     ) : (
                       <button type="button" data-id={String(conv.id)} onClick={handleSelectBtn}
                         className={cn("flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition-colors hover:bg-muted",

@@ -329,8 +329,9 @@ export function AutomationBuilderSheet({
         <SheetBody>
           <div className="px-6 py-4 space-y-6">
             <div className="space-y-1.5">
-              <Label>Name *</Label>
+              <Label htmlFor="automation-name">Name *</Label>
               <Input
+                id="automation-name"
                 placeholder="e.g. Notify sales on hot lead"
                 value={name}
                 onChange={handleNameChange}
@@ -338,8 +339,9 @@ export function AutomationBuilderSheet({
             </div>
 
             <div className="space-y-1.5">
-              <Label>Description</Label>
+              <Label htmlFor="automation-description">Description</Label>
               <Textarea
+                id="automation-description"
                 rows={2}
                 placeholder="What does this automation do?"
                 value={description}
@@ -348,9 +350,9 @@ export function AutomationBuilderSheet({
             </div>
 
             <div className="space-y-1.5">
-              <Label>Trigger *</Label>
+              <Label id="automation-trigger-label">Trigger *</Label>
               <Select value={triggerEvent} onValueChange={handleTriggerChange}>
-                <SelectTrigger>
+                <SelectTrigger aria-labelledby="automation-trigger-label">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -426,8 +428,9 @@ export function AutomationBuilderSheet({
                         variant="ghost"
                         className="h-9 w-9 shrink-0 text-destructive hover:text-destructive"
                         onClick={() => handleRemoveCondition(index)}
+                        aria-label={`Remove condition ${index + 1}`}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-4 w-4" aria-hidden />
                       </Button>
                     </div>
                   ))}
@@ -472,8 +475,9 @@ export function AutomationBuilderSheet({
                           variant="ghost"
                           className="w-7 text-destructive hover:text-destructive"
                           onClick={() => handleRemoveAction(index)}
+                          aria-label={`Remove action ${index + 1}`}
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
+                          <Trash2 className="h-3.5 w-3.5" aria-hidden />
                         </Button>
                       </div>
 

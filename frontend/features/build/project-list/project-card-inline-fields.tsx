@@ -23,7 +23,7 @@ import {
   getUserInitials,
 } from "@/features/build/shared/resolve-user-name";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { TEXT_FLEX_CHILD } from "@/features/build/shared/text-overflow";
+import { TEXT_FLEX_CHILD } from "@/lib/text-overflow";
 import type { ProjectListItem } from "@/types/projects/projects";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -40,7 +40,7 @@ import {
 import {
   TEXT_ONE_LINE,
   TEXT_TWO_LINES,
-} from "@/features/build/shared/text-overflow";
+} from "@/lib/text-overflow";
 import { InlineFieldWrapper } from "@/features/build/views/card-inline-fields";
 import {
   dateToneClasses,

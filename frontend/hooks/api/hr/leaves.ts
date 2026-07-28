@@ -285,7 +285,7 @@ export function useAddLegacyHoliday() {
       void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "holidaysYear"] });
       void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "holidaysCalendar"] });
       void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "monthlyAttendance"] });
-      void qc.invalidateQueries({ queryKey: ["hr", "holidays"] });
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.holidays() });
     },
   });
 }
@@ -300,7 +300,7 @@ export function useDeleteLegacyHoliday() {
       void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "holidaysYear"] });
       void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "holidaysCalendar"] });
       void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "monthlyAttendance"] });
-      void qc.invalidateQueries({ queryKey: ["hr", "holidays"] });
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.holidays() });
     },
   });
 }
@@ -315,7 +315,7 @@ export function useUpdateLegacyHoliday() {
       void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "holidaysYear"] });
       void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "holidaysCalendar"] });
       void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "monthlyAttendance"] });
-      void qc.invalidateQueries({ queryKey: ["hr", "holidays"] });
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.holidays() });
     },
   });
 }
@@ -349,7 +349,7 @@ export interface LeavePolicyResponse {
 
 export function useLeavePolicy() {
   return useQuery({
-    queryKey: ["hr", "leave-policy"],
+    queryKey: queryKeys.hr.leavePolicy(),
     queryFn: () => apiClient.get<LeavePolicyResponse>("/hr/leave-policy"),
     staleTime: 10 * 60 * 1000,
   });

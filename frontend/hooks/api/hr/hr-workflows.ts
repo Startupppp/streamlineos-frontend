@@ -14,9 +14,9 @@ import type {
   PaginatedResult,
 } from "@/types/hr/workflows";
 
-const WORKFLOWS_KEY = ["hr", "workflows"] as const;
-const INSTANCES_KEY = ["hr", "workflow-instances"] as const;
-const DELEGATIONS_KEY = ["hr", "workflow-delegations"] as const;
+const WORKFLOWS_KEY = ["streamlineos", "hr", "workflows"] as const;
+const INSTANCES_KEY = ["streamlineos", "hr", "workflow-instances"] as const;
+const DELEGATIONS_KEY = ["streamlineos", "hr", "workflow-delegations"] as const;
 
 export function useHrWorkflowDefinitions(params?: { objectType?: HrWorkflowObjectType; status?: HrWorkflowStatus; page?: number; limit?: number }) {
   return useQuery({

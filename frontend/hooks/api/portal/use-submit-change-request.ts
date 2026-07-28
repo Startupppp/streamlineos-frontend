@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { portalApiClient } from "@/lib/portal-api-client";
+import { queryKeys } from "@/lib/query-keys";
 import type {
   ChangeRequestInput,
 } from "@/features/portal/lib/change-request-schema";
@@ -17,7 +18,7 @@ export function useSubmitChangeRequest(projectId: number) {
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: ["portal", "projects", projectId, "overview"],
+        queryKey: queryKeys.portal.projectOverview(projectId),
       });
     },
   });

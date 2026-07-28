@@ -54,7 +54,7 @@ import {
   PmPanel,
   PmSection,
 } from "@/features/build/shared/pm-chrome";
-import { TEXT_BODY } from "@/features/build/shared/text-overflow";
+import { TEXT_BODY } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";

@@ -25,7 +25,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { getUserDisplayName } from "@/features/build/shared/resolve-user-name";
 import { cn } from "@/lib/utils";
 import { PM_ROW } from "@/features/build/shared/pm-chrome";
-import { TEXT_ONE_LINE } from "@/features/build/shared/text-overflow";
+import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import type { ActionItem, CreateActionItemInput, UpdateActionItemInput, ProjectMemberRecord } from "@/types/projects";
 
 const CONVERTIBLE = new Set(["open", "in_progress"]);

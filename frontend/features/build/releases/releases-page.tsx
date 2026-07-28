@@ -40,7 +40,7 @@ import {
 import {
   TABLE_TITLE_CELL,
   TEXT_FLEX_CHILD,
-} from "@/features/build/shared/text-overflow";
+} from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 const STATUS_CONFIG: Record<

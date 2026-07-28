@@ -13,7 +13,7 @@ import type {
 } from "@/types/projects";
 import { useCan } from "@/hooks/api/access";
 
-const TEAMS_BASE = ["projects", "teams"] as const;
+const TEAMS_BASE = ["streamlineos", "projects", "teams"] as const;
 
 export interface TeamProject {
   id: number;

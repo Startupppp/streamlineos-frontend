@@ -23,7 +23,7 @@ import {
   PM_FILL_PANEL,
 } from "@/features/build/shared/pm-chrome";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
-import { TABLE_TITLE_CELL } from "@/features/build/shared/text-overflow";
+import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { FORM_TYPE_LABELS, FORM_TYPES } from "./field-type-meta";
 import type { ProjectForm } from "@/types/projects/forms";

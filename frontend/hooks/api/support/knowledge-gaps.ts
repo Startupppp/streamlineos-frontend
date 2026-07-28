@@ -10,7 +10,7 @@ import type {
 } from "@/features/support/lib/knowledge-gap.types";
 
 export const knowledgeGapsKeys = {
-  all: ["support", "knowledge-gaps"] as const,
+  all: ["streamlineos", "support", "knowledge-gaps"] as const,
   list: (cursor?: number) =>
     [...knowledgeGapsKeys.all, "list", cursor ?? null] as const,
 };

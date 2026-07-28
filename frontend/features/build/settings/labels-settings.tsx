@@ -29,7 +29,7 @@ import {
   type TicketLabel,
 } from "@/hooks/api/build/labels";
 import { LabelEditRow } from "./label-edit-row";
-import { TEXT_BODY, TEXT_ONE_LINE } from "@/features/build/shared/text-overflow";
+import { TEXT_BODY, TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
 
 function DeleteLabelButton({ onConfirm }: { onConfirm: () => void }) {

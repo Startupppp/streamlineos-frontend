@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
-import type { TimesheetPeriod } from "@/features/timesheets-core/types";
+import type { TimesheetPeriod } from "@/features/timesheets/types";
 
 export interface TeamMemberWeekSummary {
   userId: string;

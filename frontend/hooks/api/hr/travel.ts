@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 
 export interface TravelRequest {
   id: number;
@@ -22,7 +23,7 @@ export interface TravelRequest {
 
 export function useMyTravelRequests() {
   return useQuery<TravelRequest[]>({
-    queryKey: ["hr", "travel", "mine"],
+    queryKey: queryKeys.hr.travelMine(),
     queryFn: () => apiClient.get<TravelRequest[]>("/hr/travel"),
     staleTime: 60_000,
   });
@@ -30,7 +31,7 @@ export function useMyTravelRequests() {
 
 export function usePendingTravelApprovals() {
   return useQuery<TravelRequest[]>({
-    queryKey: ["hr", "travel", "approvals"],
+    queryKey: queryKeys.hr.travelApprovals(),
     queryFn: () => apiClient.get<TravelRequest[]>("/hr/travel/approvals"),
     staleTime: 30_000,
   });
@@ -42,7 +43,7 @@ export function useCreateTravelRequest() {
     mutationKey: ["hr", "travel", "create"],
     mutationFn: (data: Omit<TravelRequest, "id" | "orgId" | "userId" | "status" | "createdAt">) =>
       apiClient.post<TravelRequest>("/hr/travel", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["hr", "travel"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.travelAll }),
   });
 }
 
@@ -51,7 +52,7 @@ export function useManagerApproveTravelRequest() {
   return useMutation({
     mutationKey: ["hr", "travel", "manager-approve"],
     mutationFn: (id: number) => apiClient.patch<TravelRequest>(`/hr/travel/${id}/manager-approve`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["hr", "travel"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.travelAll }),
   });
 }
 
@@ -60,7 +61,7 @@ export function useFinanceApproveTravelRequest() {
   return useMutation({
     mutationKey: ["hr", "travel", "finance-approve"],
     mutationFn: (id: number) => apiClient.patch<TravelRequest>(`/hr/travel/${id}/finance-approve`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["hr", "travel"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.travelAll }),
   });
 }
 
@@ -70,6 +71,6 @@ export function useRejectTravelRequest() {
     mutationKey: ["hr", "travel", "reject"],
     mutationFn: ({ id, reason }: { id: number; reason: string }) =>
       apiClient.patch<TravelRequest>(`/hr/travel/${id}/reject`, { reason }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["hr", "travel"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.travelAll }),
   });
 }

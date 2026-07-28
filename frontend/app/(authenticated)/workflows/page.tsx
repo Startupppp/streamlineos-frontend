@@ -77,7 +77,7 @@ import {
 import {
   createWorkflowSchema,
   type CreateWorkflowValues,
-} from "./create-workflow-schema";
+} from "@/features/workflows/create-workflow-schema";
 
 type StatusFilter = WorkflowStatus | "all";
 

@@ -41,7 +41,7 @@ import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
-import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/features/build/shared/text-overflow";
+import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { TestCaseSheet } from "./test-case-sheet";
 

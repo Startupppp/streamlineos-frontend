@@ -8,7 +8,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import type {
   TimesheetSettings,
   UpdateTimesheetSettingsInput,
-} from "@/features/timesheets-core/types";
+} from "@/features/timesheets/types";
 import { useCan } from "../access";
 
 export function useTimesheetSettings(enabled = true) {

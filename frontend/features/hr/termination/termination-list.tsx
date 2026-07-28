@@ -23,6 +23,7 @@ import { TablePagination } from "@/components/ui/table-pagination";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 import type { Termination, TerminationStatus, TerminationPagination } from "@/hooks/api/hr";
+import { getInitials } from "@/lib/format-utils";
 import {
   TERMINATION_STATUS_LABELS,
   TERMINATION_STATUSES,
@@ -34,16 +35,6 @@ function statusLabel(status: TerminationStatus | null): string {
     return TERMINATION_STATUS_LABELS[status as keyof typeof TERMINATION_STATUS_LABELS];
   }
   return status ?? "Unknown";
-}
-
-function getInitials(name: string | null): string {
-  if (!name) return "?";
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
 }
 
 interface TerminationCardProps {

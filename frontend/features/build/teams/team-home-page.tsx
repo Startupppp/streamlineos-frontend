@@ -58,7 +58,7 @@ import {
   PM_ROW,
 } from "@/features/build/shared/pm-chrome";
 import { getUserDisplayName, getUserInitials } from "@/features/build/shared/resolve-user-name";
-import { TEXT_ONE_LINE } from "@/features/build/shared/text-overflow";
+import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
 import { resolveImageUrl } from "@/lib/utils";
 

@@ -310,7 +310,7 @@ export function useConvertToEmployee() {
 
 export function useInternshipCertificate(contractId: number, enabled = false) {
   return useQuery<{ html: string; templateId: number | null }>({
-    queryKey: ["hr", "global", "contracts", contractId, "certificate"],
+    queryKey: queryKeys.hr.internshipCertificate(contractId),
     queryFn: () => apiClient.get(`/hr/global/contracts/${contractId}/internship-certificate`),
     enabled,
     staleTime: 300_000,

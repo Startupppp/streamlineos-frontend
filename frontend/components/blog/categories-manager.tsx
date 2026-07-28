@@ -140,27 +140,28 @@ export function CategoriesManager() {
         </div>
 
         <div className="space-y-1.5">
-          <Label>Name</Label>
-          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Technology" />
+          <Label htmlFor="category-name">Name</Label>
+          <Input id="category-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Technology" />
         </div>
 
         <div className="space-y-1.5">
-          <Label>Color</Label>
+          <Label id="category-color-label">Color</Label>
           <div className="flex items-center gap-2">
             <input
               type="color"
               value={color}
               onChange={(e) => setColor(e.target.value)}
               className="h-9 w-12 cursor-pointer rounded-md border border-input bg-transparent"
-              aria-label="Category color"
+              aria-labelledby="category-color-label"
             />
-            <Input value={color} onChange={(e) => setColor(e.target.value)} className="font-mono" />
+            <Input value={color} onChange={(e) => setColor(e.target.value)} className="font-mono" aria-label="Color hex value" />
           </div>
         </div>
 
         <div className="space-y-1.5">
-          <Label>Description</Label>
+          <Label htmlFor="category-description">Description</Label>
           <Textarea
+            id="category-description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={3}

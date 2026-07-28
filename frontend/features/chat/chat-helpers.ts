@@ -3,6 +3,10 @@ import {
   getUserDisplayName,
   type NamedUser,
 } from "@/features/build/shared/resolve-user-name";
+import {
+  getInitials as _getInitials,
+  formatFileSize as _formatFileSize,
+} from "@/lib/format-utils";
 
 export type ChatOrgUser = {
   id: string;
@@ -31,14 +35,8 @@ export function resolveChatUserName(
   return "Unknown";
 }
 
-export function getInitials(name: string | null | undefined) {
-  if (!name) return "?";
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
+export function getInitials(name: string | null | undefined): string {
+  return _getInitials(name);
 }
 
 function toDate(date: Date | string | null): Date | null {
@@ -73,10 +71,8 @@ export function formatChannelTime(date: Date | string | null) {
   return format(d, "MMM d");
 }
 
-export function formatFileSize(bytes: number) {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+export function formatFileSize(bytes: number): string {
+  return _formatFileSize(bytes);
 }
 
 export function getFileExt(name: string) {

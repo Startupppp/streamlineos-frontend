@@ -244,7 +244,7 @@ function EnrollmentsTab({ sequenceId }: { sequenceId: string }) {
           className="flex items-center justify-between rounded-lg border border-border p-3 bg-muted/20 gap-3"
         >
           <div className="min-w-0 flex-1 space-y-0.5">
-            <p className="text-xs font-medium truncate">{e.entityId}</p>
+            <p className="text-xs font-medium truncate">{e.entityName ?? e.entityId}</p>
             <div className="flex items-center gap-2">
               <Badge
                 variant={ENROLLMENT_STATUS_VARIANTS[e.status] ?? "outline"}

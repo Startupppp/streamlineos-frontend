@@ -40,10 +40,10 @@ interface PaginatedResult<T> {
 const BASE = "/hr/enterprise/ops/emergency";
 
 const emergencyKeys = {
-  all: ["hr-emergency"] as const,
-  list: (p: Record<string, unknown>) => ["hr-emergency", "list", p] as const,
-  detail: (id: string) => ["hr-emergency", "detail", id] as const,
-  status: (id: string) => ["hr-emergency", "status", id] as const,
+  all: ["streamlineos", "hr-emergency"] as const,
+  list: (p: Record<string, unknown>) => ["streamlineos", "hr-emergency", "list", p] as const,
+  detail: (id: string) => ["streamlineos", "hr-emergency", "detail", id] as const,
+  status: (id: string) => ["streamlineos", "hr-emergency", "status", id] as const,
 };
 
 export function useEmergencyEvents(params: { page?: number; status?: EmergencyEventStatus } = {}) {

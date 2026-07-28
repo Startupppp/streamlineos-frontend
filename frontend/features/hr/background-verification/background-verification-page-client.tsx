@@ -35,6 +35,7 @@ import type { ComboboxOption } from "@/components/ui/combobox";
 import type { Employee } from "@/types/hr";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { getInitials } from "@/lib/format-utils";
 import { InitiateBgvSheet } from "@/features/hr/background-verification/initiate-bgv-sheet";
 import { EditVerificationSheet } from "@/features/hr/background-verification/edit-verification-sheet";
 
@@ -65,16 +66,6 @@ function getStatusConfig(s: string | null) {
     icon: <ShieldCheck className="h-2.5 w-2.5" />,
     label: "Pending",
   };
-}
-
-function getInitials(name: string | null | undefined): string {
-  if (!name) return "?";
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
 }
 
 function ComplianceDashboard() {

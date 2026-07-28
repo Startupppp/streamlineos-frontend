@@ -29,7 +29,7 @@ import {
 import {
   FLEX_TITLE_SLOT,
   TEXT_ONE_LINE,
-} from "@/features/build/shared/text-overflow";
+} from "@/lib/text-overflow";
 import { getTicketDetailHref } from "@/features/build/shared/format-ticket-key";
 
 export type DueBucket = "overdue" | "today" | "upcoming" | "none";

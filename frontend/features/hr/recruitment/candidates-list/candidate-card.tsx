@@ -25,6 +25,7 @@ import {
 import { AIScoreCandidateButton } from "@/features/hr/recruitment/ai-score-candidate-button";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
+import { getInitials } from "@/lib/format-utils";
 import type { Candidate, CandidateStatus } from "@/types/hr";
 
 export const STAGE_CONFIG: {
@@ -94,10 +95,6 @@ const SOURCE_LABELS: Record<string, string> = {
   CAREERS_PAGE: "Careers Page",
   NAUKRI: "Naukri",
 };
-
-export function getInitials(first: string, last: string) {
-  return `${first?.[0] ?? ""}${last?.[0] ?? ""}`.toUpperCase();
-}
 
 export function getStageConfig(status: CandidateStatus | null) {
   return STAGE_CONFIG.find((s) => s.value === status) ?? STAGE_CONFIG[0];
@@ -210,7 +207,7 @@ export function CandidateCard({
       <Link href={`/hr/recruitment/candidates/${candidate.id}`} className="block p-3 pr-14">
         <div className="flex items-start gap-3 mb-2">
           <div className="h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0 bg-gradient-to-br from-primary/20 to-primary/10 text-primary border border-primary/20">
-            {getInitials(candidate.firstName, candidate.lastName)}
+            {getInitials(undefined, candidate.firstName, candidate.lastName)}
           </div>
           <div className="flex-1 min-w-0">
             <TruncatedText

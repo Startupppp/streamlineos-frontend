@@ -29,7 +29,7 @@ import {
   PmSection,
   PM_PANEL,
 } from "@/features/build/shared/pm-chrome";
-import { TEXT_ONE_LINE } from "@/features/build/shared/text-overflow";
+import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import type { UpdateMeetingInput } from "@/types/projects";
 
 function DeleteMeetingButton({ onClick }: { onClick: () => void }) {

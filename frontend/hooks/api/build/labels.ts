@@ -10,7 +10,7 @@ export interface TicketLabel {
   color: string;
 }
 
-const LABELS_KEY = ["projects", "labels"] as const;
+const LABELS_KEY = ["streamlineos", "projects", "labels"] as const;
 
 export function useOrgLabels() {
   return useQuery<TicketLabel[]>({

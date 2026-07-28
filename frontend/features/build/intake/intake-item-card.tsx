@@ -7,7 +7,7 @@ import { CheckIcon, XIcon, CopyIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PriorityBadge } from "@/features/build/shared/priority-badge";
 import { PM_PANEL } from "@/features/build/shared/pm-chrome";
-import { TEXT_ONE_LINE, TEXT_TWO_LINES } from "@/features/build/shared/text-overflow";
+import { TEXT_ONE_LINE, TEXT_TWO_LINES } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 const STATUS_BADGE_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline"> = {

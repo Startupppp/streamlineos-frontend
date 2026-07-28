@@ -28,7 +28,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { TEXT_BODY, TEXT_ONE_LINE } from "@/features/build/shared/text-overflow";
+import { TEXT_BODY, TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { buildFeedbucketEmbedSnippet } from "@/lib/feedbucket";

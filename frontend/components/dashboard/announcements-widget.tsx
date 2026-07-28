@@ -52,8 +52,9 @@ function AnnouncementItem({
     >
       {ann.isPinned && (
         <Pin
-          className="absolute top-2 right-2 h-3 w-3 text-amber-500"
+          role="img"
           aria-label="Pinned"
+          className="absolute top-2 right-2 h-3 w-3 text-amber-500"
         />
       )}
       <p className="text-amber-900 dark:text-amber-100 leading-snug pr-4">

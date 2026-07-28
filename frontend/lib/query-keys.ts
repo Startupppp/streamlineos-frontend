@@ -205,6 +205,52 @@ export const queryKeys = {
       [...base, "hr", "global", "contracts", params] as const,
     contract: (id: number) =>
       [...base, "hr", "global", "contract", id] as const,
+    announcements: () => [...base, "hr", "announcements"] as const,
+    announcementsAll: () => [...base, "hr", "announcements", "all"] as const,
+    compOff: () => [...base, "hr", "comp-off"] as const,
+    complianceCalendar: (year: number, month: number) =>
+      [...base, "hr", "compliance", "calendar", year, month] as const,
+    travelAll: [...base, "hr", "travel"] as const,
+    travelMine: () => [...base, "hr", "travel", "mine"] as const,
+    travelApprovals: () => [...base, "hr", "travel", "approvals"] as const,
+    leavePolicies: () => [...base, "hr", "leave-policies"] as const,
+    leavePolicy: () => [...base, "hr", "leave-policy"] as const,
+    requisitions: (status?: string) =>
+      [...base, "hr", "requisitions", status] as const,
+    salaryStructureTemplates: () =>
+      [...base, "hr", "salary-structure-templates"] as const,
+    settingsHubRules: (params: Record<string, unknown> | null) =>
+      [...base, "hr", "settings-hub", "effective-rules", params] as const,
+    settingsHubVersionsAll: [...base, "hr", "settings-hub", "versions"] as const,
+    settingsHubVersions: (entity: string, id: number | null) =>
+      [...base, "hr", "settings-hub", "versions", entity, id] as const,
+    holidays: () => [...base, "hr", "holidays"] as const,
+    importJobs: (entity?: string) =>
+      [...base, "hr", "import", "jobs", entity ?? "all"] as const,
+    importJob: (jobId: string) =>
+      [...base, "hr", "import", "jobs", jobId] as const,
+    hrCalendar: (from: string, to: string, types?: string) =>
+      [...base, "hr", "calendar", from, to, types] as const,
+    benefitsAll: [...base, "hr", "benefits"] as const,
+    benefitPlans: (params?: Record<string, unknown>) =>
+      [...base, "hr", "benefits", "plans", params] as const,
+    benefitPlan: (id: number) => [...base, "hr", "benefits", "plans", id] as const,
+    benefitWindows: [...base, "hr", "benefits", "windows"] as const,
+    benefitMy: [...base, "hr", "benefits", "my"] as const,
+    benefitDependents: [...base, "hr", "benefits", "dependents"] as const,
+    benefitClaims: (params?: Record<string, unknown>) =>
+      [...base, "hr", "benefits", "claims", params] as const,
+    benefitAvailable: () =>
+      [...base, "hr", "benefits", "plans", "available"] as const,
+    travelVisitLogs: (travelRequestId: number) =>
+      [...base, "hr", "travel-visits", travelRequestId] as const,
+    internshipCertificate: (contractId: number) =>
+      [...base, "hr", "global", "contracts", contractId, "certificate"] as const,
+    hrPoliciesAll: [...base, "hr", "policies"] as const,
+    hrPoliciesList: (params?: Record<string, unknown>) =>
+      [...base, "hr", "policies", "list", params] as const,
+    hrPolicyDetail: (id: number) =>
+      [...base, "hr", "policies", "detail", id] as const,
   },
 
   leads: {
@@ -440,6 +486,21 @@ export const queryKeys = {
     commentDrafts: {
       mine: () => [...base, "projects", "comment-drafts", "mine"] as const,
     },
+    commentPermalinkWithComment: (
+      projectId: number,
+      ticketId: number,
+      commentId: string,
+    ) =>
+      [
+        ...base,
+        "projects",
+        "comment-permalink",
+        projectId,
+        ticketId,
+        commentId,
+      ] as const,
+    commentPermalinkTicket: (projectId: number, ticketId: number) =>
+      [...base, "projects", "comment-permalink", projectId, ticketId] as const,
   },
 
   chat: {
@@ -803,6 +864,7 @@ export const queryKeys = {
       [...base, "accounting", "cashFlow", params] as const,
     coaTemplates: () => [...base, "accounting", "coaTemplates"] as const,
     setupProgress: () => [...base, "accounting", "setupProgress"] as const,
+    apAll: [...base, "accounting", "ap"] as const,
   },
 
   recurringInvoices: {
@@ -969,6 +1031,7 @@ export const queryKeys = {
     researchBrief: (id: number) =>
       [...base, "kb", "research-brief", id] as const,
     settings: () => [...base, "kb", "settings"] as const,
+    sources: () => [...base, "kb", "sources"] as const,
   },
 
   roadmap: {
@@ -1476,6 +1539,7 @@ export const queryKeys = {
   timesheets: {
     all: [...base, "timesheets"] as const,
     payroll: {
+      all: [...base, "timesheets", "payroll"] as const,
       summary: (params: Record<string, unknown>) =>
         [...base, "timesheets", "payroll", "summary", params] as const,
       exports: (page: number, pageSize: number) =>
@@ -1689,6 +1753,8 @@ export const queryKeys = {
       [...base, "crmMetadata", "validationRules", params] as const,
     blueprints: (params?: Record<string, unknown>) =>
       [...base, "crmMetadata", "blueprints", params] as const,
+    blueprintTransitions: (blueprintId: string | null) =>
+      [...base, "crmMetadata", "blueprints", blueprintId, "transitions"] as const,
   },
 
   crmCampaigns: {
@@ -1773,7 +1839,16 @@ export const queryKeys = {
     aiCredits: () => [...base, "billing", "ai-credits"] as const,
     aiCreditTransactions: (params: Record<string, unknown>) =>
       [...base, "billing", "ai-credits", "transactions", params] as const,
+    aiCreditsUsage: (days: number) =>
+      [...base, "billing", "ai-credits", "usage", { days }] as const,
     entitlements: () => [...base, "billing", "entitlements"] as const,
+    subscription: () => [...base, "billing", "subscription"] as const,
+    summary: () => [...base, "billing", "summary"] as const,
+    plans: () => [...base, "billing", "plans"] as const,
+    coupon: (code: string, plan: string | null) =>
+      [...base, "billing", "coupon", code, plan] as const,
+    profile: () => [...base, "billing", "profile"] as const,
+    seats: () => [...base, "billing", "seats"] as const,
   },
 
   crmDataQuality: {
@@ -1856,5 +1931,34 @@ export const queryKeys = {
       [...base, "moduleAccess", moduleKey, "member-candidates"] as const,
     ownership: (moduleKey: string) =>
       [...base, "moduleAccess", moduleKey, "ownership"] as const,
+  },
+
+  portal: {
+    all: [...base, "portal"] as const,
+    projects: () => [...base, "portal", "projects"] as const,
+    projectOverview: (projectId: number) =>
+      [...base, "portal", "projects", projectId, "overview"] as const,
+  },
+
+  hrSimulations: {
+    all: [...base, "hr-simulations"] as const,
+    history: (params: Record<string, unknown>) =>
+      [...base, "hr-simulations", "history", params] as const,
+    compare: (params: Record<string, unknown> | null) =>
+      [...base, "hr-simulations", "compare", params] as const,
+  },
+
+  hrSafety: {
+    all: [...base, "hr-safety"] as const,
+    incidents: (params: Record<string, unknown>) =>
+      [...base, "hr-safety", "incidents", params] as const,
+    incident: (id: number) => [...base, "hr-safety", "incident", id] as const,
+    wellnessAll: [...base, "hr-safety", "wellness"] as const,
+    wellnessPulse: [...base, "hr-safety", "wellness", "pulse"] as const,
+    myCheckins: (fromDate?: string, toDate?: string) =>
+      [...base, "hr-safety", "wellness", "my", fromDate, toDate] as const,
+    wellnessTrend: (fromDate?: string, toDate?: string) =>
+      [...base, "hr-safety", "wellness", "trend", fromDate, toDate] as const,
+    burnout: [...base, "hr-safety", "wellness", "burnout"] as const,
   },
 } as const;

@@ -149,9 +149,9 @@ export interface PaginatedResponse<T> {
 
 // ─── Device Hooks ─────────────────────────────────────────────────────────────
 
-const DEVICES_KEY = ["hr", "enterprise", "comp", "devices"] as const;
-const SYNC_LOGS_KEY = ["hr", "enterprise", "comp", "syncLogs"] as const;
-const MAPPINGS_KEY = ["hr", "enterprise", "comp", "mappings"] as const;
+const DEVICES_KEY = ["streamlineos", "hr", "enterprise", "comp", "devices"] as const;
+const SYNC_LOGS_KEY = ["streamlineos", "hr", "enterprise", "comp", "syncLogs"] as const;
+const MAPPINGS_KEY = ["streamlineos", "hr", "enterprise", "comp", "mappings"] as const;
 
 export function useTimeDevices(params?: Record<string, unknown>) {
   return useQuery({
@@ -239,9 +239,9 @@ export function useCreateDeviceMapping() {
 
 // ─── Payroll Compliance Hooks ──────────────────────────────────────────────────
 
-const VARIANCE_KEY = ["hr", "enterprise", "comp", "variance"] as const;
-const ARREARS_KEY = ["hr", "enterprise", "comp", "arrears"] as const;
-const COMPLIANCE_TASKS_KEY = ["hr", "enterprise", "comp", "complianceTasks"] as const;
+const VARIANCE_KEY = ["streamlineos", "hr", "enterprise", "comp", "variance"] as const;
+const ARREARS_KEY = ["streamlineos", "hr", "enterprise", "comp", "arrears"] as const;
+const COMPLIANCE_TASKS_KEY = ["streamlineos", "hr", "enterprise", "comp", "complianceTasks"] as const;
 
 export function useVarianceApprovals(params?: Record<string, unknown>) {
   return useQuery({
@@ -308,9 +308,9 @@ export function useUpdateComplianceTask() {
 
 // ─── Comp Planning Hooks ──────────────────────────────────────────────────────
 
-const COMP_CYCLES_KEY = ["hr", "enterprise", "comp", "cycles"] as const;
-const COMP_RECS_KEY = ["hr", "enterprise", "comp", "recommendations"] as const;
-const COMP_BUDGET_KEY = ["hr", "enterprise", "comp", "budgetPools"] as const;
+const COMP_CYCLES_KEY = ["streamlineos", "hr", "enterprise", "comp", "cycles"] as const;
+const COMP_RECS_KEY = ["streamlineos", "hr", "enterprise", "comp", "recommendations"] as const;
+const COMP_BUDGET_KEY = ["streamlineos", "hr", "enterprise", "comp", "budgetPools"] as const;
 
 export function useCompCycles(params?: Record<string, unknown>) {
   return useQuery({
@@ -404,7 +404,7 @@ export function useBudgetPools(cycleId: number) {
 
 // ─── Equity Hooks ─────────────────────────────────────────────────────────────
 
-const EQUITY_GRANTS_KEY = ["hr", "enterprise", "comp", "equityGrants"] as const;
+const EQUITY_GRANTS_KEY = ["streamlineos", "hr", "enterprise", "comp", "equityGrants"] as const;
 
 export function useEquityGrants(params?: Record<string, unknown>) {
   return useQuery({
@@ -476,7 +476,7 @@ export function useRecordExercise() {
 
 // ─── Workforce Costing Hooks ──────────────────────────────────────────────────
 
-const COSTING_KEY = ["hr", "enterprise", "comp", "costing"] as const;
+const COSTING_KEY = ["streamlineos", "hr", "enterprise", "comp", "costing"] as const;
 
 export function useWorkforceCostSummary() {
   return useQuery({

@@ -9,7 +9,7 @@ import type { Module } from "@/types/projects/projects";
 import type { ModuleStatus } from "@/types/projects/shared";
 import { getModuleAvatarDisplay } from "@/features/build/modules/lib/module-name";
 import { PM_PANEL } from "@/features/build/shared/pm-chrome";
-import { TEXT_ONE_LINE, TEXT_TWO_LINES } from "@/features/build/shared/text-overflow";
+import { TEXT_ONE_LINE, TEXT_TWO_LINES } from "@/lib/text-overflow";
 
 interface ModuleStatusStyle {
   label: string;

@@ -47,7 +47,7 @@ import {
   listItemReduced,
   pmSpring,
 } from "@/features/build/shared/pm-motion";
-import { TEXT_ONE_LINE } from "@/features/build/shared/text-overflow";
+import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 
 type IconRef = RefObject<IconHandle | null>;
 

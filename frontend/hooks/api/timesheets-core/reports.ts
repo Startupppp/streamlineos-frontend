@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
-import type { ReportOverview } from "@/features/timesheets-core/types";
+import type { ReportOverview } from "@/features/timesheets/types";
 import type {
   ApprovalSlaReport,
   BillingLeakageReport,
@@ -12,7 +12,7 @@ import type {
   ComplianceReport,
   ReportRangeParams,
   UtilizationReport,
-} from "@/features/timesheets-core/reports/reports-types";
+} from "@/features/timesheets/reports/reports-types";
 
 interface OverviewQuery {
   startDate?: string;

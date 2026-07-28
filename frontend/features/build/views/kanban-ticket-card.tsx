@@ -7,7 +7,7 @@ import { TicketQuickActions } from "./ticket-quick-actions";
 import { InlinePriority, InlineAssignee, InlineEstimate } from "./card-inline-fields";
 import { InlineType, InlineLabels, InlineCycle } from "./card-inline-extra-fields";
 import { InlineDueDate, InlineStartDate } from "./card-inline-date-fields";
-import { TEXT_TWO_LINES } from "@/features/build/shared/text-overflow";
+import { TEXT_TWO_LINES } from "@/lib/text-overflow";
 
 interface KanbanTicketCardProps {
   ticket: KanbanTicket;

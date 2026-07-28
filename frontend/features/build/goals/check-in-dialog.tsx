@@ -26,7 +26,7 @@ import { toast } from "sonner";
 import { useCheckIn, type KeyResult } from "@/hooks/api/goals";
 import { formatMetricValue } from "./constants";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { TEXT_ONE_LINE } from "@/features/build/shared/text-overflow";
+import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 
 const checkInSchema = z.object({
   newValue: z.string().min(1, "Value is required").refine(

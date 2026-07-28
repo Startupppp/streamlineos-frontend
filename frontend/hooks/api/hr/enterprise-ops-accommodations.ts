@@ -52,10 +52,10 @@ export interface ListAccommodationsParams {
 const BASE = "/hr/enterprise/ops/accommodations";
 
 const accKeys = {
-  all: ["hr-accommodations"] as const,
-  list: (p: ListAccommodationsParams) => ["hr-accommodations", "list", p] as const,
-  detail: (id: string) => ["hr-accommodations", "detail", id] as const,
-  tasks: (id: string) => ["hr-accommodations", "tasks", id] as const,
+  all: ["streamlineos", "hr-accommodations"] as const,
+  list: (p: ListAccommodationsParams) => ["streamlineos", "hr-accommodations", "list", p] as const,
+  detail: (id: string) => ["streamlineos", "hr-accommodations", "detail", id] as const,
+  tasks: (id: string) => ["streamlineos", "hr-accommodations", "tasks", id] as const,
 };
 
 export function useAccommodations(params: ListAccommodationsParams = {}) {

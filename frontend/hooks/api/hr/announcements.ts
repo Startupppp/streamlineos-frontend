@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 
 export interface HrAnnouncement {
   id: number;
@@ -25,7 +26,7 @@ export type UpdateHrAnnouncementData = Partial<CreateHrAnnouncementData> & { id:
 
 export function useHrAnnouncements() {
   return useQuery<HrAnnouncement[]>({
-    queryKey: ["hr", "announcements"],
+    queryKey: queryKeys.hr.announcements(),
     queryFn: () => apiClient.get<HrAnnouncement[]>("/org/announcements"),
     staleTime: 60_000,
   });
@@ -33,7 +34,7 @@ export function useHrAnnouncements() {
 
 export function useAllHrAnnouncements(options?: { enabled?: boolean }) {
   return useQuery<HrAnnouncement[]>({
-    queryKey: ["hr", "announcements", "all"],
+    queryKey: queryKeys.hr.announcementsAll(),
     queryFn: () => apiClient.get<HrAnnouncement[]>("/org/announcements/all"),
     staleTime: 30_000,
     enabled: options?.enabled,
@@ -46,7 +47,7 @@ export function useCreateHrAnnouncement() {
     mutationKey: ["hr", "announcements", "create"],
     mutationFn: (data: CreateHrAnnouncementData) =>
       apiClient.post<HrAnnouncement>("/org/announcements", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["hr", "announcements"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.announcements() }),
   });
 }
 
@@ -56,7 +57,7 @@ export function useUpdateHrAnnouncement() {
     mutationKey: ["hr", "announcements", "update"],
     mutationFn: ({ id, ...data }: UpdateHrAnnouncementData) =>
       apiClient.patch<HrAnnouncement>(`/org/announcements/${id}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["hr", "announcements"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.announcements() }),
   });
 }
 
@@ -65,7 +66,7 @@ export function useDeleteHrAnnouncement() {
   return useMutation({
     mutationKey: ["hr", "announcements", "delete"],
     mutationFn: (id: number) => apiClient.delete<void>(`/org/announcements/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["hr", "announcements"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.announcements() }),
   });
 }
 
@@ -74,6 +75,6 @@ export function useMarkHrAnnouncementRead() {
   return useMutation({
     mutationKey: ["hr", "announcements", "read"],
     mutationFn: (id: number) => apiClient.post<void>(`/org/announcements/${id}/read`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["hr", "announcements"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.announcements() }),
   });
 }

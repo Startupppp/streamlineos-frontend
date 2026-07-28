@@ -17,7 +17,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { getUserDisplayName } from "@/features/build/shared/resolve-user-name";
 import { cn } from "@/lib/utils";
 import { PM_PANEL, PM_PANEL_SOLID } from "@/features/build/shared/pm-chrome";
-import { TEXT_ONE_LINE, TEXT_BODY } from "@/features/build/shared/text-overflow";
+import { TEXT_ONE_LINE, TEXT_BODY } from "@/lib/text-overflow";
 import type { StandupEntry, MeetingAttendee, ProjectMemberRecord } from "@/types/projects";
 
 const standupSchema = z.object({

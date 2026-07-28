@@ -5,7 +5,6 @@ export * from "./run-stage-actions/mark-paid-panel";
 export * from "./run-stage-actions/publish-payslips-action";
 export { PublicationsTab } from "./payslips/publications-tab";
 export { TemplatesTab } from "./payslips/templates-tab";
-export { TemplateEditSheet } from "./payslips/template-edit-sheet";
 export { ValidationPanel } from "./bank-transfers/validation-panel";
 export { BatchesTable } from "./bank-transfers/batches-table";
 export { BatchDetailSheet } from "./bank-transfers/batch-detail-sheet";

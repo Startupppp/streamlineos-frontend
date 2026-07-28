@@ -32,7 +32,7 @@ import {
 import {
   TEXT_ONE_LINE,
   TEXT_BODY,
-} from "@/features/build/shared/text-overflow";
+} from "@/lib/text-overflow";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;

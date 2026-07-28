@@ -27,7 +27,7 @@ export interface PatchAccessRequestInput {
   grantedBy?: string;
 }
 
-const AR_KEY = ["hr", "access-requests"] as const;
+const AR_KEY = ["streamlineos", "hr", "access-requests"] as const;
 
 export function useAccessRequests(employeeId?: string) {
   return useQuery<AccessRequest[]>({

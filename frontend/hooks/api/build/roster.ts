@@ -25,7 +25,7 @@ export interface ProjectRoster {
   members: RosterMember[];
 }
 
-const ROSTER_BASE = ["projects", "roster"] as const;
+const ROSTER_BASE = ["streamlineos", "projects", "roster"] as const;
 
 export const rosterQueryKeys = {
   detail: (projectId: number) => [...ROSTER_BASE, projectId] as const,

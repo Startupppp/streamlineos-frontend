@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { format, isPast, isToday, differenceInDays } from "date-fns";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PM_PANEL } from "@/features/build/shared/pm-chrome";
-import { TEXT_TWO_LINES } from "@/features/build/shared/text-overflow";
+import { TEXT_TWO_LINES } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 const STATUS_CONFIG = {

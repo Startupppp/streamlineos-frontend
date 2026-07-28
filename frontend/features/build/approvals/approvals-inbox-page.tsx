@@ -26,7 +26,7 @@ import {
   PmSection,
   PM_FILL_PANEL,
 } from "@/features/build/shared/pm-chrome";
-import { TABLE_TITLE_CELL } from "@/features/build/shared/text-overflow";
+import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface DecideTarget {

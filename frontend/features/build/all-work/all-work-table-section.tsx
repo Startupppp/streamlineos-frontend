@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { PM_PANEL_SOLID } from "@/features/build/shared/pm-chrome";
-import { TABLE_TITLE_CELL } from "@/features/build/shared/text-overflow";
+import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { toTableTicket, type TableRow } from "./all-work-ticket-utils";

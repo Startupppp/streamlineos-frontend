@@ -13,7 +13,7 @@ import { AnimatedLogo } from "@/features/landing/components/animated-logo";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { cn } from "@/lib/utils";
-import { TEXT_BODY } from "@/features/build/shared/text-overflow";
+import { TEXT_BODY } from "@/lib/text-overflow";
 import type { Plan } from "@/lib/billing/feature-gates";
 import type { AiSeverity, ProjectAiEvidence } from "@/types/projects/ai";
 import { useAskProjectAi } from "@/hooks/api/build/ai";

@@ -14,7 +14,7 @@ import type {
 } from "@/types/blog";
 
 const blogKeys = {
-  all: ["blog"] as const,
+  all: ["streamlineos", "blog"] as const,
   posts: () => [...blogKeys.all, "posts"] as const,
   post: (id: string) => [...blogKeys.all, "post", id] as const,
   categories: () => [...blogKeys.all, "categories"] as const,

@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 
 export interface Holiday {
   id: string;
@@ -19,7 +20,7 @@ interface CreateHolidayInput {
 
 export function useHolidays() {
   return useQuery<Holiday[]>({
-    queryKey: ["hr", "holidays"],
+    queryKey: queryKeys.hr.holidays(),
     queryFn: () => apiClient.get<Holiday[]>("/hr/attendance/holidays"),
     staleTime: 300_000,
   });
@@ -31,7 +32,7 @@ export function useCreateHoliday() {
     mutationKey: ["hr", "holidays", "create"],
     mutationFn: (data: CreateHolidayInput) =>
       apiClient.post<Holiday>("/hr/attendance/holidays", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["hr", "holidays"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.holidays() }),
   });
 }
 
@@ -41,7 +42,7 @@ export function useUpdateHoliday() {
     mutationKey: ["hr", "holidays", "update"],
     mutationFn: ({ id, ...data }: Partial<CreateHolidayInput> & { id: string }) =>
       apiClient.patch<Holiday>(`/hr/attendance/holidays/${id}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["hr", "holidays"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.holidays() }),
   });
 }
 
@@ -51,6 +52,6 @@ export function useDeleteHoliday() {
     mutationKey: ["hr", "holidays", "delete"],
     mutationFn: (id: string) =>
       apiClient.delete<void>(`/hr/attendance/holidays/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["hr", "holidays"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.holidays() }),
   });
 }

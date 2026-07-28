@@ -57,7 +57,7 @@ import {
   PM_PANEL,
   PM_ROW,
 } from "@/features/build/shared/pm-chrome";
-import { TEXT_ONE_LINE, TEXT_BODY } from "@/features/build/shared/text-overflow";
+import { TEXT_ONE_LINE, TEXT_BODY } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
 
 function UnlinkProjectButton({

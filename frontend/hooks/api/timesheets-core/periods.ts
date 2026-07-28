@@ -6,7 +6,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
-import type { PeriodDetail, PeriodStatus, TimesheetPeriod } from "@/features/timesheets-core/types";
+import type { PeriodDetail, PeriodStatus, TimesheetPeriod } from "@/features/timesheets/types";
 
 interface PeriodsQuery {
   userId?: string;

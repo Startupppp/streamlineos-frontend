@@ -38,7 +38,7 @@ import {
   getUserDisplayName,
   getUserInitials,
 } from "@/features/build/shared/resolve-user-name";
-import { TEXT_FLEX_CHILD } from "@/features/build/shared/text-overflow";
+import { TEXT_FLEX_CHILD } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { PmPanel } from "@/features/build/shared/pm-chrome";
 import { useCan } from "@/hooks/api/access";

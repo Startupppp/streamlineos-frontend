@@ -79,6 +79,7 @@ export interface CrmSequenceEnrollment {
   id: string;
   entityType: string;
   entityId: string;
+  entityName: string | null;
   status: SequenceEnrollmentStatus;
   currentStep: number;
   nextRunAt: string | null;

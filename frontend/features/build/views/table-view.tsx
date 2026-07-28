@@ -8,7 +8,7 @@ import { TicketQuickActions } from "./ticket-quick-actions";
 import { InlineStatus, InlinePriority, InlineAssignee, InlineEstimate, InlineFieldWrapper, stopEvent } from "./card-inline-fields";
 import { InlineType, InlineLabels, InlineCycle, InlineSprint } from "./card-inline-extra-fields";
 import { InlineDueDate } from "./card-inline-date-fields";
-import { TABLE_TITLE_CELL } from "@/features/build/shared/text-overflow";
+import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import type { DisplayOptions } from "../shared/types";
 

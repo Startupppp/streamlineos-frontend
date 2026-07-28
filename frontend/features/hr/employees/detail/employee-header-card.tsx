@@ -6,8 +6,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { AvailabilityBadge, InfoField, StatBlock } from "@/features/hr/employees/detail/employee-detail-helpers";
-import { getInitials, LIFECYCLE_BADGE } from "@/features/hr/employees/detail/employee-detail-constants";
+import { LIFECYCLE_BADGE } from "@/features/hr/employees/detail/employee-detail-constants";
 import { cn, resolveImageUrl } from "@/lib/utils";
+import { getInitials } from "@/lib/format-utils";
 import { format } from "date-fns";
 import {
   Building2,
@@ -83,7 +84,7 @@ export function EmployeeHeaderCard({
                 )}
               />
               <AvatarFallback className="bg-muted text-lg font-bold text-muted-foreground sm:text-xl">
-                {getInitials(employee.firstName, employee.lastName)}
+                {getInitials(undefined, employee.firstName, employee.lastName)}
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1 sm:hidden">

@@ -223,7 +223,12 @@ export const SHARED_PERMISSIONS: Permission[] = [
     action: "payslips",
     description: "View own payslips",
   },
+  {
+    name: "self:cases",
+    resource: "self",
+    action: "cases",
+    description: "View and acknowledge disciplinary actions issued to oneself",
+  },
   { name: "branch:create", resource: "branch", action: "create", description: "Create branches" },
   { name: "branch:update", resource: "branch", action: "update", description: "Update branches" },
-  { name: "branch:manage_targets", resource: "branch", action: "manage_targets", description: "Manage branch targets" },
 ];

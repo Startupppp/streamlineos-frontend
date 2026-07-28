@@ -43,7 +43,7 @@ import { cn } from "@/lib/utils";
 import { getColorSafe, priorityColors } from "@/lib/theme-constants";
 import type { ProjectStatusRecord, Ticket } from "@/types/projects";
 import { PM_PANEL } from "@/features/build/shared/pm-chrome";
-import { TEXT_TWO_LINES } from "@/features/build/shared/text-overflow";
+import { TEXT_TWO_LINES } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 export interface EpicCardProps {

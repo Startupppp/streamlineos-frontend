@@ -6,7 +6,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
-import type { CreateBudgetInput, TimesheetBudget } from "@/features/timesheets-core/types";
+import type { CreateBudgetInput, TimesheetBudget } from "@/features/timesheets/types";
 
 export function useBudgets(enabled = true) {
   const canView = useCan("timesheets:budgets:view");

@@ -22,7 +22,7 @@ import { StatusBadge } from "@/features/build/shared/status-badge";
 import { formatTicketKey } from "@/features/build/shared/format-ticket-key";
 import { getUserDisplayName, getUserInitials } from "@/features/build/shared/resolve-user-name";
 import { PmPageShell, PM_TOOLBAR, PmPanel } from "@/features/build/shared/pm-chrome";
-import { TABLE_TITLE_CELL } from "@/features/build/shared/text-overflow";
+import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { resolveImageUrl } from "@/lib/utils";
 import { format } from "date-fns";

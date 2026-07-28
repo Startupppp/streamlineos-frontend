@@ -30,6 +30,7 @@ const EMPLOYEE_SELF_SERVICE = [
   "self:leaves",
   "self:expenses",
   "self:payslips",
+  "self:cases",
   "hr:leaves:create",
   "hr:expenses:create",
   "kb:spaces:view",

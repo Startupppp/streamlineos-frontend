@@ -74,12 +74,7 @@ export function useCreateTimesheetPayrollExport() {
     mutationFn: (data: CreateExportBody) =>
       apiClient.post<CreateExportResponse>("/timesheets/payroll/export", data),
     onSuccess: () => {
-      void qc.invalidateQueries({
-        queryKey: ["streamlineos", "timesheets", "payroll", "summary"],
-      });
-      void qc.invalidateQueries({
-        queryKey: ["streamlineos", "timesheets", "payroll", "exports"],
-      });
+      void qc.invalidateQueries({ queryKey: queryKeys.timesheets.payroll.all });
     },
     onError: (error) => toast.error(getErrorMessage(error)),
   });

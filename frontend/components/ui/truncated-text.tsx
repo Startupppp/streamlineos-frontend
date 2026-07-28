@@ -103,7 +103,7 @@ export function TruncatedText({
           onPointerUp={handlePointerUp}
           className={cn(
             CLAMP_CLASS[lines],
-            truncated && "cursor-default outline-none",
+            truncated && "cursor-default outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:rounded-sm",
             className,
           )}
         >

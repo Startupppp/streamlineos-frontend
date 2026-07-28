@@ -419,10 +419,21 @@ export function DataTable<T>({
                     key={row.id}
                     className={cn(
                       "h-10 hover:bg-muted/30 transition-colors",
-                      onRowClick && "cursor-pointer",
+                      onRowClick && "cursor-pointer active:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
                       rowClassName?.(row.original, rowIndex),
                     )}
                     onClick={onRowClick ? () => onRowClick(row.original) : undefined}
+                    onKeyDown={
+                      onRowClick
+                        ? (e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              onRowClick(row.original);
+                            }
+                          }
+                        : undefined
+                    }
+                    tabIndex={onRowClick ? 0 : undefined}
                     data-state={row.getIsSelected() ? "selected" : undefined}
                   >
                     {row.getVisibleCells().map((cell) => (

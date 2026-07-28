@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input";
 import type { Sprint } from "@/types/projects";
 import { getUserDisplayName } from "@/features/build/shared/resolve-user-name";
 import { PM_TOOLBAR } from "@/features/build/shared/pm-chrome";
-import { TEXT_ONE_LINE } from "@/features/build/shared/text-overflow";
+import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { useTicketSearch } from "@/hooks/api/build/ticket-search";
 import { cn } from "@/lib/utils";
 

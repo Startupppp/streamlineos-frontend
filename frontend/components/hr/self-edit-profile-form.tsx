@@ -328,6 +328,7 @@ export function SelfEditProfileForm({
               <Input
                 {...newSkillRegistration}
                 placeholder="Add a skill…"
+                aria-label="Add a skill"
                 className="text-sm flex-1"
                 onChange={handleSkillInputChange}
                 onKeyDown={handleSkillKeyDown}
@@ -358,6 +359,7 @@ export function SelfEditProfileForm({
           <div className="space-y-2">
             <SocialField
               id="linkedinUrl"
+              aria-label="LinkedIn URL"
               icon={<Linkedin className="h-3.5 w-3.5 text-blue-600 dark:text-blue-300" />}
               placeholder="https://linkedin.com/in/yourhandle"
               error={errors.linkedinUrl?.message}
@@ -365,6 +367,7 @@ export function SelfEditProfileForm({
             />
             <SocialField
               id="twitterUrl"
+              aria-label="Twitter / X URL"
               icon={<Twitter className="h-3.5 w-3.5 text-sky-500 dark:text-sky-300" />}
               placeholder="https://twitter.com/yourhandle"
               error={errors.twitterUrl?.message}
@@ -372,6 +375,7 @@ export function SelfEditProfileForm({
             />
             <SocialField
               id="githubUrl"
+              aria-label="GitHub URL"
               icon={<Github className="h-3.5 w-3.5" />}
               placeholder="https://github.com/yourhandle"
               error={errors.githubUrl?.message}
@@ -379,6 +383,7 @@ export function SelfEditProfileForm({
             />
             <SocialField
               id="websiteUrl"
+              aria-label="Website URL"
               icon={<Globe className="h-3.5 w-3.5 text-green-600 dark:text-green-300" />}
               placeholder="https://yourwebsite.com"
               error={errors.websiteUrl?.message}

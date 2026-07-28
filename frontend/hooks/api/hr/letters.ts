@@ -40,7 +40,7 @@ export interface SaveLetterInput {
   contextSnapshot?: Record<string, unknown>;
 }
 
-const LETTERS_KEY = ["hr", "letters"] as const;
+const LETTERS_KEY = ["streamlineos", "hr", "letters"] as const;
 
 export function useLetters(employeeId?: string) {
   return useQuery<LetterRender[]>({

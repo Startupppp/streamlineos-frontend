@@ -52,10 +52,6 @@ export const LIFECYCLE_BADGE: Record<string, { label: string; className: string 
   },
 };
 
-export function getInitials(first?: string | null, last?: string | null) {
-  return `${first?.[0] ?? ""}${last?.[0] ?? ""}`.toUpperCase() || "?";
-}
-
 export function profileCompletenessScore(employee: EmployeeData): {
   pct: number;
   missing: string[];

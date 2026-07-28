@@ -2,6 +2,7 @@
 
 import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -62,20 +63,9 @@ export interface ListIncidentsParams {
   toDate?: string;
 }
 
-const safetyKeys = {
-  all: ["hr-safety"] as const,
-  incidents: (params: ListIncidentsParams) => ["hr-safety", "incidents", params] as const,
-  incident: (id: number) => ["hr-safety", "incident", id] as const,
-  myCheckins: (fromDate?: string, toDate?: string) =>
-    ["hr-safety", "wellness", "my", fromDate, toDate] as const,
-  trend: (fromDate?: string, toDate?: string) =>
-    ["hr-safety", "wellness", "trend", fromDate, toDate] as const,
-  burnout: ["hr-safety", "wellness", "burnout"] as const,
-};
-
 export function useSafetyIncidents(params: ListIncidentsParams = {}) {
   return useQuery({
-    queryKey: safetyKeys.incidents(params),
+    queryKey: queryKeys.hrSafety.incidents(params),
     queryFn: () => apiClient.get<PaginatedResult<SafetyIncident>>("/hr/safety/incidents", params as Record<string, unknown>),
     staleTime: 30_000,
     placeholderData: keepPreviousData,
@@ -84,7 +74,7 @@ export function useSafetyIncidents(params: ListIncidentsParams = {}) {
 
 export function useSafetyIncident(id: number) {
   return useQuery({
-    queryKey: safetyKeys.incident(id),
+    queryKey: queryKeys.hrSafety.incident(id),
     queryFn: () => apiClient.get<SafetyIncident>(`/hr/safety/incidents/${id}`),
     enabled: id > 0,
     staleTime: 30_000,
@@ -105,7 +95,7 @@ export function useReportIncident() {
       confidentialMedicalNote?: string;
     }) => apiClient.post<SafetyIncident>("/hr/safety/incidents", body),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: safetyKeys.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.hrSafety.all });
       toast.success("Incident reported");
     },
     onError: (e) => toast.error(getErrorMessage(e)),
@@ -124,8 +114,8 @@ export function useUpdateSafetyIncident(id: number) {
       medicalAttention: boolean;
     }>) => apiClient.patch<SafetyIncident>(`/hr/safety/incidents/${id}`, body),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: safetyKeys.incident(id) });
-      void qc.invalidateQueries({ queryKey: safetyKeys.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.hrSafety.incident(id) });
+      void qc.invalidateQueries({ queryKey: queryKeys.hrSafety.all });
       toast.success("Incident updated");
     },
     onError: (e) => toast.error(getErrorMessage(e)),
@@ -138,7 +128,7 @@ export function useDeleteSafetyIncident() {
     mutationKey: ["hr-safety", "incident", "delete"],
     mutationFn: (id: number) => apiClient.delete(`/hr/safety/incidents/${id}`),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: safetyKeys.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.hrSafety.all });
       toast.success("Incident deleted");
     },
     onError: (e) => toast.error(getErrorMessage(e)),
@@ -152,7 +142,7 @@ export function useSubmitCheckin() {
     mutationFn: (body: { date: string; score: number; flags?: string[] }) =>
       apiClient.post<WellnessCheckin>("/hr/safety/wellness/checkin", body),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ["hr-safety", "wellness"] });
+      void qc.invalidateQueries({ queryKey: queryKeys.hrSafety.wellnessAll });
       toast.success("Wellness check-in submitted");
     },
     onError: (e) => toast.error(getErrorMessage(e)),
@@ -161,7 +151,7 @@ export function useSubmitCheckin() {
 
 export function useMyCheckins(fromDate?: string, toDate?: string) {
   return useQuery({
-    queryKey: safetyKeys.myCheckins(fromDate, toDate),
+    queryKey: queryKeys.hrSafety.myCheckins(fromDate, toDate),
     queryFn: () =>
       apiClient.get<WellnessCheckin[]>("/hr/safety/wellness/my", { fromDate, toDate }),
     staleTime: 60_000,
@@ -170,7 +160,7 @@ export function useMyCheckins(fromDate?: string, toDate?: string) {
 
 export function useWellnessTrend(fromDate?: string, toDate?: string) {
   return useQuery({
-    queryKey: safetyKeys.trend(fromDate, toDate),
+    queryKey: queryKeys.hrSafety.wellnessTrend(fromDate, toDate),
     queryFn: () =>
       apiClient.get<WellnessTrendPoint[]>("/hr/safety/wellness/trend", { fromDate, toDate }),
     staleTime: 120_000,
@@ -179,7 +169,7 @@ export function useWellnessTrend(fromDate?: string, toDate?: string) {
 
 export function useBurnoutFlags() {
   return useQuery({
-    queryKey: safetyKeys.burnout,
+    queryKey: queryKeys.hrSafety.burnout,
     queryFn: () => apiClient.get<BurnoutFlag[]>("/hr/safety/wellness/burnout"),
     staleTime: 120_000,
   });
@@ -199,7 +189,7 @@ export interface WellnessPulse {
 
 export function useWellnessPulse(enabled = true) {
   return useQuery({
-    queryKey: ["hr-safety", "wellness", "pulse"] as const,
+    queryKey: queryKeys.hrSafety.wellnessPulse,
     queryFn: () => apiClient.get<WellnessPulse>("/hr/safety/wellness/pulse"),
     staleTime: 120_000,
     enabled,

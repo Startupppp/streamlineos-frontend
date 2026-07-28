@@ -36,7 +36,7 @@ import { TransitionFormSheet } from "./transition-form-sheet";
 import type { CustomState } from "@/hooks/api/build/custom-states";
 import type { WorkflowTransition, CreateTransitionInput } from "@/types/projects/workflow";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/features/build/shared/text-overflow";
+import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 

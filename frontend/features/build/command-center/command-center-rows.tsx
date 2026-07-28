@@ -26,7 +26,7 @@ import {
   pmSpring,
 } from "@/features/build/shared/pm-motion";
 import { PM_ROW } from "@/features/build/shared/pm-chrome";
-import { FLEX_TITLE_SLOT } from "@/features/build/shared/text-overflow";
+import { FLEX_TITLE_SLOT } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getTicketDetailHref } from "@/features/build/shared/format-ticket-key";
 

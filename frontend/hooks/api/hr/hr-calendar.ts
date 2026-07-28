@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 
 export const HR_CALENDAR_EVENT_TYPES = [
   "HOLIDAY",
@@ -51,7 +52,7 @@ export function useHrCalendar(params: {
 }) {
   const types = params.types?.join(",");
   return useQuery({
-    queryKey: ["hr", "calendar", params.from, params.to, types],
+    queryKey: queryKeys.hr.hrCalendar(params.from, params.to, types),
     queryFn: () =>
       apiClient.get<HrCalendarEvent[]>("/hr/calendar", {
         from: params.from,

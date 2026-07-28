@@ -42,6 +42,7 @@ export async function signInWithMagicToken(
 
 export function useVerifyEmail() {
   return useMutation({
+    mutationKey: ["auth", "verify-email"],
     mutationFn: (variables: { token: string }) =>
       apiClient.post<{ autoLoginToken: string }>(
         "/auth/verify-email",
@@ -52,6 +53,7 @@ export function useVerifyEmail() {
 
 export function useAcceptInvitation() {
   return useMutation({
+    mutationKey: ["auth", "accept-invitation"],
     mutationFn: (variables: {
       token: string;
       firstName?: string;
@@ -66,6 +68,7 @@ export function useAcceptInvitation() {
 
 export function useResendVerificationEmail() {
   return useMutation({
+    mutationKey: ["auth", "resend-verification"],
     mutationFn: (variables: { email: string }) =>
       apiClient.post<{ success: boolean }>(
         "/auth/resend-verification",
@@ -77,6 +80,7 @@ export function useResendVerificationEmail() {
 export function useSignOut() {
   const router = useRouter();
   return useMutation({
+    mutationKey: ["auth", "sign-out"],
     mutationFn: async () => {
       try {
         await apiClient.post("/auth/logout", undefined);

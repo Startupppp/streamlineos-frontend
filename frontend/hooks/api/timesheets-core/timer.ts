@@ -11,7 +11,7 @@ import type {
   StartTimerInput,
   TimerSession,
   TimesheetEntry,
-} from "@/features/timesheets-core/types";
+} from "@/features/timesheets/types";
 
 export function useActiveTimer() {
   const canView = useCan("timesheets:entries:view");

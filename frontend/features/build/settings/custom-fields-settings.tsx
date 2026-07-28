@@ -49,7 +49,7 @@ import {
 import type { CustomFieldType } from "@/types/projects/tasks";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { TEXT_ONE_LINE, TEXT_BODY } from "@/features/build/shared/text-overflow";
+import { TEXT_ONE_LINE, TEXT_BODY } from "@/lib/text-overflow";
 
 const customFieldSchema = z.object({
   fieldName: z.string().min(1, "Field name is required"),

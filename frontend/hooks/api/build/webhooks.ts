@@ -6,7 +6,7 @@ import type { ProjectWebhook, WebhookDelivery } from "@/types/projects";
 export type { ProjectWebhook, WebhookDelivery } from "@/types/projects";
 
 function webhookKeys(projectId: number) {
-  return ["projects", projectId, "webhooks"] as const;
+  return ["streamlineos", "projects", projectId, "webhooks"] as const;
 }
 
 export function useWebhooks(projectId: number) {

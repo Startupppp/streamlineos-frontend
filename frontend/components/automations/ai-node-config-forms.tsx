@@ -53,6 +53,7 @@ export function ClassifyNodeForm({ config, onChange }: FormProps) {
       <div className="space-y-1.5">
         <Label className="text-xs">Classification labels *</Label>
         <Input
+          aria-label="Classification labels"
           placeholder="e.g. billing, technical, general (comma separated, min 2)"
           value={labels.join(", ")}
           onChange={(e) => handleLabelsChange(e.target.value)}
@@ -61,6 +62,7 @@ export function ClassifyNodeForm({ config, onChange }: FormProps) {
       <div className="space-y-1.5">
         <Label className="text-xs">Payload field to classify *</Label>
         <Input
+          aria-label="Payload field to classify"
           placeholder="e.g. subject"
           value={field}
           onChange={(e) => onChange({ field: e.target.value })}
@@ -86,6 +88,7 @@ export function SummarizeNodeForm({ config, onChange }: FormProps) {
       <div className="space-y-1.5">
         <Label className="text-xs">Payload fields to summarize *</Label>
         <Input
+          aria-label="Payload fields to summarize"
           placeholder="e.g. subject, body, description (comma separated)"
           value={fields.join(", ")}
           onChange={(e) => handleFieldsChange(e.target.value)}
@@ -175,8 +178,9 @@ export function ExtractNodeForm({ config, onChange }: FormProps) {
             variant="ghost"
             className="w-7 text-destructive hover:text-destructive shrink-0"
             onClick={() => handleRemove(idx)}
+            aria-label={`Remove field ${idx + 1}`}
           >
-            <Trash2 className="h-3.5 w-3.5" />
+            <Trash2 className="h-3.5 w-3.5" aria-hidden />
           </Button>
         </div>
       ))}
@@ -207,6 +211,7 @@ export function RoutingSuggestionNodeForm({ config, onChange }: FormProps) {
       <div className="space-y-1.5">
         <Label className="text-xs">Routing options *</Label>
         <Input
+          aria-label="Routing options"
           placeholder="e.g. tier-1-support, billing-team, engineering (comma separated)"
           value={options.join(", ")}
           onChange={(e) => handleOptionsChange(e.target.value)}
@@ -215,6 +220,7 @@ export function RoutingSuggestionNodeForm({ config, onChange }: FormProps) {
       <div className="space-y-1.5">
         <Label className="text-xs">Payload field for context *</Label>
         <Input
+          aria-label="Payload field for context"
           placeholder="e.g. subject"
           value={field}
           onChange={(e) => onChange({ field: e.target.value })}
