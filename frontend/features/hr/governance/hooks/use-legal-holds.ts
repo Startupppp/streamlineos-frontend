@@ -117,7 +117,7 @@ export function useAttachHoldItem() {
     mutationKey: ["hr", "governance", "legal-holds", "attach-item"],
     mutationFn: ({ holdId, ...payload }) =>
       apiClient.post<HoldItem>(`/hr/governance/legal-holds/${holdId}/items`, payload),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: [...HOLDS_KEY, vars.holdId, "items"] });
       toast.success("Item attached to hold");
     },
@@ -131,7 +131,7 @@ export function useDetachHoldItem() {
     mutationKey: ["hr", "governance", "legal-holds", "detach-item"],
     mutationFn: ({ holdId, itemId }) =>
       apiClient.delete<void>(`/hr/governance/legal-holds/${holdId}/items/${itemId}`),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: [...HOLDS_KEY, vars.holdId, "items"] });
       toast.success("Item removed from hold");
     },

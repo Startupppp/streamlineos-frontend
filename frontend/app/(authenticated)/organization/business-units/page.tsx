@@ -69,7 +69,7 @@ type FormValues = z.infer<typeof formSchema>;
 function BuForm({
   defaultValues,
   onSubmit,
-  isPending: _isPending,
+  isPending: _,
 }: {
   defaultValues?: FormValues;
   onSubmit: (v: FormValues) => void;

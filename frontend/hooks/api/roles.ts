@@ -144,7 +144,7 @@ export const useSetRolePermissions = () => {
     mutationKey: ["roles", "set-permissions"],
     mutationFn: ({ roleId, items }) =>
       apiClient.put<{ success: boolean }>(`/roles/${roleId}/permissions`, { items }),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.roles.permissions(variables.roleId),
       });
@@ -180,7 +180,7 @@ export const useAssignRoleMember = () => {
     mutationKey: ["roles", "assign-member"],
     mutationFn: ({ roleId, ...body }) =>
       apiClient.post<{ success: boolean }>(`/roles/${roleId}/members`, body),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.roles.members(variables.roleId),
       });
@@ -196,7 +196,7 @@ export const useUnassignRoleMember = () => {
     mutationKey: ["roles", "unassign-member"],
     mutationFn: ({ roleId, ...body }) =>
       apiClient.delete<{ success: boolean }>(`/roles/${roleId}/members`, body),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.roles.members(variables.roleId),
       });

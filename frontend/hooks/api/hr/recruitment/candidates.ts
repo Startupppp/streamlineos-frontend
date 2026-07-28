@@ -244,7 +244,7 @@ export function useGenerateCandidateAiScore() {
         `/hr/recruitment/candidates/${candidateId}/ai-score`,
         {}
       ),
-    onSuccess: (_data, candidateId) => {
+    onSuccess: (_, candidateId) => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.candidate(candidateId) });
       qc.invalidateQueries({ queryKey: queryKeys.hr.candidates() });
     },
@@ -281,7 +281,7 @@ export function useUpdateCandidate() {
     mutationKey: ["hr", "recruitment", "candidates", "update"],
     mutationFn: ({ id, ...data }: UpdateCandidateInput & { id: number }) =>
       apiClient.patch<{ success: boolean }>(`/hr/recruitment/candidates/${id}`, data),
-    onSuccess: (_data, { id }) => {
+    onSuccess: (_, { id }) => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.candidates() });
       qc.invalidateQueries({ queryKey: queryKeys.hr.candidate(id) });
       qc.invalidateQueries({ queryKey: queryKeys.hr.recruitmentPipeline() });
@@ -369,7 +369,7 @@ export function useUpdateCandidateStage() {
 
       return { previous };
     },
-    onError: (_err, _vars, context) => {
+    onError: (_, _vars, context) => {
       if (context?.previous) {
         qc.setQueryData(ATS_KANBAN_KEY, context.previous);
       }

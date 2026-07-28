@@ -132,7 +132,7 @@ export function useCompleteTask() {
       );
       return { prev };
     },
-    onError: (_err, _vars, ctx) => {
+    onError: (_, _vars, ctx) => {
       if (ctx?.prev) {
         qc.setQueryData(queryKeys.tasks.myQueue(), ctx.prev);
       }

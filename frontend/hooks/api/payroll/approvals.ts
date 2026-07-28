@@ -26,7 +26,7 @@ export function useSubmitApproval() {
     mutationKey: ["payroll", "submit-approval"],
     mutationFn: ({ runId }) =>
       apiClient.post<SubmitApprovalResult>(`/payroll/runs/${runId}/submit-approval`),
-    onSuccess: (_data, { runId }) => {
+    onSuccess: (_, { runId }) => {
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.runApprovals(runId) });
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
       void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "runs"] });
@@ -47,7 +47,7 @@ export function useApproveStage() {
         `/payroll/runs/${runId}/approvals/${approvalId}/approve`,
         { comment },
       ),
-    onSuccess: (_data, { runId }) => {
+    onSuccess: (_, { runId }) => {
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.runApprovals(runId) });
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
       void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "runs"] });
@@ -68,7 +68,7 @@ export function useRejectStage() {
         `/payroll/runs/${runId}/approvals/${approvalId}/reject`,
         { comment },
       ),
-    onSuccess: (_data, { runId }) => {
+    onSuccess: (_, { runId }) => {
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.runApprovals(runId) });
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
       void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "runs"] });
@@ -82,7 +82,7 @@ export function useLockRun() {
     mutationKey: ["payroll", "lock-run"],
     mutationFn: ({ runId }) =>
       apiClient.post<{ success: boolean }>(`/payroll/runs/${runId}/lock`),
-    onSuccess: (_data, { runId }) => {
+    onSuccess: (_, { runId }) => {
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
       void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "runs"] });
     },
@@ -95,7 +95,7 @@ export function useReopenRun() {
     mutationKey: ["payroll", "reopen-run"],
     mutationFn: ({ runId, reason }) =>
       apiClient.post<{ success: boolean }>(`/payroll/runs/${runId}/reopen`, { reason }),
-    onSuccess: (_data, { runId }) => {
+    onSuccess: (_, { runId }) => {
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
       void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "runs"] });
     },
@@ -108,7 +108,7 @@ export function useCloseRun() {
     mutationKey: ["payroll", "close-run"],
     mutationFn: ({ runId }) =>
       apiClient.post<{ success: boolean }>(`/payroll/runs/${runId}/close`),
-    onSuccess: (_data, { runId }) => {
+    onSuccess: (_, { runId }) => {
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
       void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "runs"] });
     },

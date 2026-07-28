@@ -351,7 +351,7 @@ export function useTriggerWorkflow() {
     mutationKey: ["workflows", "trigger"],
     mutationFn: ({ id, data }: { id: string; data?: Record<string, unknown> }) =>
       apiClient.post<WorkflowExecution>(`/workflows/${id}/trigger`, data),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.workflows.executions(variables.id) });
       qc.invalidateQueries({ queryKey: queryKeys.workflows.all });
     },
@@ -366,7 +366,7 @@ export function useCancelExecution() {
       apiClient.post<WorkflowExecution>(
         `/workflows/${workflowId}/executions/${executionId}/cancel`,
       ),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.workflows.executions(variables.workflowId) });
       qc.invalidateQueries({ queryKey: queryKeys.workflows.all });
     },
@@ -392,7 +392,7 @@ export function useCreateSchedule() {
     mutationKey: ["create", "schedule"],
     mutationFn: ({ workflowId, ...input }: CreateScheduleInput & { workflowId: string }) =>
       apiClient.post<WorkflowSchedule>(`/workflows/${workflowId}/schedules`, input),
-    onSuccess: (_data, variables) =>
+    onSuccess: (_, variables) =>
       qc.invalidateQueries({ queryKey: queryKeys.workflows.schedules(variables.workflowId) }),
   });
 }
@@ -410,7 +410,7 @@ export function useUpdateSchedule() {
         `/workflows/${workflowId}/schedules/${scheduleId}`,
         input,
       ),
-    onSuccess: (_data, variables) =>
+    onSuccess: (_, variables) =>
       qc.invalidateQueries({ queryKey: queryKeys.workflows.schedules(variables.workflowId) }),
   });
 }
@@ -426,7 +426,7 @@ export function useDeleteSchedule() {
       apiClient.delete<{ success: boolean }>(
         `/workflows/${workflowId}/schedules/${scheduleId}`,
       ),
-    onSuccess: (_data, variables) =>
+    onSuccess: (_, variables) =>
       qc.invalidateQueries({ queryKey: queryKeys.workflows.schedules(variables.workflowId) }),
   });
 }
@@ -437,7 +437,7 @@ export function useCreateSecret() {
     mutationKey: ["create", "secret"],
     mutationFn: ({ workflowId, ...input }: CreateSecretInput & { workflowId: string }) =>
       apiClient.post<WorkflowSecret>(`/workflows/${workflowId}/secrets`, input),
-    onSuccess: (_data, variables) =>
+    onSuccess: (_, variables) =>
       qc.invalidateQueries({ queryKey: queryKeys.workflows.secrets(variables.workflowId) }),
   });
 }
@@ -453,7 +453,7 @@ export function useDeleteSecret() {
       apiClient.delete<{ success: boolean }>(
         `/workflows/${workflowId}/secrets/${secretId}`,
       ),
-    onSuccess: (_data, variables) =>
+    onSuccess: (_, variables) =>
       qc.invalidateQueries({ queryKey: queryKeys.workflows.secrets(variables.workflowId) }),
   });
 }

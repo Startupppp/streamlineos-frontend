@@ -51,7 +51,7 @@ export function useUpdatePortfolio() {
     mutationKey: ["projects", "portfolios", "update"],
     mutationFn: ({ id, ...data }: UpdatePortfolioInput & { id: number }) =>
       apiClient.patch<Portfolio>(`/build/portfolios/${id}`, data),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.projects.portfolios.list() });
       qc.invalidateQueries({ queryKey: queryKeys.projects.portfolios.detail(vars.id) });
     },

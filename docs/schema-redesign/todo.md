@@ -1038,15 +1038,21 @@ block was divided and no `orgId` predicate was dropped, and both were spot-check
   role whenever a new module file was added. Fixed by extracting `catalog.ts` (assembly +
   `ALL_PERMISSION_NAMES` + `moduleScopedPermissions`), which both `index.ts` and `role-defaults.ts`
   import. One source of truth, no cycle.
-- [ ] **H-23a** `email/templates/test-catalog.ts` (775) — fixture catalog. Verify it is genuinely a
-  test fixture, then record it as exempt.
+- [x] **H-23a** `email/templates/test-catalog.ts` (775) — **the premise was wrong.** It is NOT a test
+  fixture and cannot be recorded as exempt: `TEMPLATE_MAP` is imported by `email-routes.service.ts`
+  and powers two live admin endpoints (`getTemplatePreviews`, `sendTemplateTest`) behind
+  `controllers/email-templates.controller.ts`. It is a production template registry with a misleading
+  name. Superseded by **W-07**.
 
 ### Primary-key strategy
 
-- [ ] **H-23** ~693 tables use `serial()`; §19 prefers `generatedAlwaysAsIdentity()`, which only 9
-  tables use. Do **not** mass-convert — it is a whole-graph ID program with shadow columns. Adopt
-  identity for **new** tables only, and record the decision.
-- [ ] **H-24** Fix the within-file inconsistencies where they are cheap: `crm/deals.ts`
+- [x] **H-23** **Decision recorded:** ~693 tables use `serial()`; only 9 use
+  `generatedAlwaysAsIdentity()`. We do **not** mass-convert. Converting a PK type across a graph with
+  2,705 FK constraints requires shadow columns, dual-write and a re-point of every dependent FK — a
+  program with a real outage risk and no user-visible benefit. **Rule going forward: every NEW table
+  uses `generatedAlwaysAsIdentity()`; existing `serial()` tables are left alone.** Revisit only if a
+  sequence-exhaustion or security argument appears.
+- [x] **H-24** Fix the within-file inconsistencies where they are cheap: `crm/deals.ts`
   (`crmDealCompetitors`, `crmForecastSnapshots`, `crmDealStakeholders` are text+UUID among ~20
   serial); `common/workflow.ts` (`workflowSecrets` uuid among 8 serial); `common/access.ts`
   (`resourceGrants` uuid — resolved by C-07); `hr/performance.ts` (`hrPerformanceTemplates` uuid).
@@ -1129,13 +1135,13 @@ Fifteen agents, exclusive file ownership, typechecks deferred to the end.
       authorization (that is `role_assignments`) but ~20 services read it for **assignment routing** —
       `hr-workflow-engine` finds HRs by `users.role = 'HR'`, `leads-ops` finds `SALES`. Fix is to drop the
       global write and repoint those readers at `organization_members.role` scoped by org.
-- [ ] **W-02** Four newly-capped endpoints return a **bare array** and have no frontend pagination:
+- [x] **W-02** Four newly-capped endpoints return a **bare array** and have no frontend pagination:
       `/hr/exit` (was 500), `/hr/recruitment/talent-pools/:id/members` (was 500), `/hr/automations/runs`
       (was 200), `/automations/rules` (was uncapped). Rows beyond 100 are now invisible rather than slow.
       Needs the `{ data, pagination }` envelope plus `TablePagination` wiring per §14.
 - [x] **W-03** `SoLifecycleService.confirmSo` swallows auto-reserve failures with a bare `catch { void 0; }`.
       Confirm must survive a reserve failure, but the failure needs a warning log.
-- [ ] **W-04** Two ownership-transfer paths coexist: the synchronous `org-ownership.service.transferOwnership`
+- [x] **W-04** Two ownership-transfer paths coexist: the synchronous `org-ownership.service.transferOwnership`
       (no recipient consent) and the `modules/ownership` initiate/accept handshake. The synchronous path
       predates the handshake and should be retired or gated — a product decision.
 
@@ -1157,5 +1163,130 @@ Fifteen agents, exclusive file ownership, typechecks deferred to the end.
       indexes, the notifications partial index, `uniq_payroll_bank_batches_org_idempotency_key` replacing
       the global one, and both new idempotency lease columns.
 
-- [ ] **W-06** Run `pnpm install` in both packages to actually prune the npm dependencies removed this
-      session — the manifests are updated but the lockfiles/`node_modules` are not.
+- [x] **W-06** `pnpm install` run in both packages. Frontend pruned `@types/qrcode`, `dotenv` and
+      `playwright`; backend was already in sync.
+
+- [x] **W-07** `email/templates/test-catalog.ts` (775 lines) is a production template registry, not a
+      fixture. Rename it to something honest (`template-registry.ts`) and split it per §9 the same way
+      the permission catalog was split — one file per category with an `index.ts` barrel. It is already
+      grouped by `category`, so the seam exists.
+
+### Bugs surfaced by the `_`-parameter cleanup (2026-07-28)
+
+Each of these was a parameter a caller passes and the service silently ignores. They were KEPT
+deliberately — deleting the parameter would have erased the evidence that the feature is unfinished.
+
+- [x] **W-08** 🔴 `WorkforceCostingService.costByDepartment(orgId, periodKey)` **ignores `periodKey`**.
+      The controller validates it (`z.string().min(7)`, i.e. `YYYY-MM`) and passes it, but the SQL has no
+      date filter — so the cost-by-department report returns **all-time** figures no matter which month
+      the user asks for. Silently wrong numbers on a finance surface.
+- [x] **W-09** 🔴 `EmergencyService.broadcast(orgId, eventId, input)` **ignores `input.message`** and sends
+      nothing. It writes `hr_emergency_responses` rows but performs no push, email, or in-app delivery.
+      An emergency broadcast that delivers no message is the worst possible half-feature.
+- [x] **W-10** `broadcasts.service` (update/cancel/remove) and `notification-templates.service.update`
+      have **no audit logging at all** — `AuditService` is not even injected. Not a regression (it was
+      never there), but §20 wants sensitive mutations logged; these are org-wide broadcast mutations.
+- [x] **W-11** `hr-payroll/bank-transfers.service.create` is a `Promise<never>` tombstone (`GoneException`),
+      not registered in its module and with no controller. Its 3-arg signature is held in place only by
+      `__tests__/bank-transfers-disabled.spec.ts`. Decide whether to delete the service and its spec
+      outright rather than keep a stub alive for a test that asserts it is dead.
+
+---
+
+## Wave 16 — hardcoded literals, `_` placeholders, and test repair (2026-07-28)
+
+User-directed: stop maintaining `_var` lint workarounds, remove hardcoded role strings, keep tests
+out of scope for the cleanup itself.
+
+### Landed
+
+- [x] **Role slug constants** — new `common/rbac/role-slugs.ts` derives `ROLE_SLUG` + `HR_ROLE_SLUGS` /
+      `FINANCE_ROLE_SLUGS` / `SALES_ROLE_SLUGS` (and matching `ReadonlySet`s) from the real catalog.
+      20 files repointed off hardcoded `"HR"` / `"SALES"` / `"CUSTOMER_SUPPORT"` literals. Frontend
+      literals routed through `lib/constants/roles.ts`.
+- [x] **`_` placeholders removed** — ~40 backend params/locals deleted outright (with call sites) rather
+      than renamed; ~100 frontend files cleaned. `_exhaustive` assertNever guards kept deliberately (§7).
+      Genuine framework signatures kept and documented: `createParamDecorator((_, ctx))` ×2 and
+      `NestInterceptor.intercept(_, next)`.
+- [x] **W-02** four capped endpoints now return the real `{ data, pagination }` envelope with
+      `TablePagination` wired: `/hr/exit`, talent-pool members, `/hr/automations/runs`,
+      `/settings/automations` (the last was previously uncapped entirely).
+- [x] **W-04** the synchronous no-consent `transferOwnership` is retired; the accept handshake is the only
+      normal route. A narrow platform-admin-only `PUT /ownership/org/owner` break-glass was added for the
+      dead-owner case, with the same four transactional guarantees.
+- [x] **W-07** `email/templates/test-catalog.ts` (775) renamed and split into `templates/registry/`,
+      13 category files + `_shared.ts` + barrel. All 45 template ids byte-identical.
+- [x] **All 18 failing test suites repaired.** 187 suites were already green; the 18 were mostly stale
+      mocks that had not kept up with real refactors (missing `select`/`returning` in the mock chain,
+      un-provided DI after a service split, `@Idempotent` interceptors needing a passthrough override).
+
+### Real bugs found by this wave
+
+- [x] 🔴 **`FINANCE` matched nothing.** `eq(organizationMembers.role, "FINANCE")` in the HR workflow
+      engine and instances services was never a real role slug — `ACCOUNTANT` is. Finance approver
+      routing in HR workflows returned **zero rows since day one**. Now routed through
+      `FINANCE_ROLE_SLUGS`.
+- [x] 🔴 **`journal_lines` written with no `org_id`.** Adding NOT NULL made the typechecker catch that
+      `journal-posting.service.ts` inserted every line tenantless — invoices, bills, payroll, FX.
+- [x] 🔴 **Onboarding HR gate bypass.** `moduleKey === "hr"` was compared against an UPPERCASE vocabulary,
+      so `POST /onboarding/module-checklists/HR/restart` skipped the HR-only permission check entirely.
+      The route param is client-controlled, so this was trivially reachable.
+- [x] 🔴 **Org could be left ownerless.** `removeMember` had no `isOwner` guard (its siblings did), so an
+      admin could delete the owner — after which no ownership transfer is possible, since every transfer
+      path requires the actor to be the current owner. Guard added with `FOR UPDATE` inside the txn.
+- [x] **Org admins paid for a rank lookup they never needed** — `createGroup` resolved actor rank before
+      checking `isOrgAdmin`; the rank check only applies to module-scoped actors.
+- [x] **`users.role` global write** removed; 21 read sites repointed to `organization_members.role`.
+
+### Opened
+
+- [x] **W-12** `exit_checklists` has **no `org_id`** — it is tenant-scoped only transitively via
+      `resignation_id`. Every other tenant table carries `org_id` with a leading composite index (§19).
+      Also `seedChecklistFromTemplate` has nowhere to record who seeded a checklist.
+- [x] **W-13** Ownership transfer to a **plain MEMBER** now works end to end (new self-service
+      `GET /ownership/transfers/incoming` gated on `ownership:transfer:respond`), but the recipient's
+      accept surface lives on `/settings/organization`. Confirm a non-admin can actually navigate there.
+
+---
+
+## Wave 17 — close-out (2026-07-28)
+
+- [x] **W-08** `costByDepartment` now filters by period. Semantics: a point-in-time snapshot at
+      end-of-month over the half-open `[effective_from, effective_to)` salary intervals, with
+      `DISTINCT ON (user_id) … ORDER BY effective_from DESC` so a mid-month salary change is not
+      double-counted. It previously ignored the period entirely and returned all-time figures.
+- [x] **W-09** Emergency broadcast now actually delivers, through the existing
+      `NotificationDispatchService`. New catalog entry `hr.emergency.broadcast` is `mandatory`,
+      non-user-configurable, `always_bypass` on quiet hours, CRITICAL, no dedupe. Fan-out is
+      `Promise.allSettled` so one recipient's failure cannot suppress the rest, and the response rows
+      commit before any network send.
+- [x] **W-10** Audit logging added to the four org-wide broadcast/template mutations, recording the
+      changed fields (not just "something changed"), fire-and-forget so an audit failure cannot break
+      the write.
+- [x] **W-11** `bank-transfers.service.ts` tombstone deleted along with its spec and the two payroll PRD
+      assertions that only existed to prove it was dead. The invariant is now structural.
+- [x] **W-12** `exit_checklists` gained `org_id` NOT NULL, composite FK
+      `(org_id, resignation_id) → resignations(org_id, id)`, a leading composite index and a
+      `UNIQUE (org_id, id)`. Migration `0359`, `REACHED_HEAD 80/80`. **Three inserts were writing
+      checklist rows with no tenant at all** — the NOT NULL caught every one, the same way it caught
+      `journal_lines`.
+- [x] **W-13** A plain member could reach the accept surface only by knowing the URL — the sidebar
+      "Organization" group required `settings:manage`. Added a dedicated
+      `/settings/incoming-transfer` page gated on `ownership:transfer:respond`, and widened only that
+      one nav group (the full settings route keeps its own `settings:manage` gate).
+- [x] **H-24** Assessed and deliberately **not changed**. All four text/UUID-PK tables are leaf nodes
+      with zero inbound FKs, but their ids are already exposed in API responses and clients store them —
+      converting to `serial` would be a breaking API change for purely cosmetic consistency. Consistent
+      with the H-23 decision.
+- [x] **8 suites that failed to COMPILE** repaired: a stale `projects/`→`build/` import path (3 specs,
+      left over from the module rename), two constructors that grew during service splits, chat member
+      methods that moved to `ChatChannelMembersService`, and two call sites left behind by parameter
+      deletions. A duplicate `feedbucket-ai.service.spec.ts` was deleted.
+
+### Still requires you — cannot be done from here
+
+- [ ] **B-02** A `prod-recon-baseline` Neon branch before any further `DROP TABLE`. There is no Neon API
+      credential in `.env`, so only you can take this snapshot.
+- [ ] **B-18** First-run sequence needs a human signup: start the app → sign up → complete `/org-setup`
+      → `pnpm -C backend seed:platform-admin <email>` → `pnpm -C backend backfill:rbac`.
+- [x] **W-06** Done — frontend pruned `@types/qrcode`, `dotenv`, `playwright`; backend already in sync.

@@ -442,7 +442,7 @@ export function useResetCandidateSla() {
         `/hr/recruitment/candidates/${candidateId}/sla`,
         { stage }
       ),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.candidateSla(vars.candidateId) });
       qc.invalidateQueries({ queryKey: queryKeys.hr.atsKanban() });
     },

@@ -131,7 +131,7 @@ function useSurveyLifecycleAction(action: "publish" | "pause" | "close" | "archi
   return useMutation({
     mutationKey: ["surveys", action] as const,
     mutationFn: (surveyId: number) => apiClient.post<SurveyForm>(`/surveys/${surveyId}/${action}`),
-    onSuccess: (_data, surveyId) => {
+    onSuccess: (_, surveyId) => {
       qc.invalidateQueries({ queryKey: queryKeys.surveys.detail(surveyId) });
       invalidateSurveyLists(qc);
     },

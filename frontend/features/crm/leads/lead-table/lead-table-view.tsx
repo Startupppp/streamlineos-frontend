@@ -34,7 +34,7 @@ function ColumnToggleItem({ col, checked, onToggle }: ColumnToggleItemProps) {
 }
 
 export function LeadTableView({
-  leads, totalCount, page, totalPages: _totalPages, pageSize,
+  leads, totalCount, page, pageSize,
   sortColumn, sortDirection, onSort, onPageChange, onPageSizeChange,
   onStatusChange, onPriorityChange, onAssign,
   onBulkUpdate, onBulkDelete, teamMembers,

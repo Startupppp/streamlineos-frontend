@@ -33,7 +33,7 @@ export interface CommandCenterJumpLink {
 }
 
 function workspaceHref(path: string) {
-  return (_projectId: number | null) => path;
+  return (_: number | null) => path;
 }
 
 function projectHref(path: string) {
@@ -41,31 +41,31 @@ function projectHref(path: string) {
     projectId === null ? "/build/all" : `/build/${projectId}${path}`;
 }
 
-function renderInboxIcon(_ref: IconRef) {
+function renderInboxIcon(_: IconRef) {
   return <Inbox className="h-[13px] w-[13px]" />;
 }
 
-function renderClipboardCheckIcon(_ref: IconRef) {
+function renderClipboardCheckIcon(_: IconRef) {
   return <ClipboardCheck className="h-[13px] w-[13px]" />;
 }
 
-function renderUsersIcon(_ref: IconRef) {
+function renderUsersIcon(_: IconRef) {
   return <Users className="h-[13px] w-[13px]" />;
 }
 
-function renderBookOpenIcon(_ref: IconRef) {
+function renderBookOpenIcon(_: IconRef) {
   return <BookOpen className="h-[13px] w-[13px]" />;
 }
 
-function renderCalendarClockIcon(_ref: IconRef) {
+function renderCalendarClockIcon(_: IconRef) {
   return <CalendarClock className="h-[13px] w-[13px]" />;
 }
 
-function renderMessageCircleIcon(_ref: IconRef) {
+function renderMessageCircleIcon(_: IconRef) {
   return <MessageCircle className="h-[13px] w-[13px]" />;
 }
 
-function renderSparklesIcon(_ref: IconRef) {
+function renderSparklesIcon(_: IconRef) {
   return <Sparkles className="h-[13px] w-[13px]" />;
 }
 

@@ -44,7 +44,7 @@ export function useToggleWatch(projectId: number) {
         {}
       );
     },
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.watchers(variables.ticketId),
       });
@@ -67,7 +67,7 @@ export function useAddWatcher(projectId: number) {
         `/build/${projectId}/tickets/${ticketId}/watchers`,
         { userId }
       ),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.watchers(variables.ticketId),
       });

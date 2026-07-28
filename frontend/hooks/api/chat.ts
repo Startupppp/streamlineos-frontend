@@ -191,7 +191,7 @@ export function useSendMessage() {
 
       return { previousData };
     },
-    onError: (_err, variables, context) => {
+    onError: (_, variables, context) => {
 
       if (context?.previousData) {
         queryClient.setQueryData(
@@ -200,7 +200,7 @@ export function useSendMessage() {
         );
       }
     },
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.chat.messages(variables.channelId),
       });
@@ -332,7 +332,7 @@ export function useAddChannelMember() {
     mutationKey: ["chat", "channels", "add-member"],
     mutationFn: ({ channelId, userId }: { channelId: number; userId: string }) =>
       apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/members`, { userId }),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.channel(variables.channelId) });
     },
   });
@@ -344,7 +344,7 @@ export function useRemoveChannelMember() {
     mutationKey: ["chat", "channels", "remove-member"],
     mutationFn: ({ channelId, userId }: { channelId: number; userId: string }) =>
       apiClient.delete<{ ok: boolean }>(`/chat/channels/${channelId}/members/${userId}`),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.channel(variables.channelId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
     },
@@ -360,7 +360,7 @@ export function useUpdateChannel() {
       ...update
     }: UpdateChannelInput & { channelId: number }) =>
       apiClient.patch<{ ok: boolean }>(`/chat/channels/${channelId}`, update),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.chat.channel(variables.channelId),
       });
@@ -409,7 +409,7 @@ export function usePinMessage() {
     mutationKey: ["chat", "messages", "pin"],
     mutationFn: ({ channelId, messageId }: { channelId: number; messageId: number }) =>
       apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/pins`, { messageId }),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.pins(variables.channelId) });
     },
   });
@@ -421,7 +421,7 @@ export function useUnpinMessage() {
     mutationKey: ["chat", "messages", "unpin"],
     mutationFn: ({ channelId, messageId }: { channelId: number; messageId: number }) =>
       apiClient.delete<{ ok: boolean }>(`/chat/channels/${channelId}/pins/${messageId}`),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.pins(variables.channelId) });
     },
   });
@@ -635,7 +635,7 @@ export function useRegenerateInviteLink() {
     mutationKey: ["chat", "channels", "invite-link", "regenerate"],
     mutationFn: (channelId: number) =>
       apiClient.post<{ token: string }>(`/chat/channels/${channelId}/invite-link/regenerate`),
-    onSuccess: (_data, channelId) => {
+    onSuccess: (_, channelId) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.inviteLink(channelId) });
     },
   });
@@ -736,7 +736,7 @@ export function useAssignTicketFromChat() {
     mutationKey: ["chat", "actions", "assign-ticket"],
     mutationFn: (input: AssignTicketFromChatInput) =>
       apiClient.post<{ ok: boolean }>("/chat/actions/assign-ticket", input),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.chat.messages(variables.channelId),
       });
@@ -757,7 +757,7 @@ export function useSetDueDateFromChat() {
     mutationKey: ["chat", "actions", "set-due-date"],
     mutationFn: (input: SetDueDateFromChatInput) =>
       apiClient.post<{ ok: boolean }>("/chat/actions/set-due-date", input),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.chat.messages(variables.channelId),
       });
@@ -774,7 +774,7 @@ export function useCreateTaskFromMessage() {
         "/chat/actions/create-task-from-message",
         input,
       ),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.chat.messages(variables.channelId),
       });

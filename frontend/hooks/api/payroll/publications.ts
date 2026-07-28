@@ -26,7 +26,7 @@ export function usePublishPayslips() {
       apiClient.post<PublishResult>(`/payroll/runs/${runId}/payslips/publish`, {
         userIds,
       }),
-    onSuccess: (_data, { runId }) => {
+    onSuccess: (_, { runId }) => {
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.runPublications(runId) });
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
       void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "runs"] });

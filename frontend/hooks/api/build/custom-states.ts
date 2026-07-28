@@ -91,7 +91,7 @@ export function useUpdateCustomState(projectId: number) {
       );
       return { previous };
     },
-    onError: (_err, _vars, context) => {
+    onError: (_, _vars, context) => {
       if (context?.previous) {
         qc.setQueryData(stateKeys(projectId), context.previous);
       }
@@ -136,7 +136,7 @@ export function useDeleteCustomState(projectId: number) {
       );
       return { previous };
     },
-    onError: (_err, _stateId, context) => {
+    onError: (_, _stateId, context) => {
       if (context?.previous) {
         qc.setQueryData(stateKeys(projectId), context.previous);
       }

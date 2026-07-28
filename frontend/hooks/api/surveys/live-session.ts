@@ -74,7 +74,7 @@ function useLiveSessionAction(action: "start" | "next" | "reveal" | "end") {
   return useMutation({
     mutationKey: ["surveys", "live", action] as const,
     mutationFn: (sessionId: number) => apiClient.post<SurveyLiveSession>(`/surveys/live-sessions/${sessionId}/${action}`),
-    onSuccess: (_data, sessionId) => qc.invalidateQueries({ queryKey: queryKeys.surveys.liveSession(sessionId) }),
+    onSuccess: (_, sessionId) => qc.invalidateQueries({ queryKey: queryKeys.surveys.liveSession(sessionId) }),
   });
 }
 

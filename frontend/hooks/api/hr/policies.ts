@@ -62,7 +62,7 @@ export function useUpdateHrPolicy() {
     mutationKey: ["hr", "policies", "update"],
     mutationFn: ({ id, ...data }: UpdatePolicyInput & { id: number }) =>
       apiClient.patch<HrPolicy>(`/hr/policies/${id}`, data),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.hrPoliciesAll });
       qc.invalidateQueries({ queryKey: queryKeys.hr.hrPolicyDetail(vars.id) });
     },

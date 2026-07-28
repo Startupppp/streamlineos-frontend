@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 
 export interface TalentPool {
@@ -23,6 +23,16 @@ export interface TalentPoolMember {
   currentCompany: string | null;
   currentRole: string | null;
   status: string;
+}
+
+export interface PaginatedPoolMembers {
+  data: TalentPoolMember[];
+  pagination: { page: number; limit: number; total: number; totalPages: number };
+}
+
+interface PoolMembersParams {
+  page?: number;
+  limit?: number;
 }
 
 const poolsKey = ["hr", "talentPools"] as const;
@@ -55,12 +65,19 @@ export function useDeleteTalentPool() {
   });
 }
 
-export function usePoolMembers(poolId: number) {
+export function usePoolMembers(poolId: number, params?: PoolMembersParams) {
   return useQuery({
-    queryKey: poolMembersKey(poolId),
-    queryFn: () => apiClient.get<TalentPoolMember[]>(`/hr/recruitment/talent-pools/${poolId}/members`),
+    queryKey: [...poolMembersKey(poolId), params] as const,
+    queryFn: () => {
+      const search = new URLSearchParams();
+      if (params?.page) search.set("page", String(params.page));
+      if (params?.limit) search.set("limit", String(params.limit));
+      const qs = search.toString();
+      return apiClient.get<PaginatedPoolMembers>(`/hr/recruitment/talent-pools/${poolId}/members${qs ? `?${qs}` : ""}`);
+    },
     staleTime: 60_000,
     enabled: !!poolId,
+    placeholderData: keepPreviousData,
   });
 }
 

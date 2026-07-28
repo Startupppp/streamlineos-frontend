@@ -459,7 +459,6 @@ function NestedGroup({
 interface DroppableGroupProps {
   groupKey: string;
   items: Ticket[];
-  groupBy: string;
   projectKey?: string | null;
   projectId?: number;
   projectStatuses?: Array<{ name: string; color: string | null; type?: string | null }>;
@@ -471,7 +470,6 @@ interface DroppableGroupProps {
 function DroppableGroup({
   groupKey,
   items,
-  groupBy: _groupBy,
   projectKey,
   projectId,
   projectStatuses,
@@ -774,7 +772,6 @@ export const ListView = memo(function ListView({
                   <DroppableGroup
                     groupKey={group}
                     items={items}
-                    groupBy={groupBy ?? "status"}
                     projectKey={projectKey}
                     projectId={projectId}
                     projectStatuses={projectStatuses}

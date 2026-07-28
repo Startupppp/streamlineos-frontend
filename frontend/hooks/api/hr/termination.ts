@@ -134,7 +134,7 @@ export function useSubmitTermination() {
     mutationKey: [...terminationKeys.all, "submit"],
     mutationFn: (id: number) =>
       apiClient.patch<{ success: boolean }>(`/hr/termination/${id}/submit`),
-    onSuccess: (_data, id) => {
+    onSuccess: (_, id) => {
       void qc.invalidateQueries({ queryKey: terminationKeys.all });
       void qc.invalidateQueries({ queryKey: terminationKeys.detail(id) });
     },
@@ -161,7 +161,7 @@ export function useCeoReviewTermination() {
           remarks,
         },
       ),
-    onSuccess: (_data, { id }) => {
+    onSuccess: (_, { id }) => {
       void qc.invalidateQueries({ queryKey: terminationKeys.all });
       void qc.invalidateQueries({ queryKey: terminationKeys.detail(id) });
     },
@@ -177,7 +177,7 @@ export function useSendTerminationEmail() {
         `/hr/termination/${id}/send-email`,
         {},
       ),
-    onSuccess: (_data, id) => {
+    onSuccess: (_, id) => {
       void qc.invalidateQueries({ queryKey: terminationKeys.all });
       void qc.invalidateQueries({ queryKey: terminationKeys.detail(id) });
     },
@@ -190,7 +190,7 @@ export function useCompleteTermination() {
     mutationKey: [...terminationKeys.all, "complete"],
     mutationFn: (id: number) =>
       apiClient.patch<{ success: boolean }>(`/hr/termination/${id}/complete`),
-    onSuccess: (_data, id) => {
+    onSuccess: (_, id) => {
       void qc.invalidateQueries({ queryKey: terminationKeys.all });
       void qc.invalidateQueries({ queryKey: terminationKeys.detail(id) });
     },

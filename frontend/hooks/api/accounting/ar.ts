@@ -214,7 +214,7 @@ export function usePostCreditNote() {
       apiClient.post<{ id: number; status: string; needsApproval?: boolean }>(
         `/accounting/credit-notes/${creditNoteId}/post`,
       ),
-    onSuccess: (_data, { creditNoteId }) => {
+    onSuccess: (_, { creditNoteId }) => {
       queryClient.invalidateQueries({
         queryKey: arKeys.creditNotes.detail(creditNoteId),
       });
@@ -277,7 +277,7 @@ export function useUpdateRecurringTemplate() {
         `/accounting/recurring-invoices/${templateId}`,
         body,
       ),
-    onSuccess: (_data, { templateId }) => {
+    onSuccess: (_, { templateId }) => {
       queryClient.invalidateQueries({
         queryKey: arKeys.recurringTemplates.all,
         exact: false,
@@ -297,7 +297,7 @@ export function useDeleteRecurringTemplate() {
       apiClient.delete<{ id: number; deleted: boolean }>(
         `/accounting/recurring-invoices/${templateId}`,
       ),
-    onSuccess: (_data, { templateId }) => {
+    onSuccess: (_, { templateId }) => {
       queryClient.invalidateQueries({
         queryKey: arKeys.recurringTemplates.all,
         exact: false,

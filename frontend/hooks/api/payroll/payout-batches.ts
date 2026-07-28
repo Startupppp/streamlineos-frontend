@@ -58,7 +58,7 @@ export function useCreatePayoutBatch() {
         format ? { format } : {},
         idempotencyKey ? { headers: { "idempotency-key": idempotencyKey } } : undefined,
       ),
-    onSuccess: (_data, { runId }) => {
+    onSuccess: (_, { runId }) => {
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.bankBatches(runId) });
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.bankBatches() });
     },
@@ -71,7 +71,7 @@ export function useMarkBatchSent() {
     mutationKey: ["payroll", "mark-batch-sent"],
     mutationFn: ({ batchId }) =>
       apiClient.post<{ success: boolean }>(`/payroll/payout/batches/${batchId}/mark-sent`),
-    onSuccess: (_data, { batchId, runId }) => {
+    onSuccess: (_, { batchId, runId }) => {
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.bankBatch(batchId) });
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.bankBatches(runId) });
     },
@@ -91,7 +91,7 @@ export function useMarkBatchPaid() {
         `/payroll/payout/batches/${batchId}/mark-paid`,
         { transactionRef },
       ),
-    onSuccess: (_data, { batchId, runId }) => {
+    onSuccess: (_, { batchId, runId }) => {
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.bankBatch(batchId) });
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.bankBatches(runId) });
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId ?? 0) });
@@ -112,7 +112,7 @@ export function useMarkItemPaid() {
         `/payroll/payout/batches/${batchId}/items/${itemId}/mark-paid`,
         { transactionRef },
       ),
-    onSuccess: (_data, { batchId, runId }) => {
+    onSuccess: (_, { batchId, runId }) => {
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.bankBatch(batchId) });
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.bankBatches(runId) });
     },
@@ -132,7 +132,7 @@ export function useMarkItemFailed() {
         `/payroll/payout/batches/${batchId}/items/${itemId}/mark-failed`,
         { failureReason },
       ),
-    onSuccess: (_data, { batchId, runId }) => {
+    onSuccess: (_, { batchId, runId }) => {
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.bankBatch(batchId) });
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.bankBatches(runId) });
     },
@@ -162,7 +162,7 @@ export function useImportBankReturn() {
         `/payroll/payout/batches/${batchId}/import-return`,
         { csv },
       ),
-    onSuccess: (_data, { batchId, runId }) => {
+    onSuccess: (_, { batchId, runId }) => {
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.bankBatch(batchId) });
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.bankBatches(runId) });
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId ?? 0) });

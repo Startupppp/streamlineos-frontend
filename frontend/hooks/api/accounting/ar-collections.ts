@@ -218,7 +218,7 @@ export function useUpdateInvoiceCollection() {
       }
       return { snapshots };
     },
-    onError: (_err, _vars, context) => {
+    onError: (_, _vars, context) => {
       if (!context) return;
       for (const [key, data] of context.snapshots) {
         queryClient.setQueryData(key as readonly unknown[], data);

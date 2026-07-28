@@ -33,7 +33,6 @@ export interface LeadTableViewProps {
   leads: Lead[];
   totalCount: number;
   page: number;
-  totalPages: number;
   pageSize: number;
   sortColumn: string;
   sortDirection: "asc" | "desc";

@@ -93,7 +93,7 @@ export function useReverseGrn() {
         { reason },
         { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.goodsReceipts() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.goodsReceipt(variables.grnId) });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
@@ -191,7 +191,7 @@ export function usePostVendorReturn() {
         { ...(reason !== undefined ? { reason } : {}) },
         { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.vendorReturns() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.vendorReturn(variables.returnId) });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
@@ -209,7 +209,7 @@ export function useCancelVendorReturn() {
     mutationKey: ["inventory", "vendorReturns", "cancel"],
     mutationFn: ({ returnId }) =>
       apiClient.post<void>(`/inventory/vendor-returns/${returnId}/cancel`, {}),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.vendorReturns() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.vendorReturn(variables.returnId) });
     },
@@ -307,7 +307,7 @@ export function usePostCustomerReturn() {
         { ...(reason !== undefined ? { reason } : {}) },
         { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.customerReturns() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.customerReturn(variables.returnId) });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
@@ -325,7 +325,7 @@ export function useCancelCustomerReturn() {
     mutationKey: ["inventory", "customerReturns", "cancel"],
     mutationFn: ({ returnId }) =>
       apiClient.post<void>(`/inventory/customer-returns/${returnId}/cancel`, {}),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.customerReturns() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.customerReturn(variables.returnId) });
     },

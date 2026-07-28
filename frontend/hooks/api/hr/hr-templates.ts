@@ -91,7 +91,7 @@ export function useUpdateHrTemplate() {
     mutationKey: ["hr", "templates", "update"],
     mutationFn: ({ id, ...data }: UpdateTemplateInput) =>
       apiClient.patch<HrTemplate>(`/hr/templates/${id}`, data),
-    onSuccess: (_data, { id }) => {
+    onSuccess: (_, { id }) => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.hrTemplates() });
       qc.invalidateQueries({ queryKey: queryKeys.hr.hrTemplate(id) });
     },
@@ -104,7 +104,7 @@ export function useTransitionHrTemplate() {
     mutationKey: ["hr", "templates", "transition"],
     mutationFn: ({ id, to }: { id: number; to: HrTemplateStatus }) =>
       apiClient.post<HrTemplate>(`/hr/templates/${id}/transition`, { to }),
-    onSuccess: (_data, { id }) => {
+    onSuccess: (_, { id }) => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.hrTemplates() });
       qc.invalidateQueries({ queryKey: queryKeys.hr.hrTemplate(id) });
     },
@@ -133,7 +133,7 @@ export function useRenderHrTemplate() {
     mutationKey: ["hr", "templates", "render"],
     mutationFn: ({ templateId, ...body }: RenderInput & { templateId: number }) =>
       apiClient.post<RenderResponse>(`/hr/templates/${templateId}/render`, body),
-    onSuccess: (_data, { templateId }) => {
+    onSuccess: (_, { templateId }) => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.hrTemplateRenders(templateId) });
     },
   });

@@ -183,7 +183,6 @@ export function MailShell() {
           ) : selectedMessage ? (
             <MailReadingPane
               selectedMessage={selectedMessage}
-              accounts={accounts}
               onBack={handleBackToList}
               onReply={handleReply}
             />

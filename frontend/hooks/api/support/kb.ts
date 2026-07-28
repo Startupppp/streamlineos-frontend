@@ -239,7 +239,7 @@ export function useUpdateSupportKbArticle() {
     mutationKey: ["supportKb", "articles", "update"],
     mutationFn: ({ id, ...input }: UpdateKbArticleInput & { id: number }) =>
       apiClient.patch<KbArticleListItem>(`/support/kb/articles/${id}`, input),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: [...queryKeys.supportKb.all, "articles"] });
       qc.invalidateQueries({ queryKey: queryKeys.supportKb.article(variables.id) });
     },
@@ -286,7 +286,7 @@ export function useSubmitSupportKbFeedback() {
         `/public/kb/${slug}/feedback?org=${encodeURIComponent(orgId)}`,
         body,
       ),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.supportKb.publicArticle(variables.orgId, variables.slug) });
     },
   });

@@ -299,7 +299,7 @@ export function useAddTravelVisitLog() {
       lng?: string;
       note?: string;
     }) => apiClient.post<TravelVisitLog>("/hr/travel-visits", data),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.travelVisitLogs(vars.travelRequestId) });
     },
   });

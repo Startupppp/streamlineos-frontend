@@ -70,7 +70,7 @@ export function useUpdatePmWorkspace() {
       ...data
     }: UpdatePmWorkspaceInput & { pmWorkspaceId: string }) =>
       apiClient.patch<PmWorkspace>(`${BASE}/${pmWorkspaceId}`, data),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.projects.pmWorkspaces.list() });
       qc.invalidateQueries({
         queryKey: queryKeys.projects.pmWorkspaces.detail(vars.pmWorkspaceId),

@@ -124,7 +124,7 @@ export function useUpdateChannel() {
     mutationKey: ["inventory", "channel", "update"],
     mutationFn: ({ channelId, ...data }) =>
       apiClient.patch<Channel>(`/inventory/channels/${channelId}`, data),
-    onSuccess: (_res, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.channels() });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.channel(vars.channelId) });
     },
@@ -137,7 +137,7 @@ export function useSyncChannelStock() {
     mutationKey: ["inventory", "channel", "sync-stock"],
     mutationFn: (channelId) =>
       apiClient.post<unknown>(`/inventory/channels/${channelId}/sync-stock`, {}),
-    onSuccess: (_res, channelId) => {
+    onSuccess: (_, channelId) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.channels() });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.channelPublications(channelId) });
     },
@@ -150,7 +150,7 @@ export function useRetryChannelPublications() {
     mutationKey: ["inventory", "channel", "publications", "retry"],
     mutationFn: (channelId) =>
       apiClient.post<unknown>(`/inventory/channels/${channelId}/publications/retry`, {}),
-    onSuccess: (_res, channelId) => {
+    onSuccess: (_, channelId) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.channelPublications(channelId) });
     },
   });

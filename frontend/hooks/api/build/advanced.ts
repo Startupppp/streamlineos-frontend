@@ -53,7 +53,7 @@ export function useCreateEpic(options?: Parameters<typeof useMutation>[0]) {
       const { projectId, ...data } = variables;
       return apiClient.post<Epic>(`/build/${projectId}/epics`, data);
     },
-    onSuccess: (_data: unknown, variables: CreateEpicInput) => {
+    onSuccess: (_: unknown, variables: CreateEpicInput) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.epics(variables.projectId),
       });
@@ -81,7 +81,7 @@ export function useCreateCycle(options?: Parameters<typeof useMutation>[0]) {
     mutationKey: ["projects", "cycles", "create"],
     mutationFn: ({ projectId, ...data }: CreateCycleInput) =>
       apiClient.post<Cycle>(`/build/${projectId}/cycles`, data),
-    onSuccess: (_data: unknown, variables: CreateCycleInput) => {
+    onSuccess: (_: unknown, variables: CreateCycleInput) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.cycles(variables.projectId),
       });
@@ -96,7 +96,7 @@ export function useUpdateCycle(options?: Parameters<typeof useMutation>[0]) {
     mutationKey: ["projects", "cycles", "update"],
     mutationFn: ({ id, projectId, ...data }: UpdateCycleInput & { projectId: number }) =>
       apiClient.patch<Cycle>(`/build/${projectId}/cycles/${id}`, data),
-    onSuccess: (_data: unknown, variables: UpdateCycleInput & { projectId: number }) => {
+    onSuccess: (_: unknown, variables: UpdateCycleInput & { projectId: number }) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.cycles(variables.projectId),
       });
@@ -127,7 +127,7 @@ export function useCreateModule(options?: Parameters<typeof useMutation>[0]) {
     mutationKey: ["projects", "modules", "create"],
     mutationFn: ({ projectId, ...data }: CreateModuleInput) =>
       apiClient.post<Module>(`/build/${projectId}/modules`, data),
-    onSuccess: (_data: unknown, variables: CreateModuleInput) => {
+    onSuccess: (_: unknown, variables: CreateModuleInput) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.modules(variables.projectId),
       });
@@ -142,7 +142,7 @@ export function useUpdateModule(options?: Parameters<typeof useMutation>[0]) {
     mutationKey: ["projects", "modules", "update"],
     mutationFn: ({ id, projectId, ...data }: UpdateModuleInput & { projectId: number }) =>
       apiClient.patch<Module>(`/build/${projectId}/modules/${id}`, data),
-    onSuccess: (_data: unknown, variables: UpdateModuleInput & { projectId: number }) => {
+    onSuccess: (_: unknown, variables: UpdateModuleInput & { projectId: number }) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.modules(variables.projectId),
       });
@@ -173,7 +173,7 @@ export function useCreateView(options?: Parameters<typeof useMutation>[0]) {
     mutationKey: ["projects", "views", "create"],
     mutationFn: ({ projectId, ...data }: CreateViewInput) =>
       apiClient.post<ProjectView>(`/build/${projectId}/views`, data),
-    onSuccess: (_data: unknown, variables: CreateViewInput) => {
+    onSuccess: (_: unknown, variables: CreateViewInput) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.views(variables.projectId),
       });
@@ -188,7 +188,7 @@ export function useUpdateView(options?: Parameters<typeof useMutation>[0]) {
     mutationKey: ["projects", "views", "update"],
     mutationFn: ({ id, projectId, ...data }: UpdateViewInput & { projectId: number }) =>
       apiClient.patch<ProjectView>(`/build/${projectId}/views/${id}`, data),
-    onSuccess: (_data: unknown, variables: UpdateViewInput & { projectId: number }) => {
+    onSuccess: (_: unknown, variables: UpdateViewInput & { projectId: number }) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.views(variables.projectId),
       });
@@ -203,7 +203,7 @@ export function useDeleteView(options?: Parameters<typeof useMutation>[0]) {
     mutationKey: ["projects", "views", "delete"],
     mutationFn: ({ id, projectId }: { id: number; projectId: number }) =>
       apiClient.delete<{ success: boolean }>(`/build/${projectId}/views/${id}`),
-    onSuccess: (_data: unknown, variables: { id: number; projectId: number }) => {
+    onSuccess: (_: unknown, variables: { id: number; projectId: number }) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.views(variables.projectId),
       });
@@ -295,7 +295,7 @@ export function useCreateIntakeRequest(options?: Parameters<typeof useMutation>[
     mutationKey: ["projects", "intake", "create"],
     mutationFn: ({ projectId, ...data }: CreateIntakeRequestInput) =>
       apiClient.post<IntakeRequest>(`/build/${projectId}/intake`, data),
-    onSuccess: (_data: unknown, variables: CreateIntakeRequestInput) => {
+    onSuccess: (_: unknown, variables: CreateIntakeRequestInput) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.intake(variables.projectId),
       });
@@ -313,7 +313,7 @@ export function useUpdateIntakeRequest(options?: Parameters<typeof useMutation>[
         `/build/${projectId}/intake/${id}`,
         data
       ),
-    onSuccess: (_data: unknown, variables: UpdateIntakeRequestInput & { projectId: number }) => {
+    onSuccess: (_: unknown, variables: UpdateIntakeRequestInput & { projectId: number }) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.intake(variables.projectId),
       });

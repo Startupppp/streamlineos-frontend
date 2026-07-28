@@ -70,7 +70,7 @@ export function useDecideApproval(projectId: number) {
     mutationKey: ["projects", projectId, "approvals", "decide"],
     mutationFn: ({ id, ...data }: DecideApprovalInput & { id: number }) =>
       apiClient.patch<Approval>(`/build/${projectId}/approvals/${id}/decide`, data),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.projects.approvals.list(projectId) });
       qc.invalidateQueries({ queryKey: queryKeys.projects.approvals.detail(projectId, vars.id) });
       qc.invalidateQueries({ queryKey: queryKeys.projects.approvals.inbox() });
@@ -84,7 +84,7 @@ export function useUpdateApproval(projectId: number) {
     mutationKey: ["projects", projectId, "approvals", "update"],
     mutationFn: ({ id, ...data }: UpdateApprovalInput & { id: number }) =>
       apiClient.patch<Approval>(`/build/${projectId}/approvals/${id}`, data),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.projects.approvals.list(projectId) });
       qc.invalidateQueries({ queryKey: queryKeys.projects.approvals.detail(projectId, vars.id) });
       qc.invalidateQueries({ queryKey: queryKeys.projects.approvals.inbox() });

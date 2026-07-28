@@ -124,7 +124,7 @@ export function useBuildPayrollInputPeriod() {
     mutationKey: ["hr-payroll-inputs", "periods", "build"],
     mutationFn: (periodId: number) =>
       apiClient.post<PayrollInputPeriod>(`/hr/payroll-inputs/periods/${periodId}/build`),
-    onSuccess: (_data, periodId) => {
+    onSuccess: (_, periodId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.hrPayrollInputs.period(periodId) });
       void qc.invalidateQueries({ queryKey: queryKeys.hrPayrollInputs.periods() });
       toast.success("Period built — snapshots captured");
@@ -139,7 +139,7 @@ export function useLockPayrollInputPeriod() {
     mutationKey: ["hr-payroll-inputs", "periods", "lock"],
     mutationFn: (periodId: number) =>
       apiClient.post<PayrollInputPeriod>(`/hr/payroll-inputs/periods/${periodId}/lock`),
-    onSuccess: (_data, periodId) => {
+    onSuccess: (_, periodId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.hrPayrollInputs.period(periodId) });
       void qc.invalidateQueries({ queryKey: queryKeys.hrPayrollInputs.periods() });
       toast.success("Period locked");
@@ -154,7 +154,7 @@ export function useUnlockPayrollInputPeriod() {
     mutationKey: ["hr-payroll-inputs", "periods", "unlock"],
     mutationFn: (periodId: number) =>
       apiClient.post<PayrollInputPeriod>(`/hr/payroll-inputs/periods/${periodId}/unlock`),
-    onSuccess: (_data, periodId) => {
+    onSuccess: (_, periodId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.hrPayrollInputs.period(periodId) });
       void qc.invalidateQueries({ queryKey: queryKeys.hrPayrollInputs.periods() });
       toast.success("Period unlocked");
@@ -214,7 +214,7 @@ export function useCreatePayrollAdjustment() {
       reason: string;
       sourceChangeRef?: Record<string, unknown>;
     }) => apiClient.post<PayrollAdjustment>("/hr/payroll-inputs/adjustments", data),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       if (vars.periodId) {
         void qc.invalidateQueries({ queryKey: queryKeys.hrPayrollInputs.adjustments(vars.periodId) });
       }

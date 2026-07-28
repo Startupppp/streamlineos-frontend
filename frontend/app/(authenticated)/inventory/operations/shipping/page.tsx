@@ -5,7 +5,6 @@ export default function ShippingQueuePage() {
     <SoQueuePage
       status="PACKED"
       title="Shipping Queue"
-      actionNoun="ship"
       emptyTitle="Nothing to ship"
       emptyDescription="Sales orders in Packed status will appear here ready for shipping."
     />

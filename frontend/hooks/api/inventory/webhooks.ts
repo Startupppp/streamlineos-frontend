@@ -148,7 +148,7 @@ export function useRetryWebhookEvent() {
     mutationKey: ["inventory", "webhook", "event", "retry"],
     mutationFn: ({ eventId }) =>
       apiClient.post<WebhookEvent>(`/inventory/webhooks/events/${eventId}/retry`),
-    onSuccess: (_res, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.webhookEvents(vars.webhookId) });
     },
   });

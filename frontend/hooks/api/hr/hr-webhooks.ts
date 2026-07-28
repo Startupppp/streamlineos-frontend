@@ -70,7 +70,7 @@ export function useUpdateHrWebhook() {
     mutationKey: [...BASE, "update"],
     mutationFn: ({ id, ...input }: UpdateHrWebhookInput & { id: number }) =>
       apiClient.patch<HrWebhookSubscription>(`/hr/webhooks/${id}`, input),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: hrWebhookKeys.all });
       qc.invalidateQueries({ queryKey: hrWebhookKeys.detail(vars.id) });
     },
@@ -93,7 +93,7 @@ export function useToggleHrWebhook() {
       }
       return { previous };
     },
-    onError: (_err, _vars, ctx) => {
+    onError: (_, _vars, ctx) => {
       if (ctx?.previous) qc.setQueryData(hrWebhookKeys.list(), ctx.previous);
     },
     onSettled: () => qc.invalidateQueries({ queryKey: hrWebhookKeys.all }),
@@ -116,7 +116,7 @@ export function useTestHrWebhook() {
     mutationKey: [...BASE, "test"],
     mutationFn: (id: number) =>
       apiClient.post<{ deliveryId: number; event: string }>(`/hr/webhooks/${id}/test`, {}),
-    onSuccess: (_data, id) => {
+    onSuccess: (_, id) => {
       qc.invalidateQueries({ queryKey: hrWebhookKeys.deliveries(id) });
     },
   });
@@ -131,7 +131,7 @@ export function useRedeliverHrWebhook() {
         `/hr/webhooks/${subscriptionId}/deliveries/${deliveryId}/redeliver`,
         {},
       ),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: hrWebhookKeys.deliveries(vars.subscriptionId) });
     },
   });

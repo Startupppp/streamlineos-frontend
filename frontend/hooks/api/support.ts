@@ -130,7 +130,7 @@ export const useAddSupportMessage = () => {
     mutationKey: ["add", "support", "message"],
     mutationFn: ({ ticketId, ...data }) =>
       apiClient.post<SupportMessage>(`/support/${ticketId}/messages`, data),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.support.detail(variables.ticketId),
       });

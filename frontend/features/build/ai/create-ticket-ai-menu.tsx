@@ -146,7 +146,7 @@ export function useCreateTicketAi({
     });
   }, [suggestFieldsMutation, draftInput]);
 
-  const handleApplyFieldsFromText = useCallback((_text: string) => {
+  const handleApplyFieldsFromText = useCallback((_: string) => {
     const data = lastFieldsRef.current;
     if (!data) return;
     onApplyFields({

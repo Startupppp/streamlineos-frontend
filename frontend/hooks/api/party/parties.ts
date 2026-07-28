@@ -72,7 +72,7 @@ export function useUpdateParty() {
     mutationKey: ["party", "parties", "update"],
     mutationFn: ({ partyId, ...input }: UpdatePartyInput & { partyId: string }) =>
       apiClient.patch<BusinessParty>(`/party/parties/${partyId}`, input),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       void qc.invalidateQueries({
         queryKey: queryKeys.party.party(variables.partyId),
       });
@@ -109,7 +109,7 @@ export function useCreateContact() {
     mutationKey: ["party", "contacts", "create"],
     mutationFn: (input: CreateContactInput) =>
       apiClient.post<PartyContact>(`/party/parties/${input.partyId}/contacts`, input),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       void qc.invalidateQueries({
         queryKey: queryKeys.party.contacts(variables.partyId),
       });
@@ -123,11 +123,10 @@ export function useUpdateContact() {
     mutationKey: ["party", "contacts", "update"],
     mutationFn: ({
       partyContactId,
-      partyId: _partyId,
       ...input
     }: UpdateContactInput & { partyContactId: string; partyId: string }) =>
       apiClient.patch<PartyContact>(`/party/contacts/${partyContactId}`, input),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       void qc.invalidateQueries({
         queryKey: queryKeys.party.contacts(variables.partyId),
       });
@@ -141,7 +140,7 @@ export function useDeleteContact() {
     mutationKey: ["party", "contacts", "delete"],
     mutationFn: ({ partyContactId }: { partyContactId: string; partyId: string }) =>
       apiClient.delete(`/party/contacts/${partyContactId}`),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       void qc.invalidateQueries({
         queryKey: queryKeys.party.contacts(variables.partyId),
       });

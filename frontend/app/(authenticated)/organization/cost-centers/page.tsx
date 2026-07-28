@@ -66,7 +66,7 @@ type FormValues = z.infer<typeof formSchema>;
 function CostCenterForm({
   defaultValues,
   onSubmit,
-  isPending: _isPending,
+  isPending: _,
 }: {
   defaultValues?: FormValues;
   onSubmit: (v: FormValues) => void;

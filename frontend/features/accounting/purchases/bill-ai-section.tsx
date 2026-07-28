@@ -90,7 +90,7 @@ export function BillAiSection({ bill }: BillAiSectionProps) {
     setExtractOpen((v) => !v);
   }
 
-  function handleDraftReady(_draft: ExtractedDocumentDraft, sourceName: string): void {
+  function handleDraftReady(_: ExtractedDocumentDraft, sourceName: string): void {
     setExtractOpen(false);
     void Promise.resolve(sourceName);
   }

@@ -39,7 +39,6 @@ interface PageCardProps {
 }
 
 const PageCard = memo(function PageCard({
-  id: _id,
   icon,
   title,
   updatedAt,

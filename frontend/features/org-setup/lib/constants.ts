@@ -13,7 +13,7 @@ export const ORG_SETUP_COL_PAD = WIZARD_COL_PAD;
 
 export type StepId = "welcome" | "basics" | "invite";
 
-export function getStepSequence(_goals: string[]): StepId[] {
+export function getStepSequence(): StepId[] {
   return ["welcome", "basics", "invite"];
 }
 

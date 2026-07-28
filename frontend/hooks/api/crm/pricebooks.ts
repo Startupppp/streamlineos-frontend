@@ -91,7 +91,7 @@ export function useUpsertPricebookEntry() {
       ...data
     }: { pricebookId: string; productId: number; unitPriceCents: number; minQuantity: number }) =>
       apiClient.post<PricebookEntry>(`/crm/pricebooks/${pricebookId}/entries`, data),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.crmPricebooks.entries(vars.pricebookId) });
     },
   });
@@ -105,7 +105,7 @@ export function useDeletePricebookEntry() {
       apiClient.delete<{ success: boolean }>(
         `/crm/pricebooks/${pricebookId}/entries/${entryId}`,
       ),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.crmPricebooks.entries(vars.pricebookId) });
     },
   });

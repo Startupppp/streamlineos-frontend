@@ -38,7 +38,7 @@ export function useUpdateHiringFlow() {
     mutationKey: ["hr", "recruitment", "hiring-flows", "update"],
     mutationFn: ({ id, ...data }: UpdateHiringFlowInput & { id: number }) =>
       apiClient.patch<HiringFlow>(`/hr/recruitment/hiring-flows/${id}`, data),
-    onSuccess: (_data, { id }) => {
+    onSuccess: (_, { id }) => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.hiringFlows() });
       qc.invalidateQueries({ queryKey: queryKeys.hr.hiringFlow(id) });
     },
@@ -72,7 +72,7 @@ export function useCreateHiringFlowRound() {
     mutationKey: ["hr", "recruitment", "hiring-flow-rounds", "create"],
     mutationFn: ({ flowId, ...data }: CreateHiringFlowRoundInput & { flowId: number }) =>
       apiClient.post<HiringFlowRound>(`/hr/recruitment/hiring-flows/${flowId}/rounds`, data),
-    onSuccess: (_data, { flowId }) => {
+    onSuccess: (_, { flowId }) => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.hiringFlows() });
       qc.invalidateQueries({ queryKey: queryKeys.hr.hiringFlow(flowId) });
       qc.invalidateQueries({ queryKey: queryKeys.hr.hiringFlowRounds(flowId) });
@@ -86,7 +86,7 @@ export function useUpdateHiringFlowRound() {
     mutationKey: ["hr", "recruitment", "hiring-flow-rounds", "update"],
     mutationFn: ({ flowId, roundId, ...data }: UpdateHiringFlowRoundInput & { flowId: number; roundId: number }) =>
       apiClient.patch<HiringFlowRound>(`/hr/recruitment/hiring-flows/${flowId}/rounds/${roundId}`, data),
-    onSuccess: (_data, { flowId }) => {
+    onSuccess: (_, { flowId }) => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.hiringFlows() });
       qc.invalidateQueries({ queryKey: queryKeys.hr.hiringFlow(flowId) });
       qc.invalidateQueries({ queryKey: queryKeys.hr.hiringFlowRounds(flowId) });
@@ -100,7 +100,7 @@ export function useDeleteHiringFlowRound() {
     mutationKey: ["hr", "recruitment", "hiring-flow-rounds", "delete"],
     mutationFn: ({ flowId, roundId }: { flowId: number; roundId: number }) =>
       apiClient.delete<{ success: boolean }>(`/hr/recruitment/hiring-flows/${flowId}/rounds/${roundId}`),
-    onSuccess: (_data, { flowId }) => {
+    onSuccess: (_, { flowId }) => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.hiringFlows() });
       qc.invalidateQueries({ queryKey: queryKeys.hr.hiringFlow(flowId) });
       qc.invalidateQueries({ queryKey: queryKeys.hr.hiringFlowRounds(flowId) });

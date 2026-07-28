@@ -44,7 +44,7 @@ export function useUpdateKbSpace() {
     mutationKey: ["kb", "spaces", "update"],
     mutationFn: ({ spaceId, ...data }: UpdateSpaceInput) =>
       apiClient.patch<KbSpace>(`/kb/spaces/${spaceId}`, data),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.kb.spaces() });
       qc.invalidateQueries({ queryKey: queryKeys.kb.space(variables.spaceId) });
     },

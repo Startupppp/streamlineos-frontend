@@ -120,7 +120,6 @@ export default function DocumentsPage() {
   }, [documents, searchTerm, selectedCategory, customFolders]);
 
   const totalFiltered = totalDocuments;
-  const totalPages = Math.max(1, documentsPage?.pagination.totalPages ?? 1);
 
   const folders: FolderItem[] = useMemo(() => [
     { name: "Employee Contracts", count: documents.filter((d) => d.type === "CONTRACT" || d.type === "OFFER_LETTER").length, colorIdx: 0 },
@@ -224,7 +223,6 @@ export default function DocumentsPage() {
           page={page}
           pageSize={pageSize}
           totalFiltered={totalFiltered}
-          totalPages={totalPages}
           selectedCategory={selectedCategory}
           searchTerm={searchTerm}
           onPageChange={setPage}

@@ -86,7 +86,7 @@ export function useCreateEngagement() {
         `/directory/workers/${workerId}/engagements`,
         { ...input, workerId },
       ),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       qc.invalidateQueries({
         queryKey: queryKeys.directory.engagements(variables.workerId),
       });
@@ -103,14 +103,13 @@ export function useUpdateEngagement() {
     mutationKey: ["directory", "engagements", "update"],
     mutationFn: ({
       workerEngagementId,
-      workerId: _workerId,
       ...input
     }: UpdateEngagementInput & { workerEngagementId: string; workerId: string }) =>
       apiClient.patch<WorkerEngagement>(
         `/directory/engagements/${workerEngagementId}`,
         input,
       ),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       qc.invalidateQueries({
         queryKey: queryKeys.directory.engagements(variables.workerId),
       });
@@ -124,14 +123,13 @@ export function useTerminateEngagement() {
     mutationKey: ["directory", "engagements", "terminate"],
     mutationFn: ({
       workerEngagementId,
-      workerId: _workerId,
       ...input
     }: TerminateEngagementInput & { workerEngagementId: string; workerId: string }) =>
       apiClient.post<WorkerEngagement>(
         `/directory/engagements/${workerEngagementId}/terminate`,
         input,
       ),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       qc.invalidateQueries({
         queryKey: queryKeys.directory.engagements(variables.workerId),
       });

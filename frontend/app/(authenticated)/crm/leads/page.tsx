@@ -418,7 +418,6 @@ export default function LeadsPipelinePage() {
               leads={tableData?.leads || []}
               totalCount={tableData?.totalCount || 0}
               page={tableData?.page || 1}
-              totalPages={tableData?.totalPages || 1}
               pageSize={pageSize}
               sortColumn={sortColumn}
               sortDirection={sortDirection}

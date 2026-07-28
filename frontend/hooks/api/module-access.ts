@@ -197,7 +197,7 @@ export function useSetModuleRolePermissions(moduleKey: string) {
         `/module-access/${moduleKey}/roles/${roleId}/permissions`,
         { items },
       ),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       void queryClient.invalidateQueries({
         queryKey: queryKeys.moduleAccess.roles(moduleKey),
       });
@@ -234,7 +234,7 @@ export function useAddModuleGroupMember(moduleKey: string) {
         `/module-access/${moduleKey}/groups/${groupId}/members`,
         { userId },
       ),
-    onSuccess: (_data, { groupId }) => {
+    onSuccess: (_, { groupId }) => {
       void queryClient.invalidateQueries({
         queryKey: queryKeys.moduleAccess.groupMembers(moduleKey, groupId),
       });
@@ -257,7 +257,7 @@ export function useRemoveModuleGroupMember(moduleKey: string) {
       apiClient.delete<{ success: true }>(
         `/module-access/${moduleKey}/groups/${groupId}/members/${userId}`,
       ),
-    onSuccess: (_data, { groupId }) => {
+    onSuccess: (_, { groupId }) => {
       void queryClient.invalidateQueries({
         queryKey: queryKeys.moduleAccess.groupMembers(moduleKey, groupId),
       });

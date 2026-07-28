@@ -45,7 +45,7 @@ export function useCreateSprint(options?: Parameters<typeof useMutation>[0]) {
     mutationKey: ["projects", "sprints", "create"],
     mutationFn: ({ projectId, ...data }: CreateSprintInput) =>
       apiClient.post<Sprint>(`/build/${projectId}/sprints`, data),
-    onSuccess: (_data: unknown, variables: CreateSprintInput) => {
+    onSuccess: (_: unknown, variables: CreateSprintInput) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.sprints(variables.projectId),
       });

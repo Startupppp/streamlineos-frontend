@@ -43,7 +43,7 @@ export function useAddExternalLink() {
         entityType,
         entityId,
       }),
-    onSuccess: (_data, vars) =>
+    onSuccess: (_, vars) =>
       qc.invalidateQueries({ queryKey: [...queryKeys.support.detail(vars.ticketId), "external-links"] }),
   });
 }
@@ -54,7 +54,7 @@ export function useRemoveExternalLink() {
     mutationKey: ["remove", "external", "link"],
     mutationFn: ({ ticketId, linkId }: { ticketId: number; linkId: number }) =>
       apiClient.delete<{ success: boolean }>(`/support/${ticketId}/external-links/${linkId}`),
-    onSuccess: (_data, vars) =>
+    onSuccess: (_, vars) =>
       qc.invalidateQueries({ queryKey: [...queryKeys.support.detail(vars.ticketId), "external-links"] }),
   });
 }

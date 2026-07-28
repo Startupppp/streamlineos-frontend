@@ -19,6 +19,7 @@ import { OrgConfigSection } from "@/features/settings/organization/org-config-se
 import { OrgSecuritySection } from "@/features/settings/organization/org-security-section";
 import { OrgDataPrivacySection } from "@/features/settings/organization/org-data-privacy-section";
 import { OrgDangerZoneSection } from "@/features/settings/organization/org-danger-zone-section";
+import { OrgIncomingTransferSection } from "@/features/settings/organization/org-incoming-transfer-section";
 
 const CURRENCY_CODES = ["USD", "EUR", "INR", "GBP", "AED"] as const;
 type CurrencyCode = (typeof CURRENCY_CODES)[number];
@@ -369,6 +370,8 @@ export default function OrganizationSettingsPage() {
             onSaveIpAllowlist={handleSaveIpAllowlist}
           />
         )}
+
+        <OrgIncomingTransferSection />
 
         <OrgDangerZoneSection org={org} />
       </div>

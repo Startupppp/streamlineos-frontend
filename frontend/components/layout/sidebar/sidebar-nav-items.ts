@@ -100,6 +100,7 @@
   DollarSign,
 } from "lucide-react";
 import { matchesOrgModule } from "@/lib/module-vocabulary";
+import { ROLES } from "@/lib/constants/roles";
 
 export interface NavRoute {
   label: string;
@@ -2146,13 +2147,19 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     label: "Organization",
-    requiredPermission: "settings:manage",
+    requiredPermission: ["settings:manage", "ownership:transfer:respond"],
     routes: [
       {
         label: "Organization Settings",
         icon: Building2,
         href: "/settings/organization",
         requiredPermission: "settings:manage",
+      },
+      {
+        label: "Incoming Transfer",
+        icon: ArrowLeftRight,
+        href: "/settings/incoming-transfer",
+        requiredPermission: "ownership:transfer:respond",
       },
     ],
   },
@@ -2421,7 +2428,7 @@ export function getNavGroupsForUser(
 ): NavGroup[] {
   if (!role) return [];
 
-  const isOwner = role === "OWNER";
+  const isOwner = role === ROLES.OWNER;
   const granted = new Set(permissions ?? []);
 
   return NAV_GROUPS.filter(
@@ -2441,7 +2448,7 @@ export function getNavGroupsForUser(
 }
 
 export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
-  return getNavGroupsForUser(role, role === "OWNER" ? undefined : []);
+  return getNavGroupsForUser(role, role === ROLES.OWNER ? undefined : []);
 }
 
 export function flattenNavRoutes(routes: NavRoute[]): NavRoute[] {
@@ -2475,7 +2482,7 @@ export function countProductNavLeaves(navGroups: NavGroup[]): number {
 }
 
 export function shouldHideProductSidebar(navGroups: NavGroup[]): boolean {
-  return countProductNavLeaves(navGroups) <= 1;
+  return countProductNavLeaves(navGroups) === 0;
 }
 
 export type ProductKey =
@@ -2692,7 +2699,7 @@ export function getNavGroupsForProduct(
     ];
   }
   if (productKey === "documents") {
-    const isOwner = role === "OWNER";
+    const isOwner = role === ROLES.OWNER;
     const granted = new Set(permissions ?? []);
     const documentRoutes = [
       {

@@ -4,6 +4,7 @@ import { useState, useCallback, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useCan } from "@/hooks/api/access";
+import { ROLES } from "@/lib/constants/roles";
 import { isToday, isFuture, parseISO } from "date-fns";
 import { toast } from "sonner";
 import { Plus, AlertCircle } from "lucide-react";
@@ -42,7 +43,7 @@ export default function TerminationPage() {
   const employeeIdParam = searchParams.get("employeeId");
 
   const role = session?.user?.role;
-  const isHR = role === "HR";
+  const isHR = role === ROLES.HR;
   const isCEO = canApproveExit;
 
   const [page, setPage] = useState(1);
@@ -131,7 +132,7 @@ export default function TerminationPage() {
     }
 
     const targetEmployee = employees.find((e) => e.id === selectedUserId);
-    if (targetEmployee?.role === "CEO") {
+    if (targetEmployee?.role === ROLES.CEO) {
       toast.error("CEO cannot be terminated through this workflow");
       return;
     }

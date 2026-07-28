@@ -87,7 +87,7 @@ interface LineRowContext {
   onRemove: (index: number) => void;
 }
 
-function buildLineColumns(_ctx: LineRowContext[]): DataTableColumn<LineRowContext>[] {
+function buildLineColumns(_: LineRowContext[]): DataTableColumn<LineRowContext>[] {
   return [
     {
       key: "account",

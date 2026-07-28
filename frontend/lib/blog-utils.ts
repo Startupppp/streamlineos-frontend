@@ -51,9 +51,9 @@ export function extractToc(html: string): { html: string; toc: TocItem[] } {
 
   const out = html.replace(
     /<(h2|h3)([^>]*)>([\s\S]*?)<\/\1>/gi,
-    (_match, tag: string, attrs: string, inner: string) => {
+    (match, tag: string, attrs: string, inner: string) => {
       const text = stripHtml(inner);
-      if (!text) return _match;
+      if (!text) return match;
 
       const base = slugifyHeading(text);
       let id = base;

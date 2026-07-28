@@ -328,7 +328,7 @@ export function useArchiveProject(
       apiClient.patch<{ success: boolean }>(`/build/${projectId}`, {
         status: restore ? "ACTIVE" : "ARCHIVED",
       }),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.detail(variables.projectId),
       });
@@ -366,7 +366,7 @@ export function useAddProjectMember(
     mutationKey: ["projects", "members", "add"],
     mutationFn: ({ projectId, ...data }: AddProjectMemberInput) =>
       apiClient.post<ProjectMember>(`/build/${projectId}/members`, data),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.members(variables.projectId),
       });
@@ -405,7 +405,7 @@ export function useUpdateProjectMemberRole(
         `/build/${projectId}/members/${memberUserId}`,
         { role },
       ),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.members(variables.projectId),
       });
@@ -427,7 +427,7 @@ export function useRemoveProjectMember(
       apiClient.delete<{ success: boolean }>(`/build/${projectId}/members`, {
         data: { userId },
       }),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.members(variables.projectId),
       });

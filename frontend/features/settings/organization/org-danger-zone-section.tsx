@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { toast } from "sonner";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Clock } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,10 +26,15 @@ import { useAccess, useCan } from "@/hooks/api/access";
 import {
   useArchiveOrg,
   useRestoreOrg,
-  useTransferOwnership,
   useLeaveOrg,
   useDeleteOrg,
+  useOrgMembers,
 } from "@/hooks/api/organization";
+import {
+  useInitiateOrgTransfer,
+  usePendingOrgTransfers,
+  useCancelOrgTransfer,
+} from "@/hooks/api/ownership";
 import { clearBackendTokenCache } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { OrgSettings } from "@/types/organization";
@@ -52,16 +58,39 @@ export function OrgDangerZoneSection({ org }: Props) {
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
-  const [newOwnerUserId, setNewOwnerUserId] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState("");
 
   const archiveMutation = useArchiveOrg();
   const restoreMutation = useRestoreOrg();
-  const transferMutation = useTransferOwnership();
+  const initiateTransfer = useInitiateOrgTransfer();
+  const cancelTransfer = useCancelOrgTransfer();
   const leaveMutation = useLeaveOrg();
   const deleteMutation = useDeleteOrg();
+  const pendingTransfersQuery = usePendingOrgTransfers();
+
+  const { data: membersData } = useOrgMembers(1, 100, undefined, {
+    enabled: transferOpen,
+    staleTime: 30_000,
+  });
+
+  const pendingTransfer = pendingTransfersQuery.data?.data[0] ?? null;
+
+  const membershipIdByUserId = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const m of membersData?.data ?? []) {
+      if (m.membershipId !== undefined) {
+        map.set(m.userId, m.membershipId);
+      }
+    }
+    return map;
+  }, [membersData]);
+
+  const selectedMembershipId = selectedUserId
+    ? membershipIdByUserId.get(selectedUserId)
+    : undefined;
 
   const handleOpenTransfer = useCallback(() => {
-    setNewOwnerUserId("");
+    setSelectedUserId("");
     setTransferOpen(true);
   }, []);
 
@@ -110,20 +139,37 @@ export function OrgDangerZoneSection({ org }: Props) {
   );
 
   function handleConfirmTransfer() {
-    if (!newOwnerUserId) {
+    if (!selectedUserId) {
       toast.error("Select a new owner first");
       return;
     }
-    transferMutation.mutate(
-      { newOwnerUserId },
+    if (selectedMembershipId === undefined) {
+      toast.error("Member ID unavailable — a backend update is required to complete the transfer");
+      return;
+    }
+    const recipientName =
+      (membersData?.data ?? []).find((m) => m.userId === selectedUserId)?.name ??
+      "the selected member";
+    initiateTransfer.mutate(
+      { toMembershipId: selectedMembershipId },
       {
         onSuccess: () => {
-          toast.success("Ownership transferred");
+          toast.success(
+            `Ownership transfer sent — ${recipientName} must accept it to take effect`,
+          );
           setTransferOpen(false);
         },
         onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
+  }
+
+  function handleCancelPendingTransfer() {
+    if (!pendingTransfer) return;
+    cancelTransfer.mutate(pendingTransfer.id, {
+      onSuccess: () => toast.success("Ownership transfer cancelled"),
+      onError: (err) => toast.error(getErrorMessage(err)),
+    });
   }
 
   function handleConfirmArchive() {
@@ -190,6 +236,7 @@ export function OrgDangerZoneSection({ org }: Props) {
 
   const deleteMatchValue = org.name ?? org.slug ?? "";
   const deleteEnabled = deleteConfirmation === deleteMatchValue;
+  const memberIdUnavailable = !!selectedUserId && selectedMembershipId === undefined;
 
   return (
     <>
@@ -206,17 +253,41 @@ export function OrgDangerZoneSection({ org }: Props) {
               <div>
                 <p className="text-sm font-medium">Transfer Ownership</p>
                 <p className="text-xs text-muted-foreground">
-                  Permanently transfer org ownership to another member
+                  {pendingTransfer
+                    ? "Awaiting acceptance — the selected member must confirm the transfer"
+                    : "Send a transfer request to hand over organization ownership"}
                 </p>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-destructive/50 text-destructive hover:bg-destructive/10 shrink-0"
-                onClick={handleOpenTransfer}
-              >
-                Transfer
-              </Button>
+              {pendingTransfer ? (
+                <div className="flex items-center gap-2 shrink-0">
+                  <Badge
+                    variant="outline"
+                    className="text-xs gap-1 text-amber-700 border-amber-300 bg-amber-50 dark:text-amber-400 dark:border-amber-700/50 dark:bg-amber-500/10"
+                  >
+                    <Clock className="h-3 w-3" />
+                    Transfer pending
+                  </Badge>
+                  <LoadingButton
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs text-destructive hover:bg-destructive/10"
+                    isPending={cancelTransfer.isPending}
+                    onClick={handleCancelPendingTransfer}
+                  >
+                    Cancel
+                  </LoadingButton>
+                </div>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-destructive/50 text-destructive hover:bg-destructive/10 shrink-0"
+                  onClick={handleOpenTransfer}
+                  disabled={pendingTransfersQuery.isLoading}
+                >
+                  Transfer
+                </Button>
+              )}
             </div>
           )}
 
@@ -304,15 +375,20 @@ export function OrgDangerZoneSection({ org }: Props) {
             <DialogHeader>
               <DialogTitle>Transfer Ownership</DialogTitle>
               <DialogDescription>
-                This transfers all owner privileges to the selected member. You will become a regular admin.
+                This sends a transfer request the recipient must accept before ownership changes. You remain the owner until the request is accepted.
               </DialogDescription>
             </DialogHeader>
-            <div className="py-2">
+            <div className="space-y-3 py-2">
               <UserCombobox
-                value={newOwnerUserId}
-                onChange={setNewOwnerUserId}
+                value={selectedUserId}
+                onChange={setSelectedUserId}
                 placeholder="Select new owner…"
               />
+              {memberIdUnavailable && (
+                <p className="text-xs text-destructive">
+                  Transfer cannot be initiated — member identifier not exposed by the current API. A backend update is required.
+                </p>
+              )}
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={handleTransferClose}>
@@ -320,12 +396,12 @@ export function OrgDangerZoneSection({ org }: Props) {
               </Button>
               <LoadingButton
                 variant="destructive"
-                disabled={!newOwnerUserId}
-                isPending={transferMutation.isPending}
-                loadingText="Transferring…"
+                disabled={!selectedUserId || memberIdUnavailable}
+                isPending={initiateTransfer.isPending}
+                loadingText="Sending request…"
                 onClick={handleConfirmTransfer}
               >
-                Transfer Ownership
+                Send Transfer Request
               </LoadingButton>
             </DialogFooter>
           </DialogContent>

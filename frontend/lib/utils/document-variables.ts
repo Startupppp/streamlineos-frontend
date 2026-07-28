@@ -5,12 +5,12 @@ export function substituteVariables(
 ): { result: string; missing: string[] } {
   const tokenRegex = /\{\{([^}]+)\}\}/g;
   const missing: string[] = [];
-  const result = htmlContent.replace(tokenRegex, (_match, key: string) => {
+  const result = htmlContent.replace(tokenRegex, (match, key: string) => {
     const trimmed = key.trim();
     const val = variables[trimmed];
     if (!val) {
       missing.push(trimmed);
-      return _match;
+      return match;
     }
     return val;
   });

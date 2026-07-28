@@ -14,7 +14,7 @@ export function useCreateLoanAdjustment() {
         `/payroll/runs/${runId}/loan-adjustments`,
         data,
       ),
-    onSuccess: (_data, { runId }) => {
+    onSuccess: (_, { runId }) => {
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.runEmployeesAll(runId) });
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.runExceptionsAll(runId) });

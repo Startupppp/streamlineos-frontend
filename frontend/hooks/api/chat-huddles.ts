@@ -22,7 +22,7 @@ export function useStartHuddle() {
     mutationKey: ["chat", "huddle", "start"],
     mutationFn: (channelId: number) =>
       apiClient.post<Huddle>(`/chat/channels/${channelId}/huddle/start`),
-    onSuccess: (_data, channelId) => {
+    onSuccess: (_, channelId) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.huddle(channelId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.calendar.all, exact: false });
     },
@@ -38,7 +38,7 @@ export function useJoinHuddle() {
     mutationKey: ["chat", "huddle", "join"],
     mutationFn: ({ huddleId }: { huddleId: number; channelId: number }) =>
       apiClient.post<{ ok: boolean }>(`/chat/huddles/${huddleId}/join`),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.huddle(variables.channelId) });
     },
     onError: (error) => {
@@ -53,7 +53,7 @@ export function useLeaveHuddle() {
     mutationKey: ["chat", "huddle", "leave"],
     mutationFn: ({ huddleId }: { huddleId: number; channelId: number }) =>
       apiClient.post<{ ok: boolean }>(`/chat/huddles/${huddleId}/leave`),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.huddle(variables.channelId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.calendar.all, exact: false });
     },
@@ -74,7 +74,7 @@ export function useSetHuddleMute() {
     mutationKey: ["chat", "huddle", "mute"],
     mutationFn: ({ huddleId, muted }: { huddleId: number; channelId: number; muted: boolean }) =>
       apiClient.patch<{ ok: boolean }>(`/chat/huddles/${huddleId}/mute`, { muted }),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.huddle(variables.channelId) });
     },
   });
@@ -86,7 +86,7 @@ export function useRaiseHand() {
     mutationKey: ["chat", "huddle", "hand"],
     mutationFn: ({ huddleId, raised }: { huddleId: number; channelId: number; raised: boolean }) =>
       apiClient.patch<{ ok: boolean }>(`/chat/huddles/${huddleId}/hand`, { raised }),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.huddle(variables.channelId) });
     },
   });
@@ -106,7 +106,7 @@ export function useSetHuddleScreenShare() {
     mutationKey: ["chat", "huddle", "screenshare"],
     mutationFn: ({ huddleId, isScreenSharing }: { huddleId: number; channelId: number; isScreenSharing: boolean }) =>
       apiClient.patch<{ ok: boolean }>(`/chat/huddles/${huddleId}/screenshare`, { isScreenSharing }),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.huddle(variables.channelId) });
     },
   });
@@ -118,7 +118,7 @@ export function useKickParticipant() {
     mutationKey: ["chat", "huddle", "kick"],
     mutationFn: ({ huddleId, targetUserId }: { huddleId: number; channelId: number; targetUserId: string }) =>
       apiClient.post<{ ok: boolean }>(`/chat/huddles/${huddleId}/kick`, { targetUserId }),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.huddle(variables.channelId) });
     },
   });
@@ -130,7 +130,7 @@ export function useSetHuddleDeafen() {
     mutationKey: ["chat", "huddle", "deafen"],
     mutationFn: ({ huddleId, deafened }: { huddleId: number; channelId: number; deafened: boolean }) =>
       apiClient.patch<{ ok: boolean }>(`/chat/huddles/${huddleId}/deafen`, { deafened }),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.huddle(variables.channelId) });
     },
   });

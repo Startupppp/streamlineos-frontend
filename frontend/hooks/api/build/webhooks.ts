@@ -56,7 +56,7 @@ export function useSendTestWebhook(projectId: number) {
         `/build/${projectId}/webhooks/${webhookId}/test`,
         {},
       ),
-    onSuccess: (_data, webhookId) => {
+    onSuccess: (_, webhookId) => {
       void qc.invalidateQueries({ queryKey: [...webhookKeys(projectId), webhookId, "deliveries"] });
     },
   });

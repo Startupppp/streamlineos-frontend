@@ -19,7 +19,6 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 interface SoQueuePageProps {
   status: SalesOrderStatus;
   title: string;
-  actionNoun: string;
   emptyTitle: string;
   emptyDescription: string;
 }
@@ -92,7 +91,7 @@ const columns: DataTableColumn<SalesOrderListItem>[] = [
   },
 ];
 
-export function SoQueuePage({ status, title, actionNoun: _actionNoun, emptyTitle, emptyDescription }: SoQueuePageProps) {
+export function SoQueuePage({ status, title, emptyTitle, emptyDescription }: SoQueuePageProps) {
   const [search, setSearch] = useState("");
 
   const query = useSalesOrders({ status, limit: 50 });

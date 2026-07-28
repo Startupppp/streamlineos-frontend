@@ -46,7 +46,7 @@ function createAnimatedIcon(
 
 function createLucideIcon(Icon: LucideIcon): AnimatedNavIconComponent {
   return forwardRef<IconHandle, FinanceIconProps>(
-    function FinanceLucideIcon({ className, size }, _ref) {
+    function FinanceLucideIcon({ className, size }, _) {
       return <Icon className={className} size={size} />;
     },
   );

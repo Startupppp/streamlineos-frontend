@@ -62,7 +62,7 @@ export function useRateResearchBrief() {
     mutationKey: ["kb", "research-briefs", "rate"],
     mutationFn: ({ briefId, rating }: { briefId: number; rating: "helpful" | "not_helpful" }) =>
       apiClient.post<{ success: boolean }>(`/kb/research-briefs/${briefId}/rate`, { rating }),
-    onSuccess: (_data, { briefId }) => {
+    onSuccess: (_, { briefId }) => {
       qc.invalidateQueries({ queryKey: queryKeys.kb.researchBrief(briefId) });
       qc.invalidateQueries({ queryKey: queryKeys.kb.researchBriefs() });
     },

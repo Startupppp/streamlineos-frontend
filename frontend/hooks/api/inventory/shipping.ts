@@ -156,7 +156,7 @@ export function useUpdatePackageLines() {
     mutationKey: ["inventory", "package", "lines", "update"],
     mutationFn: ({ packageId, lines }) =>
       apiClient.patch<Package>(`/inventory/packages/${packageId}/lines`, { lines }),
-    onSuccess: (_res, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.packageDetail(vars.packageId) });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.packages() });
     },
@@ -169,7 +169,7 @@ export function useClosePackage() {
     mutationKey: ["inventory", "package", "close"],
     mutationFn: (packageId) =>
       apiClient.post<Package>(`/inventory/packages/${packageId}/close`, {}),
-    onSuccess: (_res, packageId) => {
+    onSuccess: (_, packageId) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.packageDetail(packageId) });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.packages() });
     },
@@ -182,7 +182,7 @@ export function useReopenPackage() {
     mutationKey: ["inventory", "package", "reopen"],
     mutationFn: (packageId) =>
       apiClient.post<Package>(`/inventory/packages/${packageId}/reopen`, {}),
-    onSuccess: (_res, packageId) => {
+    onSuccess: (_, packageId) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.packageDetail(packageId) });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.packages() });
     },
@@ -253,7 +253,7 @@ export function useUpdateShipment() {
     mutationKey: ["inventory", "shipment", "update"],
     mutationFn: ({ shipmentId, ...data }) =>
       apiClient.patch<Shipment>(`/inventory/shipments/${shipmentId}`, data),
-    onSuccess: (_res, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.shipment(vars.shipmentId) });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.shipments() });
     },
@@ -266,7 +266,7 @@ export function useShipShipment() {
     mutationKey: ["inventory", "shipment", "ship"],
     mutationFn: (shipmentId) =>
       apiClient.post<Shipment>(`/inventory/shipments/${shipmentId}/ship`, {}),
-    onSuccess: (_res, shipmentId) => {
+    onSuccess: (_, shipmentId) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.shipment(shipmentId) });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.shipments() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
@@ -280,7 +280,7 @@ export function useCancelShipment() {
     mutationKey: ["inventory", "shipment", "cancel"],
     mutationFn: (shipmentId) =>
       apiClient.post<Shipment>(`/inventory/shipments/${shipmentId}/cancel`, {}),
-    onSuccess: (_res, shipmentId) => {
+    onSuccess: (_, shipmentId) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.shipment(shipmentId) });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.shipments() });
     },
@@ -338,7 +338,7 @@ export function useDispatchLoad() {
     mutationKey: ["inventory", "load", "dispatch"],
     mutationFn: (loadId) =>
       apiClient.post<Load>(`/inventory/loads/${loadId}/dispatch`, {}),
-    onSuccess: (_res, loadId) => {
+    onSuccess: (_, loadId) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.load(loadId) });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.loads() });
     },
@@ -351,7 +351,7 @@ export function useCloseLoad() {
     mutationKey: ["inventory", "load", "close"],
     mutationFn: (loadId) =>
       apiClient.post<Load>(`/inventory/loads/${loadId}/close`, {}),
-    onSuccess: (_res, loadId) => {
+    onSuccess: (_, loadId) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.load(loadId) });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.loads() });
     },
@@ -364,7 +364,7 @@ export function useCancelLoad() {
     mutationKey: ["inventory", "load", "cancel"],
     mutationFn: (loadId) =>
       apiClient.post<Load>(`/inventory/loads/${loadId}/cancel`, {}),
-    onSuccess: (_res, loadId) => {
+    onSuccess: (_, loadId) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.load(loadId) });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.loads() });
     },

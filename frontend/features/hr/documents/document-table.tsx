@@ -34,7 +34,6 @@ export interface DocumentTableProps {
   page: number;
   pageSize: number;
   totalFiltered: number;
-  totalPages: number;
   selectedCategory: string;
   searchTerm: string;
   onPageChange: (page: number) => void;
@@ -51,7 +50,6 @@ export function DocumentTable({
   page,
   pageSize,
   totalFiltered,
-  totalPages: _totalPages,
   selectedCategory,
   searchTerm,
   onPageChange,

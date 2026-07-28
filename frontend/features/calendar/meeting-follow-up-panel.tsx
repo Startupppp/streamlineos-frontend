@@ -31,7 +31,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 
 interface MeetingFollowUpPanelProps {
   eventId: string;
-  eventTitle: string;
   onClose?: () => void;
 }
 
@@ -111,7 +110,7 @@ function DraftedActionItem({ item, index }: DraftedActionItemProps) {
   );
 }
 
-export function MeetingFollowUpPanel({ eventId, eventTitle: _eventTitle, onClose }: MeetingFollowUpPanelProps) {
+export function MeetingFollowUpPanel({ eventId, onClose }: MeetingFollowUpPanelProps) {
   const canUse = useCan("calendar:ai:use");
 
   const [meetingNotes, setMeetingNotes] = useState("");

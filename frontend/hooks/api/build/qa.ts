@@ -44,7 +44,7 @@ export function useCreateTestSuite() {
     mutationKey: ["projects", "qa", "suites", "create"],
     mutationFn: ({ projectId, ...data }: CreateTestSuiteInput & { projectId: number }) =>
       apiClient.post<TestSuite>(`/build/${projectId}/test-suites`, data),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.projects.qa.suites(vars.projectId) });
     },
   });
@@ -60,7 +60,7 @@ export function useUpdateTestSuite() {
       ...data
     }: UpdateTestSuiteInput & { projectId: number; id: number }) =>
       apiClient.patch<TestSuite>(`/build/${projectId}/test-suites/${id}`, data),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.projects.qa.suites(vars.projectId) });
     },
   });
@@ -72,7 +72,7 @@ export function useDeleteTestSuite() {
     mutationKey: ["projects", "qa", "suites", "delete"],
     mutationFn: ({ projectId, id }: { projectId: number; id: number }) =>
       apiClient.delete<unknown>(`/build/${projectId}/test-suites/${id}`),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.projects.qa.suites(vars.projectId) });
     },
   });
@@ -100,7 +100,7 @@ export function useCreateTestCase() {
     mutationKey: ["projects", "qa", "cases", "create"],
     mutationFn: ({ projectId, ...data }: CreateTestCaseInput & { projectId: number }) =>
       apiClient.post<TestCase>(`/build/${projectId}/test-cases`, data),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.projects.qa.casesAll(vars.projectId) });
     },
   });
@@ -116,7 +116,7 @@ export function useUpdateTestCase() {
       ...data
     }: UpdateTestCaseInput & { projectId: number; id: number }) =>
       apiClient.patch<TestCase>(`/build/${projectId}/test-cases/${id}`, data),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.projects.qa.casesAll(vars.projectId) });
     },
   });
@@ -128,7 +128,7 @@ export function useDeleteTestCase() {
     mutationKey: ["projects", "qa", "cases", "delete"],
     mutationFn: ({ projectId, id }: { projectId: number; id: number }) =>
       apiClient.delete<unknown>(`/build/${projectId}/test-cases/${id}`),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.projects.qa.casesAll(vars.projectId) });
     },
   });
@@ -161,7 +161,7 @@ export function useCreateTestRun() {
     mutationKey: ["projects", "qa", "runs", "create"],
     mutationFn: ({ projectId, ...data }: CreateTestRunInput & { projectId: number }) =>
       apiClient.post<TestRun>(`/build/${projectId}/test-runs`, data),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.projects.qa.runs(vars.projectId) });
     },
   });
@@ -177,7 +177,7 @@ export function useUpdateTestRun() {
       ...data
     }: UpdateTestRunInput & { projectId: number; id: number }) =>
       apiClient.patch<TestRun>(`/build/${projectId}/test-runs/${id}`, data),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.projects.qa.runs(vars.projectId) });
       qc.invalidateQueries({ queryKey: queryKeys.projects.qa.run(vars.projectId, vars.id) });
     },
@@ -190,7 +190,7 @@ export function useDeleteTestRun() {
     mutationKey: ["projects", "qa", "runs", "delete"],
     mutationFn: ({ projectId, id }: { projectId: number; id: number }) =>
       apiClient.delete<unknown>(`/build/${projectId}/test-runs/${id}`),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.projects.qa.runs(vars.projectId) });
     },
   });
@@ -210,7 +210,7 @@ export function useUpdateTestResult() {
         `/build/${projectId}/test-runs/${runId}/results/${resultId}`,
         data,
       ),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.projects.qa.run(vars.projectId, vars.runId) });
     },
   });
@@ -236,7 +236,7 @@ export function useCreateBugFromResult() {
         `/build/${projectId}/test-runs/${runId}/results/${resultId}/bug`,
         data,
       ),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.projects.qa.run(vars.projectId, vars.runId) });
       qc.invalidateQueries({ queryKey: queryKeys.projects.bugs.list(vars.projectId) });
     },

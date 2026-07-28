@@ -40,6 +40,7 @@ export interface OrgSettings {
 }
 
 export interface OrgMember {
+  membershipId?: number;
   userId: string;
   role: string;
   joinedAt: Date;

@@ -8,11 +8,7 @@ import { useShiftAssignments } from "@/hooks/api/hr/shifts";
 import { useOrgMembersByIds } from "@/hooks/api/organization";
 import { getUserDisplayName, type NamedUser } from "@/features/build/shared/resolve-user-name";
 
-interface Props {
-  canManage: boolean;
-}
-
-export function ShiftAssignmentsTab({ canManage: _canManage }: Props) {
+export function ShiftAssignmentsTab() {
   const { data: assignments, isLoading } = useShiftAssignments();
 
   const userIds = useMemo(

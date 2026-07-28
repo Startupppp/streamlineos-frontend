@@ -77,7 +77,7 @@ export function useUpdateRichDocument() {
     mutationKey: ["hr", "rich-documents", "update"],
     mutationFn: ({ id, ...data }: { id: number; title?: string; contentJson?: unknown }) =>
       apiClient.patch<{ success: boolean }>(`/hr/rich-documents/${id}`, data),
-    onSuccess: (_res, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: richDocKeys.lists() });
       qc.invalidateQueries({ queryKey: richDocKeys.detail(vars.id) });
     },
@@ -100,7 +100,7 @@ export function usePublishRichDocument() {
     mutationKey: ["hr", "rich-documents", "publish"],
     mutationFn: (id: number) =>
       apiClient.patch<{ success: boolean }>(`/hr/rich-documents/${id}/publish`),
-    onSuccess: (_res, id) => {
+    onSuccess: (_, id) => {
       qc.invalidateQueries({ queryKey: richDocKeys.lists() });
       qc.invalidateQueries({ queryKey: richDocKeys.detail(id) });
     },

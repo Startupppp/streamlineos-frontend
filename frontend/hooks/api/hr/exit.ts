@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -50,17 +50,36 @@ export interface ResignationProgress {
   steps: ResignationProgressStep[];
 }
 
+export interface PaginatedResignations {
+  data: Resignation[];
+  pagination: { page: number; limit: number; total: number; totalPages: number };
+}
+
+interface ResignationListParams {
+  page?: number;
+  limit?: number;
+  status?: string;
+}
+
 const exitKeys = {
   all: [...queryKeys.hr.all, "exit"] as const,
   list: () => [...exitKeys.all, "list"] as const,
   progress: (id: number) => [...exitKeys.all, "progress", id] as const,
 };
 
-export function useResignations() {
+export function useResignations(params?: ResignationListParams) {
   return useQuery({
-    queryKey: exitKeys.list(),
-    queryFn: () => apiClient.get<Resignation[]>("/hr/exit"),
+    queryKey: [...exitKeys.list(), params] as const,
+    queryFn: () => {
+      const search = new URLSearchParams();
+      if (params?.page) search.set("page", String(params.page));
+      if (params?.limit) search.set("limit", String(params.limit));
+      if (params?.status) search.set("status", params.status);
+      const qs = search.toString();
+      return apiClient.get<PaginatedResignations>(`/hr/exit${qs ? `?${qs}` : ""}`);
+    },
     staleTime: 2 * 60_000,
+    placeholderData: keepPreviousData,
   });
 }
 

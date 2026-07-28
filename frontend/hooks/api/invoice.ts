@@ -198,7 +198,7 @@ export const useRecordPayment = () => {
     mutationKey: ["record", "payment"],
     mutationFn: ({ invoiceId, ...data }) =>
       apiClient.post<Payment>(`/invoices/${invoiceId}/payments`, data),
-    onSuccess: (_result, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.invoice.all });
       queryClient.invalidateQueries({
         queryKey: [...queryKeys.invoice.detail(variables.invoiceId), "payments"],

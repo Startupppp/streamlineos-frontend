@@ -338,7 +338,7 @@ export function CreateTicketDialog({
   );
   const handleShowLinksEditor = useCallback(() => setShowLinksEditor(true), []);
   const handleCreateMoreChange = useCallback(
-    (_checked: boolean) => {
+    (_: boolean) => {
       handleToggleCreateMore();
     },
     [handleToggleCreateMore],

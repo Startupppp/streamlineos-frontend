@@ -58,7 +58,7 @@ export default function OrgSetupPage() {
   const exitedRef = useRef(false);
   const hydratedFromServerRef = useRef(false);
 
-  const sequence = useMemo(() => getStepSequence(data.goals), [data.goals]);
+  const sequence = useMemo(() => getStepSequence(), []);
   const totalSteps = sequence.length;
   const currentStepId: StepId = sequence[step - 1] ?? "welcome";
 
@@ -130,7 +130,7 @@ export default function OrgSetupPage() {
 
   useEffect(() => {
     const savedDraft = syncAppsFromGoals(loadDraft());
-    const savedSequence = getStepSequence(savedDraft.goals);
+    const savedSequence = getStepSequence();
     const restoredStep = clampStep(loadStep(), savedSequence.length);
     setData(savedDraft);
     saveDraft(savedDraft);
@@ -150,7 +150,7 @@ export default function OrgSetupPage() {
     const merged = syncAppsFromGoals(parseWizardDraft(serverSession.data));
     if (!hasDraftProgress(merged)) return;
 
-    const mergedSequence = getStepSequence(merged.goals);
+    const mergedSequence = getStepSequence();
     const stepFromServer = resolveStepIndex(
       serverSession.currentStep,
       mergedSequence,

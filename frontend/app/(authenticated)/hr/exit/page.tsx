@@ -15,18 +15,23 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { EmptyState } from "@/components/ui/empty-state";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { toast } from "sonner";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import { useSession } from "next-auth/react";
 import { useCan } from "@/hooks/api/access";
+import { ROLES } from "@/lib/constants/roles";
 import { ResignationCard } from "@/features/hr/exit/resignation-card";
 import { ResignationFormSheet } from "@/features/hr/exit/resignation-form-sheet";
 import { RejectRemarksSheet, type RejectDialogState } from "@/features/hr/exit/reject-remarks-sheet";
 
 export default function ExitManagementPage() {
   const { data: session } = useSession();
-  const { data: resignations, isLoading, isError, refetch } = useResignations();
+  const [page, setPage] = useState(1);
+  const { data: resignationData, isLoading, isError, refetch } = useResignations({ page, limit: 20 });
+  const resignations = resignationData?.data;
+  const pagination = resignationData?.pagination;
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
@@ -38,7 +43,7 @@ export default function ExitManagementPage() {
   const role = session?.user?.role;
   const userId = session?.user?.id;
   const isAdmin = useCan("hr:exit:manage");
-  const isHR = role === "HR";
+  const isHR = role === ROLES.HR;
   const isCEO = useCan("hr:exit:approve");
 
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -129,6 +134,10 @@ export default function ExitManagementPage() {
   }, [withdrawId, withdrawResignation]);
 
   const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
+
+  function handlePageChange(nextPage: number) {
+    setPage(nextPage);
+  }
 
   const handleHrApproveClose = useCallback((open: boolean) => {
     if (!open) setHrApproveId(null);
@@ -246,6 +255,14 @@ export default function ExitManagementPage() {
               onViewLetter={handleViewLetter}
             />
           ))}
+          {pagination && pagination.totalPages > 1 && (
+            <TablePagination
+              page={page}
+              pageSize={pagination.limit}
+              total={pagination.total}
+              onPageChange={handlePageChange}
+            />
+          )}
         </div>
       )}
 

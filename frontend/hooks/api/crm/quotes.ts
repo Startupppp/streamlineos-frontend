@@ -70,7 +70,7 @@ export function useCreateQuote() {
   return useMutation({
     mutationKey: ["quotes", "create"],
     mutationFn: (input: CreateQuoteInput) => apiClient.post<Quote>("/quotes", input),
-    onSuccess: (_data, vars) => invalidateQuoteCaches(qc, { dealId: vars.dealId }),
+    onSuccess: (_, vars) => invalidateQuoteCaches(qc, { dealId: vars.dealId }),
   });
 }
 
@@ -78,9 +78,9 @@ export function useUpdateQuote() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["quotes", "update"],
-    mutationFn: ({ id, dealId: _dealId, ...input }: UpdateQuoteInput & { dealId?: number }) =>
+    mutationFn: ({ id, ...input }: UpdateQuoteInput & { dealId?: number }) =>
       apiClient.patch<Quote>(`/quotes/${id}`, input),
-    onSuccess: (_data, vars) => invalidateQuoteCaches(qc, { id: vars.id, dealId: vars.dealId }),
+    onSuccess: (_, vars) => invalidateQuoteCaches(qc, { id: vars.id, dealId: vars.dealId }),
   });
 }
 
@@ -98,7 +98,7 @@ export function useUpdateQuoteStatus() {
       rejectionReason?: string;
       dealId?: number;
     }) => apiClient.patch<Quote>(`/quotes/${id}`, { status, rejectionReason }),
-    onSuccess: (_data, vars) => invalidateQuoteCaches(qc, { id: vars.id, dealId: vars.dealId }),
+    onSuccess: (_, vars) => invalidateQuoteCaches(qc, { id: vars.id, dealId: vars.dealId }),
   });
 }
 
@@ -108,7 +108,7 @@ export function useSendQuote() {
     mutationKey: ["quotes", "send"],
     mutationFn: ({ id }: { id: number; dealId?: number }) =>
       apiClient.post<Quote>(`/quotes/${id}/send`),
-    onSuccess: (_data, vars) => invalidateQuoteCaches(qc, { id: vars.id, dealId: vars.dealId }),
+    onSuccess: (_, vars) => invalidateQuoteCaches(qc, { id: vars.id, dealId: vars.dealId }),
   });
 }
 
@@ -118,7 +118,7 @@ export function useDeleteQuote() {
     mutationKey: ["quotes", "delete"],
     mutationFn: ({ id }: { id: number; dealId?: number }) =>
       apiClient.delete<{ success: boolean }>(`/quotes/${id}`),
-    onSuccess: (_data, vars) => invalidateQuoteCaches(qc, { dealId: vars.dealId }),
+    onSuccess: (_, vars) => invalidateQuoteCaches(qc, { dealId: vars.dealId }),
   });
 }
 
@@ -132,7 +132,7 @@ export function useApproveQuote() {
     mutationKey: ["quotes", "approve"],
     mutationFn: ({ id }: { id: number; dealId?: number }) =>
       apiClient.post<Quote>(`/quotes/${id}/approve`),
-    onSuccess: (_data, vars) => invalidateQuoteCaches(qc, { id: vars.id, dealId: vars.dealId }),
+    onSuccess: (_, vars) => invalidateQuoteCaches(qc, { id: vars.id, dealId: vars.dealId }),
   });
 }
 
@@ -142,7 +142,7 @@ export function useRejectQuote() {
     mutationKey: ["quotes", "reject"],
     mutationFn: ({ id, reason }: { id: number; reason?: string; dealId?: number }) =>
       apiClient.post<Quote>(`/quotes/${id}/reject`, { reason }),
-    onSuccess: (_data, vars) => invalidateQuoteCaches(qc, { id: vars.id, dealId: vars.dealId }),
+    onSuccess: (_, vars) => invalidateQuoteCaches(qc, { id: vars.id, dealId: vars.dealId }),
   });
 }
 
@@ -154,7 +154,7 @@ export function useConvertQuoteToInvoice() {
       apiClient.post<{ invoice: { id: number; invoiceNumber: string }; quoteId: number }>(
         `/quotes/${id}/convert-to-invoice`,
       ),
-    onSuccess: (_data, vars) => invalidateQuoteCaches(qc, { id: vars.id, dealId: vars.dealId }),
+    onSuccess: (_, vars) => invalidateQuoteCaches(qc, { id: vars.id, dealId: vars.dealId }),
   });
 }
 
@@ -164,6 +164,6 @@ export function useMarkQuoteSigned() {
     mutationKey: ["quotes", "mark-signed"],
     mutationFn: ({ id, documentRef }: { id: number; documentRef?: string; dealId?: number }) =>
       apiClient.post<Quote>(`/quotes/${id}/mark-signed`, { documentRef }),
-    onSuccess: (_data, vars) => invalidateQuoteCaches(qc, { id: vars.id, dealId: vars.dealId }),
+    onSuccess: (_, vars) => invalidateQuoteCaches(qc, { id: vars.id, dealId: vars.dealId }),
   });
 }

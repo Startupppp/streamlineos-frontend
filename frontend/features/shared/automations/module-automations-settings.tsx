@@ -207,7 +207,7 @@ function AutomationCardItem({
 
 export function ModuleAutomationsSettings({ config }: { config: ModuleAutomationsConfig }) {
   const { sectionModule, moduleLabel, moduleEnabledKey, subtitle } = config;
-  const { data: rules, isLoading, isError, refetch } = useAutomations();
+  const { data: automationsData, isLoading, isError, refetch } = useAutomations({ limit: 100 });
   const toggle = useToggleAutomation();
   const remove = useDeleteAutomation();
   const enabledModules = useEnabledModules();
@@ -221,7 +221,7 @@ export function ModuleAutomationsSettings({ config }: { config: ModuleAutomation
   const moduleEnabled =
     enabledModules.length === 0 || matchesOrgModule(enabledModules, moduleEnabledKey);
 
-  const moduleRules = (rules ?? []).filter(
+  const moduleRules = (automationsData?.data ?? []).filter(
     (r) => getModuleForTrigger(r.triggerEvent) === sectionModule,
   );
 

@@ -57,7 +57,7 @@ export function useUpdateCampaign() {
     mutationKey: ["crmCampaigns", "update"] as const,
     mutationFn: ({ id, ...data }: UpdateCampaignInput) =>
       apiClient.patch<CrmCampaign>(`/crm/campaigns/${id}`, data),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.crmCampaigns.all });
       qc.invalidateQueries({ queryKey: queryKeys.crmCampaigns.detail(variables.id) });
     },

@@ -149,7 +149,7 @@ export function useStartCycleCount() {
     mutationKey: ["inventory", "cycleCounts", "start"],
     mutationFn: (countId) =>
       apiClient.post<CycleCount>(`/inventory/cycle-counts/${countId}/start`),
-    onSuccess: (_data, countId) => {
+    onSuccess: (_, countId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.cycleCount(countId) });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.cycleCounts() });
     },
@@ -162,7 +162,7 @@ export function useUpdateCycleCountLines() {
     mutationKey: ["inventory", "cycleCounts", "updateLines"],
     mutationFn: ({ countId, lines }) =>
       apiClient.patch<CycleCount>(`/inventory/cycle-counts/${countId}/lines`, { lines }),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.cycleCount(vars.countId) });
     },
   });
@@ -174,7 +174,7 @@ export function useReviewCycleCount() {
     mutationKey: ["inventory", "cycleCounts", "review"],
     mutationFn: (countId) =>
       apiClient.post<CycleCount>(`/inventory/cycle-counts/${countId}/review`),
-    onSuccess: (_data, countId) => {
+    onSuccess: (_, countId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.cycleCount(countId) });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.cycleCounts() });
     },
@@ -189,7 +189,7 @@ export function usePostCycleCount() {
       apiClient.post<CycleCount>(`/inventory/cycle-counts/${countId}/post`, undefined, {
         headers: { "Idempotency-Key": crypto.randomUUID() },
       }),
-    onSuccess: (_data, countId) => {
+    onSuccess: (_, countId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.cycleCount(countId) });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.cycleCounts() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
@@ -204,7 +204,7 @@ export function useCancelCycleCount() {
     mutationKey: ["inventory", "cycleCounts", "cancel"],
     mutationFn: (countId) =>
       apiClient.post<CycleCount>(`/inventory/cycle-counts/${countId}/cancel`),
-    onSuccess: (_data, countId) => {
+    onSuccess: (_, countId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.cycleCount(countId) });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.cycleCounts() });
     },
@@ -252,7 +252,7 @@ export function useStartPhysicalAudit() {
     mutationKey: ["inventory", "physicalAudits", "start"],
     mutationFn: (auditId) =>
       apiClient.post<PhysicalAudit>(`/inventory/physical-audits/${auditId}/start`),
-    onSuccess: (_data, auditId) => {
+    onSuccess: (_, auditId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.physicalAudit(auditId) });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.physicalAudits() });
     },
@@ -265,7 +265,7 @@ export function useUpdatePhysicalAuditLines() {
     mutationKey: ["inventory", "physicalAudits", "updateLines"],
     mutationFn: ({ auditId, lines }) =>
       apiClient.patch<PhysicalAudit>(`/inventory/physical-audits/${auditId}/lines`, { lines }),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.physicalAudit(vars.auditId) });
     },
   });
@@ -277,7 +277,7 @@ export function useReviewPhysicalAudit() {
     mutationKey: ["inventory", "physicalAudits", "review"],
     mutationFn: (auditId) =>
       apiClient.post<PhysicalAudit>(`/inventory/physical-audits/${auditId}/review`),
-    onSuccess: (_data, auditId) => {
+    onSuccess: (_, auditId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.physicalAudit(auditId) });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.physicalAudits() });
     },
@@ -292,7 +292,7 @@ export function usePostPhysicalAudit() {
       apiClient.post<PhysicalAudit>(`/inventory/physical-audits/${auditId}/post`, undefined, {
         headers: { "Idempotency-Key": crypto.randomUUID() },
       }),
-    onSuccess: (_data, auditId) => {
+    onSuccess: (_, auditId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.physicalAudit(auditId) });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.physicalAudits() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
@@ -307,7 +307,7 @@ export function useCancelPhysicalAudit() {
     mutationKey: ["inventory", "physicalAudits", "cancel"],
     mutationFn: (auditId) =>
       apiClient.post<PhysicalAudit>(`/inventory/physical-audits/${auditId}/cancel`),
-    onSuccess: (_data, auditId) => {
+    onSuccess: (_, auditId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.physicalAudit(auditId) });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.physicalAudits() });
     },

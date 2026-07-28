@@ -5,7 +5,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 type AblyAuthCallback = NonNullable<Ably.ClientOptions["authCallback"]>;
 
 function tokenAuthCallback(path: string): AblyAuthCallback {
-  return (_params, callback) => {
+  return (_, callback) => {
     apiClient
       .get<Ably.TokenRequest>(path)
       .then((tokenRequest) => callback(null, tokenRequest))

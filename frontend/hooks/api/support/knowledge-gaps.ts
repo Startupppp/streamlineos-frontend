@@ -79,7 +79,7 @@ export function useDismissGap() {
         });
       return { snapshots };
     },
-    onError: (_err, _vars, context) => {
+    onError: (_, _vars, context) => {
       const ctx = context as
         | { snapshots: Map<string, ListKnowledgeGapsResponse> }
         | undefined;

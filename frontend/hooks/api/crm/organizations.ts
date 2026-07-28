@@ -71,7 +71,7 @@ export function useUpdateCrmOrganization() {
     mutationKey: ["crmOrganizations", "update"] as const,
     mutationFn: ({ id, ...input }: Partial<CreateCrmOrganizationInput> & { id: number; parentId?: number | null; notes?: string | null; healthScore?: number | null }) =>
       apiClient.patch<CrmOrganization>(`/crm/organizations/${id}`, input),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.crmOrganizations.all });
       qc.invalidateQueries({ queryKey: queryKeys.crmOrganizations.detail(variables.id) });
     },

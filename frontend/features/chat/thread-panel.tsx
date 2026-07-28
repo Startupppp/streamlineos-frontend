@@ -97,8 +97,8 @@ const ThreadCloseButton = React.forwardRef<
 
 const ThreadSendButton = React.forwardRef<
   HTMLButtonElement,
-  React.ButtonHTMLAttributes<HTMLButtonElement> & { isPending: boolean; hasInput: boolean }
->(function ThreadSendButton({ className, isPending, hasInput: _hasInput, ...props }, ref) {
+  React.ButtonHTMLAttributes<HTMLButtonElement> & { isPending: boolean }
+>(function ThreadSendButton({ className, isPending, ...props }, ref) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
     <button ref={ref} {...hoverHandlers} className={className} {...props}>
@@ -278,7 +278,6 @@ export function ThreadPanel({
             onClick={handleSend}
             disabled={!input.trim() || sendReply.isPending}
             isPending={sendReply.isPending}
-            hasInput={!!input.trim()}
             className={cn(
               "shrink-0 h-7 w-7 rounded-lg flex items-center justify-center transition-colors",
               input.trim()

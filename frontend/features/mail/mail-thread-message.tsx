@@ -38,7 +38,7 @@ interface AttachmentChipProps {
 const AttachmentChip = forwardRef<HTMLButtonElement, AttachmentChipProps>(
   function AttachmentChip(
     { attachmentId, messageId, accountId, fileName, sizeBytes },
-    _ref,
+    _,
   ) {
     const { iconRef, hoverHandlers } = useAnimatedIcon();
 

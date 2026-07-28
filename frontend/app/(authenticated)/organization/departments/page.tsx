@@ -80,7 +80,7 @@ function DeptForm({
   defaultValues,
   branches,
   onSubmit,
-  isPending: _isPending,
+  isPending: _,
 }: {
   defaultValues?: FormValues;
   branches: { id: string; name: string }[];

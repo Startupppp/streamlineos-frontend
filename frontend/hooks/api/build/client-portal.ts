@@ -87,7 +87,7 @@ export function useUpdateTicketVisibility(projectId: number) {
       }
       return { prev };
     },
-    onError: (_err, _vars, ctx) => {
+    onError: (_, _vars, ctx) => {
       if (ctx?.prev) {
         qc.setQueryData(queryKeys.projects.clientPortal.visibility(projectId), ctx.prev);
       }
@@ -119,7 +119,7 @@ export function useUpdateMilestoneVisibility(projectId: number) {
       }
       return { prev };
     },
-    onError: (_err, _vars, ctx) => {
+    onError: (_, _vars, ctx) => {
       if (ctx?.prev) {
         qc.setQueryData(queryKeys.projects.clientPortal.visibility(projectId), ctx.prev);
       }

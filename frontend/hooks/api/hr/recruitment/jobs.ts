@@ -155,7 +155,7 @@ export function useUpdateJobPosting() {
     mutationKey: ["hr", "recruitment", "jobs", "update"],
     mutationFn: ({ id, ...data }: UpdateJobPostingInput & { id: number }) =>
       apiClient.patch<{ success: boolean }>(`/hr/recruitment/jobs/${id}`, data),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       void qc.invalidateQueries({ queryKey: JOB_POSTINGS_ROOT });
       void qc.invalidateQueries({ queryKey: queryKeys.hr.jobPosting(vars.id) });
       void qc.invalidateQueries({ queryKey: queryKeys.hr.recruitmentStats() });
@@ -203,7 +203,7 @@ export function usePublishJobToBoards() {
     mutationKey: ["hr", "recruitment", "jobs", "publish"],
     mutationFn: ({ jobId, platforms }: { jobId: number; platforms: JobBoardPlatform[] }) =>
       apiClient.post<PublishJobResult>(`/hr/recruitment/jobs/${jobId}/publish`, { platforms }),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       void qc.invalidateQueries({ queryKey: JOB_POSTINGS_ROOT });
       void qc.invalidateQueries({ queryKey: queryKeys.hr.jobPosting(vars.jobId) });
     },

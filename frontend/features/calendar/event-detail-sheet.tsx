@@ -79,7 +79,6 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
   const [aiFollowUpOpen, setAiFollowUpOpen] = useState(false);
 
   const handleOpenAiPrep = useCallback(() => setAiPrepOpen(true), []);
-  const handleCloseAiPrep = useCallback(() => setAiPrepOpen(false), []);
   const handleCloseAiFollowUp = useCallback(() => setAiFollowUpOpen(false), []);
   const handleSwitchToFollowUp = useCallback(() => {
     setAiPrepOpen(false);
@@ -499,7 +498,6 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                 <MeetingPrepPanel
                   eventId={String(event.id)}
                   eventTitle={event.title ?? ""}
-                  onClose={handleCloseAiPrep}
                 />
                 <div className="pt-2 border-t">
                   <Button
@@ -526,7 +524,6 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
             {event && (
               <MeetingFollowUpPanel
                 eventId={String(event.id)}
-                eventTitle={event.title ?? ""}
                 onClose={handleCloseAiFollowUp}
               />
             )}

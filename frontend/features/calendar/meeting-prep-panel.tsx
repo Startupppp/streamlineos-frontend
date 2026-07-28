@@ -23,7 +23,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 interface MeetingPrepPanelProps {
   eventId: string;
   eventTitle: string;
-  onClose?: () => void;
 }
 
 function PrepSkeleton() {
@@ -37,7 +36,7 @@ function PrepSkeleton() {
   );
 }
 
-export function MeetingPrepPanel({ eventId, eventTitle, onClose: _onClose }: MeetingPrepPanelProps) {
+export function MeetingPrepPanel({ eventId, eventTitle }: MeetingPrepPanelProps) {
   const canUse = useCan("calendar:ai:use");
   const { data: connections = [] } = useCalendarConnections();
   const hasConnectedCalendar = connections.some((c) => c.status === "active");

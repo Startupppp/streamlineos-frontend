@@ -26,7 +26,7 @@ export function useUpdateComment() {
         `/build/${projectId}/tickets/${ticketId}/comments/${commentId}`,
         { content }
       ),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.ticket(variables.ticketId),
       });
@@ -45,7 +45,7 @@ export function useDeleteComment() {
       apiClient.delete<void>(
         `/build/${projectId}/tickets/${ticketId}/comments/${commentId}`
       ),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.ticket(variables.ticketId),
       });

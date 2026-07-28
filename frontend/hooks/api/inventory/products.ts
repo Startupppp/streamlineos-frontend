@@ -142,7 +142,7 @@ export function useUpdateProduct(id?: number) {
         serializeProductWrite(data),
       );
     },
-    onSuccess: (_res, vars) => {
+    onSuccess: (_, vars) => {
       const resolvedId = id ?? vars.productId;
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.products() });
       if (resolvedId !== undefined) {
@@ -170,7 +170,7 @@ export function useArchiveProduct() {
     mutationKey: ["inventory", "product", "archive"],
     mutationFn: (productId) =>
       apiClient.post<InventoryProduct>(`/inventory/products/${productId}/archive`, {}),
-    onSuccess: (_res, productId) => {
+    onSuccess: (_, productId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.products() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.product(productId) });
     },
@@ -183,7 +183,7 @@ export function useRestoreProduct() {
     mutationKey: ["inventory", "product", "restore"],
     mutationFn: (productId) =>
       apiClient.post<InventoryProduct>(`/inventory/products/${productId}/restore`, {}),
-    onSuccess: (_res, productId) => {
+    onSuccess: (_, productId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.products() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.product(productId) });
     },

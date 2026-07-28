@@ -76,7 +76,7 @@ export function useUpdateProjectTeam() {
     mutationKey: [...TEAMS_BASE, "update"],
     mutationFn: ({ id, ...data }: UpdateTeamInput & { id: number }) =>
       apiClient.patch<ProjectTeamDetail>(`/build/teams/${id}`, data),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: teamQueryKeys.list() });
       qc.invalidateQueries({ queryKey: teamQueryKeys.detail(vars.id) });
     },

@@ -135,7 +135,7 @@ export function useUpdateWhiteboardSharing(projectId: number) {
         `/build/${projectId}/whiteboards/${id}/sharing`,
         input,
       ),
-    onSuccess: (_sharing, variables) => {
+    onSuccess: (_: unknown, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.whiteboards.detail(variables.id) });
       qc.invalidateQueries({ queryKey: queryKeys.whiteboards.list(projectId) });
     },
@@ -151,7 +151,7 @@ export function useRotateWhiteboardShareToken(projectId: number) {
         `/build/${projectId}/whiteboards/${id}/sharing/rotate-token`,
         {},
       ),
-    onSuccess: (_sharing, id) => {
+    onSuccess: (_: unknown, id) => {
       qc.invalidateQueries({ queryKey: queryKeys.whiteboards.detail(id) });
     },
   });
@@ -166,7 +166,7 @@ export function useSetWhiteboardShares(projectId: number) {
         `/build/${projectId}/whiteboards/${id}/shares`,
         { shares },
       ),
-    onSuccess: (_shares, variables) => {
+    onSuccess: (_: unknown, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.whiteboards.detail(variables.id) });
     },
   });
@@ -180,7 +180,7 @@ export function useRemoveWhiteboardShare(projectId: number) {
       apiClient.delete<{ success: boolean }>(
         `/build/${projectId}/whiteboards/${id}/shares/${userId}`,
       ),
-    onSuccess: (_result, variables) => {
+    onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.whiteboards.detail(variables.id) });
     },
   });

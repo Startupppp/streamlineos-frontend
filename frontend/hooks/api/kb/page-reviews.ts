@@ -74,7 +74,7 @@ export function useCreatePageReview() {
     mutationKey: ["kb", "pageReviews", "create"],
     mutationFn: ({ pageId, ...body }: CreatePageReviewInput & { pageId: number }) =>
       apiClient.post<KbPageReview>(`/kb/pages/${pageId}/reviews`, body),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.kb.pageReviews() });
       qc.invalidateQueries({ queryKey: queryKeys.kb.pageReviewsDue() });
       qc.invalidateQueries({ queryKey: queryKeys.kb.page(variables.pageId) });

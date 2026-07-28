@@ -55,7 +55,7 @@ export function useUpdateRisk(projectId: number) {
     mutationKey: ["projects", projectId, "risks", "update"],
     mutationFn: ({ id, ...data }: UpdateRiskInput & { id: number }) =>
       apiClient.patch<Risk>(`/build/${projectId}/risks/${id}`, data),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.projects.risks.list(projectId) });
       qc.invalidateQueries({ queryKey: queryKeys.projects.risks.detail(projectId, vars.id) });
     },
@@ -116,7 +116,7 @@ export function useUpdateDecision(projectId: number) {
     mutationKey: ["projects", projectId, "decisions", "update"],
     mutationFn: ({ id, ...data }: UpdateDecisionInput & { id: number }) =>
       apiClient.patch<Decision>(`/build/${projectId}/decisions/${id}`, data),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.projects.decisions.list(projectId) });
       qc.invalidateQueries({ queryKey: queryKeys.projects.decisions.detail(projectId, vars.id) });
     },

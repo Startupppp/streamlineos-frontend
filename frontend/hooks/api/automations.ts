@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -117,11 +117,28 @@ interface UpdateAutomationInput {
   isEnabled?: boolean;
 }
 
-export function useAutomations() {
+export interface PaginatedAutomations {
+  data: AutomationRule[];
+  pagination: { page: number; limit: number; total: number; totalPages: number };
+}
+
+interface AutomationListParams {
+  page?: number;
+  limit?: number;
+}
+
+export function useAutomations(params?: AutomationListParams) {
   return useQuery({
-    queryKey: queryKeys.automations.list(),
-    queryFn: () => apiClient.get<AutomationRule[]>("/settings/automations"),
+    queryKey: [...queryKeys.automations.all, "list", params] as const,
+    queryFn: () => {
+      const search = new URLSearchParams();
+      if (params?.page) search.set("page", String(params.page));
+      if (params?.limit) search.set("limit", String(params.limit));
+      const qs = search.toString();
+      return apiClient.get<PaginatedAutomations>(`/settings/automations${qs ? `?${qs}` : ""}`);
+    },
     staleTime: 30_000,
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -191,7 +208,7 @@ export function useTestAutomation() {
     mutationKey: ["automations", "test"],
     mutationFn: ({ id, payload }: { id: number; payload: Record<string, unknown> }) =>
       apiClient.post<AutomationTestResult>(`/settings/automations/${id}/test`, { payload }),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.automations.runs(variables.id) });
       qc.invalidateQueries({ queryKey: queryKeys.automations.all });
     },

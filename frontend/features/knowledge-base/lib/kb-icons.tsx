@@ -119,7 +119,7 @@ function createAnimatedIcon(Icon: AnimateIconSource): KbIconComponent {
 function createLucideIcon(Icon: LucideIcon): KbIconComponent {
   return forwardRef<IconHandle, KbIconProps>(function KbLucideIcon(
     { className, size },
-    _ref,
+    _,
   ) {
     return <Icon className={className} size={size ?? classNameToIconSize(className)} />;
   });

@@ -94,7 +94,7 @@ export function useUpdateDocumentTemplate() {
     mutationKey: ["hr", "document-templates", "update"],
     mutationFn: ({ id, ...data }: UpdateDocumentTemplateInput & { id: number }) =>
       apiClient.put<DocumentTemplate>(`/hr/documents/templates/${id}`, data),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.documentTemplates() });
       qc.invalidateQueries({ queryKey: queryKeys.hr.documentTemplate(variables.id) });
     },

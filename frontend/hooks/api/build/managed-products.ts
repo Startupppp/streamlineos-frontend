@@ -70,7 +70,7 @@ export function useUpdateManagedProduct() {
         `/build/managed-products/${managedProductId}`,
         data,
       ),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.projects.managedProducts.list() });
       qc.invalidateQueries({
         queryKey: queryKeys.projects.managedProducts.detail(vars.managedProductId),

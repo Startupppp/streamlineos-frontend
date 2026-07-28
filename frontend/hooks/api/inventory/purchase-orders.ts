@@ -224,7 +224,7 @@ export function useUpdatePurchaseOrder(poId: number) {
   const qc = useQueryClient();
   return useMutation<PurchaseOrderSummary, Error, UpdatePurchaseOrderInput>({
     mutationKey: ["inventory", "purchase-orders", "update", poId],
-    mutationFn: ({ lines, poId: _id, ...rest }) =>
+    mutationFn: ({ lines, ...rest }) =>
       apiClient.patch<PurchaseOrderSummary>(`/inventory/purchase-orders/${poId}`, {
         ...rest,
         ...(lines !== undefined

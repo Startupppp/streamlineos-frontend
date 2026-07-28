@@ -5,7 +5,6 @@ export default function PickingQueuePage() {
     <SoQueuePage
       status="RESERVED"
       title="Picking Queue"
-      actionNoun="pick"
       emptyTitle="Nothing to pick"
       emptyDescription="Sales orders in Reserved status will appear here ready for picking."
     />

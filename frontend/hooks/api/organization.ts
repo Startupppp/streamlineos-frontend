@@ -319,23 +319,6 @@ export const useCreateOrganization = () => {
   });
 };
 
-export const useTransferOwnership = () => {
-  const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, { newOwnerUserId: string }>({
-    mutationKey: ["transfer", "ownership"],
-    mutationFn: (data) =>
-      apiClient.post<{ success: boolean }>(
-        "/organization/transfer-ownership",
-        data,
-      ),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: queryKeys.organization.all,
-      });
-    },
-  });
-};
-
 export const useLeaveOrg = () => {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean; nextOrgId?: string }, Error, void>({

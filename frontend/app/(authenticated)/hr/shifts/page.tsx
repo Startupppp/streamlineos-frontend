@@ -62,7 +62,7 @@ export default function ShiftsPage() {
             <ShiftTemplatesTab canManage={canManage} onEdit={handleEdit} />
           </TabsContent>
           <TabsContent value="assignments" className="mt-0 flex flex-1 min-h-0 flex-col">
-            <ShiftAssignmentsTab canManage={canManage} />
+            <ShiftAssignmentsTab />
           </TabsContent>
           <TabsContent value="swaps" className="mt-0 flex flex-1 min-h-0 flex-col">
             <ShiftSwapsTab canManage={canManage} />

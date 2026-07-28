@@ -51,7 +51,7 @@ function usePeriodAction(action: "submit" | "recall" | "reopen" | "lock" | "unlo
     mutationKey: ["timesheets", "periods", action],
     mutationFn: (periodId: number) =>
       apiClient.post<TimesheetPeriod>(`/timesheets/periods/${periodId}/${action}`),
-    onSuccess: (_data, periodId) => {
+    onSuccess: (_, periodId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.timesheets.periods() });
       void qc.invalidateQueries({ queryKey: queryKeys.timesheets.periodCurrent() });
       void qc.invalidateQueries({ queryKey: queryKeys.timesheets.period(periodId) });

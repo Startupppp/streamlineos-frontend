@@ -78,7 +78,7 @@ export function useReindexSupportKbArticle() {
     mutationKey: ["supportKb", "rag", "reindex"],
     mutationFn: (id: number) =>
       apiClient.post<ReindexResult>(`/support/kb/articles/${id}/reindex`, {}),
-    onSuccess: (_data, id) => {
+    onSuccess: (_, id) => {
       qc.invalidateQueries({
         queryKey: [...queryKeys.supportKb.article(id), "index-status"],
       });

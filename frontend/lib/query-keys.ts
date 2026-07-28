@@ -1961,4 +1961,11 @@ export const queryKeys = {
       [...base, "hr-safety", "wellness", "trend", fromDate, toDate] as const,
     burnout: [...base, "hr-safety", "wellness", "burnout"] as const,
   },
+
+  ownership: {
+    all: [...base, "ownership"] as const,
+    orgTransfers: () => [...base, "ownership", "org", "transfers"] as const,
+    incomingTransfers: () =>
+      [...base, "ownership", "transfers", "incoming"] as const,
+  },
 } as const;

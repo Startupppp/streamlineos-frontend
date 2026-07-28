@@ -327,11 +327,11 @@ export function useConfirmMatch(bankAccountId: number) {
       }
       return { snapshot };
     },
-    onError: (_err, _vars, context) => {
+    onError: (error, _vars, context) => {
       if (context?.snapshot) {
         queryClient.setQueryData(bankingKeys.reconciliation(bankAccountId), context.snapshot);
       }
-      toast.error(getErrorMessage(_err));
+      toast.error(getErrorMessage(error));
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: bankingKeys.reconciliation(bankAccountId) });
@@ -372,11 +372,11 @@ export function useUnmatch(bankAccountId: number) {
       }
       return { snapshot };
     },
-    onError: (_err, _vars, context) => {
+    onError: (error, _vars, context) => {
       if (context?.snapshot) {
         queryClient.setQueryData(bankingKeys.reconciliation(bankAccountId), context.snapshot);
       }
-      toast.error(getErrorMessage(_err));
+      toast.error(getErrorMessage(error));
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: bankingKeys.reconciliation(bankAccountId) });
@@ -409,11 +409,11 @@ export function useIgnoreTransaction(bankAccountId: number) {
       }
       return { snapshot };
     },
-    onError: (_err, _vars, context) => {
+    onError: (error, _vars, context) => {
       if (context?.snapshot) {
         queryClient.setQueryData(bankingKeys.reconciliation(bankAccountId), context.snapshot);
       }
-      toast.error(getErrorMessage(_err));
+      toast.error(getErrorMessage(error));
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: bankingKeys.reconciliation(bankAccountId) });

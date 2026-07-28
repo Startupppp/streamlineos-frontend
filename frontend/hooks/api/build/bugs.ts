@@ -43,7 +43,7 @@ export function useCreateBug() {
     mutationKey: ["projects", "bugs", "create"],
     mutationFn: ({ projectId, ...data }: CreateBugInput & { projectId: number }) =>
       apiClient.post<Bug>(`/build/${projectId}/bugs`, data),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.projects.bugs.list(vars.projectId) });
     },
   });
@@ -59,7 +59,7 @@ export function useUpdateBug() {
       ...data
     }: UpdateBugInput & { projectId: number; id: number }) =>
       apiClient.patch<Bug>(`/build/${projectId}/bugs/${id}`, data),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.projects.bugs.list(vars.projectId) });
       qc.invalidateQueries({ queryKey: queryKeys.projects.bugs.detail(vars.projectId, vars.id) });
     },
@@ -72,7 +72,7 @@ export function useDeleteBug() {
     mutationKey: ["projects", "bugs", "delete"],
     mutationFn: ({ projectId, id }: { projectId: number; id: number }) =>
       apiClient.delete<unknown>(`/build/${projectId}/bugs/${id}`),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.projects.bugs.list(vars.projectId) });
     },
   });

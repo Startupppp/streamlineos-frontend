@@ -135,7 +135,7 @@ function getRowKey(log: AttendanceLog) {
   return log.id;
 }
 
-function getRowClassName(_log: AttendanceLog, index: number) {
+function getRowClassName(_: AttendanceLog, index: number) {
   return cn(
     "hover:bg-muted/30 transition-colors duration-200",
     index % 2 === 0 ? "bg-background" : "bg-muted/20"

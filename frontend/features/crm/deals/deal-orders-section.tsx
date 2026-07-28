@@ -86,7 +86,7 @@ function useCreateOrder() {
     mutationKey: ["orders", "create"] as const,
     mutationFn: (input: { dealId: number; notes?: string; shippingAddress?: string }) =>
       apiClient.post<{ order: Order }>("/crm/orders", input),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       void qc.invalidateQueries({ queryKey: ["orders", "deal", vars.dealId] });
     },
   });
@@ -98,7 +98,7 @@ function useUpdateOrderStatus() {
     mutationKey: ["orders", "updateStatus"] as const,
     mutationFn: ({ id, status }: { id: number; status: OrderStatus; dealId: number }) =>
       apiClient.patch<{ order: Order }>(`/crm/orders/${id}/status`, { status }),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       void qc.invalidateQueries({ queryKey: ["orders", "deal", vars.dealId] });
     },
   });
@@ -110,7 +110,7 @@ function useDeleteOrder() {
     mutationKey: ["orders", "delete"] as const,
     mutationFn: ({ id }: { id: number; dealId: number }) =>
       apiClient.delete<{ success: boolean }>(`/crm/orders/${id}`),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       void qc.invalidateQueries({ queryKey: ["orders", "deal", vars.dealId] });
     },
   });

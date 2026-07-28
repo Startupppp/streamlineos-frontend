@@ -587,4 +587,8 @@ export type PermissionKey =
   | "payroll:access:view"
   | "payroll:access:manage"
   | "sign:access:view"
-  | "sign:access:manage";
+  | "sign:access:manage"
+  | "ownership:modules:view"
+  | "ownership:modules:manage"
+  | "ownership:org:transfer"
+  | "ownership:transfer:respond";

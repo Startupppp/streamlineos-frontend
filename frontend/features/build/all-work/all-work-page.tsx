@@ -99,7 +99,6 @@ export function AllWorkPage() {
   const {
     tableSelection,
     setTableSelection,
-    isPendingBulk: _isPendingBulk,
     handleBulkStatus,
     handleBulkPriority,
     handleBulkAssignee,

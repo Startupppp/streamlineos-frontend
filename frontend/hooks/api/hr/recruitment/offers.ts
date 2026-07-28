@@ -139,7 +139,7 @@ export function useRespondToNegotiation(candidateId: number) {
         `/hr/recruitment/candidates/${candidateId}/offers/${offerId}/negotiations`,
         data,
       ),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "offerNegotiations", variables.offerId] });
       void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "offerVersions", variables.offerId] });
       void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "candidateOffers", candidateId] });

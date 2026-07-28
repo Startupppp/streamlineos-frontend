@@ -49,7 +49,7 @@ export function useAttachTag() {
     mutationKey: ["attach", "tag"],
     mutationFn: ({ ticketId, tagId }: { ticketId: number; tagId: number }) =>
       apiClient.post<{ success: boolean }>(`/support/${ticketId}/tags/${tagId}`, {}),
-    onSuccess: (_data, vars) => qc.invalidateQueries({ queryKey: queryKeys.support.detail(vars.ticketId) }),
+    onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: queryKeys.support.detail(vars.ticketId) }),
   });
 }
 
@@ -59,6 +59,6 @@ export function useDetachTag() {
     mutationKey: ["detach", "tag"],
     mutationFn: ({ ticketId, tagId }: { ticketId: number; tagId: number }) =>
       apiClient.delete<{ success: boolean }>(`/support/${ticketId}/tags/${tagId}`),
-    onSuccess: (_data, vars) => qc.invalidateQueries({ queryKey: queryKeys.support.detail(vars.ticketId) }),
+    onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: queryKeys.support.detail(vars.ticketId) }),
   });
 }

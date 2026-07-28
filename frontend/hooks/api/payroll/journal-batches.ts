@@ -67,7 +67,7 @@ export function usePostJournalBatch() {
     mutationKey: ["payroll", "journal-batches", "post"],
     mutationFn: (batchId: number) =>
       apiClient.post<JournalBatch>(`/payroll/accounting/journal-batches/${batchId}/post`),
-    onSuccess: (_d, batchId) => invalidate(batchId),
+    onSuccess: (_, batchId) => invalidate(batchId),
   });
 }
 
@@ -79,7 +79,7 @@ export function useReverseJournalBatch() {
       apiClient.post<JournalBatch>(`/payroll/accounting/journal-batches/${batchId}/reverse`, {
         reason,
       }),
-    onSuccess: (_d, { batchId }) => invalidate(batchId),
+    onSuccess: (_, { batchId }) => invalidate(batchId),
   });
 }
 
@@ -100,6 +100,6 @@ export function useReconcileJournalBatch() {
         status,
         note,
       }),
-    onSuccess: (_d, { batchId }) => invalidate(batchId),
+    onSuccess: (_, { batchId }) => invalidate(batchId),
   });
 }

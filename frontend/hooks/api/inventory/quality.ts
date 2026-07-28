@@ -167,7 +167,7 @@ export function useStartInspection() {
     mutationKey: ["inventory", "quality", "inspection", "start"],
     mutationFn: (inspectionId) =>
       apiClient.post<Inspection>(`/inventory/quality/inspections/${inspectionId}/start`),
-    onSuccess: (_res, inspectionId) => {
+    onSuccess: (_, inspectionId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.qualityInspection(inspectionId) });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.qualityInspections() });
     },
@@ -184,7 +184,7 @@ export function usePassInspection() {
         undefined,
         { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
-    onSuccess: (_res, inspectionId) => {
+    onSuccess: (_, inspectionId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.qualityInspection(inspectionId) });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.qualityInspections() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
@@ -206,7 +206,7 @@ export function useFailInspection() {
     mutationKey: ["inventory", "quality", "inspection", "fail"],
     mutationFn: ({ inspectionId, lines }) =>
       apiClient.post<Inspection>(`/inventory/quality/inspections/${inspectionId}/fail`, { lines }),
-    onSuccess: (_res, vars) => {
+    onSuccess: (_, vars) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.qualityInspection(vars.inspectionId) });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.qualityInspections() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
@@ -229,7 +229,7 @@ export function useDisposeInspection() {
         lineId !== undefined ? { lineId } : {},
         { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
-    onSuccess: (_res, vars) => {
+    onSuccess: (_, vars) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.qualityInspection(vars.inspectionId) });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.qualityInspections() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
@@ -244,7 +244,7 @@ export function useCancelInspection() {
     mutationKey: ["inventory", "quality", "inspection", "cancel"],
     mutationFn: (inspectionId) =>
       apiClient.post<Inspection>(`/inventory/quality/inspections/${inspectionId}/cancel`),
-    onSuccess: (_res, inspectionId) => {
+    onSuccess: (_, inspectionId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.qualityInspection(inspectionId) });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.qualityInspections() });
     },
@@ -315,7 +315,7 @@ export function useReleaseQualityHold() {
         undefined,
         { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
-    onSuccess: (_res, holdId) => {
+    onSuccess: (_, holdId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.qualityHold(holdId) });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.qualityHolds() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
@@ -382,7 +382,7 @@ export function useUpdateRecall() {
     mutationKey: ["inventory", "quality", "recall", "update"],
     mutationFn: ({ recallId, ...data }) =>
       apiClient.patch<Recall>(`/inventory/quality/recalls/${recallId}`, data),
-    onSuccess: (_res, vars) => {
+    onSuccess: (_, vars) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.recall(vars.recallId) });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.recalls() });
     },

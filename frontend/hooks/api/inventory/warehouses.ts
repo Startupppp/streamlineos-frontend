@@ -197,7 +197,7 @@ export function useUpdateLocation() {
     mutationKey: ["inventory", "location", "update"],
     mutationFn: ({ warehouseId, locationId, data }) =>
       apiClient.patch<WarehouseLocation>(`/inventory/warehouses/${warehouseId}/locations/${locationId}`, data),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.locations(vars.warehouseId) });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.warehouses() });
     },
@@ -224,7 +224,7 @@ export function useSetDefaultWarehouse() {
       );
       return { previous };
     },
-    onError: (_err, _vars, context) => {
+    onError: (_, _vars, context) => {
       if (context?.previous) {
         qc.setQueryData(queryKeys.inventory.warehouses(), context.previous);
       }

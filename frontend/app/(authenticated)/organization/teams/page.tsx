@@ -81,7 +81,7 @@ function TeamForm({
   defaultValues,
   departments,
   onSubmit,
-  isPending: _isPending,
+  isPending: _,
 }: {
   defaultValues?: Partial<FormValues>;
   departments: { id: string; name: string }[];

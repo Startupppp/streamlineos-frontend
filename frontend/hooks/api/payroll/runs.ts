@@ -82,7 +82,7 @@ export function useGenerateRun() {
     mutationKey: ["payroll", "runs", "generate"],
     mutationFn: (runId: number) =>
       apiClient.post<{ ok: boolean }>(`/payroll/runs/${runId}/generate`),
-    onSuccess: (_data, runId) => {
+    onSuccess: (_, runId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
       void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "runs"] });
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.commandCenterAll });
@@ -96,7 +96,7 @@ export function useRecalculateRun() {
     mutationKey: ["payroll", "runs", "recalculate"],
     mutationFn: (runId: number) =>
       apiClient.post<{ ok: boolean }>(`/payroll/runs/${runId}/recalculate`),
-    onSuccess: (_data, runId) => {
+    onSuccess: (_, runId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.runEmployeesAll(runId) });
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.runExceptionsAll(runId) });

@@ -69,7 +69,7 @@ type FormValues = z.infer<typeof formSchema>;
 function LocationForm({
   defaultValues,
   onSubmit,
-  isPending: _isPending,
+  isPending: _,
 }: {
   defaultValues?: FormValues;
   onSubmit: (v: FormValues) => void;

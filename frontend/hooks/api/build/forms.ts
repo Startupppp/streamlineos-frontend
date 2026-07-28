@@ -62,7 +62,7 @@ export function useUpdateForm(projectId: number) {
     mutationKey: ["projects", projectId, "forms", "update"],
     mutationFn: ({ id, ...data }: UpdateFormInput & { id: number }) =>
       apiClient.patch<ProjectForm>(`/build/${projectId}/forms/${id}`, data),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.projects.forms.list(projectId) });
       qc.invalidateQueries({ queryKey: queryKeys.projects.forms.detail(projectId, vars.id) });
     },

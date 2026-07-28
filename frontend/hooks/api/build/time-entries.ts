@@ -14,7 +14,7 @@ export function useLogTime(options?: Parameters<typeof useMutation>[0]) {
         `/build/${projectId}/tickets/${ticketId}/time-entries`,
         data
       ),
-    onSuccess: (_data: unknown, variables: LogTimeInput) => {
+    onSuccess: (_: unknown, variables: LogTimeInput) => {
       queryClient.invalidateQueries({
         queryKey: [...queryKeys.projects.all, "timeEntries"],
       });

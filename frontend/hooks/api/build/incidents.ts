@@ -46,7 +46,7 @@ export function useCreateIncident() {
     mutationKey: ["projects", "incidents", "create"],
     mutationFn: ({ projectId, ...data }: CreateIncidentInput & { projectId: number }) =>
       apiClient.post<Incident>(`/build/${projectId}/incidents`, data),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.projects.incidents.list(vars.projectId) });
     },
   });
@@ -62,7 +62,7 @@ export function useUpdateIncident() {
       ...data
     }: UpdateIncidentInput & { projectId: number; id: number }) =>
       apiClient.patch<Incident>(`/build/${projectId}/incidents/${id}`, data),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.projects.incidents.list(vars.projectId) });
       qc.invalidateQueries({
         queryKey: queryKeys.projects.incidents.detail(vars.projectId, vars.id),
@@ -77,7 +77,7 @@ export function useDeleteIncident() {
     mutationKey: ["projects", "incidents", "delete"],
     mutationFn: ({ projectId, id }: { projectId: number; id: number }) =>
       apiClient.delete<unknown>(`/build/${projectId}/incidents/${id}`),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.projects.incidents.list(vars.projectId) });
     },
   });
@@ -96,7 +96,7 @@ export function useAddIncidentUpdate() {
         `/build/${projectId}/incidents/${incidentId}/updates`,
         data,
       ),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({
         queryKey: queryKeys.projects.incidents.detail(vars.projectId, vars.incidentId),
       });

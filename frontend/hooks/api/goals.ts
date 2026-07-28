@@ -194,7 +194,7 @@ export function useUpdateGoal() {
     mutationKey: ["update", "goal"],
     mutationFn: ({ id, ...input }: UpdateGoalInput & { id: number }) =>
       apiClient.patch<GoalListItem>(`/goals/${id}`, input),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.goals.all });
       qc.invalidateQueries({ queryKey: queryKeys.goals.detail(variables.id) });
     },

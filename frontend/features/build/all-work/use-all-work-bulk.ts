@@ -103,7 +103,7 @@ export function useAllWorkBulk(tickets: AllWorkTicket[]): UseAllWorkBulkReturn {
     [handleBulkAction]
   );
 
-  const handleBulkSprintNoOp = useCallback((_value: string) => {}, []);
+  const handleBulkSprintNoOp = useCallback((_: string) => {}, []);
 
   const handleClearSelection = useCallback(() => {
     setTableSelection(new Set());

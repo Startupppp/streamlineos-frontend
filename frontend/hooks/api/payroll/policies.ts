@@ -144,7 +144,7 @@ export function useCreatePolicyVersion() {
         `/payroll/policies/${policyId}/versions`,
         data,
       ),
-    onSuccess: (_result, variables) => {
+    onSuccess: (_, variables) => {
       qc.invalidateQueries({
         queryKey: queryKeys.payroll.policyVersions(variables.policyId),
       });

@@ -145,14 +145,14 @@ export function useUpdateDealStage() {
       });
       return { snapshots };
     },
-    onError: (_err, _vars, context) => {
+    onError: (_, _vars, context) => {
       if (context) {
         for (const [key, data] of context.snapshots) {
           qc.setQueryData(key, data);
         }
       }
     },
-    onSettled: (_data, _err, vars) => {
+    onSettled: (_, _err, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.deals.all });
       qc.invalidateQueries({ queryKey: queryKeys.deals.detail(vars.id) });
       qc.invalidateQueries({ queryKey: queryKeys.deals.stats() });
@@ -420,7 +420,7 @@ export function useUpdateStakeholder(dealId: number) {
       );
       return { snapshot };
     },
-    onError: (_err, _vars, context) => {
+    onError: (_, _vars, context) => {
       if (context?.snapshot) {
         qc.setQueryData(queryKeys.deals.stakeholders(dealId), context.snapshot);
       }
@@ -445,7 +445,7 @@ export function useDeleteStakeholder(dealId: number) {
       );
       return { snapshot };
     },
-    onError: (_err, _vars, context) => {
+    onError: (_, _vars, context) => {
       if (context?.snapshot) {
         qc.setQueryData(queryKeys.deals.stakeholders(dealId), context.snapshot);
       }

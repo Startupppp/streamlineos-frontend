@@ -280,7 +280,7 @@ export function useDispatchTransfer() {
     mutationKey: ["inventory", "transfer", "dispatch"],
     mutationFn: ({ transferId }) =>
       apiClient.post<void>(`/inventory/stock/transfers/${transferId}/dispatch`, {}),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.transfers() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.transfer(vars.transferId) });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
@@ -298,7 +298,7 @@ export function useReserveTransfer() {
         {},
         { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
-    onSuccess: (_data, transferId) => {
+    onSuccess: (_, transferId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.transfers() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.transfer(transferId) });
     },
@@ -311,7 +311,7 @@ export function useCancelTransfer() {
     mutationKey: ["inventory", "transfer", "cancel"],
     mutationFn: (transferId) =>
       apiClient.post<void>(`/inventory/stock/transfers/${transferId}/cancel`, {}),
-    onSuccess: (_data, transferId) => {
+    onSuccess: (_, transferId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.transfers() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.transfer(transferId) });
     },

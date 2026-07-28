@@ -47,7 +47,7 @@ export function useUpdateChangeRequest(projectId: number) {
     mutationKey: ["projects", projectId, "change-requests", "update"],
     mutationFn: ({ id, ...data }: UpdateChangeRequestInput & { id: number }) =>
       apiClient.patch<ChangeRequest>(`/build/${projectId}/change-requests/${id}`, data),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.projects.changeRequests.list(projectId) });
       qc.invalidateQueries({
         queryKey: queryKeys.projects.changeRequests.detail(projectId, vars.id),

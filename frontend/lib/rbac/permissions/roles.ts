@@ -9,6 +9,7 @@ import { FEEDBUCKET_PERMISSIONS } from "./feedbucket";
 import { NOTIFICATIONS_PERMISSIONS } from "./notifications";
 import { ACCOUNTING_PERMISSIONS } from "./accounting";
 import { PAYROLL_PERMISSIONS } from "./payroll";
+import { OWNERSHIP_PERMISSIONS } from "./ownership";
 import { ROLES } from "@/lib/constants/roles";
 
 export const PERMISSIONS = [
@@ -23,6 +24,7 @@ export const PERMISSIONS = [
   ...NOTIFICATIONS_PERMISSIONS,
   ...ACCOUNTING_PERMISSIONS,
   ...PAYROLL_PERMISSIONS,
+  ...OWNERSHIP_PERMISSIONS,
 ];
 
 const EMPLOYEE_SELF_SERVICE = [

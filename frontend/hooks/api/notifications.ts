@@ -102,7 +102,7 @@ export const useMarkAllNotificationsRead = () => {
       queryClient.setQueryData<UnreadCount>(unreadKey, { count: 0 });
       return { previousCount };
     },
-    onError: (_error, _vars, context) => {
+    onError: (_, _vars, context) => {
       if (context?.previousCount !== undefined) {
         queryClient.setQueryData(queryKeys.notifications.unreadCount(), context.previousCount);
       }
@@ -246,7 +246,7 @@ export const useUpdateNotificationTemplate = () => {
     mutationKey: ["notifications", "templates", "update"],
     mutationFn: ({ id, ...dto }) =>
       apiClient.patch<NotificationTemplate>(`/notification-templates/${id}`, dto),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.templates() });
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.template(vars.id) });
     },
@@ -304,7 +304,7 @@ export const useUpdateBroadcast = () => {
   return useMutation<Broadcast, Error, { id: number } & UpdateBroadcastInput>({
     mutationKey: ["notifications", "broadcasts", "update"],
     mutationFn: ({ id, ...dto }) => apiClient.patch<Broadcast>(`/broadcasts/${id}`, dto),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.broadcasts() });
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.broadcast(vars.id) });
     },

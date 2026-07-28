@@ -64,7 +64,7 @@ interface RemoveLineButtonProps {
 }
 
 const RemoveLineButton = forwardRef<HTMLButtonElement, RemoveLineButtonProps>(
-  function RemoveLineButton({ index, disabled, onRemove }, _ref) {
+  function RemoveLineButton({ index, disabled, onRemove }, _) {
     function handleClick(): void {
       onRemove(index);
     }

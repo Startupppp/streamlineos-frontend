@@ -27,7 +27,7 @@ export function useFollowTicket() {
   return useMutation({
     mutationKey: ["follow", "ticket"],
     mutationFn: (ticketId: number) => apiClient.post<{ success: boolean }>(`/support/${ticketId}/follow`, {}),
-    onSuccess: (_data, ticketId) =>
+    onSuccess: (_, ticketId) =>
       qc.invalidateQueries({ queryKey: queryKeys.supportWatchers.list(ticketId) }),
   });
 }
@@ -37,7 +37,7 @@ export function useUnfollowTicket() {
   return useMutation({
     mutationKey: ["unfollow", "ticket"],
     mutationFn: (ticketId: number) => apiClient.delete<{ success: boolean }>(`/support/${ticketId}/follow`),
-    onSuccess: (_data, ticketId) =>
+    onSuccess: (_, ticketId) =>
       qc.invalidateQueries({ queryKey: queryKeys.supportWatchers.list(ticketId) }),
   });
 }

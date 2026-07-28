@@ -73,7 +73,7 @@ export function useUpdatePerson() {
         `/directory/people/${organizationPersonId}`,
         input,
       ),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       qc.invalidateQueries({
         queryKey: queryKeys.directory.person(variables.organizationPersonId),
       });

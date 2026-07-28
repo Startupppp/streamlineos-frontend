@@ -73,7 +73,7 @@ export function useUpdateMeeting(projectId: number) {
     mutationKey: ["projects", projectId, "meetings", "update"],
     mutationFn: ({ id, ...data }: UpdateMeetingInput) =>
       apiClient.patch<Meeting>(`/build/${projectId}/meetings/${id}`, data),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.projects.meetings.list(projectId) });
       qc.invalidateQueries({ queryKey: queryKeys.projects.meetings.detail(projectId, vars.id) });
     },
