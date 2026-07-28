@@ -142,8 +142,9 @@ export function UpcomingHolidaysWidget() {
 }
 
 export function LeaveBalanceWidget() {
+  const { canViewLeaves } = useDashboardAccess();
   const { data, isLoading } = useMyLeaveBalance();
-  const { data: myRequestsData } = useHrMyLeaveRequests();
+  const { data: myRequestsData } = useHrMyLeaveRequests(canViewLeaves);
   const balances = data ?? [];
 
   const requests = useMemo(

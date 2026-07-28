@@ -47,6 +47,14 @@ function PayrollSelfCard() {
             No payslip published yet.
           </p>
         )}
+        {data?.nextPayDate && (
+          <div className="flex items-center justify-between text-[11px]">
+            <span className="text-muted-foreground">Next payroll</span>
+            <span className="font-medium">
+              {format(new Date(data.nextPayDate.date), "MMM d, yyyy")}
+            </span>
+          </div>
+        )}
         {data && Number(data.pendingReimbursementsCount) > 0 && (
           <div className="flex items-center justify-between text-[11px]">
             <span className="text-muted-foreground">Pending reimbursements</span>
