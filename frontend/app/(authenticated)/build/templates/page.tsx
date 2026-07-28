@@ -32,7 +32,6 @@ import { ApplyTemplateDialog } from "@/features/build/templates/apply-template-d
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   PmPageShell,
-  PmPanel,
   PmSection,
   PmStaggerList,
   PM_FILL_PANEL,

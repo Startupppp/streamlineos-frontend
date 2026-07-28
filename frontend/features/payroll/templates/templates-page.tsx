@@ -91,7 +91,7 @@ export function TemplatesPageContent() {
     const current = searchParams.get("search") ?? "";
     if (debouncedSearchInput === current) return;
     updateUrl({ search: debouncedSearchInput || undefined });
-  }, [debouncedSearchInput]);
+  }, [debouncedSearchInput, searchParams, updateUrl]);
 
   const handleSearchChange = useCallback((value: string) => {
     setSearchInput(value);

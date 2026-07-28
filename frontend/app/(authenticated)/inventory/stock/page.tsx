@@ -66,7 +66,7 @@ export default function StockLevelsPage() {
     params.delete("page");
     setPage(1);
     router.replace(`?${params.toString()}`);
-  }, [debouncedSearch]);
+  }, [debouncedSearch, router, searchParams]);
   const [availabilityVariantId, setAvailabilityVariantId] = useState<number | null>(null);
   const [availabilityVariantName, setAvailabilityVariantName] = useState<string>("");
   const [availabilityOpen, setAvailabilityOpen] = useState(false);

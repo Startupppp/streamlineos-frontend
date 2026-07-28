@@ -57,7 +57,6 @@ import {
 import { cn } from "@/lib/utils";
 import {
   PmPageShell,
-  PmPanel,
   PmSection,
   PmStaggerList,
   PM_FILL_PANEL,

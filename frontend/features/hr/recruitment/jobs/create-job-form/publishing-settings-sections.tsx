@@ -1,7 +1,6 @@
 "use client";
 
 import { Controller } from "react-hook-form";
-import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -40,7 +39,7 @@ function PriorityButton({ value, label, activeClass, isActive, onChange }: Prior
 }
 
 export function Section9({ form }: SectionProps) {
-  const { register, control, formState: { errors } } = form;
+  const { control, formState: { errors } } = form;
   return (
     <div>
       <SectionTitle title="Job Status & Visibility" subtitle="Control the posting's reach and status" icon={Eye} />

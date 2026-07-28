@@ -1,12 +1,11 @@
 ﻿"use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable } from "@/components/ui/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -47,10 +46,13 @@ export default function EquityPage() {
     return map;
   }, [membersData]);
 
-  const resolveMemberName = (userId: string) => {
-    const member = memberById.get(userId);
-    return member ? getUserDisplayName(member) : userId;
-  };
+  const resolveMemberName = useCallback(
+    (userId: string) => {
+      const member = memberById.get(userId);
+      return member ? getUserDisplayName(member) : userId;
+    },
+    [memberById],
+  );
 
   const grantColumns = useMemo(() => [
     { key: "employee", header: "Employee", cell: (r: EquityGrant) => <span className="font-medium text-sm">{resolveMemberName(r.userId)}</span> },
@@ -73,7 +75,7 @@ export default function EquityPage() {
         <span className="text-xs text-muted-foreground">Pending</span>
       ),
     },
-  ], [memberById]);
+  ], [resolveMemberName]);
 
   return (
     <PageWrapper

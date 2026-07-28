@@ -23,12 +23,10 @@ import { SprintPlanningPanel, type PlanningTicket } from "@/features/build/sprin
 import { ModuleDisabledState } from "@/features/build/shared/module-disabled-state";
 import {
   PmPageShell,
-  PmPanel,
   PmSection,
   PmStaggerList,
   PM_FILL_PANEL,
 } from "@/features/build/shared/pm-chrome";
-import { cn } from "@/lib/utils";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;

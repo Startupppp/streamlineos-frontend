@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { toast } from "sonner";
 import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useWorkers } from "@/hooks/api/directory/workers";
@@ -33,7 +32,6 @@ import type { BadgeTone } from "@/components/ui/semantic-badge";
 import { WorkerFormDialog } from "./worker-form-dialog";
 import { WorkerEngagementsSheet } from "./worker-engagements-sheet";
 import type { Worker, WorkerStatus } from "@/types/directory/workers";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { CONTENT_FILL_PANEL, FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";

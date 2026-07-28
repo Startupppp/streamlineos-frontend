@@ -1,16 +1,6 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
-import { ChevronLeft, FileText } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { useMemo } from "react";
 import { CsvFieldMapper } from "@/features/crm/leads/csv-field-mapper";
 
 const CONTACT_FIELDS: { value: string; label: string }[] = [

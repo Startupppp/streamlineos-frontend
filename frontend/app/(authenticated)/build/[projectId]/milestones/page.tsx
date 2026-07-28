@@ -31,12 +31,10 @@ import { isPast, isToday } from "date-fns";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import {
   PmPageShell,
-  PmPanel,
   PmSection,
   PmStaggerList,
   PM_FILL_PANEL,
 } from "@/features/build/shared/pm-chrome";
-import { cn } from "@/lib/utils";
 
 function NewMilestoneButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();

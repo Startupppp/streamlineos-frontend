@@ -42,7 +42,6 @@ import { ErrorState } from "@/components/shared/error-state";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import {
   ResponsivePopover,
   ResponsivePopoverContent,

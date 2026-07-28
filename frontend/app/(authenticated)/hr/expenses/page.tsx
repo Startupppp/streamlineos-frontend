@@ -10,7 +10,7 @@ import {
   useUpdateExpenseStatus,
   useHrEmployees,
   unwrapEmployees} from "@/hooks/api/hr";
-import type { Employee, PaginatedEmployees } from "@/types/hr";
+import type { Employee } from "@/types/hr";
 import { CreateExpenseDialog } from "@/features/hr/expenses/components/create-expense-dialog";
 import { ImportExpenseSheet } from "@/features/hr/expenses/components/import-expense-sheet";
 import ExpensesLoading from "./loading";

@@ -5,6 +5,7 @@ import {
   type ColumnDef,
   type SortingState,
   type RowSelectionState,
+  type RowData,
   flexRender,
   getCoreRowModel,
   getSortedRowModel,
@@ -28,9 +29,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
 
 declare module "@tanstack/react-table" {
-  interface ColumnMeta<TData, TValue> {
+  interface ColumnMeta<TData extends RowData, TValue> {
     className?: string;
     headerClassName?: string;
+    _phantom?: readonly [TData, TValue];
   }
 }
 

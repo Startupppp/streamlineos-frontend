@@ -5,7 +5,6 @@ import {
   useEffect,
   useMemo,
   useState,
-  type ChangeEvent,
 } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
@@ -201,7 +200,7 @@ function StockSummaryContent() {
   const currentPage = Number(searchParams.get("page") ?? "1");
 
   const query = useStockSummary({ page: currentPage, limit: 50 });
-  const items = query.data?.items ?? [];
+  const items = useMemo(() => query.data?.items ?? [], [query.data]);
 
   const filtered = useMemo(() => {
     const term = debouncedSearch.trim().toLowerCase();
@@ -267,7 +266,7 @@ function StockSummaryContent() {
     else params.delete("q");
     params.delete("page");
     router.replace(`?${params.toString()}`, { scroll: false });
-  }, [debouncedSearch]);
+  }, [debouncedSearch, router, searchParams]);
 
   return (
     <PageWrapper

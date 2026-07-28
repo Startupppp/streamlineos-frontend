@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, type ChangeEvent } from "react";
+import { useState, useCallback } from "react";
 import { Building2, GitBranch, Briefcase, Users } from "lucide-react";
 import { ChevronRightIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";

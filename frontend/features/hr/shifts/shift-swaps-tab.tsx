@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, type ReactNode } from "react";
+import { useCallback, useMemo, type ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -43,19 +43,19 @@ export function ShiftSwapsTab({ canManage }: Props) {
     return map;
   }, [membersData]);
 
-  function handleApprove(id: number) {
+  const handleApprove = useCallback((id: number) => {
     updateStatus.mutate({ id, status: "APPROVED" }, {
       onSuccess: () => toast.success("Swap request approved"),
       onError: (err) => toast.error(getErrorMessage(err)),
     });
-  }
+  }, [updateStatus]);
 
-  function handleReject(id: number) {
+  const handleReject = useCallback((id: number) => {
     updateStatus.mutate({ id, status: "REJECTED" }, {
       onSuccess: () => toast.success("Swap request rejected"),
       onError: (err) => toast.error(getErrorMessage(err)),
     });
-  }
+  }, [updateStatus]);
 
   type Swap = NonNullable<typeof swaps>[number];
 
@@ -123,7 +123,7 @@ export function ShiftSwapsTab({ canManage }: Props) {
     }
 
     return cols;
-  }, [canManage, updateStatus.isPending, memberById]);
+  }, [canManage, updateStatus.isPending, memberById, handleApprove, handleReject]);
 
   return (
     <DataTable

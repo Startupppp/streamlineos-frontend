@@ -53,7 +53,7 @@ export function ReportResultPanel({ result, isPending, isHr, onSchedule }: Repor
       a.download = `${result.entity}-report.xlsx`;
       a.click();
       URL.revokeObjectURL(url);
-    } catch (e) {
+    } catch (_e) {
       toast.error("Failed to export Excel file");
     }
   }, [result]);

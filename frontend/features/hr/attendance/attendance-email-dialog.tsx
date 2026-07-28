@@ -34,7 +34,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { toast } from "sonner";
 import { useHrEmployees,
   unwrapEmployees} from "@/hooks/api/hr";
-import type { Employee, PaginatedEmployees } from "@/types/hr";
+import type { Employee } from "@/types/hr";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 

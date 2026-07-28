@@ -38,8 +38,6 @@ import {
   type ComplianceRequirement,
 } from "@/hooks/api/hr/global";
 
-const UNSET = "__none__";
-
 const schema = z.object({
   name: z.string().min(1),
   countryCode: z.string().optional(),

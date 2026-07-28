@@ -48,7 +48,7 @@ import { AddLinkDialog } from "@/features/build/goals/add-link-dialog";
 import { KeyResultRow } from "@/features/build/goals/key-result-row";
 import { LinkRow } from "@/features/build/goals/link-row";
 import { GoalDetailSkeleton } from "@/features/build/goals/goal-detail-skeleton";
-import { STATUS_CONFIG, LEVEL_LABEL } from "@/features/build/goals/constants";
+import { STATUS_CONFIG } from "@/features/build/goals/constants";
 import {
   PmPageShell,
   PmPanel,

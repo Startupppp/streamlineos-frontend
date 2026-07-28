@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -59,45 +59,42 @@ export function SequencesSection({ sequences, canManage }: SequencesSectionProps
     return seq.entityType;
   }
 
-  const baseColumns: DataTableColumn<NumberSequence>[] = [
-    {
-      key: "entityType",
-      header: "Entity type",
+  const columns = useMemo<DataTableColumn<NumberSequence>[]>(() => {
+    const baseColumns: DataTableColumn<NumberSequence>[] = [
+      {
+        key: "entityType",
+        header: "Entity type",
+        cell: (row) => (
+          <span className="text-xs font-mono capitalize">{row.entityType.replace(/_/g, " ")}</span>
+        ),
+      },
+      {
+        key: "prefix",
+        header: "Prefix",
+        cell: (row) => <span className="text-xs font-mono">{row.prefix}</span>,
+      },
+      {
+        key: "padding",
+        header: "Padding",
+        cell: (row) => <span className="text-xs tabular-nums">{row.padding}</span>,
+      },
+      {
+        key: "nextNumber",
+        header: "Next #",
+        cell: (row) => <span className="text-xs tabular-nums">{row.nextNumber}</span>,
+      },
+    ];
+    const actionsColumn: DataTableColumn<NumberSequence> = {
+      key: "actions",
+      header: "",
       cell: (row) => (
-        <span className="text-xs font-mono capitalize">{row.entityType.replace(/_/g, " ")}</span>
+        <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setEditSeq(row)}>
+          Edit
+        </Button>
       ),
-    },
-    {
-      key: "prefix",
-      header: "Prefix",
-      cell: (row) => <span className="text-xs font-mono">{row.prefix}</span>,
-    },
-    {
-      key: "padding",
-      header: "Padding",
-      cell: (row) => <span className="text-xs tabular-nums">{row.padding}</span>,
-    },
-    {
-      key: "nextNumber",
-      header: "Next #",
-      cell: (row) => <span className="text-xs tabular-nums">{row.nextNumber}</span>,
-    },
-  ];
-
-  const actionsColumn: DataTableColumn<NumberSequence> = {
-    key: "actions",
-    header: "",
-    cell: (row) => (
-      <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setEditSeq(row)}>
-        Edit
-      </Button>
-    ),
-  };
-
-  const columns = useMemo(
-    () => (canManage ? [...baseColumns, actionsColumn] : baseColumns),
-    [canManage],
-  );
+    };
+    return canManage ? [...baseColumns, actionsColumn] : baseColumns;
+  }, [canManage]);
 
   return (
     <>
@@ -146,40 +143,37 @@ export function SystemAccountsSection({ systemAccounts, canManage }: SystemAccou
     return !m.accountId ? "bg-amber-50/60 dark:bg-amber-500/10" : "";
   }
 
-  const baseColumns: DataTableColumn<SystemAccountMapping>[] = [
-    {
-      key: "purpose",
-      header: "Purpose",
-      cell: (row) => <span className="text-xs">{PURPOSE_LABELS[row.purpose]}</span>,
-    },
-    {
-      key: "account",
-      header: "Mapped account",
-      cell: (row) =>
-        row.account ? (
-          <span className="text-xs font-mono">
-            {row.account.code} – {row.account.name}
-          </span>
-        ) : (
-          <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">Not mapped</span>
-        ),
-    },
-  ];
-
-  const actionsColumn: DataTableColumn<SystemAccountMapping> = {
-    key: "actions",
-    header: "",
-    cell: (row) => (
-      <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setEditMapping(row)}>
-        Map
-      </Button>
-    ),
-  };
-
-  const columns = useMemo(
-    () => (canManage ? [...baseColumns, actionsColumn] : baseColumns),
-    [canManage],
-  );
+  const columns = useMemo<DataTableColumn<SystemAccountMapping>[]>(() => {
+    const baseColumns: DataTableColumn<SystemAccountMapping>[] = [
+      {
+        key: "purpose",
+        header: "Purpose",
+        cell: (row) => <span className="text-xs">{PURPOSE_LABELS[row.purpose]}</span>,
+      },
+      {
+        key: "account",
+        header: "Mapped account",
+        cell: (row) =>
+          row.account ? (
+            <span className="text-xs font-mono">
+              {row.account.code} – {row.account.name}
+            </span>
+          ) : (
+            <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">Not mapped</span>
+          ),
+      },
+    ];
+    const actionsColumn: DataTableColumn<SystemAccountMapping> = {
+      key: "actions",
+      header: "",
+      cell: (row) => (
+        <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setEditMapping(row)}>
+          Map
+        </Button>
+      ),
+    };
+    return canManage ? [...baseColumns, actionsColumn] : baseColumns;
+  }, [canManage]);
 
   return (
     <>
@@ -219,12 +213,12 @@ export function PoliciesSection({ policies, canManage }: PoliciesSectionProps) {
   const [addPolicyOpen, setAddPolicyOpen] = useState(false);
   const deletePolicy = useDeleteApprovalPolicy();
 
-  function handleDeletePolicy(id: number): void {
+  const handleDeletePolicy = useCallback((id: number): void => {
     deletePolicy.mutate(id, {
       onSuccess: () => toast.success("Policy deleted"),
       onError: (err) => toast.error(getErrorMessage(err)),
     });
-  }
+  }, [deletePolicy]);
 
   function handleClosePolicyDialog(v: boolean): void {
     if (!v) { setAddPolicyOpen(false); setEditPolicy(undefined); }
@@ -238,60 +232,57 @@ export function PoliciesSection({ policies, canManage }: PoliciesSectionProps) {
     return p.id;
   }
 
-  const baseColumns: DataTableColumn<ApprovalPolicy>[] = [
-    {
-      key: "recordType",
-      header: "Record type",
+  const columns = useMemo<DataTableColumn<ApprovalPolicy>[]>(() => {
+    const baseColumns: DataTableColumn<ApprovalPolicy>[] = [
+      {
+        key: "recordType",
+        header: "Record type",
+        cell: (row) => (
+          <span className="text-xs font-mono">{row.recordType.replace(/_/g, " ")}</span>
+        ),
+      },
+      {
+        key: "minAmount",
+        header: "Min amount",
+        cell: (row) => <span className="text-xs tabular-nums">{row.minAmount ?? "—"}</span>,
+      },
+      {
+        key: "approverRole",
+        header: "Approver role",
+        cell: (row) => <span className="text-xs">{row.approverRole ?? "—"}</span>,
+      },
+      {
+        key: "isActive",
+        header: "Active",
+        cell: (row) => (
+          <Badge variant={row.isActive ? "default" : "secondary"} className="text-[10px]">
+            {row.isActive ? "Active" : "Inactive"}
+          </Badge>
+        ),
+      },
+    ];
+    const actionsColumn: DataTableColumn<ApprovalPolicy> = {
+      key: "actions",
+      header: "",
       cell: (row) => (
-        <span className="text-xs font-mono">{row.recordType.replace(/_/g, " ")}</span>
+        <div className="flex gap-1">
+          <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setEditPolicy(row)}>
+            Edit
+          </Button>
+          <LoadingButton
+            variant="ghost"
+            size="sm"
+            className="h-6 text-xs text-destructive hover:text-destructive"
+            onClick={() => handleDeletePolicy(row.id)}
+            isPending={deletePolicy.isPending}
+          >
+            Delete
+          </LoadingButton>
+        </div>
       ),
-    },
-    {
-      key: "minAmount",
-      header: "Min amount",
-      cell: (row) => <span className="text-xs tabular-nums">{row.minAmount ?? "—"}</span>,
-    },
-    {
-      key: "approverRole",
-      header: "Approver role",
-      cell: (row) => <span className="text-xs">{row.approverRole ?? "—"}</span>,
-    },
-    {
-      key: "isActive",
-      header: "Active",
-      cell: (row) => (
-        <Badge variant={row.isActive ? "default" : "secondary"} className="text-[10px]">
-          {row.isActive ? "Active" : "Inactive"}
-        </Badge>
-      ),
-    },
-  ];
-
-  const actionsColumn: DataTableColumn<ApprovalPolicy> = {
-    key: "actions",
-    header: "",
-    cell: (row) => (
-      <div className="flex gap-1">
-        <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setEditPolicy(row)}>
-          Edit
-        </Button>
-        <LoadingButton
-          variant="ghost"
-          size="sm"
-          className="h-6 text-xs text-destructive hover:text-destructive"
-          onClick={() => handleDeletePolicy(row.id)}
-          isPending={deletePolicy.isPending}
-        >
-          Delete
-        </LoadingButton>
-      </div>
-    ),
-  };
-
-  const columns = useMemo(
-    () => (canManage ? [...baseColumns, actionsColumn] : baseColumns),
-    [canManage, deletePolicy.isPending],
-  );
+    };
+    return canManage ? [...baseColumns, actionsColumn] : baseColumns;
+  }, [canManage, deletePolicy.isPending, handleDeletePolicy]);
 
   return (
     <>

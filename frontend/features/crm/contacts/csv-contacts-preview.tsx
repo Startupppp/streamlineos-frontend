@@ -7,7 +7,6 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { cn } from "@/lib/utils";
 
 const VALID_SOURCES = [
   "referral",

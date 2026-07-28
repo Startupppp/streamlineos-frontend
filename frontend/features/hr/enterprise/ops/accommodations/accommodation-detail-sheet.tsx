@@ -9,7 +9,6 @@ import {
   SheetBody,
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -20,7 +19,6 @@ import {
   useAccommodation,
   useAccommodationTasks,
   useApproveAccommodation,
-  useUpdateAccommodationTask,
   type AccommodationTaskStatus,
 } from "@/hooks/api/hr/enterprise-ops-accommodations";
 import { format } from "date-fns";
@@ -45,7 +43,6 @@ export function AccommodationDetailSheet({ id, open, onOpenChange }: Props) {
   const { data: request, isLoading } = useAccommodation(id);
   const { data: tasks } = useAccommodationTasks(id);
   const approve = useApproveAccommodation(id);
-  const updateTask = useUpdateAccommodationTask(id, "");
 
   if (isLoading || !request) {
     return (

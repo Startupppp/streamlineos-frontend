@@ -59,7 +59,6 @@ import { ErrorState } from "@/components/shared/error-state";
 import { AutomationValueInput } from "@/features/build/automations/automation-value-input";
 import {
   PmPageShell,
-  PmPanel,
   PmSection,
   PmStaggerList,
   PM_FILL_PANEL,

@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
@@ -35,10 +35,13 @@ export function SimulationHistory() {
     return map;
   }, [membersData]);
 
-  const resolveMemberName = (userId: string) => {
-    const member = memberById.get(userId);
-    return member ? getUserDisplayName(member) : userId;
-  };
+  const resolveMemberName = useCallback(
+    (userId: string) => {
+      const member = memberById.get(userId);
+      return member ? getUserDisplayName(member) : userId;
+    },
+    [memberById],
+  );
 
   const columns: DataTableColumn<SimulationRecord>[] = useMemo(() => [
     {
@@ -74,7 +77,7 @@ export function SimulationHistory() {
         </span>
       ),
     },
-  ], [memberById]);
+  ], [resolveMemberName]);
 
   return (
     <DataTable

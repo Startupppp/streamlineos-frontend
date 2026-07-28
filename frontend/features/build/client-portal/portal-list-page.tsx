@@ -11,7 +11,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { CalendarDays, ArrowRight } from "lucide-react";
 import {
   PmPageShell,
-  PmPanel,
   PmSection,
   PmStaggerList,
   PM_FILL_PANEL,

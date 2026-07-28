@@ -17,7 +17,6 @@ import {
   shouldShowMobileModuleBottomNav,
   MAX_MOBILE_MODULE_TABS,
   MOBILE_MODULE_CONTENT_PADDING_CLASS,
-  MOBILE_PRIMARY_TABS_WHEN_OVERFLOW,
 } from "./mobile-module-nav-items";
 
 const projectsNav: NavGroup[] = [

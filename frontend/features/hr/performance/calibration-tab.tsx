@@ -60,7 +60,7 @@ export function CalibrationTab() {
     });
   }
 
-  async function handleSave(employeeId: string) {
+  const handleSave = useCallback(async (employeeId: string) => {
     const row = entries.find((e) => e.employeeId === employeeId);
     const data = editingEntry[employeeId] ?? {
       preRating: row?.preRating ?? "",
@@ -83,7 +83,7 @@ export function CalibrationTab() {
     } catch (err) {
       toast.error(getErrorMessage(err));
     }
-  }
+  }, [entries, editingEntry, upsert]);
 
   const columns: DataTableColumn<CalibrationEntry>[] = useMemo(() => [
     {
@@ -181,7 +181,7 @@ export function CalibrationTab() {
         </LoadingButton>
       ),
     },
-  ], [editingEntry, rowErrors, resolveMemberName, upsert.isPending]);
+  ], [editingEntry, rowErrors, resolveMemberName, upsert.isPending, handleSave]);
 
   return (
     <div className="space-y-4">

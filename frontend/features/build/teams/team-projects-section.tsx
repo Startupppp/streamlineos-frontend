@@ -75,7 +75,7 @@ function AddProjectPicker({
   const { iconRef, hoverHandlers } = useAnimatedIcon();
 
   const { data } = useProjects({ limit: 100 });
-  const allProjects = data?.data ?? [];
+  const allProjects = useMemo(() => data?.data ?? [], [data]);
 
   const options = useMemo(() => {
     const q = search.trim().toLowerCase();

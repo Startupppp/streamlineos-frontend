@@ -92,13 +92,12 @@ const columns: DataTableColumn<SalesOrderListItem>[] = [
   },
 ];
 
-export function SoQueuePage({ status, title, actionNoun, emptyTitle, emptyDescription }: SoQueuePageProps) {
+export function SoQueuePage({ status, title, actionNoun: _actionNoun, emptyTitle, emptyDescription }: SoQueuePageProps) {
   const [search, setSearch] = useState("");
 
   const query = useSalesOrders({ status, limit: 50 });
 
   const allItems = query.data?.items ?? [];
-  const total = query.data?.total ?? 0;
 
   const items = search.trim()
     ? allItems.filter(

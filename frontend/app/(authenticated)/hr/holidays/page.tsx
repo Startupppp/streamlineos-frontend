@@ -43,7 +43,7 @@ export default function HolidaysPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingHoliday, setEditingHoliday] = useState<Holiday | null>(null);
 
-  const allHolidays = holidays ?? [];
+  const allHolidays = useMemo(() => holidays ?? [], [holidays]);
 
   const availableYears = useMemo(() => {
     const years = new Set<number>();

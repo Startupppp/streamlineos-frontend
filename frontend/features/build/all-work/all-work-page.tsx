@@ -57,7 +57,7 @@ export function AllWorkPage() {
   const { data: allWorkData, isLoading, isError, refetch } = useAllWork(filters);
   const { data: projectsData } = useProjects({ limit: 100 });
 
-  const tickets = allWorkData?.data ?? [];
+  const tickets = useMemo(() => allWorkData?.data ?? [], [allWorkData]);
   const total = allWorkData?.total ?? 0;
   const currentPage = allWorkData?.page ?? page;
   const limit = allWorkData?.limit ?? 50;

@@ -12,7 +12,6 @@ import {
   SheetTitle,
   SheetDescription,
   SheetBody,
-  SheetFooter,
 } from "@/components/ui/sheet";
 import {
   Form,
@@ -134,12 +133,6 @@ const EMPTY_ENGAGEMENT_DEFAULTS: EngagementFormValues = {
   isPrimary: false,
   designation: "",
 };
-
-interface TerminateFormValues {
-  terminationReason: string;
-  terminationNotes: string;
-  endsOn: string;
-}
 
 function TerminateAlertDialog({
   open,

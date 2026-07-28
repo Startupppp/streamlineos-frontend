@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { LayoutGrid, List, Users, UserPlus, Download } from "lucide-react";
+import { LayoutGrid, List, UserPlus, Download } from "lucide-react";
 import {
   useHrEmployees,
   useHrDepartments,

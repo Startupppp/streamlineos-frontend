@@ -471,7 +471,7 @@ interface DroppableGroupProps {
 function DroppableGroup({
   groupKey,
   items,
-  groupBy,
+  groupBy: _groupBy,
   projectKey,
   projectId,
   projectStatuses,

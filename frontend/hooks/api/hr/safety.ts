@@ -52,7 +52,7 @@ interface PaginatedResult<T> {
   pagination: { page: number; limit: number; total: number; totalPages: number };
 }
 
-export interface ListIncidentsParams {
+export type ListIncidentsParams = {
   page?: number;
   limit?: number;
   status?: IncidentStatus;
@@ -61,12 +61,12 @@ export interface ListIncidentsParams {
   search?: string;
   fromDate?: string;
   toDate?: string;
-}
+};
 
 export function useSafetyIncidents(params: ListIncidentsParams = {}) {
   return useQuery({
     queryKey: queryKeys.hrSafety.incidents(params),
-    queryFn: () => apiClient.get<PaginatedResult<SafetyIncident>>("/hr/safety/incidents", params as Record<string, unknown>),
+    queryFn: () => apiClient.get<PaginatedResult<SafetyIncident>>("/hr/safety/incidents", params),
     staleTime: 30_000,
     placeholderData: keepPreviousData,
   });

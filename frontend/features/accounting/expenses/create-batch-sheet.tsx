@@ -41,7 +41,10 @@ export function CreateBatchSheet({ open, onOpenChange, onCreated }: CreateBatchS
     defaultValues: { name: "" },
   });
 
-  const pendingExpenses: ExpenseWithRelations[] = pendingQuery.data?.expenses ?? [];
+  const pendingExpenses = useMemo<ExpenseWithRelations[]>(
+    () => pendingQuery.data?.expenses ?? [],
+    [pendingQuery.data],
+  );
 
   const runningTotal = useMemo(
     () =>

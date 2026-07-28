@@ -4,7 +4,6 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { RefreshCw, Info } from "lucide-react";
 import { AppSheet } from "@/components/shared";
-import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";

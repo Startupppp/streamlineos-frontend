@@ -47,11 +47,6 @@ export function TeamTable({ rows, weekStart, isLoading, onRowClick }: TeamTableP
     [weekStart],
   );
 
-  // TODO: server-side pagination (limit: 500 / limit: 200 needs coordinated backend+hook change)
-  const missingCount = rows.filter(
-    (r) => r.status === "MISSING" || r.status === "OPEN" || r.status === "DRAFT",
-  ).length;
-
   const columns = useMemo<DataTableColumn<TeamMemberRow>[]>(
     () => [
       {

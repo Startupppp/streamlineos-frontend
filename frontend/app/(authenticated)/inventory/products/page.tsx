@@ -284,7 +284,7 @@ function ProductsPageInner() {
     if (trimmed !== current) {
       updateParams({ search: trimmed });
     }
-  }, [debouncedSearch]);
+  }, [debouncedSearch, updateParams, searchParams]);
 
   function handleSearchChange(value: string): void {
     setSearch(value);

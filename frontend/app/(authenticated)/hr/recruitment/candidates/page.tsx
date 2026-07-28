@@ -109,7 +109,7 @@ export default function CandidatesPage() {
   }, [debouncedSearch, setFilter]);
 
   // Search is server-side via the `search` query param.
-  const filteredCandidates = candidates ?? [];
+  const filteredCandidates = useMemo(() => candidates ?? [], [candidates]);
 
   const stageCounts = useMemo(() => {
     const counts = candidatesPage?.statusCounts;

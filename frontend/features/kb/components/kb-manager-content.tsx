@@ -38,7 +38,7 @@ import {
   EmptyKnowledgeIllustration,
   EmptySearchIllustration,
 } from "@/components/illustrations";
-import { BarChart2, CheckCircle2, FileText, FolderTree, Globe, Loader2, Sparkles } from "lucide-react";
+import { BarChart2, CheckCircle2, FileText, FolderTree, Globe, Sparkles } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { KbArticleCard } from "./kb-article-card";

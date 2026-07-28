@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { EmptyProductsIllustration, EmptySearchIllustration } from "@/components/illustrations";
@@ -104,7 +104,7 @@ function UomPageInner() {
     return matchesSearch && matchesStatus;
   });
 
-  function updateParams(updates: Record<string, string | null>): void {
+  const updateParams = useCallback((updates: Record<string, string | null>): void => {
     const params = new URLSearchParams(searchParams.toString());
     for (const [key, value] of Object.entries(updates)) {
       if (!value || value === "all") {
@@ -114,7 +114,7 @@ function UomPageInner() {
       }
     }
     router.replace(`?${params.toString()}`, { scroll: false });
-  }
+  }, [searchParams, router]);
 
   useEffect(() => {
     const trimmed = debouncedSearch.trim() || null;
@@ -122,7 +122,7 @@ function UomPageInner() {
     if (trimmed !== current) {
       updateParams({ search: trimmed });
     }
-  }, [debouncedSearch]);
+  }, [debouncedSearch, updateParams, searchParams]);
 
   function handleSearchChange(value: string): void {
     setSearch(value);

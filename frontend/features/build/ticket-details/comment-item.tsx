@@ -16,7 +16,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Loader2, Pencil } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { SendIcon, LinkIcon, Trash2Icon, XIcon, CirclePlusIcon } from "@animateicons/react/lucide";
 import { resolveImageUrl } from "@/lib/utils";
 import { toast } from "sonner";

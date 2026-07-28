@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
-import { Plus, FileText, Users, LayoutGrid, Shield } from "lucide-react";
+import { Plus, FileText, LayoutGrid, Shield } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -28,7 +28,6 @@ import {
   useEnroll,
   useWaive,
   useInsuranceClaims,
-  useSubmitClaim,
   type BenefitPlan,
   type InsuranceClaim,
 } from "@/hooks/api/hr";

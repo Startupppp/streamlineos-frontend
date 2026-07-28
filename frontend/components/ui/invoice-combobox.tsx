@@ -24,10 +24,12 @@ export function InvoiceCombobox({
   const debouncedSearch = useDebouncedValue(search, 300);
 
   const { data, isFetching } = useInvoices({ limit: 100 });
-  const invoices = data?.items ?? [];
 
-  const numericLookup =
-    /^\d+$/.test(debouncedSearch.trim()) ? Number(debouncedSearch.trim()) : 0;
+  const invoices = useMemo(() => data?.items ?? [], [data]);
+
+  const numericLookup = /^\d+$/.test(debouncedSearch.trim())
+    ? Number(debouncedSearch.trim())
+    : 0;
   const { data: lookedUpInvoice } = useInvoice(numericLookup);
 
   const options = useMemo(() => {

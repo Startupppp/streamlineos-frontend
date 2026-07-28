@@ -22,7 +22,6 @@ import {
   useCommitImportJob,
   type HrImportEntity,
   type HrImportJob,
-  type CreateImportJobResult,
 } from "@/hooks/api/hr/import-export";
 
 interface ImportWizardSheetProps {

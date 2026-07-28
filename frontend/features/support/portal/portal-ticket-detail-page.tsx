@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { usePortalTicket } from "@/hooks/api/support/portal";
 import { PortalReplyComposer } from "./portal-reply-composer";
-import { STATUS_LABELS, STATUS_COLORS, PRIORITY_COLORS, formatCategoryLabel } from "./portal-ticket-constants";
+import { STATUS_LABELS, STATUS_COLORS, PRIORITY_COLORS } from "./portal-ticket-constants";
 
 function fileMimeIcon(mimeType: string) {
   if (mimeType.startsWith("image/")) return ImageIcon;

@@ -8,7 +8,6 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { cn } from "@/lib/utils";
 import { formatDealId } from "@/lib/format-utils";
 import { useCrmStages, resolveStage } from "@/hooks/api/crm/metadata";
 import { CrmStageBadge } from "@/features/crm/shared/metadata";

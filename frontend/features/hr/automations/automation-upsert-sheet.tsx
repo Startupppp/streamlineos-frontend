@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -113,7 +112,7 @@ function buildAction(type: string, configRaw: string): HrAutomationAction {
   }
 }
 
-function ActionConfigFields({ index, actionType }: { index: number; actionType: string }) {
+function ActionConfigFields({ index: _index, actionType }: { index: number; actionType: string }) {
   const placeholder: Record<string, string> = {
     create_task: '{"title":"Task title","dueInDays":3}',
     start_workflow: '{"workflowId":"wf_abc"}',

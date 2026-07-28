@@ -1,7 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { format } from "date-fns";
 import { ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";

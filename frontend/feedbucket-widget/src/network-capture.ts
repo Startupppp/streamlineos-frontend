@@ -33,9 +33,6 @@ function truncateUrl(url: string): string {
   return url.length > MAX_URL_LENGTH ? url.slice(0, MAX_URL_LENGTH) : url;
 }
 
-function scrubSensitiveHeaders(headers: Headers | Record<string, string> | undefined): void {
-}
-
 function patchXhr(): void {
   const OrigXHR = window.XMLHttpRequest;
 

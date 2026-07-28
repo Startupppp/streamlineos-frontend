@@ -4,7 +4,6 @@ import { useRef, useState, type ChangeEvent } from "react";
 import {
   FileText,
   ImageIcon,
-  Loader2,
   Paperclip,
   RefreshCw,
   Sparkles,
@@ -20,7 +19,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { DownloadIcon, Trash2Icon } from "@animateicons/react/lucide";

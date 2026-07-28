@@ -23,7 +23,6 @@ import {
   PmPageShell,
   PmPanel,
   PmSection,
-  PM_PANEL,
   PM_ROW,
 } from "@/features/build/shared/pm-chrome";
 import { TruncatedText } from "@/components/ui/truncated-text";

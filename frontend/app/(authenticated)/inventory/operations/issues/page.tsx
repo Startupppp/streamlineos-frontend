@@ -8,7 +8,6 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { ErrorState } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { useStockTransactions } from "@/hooks/api/inventory/stock";
 import type { StockTransaction } from "@/hooks/api/inventory/stock";

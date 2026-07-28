@@ -2,7 +2,6 @@
 
 import { forwardRef } from "react";
 import { Check, Tag } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import type { CouponValidationResult } from "@/hooks/api/subscription";

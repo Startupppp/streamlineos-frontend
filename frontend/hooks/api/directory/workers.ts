@@ -103,7 +103,7 @@ export function useUpdateEngagement() {
     mutationKey: ["directory", "engagements", "update"],
     mutationFn: ({
       workerEngagementId,
-      workerId,
+      workerId: _workerId,
       ...input
     }: UpdateEngagementInput & { workerEngagementId: string; workerId: string }) =>
       apiClient.patch<WorkerEngagement>(

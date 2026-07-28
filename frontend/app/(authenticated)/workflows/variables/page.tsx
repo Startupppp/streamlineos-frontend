@@ -8,7 +8,6 @@ import { Variable, Link2 } from "lucide-react";
 import { Trash2Icon } from "@animateicons/react/lucide";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";

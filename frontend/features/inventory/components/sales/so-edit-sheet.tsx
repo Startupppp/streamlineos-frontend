@@ -44,7 +44,7 @@ export function SoEditSheet({ open, onOpenChange, soId, so }: SoEditSheetProps) 
   const variantsQuery = useProductVariants({ activeOnly: true });
   const updateMutation = useUpdateSalesOrder();
 
-  const variants = variantsQuery.data ?? [];
+  const variants = useMemo(() => variantsQuery.data ?? [], [variantsQuery.data]);
 
   const orderLineVariants = useMemo(
     () => variants.map((v) => ({

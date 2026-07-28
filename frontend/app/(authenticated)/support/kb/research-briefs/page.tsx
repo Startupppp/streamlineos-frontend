@@ -2,7 +2,6 @@
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { LoadingState } from "@/components/shared/loading-state";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { KbResearchBriefForm } from "@/features/kb/components/kb-research-brief-form";

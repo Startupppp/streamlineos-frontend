@@ -263,7 +263,7 @@ export function GlobalAskOs() {
       sendMessage,
       qc,
       activeConversationId,
-      createConversation.mutateAsync,
+      createConversation,
       selectedPersona,
     ],
   );
@@ -395,7 +395,6 @@ export function GlobalAskOs() {
       className={anchorClassName}
       role="complementary"
       aria-label="Ask OS assistant"
-      aria-modal={isMobile && open ? true : undefined}
     >
       <AnimatePresence initial={false}>
         {open && (

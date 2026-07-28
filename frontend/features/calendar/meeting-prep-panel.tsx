@@ -3,7 +3,6 @@
 import { useState, useCallback } from "react";
 import { Sparkles, CalendarDays, ClipboardList, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";

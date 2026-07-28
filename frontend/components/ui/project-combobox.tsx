@@ -24,7 +24,7 @@ export function ProjectCombobox({
   const debouncedSearch = useDebouncedValue(search, 300);
 
   const { data, isFetching } = useProjects({ limit: 100 });
-  const projects = data?.data ?? [];
+  const projects = useMemo(() => data?.data ?? [], [data]);
 
   const numericLookup =
     /^\d+$/.test(debouncedSearch.trim()) ? Number(debouncedSearch.trim()) : 0;

@@ -1,7 +1,6 @@
 ﻿"use client";
 
 import { memo, useState, useMemo, useCallback } from "react";
-import { Loader2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";

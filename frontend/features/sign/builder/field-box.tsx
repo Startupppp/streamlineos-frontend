@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import type { SignField } from "@/types/sign";
 import { fieldTypeMeta } from "./field-types";
@@ -15,9 +15,29 @@ interface FieldBoxProps {
   onResize: (width: number, height: number) => void;
 }
 
-export function FieldBox({ field, scale, color, isSelected, onSelect, onMove, onResize }: FieldBoxProps) {
-  const dragStart = useRef<{ mouseX: number; mouseY: number; fieldX: number; fieldY: number } | null>(null);
-  const resizeStart = useRef<{ mouseX: number; mouseY: number; width: number; height: number } | null>(null);
+export function FieldBox({
+  field,
+  scale,
+  color,
+  isSelected,
+  onSelect,
+  onMove,
+  onResize,
+}: FieldBoxProps) {
+  const dragStart = useRef<{
+    mouseX: number;
+    mouseY: number;
+    fieldX: number;
+    fieldY: number;
+  } | null>(null);
+  const resizeStart = useRef<{
+    mouseX: number;
+    mouseY: number;
+    width: number;
+    height: number;
+  } | null>(null);
+  const handleDragEndRef = useRef<() => void>(() => { });
+  const handleResizeEndRef = useRef<() => void>(() => { });
   const meta = fieldTypeMeta(field.fieldType);
 
   const handleDragMove = useCallback(
@@ -25,7 +45,10 @@ export function FieldBox({ field, scale, color, isSelected, onSelect, onMove, on
       if (!dragStart.current) return;
       const dxPt = (e.clientX - dragStart.current.mouseX) / scale;
       const dyPt = (e.clientY - dragStart.current.mouseY) / scale;
-      onMove(Math.max(0, dragStart.current.fieldX + dxPt), Math.max(0, dragStart.current.fieldY + dyPt));
+      onMove(
+        Math.max(0, dragStart.current.fieldX + dxPt),
+        Math.max(0, dragStart.current.fieldY + dyPt),
+      );
     },
     [scale, onMove],
   );
@@ -33,13 +56,22 @@ export function FieldBox({ field, scale, color, isSelected, onSelect, onMove, on
   const handleDragEnd = useCallback(() => {
     dragStart.current = null;
     window.removeEventListener("mousemove", handleDragMove);
-    window.removeEventListener("mouseup", handleDragEnd);
+    window.removeEventListener("mouseup", handleDragEndRef.current);
   }, [handleDragMove]);
+
+  useLayoutEffect(() => {
+    handleDragEndRef.current = handleDragEnd;
+  }, [handleDragEnd]);
 
   function handleDragStart(e: React.MouseEvent) {
     e.stopPropagation();
     onSelect();
-    dragStart.current = { mouseX: e.clientX, mouseY: e.clientY, fieldX: field.x, fieldY: field.y };
+    dragStart.current = {
+      mouseX: e.clientX,
+      mouseY: e.clientY,
+      fieldX: field.x,
+      fieldY: field.y,
+    };
     window.addEventListener("mousemove", handleDragMove);
     window.addEventListener("mouseup", handleDragEnd);
   }
@@ -49,7 +81,10 @@ export function FieldBox({ field, scale, color, isSelected, onSelect, onMove, on
       if (!resizeStart.current) return;
       const dxPt = (e.clientX - resizeStart.current.mouseX) / scale;
       const dyPt = (e.clientY - resizeStart.current.mouseY) / scale;
-      onResize(Math.max(16, resizeStart.current.width + dxPt), Math.max(16, resizeStart.current.height + dyPt));
+      onResize(
+        Math.max(16, resizeStart.current.width + dxPt),
+        Math.max(16, resizeStart.current.height + dyPt),
+      );
     },
     [scale, onResize],
   );
@@ -57,12 +92,21 @@ export function FieldBox({ field, scale, color, isSelected, onSelect, onMove, on
   const handleResizeEnd = useCallback(() => {
     resizeStart.current = null;
     window.removeEventListener("mousemove", handleResizeMove);
-    window.removeEventListener("mouseup", handleResizeEnd);
+    window.removeEventListener("mouseup", handleResizeEndRef.current);
   }, [handleResizeMove]);
+
+  useLayoutEffect(() => {
+    handleResizeEndRef.current = handleResizeEnd;
+  }, [handleResizeEnd]);
 
   function handleResizeStart(e: React.MouseEvent) {
     e.stopPropagation();
-    resizeStart.current = { mouseX: e.clientX, mouseY: e.clientY, width: field.width, height: field.height };
+    resizeStart.current = {
+      mouseX: e.clientX,
+      mouseY: e.clientY,
+      width: field.width,
+      height: field.height,
+    };
     window.addEventListener("mousemove", handleResizeMove);
     window.addEventListener("mouseup", handleResizeEnd);
   }

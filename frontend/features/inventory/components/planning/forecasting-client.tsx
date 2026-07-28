@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { ErrorState } from "@/components/shared";

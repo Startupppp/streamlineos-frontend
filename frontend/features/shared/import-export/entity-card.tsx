@@ -10,7 +10,6 @@ import {
 } from "lucide-react";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { UploadIcon, DownloadIcon } from "@animateicons/react/lucide";
-import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";

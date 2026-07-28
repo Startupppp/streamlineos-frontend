@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -45,19 +45,19 @@ export function OvertimeList({ canManage }: Props) {
     return map;
   }, [membersData]);
 
-  function handleApprove(id: number) {
+  const handleApprove = useCallback((id: number) => {
     approve.mutate(id, {
       onSuccess: () => toast.success("Overtime approved"),
       onError: (err) => toast.error(getErrorMessage(err)),
     });
-  }
+  }, [approve]);
 
-  function handleReject(id: number) {
+  const handleReject = useCallback((id: number) => {
     reject.mutate(id, {
       onSuccess: () => toast.success("Overtime rejected"),
       onError: (err) => toast.error(getErrorMessage(err)),
     });
-  }
+  }, [reject]);
 
   type OvertimeRequest = NonNullable<typeof requests>[number];
 
@@ -139,7 +139,7 @@ export function OvertimeList({ canManage }: Props) {
     }
 
     return cols;
-  }, [canManage, approve.isPending, reject.isPending, memberById]);
+  }, [canManage, approve.isPending, reject.isPending, memberById, handleApprove, handleReject]);
 
   return (
     <DataTable

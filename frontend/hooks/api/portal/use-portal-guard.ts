@@ -1,21 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { getPortalToken } from "@/lib/portal-api-client";
 
 export function usePortalGuard(): { isReady: boolean } {
   const router = useRouter();
-  const [isReady, setIsReady] = useState(false);
+  const token = useMemo(() => getPortalToken(), []);
 
   useEffect(() => {
-    const token = getPortalToken();
     if (!token) {
       router.replace("/portal/accept-invitation?reason=no_token");
-      return;
     }
-    setIsReady(true);
-  }, [router]);
+  }, [token, router]);
 
-  return { isReady };
+  return { isReady: !!token };
 }

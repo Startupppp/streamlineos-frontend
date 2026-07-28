@@ -11,7 +11,7 @@ interface RouteErrorBoundaryProps {
 }
 
 export function RouteErrorBoundary({
-  error,
+  error: _error,
   reset,
   title = "Something went wrong",
   fallbackMessage = "An unexpected error occurred. Please try again.",

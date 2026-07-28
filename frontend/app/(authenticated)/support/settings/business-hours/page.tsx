@@ -94,15 +94,14 @@ export default function BusinessHoursPage() {
 
   const count = businessHoursList?.length ?? 0;
 
-  function makeEditBhHandler(bh: BusinessHours) {
-    return function handleEditBh() { handleStartEdit(bh); };
-  }
-
-  function makeDeleteBhHandler(id: number) {
-    return function handleDeleteBh() { handleDeleteRequest(id); };
-  }
-
-  const columns = useMemo<DataTableColumn<BusinessHours>[]>(() => [
+  const columns = useMemo<DataTableColumn<BusinessHours>[]>(() => {
+    function makeEditBhHandler(bh: BusinessHours) {
+      return function handleEditBh() { handleStartEdit(bh); };
+    }
+    function makeDeleteBhHandler(id: number) {
+      return function handleDeleteBh() { handleDeleteRequest(id); };
+    }
+    return [
     {
       key: "name",
       header: "Name",
@@ -151,7 +150,8 @@ export default function BusinessHoursPage() {
         </div>
       ),
     },
-  ], [handleStartEdit, handleDeleteRequest]);
+    ];
+  }, [handleStartEdit, handleDeleteRequest]);
 
   return (
     <>

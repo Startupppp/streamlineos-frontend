@@ -2,7 +2,6 @@
 
 import { memo, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { XIcon } from "@animateicons/react/lucide";
 import {
   Select,

@@ -83,7 +83,7 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
   const { data: projectMembers = [] } = useProjectMembers(projectId);
   const { data: sprints = [] } = useSprints(projectId);
   const { data: boardTickets } = useProjectBoardTickets(projectId);
-  const tickets = boardTickets ?? [];
+  const tickets = useMemo(() => boardTickets ?? [], [boardTickets]);
 
   const activeSprint = useMemo(
     () => sprints.find((s) => s.status === "ACTIVE") ?? null,

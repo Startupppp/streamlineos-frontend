@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { DragDropContext, Droppable, type DropResult } from "@hello-pangea/dnd";
 import { Plus, Star } from "lucide-react";
@@ -47,9 +47,13 @@ export default function PipelinesPage() {
 
   const allPipelines = data?.pipelines ?? [];
   const selectedPipeline = allPipelines.find((p) => p.id === selectedPipelineId) ?? null;
-  const sortedStages = selectedPipeline
-    ? [...selectedPipeline.stages].sort((a, b) => a.sortOrder - b.sortOrder)
-    : [];
+  const sortedStages = useMemo(
+    () =>
+      selectedPipeline
+        ? [...selectedPipeline.stages].sort((a, b) => a.sortOrder - b.sortOrder)
+        : [],
+    [selectedPipeline],
+  );
 
   const handleSelectPipeline = useCallback((id: string) => setSelectedPipelineId(id), []);
 

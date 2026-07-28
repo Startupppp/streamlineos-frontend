@@ -109,7 +109,6 @@ export function BlogPostForm({
   const canUseAi = useCan("blog:ai:use");
   const coverImage = watch("coverImage");
   const currentContent = watch("content");
-  const currentTitle = watch("title");
   const currentExcerpt = watch("excerpt");
   const saving = createPost.isPending || updatePost.isPending;
 

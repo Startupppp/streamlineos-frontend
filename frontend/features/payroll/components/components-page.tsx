@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { toast } from "sonner";
@@ -51,11 +51,21 @@ export function ComponentsPageContent() {
 
   const debouncedSearch = useDebouncedValue(searchInput, 300);
 
+  const updateParams = useCallback((updates: Record<string, string>) => {
+    const params = new URLSearchParams(searchParams.toString());
+    for (const [k, v] of Object.entries(updates)) {
+      if (v) params.set(k, v);
+      else params.delete(k);
+    }
+    params.delete("page");
+    router.replace(`?${params.toString()}`, { scroll: false });
+  }, [router, searchParams]);
+
   useEffect(() => {
     const current = searchParams.get("search") ?? "";
     if (debouncedSearch === current) return;
     updateParams({ search: debouncedSearch });
-  }, [debouncedSearch]);
+  }, [debouncedSearch, searchParams, updateParams]);
 
   const { data, isLoading } = usePayrollComponents({
     search: debouncedSearch.trim() || undefined,
@@ -65,16 +75,6 @@ export function ComponentsPageContent() {
     page,
     pageSize: 20,
   });
-
-  function updateParams(updates: Record<string, string>) {
-    const params = new URLSearchParams(searchParams.toString());
-    for (const [k, v] of Object.entries(updates)) {
-      if (v) params.set(k, v);
-      else params.delete(k);
-    }
-    params.delete("page");
-    router.replace(`?${params.toString()}`, { scroll: false });
-  }
 
   function handleSearchChange(value: string) {
     setSearchInput(value);

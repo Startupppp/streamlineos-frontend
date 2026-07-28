@@ -19,7 +19,6 @@ import { useLeaveTypesAdmin } from "@/hooks/api/hr/leaves";
 import { LeaveTypesManager } from "@/features/hr/leaves/leave-types-manager";
 import { PolicyCard } from "@/features/hr/leave-policies/policy-card";
 import { PolicyFormSheet } from "@/features/hr/leave-policies/policy-form-sheet";
-import { emptyPolicyDefaults } from "@/features/hr/leave-policies/policy-schema";
 
 function LeavePoliciesEmptyState({ onCreateClick }: { onCreateClick: () => void }) {
   return (

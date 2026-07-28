@@ -714,3 +714,37 @@ Exit: old/new frontend versions work; UI gates match backend; portal principals 
 - Physical renaming of the established Organization tenant graph merely to change UI terminology.
 - Big-bang ID conversion or route/table rename without shadow columns, aliases, dual-read comparison, and consumer compatibility.
 - Big-bang rewrite without dual-read migration phases.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+user data has experienced or 20 years experienced are architect and product manager. 
+you should check the entire repo before and you get an assumption that this is a product where HRMS, CRM, product management, knowledge base, payroll, everything is there so in this one platform, 
+Now here is the problem
+1.  i feel org is not needed i am not sure you should think this at a scale and based on that you should decide it and also real work usage and also how multiple products working based on all these you should decide because one person can invites to multiple workspaces and also he has his own workspaces so i feel there is need of orgs 
+2. this platform can be created by anyone but that ownership can be transfered to the any one 
+example :- if the CEO says that HR you should get into this platform and you should workspace in this platform and you should add all the people, then at the end of the day, that HR should transfer that ownership to the CEO, so similar cases for inventory, similar cases for data as well. similarly for the CTO or else any other roles as well 
+3.  I feel present schemas are so messed because of AI based coding,  example:- products in project module and products in inventory are same AI but it actually two different things, but in reality there are two different modules so two different modules needed two different kind of schemas so that's a mistake and not just that there are so many like in fact team members in project management module and workspace module are different some people not every workspace member is a project member member so there are so many mistakes gonna happen so I want to redesign the schemas and also folders
+I feel like I have to it's better maintain module level schemas and common schemas wherein user schemas, workspaces, workspaces members and building and some are common to every module.
+4. suggest the best UI, UX, schemas and also role-based access and Here is my idea
+ I feel this pattern like for example HR or else admin or else owner, can able to add the employee, but only admin/owner can able to add the module level admins example project module admin and this admin having all the powers for that module along with the owner and admin, and module level admins call it as the module admin having the to add a multple teams, members, remove, multiple admins they can make in that module etc all  the rules similarly for the HRMS as well multiple hr's and under that HR having multiple HR's and some are recurriment etc and based on that RBAC impementing simlarly for the other modules as well like inventory etc and in the inventory there are like delivery, admin, ware house admin etc multiple level were there in that level, 
+but in the projects module you shuold provide a way for the clients to see the progress as well 
+
+5. you should think about all the possible edgecase and you should make the schemas such that it should scalable, maintainable, easy accessable, future proof, and easy extend and best, efficient, db queries, and can serve the future all kind of requirements, and also easily scalable and future proof
+ my another repo there is bad of storing the inivites in the org schema it is storing it in the array of invites format that is so bad every time update a invite it need to find org and then it should find the array of elements and then it should update it and it should again put into it so it is so bad instead maintain the invites in another seperate schema update is easy just fetch and update it 
+
+6. i want to go with the module level RBAC in that module admin can create multiple roles example in the HRMS admin of that module is the senior HR and other like Recuritment HR etc so this Recuritment HR is not responsible or able to approve the Leaves of the employee so on keeping this in the mind and many edgecase 
+so in the frontend there a page which is common to all the modules only that module admin's can able to access it and module admin can transfer that admin ownership as well and also this admin will create the role group name in that module admin will add what all the access he having and actions as well page in clicking it open the actions so he needs to select so that will be attached if he clicked on that page it is only the page view access only and while checking the permissions from the roles tab his role with that org and based on the role if he is module owner then access to all the acess similar admin and owner and admin is not having access is only changing the role of the owner and also multipe admin of org and multiple module level admins also and if that user is not admin to that module then you shold check the group and get all the list of access he having and based on that you should do 
+7. if it is better way of implementation like getting with the opensources repo's like keyclock etc if that is good let me know and you should do the research and let me know the best way of doing it 
+
+you don't need to write the code now you should come with the plan i will verify once 

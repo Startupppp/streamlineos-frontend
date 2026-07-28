@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -57,10 +57,13 @@ export function AccommodationsPageContent() {
     return map;
   }, [membersData]);
 
-  const resolveMemberName = (userId: string) => {
-    const member = memberById.get(userId);
-    return member ? getUserDisplayName(member) : userId;
-  };
+  const resolveMemberName = useCallback(
+    (userId: string) => {
+      const member = memberById.get(userId);
+      return member ? getUserDisplayName(member) : userId;
+    },
+    [memberById],
+  );
 
   const columns: DataTableColumn<AccommodationRequest>[] = useMemo(() => [
     {
@@ -97,7 +100,7 @@ export function AccommodationsPageContent() {
         </span>
       ),
     },
-  ], [memberById]);
+  ], [resolveMemberName]);
 
   return (
     <>

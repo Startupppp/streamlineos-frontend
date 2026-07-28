@@ -117,15 +117,14 @@ export default function SupportSlaPage() {
   const count = policies?.length ?? 0;
   const enabledCount = policies?.filter((p) => p.isEnabled).length ?? 0;
 
-  function makeEditHandler(policy: SlaPolicy) {
-    return function handleEdit() { handleStartEdit(policy); };
-  }
-
-  function makeDeleteHandler(id: number) {
-    return function handleDelete() { handleDeleteRequest(id); };
-  }
-
-  const columns = useMemo<DataTableColumn<SlaPolicy>[]>(() => [
+  const columns = useMemo<DataTableColumn<SlaPolicy>[]>(() => {
+    function makeEditHandler(policy: SlaPolicy) {
+      return function handleEdit() { handleStartEdit(policy); };
+    }
+    function makeDeleteHandler(id: number) {
+      return function handleDelete() { handleDeleteRequest(id); };
+    }
+    return [
     {
       key: "name",
       header: "Name",
@@ -204,7 +203,8 @@ export default function SupportSlaPage() {
         </div>
       ),
     },
-  ], [businessHoursNameById, handleStartEdit, handleDeleteRequest]);
+    ];
+  }, [businessHoursNameById, handleStartEdit, handleDeleteRequest]);
 
   return (
     <>

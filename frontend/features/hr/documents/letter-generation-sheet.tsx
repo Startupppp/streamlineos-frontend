@@ -66,6 +66,16 @@ export function LetterGenerationSheet({ open, onOpenChange, employees, onSaved }
     );
   }, [templateId, employeeId, extraContext, renderLetter]);
 
+  const handleClose = useCallback((open: boolean) => {
+    if (!open) {
+      setEmployeeId("");
+      setTemplateId("");
+      setExtraContext({});
+      setPreviewHtml(null);
+    }
+    onOpenChange(open);
+  }, [onOpenChange]);
+
   const handleSave = useCallback(() => {
     if (!previewHtml || !templateId) return;
     saveLetter.mutate(
@@ -85,7 +95,7 @@ export function LetterGenerationSheet({ open, onOpenChange, employees, onSaved }
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [previewHtml, templateId, employeeId, extraContext, previewTemplateVersion, saveLetter, onSaved]);
+  }, [previewHtml, templateId, employeeId, extraContext, previewTemplateVersion, saveLetter, onSaved, handleClose]);
 
   const handleAddExtra = useCallback(() => {
     if (!extraKey.trim()) return;
@@ -93,16 +103,6 @@ export function LetterGenerationSheet({ open, onOpenChange, employees, onSaved }
     setExtraKey("");
     setExtraVal("");
   }, [extraKey, extraVal]);
-
-  const handleClose = useCallback((open: boolean) => {
-    if (!open) {
-      setEmployeeId("");
-      setTemplateId("");
-      setExtraContext({});
-      setPreviewHtml(null);
-    }
-    onOpenChange(open);
-  }, [onOpenChange]);
 
   const handleExtraKeyChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setExtraKey(e.target.value), []);
   const handleExtraValChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setExtraVal(e.target.value), []);

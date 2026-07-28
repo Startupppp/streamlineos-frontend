@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -74,10 +74,13 @@ export function IdentityPageContent() {
     return map;
   }, [membersData]);
 
-  const resolveMemberName = (userId: string) => {
-    const member = memberById.get(userId);
-    return member ? getUserDisplayName(member) : userId;
-  };
+  const resolveMemberName = useCallback(
+    (userId: string) => {
+      const member = memberById.get(userId);
+      return member ? getUserDisplayName(member) : userId;
+    },
+    [memberById],
+  );
 
   const provisioningColumns: DataTableColumn<AccessProvisioningRecord>[] = useMemo(() => [
     {
@@ -126,7 +129,7 @@ export function IdentityPageContent() {
         </span>
       ),
     },
-  ], [memberById]);
+  ], [resolveMemberName]);
 
   const templateColumns: DataTableColumn<ProvisioningTemplate>[] = [
     {

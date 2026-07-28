@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { Check, ChevronsUpDown, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -48,6 +48,7 @@ export function AnnouncementTargetPicker({
   disabled,
 }: AnnouncementTargetPickerProps) {
   const [open, setOpen] = useState(false);
+  const errorId = useId();
 
   const selected = useMemo(
     () => options.filter((o) => value.includes(o.value)),
@@ -74,7 +75,7 @@ export function AnnouncementTargetPicker({
           <button
             type="button"
             disabled={disabled}
-            aria-invalid={Boolean(error)}
+            aria-describedby={error ? errorId : undefined}
             className={cn(
               "flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-3 text-left text-sm transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
               error && "border-destructive",
@@ -141,7 +142,7 @@ export function AnnouncementTargetPicker({
         </div>
       )}
 
-      {error && <p className="text-xs text-destructive">{error}</p>}
+      {error && <p id={errorId} className="text-xs text-destructive">{error}</p>}
     </div>
   );
 }

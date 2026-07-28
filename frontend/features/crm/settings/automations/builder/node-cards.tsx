@@ -4,7 +4,6 @@ import { memo, useCallback } from "react";
 import { GripVertical } from "lucide-react";
 import { XIcon } from "@animateicons/react/lucide";
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

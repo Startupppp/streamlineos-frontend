@@ -123,7 +123,7 @@ export function useUpdateContact() {
     mutationKey: ["party", "contacts", "update"],
     mutationFn: ({
       partyContactId,
-      partyId,
+      partyId: _partyId,
       ...input
     }: UpdateContactInput & { partyContactId: string; partyId: string }) =>
       apiClient.patch<PartyContact>(`/party/contacts/${partyContactId}`, input),

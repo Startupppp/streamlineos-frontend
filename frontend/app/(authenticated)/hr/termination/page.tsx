@@ -27,7 +27,6 @@ import {
   useHrEmployees,
   type Termination,
   type TerminationStatus,
-  unwrapEmployees,
 } from "@/hooks/api/hr";
 import type { Employee } from "@/types/hr";
 
@@ -57,7 +56,7 @@ export default function TerminationPage() {
     page,
     status: statusFilter === "ALL" ? undefined : statusFilter,
   });
-  const terminations = terminationsData?.data ?? [];
+  const terminations = useMemo(() => terminationsData?.data ?? [], [terminationsData]);
   const { data: employeesData } = useHrEmployees({ limit: 100 });
   const createTermination = useCreateTermination();
   const submitTermination = useSubmitTermination();

@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Loader2, ChevronDown, BookOpen, ExternalLink, FilePlus } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ChevronDown, BookOpen, ExternalLink, FilePlus } from "lucide-react";
 import { LoadingButton } from "@/components/ui/loading-button";
 import {
   Select,

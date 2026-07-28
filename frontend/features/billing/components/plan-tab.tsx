@@ -108,9 +108,9 @@ export function PlanTab() {
     void refetchPlans();
   }
 
-  function planLabel(plan: SubscriptionPlan): string {
+  const planLabel = useCallback((plan: SubscriptionPlan): string => {
     return planConfigById[plan]?.label ?? plan;
-  }
+  }, [planConfigById]);
 
   function handleSetMonthly() {
     setBillingCycle("monthly");
@@ -188,7 +188,7 @@ export function PlanTab() {
         setUpgradingPlan(null);
       }
     },
-    [data?.isConfigured, createOrder, verifySubscription, session, billingCycle, appliedCoupon, planConfigById],
+    [data?.isConfigured, createOrder, verifySubscription, session, billingCycle, appliedCoupon, planLabel],
   );
 
   const [now] = useState(Date.now);

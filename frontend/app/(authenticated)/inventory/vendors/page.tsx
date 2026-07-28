@@ -266,7 +266,7 @@ export default function VendorsListPage() {
     startTransition(() => {
       router.replace(`?${params.toString()}`, { scroll: false });
     });
-  }, [debouncedSearch]);
+  }, [debouncedSearch, router, searchParams]);
 
   return (
     <PageWrapper

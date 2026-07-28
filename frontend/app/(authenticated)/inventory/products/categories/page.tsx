@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Pencil,
@@ -165,7 +165,7 @@ function CategoriesPageInner() {
 
   const categoryNameById = new Map(categories.map((cat) => [cat.id, cat.name]));
 
-  function updateParams(updates: Record<string, string | null>): void {
+  const updateParams = useCallback((updates: Record<string, string | null>): void => {
     const params = new URLSearchParams(searchParams.toString());
     for (const [key, value] of Object.entries(updates)) {
       if (!value || value === "all") {
@@ -175,7 +175,7 @@ function CategoriesPageInner() {
       }
     }
     router.replace(`?${params.toString()}`, { scroll: false });
-  }
+  }, [searchParams, router]);
 
   function handleSearchChange(value: string): void {
     setSearchInput(value);
@@ -187,7 +187,7 @@ function CategoriesPageInner() {
     if (trimmed !== current) {
       updateParams({ search: trimmed });
     }
-  }, [debouncedSearch]);
+  }, [debouncedSearch, updateParams, searchParams]);
 
   function handleStatusChange(value: string): void {
     updateParams({ status: value });

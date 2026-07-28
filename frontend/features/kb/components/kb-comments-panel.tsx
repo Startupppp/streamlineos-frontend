@@ -2,9 +2,8 @@
 
 import { useState, type ChangeEvent } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { Loader2, MessagesSquare, Send } from "lucide-react";
+import { MessagesSquare, Send } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Trash2Icon } from "@animateicons/react/lucide";

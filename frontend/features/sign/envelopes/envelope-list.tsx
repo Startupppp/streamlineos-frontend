@@ -25,7 +25,6 @@ import { CreateEnvelopeDialog } from "../components/create-envelope-dialog";
 import { EditEnvelopeSheet } from "../components/edit-envelope-sheet";
 import type { SignEnvelope } from "@/types/sign";
 import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
-import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useCan } from "@/hooks/api/access";
 

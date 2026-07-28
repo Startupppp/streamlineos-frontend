@@ -106,7 +106,7 @@ export default function WarehousesPage() {
     const current = searchParams.get("q") ?? undefined;
     const next = debouncedSearch || undefined;
     if (next !== current) setParam("q", next);
-  }, [debouncedSearch, setParam]);
+  }, [debouncedSearch, setParam, searchParams]);
 
   const handleStatusChange = useCallback(
     (value: string) => setParam("status", value),

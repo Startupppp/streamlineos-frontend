@@ -43,7 +43,7 @@ export function PoEditSheet({ open, onOpenChange, po }: PoEditSheetProps) {
   const variantsQuery = useProductVariants({ activeOnly: true });
   const updateMutation = useUpdatePurchaseOrder(po.id);
 
-  const variants = variantsQuery.data ?? [];
+  const variants = useMemo(() => variantsQuery.data ?? [], [variantsQuery.data]);
 
   const orderLineVariants = useMemo(
     () => variants.map((v) => ({

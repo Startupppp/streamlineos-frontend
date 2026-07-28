@@ -10,7 +10,6 @@ import {
 } from "lucide-react";
 import { EllipsisIcon, ChevronDownIcon, ChevronRightIcon, PlusIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

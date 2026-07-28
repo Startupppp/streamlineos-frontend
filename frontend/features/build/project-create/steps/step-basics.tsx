@@ -69,7 +69,7 @@ export const StepBasics = forwardRef<BasicsHandle, StepSharedProps>(
   function StepBasicsRender({ draft, updateDraft }, ref) {
     const { data: membersData } = useOrgMembers(1, 100);
     const { data: clients } = useSimpleClientsList();
-    const members = membersData?.data ?? [];
+    const members = useMemo(() => membersData?.data ?? [], [membersData]);
     const clientList = clients ?? [];
 
     const [managerOpen, setManagerOpen] = useState(false);

@@ -3,6 +3,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type CSSProperties,
@@ -143,7 +144,9 @@ export function useMobileShellFabPosition(
   const suppressClickRef = useRef(false);
   const dragRef = useRef<DragSession | null>(null);
   const onTapRef = useRef(options.onTap);
-  onTapRef.current = options.onTap;
+  useLayoutEffect(() => {
+    onTapRef.current = options.onTap;
+  });
   const bottomObstructionPx = options.bottomObstructionPx ?? 0;
 
   useEffect(() => {

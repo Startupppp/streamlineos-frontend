@@ -1123,7 +1123,7 @@ Fifteen agents, exclusive file ownership, typechecks deferred to the end.
 
 ### Opened by this wave
 
-- [ ] **W-01** 🔴 `OrgMembershipService.updateMemberRole` writes the per-org role to the **global**
+- [x] **W-01** 🔴 `OrgMembershipService.updateMemberRole` writes the per-org role to the **global**
       `users.role` column inside the same transaction. A user who belongs to two orgs has their role in
       org B silently rewritten when an admin changes it in org A. `users.role` is not read for
       authorization (that is `role_assignments`) but ~20 services read it for **assignment routing** —
@@ -1133,8 +1133,29 @@ Fifteen agents, exclusive file ownership, typechecks deferred to the end.
       `/hr/exit` (was 500), `/hr/recruitment/talent-pools/:id/members` (was 500), `/hr/automations/runs`
       (was 200), `/automations/rules` (was uncapped). Rows beyond 100 are now invisible rather than slow.
       Needs the `{ data, pagination }` envelope plus `TablePagination` wiring per §14.
-- [ ] **W-03** `SoLifecycleService.confirmSo` swallows auto-reserve failures with a bare `catch { void 0; }`.
+- [x] **W-03** `SoLifecycleService.confirmSo` swallows auto-reserve failures with a bare `catch { void 0; }`.
       Confirm must survive a reserve failure, but the failure needs a warning log.
 - [ ] **W-04** Two ownership-transfer paths coexist: the synchronous `org-ownership.service.transferOwnership`
       (no recipient consent) and the `modules/ownership` initiate/accept handshake. The synchronous path
       predates the handshake and should be retired or gated — a product decision.
+
+### Verification pass
+
+- [x] **W-05** 🔴 Making `journal_lines.org_id` NOT NULL immediately caught a **live tenant hole** the
+      typechecker had been unable to see: `AccountingJournalPostingService` (`journal-posting.service.ts:276`)
+      inserted every journal line with **no `org_id` at all**. Every line written through the central posting
+      path — invoices, bills, payroll, FX — was tenantless. Fixed by adding `orgId: draft.orgId` to the
+      line rows. This is the strongest argument for the NOT NULL: the constraint found the bug, not the audit.
+- [x] **W-01** `users.role` global write removed from both `updateMemberRole` writers; all 21 read sites
+      repointed to `organization_members.role` scoped by `org_id`. The column now has exactly one writer
+      (new-user INSERT at invite acceptance, where the user belongs to one org) and no routing reader.
+      Dropping the column is a later migration.
+- [x] **W-03** `SoLifecycleService.confirmSo` auto-reserve failure now logs a warning with SO id + org id.
+- [x] Backend `pnpm typecheck` 0 errors; frontend `pnpm type-check` 0 errors.
+- [x] `pnpm db:bootstrap` → REACHED_HEAD 79/79 on the live Neon branch. Verified in-database:
+      `journal_lines.org_id` NOT NULL, 7 dimension indexes, composite FK `fk_jl_org_entry`, 14 trigram
+      indexes, the notifications partial index, `uniq_payroll_bank_batches_org_idempotency_key` replacing
+      the global one, and both new idempotency lease columns.
+
+- [ ] **W-06** Run `pnpm install` in both packages to actually prune the npm dependencies removed this
+      session — the manifests are updated but the lockfiles/`node_modules` are not.

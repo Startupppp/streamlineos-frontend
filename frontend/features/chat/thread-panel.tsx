@@ -98,7 +98,7 @@ const ThreadCloseButton = React.forwardRef<
 const ThreadSendButton = React.forwardRef<
   HTMLButtonElement,
   React.ButtonHTMLAttributes<HTMLButtonElement> & { isPending: boolean; hasInput: boolean }
->(function ThreadSendButton({ className, isPending, hasInput, ...props }, ref) {
+>(function ThreadSendButton({ className, isPending, hasInput: _hasInput, ...props }, ref) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
     <button ref={ref} {...hoverHandlers} className={className} {...props}>
