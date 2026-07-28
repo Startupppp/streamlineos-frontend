@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -43,6 +43,8 @@ import { AlertTriangle } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { StateIllustration } from "@/components/illustrations";
 import { useCan } from "@/hooks/api/access";
+import { useOrgMembers } from "@/hooks/api/organization";
+import { getUserDisplayName, type NamedUser } from "@/features/build/shared/resolve-user-name";
 import {
   useUnionMemberships,
   useCollectiveAgreements,
@@ -94,6 +96,15 @@ export function LaborTabs() {
   const { data: agreements, isLoading: agreementsLoading } = useCollectiveAgreements({ page: agreementPage, limit: 20 });
   const { data: cases, isLoading: casesLoading } = useLaborCases({ page: casePage, limit: 20 });
   const { data: expiring } = useExpiringAgreements(30);
+  const { data: membersData } = useOrgMembers(1, 200);
+
+  const memberById = useMemo(() => {
+    const map = new Map<string, NamedUser>();
+    for (const member of membersData?.data ?? []) {
+      map.set(member.userId, { name: member.name, email: member.email });
+    }
+    return map;
+  }, [membersData]);
 
   const createMembership = useCreateUnionMembership();
   const createAgreement = useCreateCollectiveAgreement();
@@ -137,7 +148,7 @@ export function LaborTabs() {
   }
 
   const membershipColumns: DataTableColumn<UnionMembership>[] = [
-    { key: "userId", header: "User", cell: (r) => <span className="text-sm">{r.userId}</span> },
+    { key: "userId", header: "User", cell: (r) => <span className="text-sm">{getUserDisplayName(memberById.get(r.userId))}</span> },
     { key: "unionName", header: "Union", cell: (r) => <span className="text-sm">{r.unionName}</span> },
     { key: "memberSince", header: "Since", cell: (r) => <span className="text-sm text-muted-foreground">{new Date(r.memberSince).toLocaleDateString()}</span> },
     { key: "status", header: "Status", cell: (r) => <Badge variant={r.status === "active" ? "default" : "secondary"}>{r.status}</Badge> },

@@ -8,6 +8,8 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/api-client";
 import { useShiftSwaps, useUpdateSwapStatus } from "@/hooks/api/hr/shifts";
+import { useOrgMembers } from "@/hooks/api/organization";
+import { getUserDisplayName, type NamedUser } from "@/features/build/shared/resolve-user-name";
 
 interface Props {
   canManage: boolean;
@@ -22,6 +24,15 @@ const STATUS_VARIANTS: Record<string, "default" | "secondary" | "destructive" | 
 export function ShiftSwapsTab({ canManage }: Props) {
   const { data: swaps, isLoading } = useShiftSwaps();
   const updateStatus = useUpdateSwapStatus();
+  const { data: membersData } = useOrgMembers(1, 200);
+
+  const memberById = useMemo(() => {
+    const map = new Map<string, NamedUser>();
+    for (const member of membersData?.data ?? []) {
+      map.set(member.userId, { name: member.name, email: member.email });
+    }
+    return map;
+  }, [membersData]);
 
   function handleApprove(id: number) {
     updateStatus.mutate({ id, status: "APPROVED" }, {
@@ -44,12 +55,12 @@ export function ShiftSwapsTab({ canManage }: Props) {
       {
         key: "requesterId",
         header: "Requester",
-        cell: (swap) => <span className="text-sm">{swap.requesterId}</span>,
+        cell: (swap) => <span className="text-sm">{getUserDisplayName(memberById.get(swap.requesterId))}</span>,
       },
       {
         key: "targetUserId",
         header: "Target Employee",
-        cell: (swap) => <span className="text-sm">{swap.targetUserId}</span>,
+        cell: (swap) => <span className="text-sm">{getUserDisplayName(memberById.get(swap.targetUserId))}</span>,
       },
       {
         key: "requestDate",
@@ -103,7 +114,7 @@ export function ShiftSwapsTab({ canManage }: Props) {
     }
 
     return cols;
-  }, [canManage, updateStatus.isPending]);
+  }, [canManage, updateStatus.isPending, memberById]);
 
   return (
     <DataTable

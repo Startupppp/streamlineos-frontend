@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 export interface AuditLogRow {
   id: number;
@@ -42,6 +43,7 @@ export const useAuditLogs = (
     "queryKey" | "queryFn"
   >
 ) => {
+  const canView = useCan("audit-log:read");
   return useQuery<AuditLogListResponse, Error>({
     queryKey: queryKeys.auditLog.list(filters as Record<string, unknown>),
     queryFn: () =>
@@ -53,28 +55,34 @@ export const useAuditLogs = (
         ...(filters?.dateFrom ? { dateFrom: filters.dateFrom } : {}),
         ...(filters?.dateTo ? { dateTo: filters.dateTo } : {}),
       }),
+    staleTime: 30_000,
     ...options,
+    enabled: canView && (options?.enabled ?? true),
   });
 };
 
 export const useAuditLogActions = (
   options?: Omit<UseQueryOptions<string[], Error>, "queryKey" | "queryFn">
 ) => {
+  const canView = useCan("audit-log:read");
   return useQuery<string[], Error>({
     queryKey: queryKeys.auditLog.actions(),
     queryFn: () => apiClient.get<string[]>("/audit-log/actions"),
     staleTime: 10 * 60 * 1000,
     ...options,
+    enabled: canView && (options?.enabled ?? true),
   });
 };
 
 export const useAuditLogTargetTypes = (
   options?: Omit<UseQueryOptions<string[], Error>, "queryKey" | "queryFn">
 ) => {
+  const canView = useCan("audit-log:read");
   return useQuery<string[], Error>({
     queryKey: queryKeys.auditLog.targetTypes(),
     queryFn: () => apiClient.get<string[]>("/audit-log/target-types"),
     staleTime: 10 * 60 * 1000,
     ...options,
+    enabled: canView && (options?.enabled ?? true),
   });
 };

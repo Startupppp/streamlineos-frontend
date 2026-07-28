@@ -29,6 +29,8 @@ import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { usePayrollRuns } from "@/hooks/api/payroll";
 import { useRunPublications, usePublishPayslips, downloadPayslipPdf } from "@/hooks/api/payroll";
+import { useOrgMembers } from "@/hooks/api/organization";
+import { getUserDisplayName, type NamedUser } from "@/features/build/shared/resolve-user-name";
 import type { PayslipPublication, PublicationStatus } from "@/types/payroll";
 import type { PayrollRunStatus } from "@/types/payroll/runs";
 import { formatMonth } from "@/features/payroll/shared";
@@ -120,6 +122,15 @@ export function PublicationsTab({ canManage }: PublicationsTabProps) {
   const selectedRun = eligibleRuns.find((r) => r.id === activeRunId);
 
   const { data: publications, isLoading: pubsLoading } = useRunPublications(activeRunId);
+  const { data: membersData } = useOrgMembers(1, 200);
+
+  const memberById = useMemo(() => {
+    const map = new Map<string, NamedUser>();
+    for (const member of membersData?.data ?? []) {
+      map.set(member.userId, { name: member.name, email: member.email });
+    }
+    return map;
+  }, [membersData]);
 
   function handleRunChange(value: string) {
     setSelectedRunId(Number(value));
@@ -149,7 +160,7 @@ export function PublicationsTab({ canManage }: PublicationsTabProps) {
       {
         key: "userId",
         header: "Employee",
-        cell: (row) => <span className="font-mono text-[11px]">{row.userId}</span>,
+        cell: (row) => <span className="text-[11px]">{getUserDisplayName(memberById.get(row.userId))}</span>,
       },
       {
         key: "status",
@@ -203,7 +214,7 @@ export function PublicationsTab({ canManage }: PublicationsTabProps) {
         },
       },
     ],
-    [downloadingIds],
+    [downloadingIds, memberById],
   );
 
   const canPublish = canManage && selectedRun?.status === "PAID";

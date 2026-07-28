@@ -113,10 +113,11 @@ Architecture · Database · API · Cache · Backend · Frontend · UI · UX · S
 **File size (soft cap — split by responsibility past it):**
 - **Target ≤300 lines, hard-review at 500.** Over 500 → split into smaller components/hooks/services unless the file is one of these legitimate exceptions:
   - generated files (Drizzle migrations, generated types/clients),
-  - the RBAC permission catalog / role-templates constants,
   - shadcn/ui primitives you haven't modified,
   - `*.d.ts` declaration files.
 - Splitting must follow separation of concerns — never split a cohesive unit just to hit a number.
+- **Permission catalogs are folders, not files (living rule, 2026-07-27):** the RBAC permission catalog is NO LONGER a size exception. Both repos keep it as a directory of one file per business module behind a single barrel — backend `modules/rbac/permissions/` (`hr.ts`, `crm.ts`, `build.ts`, … + `role-defaults.ts` + `index.ts`), frontend `lib/rbac/permissions/`. Never reintroduce a single monolithic `permissions.constants.ts`. Adding a module's keys means touching that module's file only, which is also what module-scoped RBAC (`permissions.module_key`) needs. A single catalog artifact that is genuinely cohesive (one module's key list, `ROLE_DEFAULT_PERMISSIONS`) may exceed 500 lines rather than be split artificially.
+- **The two catalogs must not drift (living rule, 2026-07-27):** every key in the frontend `PermissionKey` union must exist in the backend catalog and vice versa. A frontend-only key silently fails `useCan` forever; a backend-only key can't be gated. Verified drift found 2026-07-27: `branch:read` existed only in the frontend; `hr:leaves:read`, `audit-log:read`, `branch:view` only in the backend. The durable fix is server-filtered permission discovery (the frontend stops shipping an authoritative catalog).
 
 ## 10. State, Effects & Data Fetching
 

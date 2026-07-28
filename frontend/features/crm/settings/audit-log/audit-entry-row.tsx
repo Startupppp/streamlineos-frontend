@@ -2,12 +2,11 @@
 
 import { useMemo } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow, format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { fadeUp } from "@/lib/motion-variants";
-import { apiClient } from "@/lib/api-client";
+import { useAuditLogs, type AuditLogRow } from "@/hooks/api/audit-log";
 
 export type AuditAction =
   | "created"
@@ -34,27 +33,6 @@ export type AuditEntityType =
   | "user"
   | "settings";
 
-export interface AuditLogEntry {
-  id: number;
-  action: string;
-  userId: string;
-  userName: string | null;
-  userEmail: string | null;
-  userImage: string | null;
-  targetId: string | null;
-  targetType: string | null;
-  metadata: Record<string, unknown> | null;
-  ipAddress: string | null;
-  createdAt: string;
-}
-
-export interface AuditLogsResponse {
-  logs: AuditLogEntry[];
-  total: number;
-  page: number;
-  totalPages: number;
-}
-
 export interface AuditFilters {
   targetType?: string;
   action?: string;
@@ -64,18 +42,7 @@ export interface AuditFilters {
   pageSize?: number;
 }
 
-export function useAuditLogs(filters: AuditFilters) {
-  return useQuery({
-    queryKey: ["crm-audit-logs", filters] as const,
-    queryFn: () => {
-      const params = Object.fromEntries(
-        Object.entries(filters).filter(([, v]) => v !== undefined),
-      );
-      return apiClient.get<AuditLogsResponse>("/audit-log", params);
-    },
-    staleTime: 30_000,
-  });
-}
+export { useAuditLogs };
 
 const ACTION_BADGE_COLORS: Record<string, string> = {
   created: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
@@ -124,7 +91,7 @@ function isChangeObject(val: unknown): val is { from: unknown; to: unknown } {
   return typeof val === "object" && val !== null && "from" in val;
 }
 
-export function buildDescription(entry: AuditLogEntry): string {
+export function buildDescription(entry: AuditLogRow): string {
   const entityLabel = entry.targetType
     ? (ENTITY_TYPE_LABELS[entry.targetType] ?? entry.targetType)
     : "entity";
@@ -176,7 +143,7 @@ const REDUCED_ITEM_VARIANTS = {
 };
 
 interface AuditEntryRowProps {
-  entry: AuditLogEntry;
+  entry: AuditLogRow;
   isLast: boolean;
 }
 
@@ -196,7 +163,7 @@ export function AuditEntryRow({ entry, isLast }: AuditEntryRowProps) {
     try {
       return formatDistanceToNow(new Date(entry.createdAt), { addSuffix: true });
     } catch {
-      return entry.createdAt;
+      return String(entry.createdAt);
     }
   }, [entry.createdAt]);
 
@@ -204,7 +171,7 @@ export function AuditEntryRow({ entry, isLast }: AuditEntryRowProps) {
     try {
       return format(new Date(entry.createdAt), "MMM d, yyyy h:mm a");
     } catch {
-      return entry.createdAt;
+      return String(entry.createdAt);
     }
   }, [entry.createdAt]);
 

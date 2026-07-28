@@ -157,10 +157,12 @@ export function useBillingPlans() {
 }
 
 export function useBillingSummary() {
+  const canViewBilling = useCan("settings:view");
   return useQuery<BillingSummary, Error>({
     queryKey: BILLING_SUMMARY_QUERY_KEY,
     queryFn: () => apiClient.get<BillingSummary>("/billing/summary"),
     staleTime: 5 * 60_000,
+    enabled: canViewBilling,
   });
 }
 
@@ -200,10 +202,12 @@ export interface SeatInfo {
 }
 
 export function useBillingProfile() {
+  const canManageSettings = useCan("settings:manage");
   return useQuery<BillingProfile>({
     queryKey: ["billing", "profile"],
     queryFn: () => apiClient.get<BillingProfile>("/billing/profile"),
     staleTime: 5 * 60 * 1000,
+    enabled: canManageSettings,
   });
 }
 
@@ -223,9 +227,11 @@ export function useUpdateBillingProfile() {
 }
 
 export function useSeatInfo() {
+  const canManageSettings = useCan("settings:manage");
   return useQuery<SeatInfo>({
     queryKey: ["billing", "seats"],
     queryFn: () => apiClient.get<SeatInfo>("/billing/seats"),
     staleTime: 2 * 60 * 1000,
+    enabled: canManageSettings,
   });
 }

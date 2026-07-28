@@ -234,7 +234,6 @@ export const SHARED_PERMISSIONS: Permission[] = [
   { name: "dm:social:read", resource: "dm:social", action: "read", description: "View social stats" },
   { name: "dm:social:create", resource: "dm:social", action: "create", description: "Enter social stats" },
   { name: "branch:create", resource: "branch", action: "create", description: "Create branches" },
-  { name: "branch:read", resource: "branch", action: "read", description: "View branches" },
   { name: "branch:update", resource: "branch", action: "update", description: "Update branches" },
   { name: "branch:manage_targets", resource: "branch", action: "manage_targets", description: "Manage branch targets" },
   { name: "chat:submit_lead", resource: "chat", action: "submit_lead", description: "Submit leads via chat" },

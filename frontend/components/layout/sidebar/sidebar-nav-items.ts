@@ -2289,21 +2289,9 @@ export const NAV_GROUPS: NavGroup[] = [
     requiredPermission: ["settings:rbac:manage", "settings:manage"],
     routes: [
       {
-        label: "Roles",
+        label: "Roles & Permissions",
         icon: Shield,
         href: "/settings/roles",
-        requiredPermission: "settings:rbac:manage",
-      },
-      {
-        label: "Permission Matrix",
-        icon: ShieldAlert,
-        href: "/settings/permissions",
-        requiredPermission: "settings:rbac:manage",
-      },
-      {
-        label: "Role Assignment",
-        icon: UserCheck,
-        href: "/settings/rbac",
         requiredPermission: "settings:rbac:manage",
       },
       {

@@ -19,7 +19,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { cn } from "@/lib/utils"
 import { TruncatedText } from "@/components/ui/truncated-text"
 import { useGetOrganizations, useSwitchOrg } from "@/hooks/common/auth-hooks"
-import { CreateWorkspaceDialog } from "@/features/workspace/create-workspace-dialog"
+import { CreateWorkspaceDialog } from "@/components/layout/header/create-workspace-dialog"
 
 interface WorkspaceSwitcherProps {
   variant?: "header" | "sidebar"

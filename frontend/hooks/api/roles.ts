@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type { Role } from "@/types/organization";
 import type {
   AssignRoleMemberInput,
@@ -16,11 +17,13 @@ import type {
 export const useRoles = (
   options?: Omit<UseQueryOptions<Role[], Error>, "queryKey" | "queryFn">
 ) => {
+  const canManage = useCan("settings:rbac:manage");
   return useQuery<Role[], Error>({
     queryKey: queryKeys.roles.list(),
     queryFn: () => apiClient.get<Role[]>("/roles"),
     staleTime: 30 * 60_000,
     ...options,
+    enabled: canManage && (options?.enabled ?? true),
   });
 };
 
@@ -213,11 +216,13 @@ export interface RolePermissionsMatrixEntry {
 export function useRolePermissionsMatrix(
   options?: Omit<UseQueryOptions<RolePermissionsMatrixEntry[], Error>, "queryKey" | "queryFn">
 ) {
+  const canManage = useCan("settings:rbac:manage");
   return useQuery<RolePermissionsMatrixEntry[], Error>({
     queryKey: queryKeys.roles.permissionsMatrix(),
     queryFn: () => apiClient.get<RolePermissionsMatrixEntry[]>("/roles/permissions/matrix"),
     staleTime: 5 * 60_000,
     ...options,
+    enabled: canManage && (options?.enabled ?? true),
   });
 }
 
@@ -233,11 +238,13 @@ interface RolesAnalytics {
 export function useRolesAnalytics(
   options?: Omit<UseQueryOptions<RolesAnalytics, Error>, "queryKey" | "queryFn">
 ) {
+  const canManage = useCan("settings:rbac:manage");
   return useQuery<RolesAnalytics, Error>({
     queryKey: queryKeys.roles.analytics(),
     queryFn: () => apiClient.get<RolesAnalytics>("/roles/analytics"),
     staleTime: 2 * 60_000,
     ...options,
+    enabled: canManage && (options?.enabled ?? true),
   });
 }
 

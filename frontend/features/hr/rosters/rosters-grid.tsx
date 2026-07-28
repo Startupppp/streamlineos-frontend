@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { ChevronDownIcon, ChevronUpIcon } from "@animateicons/react/lucide";
@@ -14,6 +14,8 @@ import { useRosters, useRosterEntries, usePublishRoster } from "@/hooks/api/hr/r
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/api-client";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { useOrgMembers } from "@/hooks/api/organization";
+import { getUserDisplayName, type NamedUser } from "@/features/build/shared/resolve-user-name";
 
 interface Props {
   canManage: boolean;
@@ -27,9 +29,10 @@ const STATUS_VARIANTS: Record<string, "default" | "secondary" | "outline"> = {
 interface RosterCardProps {
   roster: { id: number; name: string; weekStart: string; weekEnd: string; status: string };
   canManage: boolean;
+  memberById: Map<string, NamedUser>;
 }
 
-function RosterCard({ roster, canManage }: RosterCardProps) {
+function RosterCard({ roster, canManage, memberById }: RosterCardProps) {
   const [expanded, setExpanded] = useState(false);
   const { data: entries } = useRosterEntries(expanded ? roster.id : 0);
   const publishRoster = usePublishRoster();
@@ -89,7 +92,7 @@ function RosterCard({ roster, canManage }: RosterCardProps) {
                 <div className="space-y-1">
                   {entries.map((entry) => (
                     <div key={entry.id} className="flex items-center justify-between text-xs py-1.5 border-b border-border/50 last:border-0">
-                      <span className="text-muted-foreground">{entry.userId} — {entry.date}</span>
+                      <span className="text-muted-foreground">{getUserDisplayName(memberById.get(entry.userId))} — {entry.date}</span>
                       <span className="font-medium">
                         {entry.isDayOff ? (
                           <Badge variant="secondary" className="text-[10px]">Day Off</Badge>
@@ -111,6 +114,15 @@ function RosterCard({ roster, canManage }: RosterCardProps) {
 
 export function RostersGrid({ canManage }: Props) {
   const { data: rosters, isLoading } = useRosters();
+  const { data: membersData } = useOrgMembers(1, 200);
+
+  const memberById = useMemo(() => {
+    const map = new Map<string, NamedUser>();
+    for (const member of membersData?.data ?? []) {
+      map.set(member.userId, { name: member.name, email: member.email });
+    }
+    return map;
+  }, [membersData]);
 
   if (isLoading) {
     return (
@@ -136,7 +148,7 @@ export function RostersGrid({ canManage }: Props) {
   return (
     <div className="space-y-3">
       {rosters.map((roster) => (
-        <RosterCard key={roster.id} roster={roster} canManage={canManage} />
+        <RosterCard key={roster.id} roster={roster} canManage={canManage} memberById={memberById} />
       ))}
     </div>
   );

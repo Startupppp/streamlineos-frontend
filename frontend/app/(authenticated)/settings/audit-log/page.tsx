@@ -7,6 +7,7 @@ import { Activity, SlidersHorizontal } from "lucide-react";
 import { InfoIcon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
 import { ErrorState } from "@/components/shared/error-state";
+import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
@@ -246,6 +247,14 @@ const AUDIT_LOG_COLUMNS: DataTableColumn<AuditLogRow>[] = [
 ];
 
 export default function AuditLogPage() {
+  return (
+    <DashboardGate permission="audit-log:read">
+      <AuditLogContent />
+    </DashboardGate>
+  );
+}
+
+function AuditLogContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();

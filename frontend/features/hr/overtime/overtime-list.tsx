@@ -9,6 +9,8 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/api-client";
 import { useOvertimeRequests, useApproveOvertime, useRejectOvertime } from "@/hooks/api/hr/overtime";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { useOrgMembers } from "@/hooks/api/organization";
+import { getUserDisplayName, type NamedUser } from "@/features/build/shared/resolve-user-name";
 
 interface Props {
   canManage: boolean;
@@ -28,6 +30,15 @@ export function OvertimeList({ canManage }: Props) {
   const requests = data?.items;
   const approve = useApproveOvertime();
   const reject = useRejectOvertime();
+  const { data: membersData } = useOrgMembers(1, 200);
+
+  const memberById = useMemo(() => {
+    const map = new Map<string, NamedUser>();
+    for (const member of membersData?.data ?? []) {
+      map.set(member.userId, { name: member.name, email: member.email });
+    }
+    return map;
+  }, [membersData]);
 
   function handleApprove(id: number) {
     approve.mutate(id, {
@@ -50,7 +61,7 @@ export function OvertimeList({ canManage }: Props) {
       {
         key: "userId",
         header: "Employee",
-        cell: (req) => <span className="text-sm">{req.userId}</span>,
+        cell: (req) => <span className="text-sm">{getUserDisplayName(memberById.get(req.userId))}</span>,
       },
       {
         key: "date",
@@ -123,7 +134,7 @@ export function OvertimeList({ canManage }: Props) {
     }
 
     return cols;
-  }, [canManage, approve.isPending, reject.isPending]);
+  }, [canManage, approve.isPending, reject.isPending, memberById]);
 
   return (
     <DataTable

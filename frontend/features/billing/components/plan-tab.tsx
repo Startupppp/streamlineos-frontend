@@ -19,8 +19,8 @@ import {
   type CouponValidationResult,
   type PlanDefinition,
 } from "@/hooks/api/subscription";
-import { PlanCard } from "@/features/subscription/components/plan-card";
-import { CouponSection } from "@/features/subscription/components/coupon-section";
+import { PlanCard } from "@/features/billing/components/plan-card";
+import { CouponSection } from "@/features/billing/components/coupon-section";
 import { SeatsBlock } from "@/features/billing/components/seats-block";
 import { PlanUsageMeters } from "@/features/billing/components/plan-usage-meters";
 import { PRICING } from "@/lib/pricing";

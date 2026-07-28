@@ -32,7 +32,6 @@ export const INVENTORY_PERMISSIONS: Permission[] = [
   { name: "inventory:quality:read", resource: "inventory:quality", action: "read", description: "View quality inspections and holds" },
   { name: "inventory:quality:inspect", resource: "inventory:quality", action: "inspect", description: "Create and conduct quality inspections" },
   { name: "inventory:quality:release", resource: "inventory:quality", action: "release", description: "Release quality holds" },
-  { name: "inventory:quality:scrap", resource: "inventory:quality", action: "scrap", description: "Scrap items failing quality inspection" },
   { name: "inventory:quality:recall", resource: "inventory:quality", action: "recall", description: "Initiate and manage product recalls" },
   { name: "inventory:packages:manage", resource: "inventory:packages", action: "manage", description: "Create and manage shipment packages" },
   { name: "inventory:shipments:manage", resource: "inventory:shipments", action: "manage", description: "Create and manage shipments" },

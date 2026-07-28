@@ -11,6 +11,7 @@ import {
   Users,
   KeyRound,
   Layers,
+  TrendingUp,
 } from "lucide-react";
 import { PlusIcon, Trash2Icon, CopyIcon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
@@ -186,9 +187,9 @@ function RolesContent() {
     >
       <div className="flex flex-1 min-h-0 flex-col gap-3">
         {metricsLoading ? (
-          <StatCardGridSkeleton cols={4} count={4} />
+          <StatCardGridSkeleton cols={5} count={5} />
         ) : (
-          <StatCardGrid cols={4}>
+          <StatCardGrid cols={5}>
             <StatCard
               label="Total Roles"
               value={analytics?.totalRoles ?? 0}
@@ -211,6 +212,11 @@ function RolesContent() {
               value={analytics?.totalPermissions ?? 0}
               icon={KeyRound}
               tone="amber"
+            />
+            <StatCard
+              label="Recent Changes"
+              value={analytics?.recentChanges ?? 0}
+              icon={TrendingUp}
             />
           </StatCardGrid>
         )}

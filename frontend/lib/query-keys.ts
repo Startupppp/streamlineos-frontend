@@ -1781,12 +1781,6 @@ export const queryKeys = {
     report: () => [...base, "crm", "data-quality", "report"] as const,
   },
 
-  workspaceSearch: {
-    all: [...base, "workspace-search"] as const,
-    search: (q: string, types?: string[]) =>
-      [...base, "workspace-search", "search", q, types] as const,
-  },
-
   aiSummaries: {
     all: [...base, "aiSummaries"] as const,
     latest: (entityType: string, entityId: string) =>
