@@ -1,8 +1,9 @@
 "use client";
 
 import { forwardRef } from "react";
-import { Check, Loader2, Tag } from "lucide-react";
+import { Check, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import type { CouponValidationResult } from "@/hooks/api/subscription";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -96,18 +97,15 @@ export function CouponSection({
                 className="max-w-xs font-mono uppercase text-sm"
                 aria-label="Coupon code"
               />
-              <Button
+              <LoadingButton
                 variant="outline"
                 size="sm"
                 onClick={onApply}
-                disabled={couponInput.trim().length < 3 || isValidatingCoupon}
+                disabled={couponInput.trim().length < 3}
+                isPending={isValidatingCoupon}
               >
-                {isValidatingCoupon ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  "Apply"
-                )}
-              </Button>
+                Apply
+              </LoadingButton>
             </div>
           )}
           {helperText && couponInput.trim().length >= 3 && !appliedCoupon && (

@@ -1,9 +1,17 @@
-# GO-LIVE runbook — apply the staged redesign work
+# GO-LIVE runbook — apply the staged redesign work [HISTORICAL]
 
-> Everything built this engagement is **written, typecheck-verified, and additive/idempotent**, but
+> **HISTORICAL — 2026-07-28.** This runbook was written when Neon compute quota was exhausted and
+> the staged schema SQL had not been applied. The situation has since changed: the DB was wiped and
+> cold-rebuilt with all 70 migrations applied. The wave-by-wave steps described below (Waves 2, 4, 5,
+> 6, 7, 8, 9) have been incorporated into the migration chain (0307–0349) or are tracked in the
+> wave execution plans. See STATUS.md and `pending-operator-sql-runbook.md` for what still remains.
+>
+> This document is kept as historical context for the session that first authored the schema changes.
+
+> ~~Everything built this engagement is **written, typecheck-verified, and additive/idempotent**, but
 > nothing is live because **Neon compute is out of quota** ("exceeded the compute time quota"). This is
 > the single ordered sequence to run the moment the database is reachable again. Do it on a **Neon
-> branch first**, then repeat on the real DB.
+> branch first**, then repeat on the real DB.~~
 
 ## 0. Prerequisite — restore the database (only you can do this)
 The migration attempt failed with `Your account or project has exceeded the compute time quota. Upgrade

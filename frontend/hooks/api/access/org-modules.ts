@@ -42,6 +42,7 @@ export function useToggleOrgModule() {
   const qc = useQueryClient();
   const { update } = useSession();
   return useMutation<void, Error, { moduleKey: string; enabled: boolean }>({
+    mutationKey: ["toggle", "org", "module"],
     mutationFn: ({ moduleKey, enabled }) =>
       apiClient.patch<void>(`/access/org-modules/${moduleKey}`, { enabled }),
     onSuccess: () => {

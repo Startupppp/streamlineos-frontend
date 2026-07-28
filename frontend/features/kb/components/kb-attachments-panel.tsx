@@ -21,6 +21,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { DownloadIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -187,20 +188,17 @@ export function KbAttachmentsPanel({ article }: { article: KbArticleDetail }) {
           className="hidden"
           aria-hidden="true"
         />
-        <Button
+        <LoadingButton
           size="sm"
           variant="outline"
           className="w-full"
           onClick={handlePickFile}
-          disabled={uploadAttachment.isPending}
+          isPending={uploadAttachment.isPending}
+          loadingText="Uploading…"
         >
-          {uploadAttachment.isPending ? (
-            <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
-          ) : (
-            <Upload className="h-3.5 w-3.5 mr-1" />
-          )}
-          {uploadAttachment.isPending ? "Uploading…" : "Upload file"}
-        </Button>
+          {!uploadAttachment.isPending && <Upload className="h-3.5 w-3.5 mr-1" />}
+          Upload file
+        </LoadingButton>
         <p className="text-[11px] text-muted-foreground">
           PDF, images, Word or Excel · up to 10MB.
         </p>
@@ -250,20 +248,17 @@ export function KbAttachmentsPanel({ article }: { article: KbArticleDetail }) {
               </p>
             </div>
           </div>
-          <Button
+          <LoadingButton
             size="sm"
             variant="outline"
             className="w-full"
             onClick={handleReindex}
-            disabled={reindex.isPending}
+            isPending={reindex.isPending}
+            loadingText="Indexing…"
           >
-            {reindex.isPending ? (
-              <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
-            ) : (
-              <RefreshCw className="h-3.5 w-3.5 mr-1" />
-            )}
-            {reindex.isPending ? "Indexing…" : "Rebuild AI index"}
-          </Button>
+            {!reindex.isPending && <RefreshCw className="h-3.5 w-3.5 mr-1" />}
+            Rebuild AI index
+          </LoadingButton>
         </div>
       </CardContent>
 

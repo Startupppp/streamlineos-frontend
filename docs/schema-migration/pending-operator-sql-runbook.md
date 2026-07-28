@@ -1,15 +1,25 @@
 ---
 type: operator runbook — the exact ordered sequence for all PENDING database work
-status: READY TO RUN (blocked only on a valid DATABASE_URL)
+status: PARTIALLY DONE — see update block below
 date: 2026-07-27
+updated: 2026-07-28
 ---
 
 # Pending operator SQL — ordered runbook
 
-> **Why this exists:** all the SQL below is authored, idempotent, and committed, but NONE of it has
-> executed — `backend/.env` `DATABASE_URL` fails auth (`password authentication failed for user
-> 'neondb_owner'`; the Neon password was rotated mid-session). Fix the credential, then run these
-> steps IN ORDER. Every step is idempotent and safe to re-run.
+> **UPDATE 2026-07-28 — DB was wiped and cold-rebuilt.** The original header claimed "NONE of it has
+> executed" — that is now false. The Neon database was wiped (`DROP SCHEMA public CASCADE`) and all
+> **70 migrations** were applied from empty via `pnpm db:bootstrap`. The drizzle ledger confirms
+> 70 applied migrations and 782 tables. Verified via direct DB query 2026-07-28.
+>
+> **What changed:**
+> - Step 2 (apply journaled migrations 0328–0333) is **DONE** — those migrations are part of the
+>   70-migration chain now applied.
+> - Steps 3–7 are **data-migration scripts for populated DBs**. On the current fresh DB (0 orgs)
+>   they are mostly no-ops. They must still be run on any DB with real organization data.
+> - Step 7 (`drop-dead-tables.sql`) is **still needed** — the 7 target tables exist even on the
+>   fresh DB (service_accounts, allowance_types, course_enrollments, courses, course_categories,
+>   training_attendance, training_programs all confirmed present via DB query 2026-07-28).
 >
 > **DO NOT re-run the historical `wave-*.sql` files.** They were folded into journaled migrations
 > `0307`–`0327` during the journal reconciliation. `db:migrate` covers them. Running them by hand
@@ -27,10 +37,12 @@ if any returns rows, quarantine/fix that data before Step 2, or `db:migrate` wil
 
 ```sql
 -- 1a. 0329 owner-exactly-one: orgs with 0 or >1 owners
-SELECT organization_id, count(*) AS owners
+-- NOTE: real columns are is_owner and org_id (not is_org_owner / organization_id).
+--       Verified against schema and live DB 2026-07-28.
+SELECT org_id, count(*) AS owners
 FROM   organization_members
-WHERE  is_org_owner = true
-GROUP  BY organization_id
+WHERE  is_owner = true
+GROUP  BY org_id
 HAVING count(*) <> 1;
 
 -- 1b. 0330 worker-engagement overlap: existing overlapping live engagements
@@ -63,17 +75,17 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 ```
 
-## Step 2 — apply the journaled migrations (idx 48–53)
+## Step 2 — ✅ DONE (2026-07-28) — apply the journaled migrations
 
-```bash
-pnpm -C backend db:migrate
-```
+This step is complete. Migrations 0328–0333 (idx 48–53) are part of the 70-migration chain that
+was applied when the DB was wiped and rebuilt. No action needed.
 
-Applies `0328_membership_role_assignments`, `0329_owner_exactly_one`,
-`0330_worker_engagement_overlap`, `0331_pm_workspace_id_nullable`,
-`0332_pm_workspace_id_backfill`, `0333_pm_workspace_id_not_null`.
-Journal is consistent at **54 entries = 54 files**. If it stops, fix the reported invariant and re-run
-(idempotent).
+For reference, what these applied:
+- `0328_membership_role_assignments`, `0329_owner_exactly_one`, `0330_worker_engagement_overlap`
+- `0331_pm_workspace_id_nullable`, `0332_pm_workspace_id_backfill`, `0333_pm_workspace_id_not_null`
+
+Journal is now consistent at **70 entries = 70 files** (not 54 as originally written — 16
+additional migrations 0334–0349 were added this session).
 
 ## Step 3 — Build module rename data-migration
 
@@ -136,7 +148,7 @@ Drops 10 verified-dead tables (`service_accounts`, `allowance_types`,
 orphaned `hr:learning:%` grants. The file contains commented row-count checks — run them first if you
 want to confirm the tables are empty.
 
-## Step 8 — post-run verification
+## Step 8 — post-run verification (for Steps 3–7 on a populated DB)
 
 ```sql
 -- RBAC keys migrated

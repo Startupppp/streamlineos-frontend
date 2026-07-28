@@ -17,5 +17,6 @@ export function usePortalProjectOverview(projectId: number) {
   return useQuery({
     ...portalProjectOverviewQueryOptions(projectId),
     enabled: typeof window !== "undefined" && !!getPortalToken() && projectId > 0,
+    staleTime: 30_000,
   });
 }

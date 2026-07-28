@@ -43,7 +43,7 @@ import { AlertTriangle } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { StateIllustration } from "@/components/illustrations";
 import { useCan } from "@/hooks/api/access";
-import { useOrgMembers } from "@/hooks/api/organization";
+import { useOrgMembersByIds } from "@/hooks/api/organization";
 import { getUserDisplayName, type NamedUser } from "@/features/build/shared/resolve-user-name";
 import {
   useUnionMemberships,
@@ -96,7 +96,12 @@ export function LaborTabs() {
   const { data: agreements, isLoading: agreementsLoading } = useCollectiveAgreements({ page: agreementPage, limit: 20 });
   const { data: cases, isLoading: casesLoading } = useLaborCases({ page: casePage, limit: 20 });
   const { data: expiring } = useExpiringAgreements(30);
-  const { data: membersData } = useOrgMembers(1, 200);
+
+  const memberUserIds = useMemo(
+    () => [...new Set((memberships?.data ?? []).map((m) => m.userId))],
+    [memberships?.data],
+  );
+  const { data: membersData } = useOrgMembersByIds(memberUserIds);
 
   const memberById = useMemo(() => {
     const map = new Map<string, NamedUser>();

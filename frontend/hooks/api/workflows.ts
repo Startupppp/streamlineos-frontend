@@ -376,6 +376,7 @@ export function useCancelExecution() {
 export function useHandleApproval() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["handle", "approval"],
     mutationFn: ({ approvalId, ...input }: ApprovalActionInput & { approvalId: string }) =>
       apiClient.post<WorkflowApproval>(`/workflows/approvals/${approvalId}/action`, input),
     onSuccess: () => {
@@ -388,6 +389,7 @@ export function useHandleApproval() {
 export function useCreateSchedule() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["create", "schedule"],
     mutationFn: ({ workflowId, ...input }: CreateScheduleInput & { workflowId: string }) =>
       apiClient.post<WorkflowSchedule>(`/workflows/${workflowId}/schedules`, input),
     onSuccess: (_data, variables) =>
@@ -398,6 +400,7 @@ export function useCreateSchedule() {
 export function useUpdateSchedule() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["update", "schedule"],
     mutationFn: ({
       workflowId,
       scheduleId,
@@ -415,6 +418,7 @@ export function useUpdateSchedule() {
 export function useDeleteSchedule() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["delete", "schedule"],
     mutationFn: ({
       workflowId,
       scheduleId,
@@ -430,6 +434,7 @@ export function useDeleteSchedule() {
 export function useCreateSecret() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["create", "secret"],
     mutationFn: ({ workflowId, ...input }: CreateSecretInput & { workflowId: string }) =>
       apiClient.post<WorkflowSecret>(`/workflows/${workflowId}/secrets`, input),
     onSuccess: (_data, variables) =>
@@ -440,6 +445,7 @@ export function useCreateSecret() {
 export function useDeleteSecret() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["delete", "secret"],
     mutationFn: ({
       workflowId,
       secretId,
@@ -463,6 +469,7 @@ export function useGlobalSecrets() {
 export function useCreateGlobalSecret() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["create", "global", "secret"],
     mutationFn: (input: CreateSecretInput) =>
       apiClient.post<WorkflowSecret>("/workflows/secrets", input),
     onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.workflows.all, "global-secrets"] }),
@@ -472,6 +479,7 @@ export function useCreateGlobalSecret() {
 export function useDeleteGlobalSecret() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["delete", "global", "secret"],
     mutationFn: (secretId: string) =>
       apiClient.delete<{ success: boolean }>(`/workflows/secrets/${secretId}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.workflows.all, "global-secrets"] }),
@@ -489,6 +497,7 @@ export function useGlobalVariables() {
 export function useDeleteGlobalVariable() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["delete", "global", "variable"],
     mutationFn: (variableId: string) =>
       apiClient.delete<{ success: boolean }>(`/workflows/variables/${variableId}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.workflows.all, "global-variables"] }),
@@ -498,6 +507,7 @@ export function useDeleteGlobalVariable() {
 export function useDisableWorkflow() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["disable", "workflow"],
     mutationFn: (id: string) => apiClient.post<Workflow>(`/workflows/${id}/disable`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.workflows.all }),
   });
@@ -506,6 +516,7 @@ export function useDisableWorkflow() {
 export function useArchiveWorkflow() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["archive", "workflow"],
     mutationFn: (id: string) => apiClient.post<Workflow>(`/workflows/${id}/archive`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.workflows.all }),
   });

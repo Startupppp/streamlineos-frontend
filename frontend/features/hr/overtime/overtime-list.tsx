@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/api-client";
 import { useOvertimeRequests, useApproveOvertime, useRejectOvertime } from "@/hooks/api/hr/overtime";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { useOrgMembers } from "@/hooks/api/organization";
+import { useOrgMembersByIds } from "@/hooks/api/organization";
 import { getUserDisplayName, type NamedUser } from "@/features/build/shared/resolve-user-name";
 
 interface Props {
@@ -30,7 +30,12 @@ export function OvertimeList({ canManage }: Props) {
   const requests = data?.items;
   const approve = useApproveOvertime();
   const reject = useRejectOvertime();
-  const { data: membersData } = useOrgMembers(1, 200);
+
+  const userIds = useMemo(
+    () => [...new Set((requests ?? []).map((r) => r.userId))],
+    [requests],
+  );
+  const { data: membersData } = useOrgMembersByIds(userIds);
 
   const memberById = useMemo(() => {
     const map = new Map<string, NamedUser>();

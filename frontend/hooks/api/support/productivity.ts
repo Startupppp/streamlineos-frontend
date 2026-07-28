@@ -17,6 +17,7 @@ export interface SupportTicketDraft {
 export function useSnoozeTicket() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["snooze", "ticket"],
     mutationFn: ({ ticketId, snoozedUntil }: { ticketId: number; snoozedUntil: Date }) =>
       apiClient.post<{ success: boolean; snoozedUntil: string }>(`/support/${ticketId}/snooze`, {
         snoozedUntil: snoozedUntil.toISOString(),
@@ -31,6 +32,7 @@ export function useSnoozeTicket() {
 export function useUnsnoozeTicket() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["unsnooze", "ticket"],
     mutationFn: (ticketId: number) =>
       apiClient.delete<{ success: boolean }>(`/support/${ticketId}/snooze`),
     onSuccess: (_data, ticketId) => {
@@ -43,6 +45,7 @@ export function useUnsnoozeTicket() {
 export function useSplitTicket() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["split", "ticket"],
     mutationFn: ({
       ticketId,
       title,

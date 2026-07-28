@@ -105,6 +105,7 @@ export const useInvoiceStats = (
 export const useCreateInvoice = () => {
   const queryClient = useQueryClient();
   return useMutation<Invoice, Error, CreateInvoiceInput>({
+    mutationKey: ["create", "invoice"],
     mutationFn: (data) => apiClient.post<Invoice>("/invoices", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.invoice.all });
@@ -115,6 +116,7 @@ export const useCreateInvoice = () => {
 export const useUpdateInvoice = () => {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, UpdateInvoiceInput>({
+    mutationKey: ["update", "invoice"],
     mutationFn: ({ id, ...data }) =>
       apiClient.patch<{ success: boolean }>(`/invoices/${id}`, data),
     onSuccess: (_, vars) => {
@@ -128,6 +130,7 @@ export const useUpdateInvoice = () => {
 export const useDeleteInvoice = () => {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, number>({
+    mutationKey: ["delete", "invoice"],
     mutationFn: (id) =>
       apiClient.delete<{ success: boolean }>(`/invoices/${id}`),
     onSuccess: () => {
@@ -171,6 +174,7 @@ export const useRecurringInvoices = (
 export const useRunRecurringInvoices = () => {
   const queryClient = useQueryClient();
   return useMutation<RunRecurringResult, Error, void>({
+    mutationKey: ["run", "recurring", "invoices"],
     mutationFn: () => apiClient.post<RunRecurringResult>("/invoices/recurring/run"),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.invoice.all });
@@ -191,6 +195,7 @@ interface RecordPaymentInput {
 export const useRecordPayment = () => {
   const queryClient = useQueryClient();
   return useMutation<Payment, Error, RecordPaymentInput>({
+    mutationKey: ["record", "payment"],
     mutationFn: ({ invoiceId, ...data }) =>
       apiClient.post<Payment>(`/invoices/${invoiceId}/payments`, data),
     onSuccess: (_result, variables) => {

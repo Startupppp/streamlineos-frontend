@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { SearchInput } from "@/components/ui/search-input";
 import {
   Select,
@@ -320,19 +321,16 @@ export function KbManagerContent() {
       }
       actions={
         <>
-          <Button
+          <LoadingButton
             variant="outline"
             size="sm"
             onClick={handleReindexAll}
-            disabled={reindexAll.isPending}
+            isPending={reindexAll.isPending}
+            loadingText="Indexing…"
           >
-            {reindexAll.isPending ? (
-              <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
-            ) : (
-              <Sparkles className="h-3.5 w-3.5 mr-1" />
-            )}
-            {reindexAll.isPending ? "Indexing…" : "Index all for AI"}
-          </Button>
+            {!reindexAll.isPending && <Sparkles className="h-3.5 w-3.5 mr-1" />}
+            Index all for AI
+          </LoadingButton>
           <Button variant="outline" size="sm" onClick={handleOpenCategoryDialog}>
             <FolderTree className="h-3.5 w-3.5 mr-1" /> New Category
           </Button>

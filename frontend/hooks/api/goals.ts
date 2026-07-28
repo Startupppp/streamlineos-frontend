@@ -180,6 +180,7 @@ export function useGoalStats() {
 export function useCreateGoal() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["create", "goal"],
     mutationFn: (input: CreateGoalInput) => apiClient.post<GoalListItem>("/goals", input),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.goals.all });
@@ -190,6 +191,7 @@ export function useCreateGoal() {
 export function useUpdateGoal() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["update", "goal"],
     mutationFn: ({ id, ...input }: UpdateGoalInput & { id: number }) =>
       apiClient.patch<GoalListItem>(`/goals/${id}`, input),
     onSuccess: (_data, variables) => {
@@ -202,6 +204,7 @@ export function useUpdateGoal() {
 export function useDeleteGoal() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["delete", "goal"],
     mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/goals/${id}`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.goals.all });
@@ -212,6 +215,7 @@ export function useDeleteGoal() {
 export function useCheckIn(goalId: number) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["check", "in"],
     mutationFn: (input: CheckInInput) =>
       apiClient.post<GoalListItem>(`/goals/${goalId}/check-in`, input),
     onSuccess: () => {
@@ -225,6 +229,7 @@ export function useCheckIn(goalId: number) {
 export function useAddGoalLink(goalId: number) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["add", "goal", "link"],
     mutationFn: (input: AddGoalLinkInput) =>
       apiClient.post<GoalLink>(`/goals/${goalId}/links`, input),
     onSuccess: () => {
@@ -237,6 +242,7 @@ export function useAddGoalLink(goalId: number) {
 export function useRemoveGoalLink(goalId: number) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["remove", "goal", "link"],
     mutationFn: (linkId: number) =>
       apiClient.delete<{ success: boolean }>(`/goals/${goalId}/links?linkId=${linkId}`),
     onSuccess: () => {

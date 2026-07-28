@@ -36,6 +36,7 @@ export function useUserApiTokens() {
 export function useCreateUserApiToken() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["create", "user", "api", "token"],
     mutationFn: (input: CreateUserApiTokenInput) =>
       apiClient.post<CreateUserApiTokenResponse>("/me/api-tokens", input),
     onSuccess: () => {
@@ -47,6 +48,7 @@ export function useCreateUserApiToken() {
 export function useRevokeUserApiToken() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["revoke", "user", "api", "token"],
     mutationFn: (tokenId: string) =>
       apiClient.delete<void>(`/me/api-tokens/${tokenId}`),
     onSuccess: () => {

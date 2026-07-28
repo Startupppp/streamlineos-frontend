@@ -6,6 +6,7 @@ import { queryKeys } from "@/lib/query-keys";
 
 export function useGenerateWorkspace() {
   return useMutation<{ success: boolean }, Error, { industry: string; enabledModules?: string[] }>({
+    mutationKey: ["generate", "workspace"],
     mutationFn: (data) =>
       apiClient.post<{ success: boolean }>("/workspace-onboarding/generate", data),
   });
@@ -14,6 +15,7 @@ export function useGenerateWorkspace() {
 export function useCompleteOnboarding() {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, void>({
+    mutationKey: ["complete", "onboarding"],
     mutationFn: () =>
       apiClient.post<{ success: boolean }>("/workspace-onboarding/complete", {}),
     onSuccess: () => {

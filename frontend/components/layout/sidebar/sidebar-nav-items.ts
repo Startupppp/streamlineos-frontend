@@ -665,7 +665,7 @@ export const NAV_GROUPS: NavGroup[] = [
       {
         label: "Access",
         icon: ShieldCheck,
-        href: "/hr/access",
+        href: "/settings/module-access/hr",
         requiredPermission: "hr:access:view",
       },
       {
@@ -1093,7 +1093,7 @@ export const NAV_GROUPS: NavGroup[] = [
       {
         label: "Access",
         icon: ShieldCheck,
-        href: "/crm/access",
+        href: "/settings/module-access/crm",
         requiredPermission: "crm:access:view",
       },
       {
@@ -1772,7 +1772,7 @@ export const NAV_GROUPS: NavGroup[] = [
       {
         label: "Access",
         icon: ShieldCheck,
-        href: "/inventory/access",
+        href: "/settings/module-access/inventory",
         requiredPermission: "inventory:access:view",
       },
     ],
@@ -1970,7 +1970,7 @@ export const NAV_GROUPS: NavGroup[] = [
       {
         label: "Access",
         icon: ShieldCheck,
-        href: "/build/access",
+        href: "/settings/module-access/build",
         requiredPermission: "build:access:view",
       },
     ],
@@ -2741,7 +2741,24 @@ export function isModuleEnabled(
   return matchesOrgModule(enabledModules, moduleKey);
 }
 
+const MODULE_KEY_TO_PRODUCT: Record<string, ProductKey> = {
+  hr: "hrms",
+  crm: "crm",
+  build: "build",
+  inventory: "inventory",
+  payroll: "payroll",
+  timesheets: "timesheets",
+  support: "helpdesk",
+  sign: "sign",
+};
+
 export function getProductFromPathname(pathname: string): ProductKey {
+  if (pathname.startsWith("/settings/module-access/")) {
+    const moduleKey = pathname.split("/")[3];
+    const product = moduleKey ? MODULE_KEY_TO_PRODUCT[moduleKey] : undefined;
+    if (product) return product;
+  }
+
   if (
     pathname === "/dashboard" ||
     pathname === "/" ||

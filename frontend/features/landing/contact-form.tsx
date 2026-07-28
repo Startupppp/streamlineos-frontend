@@ -5,8 +5,9 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
+import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { Label } from "@/components/ui/label";
@@ -270,23 +271,16 @@ export function ContactForm() {
               </p>
             )}
 
-            <Button
+            <LoadingButton
               type="submit"
-              disabled={pending || (turnstileRequired && !turnstileToken)}
+              disabled={turnstileRequired && !turnstileToken}
+              isPending={pending}
+              loadingText="Sending…"
               className="w-full h-11"
             >
-              {pending ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Sending…
-                </>
-              ) : (
-                <>
-                  Send message
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </>
-              )}
-            </Button>
+              Send message
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </LoadingButton>
 
             <p className="text-[12px] font-medium text-slate-400 text-center">
               Your message is encrypted in transit. We&apos;ll never share your

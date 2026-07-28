@@ -29,7 +29,7 @@ import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { usePayrollRuns } from "@/hooks/api/payroll";
 import { useRunPublications, usePublishPayslips, downloadPayslipPdf } from "@/hooks/api/payroll";
-import { useOrgMembers } from "@/hooks/api/organization";
+import { useOrgMembersByIds } from "@/hooks/api/organization";
 import { getUserDisplayName, type NamedUser } from "@/features/build/shared/resolve-user-name";
 import type { PayslipPublication, PublicationStatus } from "@/types/payroll";
 import type { PayrollRunStatus } from "@/types/payroll/runs";
@@ -122,7 +122,12 @@ export function PublicationsTab({ canManage }: PublicationsTabProps) {
   const selectedRun = eligibleRuns.find((r) => r.id === activeRunId);
 
   const { data: publications, isLoading: pubsLoading } = useRunPublications(activeRunId);
-  const { data: membersData } = useOrgMembers(1, 200);
+
+  const userIds = useMemo(
+    () => [...new Set((publications ?? []).map((p) => p.userId))],
+    [publications],
+  );
+  const { data: membersData } = useOrgMembersByIds(userIds);
 
   const memberById = useMemo(() => {
     const map = new Map<string, NamedUser>();

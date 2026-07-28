@@ -14,7 +14,7 @@ import { useRosters, useRosterEntries, usePublishRoster } from "@/hooks/api/hr/r
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/api-client";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { useOrgMembers } from "@/hooks/api/organization";
+import { useOrgMembersByIds } from "@/hooks/api/organization";
 import { getUserDisplayName, type NamedUser } from "@/features/build/shared/resolve-user-name";
 
 interface Props {
@@ -29,13 +29,26 @@ const STATUS_VARIANTS: Record<string, "default" | "secondary" | "outline"> = {
 interface RosterCardProps {
   roster: { id: number; name: string; weekStart: string; weekEnd: string; status: string };
   canManage: boolean;
-  memberById: Map<string, NamedUser>;
 }
 
-function RosterCard({ roster, canManage, memberById }: RosterCardProps) {
+function RosterCard({ roster, canManage }: RosterCardProps) {
   const [expanded, setExpanded] = useState(false);
   const { data: entries } = useRosterEntries(expanded ? roster.id : 0);
   const publishRoster = usePublishRoster();
+
+  const entryUserIds = useMemo(
+    () => [...new Set((entries ?? []).map((e) => e.userId))],
+    [entries],
+  );
+  const { data: membersData } = useOrgMembersByIds(entryUserIds);
+
+  const memberById = useMemo(() => {
+    const map = new Map<string, NamedUser>();
+    for (const member of membersData?.data ?? []) {
+      map.set(member.userId, { name: member.name, email: member.email });
+    }
+    return map;
+  }, [membersData]);
 
   function handleToggle() {
     setExpanded((v) => !v);
@@ -114,15 +127,6 @@ function RosterCard({ roster, canManage, memberById }: RosterCardProps) {
 
 export function RostersGrid({ canManage }: Props) {
   const { data: rosters, isLoading } = useRosters();
-  const { data: membersData } = useOrgMembers(1, 200);
-
-  const memberById = useMemo(() => {
-    const map = new Map<string, NamedUser>();
-    for (const member of membersData?.data ?? []) {
-      map.set(member.userId, { name: member.name, email: member.email });
-    }
-    return map;
-  }, [membersData]);
 
   if (isLoading) {
     return (
@@ -148,7 +152,7 @@ export function RostersGrid({ canManage }: Props) {
   return (
     <div className="space-y-3">
       {rosters.map((roster) => (
-        <RosterCard key={roster.id} roster={roster} canManage={canManage} memberById={memberById} />
+        <RosterCard key={roster.id} roster={roster} canManage={canManage} />
       ))}
     </div>
   );

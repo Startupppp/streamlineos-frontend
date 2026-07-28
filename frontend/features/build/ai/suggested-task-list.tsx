@@ -3,7 +3,7 @@
 import { memo, useState, useMemo, useCallback } from "react";
 import { Loader2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useTickets, useCreateTicket } from "@/hooks/api/build/tickets";
@@ -188,15 +188,15 @@ export function SuggestedTaskList({ items, projectId }: SuggestedTaskListProps) 
         ))}
       </div>
 
-      <Button
+      <LoadingButton
         size="sm"
         onClick={handleCreate}
-        disabled={selected.size === 0 || isCreating}
+        disabled={selected.size === 0}
+        isPending={isCreating}
         className="gap-1.5 text-xs"
       >
-        {isCreating && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
         Create {selected.size > 0 ? selected.size : ""} selected task{selected.size !== 1 ? "s" : ""}
-      </Button>
+      </LoadingButton>
     </div>
   );
 }

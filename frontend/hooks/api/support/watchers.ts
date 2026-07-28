@@ -25,6 +25,7 @@ export function useSupportWatchers(ticketId: number) {
 export function useFollowTicket() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["follow", "ticket"],
     mutationFn: (ticketId: number) => apiClient.post<{ success: boolean }>(`/support/${ticketId}/follow`, {}),
     onSuccess: (_data, ticketId) =>
       qc.invalidateQueries({ queryKey: queryKeys.supportWatchers.list(ticketId) }),
@@ -34,6 +35,7 @@ export function useFollowTicket() {
 export function useUnfollowTicket() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["unfollow", "ticket"],
     mutationFn: (ticketId: number) => apiClient.delete<{ success: boolean }>(`/support/${ticketId}/follow`),
     onSuccess: (_data, ticketId) =>
       qc.invalidateQueries({ queryKey: queryKeys.supportWatchers.list(ticketId) }),

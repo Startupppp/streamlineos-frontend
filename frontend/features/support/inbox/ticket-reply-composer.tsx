@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
-import { Loader2, Send, Paperclip, X, FileText, Image as ImageIcon, Wand2 } from "lucide-react";
+import { Send, Paperclip, X, FileText, Image as ImageIcon, Wand2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Textarea } from "@/components/ui/textarea";
@@ -362,19 +362,16 @@ export function TicketReplyComposer({ ticketId }: TicketReplyComposerProps) {
           >
             {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Paperclip className="h-3.5 w-3.5" />}
           </Button>
-          <Button
+          <LoadingButton
             onClick={handleReply}
-            disabled={(!replyText.trim() && pendingFiles.length === 0) || addMessage.isPending}
+            disabled={!replyText.trim() && pendingFiles.length === 0}
+            isPending={addMessage.isPending}
             size="icon"
             className="h-[28px] w-10 shrink-0"
             aria-label="Send reply"
           >
-            {addMessage.isPending ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Send className="h-3.5 w-3.5" />
-            )}
-          </Button>
+            {!addMessage.isPending && <Send className="h-3.5 w-3.5" />}
+          </LoadingButton>
         </div>
       </div>
       <input

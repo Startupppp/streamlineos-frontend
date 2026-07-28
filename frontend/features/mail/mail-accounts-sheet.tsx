@@ -24,12 +24,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { Loader2, RefreshCw, Unplug } from "lucide-react";
+import { RefreshCw, Unplug } from "lucide-react";
 import { StarIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -269,16 +270,15 @@ export function MailAccountsSheet({ open, onClose }: MailAccountsSheetProps) {
 
   const connectActions = canManage ? (
     <div className="px-4 py-3 border-t shrink-0 flex flex-row flex-wrap gap-2">
-      <Button
+      <LoadingButton
         variant="outline"
         size="sm"
         className="flex-1 h-11 px-4 text-xs bg-card justify-center gap-2 min-w-[9rem]"
-        disabled={pendingToolkit !== null}
+        disabled={pendingToolkit !== null && pendingToolkit !== "gmail"}
+        isPending={pendingToolkit === "gmail"}
         onClick={handleConnectGmail}
       >
-        {pendingToolkit === "gmail" ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
+        {pendingToolkit !== "gmail" && (
           <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
             <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
@@ -287,17 +287,16 @@ export function MailAccountsSheet({ open, onClose }: MailAccountsSheetProps) {
           </svg>
         )}
         Connect Gmail
-      </Button>
-      <Button
+      </LoadingButton>
+      <LoadingButton
         variant="outline"
         size="sm"
         className="flex-1 h-11 px-4 text-xs bg-card justify-center gap-2 min-w-[9rem]"
-        disabled={pendingToolkit !== null}
+        disabled={pendingToolkit !== null && pendingToolkit !== "outlook"}
+        isPending={pendingToolkit === "outlook"}
         onClick={handleConnectOutlook}
       >
-        {pendingToolkit === "outlook" ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
+        {pendingToolkit !== "outlook" && (
           <svg className="h-4 w-4 shrink-0" viewBox="0 0 21 21" aria-hidden="true">
             <rect x="1" y="1" width="9" height="9" fill="#f25022" />
             <rect x="11" y="1" width="9" height="9" fill="#7fba00" />
@@ -306,7 +305,7 @@ export function MailAccountsSheet({ open, onClose }: MailAccountsSheetProps) {
           </svg>
         )}
         Connect Outlook
-      </Button>
+      </LoadingButton>
     </div>
   ) : null;
 

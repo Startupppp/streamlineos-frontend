@@ -46,6 +46,7 @@ export function useUploadKbSource() {
 export function useCreateKbSourceNote() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["create", "kb", "source", "note"],
     mutationFn: (input: { title: string; text: string }) =>
       apiClient.post<KbSource>("/kb/sources/note", input),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["kb", "sources"] }),
@@ -55,6 +56,7 @@ export function useCreateKbSourceNote() {
 export function useDeleteKbSource() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["delete", "kb", "source"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/kb/sources/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["kb", "sources"] }),

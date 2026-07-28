@@ -12,5 +12,6 @@ export function usePortalProjects() {
   return useQuery({
     ...portalProjectsQueryOptions,
     enabled: typeof window !== "undefined" && !!getPortalToken(),
+    staleTime: 30_000,
   });
 }

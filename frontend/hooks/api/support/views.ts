@@ -43,6 +43,7 @@ export function useSupportSavedViews() {
 export function useCreateSavedView() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["create", "saved", "view"],
     mutationFn: (input: CreateSavedViewInput) => apiClient.post<SupportSavedView>("/support/views", input),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportViews.all }),
   });
@@ -51,6 +52,7 @@ export function useCreateSavedView() {
 export function useUpdateSavedView() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["update", "saved", "view"],
     mutationFn: ({ id, ...input }: UpdateSavedViewInput & { id: number }) =>
       apiClient.patch<SupportSavedView>(`/support/views/${id}`, input),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportViews.all }),
@@ -60,6 +62,7 @@ export function useUpdateSavedView() {
 export function useDeleteSavedView() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["delete", "saved", "view"],
     mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/support/views/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportViews.all }),
   });

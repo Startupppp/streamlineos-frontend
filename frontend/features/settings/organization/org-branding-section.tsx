@@ -17,7 +17,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Loader2, Pencil, Palette } from "lucide-react";
+import { Pencil, Palette } from "lucide-react";
 import { UploadIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
@@ -81,9 +81,9 @@ function ColorField({
 function UploadButton({ uploading, onClick }: { uploading: boolean; onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
-    <Button type="button" variant="outline" size="sm" className="h-8 shrink-0 gap-1" disabled={uploading} onClick={onClick} {...hoverHandlers}>
-      {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UploadIcon ref={iconRef} size={14} />}
-    </Button>
+    <LoadingButton type="button" variant="outline" size="sm" className="h-8 shrink-0 gap-1" isPending={uploading} onClick={onClick} {...hoverHandlers}>
+      {!uploading && <UploadIcon ref={iconRef} size={14} />}
+    </LoadingButton>
   );
 }
 
@@ -188,7 +188,7 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
       <CardHeader className="pb-2 flex flex-row items-start justify-between">
         <div>
           <CardTitle className="text-sm font-semibold flex items-center gap-2">
-            <Palette className="h-4 w-4 text-blue-600" />
+            <Palette className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             Branding
           </CardTitle>
           <CardDescription>Logo, favicon, colors, and email branding defaults.</CardDescription>

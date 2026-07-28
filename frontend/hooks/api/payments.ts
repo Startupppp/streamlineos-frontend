@@ -73,6 +73,7 @@ export function usePaymentProviders() {
 export function useCreatePaymentProvider() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["create", "payment", "provider"],
     mutationFn: (providerKey: string) =>
       apiClient.post<PaymentProvider>("/payments/providers", { providerKey }),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.payments.providers() }),
@@ -82,6 +83,7 @@ export function useCreatePaymentProvider() {
 export function useDisablePaymentProvider() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["disable", "payment", "provider"],
     mutationFn: (providerKey: string) =>
       apiClient.post<PaymentProvider>(`/payments/providers/${providerKey}/disable`, {}),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.payments.providers() }),
@@ -98,6 +100,7 @@ export type SaveCredentialsPayload = {
 export function useSavePaymentCredentials(providerKey: string) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["save", "payment", "credentials"],
     mutationFn: (payload: SaveCredentialsPayload) =>
       apiClient.post<{ credential: PaymentProviderCredentialPublic; warning: { code: string; message: string } | null }>(
         `/payments/providers/${providerKey}/credentials`,
@@ -113,6 +116,7 @@ export function useSavePaymentCredentials(providerKey: string) {
 export function useDisconnectPaymentCredentials(providerKey: string) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["disconnect", "payment", "credentials"],
     mutationFn: (environment: PaymentEnvironment) =>
       apiClient.post(`/payments/providers/${providerKey}/disconnect`, { environment }),
     onSuccess: () => {
@@ -149,6 +153,7 @@ export function useTestTransactions(providerKey: string, enabled = true) {
 export function useCreateTestTransaction(providerKey: string) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["create", "test", "transaction"],
     mutationFn: (payload: { amount: string; currency: string }) =>
       apiClient.post<PaymentTestTransaction>(`/payments/providers/${providerKey}/test-transactions`, payload),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.payments.testTransactions(providerKey) }),
@@ -158,6 +163,7 @@ export function useCreateTestTransaction(providerKey: string) {
 export function useVerifyTestTransaction(providerKey: string) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["verify", "test", "transaction"],
     mutationFn: ({ id, providerPaymentId, signature }: { id: number; providerPaymentId: string; signature: string }) =>
       apiClient.patch<PaymentTestTransaction>(`/payments/providers/${providerKey}/test-transactions/${id}/verify`, {
         providerPaymentId,
@@ -184,6 +190,7 @@ export type PaymentWebhookEndpoint = {
 export function useGenerateWebhook(providerKey: string) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["generate", "webhook"],
     mutationFn: (environment: PaymentEnvironment) =>
       apiClient.post<PaymentWebhookEndpoint>(`/payments/providers/${providerKey}/webhooks/generate`, { environment }),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.payments.readiness(providerKey) }),
@@ -193,6 +200,7 @@ export function useGenerateWebhook(providerKey: string) {
 export function useVerifyWebhook(providerKey: string) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["verify", "webhook"],
     mutationFn: (payload: { environment: PaymentEnvironment; rawBody?: string; signature?: string }) =>
       apiClient.post<PaymentWebhookEndpoint>(`/payments/providers/${providerKey}/webhooks/verify`, payload),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.payments.readiness(providerKey) }),
@@ -224,6 +232,7 @@ export function useWebhookEvents(providerKey: string, enabled = true) {
 export function useRetryWebhookEvent(providerKey: string) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["retry", "webhook", "event"],
     mutationFn: (eventId: number) =>
       apiClient.post(`/payments/providers/${providerKey}/webhooks/events/${eventId}/retry`, {}),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.payments.webhookEvents(providerKey) }),
@@ -249,6 +258,7 @@ export function usePaymentReadiness(providerKey: string, enabled = true) {
 export function useActivateLivePayments(providerKey: string) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["activate", "live", "payments"],
     mutationFn: () => apiClient.post<PaymentProvider>(`/payments/providers/${providerKey}/activate-live`, {}),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.payments.providers() });
@@ -319,6 +329,7 @@ export function useManualMethods() {
 export function useSaveManualMethod() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["save", "manual", "method"],
     mutationFn: (payload: SaveManualMethodPayload) =>
       apiClient.post<PaymentManualMethod>("/payments/manual-methods", payload),
     onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.payments.all, "manual-methods"] }),
@@ -328,6 +339,7 @@ export function useSaveManualMethod() {
 export function useDisableManualMethod() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["disable", "manual", "method"],
     mutationFn: (id: number) => apiClient.post(`/payments/manual-methods/${id}/disable`, {}),
     onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.payments.all, "manual-methods"] }),
   });

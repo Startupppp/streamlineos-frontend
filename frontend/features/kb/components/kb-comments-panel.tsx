@@ -5,6 +5,7 @@ import { formatDistanceToNow } from "date-fns";
 import { Loader2, MessagesSquare, Send } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Trash2Icon } from "@animateicons/react/lucide";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -137,18 +138,15 @@ export function KbCommentsPanel({ article }: { article: KbArticleDetail }) {
             className="text-sm resize-none"
           />
           <div className="flex justify-end">
-            <Button
+            <LoadingButton
               size="sm"
               onClick={handleAdd}
-              disabled={addComment.isPending || !draft.trim()}
+              disabled={!draft.trim()}
+              isPending={addComment.isPending}
             >
-              {addComment.isPending ? (
-                <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
-              ) : (
-                <Send className="h-3.5 w-3.5 mr-1" />
-              )}
+              {!addComment.isPending && <Send className="h-3.5 w-3.5 mr-1" />}
               Comment
-            </Button>
+            </LoadingButton>
           </div>
         </div>
 

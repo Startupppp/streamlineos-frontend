@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/tabs";
 import { StateIllustration } from "@/components/illustrations";
 import { useCan } from "@/hooks/api/access";
-import { useOrgMembers } from "@/hooks/api/organization";
+import { useOrgMembersByIds } from "@/hooks/api/organization";
 import { getUserDisplayName, type NamedUser } from "@/features/build/shared/resolve-user-name";
 import { useHrCases, useDisciplinaryActions } from "@/hooks/api/hr/cases";
 import type { HrCase, CaseCategory, CaseStatus, CaseSeverity } from "@/hooks/api/hr/cases";
@@ -98,7 +98,12 @@ export function CasesPageContent() {
   });
 
   const { data: disciplinaryData, isLoading: discLoading } = useDisciplinaryActions({ page });
-  const { data: membersData } = useOrgMembers(1, 200);
+
+  const employeeIds = useMemo(
+    () => [...new Set((disciplinaryData?.data ?? []).map((r) => r.employeeId))],
+    [disciplinaryData?.data],
+  );
+  const { data: membersData } = useOrgMembersByIds(employeeIds);
 
   const memberById = useMemo(() => {
     const map = new Map<string, NamedUser>();

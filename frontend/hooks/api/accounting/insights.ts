@@ -71,6 +71,7 @@ export function useInsightsDigest() {
 
 export function useCategorizeSuggest() {
   return useMutation<CategorizeSuggestResult, Error, CategorizeSuggestInput>({
+    mutationKey: ["categorize", "suggest"],
     mutationFn: (input) =>
       apiClient.post<CategorizeSuggestResult>("/accounting/expenses/categorize-suggest", input),
   });

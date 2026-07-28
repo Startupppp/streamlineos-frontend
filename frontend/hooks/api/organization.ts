@@ -61,17 +61,18 @@ export const useOrgMembersByIds = (
   >,
 ) => {
   const ids = [...userIds].sort();
+  const { enabled: callerEnabled, ...restOptions } = options ?? {};
   return useQuery<MembersResponse, Error>({
     queryKey: [...queryKeys.organization.members(), { userIds: ids }] as const,
     queryFn: () =>
       apiClient.get<MembersResponse>("/organization/members", {
         page: "1",
-        limit: String(Math.min(Math.max(ids.length, 1), 50)),
+        limit: String(Math.min(Math.max(ids.length, 1), 100)),
         userIds: ids.join(","),
       }),
     staleTime: 5 * 60_000,
-    enabled: ids.length > 0,
-    ...options,
+    enabled: ids.length > 0 && (callerEnabled ?? true),
+    ...restOptions,
   });
 };
 
@@ -82,6 +83,7 @@ export const useInvitations = (
     queryKey: queryKeys.organization.invitations(),
     queryFn: () => apiClient.get<Invitation[]>("/organization/invitations"),
     ...options,
+    staleTime: 30_000,
   });
 };
 
@@ -92,6 +94,7 @@ export const useInviteUser = () => {
     Error,
     { email: string; role: string }
   >({
+    mutationKey: ["organization", "invite-user"],
     mutationFn: (data) =>
       apiClient.post<{ success: boolean; invitationId: string }>(
         "/organization/members",
@@ -108,6 +111,7 @@ export const useInviteUser = () => {
 export const useCancelInvitation = () => {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, { invitationId: string }>({
+    mutationKey: ["cancel", "invitation"],
     mutationFn: (data) =>
       apiClient.delete<{ success: boolean }>("/organization/invitations", {
         data,
@@ -127,6 +131,7 @@ export const useUpdateMemberRole = () => {
     Error,
     { userId: string; role: string }
   >({
+    mutationKey: ["organization", "update-member-role"],
     mutationFn: ({ userId, role }) =>
       apiClient.patch<{ success: boolean }>(`/organization/members/${userId}`, {
         role,
@@ -179,6 +184,7 @@ export const useUpdateOrgSettings = () => {
       country?: string | null;
     }
   >({
+    mutationKey: ["organization", "settings", "update"],
     mutationFn: (data) =>
       apiClient.patch<{ success: boolean }>("/organization/settings", data),
     onSuccess: () => {
@@ -236,6 +242,7 @@ export const useCreateOrgHoliday = () => {
     Error,
     { name: string; date: string; recurring?: boolean }
   >({
+    mutationKey: ["organization", "holidays", "create"],
     mutationFn: (data) =>
       apiClient.post<{ id: string }>("/organization/holidays", data),
     onSuccess: () => {
@@ -249,6 +256,7 @@ export const useCreateOrgHoliday = () => {
 export const useDeleteOrgHoliday = () => {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, string>({
+    mutationKey: ["delete", "org", "holiday"],
     mutationFn: (id) =>
       apiClient.delete<{ success: boolean }>(`/organization/holidays/${id}`),
     onSuccess: () => {
@@ -262,6 +270,7 @@ export const useDeleteOrgHoliday = () => {
 export const useArchiveOrg = () => {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, void>({
+    mutationKey: ["archive", "org"],
     mutationFn: () =>
       apiClient.post<{ success: boolean }>("/organization/archive", {}),
     onSuccess: () => {
@@ -275,6 +284,7 @@ export const useArchiveOrg = () => {
 export const useRestoreOrg = () => {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, void>({
+    mutationKey: ["restore", "org"],
     mutationFn: () =>
       apiClient.post<{ success: boolean }>("/organization/restore", {}),
     onSuccess: () => {
@@ -312,6 +322,7 @@ export const useCreateOrganization = () => {
 export const useTransferOwnership = () => {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, { newOwnerUserId: string }>({
+    mutationKey: ["transfer", "ownership"],
     mutationFn: (data) =>
       apiClient.post<{ success: boolean }>(
         "/organization/transfer-ownership",

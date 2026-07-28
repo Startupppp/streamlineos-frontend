@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AvatarCropDialog } from "@/components/ui/avatar-crop-dialog";
@@ -224,19 +225,17 @@ export function SettingsProfile() {
           <TruncatedText text={name || "—"} className="text-[13px] font-semibold text-foreground" />
           <TruncatedText text={email ?? ""} className="text-xs text-muted-foreground" />
           <div className="flex items-center gap-2 mt-2">
-            <Button
+            <LoadingButton
               variant="outline"
               size="sm"
               className="h-7 text-xs"
-              disabled={isPhotoBusy}
+              isPending={isPhotoBusy}
+              loadingText="Uploading…"
               onClick={handleOpenFileInput}
             >
-              {isPhotoBusy ? (
-                <><Loader2 className="h-3 w-3 mr-1 animate-spin" />Uploading…</>
-              ) : (
-                <><Camera className="h-3 w-3 mr-1" />Change photo</>
-              )}
-            </Button>
+              <Camera className="h-3 w-3 mr-1" />
+              Change photo
+            </LoadingButton>
             {session?.user?.image && (
               <AnimatedIconButton
                 icon={Trash2Icon}
@@ -273,21 +272,16 @@ export function SettingsProfile() {
                   aria-describedby={nameError ? "display-name-error" : undefined}
                   className="flex-1"
                 />
-                {isSavingName ? (
-                  <Button size="icon" className="h-9 w-9 shrink-0" disabled aria-label="Saving">
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  </Button>
-                ) : (
-                  <AnimatedIconButton
-                    icon={CheckIcon}
-                    iconSize={14}
-                    size="icon"
-                    className="h-9 w-9 shrink-0"
-                    onClick={handleSaveName}
-                    disabled={!watchedName.trim()}
-                    aria-label="Save name"
-                  />
-                )}
+                <LoadingButton
+                  size="icon"
+                  className="h-9 w-9 shrink-0"
+                  onClick={handleSaveName}
+                  disabled={!watchedName.trim()}
+                  isPending={isSavingName}
+                  aria-label="Save name"
+                >
+                  {!isSavingName && <CheckIcon size={14} />}
+                </LoadingButton>
                 <AnimatedIconButton
                   icon={XIcon}
                   iconSize={14}

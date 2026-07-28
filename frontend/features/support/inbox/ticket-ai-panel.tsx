@@ -6,11 +6,11 @@ import {
   ChevronDown,
   RefreshCw,
   Reply,
-  Loader2,
   Users,
   GitBranch,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -168,26 +168,25 @@ export function TicketAiPanel({ ticketId, onInsertReply, replyDraftContent }: Ti
       {open && (
         <div className="mt-2 space-y-3 pb-1">
           <div className="flex flex-wrap items-center gap-1.5">
-            <Button type="button" variant="outline" size="sm" className="h-7 text-xs" disabled={isRegenerating} onClick={handleRegenerate}>
-              {isRegenerating ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <RefreshCw className="h-3.5 w-3.5 mr-1" />}
+            <LoadingButton type="button" variant="outline" size="sm" className="h-7 text-xs" isPending={isRegenerating} onClick={handleRegenerate}>
+              {!isRegenerating && <RefreshCw className="h-3.5 w-3.5 mr-1" />}
               Regenerate insights
-            </Button>
-            <Button type="button" variant="ghost" size="sm" className="h-7 text-xs" disabled={suggestReply.isPending} onClick={handleSuggestReply}>
-              {suggestReply.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Reply className="h-3.5 w-3.5 mr-1" />}
+            </LoadingButton>
+            <LoadingButton type="button" variant="ghost" size="sm" className="h-7 text-xs" isPending={suggestReply.isPending} onClick={handleSuggestReply}>
+              {!suggestReply.isPending && <Reply className="h-3.5 w-3.5 mr-1" />}
               Suggest reply
-            </Button>
-            <Button type="button" variant="ghost" size="sm" className="h-7 text-xs" disabled={suggestMacro.isPending} onClick={handleSuggestMacro}>
-              {suggestMacro.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
+            </LoadingButton>
+            <LoadingButton type="button" variant="ghost" size="sm" className="h-7 text-xs" isPending={suggestMacro.isPending} onClick={handleSuggestMacro}>
               Suggest macro
-            </Button>
-            <Button type="button" variant="ghost" size="sm" className="h-7 text-xs" disabled={handoffSummary.isPending} onClick={handleHandoffSummary}>
-              {handoffSummary.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Users className="h-3.5 w-3.5 mr-1" />}
+            </LoadingButton>
+            <LoadingButton type="button" variant="ghost" size="sm" className="h-7 text-xs" isPending={handoffSummary.isPending} onClick={handleHandoffSummary}>
+              {!handoffSummary.isPending && <Users className="h-3.5 w-3.5 mr-1" />}
               Handoff summary
-            </Button>
-            <Button type="button" variant="ghost" size="sm" className="h-7 text-xs" disabled={rootCauseCluster.isPending} onClick={handleRootCauseCluster}>
-              {rootCauseCluster.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <GitBranch className="h-3.5 w-3.5 mr-1" />}
+            </LoadingButton>
+            <LoadingButton type="button" variant="ghost" size="sm" className="h-7 text-xs" isPending={rootCauseCluster.isPending} onClick={handleRootCauseCluster}>
+              {!rootCauseCluster.isPending && <GitBranch className="h-3.5 w-3.5 mr-1" />}
               Find root cause
-            </Button>
+            </LoadingButton>
           </div>
 
           {isLoading ? (

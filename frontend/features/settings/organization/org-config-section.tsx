@@ -8,7 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import NextImage from "next/image";
-import { Loader2, Globe, Image as ImageIcon, Clock, IndianRupee, CalendarRange, Users, Palette } from "lucide-react";
+import { Globe, Image as ImageIcon, Clock, IndianRupee, CalendarRange, Users, Palette } from "lucide-react";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { UploadIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -90,10 +90,10 @@ interface OrgConfigSectionProps {
 function LogoUploadButton({ uploading, onClick }: { uploading: boolean; onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
-    <Button type="button" variant="outline" size="sm" className="shrink-0" disabled={uploading} onClick={onClick} {...hoverHandlers}>
-      {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <UploadIcon ref={iconRef} size={14} className="mr-1" />}
+    <LoadingButton type="button" variant="outline" size="sm" className="shrink-0" isPending={uploading} onClick={onClick} {...hoverHandlers}>
+      {!uploading && <UploadIcon ref={iconRef} size={14} className="mr-1" />}
       Upload
-    </Button>
+    </LoadingButton>
   );
 }
 
@@ -128,7 +128,7 @@ export function OrgConfigSection({
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-semibold flex items-center gap-2">
-            <Globe className="h-4 w-4 text-blue-600" />
+            <Globe className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             App Configuration
           </CardTitle>
           {!isEditingConfig && (

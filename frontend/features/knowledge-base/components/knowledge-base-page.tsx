@@ -10,6 +10,7 @@ import { ChevronUp, Loader2, MessageSquare, Send } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { useKbAsk } from "@/hooks/api/kb/ask";
 import {
@@ -272,10 +273,10 @@ export default function KnowledgeBasePage() {
             <MessageSquare className="h-4 w-4" />
             Conversations
           </Button>
-          <Button variant="outline" size="sm" className="gap-1.5" onClick={handleSourcesClick}>
-            {uploadSource.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <BookOpenTextIcon size={16} />}
+          <LoadingButton variant="outline" size="sm" className="gap-1.5" isPending={uploadSource.isPending} onClick={handleSourcesClick}>
+            {!uploadSource.isPending && <BookOpenTextIcon size={16} />}
             Sources
-          </Button>
+          </LoadingButton>
         </div>
       }
     >

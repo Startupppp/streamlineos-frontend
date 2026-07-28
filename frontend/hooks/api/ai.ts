@@ -14,6 +14,7 @@ import type {
 export function useAIScoreLead() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["a", "i", "score", "lead"],
     mutationFn: (leadId: number) =>
       apiClient.post<LeadScoreResult>("/ai/score-lead", { leadId }),
     onSuccess: (_, leadId) => {
@@ -26,6 +27,7 @@ export function useAIScoreLead() {
 export function useAIBatchScoreLeads() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["a", "i", "batch", "score", "leads"],
     mutationFn: (leadIds: number[]) =>
       apiClient.post<{ results: Record<number, LeadScoreResult>; scored: number }>(
         "/ai/score-lead",
@@ -52,6 +54,7 @@ interface GenerateEmailInput {
 
 export function useGenerateEmail() {
   return useMutation({
+    mutationKey: ["generate", "email"],
     mutationFn: (input: GenerateEmailInput) =>
       apiClient.post<GeneratedEmail>("/ai/generate-email", input),
   });
@@ -60,6 +63,7 @@ export function useGenerateEmail() {
 export function usePredictDeal() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["predict", "deal"],
     mutationFn: (dealId: number) =>
       apiClient.post<DealPredictionResult>("/ai/predict-deal", { dealId }),
     onSuccess: (_, dealId) => {
@@ -71,6 +75,7 @@ export function usePredictDeal() {
 
 export function useNextBestAction() {
   return useMutation({
+    mutationKey: ["next", "best", "action"],
     mutationFn: (leadId: number) =>
       apiClient.post<NextActionResult>("/ai/next-action", { leadId }),
   });
@@ -79,6 +84,7 @@ export function useNextBestAction() {
 export function useAnalyzeChurnRisk() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["analyze", "churn", "risk"],
     mutationFn: (input: { clientId: number; openTickets?: number; ticketsLast90Days?: number; daysSinceLastActivity?: number | null }) =>
       apiClient.post<ChurnRiskResult>("/ai/churn-risk", input),
     onSuccess: () => {
@@ -89,6 +95,7 @@ export function useAnalyzeChurnRisk() {
 
 export function useEnrichLead() {
   return useMutation({
+    mutationKey: ["enrich", "lead"],
     mutationFn: (input: { name: string; company?: string; email?: string; designation?: string; city?: string }) =>
       apiClient.post<LeadEnrichmentResult>("/ai/enrich-lead", input),
   });
@@ -97,6 +104,7 @@ export function useEnrichLead() {
 export function useAIScoreCandidate() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["a", "i", "score", "candidate"],
     mutationFn: (input: { candidateId: number; jobId?: number }) =>
       apiClient.post<CandidateScoreResult>("/ai/score-candidate", input),
     onSuccess: () => {
@@ -107,6 +115,7 @@ export function useAIScoreCandidate() {
 
 export function useAIGenerateReview() {
   return useMutation({
+    mutationKey: ["a", "i", "generate", "review"],
     mutationFn: (input: { userId: string; periodStart: string; periodEnd: string }) =>
       apiClient.post<ReviewDraftResult>("/ai/generate-review", input),
   });
@@ -114,6 +123,7 @@ export function useAIGenerateReview() {
 
 export function useAISuggestHelpdeskReply() {
   return useMutation({
+    mutationKey: ["a", "i", "suggest", "helpdesk", "reply"],
     mutationFn: (ticketId: number) =>
       apiClient.post<HelpdeskReplyResult>("/ai/helpdesk-reply", { ticketId }),
   });
@@ -121,6 +131,7 @@ export function useAISuggestHelpdeskReply() {
 
 export function useAIAttritionRisk() {
   return useMutation({
+    mutationKey: ["a", "i", "attrition", "risk"],
     mutationFn: (userId: string) =>
       apiClient.post<AttritionRiskResult>("/ai/attrition-risk", { userId }),
   });
@@ -143,6 +154,7 @@ export interface ObjectionHandlerResult {
 
 export function useObjectionHandler() {
   return useMutation({
+    mutationKey: ["objection", "handler"],
     mutationFn: (data: ObjectionHandlerInput) =>
       apiClient.post<ObjectionHandlerResult>("/ai/objection-handler", data),
   });
@@ -161,6 +173,7 @@ export interface SentimentResult {
 
 export function useSentimentAnalysis() {
   return useMutation({
+    mutationKey: ["sentiment", "analysis"],
     mutationFn: (data: { text: string; clientName?: string }) =>
       apiClient.post<SentimentResult>("/ai/sentiment-analysis", data),
   });
@@ -190,6 +203,7 @@ export interface NLSearchResult {
 
 export function useNLSearch() {
   return useMutation({
+    mutationKey: ["n", "l", "search"],
     mutationFn: (query: string) =>
       apiClient.post<NLSearchResult>("/ai/nl-search", { query }),
   });
@@ -208,6 +222,7 @@ export interface AccountSummaryResult {
 
 export function useAccountSummary() {
   return useMutation({
+    mutationKey: ["account", "summary"],
     mutationFn: (clientId: number) =>
       apiClient.post<AccountSummaryResult>("/ai/account-summary", { clientId }),
   });
@@ -222,6 +237,7 @@ export interface ReportNarratorResult {
 
 export function useReportNarrator() {
   return useMutation({
+    mutationKey: ["report", "narrator"],
     mutationFn: (data: { data: string; context?: string }) =>
       apiClient.post<ReportNarratorResult>("/ai/report-narrator", data),
   });
@@ -237,6 +253,7 @@ export interface MeetingPrepResult {
 
 export function useMeetingPrep() {
   return useMutation({
+    mutationKey: ["meeting", "prep"],
     mutationFn: (data: {
       meetingTitle: string;
       attendeeType: "lead" | "client";
@@ -260,6 +277,7 @@ interface GenerateJdInput {
 
 export function useGenerateJobDescription() {
   return useMutation({
+    mutationKey: ["generate", "job", "description"],
     mutationFn: (input: GenerateJdInput) =>
       apiClient.post<{ description: string }>("/ai/generate-jd", input),
   });
@@ -280,12 +298,14 @@ export function useOrgFeatureFlags() {
   return useQuery({
     queryKey: queryKeys.settings.featureFlags(),
     queryFn: () => apiClient.get<OrgFeatureFlags>("/settings/feature-flags"),
+    staleTime: 30_000,
   });
 }
 
 export function useUpdateFeatureFlag() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["update", "feature", "flag"],
     mutationFn: (data: { flag: keyof OrgFeatureFlags; enabled: boolean }) =>
       apiClient.patch<{ success: boolean; flag: string; enabled: boolean }>(
         "/settings/feature-flags",

@@ -2,9 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Progress } from "@/components/ui/progress";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getApiError } from "@/lib/api-client";
@@ -216,17 +217,13 @@ export function RuntimeFlow({
           <ArrowLeft className="mr-1.5 h-4 w-4" />
           Back
         </Button>
-        <Button
+        <LoadingButton
           onClick={handleNext}
-          disabled={saving}
+          isPending={saving}
+          loadingText="Saving…"
           className="h-11 min-w-[140px] gap-2 font-medium sm:ml-auto"
         >
-          {saving ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Saving…
-            </>
-          ) : isLast ? (
+          {isLast ? (
             <>
               Submit
               <ArrowRight className="h-4 w-4" />
@@ -237,7 +234,7 @@ export function RuntimeFlow({
               <ArrowRight className="h-4 w-4" />
             </>
           )}
-        </Button>
+        </LoadingButton>
       </div>
 
       <p className="text-center text-[11px] text-muted-foreground">

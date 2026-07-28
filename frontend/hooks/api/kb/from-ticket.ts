@@ -10,6 +10,7 @@ interface CreateFromTicketInput {
 
 export function useCreateKbArticleFromTicket() {
   return useMutation({
+    mutationKey: ["create", "kb", "article", "from", "ticket"],
     mutationFn: ({ ticketId, spaceId }: CreateFromTicketInput) =>
       apiClient.post<KbArticle>(`/kb/articles/from-ticket/${ticketId}`, { spaceId }),
   });

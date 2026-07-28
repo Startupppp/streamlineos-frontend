@@ -80,6 +80,7 @@ export function useCrmPipelines(type?: CrmPipelineType) {
       if (!type) return sorted;
       return sorted.filter((p) => p.type === type);
     },
+    staleTime: 30_000,
   });
 }
 
@@ -96,6 +97,7 @@ export function useCrmStages(pipelineIdOrType: string) {
         .slice()
         .sort((a, b) => a.sortOrder - b.sortOrder);
     },
+    staleTime: 30_000,
   });
 }
 
@@ -109,6 +111,7 @@ export function useCrmOptions(type: CrmOptionType) {
         .slice()
         .sort((a, b) => a.sortOrder - b.sortOrder);
     },
+    staleTime: 30_000,
   });
 }
 

@@ -19,15 +19,107 @@ server-to-server and external API consumers. Never batch-delete unverified.
 
 ---
 
-## BLOCKER — clears a third of this register
+## BLOCKER — RESOLVED 2026-07-28
 
-- [ ] **B-01** `backend/.env` `DATABASE_URL` fails auth (`password authentication failed for user
-  'neondb_owner'` — Neon password rotated mid-session). 54 journaled migrations up to
-  `0333_pm_workspace_id_not_null.sql` are authored and idempotent but **none have run**.
-  → Only the user can fix this credential. Everything marked **[DB]** is blocked on it.
-- [ ] **B-02** [DB] Create the `prod-recon-baseline` Neon backup branch **before** any migration.
-  Steps 2 and 7 of `pending-operator-sql-runbook.md` are destructive (`SET NOT NULL`, `DROP TABLE`);
-  without this branch there is no rollback.
+- [x] **B-01** ✅ CLEARED Credential rotated and verified. Connected to Neon, PostgreSQL 18.4,
+  `neondb` / `neondb_owner`.
+  ⚠️ **The runbook's premise was wrong.** It said the 54 migrations were "authored but none have
+  run". The `drizzle.__drizzle_migrations` ledger holds **54 applied rows** — exactly matching the
+  54 journal entries — and the database has **787 public tables**. The schema is fully migrated.
+  Verified the invariants really landed: `organizations.owner_membership_id` is `NOT NULL`, and all
+  five previously "code-only" tables exist (`organization_people`, `workers`, `worker_engagements`,
+  `pm_workspaces`, `pm_workspace_memberships`). Treat `pending-operator-sql-runbook.md` as stale.
+- [ ] **B-02** [DB] ⚠️ STILL REQUIRED before any `DROP TABLE`. A `prod-recon-baseline` Neon branch
+  cannot be created from here (no Neon API credential in `.env`) — **only the user can take it**.
+  Every drop below is data-risk-free (all target tables measured at **0 rows**) but `DROP TABLE` is
+  irreversible, so the snapshot still gates it.
+
+### COLD REBUILD — done 2026-07-28, and it proves the Wave 0 exit criterion
+
+The user wiped the database. It was rebuilt from empty and **reached head: 55/55 migrations, 0
+failures, 776 tables**. This is the first time the chain has been proven to build from nothing —
+the Wave 0 exit criterion (`schema-change-plan.md` §9) that was never met.
+
+- [x] **B-09** ✅ A `DROP TABLE`-only wipe is NOT enough. It left **397 enum types and 413
+  functions** behind, and `0000` then failed with `type "account_type" already exists`. Required
+  `DROP SCHEMA public CASCADE; CREATE SCHEMA public;` + re-grants. Extensions live in `public` so
+  they are dropped too — `db:bootstrap` recreates all five before migrating, which is exactly why
+  that script exists. **Record this: wiping = drop the schema, not the tables.**
+- [x] **B-10** ✅ The stale `drizzle.__drizzle_migrations` ledger still claimed 54 applied rows
+  against an empty database. Left alone it would have made `db:migrate` skip everything and create
+  nothing. Truncated before the rebuild.
+- [x] **B-11** ✅ **Strategy decision — kept the 54-migration chain, did NOT regenerate a baseline.**
+  `db:generate` cannot run headless anyway (it needs a TTY for the rename-vs-drop prompt), but the
+  deciding reason is that five migrations carry SQL Drizzle cannot express and would have silently
+  destroyed: `guard_owner_membership` + its trigger (0310/0311), `set_org_id_from_parent` (0320),
+  five `UNIQUE USING INDEX` candidate-key promotions (0324), and the `btree_gist` overlap
+  constraint (0330). Verified all present after the rebuild: both functions, the owner-guard
+  trigger, **69 self-maintaining `org_id` triggers**, `excl_worker_engagements_overlap`, all 5
+  extensions, and `organizations.owner_membership_id NOT NULL`.
+- [x] **B-12** ✅ Instead of regenerating, added **`0334_drop_dead_schema_objects.sql`** (hand-written,
+  like the repo's existing `recon_*` migrations) and journaled it as idx 54. Verified end state:
+  all 12 dead tables **absent**, all 4 dead `users` columns **absent**, and the 6 `journal_lines`
+  dimension columns **still present** (they are live — see D-13 correction).
+- [x] **D-13** ❌ **CORRECTED — the audit was wrong.** `journal_lines.{client_id, vendor_id,
+  project_id, department_id, employee_id, tax_code_id}` are NOT dead placeholders. They are read and
+  written by `accounting/finance-posting.service.ts`, `accounting-gl/general-ledger.service.ts` and
+  `finance-reports/analytics-reports.service.ts`. Removal was refused and they were kept.
+- [ ] **B-13** `db:bootstrap` died once mid-run on a transient DNS failure (`ENOTFOUND` on the
+  direct host) and exited 13 with an unsettled-top-level-await warning. It is resumable — it records
+  hashes per migration and `SKIP`s applied ones — so re-running finished the job. Worth hardening
+  the script's error path so a network blip reports cleanly instead of an unsettled-await warning.
+
+### Post-rebuild seeding state (2026-07-28)
+
+- [x] **B-14** ✅ `backfill:rbac` returning all zeros is **correct, not a failure** — it seeds RBAC
+  *for existing organizations*, and there are none yet. Re-run it after the first org exists.
+- [x] **B-15** ✅ Global catalogs seeded and verified: `permissions` **638**, `ai_credit_packs` **4**,
+  `payroll_templates` **14**.
+  The permissions table is **exactly in sync** with the refactored catalog: 630 literal descriptors
+  + 8 generated `MODULE_ACCESS_PERMISSIONS` keys (`hr|crm|inventory|build` × `access:view|manage`)
+  = 638. All 5 keys added during the P0 security work are present; all 7 removed keys are absent.
+  This matters because `role_permission_grants.permission_key` FKs to `permissions.name` — a drift
+  here would fail every grant insert.
+- [x] **B-16** ✅ Traced the bootstrap path. `org-setup.service.ts:187` inserts the `org_modules`
+  rows on org creation (translating through `moduleKeysFromOrgModuleValues`, which correctly skips
+  CORE keys — so `chat` and `kb` get no row and are always enabled). **Roles are NOT auto-seeded**:
+  `seedDefaultRoles` is only reachable via `roles.controller.ts:108`, so `backfill:rbac` (or that
+  endpoint) is still required after the first org exists.
+- [x] **B-17** ✅ `seed:platform-admin` does **not** create a user — it looks one up by email and
+  flips `isPlatformAdmin`. It cannot run before a signup.
+- [ ] **B-18** Remaining order-of-operations for a usable environment (needs a human signup):
+  1. start the app and sign up → creates the first `users` row;
+  2. complete `/org-setup` → creates the org, the owner membership and `org_modules`;
+  3. `pnpm -C backend seed:platform-admin <email>`;
+  4. `pnpm -C backend backfill:rbac` → now finds the org and seeds roles + grants.
+  `seed:demo-coupons` is org-scoped demo data — skip unless demo data is wanted.
+
+### Live-data findings from the first real connection
+
+- [x] **B-04** ✅ FIXED — **live bug, found by querying the DB.** `@RequireModule("chat")` guards
+  **11 endpoints**, but `chat` was absent from `MODULE_CATALOG` (`common/rbac/module-vocabulary.ts`).
+  That made it neither core nor provisionable: `moduleKeysFromOrgModuleValues` silently drops any key
+  not in the catalog, so `org_setup` could never write a `chat` row, and `isModuleEnabled('chat')`
+  fell through to the fail-closed default. Result: **every chat endpoint 403'd for every non-owner**.
+  Fixed by adding `chat` to `MODULE_CATALOG`; since it has no `MODULE_KEY_TO_ORG_MODULE` projection
+  it derives as CORE (same treatment as `kb`), so it is always enabled and needs no data change.
+- [x] **B-05** ✅ S-05 **does not affect this database.** All 6 `org_modules.module_key` values are
+  already lowercase — zero UPPERCASE/mixed offenders. The `FINANCE`/`HELPDESK`/`PROJECTS` mismatch is
+  not present here. The code-side hardening (the `modules` catalog table + FK, M-01) is still the
+  durable fix so the old vocabulary cannot return, but there is no urgent data repair.
+- [ ] **B-06** ⚠️ **`enabled_modules` and `org_modules` disagree** for the one org present:
+  array = `build, chat, crm, finance, helpdesk, hr, inventory, knowledge`;
+  table = `accounting, build, crm, hr, inventory, support`.
+  The array is the old vocabulary (`finance`/`helpdesk`) plus `chat`/`knowledge`. `knowledge`→`kb`
+  is core so unaffected; `chat` was the real casualty (fixed in B-04). This confirms A-01: the array
+  is stale and misleading, and dropping it is the right call — but reconcile per-org first on any
+  database with more than this one org.
+- [x] **B-07** ✅ All 12 dead tables measured: `workspace_search_chunks`, `workflow_actions`,
+  `workflow_triggers`, `party_addresses`, `crm_party_accounts`, `crm_views`, `hr_mentorships`,
+  `inv_party_vendor_profiles`, `role_permissions`, `targets`, `target_history` all hold **0 rows**;
+  `one_on_one_action_items` does not exist in the DB at all. Dropping them is zero-data-risk.
+- [x] **B-08** ✅ Owner invariant holds — **0 orgs** with anything other than exactly one
+  `is_owner = true` row. Pre-flight 1a passes.
 - [ ] **B-03** [CODE] Fix `docs/schema-migration/pending-operator-sql-runbook.md` Step 1a — the
   pre-flight query selects `is_org_owner` and `organization_id`, but the real columns are `is_owner`
   and `org_id` (`common/auth.ts:74-89`, confirmed by `migrations/0329_owner_exactly_one.sql`).
@@ -95,25 +187,29 @@ server-to-server and external API consumers. Never batch-delete unverified.
 Each was found while splitting a file. Fixing a bug inside a "pure refactor" pass makes the diff
 unreviewable, so they are logged here instead.
 
-- [ ] **S-13** ⚠️ **Cross-tenant read** — `chat/chat-channel-members.service.ts` `getChannel` asserts
-  the caller is a member, then fetches the channel with `eq(chatChannels.id, channelId)` and **no
-  `orgId` predicate**. A member of channel 5 in org A could read channel 5 in org B on an id
-  collision. Pre-existing (was `chat-channels.service.ts:209-226`). This is an OWASP A01 BOLA
-  defect — treat as P0 once verified.
+- [x] **S-13** ✅ FIXED — and it was **three** methods, not one. `getChannel`, `updateChannel` and
+  `joinPublicChannel` in `chat-channel-members.service.ts` all queried `chat_channels` by id with no
+  `org_id` predicate. All three now take `orgId` and filter on it; the three controller call sites
+  pass `u.orgId`; `getChannel` returns not-found (not forbidden) for a foreign channel so it cannot
+  be used to probe another tenant for existence. Audited the rest of both chat services — the
+  remaining queries target `chat_channel_members` keyed by `channelId + userId`, and
+  `chat-channels.service.ts` already carried its `orgId` predicates.
+- [x] **S-18** ⚠️ **REDIAGNOSED — cannot be fixed in code.** `moveBusinessUnit` accepts
+  `newParentId` but `org_business_units` **has no `parent_id` column at all** — the table is flat.
+  The method is a phantom API: it can never persist what its signature promises. Fixing it needs a
+  self-referential `parent_id` column (which the north-star `org_units` design supplies), so it is
+  folded into T-05. The sibling `moveBranch`/`moveDepartment`/`moveTeam` were checked and are
+  correct — they persist their real FK.
+- [x] **S-15** ✅ FIXED `usedCodes.add(d.code)` now guards `if (d.code?.trim())`, matching the
+  defensive pattern already on the preceding line.
 - [ ] **S-14** `signos` `send` distributes recipient tokens (`status: "invited"`,
   `signingTokenHash`) in a plain loop **outside** the transaction that flips the envelope to
   `"sent"`. A crash mid-loop leaves recipients holding live invite tokens against a still-`draft`
   envelope. Pre-existing; preserved exactly by the split.
-- [ ] **S-15** `hr-directory/employee-bulk-onboarding.service.ts:44` — `usedCodes.add(d.code)` adds
-  `null` when the nullable `code` column is null, so the duplicate-code guard never fires for
-  null-coded departments and one can be admitted twice.
 - [ ] **S-16** `payroll` `importBankReturn` calls `markItemPaid`/`markItemFailed` in a loop with no
   batching — N DB round-trips per bank-return file. Performance, not correctness.
 - [ ] **S-17** `onboarding` `sendReminders(orgId, appUrl)` never uses `appUrl`, and had a bare
   `catch {}` silently swallowing email failures (a `logger.warn` was added during the split).
-- [ ] **S-18** `org-hierarchy` **`moveBusinessUnit` is a silent no-op** — it accepts
-  `newParentId: string | null` but the update writes only `{ updatedAt: new Date() }`; the parent is
-  never persisted. Re-parenting a business unit appears to succeed and does nothing.
 - [ ] **S-19** `rbac` `addRoleMember` compares `eq(departments.id, input.principalId)` — an integer
   PK against a `string` `principalId`. Latent type mismatch Drizzle may silently coerce. Related to
   the wider integer-vs-text hierarchy defect (C-01…C-05).
@@ -135,12 +231,15 @@ unreviewable, so they are logged here instead.
 
 ### Invitations
 
-- [ ] **S-10** [CODE][DB] `invitations.token` is stored **plaintext** (`common/auth.ts:193`).
-  Replace with `token_hash` (SHA-256), compare by hash, drop the plaintext column.
-- [ ] **S-11** [DB] `invitations.revoked_by` is `integer` against `users.id text` — unjoinable.
-  Change to `revoked_by_membership_id int` + composite FK.
+- [x] **S-10** ✅ DONE `invitations.token` was stored **plaintext**. Now `token_hash` (SHA-256 via
+  `node:crypto`, unique); the raw token is emailed and never persisted, and accept looks up by hash.
+  All five write/read sites in `invitations.service` updated, plus `seed-demo`.
+- [x] **S-11** ✅ DONE `invitations.revoked_by` (integer against `users.id text`, unjoinable) →
+  `revoked_by_membership_id` with an FK to `organization_members`, matching how
+  `inviter_membership_id` / `accepted_membership_id` were already modelled.
 - [ ] **S-12** [CODE][DB] Add `invitation_events` child table (resend / revoke / accept / decline)
   instead of overwriting the single `revokedAt` / `acceptedAt` / `declinedAt` timestamps.
+  Not done — deferred with the rest of the lifecycle-audit work.
 
 ---
 
@@ -322,36 +421,254 @@ document as historical, not as a work list.
 
 ## P4 — Normalize arrays into child tables (your explicit requirement) — [DB]
 
-### The replacement table already exists — just drop the array and repoint reads
+### The replacement table already exists — ✅ ALL THREE DONE (migrations 0335 + 0336, applied)
 
-- [ ] **A-01** `organizations.enabled_modules text[]` (`common/auth.ts:23`) → `org_modules`
-  (`common/access.ts:65`). This is the root of S-05. Backfill, shadow-compare, switch reads, drop.
-- [ ] **A-02** `kb_articles.tags text[]` (`support/kb.ts:72`) → `kb_tags` + `kb_article_tags`
-  (`kb/tags.ts:15,30`).
-- [ ] **A-03** `hr_employee_profiles.skills text[]` (`hr/core-people.ts:159`) → `employee_skills`
-  (`hr/performance.ts:227`), which already carries level, verified flag and endorsements.
+- [x] **A-01** ✅ `organizations.enabled_modules text[]` **dropped**; `org_modules` is now the sole
+  store. Consumers repointed at `EntitlementsService.listModules()` rather than reading the array:
+  `auth-tokens.service`, `auth.service`, `agent-token.guard`, `organization-settings.service`,
+  `org-setup.service` (both `completeSetup` and `skipSetup` — they already called
+  `provisionOrgModules()`), the `updateOrgSettingsSchema` DTO, and two seed scripts.
+- [x] **A-02** ✅ `kb_articles.tags text[]` **dropped** → the pre-existing `kb_tags` +
+  `kb_article_tags`. Four services repointed (`kb-tags`, `support-kb`, `kb-articles`, `public/kb`).
+  List endpoints use a correlated `ARRAY(SELECT …)` subquery per row against the composite PK
+  rather than a per-article query, so no N+1 was introduced. `kb-tags.service` no longer syncs back
+  to the article row — the join tables are the single store.
+- [x] **A-03** ✅ `hr_employee_profiles.skills text[]` **dropped** → the richer pre-existing
+  `employee_skills`. `hr-analytics-plus.getSkillsGap()` rewritten: it previously matched with
+  `p.skills::text LIKE '%' || skill_name || '%'` — a substring match against a stringified array,
+  which would match partial words — and now joins `employee_skills` on `org_id + user_id` with
+  `ILIKE`. `employee-mutations` and `employee-skills` already used the table correctly.
+- [x] **A-06** ✅ `organizations.allowed_email_domains text[]` **dropped** → new
+  `organization_allowed_email_domains` (uuid PK, `org_id` FK CASCADE, lowercased `domain`,
+  `UNIQUE (org_id, domain)`, index on `org_id`). `invitations.service` reads it; settings writes go
+  through a `replaceAllowedDomains()` DELETE+INSERT inside one transaction.
+
+### Wave landed 2026-07-28 — migrations 0337–0340, applied, 61/61, 788 tables
+
+- [x] **M-01/S-05/S-09** ✅ `modules_catalog` table created (lowercase-only `CHECK`, `is_core`,
+  `is_paid_only`), `org_modules.module_key` now **FK-constrained to it** — an UPPERCASE or unknown
+  key is a hard constraint violation rather than a silent fail-closed 403. Seeded with 11 modules
+  (`kb`, `chat` core; `inventory`, `payroll` paid-only). `MODULE_KEY_TO_ORG_MODULE`,
+  `ORG_MODULE_TO_MODULE_KEY` and `moduleKeysFromOrgModuleValues` are **deleted** — one lowercase
+  vocabulary now. The migration also de-duplicates and normalises pre-existing UPPERCASE rows
+  before adding the FK, and fixes the same defect in `module_setup_checklists`. `EntitlementsService`
+  loads the core set once at startup with a compile-time fallback, so the per-request path stays cheap.
+- [x] **O-03/O-04/O-05** ✅ `module_ownerships` (one owner per module per org, composite FK to
+  `organization_members(org_id, id)`, `ON DELETE RESTRICT` so the last owner can't be deleted out
+  from under it) and `ownership_transfers` (PENDING/ACCEPTED/DECLINED/CANCELLED/EXPIRED, DB-level
+  `CHECK ((module_key IS NOT NULL) = (scope = 'MODULE'))`, two partial unique indexes enforcing at
+  most one pending transfer per scope). Acceptance is a separate authenticated action by the
+  **recipient**; accept re-verifies inside a `FOR UPDATE` transaction that the initiator still owns
+  the resource, then bumps the permissions version in that same transaction. Org owner may
+  force-reassign a module owner without a handshake. Wired into `app.module.ts`; four permission
+  keys added to the catalog, with `ownership:transfer:respond` in `EMPLOYEE_SELF_SERVICE` so any
+  member can accept a transfer aimed at them.
+- [x] **M-02..M-09** ✅ `roles.module_key` + `roles.rank` + `permissions.{module_key, risk_class,
+  is_delegable}` + the `permission_supported_scopes` child table (scopes are a table, not an array).
+  `ROLE_RANK` ladder (Owner 0 / Org Admin 10 / Module Admin 20 / module custom 30 / functional 40)
+  with **rank enforcement that did not exist before** — nothing previously stopped a
+  `settings:rbac:manage` holder creating a role granting `settings:manage`. Module Admins can only
+  grant within their own module, and may configure a same-module peer but never a cross-module one.
+  21 unit tests cover the escalation paths.
+- [x] **U-12** ✅ The nine HR/Payroll surfaces moved from `useOrgMembers(1, 200)` to
+  `useOrgMembersByIds`, so names no longer silently blank past the 200th member. `rosters-grid`
+  improved further — resolution moved into `RosterCard`, so a collapsed card issues no query at all.
+  Also fixed a **clobber bug found in `useOrgMembersByIds` itself**: `enabled` was declared before
+  `...options`, letting a caller silently override the internal `ids.length > 0` gate.
+- [x] **F-16** ✅ Added `lib/rbac/permissions/__tests__/catalog-sync.test.ts` — reads the backend
+  catalog from disk and fails when the frontend `PERMISSIONS` list or `PermissionKey` union drifts
+  from it. It surfaced 11 pre-existing frontend-only phantom keys (`dm:leads:*`, `dm:campaigns:*`,
+  `dm:social:*`, `chat:submit_lead`), pinned in a known-issues set so the suite is green while
+  blocking any NEW drift. See F-18.
+- [x] **A-04..A-11** ✅ The remaining entity arrays normalized into 7 new child tables:
+  `territory_reps` (was `assigned_reps integer[]`, now real FKs), `territory_locations` (folds
+  `states[]` + `cities[]` into one `kind`-discriminated table), `document_type_roles`,
+  `hr_employee_education`, `hr_employee_certifications` — **with a real `expires_at` date column and
+  a partial index**, so credential-expiry alerting is now expressible at all, which it was not
+  against a JSONB blob — `support_ticket_attachments`, and `hr_workflow_instance_attachments`.
+  Every list endpoint uses Drizzle's `with:` batching rather than a per-row query, so no N+1 was
+  introduced. ARRAY columns are down from 24 to 20.
+  **Five columns deliberately left as arrays** because they are bounded value lists, not entity
+  collections: `terminations.reasons`, `terminations.supporting_doc_urls`,
+  `document_templates.variables`, `onboarding_tasks.depends_on_task_ids`, `resignations.feedback`.
+  One correction: the attachments column was on `hr_workflow_step_actions`, not
+  `hr_workflow_instances` as the audit recorded.
+- [ ] **F-18** Remove the 11 phantom frontend permission keys the drift guard pinned — they exist in
+  the frontend catalog and Roles UI but no backend endpoint enforces them, so granting them does
+  nothing. Confirm each is unused, then delete and shrink `KNOWN_PHANTOM_KEYS` to empty.
+- [ ] **M-16** `guided-tour.service.ts:26` still seeds `guided_tours.module_key = "HR"` (uppercase).
+  That table has no FK to `modules_catalog` so it is not a constraint violation, but it is the last
+  survivor of the old vocabulary — normalise it.
+
+### Wave landed 2026-07-28 (second) — migrations 0341–0343, applied, 64/64, 783 tables
+
+- [x] **S-06** ✅ **The stale-access bug is fixed.** `user_roles` and `membership_role_assignments`
+  were both read and **unioned** by `resolveUserPermissions`, so revoking a role from one silently
+  left the access alive via the other. Both are now **dropped**, replaced by one membership-keyed
+  `role_assignments` (composite FK `(org_id, organization_membership_id)` → `organization_members`
+  with CASCADE, so removing a membership atomically drops its assignments). Resolution is a single
+  query with the expiry filter in SQL — no fallback, no priority merge. Tests added proving a
+  revoked role and an expired assignment both grant nothing.
+- [x] **S-08** ✅ Decision recorded: `user_permissions` **kept**. It is an additive per-user explicit
+  grant, not a competing role source, so it carries no divergence risk — it stays as the final merge
+  layer. Not every duplicate-looking table is a duplicate.
+- [x] **T-01..T-04 (partial)** ✅ `org_units` (kind enum + self-referencing `parent_id`) and
+  `org_unit_members` created; **8 tables dropped**: `org_business_units`, `org_teams`,
+  `org_locations`, `org_cost_centers`, `user_memberships`, `hr_teams`, plus the two role tables
+  above. `moveBusinessUnit` is now implementable because `parent_id` finally exists (S-18).
+- [ ] **T-12** ⚠️ **Consolidation is PARTIAL — six legacy tables survive as FK anchors** because
+  schema files outside that pass still reference them: `departments` + `department_members`
+  (referenced by `group_roles`-based RBAC), `org_branches` (by `crm/contacts.ts` and
+  `inventory/warehouses.ts`), `org_departments` (by `hr/hiring.ts`), `hr_locations`, and `branches`.
+  Finishing the collapse means repointing those FKs at `org_units` and converting
+  `group_roles.group_id` from integer to uuid. Do this as one dependency-ordered pass — it was
+  correctly deferred rather than half-done across ownership boundaries.
+- [x] **M-05/M-11** ✅ `permissions.module_key` populated for all **638** keys; **722**
+  `permission_supported_scopes` rows seeded (all/team/own for scopable keys, `all` for the rest).
+  `ACCESS_MANAGED_MODULES` extended 4 → **11 modules**, so every module has an Access surface.
+  Immutable `ORG_ADMIN` (rank 10) and 11 `{MODULE}_MODULE_ADMIN` roles (rank 20) now seed
+  idempotently on org bootstrap, with `is_system` protection enforced in `roles.service`,
+  `role-permission.service` and `module-access.service`. Discovery endpoints added at
+  `GET /rbac/discovery/{permissions,grantable,templates,members}` — a Module Admin receives only
+  their own module's keys and cannot see ranks at or above their own. 9 tests green.
+- [x] **X-05..X-09** ✅ Per-module Access screen built at
+  `settings/module-access/[moduleKey]` — descriptive route param, **server-side** `requirePermission`
+  (not a client check), role-group list with create/rename/delete, a page→actions picker that derives
+  "pages" by grouping permission descriptors on `resource` (ticking the page grants view only;
+  expanding reveals individual actions with scope selects), member assignment, and an ownership
+  section with pending-transfer state.
+- [x] **X-10** ✅ **RESOLVED.** The screen had been built against 14 *assumed* endpoints while the
+  backend served 3 — `/groups` and `/ownership` 404'd, so the feature was dead on arrival. All 15
+  calls now map to real routes, verified side by side. Implementation notes:
+  - A new `module-access-groups.service.ts` holds the added capability; the existing
+    `module-access.service.ts` was left untouched, and `PUT /groups/:id/permissions` **delegates to
+    the existing `setRolePermissions`** rather than duplicating grant logic.
+  - `useCancelModuleOwnershipTransfer` was calling `POST …/cancel`, which never existed — corrected
+    to `DELETE …/ownership/transfer`.
+  - The route's hardcoded 4-module `MODULE_META` now covers all 11, which required adding 14 missing
+    `${module}:access:view|manage` entries to the frontend `PermissionKey` union — done properly
+    rather than papered over with an `as PermissionKey` cast.
+  - No new catalog keys were needed: `MODULE_ACCESS_PERMISSIONS` already generates them for all 11
+    modules after M-05.
+  **Lesson worth keeping:** a frontend built against assumed endpoints is exactly how phantom APIs
+  enter a codebase. When one agent owns the UI and another owns the API, give a single agent both
+  sides of the contract, or verify the mapping before either is considered done.
+- [ ] **M-17** `backfill-rbac-access.ts` seeds `permissions` without `module_key` and without
+  `permission_supported_scopes` rows. Add the same `split_part` update + scope inserts as a post-seed
+  step, or existing orgs get rows that migration 0343 already handled for fresh ones.
+
+### Wave landed 2026-07-28 (third) — migrations 0344–0347, applied, 68/68, 785 tables, 2,734 FKs
+
+- [x] **T-12 (mostly)** ✅ `org_branches` and `org_departments` **dropped**; `inv_warehouses`,
+  `job_postings`, `headcount_requests` and `onboarding_templates` repointed at `org_units`.
+  ⚠️ Implementation note: the agent kept `export const orgBranches = orgUnits` as **Drizzle aliases**
+  so untouched consumers still compile. That is a pragmatic shim, not a finished state — the aliases
+  should be inlined and removed once the remaining consumers are migrated, otherwise the code reads
+  as though two tables still exist.
+- [x] **C-06** ✅ Typed principal groups replace the polymorphic integer `group_roles.group_id`:
+  `principal_groups` (ORG_UNIT | CUSTOM, with a real `org_unit_id` FK), `principal_group_members`
+  (composite FK to `organization_members`), `group_role_assignments`. `access.service.ts` resolution
+  now runs through them, so the `org_*` hierarchy is finally visible to group-based RBAC — it never
+  was before. Four tests added covering group→role resolution and broadest-scope merging.
+- [x] **C-07 (partial)** ✅ `pm_project_grants` and `pm_workspace_grants` created as typed
+  replacements for polymorphic `resource_grants`.
+- [x] **T-07** ✅ `payrolls` (gen-1, write-dead) **dropped**; its four readers migrated to
+  `payroll_run_employees` joined through `payroll_runs` — `ops-copilot-tools`, `chat-assistant`,
+  `hr-analytics`, `compliance`. The dangling `incentives.payroll_id` FK went with it.
+  ⚠️ **Two semantic changes reported rather than hidden:** the AI payroll summary now groups by
+  *run* status (gen-2 has no equivalent per-employee status — its per-employee field is a
+  disbursement state), and YTD cost could exceed the gen-1 figure if an org runs BONUS/OFF_CYCLE runs
+  in the same month, because an employee then appears in more than one run. Verify against real data
+  before trusting those two numbers.
+- [x] **T-08** ✅ `salary_structures` (gen-1) **dropped**; `employee_salary_profiles` gained the four
+  flat fields it lacked (`basic_salary`, `hra_percentage`, `allowances`, `deductions`) so the existing
+  controller contract survives without requiring org-level component rows. ⚠️ gen-2 has a unique
+  constraint on `(org_id, user_id, effective_from)` that gen-1 lacked — two records with the same
+  effective date now 409 instead of silently duplicating.
+- [x] **C-01..C-21** ✅ **17 FK constraints added**, each with a deliberate delete rule:
+  `RESTRICT` where deletion must be blocked (`managed_products.owner_membership_id` as a **composite**
+  `(org_id, id)` FK so cross-tenant ownership is unrepresentable; `app_installations.app_id`),
+  `SET NULL` for audit/optional links. `organizations.purge_scheduled_by` converted integer → text.
+  Several were declared SQL-only rather than in Drizzle to avoid circular schema imports
+  (`common/` must not import `crm/`) — the constraint is real in the database either way.
+  `worker_engagements.worker_id` was found **already covered** by an existing composite FK.
+- [x] **M-16/M-17/F-18/S-12** ✅ `backfill-rbac-access` now sets `module_key` and seeds
+  `permission_supported_scopes` with the same `split_part` logic as migration 0343, so
+  script-bootstrapped orgs match migrated ones. The last uppercase module key (`guided_tours`) is
+  lowercased. **All 11 phantom frontend permission keys removed** and `KNOWN_PHANTOM_KEYS` emptied —
+  the drift guard is now fully armed. `invitation_events` added, written **inside the same
+  transaction** as every create/resend/accept/decline/revoke/expire.
+- [ ] **T-13** Still deferred, and each for a concrete reason rather than oversight:
+  `group_roles` + `departments` + `department_members` (still written by
+  `modules/rbac/role-member.service.ts` — drain into `group_role_assignments` first);
+  `resource_grants` (still used by `kb-access.service.ts` for `kb:space` — needs a `kb_space_grants`
+  typed table); `hr_locations` (blocked by integer `location_id` on `hr_time_devices` and
+  `hr_employments`); `branches` (its relations use columns `org_units` does not have).
+  Also still open: `users.branch_id` and `hr_employments.location_id` type fixes, which were
+  correctly skipped while their target tables were moving.
+
+## P0-MONEY — idempotency defects found by audit 2026-07-28
+
+A full idempotency audit of every consequential mutating endpoint found the repo runs **three
+different** idempotency mechanisms: the standard `@Idempotent` decorator over `command_fences`, a
+bespoke `PayrollCommandReceiptsService`, and an engine-level `inv_idempotency_keys` fence. Coverage
+is good in accounting, payroll and e-sign; the gaps cluster in billing and inventory.
+
+- [ ] **I-01** 🔴 **P0 — duplicate payment record.** `PATCH /billing/razorpay` → `verifyAndActivate`.
+  The Razorpay signature passes on a retry (same `razorpay_payment_id`) and `subscription_payments`
+  has **no unique constraint** on that column, so a retry writes a second payment row. Note the
+  sibling `platform_payments` table already has exactly that index — this one was simply missed.
+  **Fix in flight.**
+- [ ] **I-02** 🔴 **P0 — free credits.** `POST /billing/ai-credits/purchase` with an explicit
+  `paymentId` skips the existence check, and no unique index covers `(org_id, reference_id)` for
+  `type='PURCHASE'`. A retry increments the balance twice and writes two PURCHASE ledger rows — the
+  org receives credits it did not pay for. **Fix in flight.**
+- [ ] **I-03** P1 `POST /accounting/credit-notes/:id/apply` reads `appliedAmount` and `amountPaid`
+  **outside** the transaction, so concurrent calls both see stale values and both increment —
+  over-crediting the invoice and over-depleting the note.
+- [ ] **I-04** P1 `POST /accounting/assets/depreciation/runs/:id/reverse` posts GL journal entries
+  with no fence — a duplicate writes a second set of reversal entries.
+- [ ] **I-05** P1 `POST /payroll/runs/:id/payslips/publish` upserts safely but dispatches
+  notification emails unconditionally, so a retry re-emails every employee their payslip.
+- [ ] **I-06** P2 (7 more) `payroll import-return`, `invoices/recurring/run` (concurrent race),
+  `sign envelope correct`, `inventory transfers create`, `PO create`, `PO send`,
+  `stock release-reservation`.
+- [ ] **I-07** ⚠️ **Mechanism defects**, which matter more than any single endpoint:
+  - **No expiry sweep on any of the three fence tables.** `command_fences`, `payroll_command_receipts`
+    and `inv_idempotency_keys` all have `expires_at` and a covering index, and no cron deletes from
+    any of them. They grow forever.
+  - `PayrollCommandReceiptsService` re-claims a `FAILED` receipt **without comparing the request
+    hash**, so a previously-failed key can be reused with a completely different body. It also lacks
+    the optimistic lock the standard mechanism uses, so two callers can both re-claim and execute.
+  - `uniq_payroll_bank_batches_idempotency_key` is on `(idempotency_key)` alone, **not tenant-scoped**
+    — a §19 violation — and `createBatch` does read-then-insert outside a transaction, so a race
+    surfaces a raw 23505 as a 500 instead of a 409.
+  - Inventory's fence stores a response but **never replays it** — a safe retry gets a 409. Its
+    `request_hash` column is written nowhere, so mismatch detection is dead code, and with no lease a
+    crashed request stays IN_FLIGHT for 24h.
+
+## P1-PERF — query efficiency findings 2026-07-28
+
+- [ ] **Q-01** 🔴 `journal_lines.org_id` is **nullable** — a tenant-isolation hole (§19/§20 require
+  non-null `org_id` on every tenant table). Backfill then `SET NOT NULL`.
+- [ ] **Q-02** `journal_lines` has **no index on any** of `client_id`, `vendor_id`, `project_id`,
+  `department_id` — every dimension-filtered GL, P&L or project-cost report full-scans a table that
+  grows with every accounting event.
+- [ ] **Q-03** `notifications` lacks an index matching its own hot query
+  (`org_id + user_id + deleted_at IS NULL ORDER BY id DESC`) — that fires on every authenticated
+  page load for every user. A partial index `WHERE deleted_at IS NULL` is the right shape.
+- [ ] **Q-04** Leading-wildcard `ILIKE '%…%'` search on `tickets.title` and four `leads` columns —
+  banned by §19 and unindexable. Needs `pg_trgm` GIN (the extension is already installed).
+- [ ] **Q-05** N+1s ranked by blast radius: survey answer save (3 queries × N answers, **and outside
+  any transaction** so a crash leaves a half-saved response), quality-recall stock engine per stock
+  level, finance posting resolving an account per journal line (runs on every payroll and invoice
+  posting), payroll generation writing per employee (~600 round-trips for 200 staff).
+- [ ] **Q-06** Unbounded reads: `audit_logs` `SELECT DISTINCT action` with no limit (full scan,
+  grows forever — cache it), and `getLead` loading every activity ever recorded on a lead.
 
 ### FK arrays with no referential integrity — new child tables needed
 
-- [ ] **A-04** `territories.assigned_reps integer[]` (`crm/deals.ts:683`) →
-  `territory_reps(territory_id, crm_person_id, assigned_at)`.
-- [ ] **A-05** `document_types.applicable_roles text[]` (`hr/offboarding.ts:125`) →
-  `document_type_roles(document_type_id, role_id)`.
-- [ ] **A-06** `organizations.allowed_email_domains text[]` (`common/auth.ts:21`) →
-  `organization_allowed_email_domains` (north-star §1).
-- [ ] **A-07** `territories.states text[]`, `territories.cities text[]` (`crm/deals.ts:681,682`) →
-  `territory_locations(territory_id, kind, value)`.
-
 ### JSONB arrays holding lifecycle entities
-
-- [ ] **A-08** `hr_employee_profiles.education` (`hr/core-people.ts:161`) → `hr_employee_education`.
-- [ ] **A-09** `hr_employee_profiles.certifications` (`hr/core-people.ts:168`) →
-  `hr_employee_certifications`. Expiry alerting cannot work against a JSONB blob.
-- [ ] **A-10** `support_ticket_messages.attachments` (`support/tickets.ts:54`) →
-  `support_ticket_attachments`, matching the existing `ticket_attachments` pattern
-  (`build/tasks.ts:184`).
-- [ ] **A-11** `hr_workflow_instances.attachments` (`hr/workflow-engine.ts:133`) →
-  `hr_workflow_instance_attachments`.
 
 ### Keep as arrays — bounded, non-entity value lists (documented decision, not an oversight)
 

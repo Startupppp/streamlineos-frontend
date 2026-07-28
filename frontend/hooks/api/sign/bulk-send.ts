@@ -64,5 +64,6 @@ export function useBulkSendErrorReport(id: number | undefined) {
     queryKey: [...queryKeys.signBulkSend.job(id ?? 0), "error-report"] as const,
     queryFn: () => apiClient.get<SignBulkSendRow[]>(`/sign/bulk-send/jobs/${id}/error-report`),
     enabled: id !== undefined,
+    staleTime: 30_000,
   });
 }

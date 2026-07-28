@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useShiftAssignments } from "@/hooks/api/hr/shifts";
-import { useOrgMembers } from "@/hooks/api/organization";
+import { useOrgMembersByIds } from "@/hooks/api/organization";
 import { getUserDisplayName, type NamedUser } from "@/features/build/shared/resolve-user-name";
 
 interface Props {
@@ -14,7 +14,12 @@ interface Props {
 
 export function ShiftAssignmentsTab({ canManage: _canManage }: Props) {
   const { data: assignments, isLoading } = useShiftAssignments();
-  const { data: membersData } = useOrgMembers(1, 200);
+
+  const userIds = useMemo(
+    () => [...new Set((assignments ?? []).map((a) => a.userId))],
+    [assignments],
+  );
+  const { data: membersData } = useOrgMembersByIds(userIds);
 
   const memberById = useMemo(() => {
     const map = new Map<string, NamedUser>();

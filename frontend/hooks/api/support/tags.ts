@@ -37,6 +37,7 @@ export function useTicketTags(ticketId: number) {
 export function useCreateTag() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["create", "tag"],
     mutationFn: (input: CreateTagInput) => apiClient.post<SupportTag>("/support/tags", input),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportTags.all }),
   });
@@ -45,6 +46,7 @@ export function useCreateTag() {
 export function useAttachTag() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["attach", "tag"],
     mutationFn: ({ ticketId, tagId }: { ticketId: number; tagId: number }) =>
       apiClient.post<{ success: boolean }>(`/support/${ticketId}/tags/${tagId}`, {}),
     onSuccess: (_data, vars) => qc.invalidateQueries({ queryKey: queryKeys.support.detail(vars.ticketId) }),
@@ -54,6 +56,7 @@ export function useAttachTag() {
 export function useDetachTag() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["detach", "tag"],
     mutationFn: ({ ticketId, tagId }: { ticketId: number; tagId: number }) =>
       apiClient.delete<{ success: boolean }>(`/support/${ticketId}/tags/${tagId}`),
     onSuccess: (_data, vars) => qc.invalidateQueries({ queryKey: queryKeys.support.detail(vars.ticketId) }),

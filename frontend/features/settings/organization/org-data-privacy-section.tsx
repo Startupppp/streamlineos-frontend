@@ -12,9 +12,9 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Loader2, AlertTriangle } from "lucide-react";
+import { Download, AlertTriangle } from "lucide-react";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { DownloadIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { Trash2Icon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
@@ -104,18 +104,18 @@ export function OrgDataPrivacySection({ canEdit }: OrgDataPrivacySectionProps) {
                 Request a full export of all organization data. You will receive a download link by email.
               </p>
             </div>
-            <AnimatedIconButton
-              icon={DownloadIcon}
-              iconSize={14}
-              iconClassName="mr-0.5"
+            <LoadingButton
               variant="outline"
               size="sm"
               className="gap-1"
               onClick={handleExport}
-              disabled={!canEdit || isExporting}
+              disabled={!canEdit}
+              isPending={isExporting}
+              loadingText="Exporting…"
             >
-              {isExporting ? <><Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />Exporting…</> : "Request data export"}
-            </AnimatedIconButton>
+              <Download className="h-3.5 w-3.5 mr-0.5" />
+              Request data export
+            </LoadingButton>
           </div>
 
           {canEdit && (

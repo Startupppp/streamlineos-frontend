@@ -163,6 +163,7 @@ export function useSupportMacros(params?: MacrosParams) {
 export function useCreateMacro() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["create", "macro"],
     mutationFn: (input: CreateMacroInput) =>
       apiClient.post<SupportMacro>("/support/macros", input),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportMacros.all }),
@@ -172,6 +173,7 @@ export function useCreateMacro() {
 export function useUpdateMacro() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["update", "macro"],
     mutationFn: ({ id, ...input }: UpdateMacroInput & { id: number }) =>
       apiClient.patch<SupportMacro>(`/support/macros/${id}`, input),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportMacros.all }),
@@ -181,6 +183,7 @@ export function useUpdateMacro() {
 export function useDeleteMacro() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["delete", "macro"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/support/macros/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportMacros.all }),
@@ -227,6 +230,7 @@ export function useRoutingRules() {
 export function useCreateRoutingRule() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["create", "routing", "rule"],
     mutationFn: (input: CreateRoutingRuleInput) =>
       apiClient.post<SupportRoutingRule>("/support/routing-rules", input),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportRouting.all }),
@@ -236,6 +240,7 @@ export function useCreateRoutingRule() {
 export function useUpdateRoutingRule() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["update", "routing", "rule"],
     mutationFn: ({ id, ...input }: UpdateRoutingRuleInput & { id: number }) =>
       apiClient.patch<SupportRoutingRule>(`/support/routing-rules/${id}`, input),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportRouting.all }),
@@ -245,6 +250,7 @@ export function useUpdateRoutingRule() {
 export function useDeleteRoutingRule() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["delete", "routing", "rule"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/support/routing-rules/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportRouting.all }),

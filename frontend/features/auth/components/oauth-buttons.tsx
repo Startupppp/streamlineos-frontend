@@ -1,7 +1,6 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 
 interface OAuthButtonsProps {
   hasGoogleProvider: boolean;
@@ -26,16 +25,15 @@ export function OAuthButtons({
     <>
       <div className="flex flex-col gap-2">
         {hasGoogleProvider && (
-          <Button
+          <LoadingButton
             type="button"
             variant="outline"
             className="w-full h-9 text-sm font-medium gap-2"
             onClick={onGoogleSignIn}
-            disabled={isGooglePending || isSignInPending}
+            disabled={isSignInPending}
+            isPending={isGooglePending}
           >
-            {isGooglePending ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
+            {!isGooglePending && (
               <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
                 <path
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -56,19 +54,18 @@ export function OAuthButtons({
               </svg>
             )}
             Continue with Google
-          </Button>
+          </LoadingButton>
         )}
         {hasMicrosoftProvider && (
-          <Button
+          <LoadingButton
             type="button"
             variant="outline"
             className="w-full h-9 text-sm font-medium gap-2"
             onClick={onMicrosoftSignIn}
-            disabled={isMicrosoftPending || isSignInPending}
+            disabled={isSignInPending}
+            isPending={isMicrosoftPending}
           >
-            {isMicrosoftPending ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
+            {!isMicrosoftPending && (
               <svg className="h-4 w-4" viewBox="0 0 21 21" aria-hidden="true">
                 <rect x="1" y="1" width="9" height="9" fill="#f25022" />
                 <rect x="11" y="1" width="9" height="9" fill="#7fba00" />
@@ -77,7 +74,7 @@ export function OAuthButtons({
               </svg>
             )}
             Continue with Microsoft
-          </Button>
+          </LoadingButton>
         )}
       </div>
 

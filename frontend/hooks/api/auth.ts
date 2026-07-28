@@ -49,6 +49,7 @@ export function useDevices() {
 export function useTrustDevice() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["trust", "device"],
     mutationFn: (deviceId: string) =>
       apiClient.post<{ message: string }>(`/me/devices/${deviceId}/trust`, {}),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.auth.devices() }),
@@ -58,6 +59,7 @@ export function useTrustDevice() {
 export function useRemoveDevice() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["remove", "device"],
     mutationFn: (deviceId: string) =>
       apiClient.delete<{ message: string }>(`/me/devices/${deviceId}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.auth.devices() }),

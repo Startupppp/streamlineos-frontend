@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect, memo } from "react";
 import dynamic from "next/dynamic";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -239,19 +240,16 @@ function CommentItemComponent({
                 <XIcon size={12} className="mr-1" />
                 Cancel
               </Button>
-              <Button
+              <LoadingButton
                 size="sm"
                 onClick={handleSaveEdit}
-                disabled={!editText.trim() || isSavingEdit}
+                disabled={!editText.trim()}
+                isPending={isSavingEdit}
                 className="px-2 text-xs"
               >
-                {isSavingEdit ? (
-                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                ) : (
-                  <SendIcon size={12} className="mr-1" />
-                )}
+                {!isSavingEdit && <SendIcon size={12} className="mr-1" />}
                 Save
-              </Button>
+              </LoadingButton>
             </div>
           </div>
         ) : (
@@ -367,19 +365,16 @@ function CommentItemComponent({
               >
                 Cancel
               </Button>
-              <Button
+              <LoadingButton
                 size="sm"
                 onClick={handleReplySubmitClick}
-                disabled={!replyText.trim() || isReplyPending}
+                disabled={!replyText.trim()}
+                isPending={isReplyPending}
                 className="px-2 text-xs"
               >
-                {isReplyPending ? (
-                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                ) : (
-                  <SendIcon size={12} className="mr-1" />
-                )}
+                {!isReplyPending && <SendIcon size={12} className="mr-1" />}
                 Reply
-              </Button>
+              </LoadingButton>
             </div>
           </div>
         )}

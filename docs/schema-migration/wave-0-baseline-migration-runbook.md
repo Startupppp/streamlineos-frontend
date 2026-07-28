@@ -1,12 +1,22 @@
 ---
 wave: 0
 type: baseline migration runbook (USER-EXECUTED)
-status: DRAFT
+status: HISTORICAL — squash approach superseded; see STATUS.md
 date: 2026-07-26
-prerequisite: wave-0-control-plane.md (read first — contains the drift report and root-cause analysis)
+superseded: 2026-07-28
 ---
 
-# Wave 0 — Baseline Migration Runbook (User-Executed)
+> **HISTORICAL — 2026-07-28.** This runbook described squashing all migrations into a single baseline
+> `0000_baseline.sql`. That approach was NOT used. Instead, the journal was reconciled into 21 discrete
+> migrations `0307`–`0327`, followed by 16 more (`0334`–`0349`). GATE 0.4 is now DONE — the DB was
+> wiped and all 70 migrations applied from empty. The squash Phases (1–7) below are historical context.
+>
+> **Still relevant from this document:**
+> - **Phase 0 / Step 0.0** — extension bootstrap (`CREATE EXTENSION IF NOT EXISTS vector/pg_trgm/btree_gist/pgcrypto/uuid-ossp`) required before `db:migrate` on any fresh branch. `pnpm db:bootstrap` handles this automatically.
+> - **Phase 9** — Neon pooler RLS transaction-locality test (GATE 0.5, still outstanding).
+> - **Fresh Database Bootstrap** section — `pnpm db:bootstrap` procedure is current and correct.
+
+# Wave 0 — Baseline Migration Runbook (User-Executed) [HISTORICAL]
 
 > **Who runs this:** You (the developer with Neon DB access and a TTY).
 > **What it does:** Squashes the broken migration journal into a single verified baseline so that

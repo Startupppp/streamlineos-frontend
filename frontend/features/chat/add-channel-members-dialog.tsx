@@ -13,9 +13,9 @@ import { SearchInput } from "@/components/ui/search-input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Check, Loader2, RefreshCw } from "lucide-react";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { CopyIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -217,22 +217,18 @@ export function AddChannelMembersDialog({
                   title="Copy link"
                   aria-label="Copy invite link"
                 />
-                <Button
+                <LoadingButton
                   type="button"
                   variant="outline"
                   size="icon"
                   className="h-9 w-9 shrink-0"
                   onClick={handleRegenerateLink}
-                  disabled={regenerateInviteLink.isPending}
+                  isPending={regenerateInviteLink.isPending}
                   title="Generate new link"
                   aria-label="Generate new invite link"
                 >
-                  {regenerateInviteLink.isPending ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <RefreshCw className="h-3.5 w-3.5" />
-                  )}
-                </Button>
+                  {!regenerateInviteLink.isPending && <RefreshCw className="h-3.5 w-3.5" />}
+                </LoadingButton>
               </div>
             )}
             <p className="text-[10px] text-muted-foreground/70 mt-1.5">

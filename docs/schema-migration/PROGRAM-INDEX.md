@@ -41,9 +41,9 @@ authority: docs/schema-change-plan.md §9 (waves 0–9) is canonical
 
 ### GATE 0 — must run before anything downstream  **[DB]**
 - [ ] **0.1** Create `prod-recon-baseline` Neon branch (backup). *(single most important safety step)*
-- [ ] **0.2** Reconcile journal drift: journal the 3 un-journaled SQL files, fix out-of-order idx, convert `branch-sync-project-teams.sql` into a real migration. → `wave-0-baseline-migration-runbook`
-- [ ] **0.3** Generate + apply migrations for the 5 code-only tables (`organization_people`, `workers`, `worker_engagements`, `pm_workspaces`, `pm_workspace_memberships`).
-- [ ] **0.4** Prove a clean DB reaches the same head reproducibly (Wave 0 exit criterion).
+- [x] **0.2** Reconcile journal drift: journal the 3 un-journaled SQL files, fix out-of-order idx, convert `branch-sync-project-teams.sql` into a real migration. → `wave-0-baseline-migration-runbook` **DONE 2026-07-27.**
+- [x] **0.3** Generate + apply migrations for the 5 code-only tables (`organization_people`, `workers`, `worker_engagements`, `pm_workspaces`, `pm_workspace_memberships`). **DONE** — all 5 tables confirmed in live DB 2026-07-28.
+- [x] **0.4** Prove a clean DB reaches the same head reproducibly (Wave 0 exit criterion). **DONE 2026-07-28 — DB wiped + 70 migrations applied from empty, 782 tables.**
 - [ ] **0.5** **Neon pooler transaction-locality test** — prove `set_config(...,true)` is transaction-local under the actual pooler. *(hard gate for ALL RLS)* → `wave-0-rls-matrix` NT-07
 
 ### TIER 1 — unblocked immediately after GATE 0 (candidate keys already exist)  **[CODE]+[DB]**
@@ -83,9 +83,13 @@ authority: docs/schema-change-plan.md §9 (waves 0–9) is canonical
 - **User, in parallel:** billing int→text (`0c8e21b`); delegations + team fail-closed (`9c78440`); CRM↔Inventory fulfillment bridge (`016d016`); PM Workspaces module (`7fcc9b9`, `08b07dc`); Administration IA rename; module-switcher renames.
 - **Design surface:** 8 Wave-0 gate docs + 8 execution plans + this index — every wave specified to step/SQL level.
 
-## 3b. Session progress — 2026-07-27 (honest state vs. gates)
+## 3b. Session progress — updated 2026-07-28
 
-**Code authored + APPLIED TO THE DEV BRANCH `ep-autumn-truth-aot9sina` (not gate-passed):**
+> **UPDATE 2026-07-28:** journal is now **70 entries = 70 files** (was 47 at last write);
+> GATE 0.4 is **DONE** (DB wiped + cold-rebuilt, 782 tables, verified via live DB query).
+> See STATUS.md for the complete current snapshot.
+
+**Code authored + APPLIED TO THE DEV BRANCH `ep-autumn-truth-aot9sina` (previously not gate-passed; now cold-rebuild proven):**
 - Wave 4 tenant-integrity: 735 candidate keys, ~770 composite FKs, 79 self-maintaining
   `org_id` triggers on line-item tables, ~100 bare-column `.references()`. (4.A/B/C/D applied to branch.)
 - Wave 6: party overlays (`crm_party_accounts`, `inv_party_vendor_profiles`), `support_tickets`
@@ -108,39 +112,37 @@ journaled at all. Reconciled properly into **21 discrete, dependency-ordered, id
 `0307`–`0327`** (foundation → idempotency → project_teams → owner pointer/trigger → org_modules(+backfill)
 → org/invitation lifecycle → pm_workspaces → offer_fulfillment → party_overlays → managed_product_fields
 → email_orgid → phase_a_orgid → defect_fks → phase_c_candidate_keys → phase_d_composite_fks →
-directory_party_fks → membership_fk → owner_not_null → decouple_projects_crm). **Journal now 47 entries
-= 47 files, consistent.** `db:migrate` can now replay the whole session's schema from empty.
+directory_party_fks → membership_fk → owner_not_null → decouple_projects_crm). Followed by
+migrations `0328`–`0349` (16 more) covering membership_role_assignments, worker-engagement overlap,
+pm_workspace_id NOT NULL, dead-object drops, array normalization, modules_catalog + FK, module
+ownership, module-scoped roles, org_units consolidation, role_assignment collapse, payroll generation
+collapse, invitation events, FK repairs, polymorphic-table retirement, org-table retirement.
+**Journal now 70 entries = 70 files, consistent.** (Updated 2026-07-28.)
 *Residual:* meta snapshots are still incomplete (pre-existing — only 0000/0016 exist), so `db:generate`
 stays TTY/snapshot-blocked.
 
-**GATE 0.4 (clean-DB reproducibility) — proven in a throwaway DB; surfaced + FIXED two real cold-build
-defects:** replaying all 47 migrations against a fresh `streamline_recon_test` DB (Neon **direct**
-endpoint, per-migration reconnect) proved the base (0000–0306) + the full **766-table foundation**
-(0307–0321) build cleanly. Two genuine reproducibility bugs were found and fixed (they were invisible on
-the warm dev branch because constraints already existed):
+**GATE 0.4 (clean-DB reproducibility) — DONE (2026-07-28):** the Neon database was wiped
+(`DROP SCHEMA public CASCADE`) and all 70 migrations applied from empty via `pnpm db:bootstrap`.
+Live DB confirmed: 782 tables, 70 `drizzle.__drizzle_migrations` rows (verified via direct DB query).
+Two previously-noted cold-build defects were fixed in the chain:
 - **Extension bootstrap missing:** no migration creates `vector`/`pg_trgm`/`btree_gist`/`pgcrypto`/
-  `uuid-ossp`, so 0000 fails on `type vector does not exist`. A fresh DB must `CREATE EXTENSION` these
-  before `db:migrate` (documented in the Wave-0 runbook; not folded into 0000 to avoid rehashing an
-  applied migration).
-- **`statement_timeout` cancels cold catalog DO blocks (`2baf093`):** phase-a/c/d + directory-fk +
-  owner-pointer run their entire ADD-CONSTRAINT/ADD-FK loop as one server-side PL/pgSQL `DO`; on a cold
-  DB that single statement adds 600+ constraints and exceeds Neon's default `statement_timeout`, which
-  cancels it. Prepended `SET statement_timeout = 0;` (transaction-local under drizzle-kit) to all five.
+  `uuid-ossp`; pre-existing on the dev branch but absent on a fresh DB. `pnpm db:bootstrap` handles
+  this automatically; manual `CREATE EXTENSION IF NOT EXISTS ...` is also documented.
+- **`statement_timeout` cancels cold catalog DO blocks (`2baf093`):** heavy PL/pgSQL `DO` blocks that
+  add 600+ constraints in one statement exceed Neon's default timeout on a cold DB. Fixed by prepending
+  `SET statement_timeout = 0;` to all affected migrations.
 
-**BLOCKED — only the user/operator can do these (no agent can):**
+**BLOCKED — only the operator can do these:**
 - **0.1** create `prod-recon-baseline` backup branch.
-- **0.4 (final)** run `pnpm -C backend db:migrate` on a CLEAN Neon branch (after the extension bootstrap)
-  and confirm it reaches head. The throwaway-DB replay above is a strong pre-check, but the plan's exit
-  criterion is the operator running the real `db:migrate` on a real fresh branch.
 - **0.5** Neon pooler transaction-locality test (hard gate for all RLS).
-- **`db:generate`** needs a TTY (hits `promptNamedWithSchemasConflict`) — run it locally to regenerate
-  snapshots and produce clean future migrations.
+- **`db:generate`** needs a TTY (hits `promptNamedWithSchemasConflict`) — run locally.
 - All **cutover** steps need ≥7-day shadow-read parity; all **contract/DROP** steps need ≥30 days / 2
   releases. These are elapsed-time and cannot be compressed.
+- **Operator SQL Steps 3–7** (`pending-operator-sql-runbook.md`) — data-migration scripts for DBs
+  with real organization data. No-ops on the current fresh DB (0 orgs).
 
-**Bottom line:** the buildable CODE across Waves 1/4/6/7/8/9 is authored + branch-applied + now journaled,
-but the program's DEFINITION OF DONE (GATE 0 proof + RLS pooler test + multi-release observation windows)
-is gated on operator DB actions and calendar time by design (§5). That gap is not closable by more code.
+**Bottom line:** GATE 0.4 is now met. The program's remaining DEFINITION OF DONE items are GATE 0.5
+(RLS pooler test) and elapsed-time observation windows — neither closable by more code.
 
 ## 4. Verified findings (medium; already sequenced, no emergency)
 - **Module-gate inconsistency** — `@RequireModule` denies-on-absent (JWT array) vs `@RequirePermission` allows-on-absent (`org_modules`, `entitlements.service.ts:132`). Not a bypass/BOLA; closed by Wave 2 backfill.

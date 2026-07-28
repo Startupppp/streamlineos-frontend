@@ -153,6 +153,7 @@ export function useSignEnvelopeCertificate(id: number | undefined) {
     queryFn: () => apiClient.get<{ url: string; certificate: SignCertificate }>(`/sign/envelopes/${id}/certificate`),
     enabled: id !== undefined,
     retry: false,
+    staleTime: 30_000,
   });
 }
 

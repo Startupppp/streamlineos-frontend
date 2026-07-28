@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { Loader2, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useCompany360Timeline } from "@/hooks/api/crm";
 import type { TimelineEvent } from "@/types/crm";
@@ -77,18 +78,15 @@ export function Customer360Timeline({ companyId }: Customer360TimelineProps) {
               <TimelineEventRow key={`${event.type}-${event.entityId}-${idx}`} event={event} />
             ))}
             {hasNextPage && (
-              <Button
+              <LoadingButton
                 variant="ghost"
                 size="sm"
                 className="w-full mt-2 h-7 text-xs text-muted-foreground"
-                disabled={isFetchingNextPage}
+                isPending={isFetchingNextPage}
                 onClick={handleLoadMore}
               >
-                {isFetchingNextPage ? (
-                  <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                ) : null}
                 Load more
-              </Button>
+              </LoadingButton>
             )}
           </>
         )}

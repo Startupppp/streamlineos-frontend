@@ -23,7 +23,7 @@ import {
   useFeedbackCycles,
   type FeedbackCycleRequest,
 } from "@/hooks/api/hr";
-import { useOrgMembers } from "@/hooks/api/organization";
+import { useOrgMembersByIds } from "@/hooks/api/organization";
 import { getUserDisplayName, type NamedUser } from "@/features/build/shared/resolve-user-name";
 
 const RELATIONSHIP_COLORS: Record<string, string> = {
@@ -41,7 +41,12 @@ export function MyReviewsTab() {
   const { data: reviews = [], isLoading } = useMyPendingReviews();
   const submitFeedback = useSubmitFeedbackResponse();
   const { data: cycles = [] } = useFeedbackCycles();
-  const { data: membersData } = useOrgMembers(1, 200);
+
+  const reviewUserIds = useMemo(
+    () => [...new Set(reviews.map((r) => r.subjectId))],
+    [reviews],
+  );
+  const { data: membersData } = useOrgMembersByIds(reviewUserIds);
 
   const memberById = useMemo(() => {
     const map = new Map<string, NamedUser>();

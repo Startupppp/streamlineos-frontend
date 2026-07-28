@@ -8,7 +8,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/api-client";
 import { useShiftSwaps, useUpdateSwapStatus } from "@/hooks/api/hr/shifts";
-import { useOrgMembers } from "@/hooks/api/organization";
+import { useOrgMembersByIds } from "@/hooks/api/organization";
 import { getUserDisplayName, type NamedUser } from "@/features/build/shared/resolve-user-name";
 
 interface Props {
@@ -24,7 +24,16 @@ const STATUS_VARIANTS: Record<string, "default" | "secondary" | "destructive" | 
 export function ShiftSwapsTab({ canManage }: Props) {
   const { data: swaps, isLoading } = useShiftSwaps();
   const updateStatus = useUpdateSwapStatus();
-  const { data: membersData } = useOrgMembers(1, 200);
+
+  const userIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const swap of swaps ?? []) {
+      ids.add(swap.requesterId);
+      ids.add(swap.targetUserId);
+    }
+    return [...ids];
+  }, [swaps]);
+  const { data: membersData } = useOrgMembersByIds(userIds);
 
   const memberById = useMemo(() => {
     const map = new Map<string, NamedUser>();

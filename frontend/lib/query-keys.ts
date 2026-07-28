@@ -1848,5 +1848,13 @@ export const queryKeys = {
       [...base, "moduleAccess", moduleKey, "catalog"] as const,
     roles: (moduleKey: string) =>
       [...base, "moduleAccess", moduleKey, "roles"] as const,
+    roleGroups: (moduleKey: string) =>
+      [...base, "moduleAccess", moduleKey, "groups"] as const,
+    groupMembers: (moduleKey: string, groupId: number) =>
+      [...base, "moduleAccess", moduleKey, "groups", groupId, "members"] as const,
+    memberCandidates: (moduleKey: string) =>
+      [...base, "moduleAccess", moduleKey, "member-candidates"] as const,
+    ownership: (moduleKey: string) =>
+      [...base, "moduleAccess", moduleKey, "ownership"] as const,
   },
 } as const;

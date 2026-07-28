@@ -37,5 +37,8 @@ async function importExpensesRequest({
 }
 
 export function useImportExpenses() {
-  return useMutation({ mutationFn: importExpensesRequest });
+  return useMutation({
+    mutationKey: ["import", "expenses"],
+    mutationFn: importExpensesRequest,
+  });
 }

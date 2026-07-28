@@ -67,6 +67,7 @@ export function useAdminPosts() {
 export function useCreatePost() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["create", "post"],
     mutationFn: (data: PostPayload) => apiClient.post<BlogPost>("/blog/posts", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: blogKeys.all }),
   });
@@ -75,6 +76,7 @@ export function useCreatePost() {
 export function useUpdatePost() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["update", "post"],
     mutationFn: ({ id, ...data }: Partial<PostPayload> & { id: string }) =>
       apiClient.patch<BlogPost>(`/blog/posts/${id}`, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: blogKeys.all }),
@@ -84,6 +86,7 @@ export function useUpdatePost() {
 export function useDeletePost() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["delete", "post"],
     mutationFn: (id: string) =>
       apiClient.delete<{ success: boolean }>(`/blog/posts/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: blogKeys.all }),
@@ -103,6 +106,7 @@ export function useCategories() {
 export function useCreateCategory() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["create", "category"],
     mutationFn: (data: CategoryPayload) =>
       apiClient.post<BlogCategory>("/blog/categories", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: blogKeys.categories() }),
@@ -112,6 +116,7 @@ export function useCreateCategory() {
 export function useUpdateCategory() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["update", "category"],
     mutationFn: ({ id, ...data }: Partial<CategoryPayload> & { id: string }) =>
       apiClient.patch<BlogCategory>(`/blog/categories/${id}`, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: blogKeys.categories() }),
@@ -121,6 +126,7 @@ export function useUpdateCategory() {
 export function useDeleteCategory() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["delete", "category"],
     mutationFn: (id: string) =>
       apiClient.delete<{ success: boolean }>(`/blog/categories/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: blogKeys.categories() }),
