@@ -213,7 +213,7 @@ export function StepBasics({
           >
             <SelectTrigger
               id="industry-select"
-              className="h-11 w-full text-sm sm:h-10"
+              className="w-full text-sm"
               aria-invalid={!!errors.industry}
               aria-describedby={errors.industry ? "industry-error" : undefined}
             >

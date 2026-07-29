@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Dialog,
   DialogContent,
@@ -34,6 +35,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError } from "@/lib/api-client";
 import {
   useModuleOwnership,
   useTransferModuleOwnership,
@@ -64,6 +66,10 @@ export function OwnershipSection({
     resolver: zodResolver(transferOwnershipSchema),
     defaultValues: { toUserId: "" },
   });
+
+  const handleRetryOwnership = useCallback(() => {
+    void ownershipQuery.refetch();
+  }, [ownershipQuery]);
 
   const handleOpenTransfer = useCallback(() => {
     form.reset();
@@ -107,7 +113,40 @@ export function OwnershipSection({
     );
   }
 
-  if (ownershipQuery.isError || !ownership) return null;
+  const ownershipUnconfigured =
+    ownershipQuery.isError &&
+    isApiError(ownershipQuery.error) &&
+    ownershipQuery.error.status === 404;
+
+  if (ownershipQuery.isError && !ownershipUnconfigured) {
+    return (
+      <EmptyState
+        illustrationPreset="permissions"
+        title="Couldn't load module ownership"
+        description={getErrorMessage(ownershipQuery.error)}
+        action={{ label: "Retry", onClick: handleRetryOwnership }}
+        className="flex-1"
+      />
+    );
+  }
+
+  if (!ownership) {
+    return (
+      <EmptyState
+        illustrationPreset="permissions"
+        title="No owner assigned"
+        description={
+          canManage
+            ? "This module has no owner yet. Assign one so requests and approvals have a clear destination."
+            : "This module has no owner yet. An organization admin can assign one."
+        }
+        {...(canManage
+          ? { action: { label: "Assign owner", onClick: handleOpenTransfer } }
+          : {})}
+        className="flex-1"
+      />
+    );
+  }
 
   const candidates = (candidatesQuery.data ?? []).filter(
     (c) => c.userId !== ownership.ownerId,
@@ -171,7 +210,9 @@ export function OwnershipSection({
           <DialogHeader>
             <DialogTitle>Transfer module ownership</DialogTitle>
             <DialogDescription>
-              The selected user must accept the transfer before it takes effect.
+              {candidates.length === 0
+                ? "You are currently the only active member of this organization. Invite someone and have them accept before you can transfer ownership."
+                : "The selected user must accept the transfer before it takes effect."}
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
@@ -224,6 +265,7 @@ export function OwnershipSection({
                 <LoadingButton
                   type="submit"
                   isPending={transferMutation.isPending}
+                  disabled={candidates.length === 0}
                   loadingText="Initiating…"
                 >
                   Transfer

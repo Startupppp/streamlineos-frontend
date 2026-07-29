@@ -1435,3 +1435,96 @@ under the 500-line cap, all still driven by the backend catalog so a new module 
 - Backend typecheck + lint clean; frontend typecheck clean, 66 documented warnings.
 - **Permission catalog drift between the two repos: 0.** **Ghost keys (enforced but uncatalogued): 0.**
 - Migrations `REACHED_HEAD 83/83`.
+
+---
+
+## Reference
+
+**[`rbac-org-map.md`](./rbac-org-map.md)** — the full identity → org → RBAC → module-access map:
+entity diagram, the signup and invitation journeys, the three ways a permission reaches a person, the
+request-time resolution flowchart, the module-access tier table, the ownership handshake state machine,
+a table-by-table reference of what everything stores, and the gotchas. Every fact in it was read from
+`information_schema` and the source, not from memory.
+
+---
+
+## Wave 21 — org-setup module vocabulary (2026-07-29)
+
+**Reported live:** completing onboarding failed with
+`enabledModules.0..7: Invalid option: expected one of "hr"|"crm"|"build"|…`
+
+**Root cause — two vocabularies, and not just case.** The org-setup wizard carried its own UPPERCASE
+module names while the API expects the canonical lowercase `modules_catalog.module_key`. Three names
+differed outright, so even case-folding would not have fixed it:
+
+| Wizard sent | API expects |
+|---|---|
+| `CRM` `HR` `BUILD` `INVENTORY` `CHAT` | `crm` `hr` `build` `inventory` `chat` |
+| `FINANCE` | **`accounting`** |
+| `HELPDESK` | **`support`** |
+| `KNOWLEDGE` | **`kb`** |
+
+**Fixed at the root, not with a translation shim.** A shim is what let this drift in the first place.
+The wizard now uses the canonical keys everywhere — `GOAL_TO_APPS`, `ALWAYS_ENABLED_MODULES`,
+`DEFAULT_APPS`, `MODULE_CATALOG`, `MODULE_ICON`, `MODULE_OUTCOMES`, `STAT_PRESETS`.
+
+**Made unrepresentable going forward:** `ORG_MODULE_KEYS` + `OrgModuleKey` are now exported from
+`wizard-data-schema.ts` and every constant and preview signature is typed against them, so a wrong or
+mis-cased key is a **compile error** rather than a runtime 400. Verified programmatically that the
+frontend and backend key lists are byte-identical.
+
+**Two latent bugs fixed in passing:**
+- `BUILD` had no entry in any preview map (they were keyed `PROJECTS`), so selecting Build rendered a
+  blank card with no icon, outcomes or stat.
+- `resolvePreviewModules` fell back to `snapshot.installedApps` — arbitrary strings — and fed them
+  straight into module rendering. Now filtered through a type guard.
+
+**Stale drafts self-heal:** `modules: z.array(z.enum(ORG_MODULE_KEYS)).catch([])` means a saved draft
+holding the old UPPERCASE values resets to `[]`, and the submit path falls back to `DEFAULT_APPS`. A
+user mid-wizard with a stale localStorage draft is not stuck.
+
+Verified: frontend typecheck clean, lint 66 warnings / 0 errors, migrations `REACHED_HEAD 83/83`,
+`org_modules` empty so there are no legacy uppercase rows to migrate.
+
+---
+
+## Wave 22 — live onboarding bugs (2026-07-29)
+
+Found by actually running the app, not by audit.
+
+- [x] **Permission catalog was never synced to the DB automatically.** `role_permission_grants.permission_key`
+      has an FK to `permissions.name`, but the `permissions` table was only populated by the **manual**
+      `pnpm backfill:rbac` script. Every catalog addition therefore silently broke grants with a
+      `23503` until someone remembered to re-run it — which is exactly what happened
+      (`Key (permission_key)=(accounting:access:view) is not present in table "permissions"`).
+      **15 keys were missing** (all the `ownership:*`, `self:cases`, and the five module-access pairs for
+      accounting/payroll/sign/support/surveys) and **7 were stale**.
+      Fixed with `PermissionCatalogSyncService` — an idempotent upsert that runs on `OnModuleInit`, so the
+      DB catalog can never lag the code again. Stale keys are **logged, not deleted** (deleting cascades
+      to `role_permission_grants`). Verified: 0 missing.
+- [x] **`getWinLoss` crashed with Postgres 42803.** Drizzle rendered `deals.stage` **unqualified in the
+      SELECT** but **qualified in the GROUP BY**, so Postgres could not match the two `CASE` expressions.
+      The `lostByReason` query in the same `Promise.all` had the identical latent bug. Rewrote the
+      win/lost bucketing as two plain aggregates (no `CASE`, no grouping) and switched the remaining
+      grouping to ordinals — Drizzle emits no column aliases, so ordinals are the reliable form here.
+- [x] **Module ownership was never seeded.** `module_ownerships` had **zero rows** for an org with 8
+      modules enabled, so `getOwnership` 404'd and the Ownership tab rendered blank — and the
+      module-owner authorization tier resolved nothing. Now seeded at org provisioning and at
+      `setModuleEnabled`, for access-managed modules only (`kb`/`chat` are core and have no access page).
+      Backfilled the live org: 6 rows.
+- [x] **`setModuleEnabled` never bumped the permissions version.** Toggling a module on or off did not
+      invalidate the cached permission set, so the change only took effect when the TTL expired. This
+      got worse once module ownership began granting permissions. Bump added inside the transaction.
+- [x] **Blank Ownership tab.** The component did `if (isError || !ownership) return null`, swallowing the
+      404 into an empty pane with no loading, empty or error state. Now: a 404 renders a proper
+      "No owner assigned" empty state (with an assign action for managers), other errors render a retry
+      state, both filling the available height per §15.
+- [x] **"Assign owner" appeared broken.** With a single-member org the candidate list is legitimately
+      empty (you cannot transfer to yourself), but the dialog just showed an empty dropdown and left
+      Submit enabled. It now explains why and disables Submit.
+
+### Verified
+
+`bumpPermissionsVersion` coverage audited across all 11 module-access mutations and all ownership
+mutations. The three that do not bump — `renameGroup`, `initiateOwnershipTransfer`,
+`cancelOwnershipTransfer` — are **correct**: none of them changes an effective permission.

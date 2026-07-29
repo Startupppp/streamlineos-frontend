@@ -1,4 +1,4 @@
-import type { WizardData } from "./wizard-data-schema";
+import type { OrgModuleKey, WizardData } from "./wizard-data-schema";
 import {
   WIZARD_COL_PAD,
   WIZARD_COL_PAD_X,
@@ -45,24 +45,24 @@ export const EVERYTHING_GOAL_ID = "everything";
 
 export const ALL_GOAL_IDS: readonly string[] = GOALS.map((g) => g.id);
 
-export const GOAL_TO_APPS: Record<string, string[]> = {
-  sales: ["CRM"],
-  hr: ["HR"],
-  inventory: ["INVENTORY"],
-  finance: ["FINANCE"],
-  support: ["HELPDESK"],
-  build: ["BUILD"],
-  ai: ["CRM", "HR", "BUILD"],
-  everything: ["CRM", "HR", "BUILD", "FINANCE", "INVENTORY", "HELPDESK"],
+export const GOAL_TO_APPS: Record<string, OrgModuleKey[]> = {
+  sales: ["crm"],
+  hr: ["hr"],
+  inventory: ["inventory"],
+  finance: ["accounting"],
+  support: ["support"],
+  build: ["build"],
+  ai: ["crm", "hr", "build"],
+  everything: ["crm", "hr", "build", "accounting", "inventory", "support"],
 };
 
-export const ALWAYS_ENABLED_MODULES = ["CHAT", "KNOWLEDGE"] as const;
+export const ALWAYS_ENABLED_MODULES = ["chat", "kb"] as const satisfies readonly OrgModuleKey[];
 
-export const DEFAULT_APPS = ["CRM", "HR", "BUILD", ...ALWAYS_ENABLED_MODULES];
+export const DEFAULT_APPS: OrgModuleKey[] = ["crm", "hr", "build", ...ALWAYS_ENABLED_MODULES];
 
-export function deriveAppsFromGoals(goals: string[]): string[] {
+export function deriveAppsFromGoals(goals: string[]): OrgModuleKey[] {
   if (goals.length === 0) return [...DEFAULT_APPS];
-  const apps = new Set<string>(ALWAYS_ENABLED_MODULES);
+  const apps = new Set<OrgModuleKey>(ALWAYS_ENABLED_MODULES);
   for (const g of goals) {
     for (const app of GOAL_TO_APPS[g] ?? []) {
       apps.add(app);
@@ -154,15 +154,15 @@ export const ESTIMATED_MINUTES_REMAINING: Record<StepId, number> = {
   invite: 1,
 };
 
-export const MODULE_CATALOG: Record<string, { label: string; description: string; setupTasks: string[] }> = {
-  CRM: { label: "CRM", description: "Pipeline, leads, and deals", setupTasks: ["Create first pipeline", "Import contacts"] },
-  HR: { label: "HR", description: "Employees, leave, and payroll", setupTasks: ["Add departments", "Invite employees"] },
-  INVENTORY: { label: "Inventory", description: "Stock, warehouses, and products", setupTasks: ["Create warehouse", "Import products"] },
-  FINANCE: { label: "Accounting", description: "Invoices, taxes, and reports", setupTasks: ["Set fiscal year", "Configure taxes"] },
-  BUILD: { label: "Build", description: "Tasks and delivery tracking", setupTasks: ["Create first project", "Invite team"] },
-  HELPDESK: { label: "Support", description: "Tickets and customer SLAs", setupTasks: ["Configure SLA policy"] },
-  KNOWLEDGE: { label: "Knowledge", description: "SOPs and team docs", setupTasks: ["Create team space"] },
-  CHAT: { label: "Chat", description: "Team messaging", setupTasks: ["Create first channel"] },
+export const MODULE_CATALOG: Partial<Record<OrgModuleKey, { label: string; description: string; setupTasks: string[] }>> = {
+  crm: { label: "CRM", description: "Pipeline, leads, and deals", setupTasks: ["Create first pipeline", "Import contacts"] },
+  hr: { label: "HR", description: "Employees, leave, and payroll", setupTasks: ["Add departments", "Invite employees"] },
+  inventory: { label: "Inventory", description: "Stock, warehouses, and products", setupTasks: ["Create warehouse", "Import products"] },
+  accounting: { label: "Accounting", description: "Invoices, taxes, and reports", setupTasks: ["Set fiscal year", "Configure taxes"] },
+  build: { label: "Build", description: "Tasks and delivery tracking", setupTasks: ["Create first project", "Invite team"] },
+  support: { label: "Support", description: "Tickets and customer SLAs", setupTasks: ["Configure SLA policy"] },
+  kb: { label: "Knowledge", description: "SOPs and team docs", setupTasks: ["Create team space"] },
+  chat: { label: "Chat", description: "Team messaging", setupTasks: ["Create first channel"] },
 };
 
 export const INVITE_ROLES = ["ADMIN", "HR", "SALES", "ENGINEERING"] as const;
