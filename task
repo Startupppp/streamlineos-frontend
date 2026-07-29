@@ -1,10 +1,9 @@
 you should act as 50 years experienced full stack developer and code reviewer the code and you should fix it as 50 years experienced developer in the best way
 task summary :- 
-Review the code and you should fix the bugs, schema, api, refactoring UI and UX etc 
+Review the code and you should fix the bugs, schema, api, refactoring UI and UX etc on RBAC and ORG 
 
 task flow :- 
-you should understand the RBAC and ORG in that you should 
-check the each and every api, schema, components, pages, everything without missing the single point and you should make a proper map of what are need to change based on the rules mentioned below format 
+you should check the each and every api, schema, components, pages, everything without missing the single point and you should make a proper map of what are need to change based on the rules mentioned below format 
 
 1. now you should understand the schemas and you should make the schema should be efficient and easy to manage the large data like Millions of users, so keeping that in the mind you should  remove the unnecessary schema and you should create the best schema possible 
 example :- in my another repo there is bad of storing the inivites in the org schema it is storing it in the array of invites format that is so bad every time update a invite it need to find org and then it should find the array of elements and then it should update it and it should again put into it so it is so bad instead maintain the invites in another seperate schema update is easy just fetch and update it 
@@ -748,3 +747,15 @@ so in the frontend there a page which is common to all the modules only that mod
 7. if it is better way of implementation like getting with the opensources repo's like keyclock etc if that is good let me know and you should do the research and let me know the best way of doing it 
 
 you don't need to write the code now you should come with the plan i will verify once 
+
+
+
+
+
+
+
+
+
+
+
+

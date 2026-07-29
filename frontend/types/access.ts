@@ -34,6 +34,7 @@ export interface RoleMember {
 
 export interface SetRolePermissionsInput {
   roleId: number;
+  version: number;
   items: RolePermissionGrant[];
 }
 

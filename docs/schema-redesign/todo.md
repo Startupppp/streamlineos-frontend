@@ -1290,3 +1290,117 @@ out of scope for the cleanup itself.
 - [ ] **B-18** First-run sequence needs a human signup: start the app → sign up → complete `/org-setup`
       → `pnpm -C backend seed:platform-admin <email>` → `pnpm -C backend backfill:rbac`.
 - [x] **W-06** Done — frontend pruned `@types/qrcode`, `dotenv`, `playwright`; backend already in sync.
+
+---
+
+## Wave 18 — Module RBAC + ORG review (2026-07-29)
+
+Three parallel audits against the module-RBAC spec, then six fix agents.
+
+### 🔴 Security defects found and FIXED
+
+- [x] **Self-role-assignment was ungated** — a module admin could add *themselves* to a group carrying
+      higher permissions than they held. `assertPermissionsGrantable` did not catch it: that guard
+      validates the permissions attached to a *role*, not who joins the role. Guards added in
+      `rbac/role-member.service.ts:171` and `module-access/module-access-groups.service.ts:418`,
+      with an org-owner / platform-admin bypass so workspace bootstrap still works.
+- [x] **Module ownership granted nothing.** `module_ownerships` was written and maintained but
+      `computeUserPermissions` **never read it** — the "module owner → allow all in module" tier simply
+      did not exist. Now resolved via `moduleScopedPermissions(moduleKey)`, batched into the existing
+      `Promise.all` so it costs zero extra round-trips, and still subject to the module-disabled strip.
+- [x] **Module admin could strip the module owner's access** — no owner check on add/remove member.
+- [x] **Removing or demoting a module owner threw an unhandled 500.** `module_ownerships` has a
+      `RESTRICT` FK; `removeMember`/`leaveOrg` never pre-checked it, so Postgres raised and the cleanup
+      and audit never ran. `updateMemberRole` had no check at all and demoted owners silently. All four
+      paths now pre-check inside the transaction and name the modules that must be transferred first.
+- [x] **Up to 5s of revoked-permission access.** The bump changed the Redis key correctly, but the
+      in-process `versionCache` (5s TTL) was never cleared, so the old key kept being rebuilt. Now a
+      module-level subscriber clears it on bump. **Caveat: this fixes only the bumping process; other
+      replicas still carry up to 5s staleness.**
+- [x] **`/build/access` was completely broken** — it passed `moduleKey="projects"` while the registry
+      holds `"build"`, so every API call from the page 404'd.
+
+### Durability + data-quality
+
+- [x] `roles` gained `description`, `version` (NOT NULL default 1), `created_by` (FK, ON DELETE SET NULL),
+      and a **case-insensitive unique index** on `(org_id, COALESCE(module_key,''), LOWER(name))` —
+      previously two groups named "Recruitment HR" could coexist, because the only unique index was on
+      an auto-generated slug carrying a `Date.now()` suffix that never collides. Migration `0361`.
+- [x] **Optimistic locking wired end to end.** `setRolePermissions` (in BOTH `rbac` and `module-access`)
+      did a blind delete-all + reinsert — two admins editing one group silently overwrote each other.
+      Now a CAS fence (`WHERE version = ?`) inside the transaction, returning the new version, with the
+      client patching its cached version and surfacing a 409 as "reload and retry".
+- [x] **Raw UUIDs shown as人 names** on four surfaces — HR delegations, incident timeline, workflow
+      detail, journal entry. Root cause in every case: the backend read did a bare `db.select()` with no
+      join to `users`. Fixed with `leftJoin` at the read path (never `innerJoin` — that would silently
+      drop timeline/ledger rows for deleted or system actors). Four more UUID *fallbacks* now end at
+      "Unknown user" instead of an id.
+
+### Open — needs your decision
+
+- [x] **W-14** Permission string format — **DECIDED: keep `<module>:<resource>:<action>` (colons).**
+      The spec sketched `<module>.<page>:<action>`, but the semantics are identical and only the
+      separator differs. Migrating would rewrite 630 catalog keys, 589 enforcement sites, both repos'
+      `PermissionKey` unions, and every live `role_permission_grants` row — a breaking data migration
+      on the authorization path, for zero behavioural gain. The `resource` segment already plays the
+      "page" role and is exposed as a separate field on each catalog entry, which is what the
+      registry-driven UI actually consumes. Revisit only if an external contract demands the dot form.
+
+### Open — known gaps, not yet built
+
+- [x] **W-15** `GET /modules/:module/me/permissions` does not exist; the frontend fetches the whole org
+      access snapshot and filters client-side.
+- [x] **W-16** Module-level member endpoints are group-scoped only — no flat list / add / change-role /
+      remove across a module, so there is no Members tab.
+- [x] **W-17** No module-scoped audit-log endpoint and no `AuditLogDrawer`; ownership and permission
+      changes are written but cannot be surfaced from the module-access UI.
+- [x] **W-18** No rate limiting on ownership-transfer or role-group mutation endpoints.
+- [x] **W-19** PermissionMatrix: clicking a page row does not grant view-only, checking an action does
+      not auto-select its page, there is no distinct view-only tri-state, and no bulk select-all.
+- [x] **W-20** Missing tests: member with group A gets exactly A; A+B gets the union; module admin denied
+      ownership transfer; org admin blocked from mutating the org owner; the Recruitment-HR-denied-leave-
+      approval case.
+- [ ] **W-21** Org-owner uniqueness is application-level only (`is_owner` has a lookup index, not a
+      partial unique constraint). Module-owner uniqueness IS enforced at DB level.
+- [ ] **W-22** Unknown permission keys are ignored during resolution but never logged, so stale grants
+      accumulate invisibly.
+
+---
+
+## Wave 19 — the six remaining RBAC features (2026-07-29)
+
+Built autonomously after the format decision (W-14: keep colons).
+
+- [x] **W-15** `GET /module-access/:moduleKey/me/permissions` — returns the caller's resolved keys for
+      one module plus their standing (`isOrgOwner` / `isPlatformAdmin` / `isModuleOwner` / `isModuleAdmin`).
+      Reuses `AccessService.resolveUserPermissions` and filters — deliberately NOT a second resolution
+      path, since any parallel implementation would drift into a security bug. Callable by any active
+      member (a plain member needs it to know what to render) and cannot probe another user.
+      `ModuleAccessPage` now gates on this instead of filtering the org-wide snapshot client-side.
+- [x] **W-16** Flat module member endpoints — `GET` (paginated, cap 100, names+emails+group chips via one
+      batched `inArray`, no N+1), `POST`, `PATCH` (replaces the whole group set atomically), `DELETE`
+      (refuses the module owner). All four reuse the same private guards as the group-scoped paths, so
+      they are not a bypass around the self-assignment and module-owner protections. New **Members tab**.
+- [x] **W-17** `GET /module-access/:moduleKey/audit-log` + an **AuditLogDrawer** (Drawer on mobile, Sheet
+      on desktop). ⚠️ The endpoint filters on `metadata->>'moduleKey'`, and `ModuleAccessGroupsService`
+      wrote **no audit entries at all** — so the log would have shown ownership events only while looking
+      complete. Nine operations are now audited (group create/rename/delete, member add/remove, flat
+      member add/update/remove, permission set), each carrying `metadata.moduleKey`, logged **after
+      commit**, with the permission diff recorded as added/removed keys capped at 50 + a `truncated` flag.
+- [x] **W-18** Rate limiting: ownership transfer 5/hour, force-set 10/hour, group mutations 30/min,
+      across both `ModuleAccessController` and `OwnershipController`.
+- [x] **W-19** PermissionMatrix completed: row label grants view-only (chevron kept as a separate
+      affordance so expand and select don't fight), checking an action auto-selects its page, a genuine
+      four-state indicator (none / view-only / partial / full) distinguished by **icon shape as well as
+      colour** with correct `aria-checked`, and reversible bulk select-all per page and per module.
+      Split into `page-action-picker.tsx` (248) + `page-action-picker-parts.tsx` (197) to stay under cap.
+- [x] **W-20** `access/__tests__/rbac-resolution.spec.ts` — 10 cases covering org owner, platform admin,
+      org admin, module owner (in-module only), member with group A (asserting both presence of A's keys
+      AND absence of others, so an over-permissive bug cannot pass), A+B union, no group, cross-tenant,
+      and the headline **Recruitment HR is denied `hr:leaves:approve`**. No bugs revealed.
+
+### Frontend restructure
+
+`module-access-page.tsx` went from a monolith to 82 lines, with `roles-tab` (365), `module-members-tab`
+(238), `member-dialogs` (380), `group-detail-panel` (230) and `audit-log-drawer` (216) extracted — all
+under the 500-line cap, all still driven by the backend catalog so a new module needs zero new components.

@@ -1931,6 +1931,12 @@ export const queryKeys = {
       [...base, "moduleAccess", moduleKey, "member-candidates"] as const,
     ownership: (moduleKey: string) =>
       [...base, "moduleAccess", moduleKey, "ownership"] as const,
+    members: (moduleKey: string, params: { page: number; pageSize: number }) =>
+      [...base, "moduleAccess", moduleKey, "members", params] as const,
+    auditLog: (moduleKey: string, params: { page: number; pageSize: number }) =>
+      [...base, "moduleAccess", moduleKey, "audit-log", params] as const,
+    myPermissions: (moduleKey: string) =>
+      [...base, "moduleAccess", moduleKey, "me", "permissions"] as const,
   },
 
   portal: {

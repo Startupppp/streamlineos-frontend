@@ -38,8 +38,6 @@ export type PermissionKey =
   | "hr:performance:manage"
   | "hr:goals:view"
   | "hr:goals:manage"
-  | "hr:learning:view"
-  | "hr:learning:manage"
   | "hr:announcements:view"
   | "hr:announcements:manage"
   | "hr:leaves:manage"

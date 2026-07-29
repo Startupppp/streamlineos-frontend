@@ -215,7 +215,7 @@ function buildClaimColumns(
       key: "claimant",
       header: "Claimant",
       cell: (claim) => (
-        <span className="text-sm">{claim.user?.name ?? claim.user?.email ?? claim.userId}</span>
+        <span className="text-sm">{claim.user?.name ?? claim.user?.email ?? "Unknown user"}</span>
       ),
     },
     {

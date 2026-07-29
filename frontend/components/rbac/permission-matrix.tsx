@@ -16,7 +16,7 @@ import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { getApiError } from "@/lib/api-client";
+import { getApiError, isApiError } from "@/lib/api-client";
 import {
   useRolePermissionGrants,
   useSetRolePermissions,
@@ -136,16 +136,24 @@ export function PermissionMatrix({
       scope ? [{ permissionKey, scope }] : [],
     );
     setRolePermissions.mutate(
-      { roleId: role.id, items },
+      { roleId: role.id, version: role.version, items },
       {
         onSuccess: () => {
           setDraft(null);
           toast.success("Permissions saved");
         },
-        onError: (error) => toast.error(getApiError(error)),
+        onError: (error) => {
+          if (isApiError(error) && error.status === 409) {
+            toast.error("These permissions were changed by someone else. Reload to see the latest version.", {
+              action: { label: "Reload", onClick: () => { void grantsQuery.refetch(); } },
+            });
+          } else {
+            toast.error(getApiError(error));
+          }
+        },
       },
     );
-  }, [effective, role.id, setRolePermissions]);
+  }, [effective, role.id, role.version, setRolePermissions, grantsQuery]);
 
   const handleRetry = useCallback(() => {
     void grantsQuery.refetch();

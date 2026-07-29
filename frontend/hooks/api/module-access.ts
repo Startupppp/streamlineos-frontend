@@ -33,6 +33,7 @@ export interface ModuleRoleGroup {
   id: number;
   name: string;
   isSystem: boolean;
+  version: number;
   memberCount: number;
   permissions: ModuleRolePermission[];
 }
@@ -63,6 +64,52 @@ export interface ModuleOwnership {
     toEmail: string;
     initiatedAt: string;
   } | null;
+}
+
+export interface ModuleMemberGroup {
+  id: number;
+  name: string;
+}
+
+export interface ModuleMember {
+  userId: string;
+  displayName: string;
+  email: string;
+  avatarUrl?: string | null;
+  groups: ModuleMemberGroup[];
+}
+
+export interface Pagination {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface PaginatedResult<T> {
+  data: T[];
+  pagination: Pagination;
+}
+
+export interface AuditLogEntry {
+  id: string | number;
+  action: string;
+  actorUserId: string;
+  actorName: string;
+  actorEmail: string;
+  targetId: string;
+  targetType: string;
+  metadata: Record<string, unknown>;
+  ipAddress: string | null;
+  createdAt: string;
+}
+
+export interface ModuleMyPermissions {
+  permissions: Array<{ key: string; scope: DataScope }>;
+  isOrgOwner: boolean;
+  isPlatformAdmin: boolean;
+  isModuleOwner: boolean;
+  isModuleAdmin: boolean;
 }
 
 function viewKey(mk: string): PermissionKey {
@@ -165,17 +212,24 @@ export function useDeleteModuleRoleGroup(moduleKey: string) {
 export function useSetModuleGroupPermissions(moduleKey: string) {
   const queryClient = useQueryClient();
   return useMutation<
-    { success: true },
+    { success: true; version: number },
     Error,
-    { groupId: number; items: { permissionKey: string; scope: DataScope }[] }
+    { groupId: number; version: number; items: { permissionKey: string; scope: DataScope }[] }
   >({
     mutationKey: ["moduleAccess", moduleKey, "set-group-permissions"],
-    mutationFn: ({ groupId, items }) =>
-      apiClient.put<{ success: true }>(
+    mutationFn: ({ groupId, version, items }) =>
+      apiClient.put<{ success: true; version: number }>(
         `/module-access/${moduleKey}/groups/${groupId}/permissions`,
-        { items },
+        { version, items },
       ),
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
+      queryClient.setQueryData<ModuleRoleGroup[]>(
+        queryKeys.moduleAccess.roleGroups(moduleKey),
+        (old) =>
+          old?.map((g) =>
+            g.id === variables.groupId ? { ...g, version: data.version } : g,
+          ),
+      );
       void queryClient.invalidateQueries({
         queryKey: queryKeys.moduleAccess.roleGroups(moduleKey),
       });
@@ -187,15 +241,15 @@ export function useSetModuleGroupPermissions(moduleKey: string) {
 export function useSetModuleRolePermissions(moduleKey: string) {
   const queryClient = useQueryClient();
   return useMutation<
-    { success: true },
+    { success: true; version: number },
     Error,
-    { roleId: number; items: { permissionKey: string; scope: DataScope }[] }
+    { roleId: number; version: number; items: { permissionKey: string; scope: DataScope }[] }
   >({
     mutationKey: ["moduleAccess", moduleKey, "set-permissions"],
-    mutationFn: ({ roleId, items }) =>
-      apiClient.put<{ success: true }>(
+    mutationFn: ({ roleId, version, items }) =>
+      apiClient.put<{ success: true; version: number }>(
         `/module-access/${moduleKey}/roles/${roleId}/permissions`,
-        { items },
+        { version, items },
       ),
     onSuccess: (_, variables) => {
       void queryClient.invalidateQueries({
@@ -322,5 +376,112 @@ export function useCancelModuleOwnershipTransfer(moduleKey: string) {
         queryKey: queryKeys.moduleAccess.ownership(moduleKey),
       });
     },
+  });
+}
+
+export function useModuleMyPermissions(moduleKey: string) {
+  const canView = useCan(viewKey(moduleKey));
+  return useQuery<ModuleMyPermissions, Error>({
+    queryKey: queryKeys.moduleAccess.myPermissions(moduleKey),
+    queryFn: () =>
+      apiClient.get<ModuleMyPermissions>(
+        `/module-access/${moduleKey}/me/permissions`,
+      ),
+    enabled: canView,
+    staleTime: 30_000,
+  });
+}
+
+export function useModuleMembers(
+  moduleKey: string,
+  page: number,
+  pageSize: number,
+  options?: { enabled?: boolean },
+) {
+  const canView = useCan(viewKey(moduleKey));
+  return useQuery<PaginatedResult<ModuleMember>, Error>({
+    queryKey: queryKeys.moduleAccess.members(moduleKey, { page, pageSize }),
+    queryFn: () =>
+      apiClient.get<PaginatedResult<ModuleMember>>(
+        `/module-access/${moduleKey}/members?page=${page}&pageSize=${pageSize}`,
+      ),
+    enabled: canView && (options?.enabled ?? true),
+    staleTime: 60_000,
+    placeholderData: (prev) => prev,
+  });
+}
+
+export function useAddModuleMember(moduleKey: string) {
+  const queryClient = useQueryClient();
+  return useMutation<{ success: true }, Error, { userId: string; groupIds?: number[] }>({
+    mutationKey: ["moduleAccess", moduleKey, "add-module-member"],
+    mutationFn: (body) =>
+      apiClient.post<{ success: true }>(
+        `/module-access/${moduleKey}/members`,
+        body,
+      ),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: [...queryKeys.moduleAccess.all, moduleKey, "members"],
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.moduleAccess.roleGroups(moduleKey),
+      });
+    },
+  });
+}
+
+export function useUpdateModuleMember(moduleKey: string) {
+  const queryClient = useQueryClient();
+  return useMutation<{ success: true }, Error, { userId: string; groupIds: number[] }>({
+    mutationKey: ["moduleAccess", moduleKey, "update-module-member"],
+    mutationFn: ({ userId, groupIds }) =>
+      apiClient.patch<{ success: true }>(
+        `/module-access/${moduleKey}/members/${userId}`,
+        { groupIds },
+      ),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: [...queryKeys.moduleAccess.all, moduleKey, "members"],
+      });
+    },
+  });
+}
+
+export function useRemoveModuleMember(moduleKey: string) {
+  const queryClient = useQueryClient();
+  return useMutation<{ success: true }, Error, { userId: string }>({
+    mutationKey: ["moduleAccess", moduleKey, "remove-module-member"],
+    mutationFn: ({ userId }) =>
+      apiClient.delete<{ success: true }>(
+        `/module-access/${moduleKey}/members/${userId}`,
+      ),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: [...queryKeys.moduleAccess.all, moduleKey, "members"],
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.moduleAccess.roleGroups(moduleKey),
+      });
+    },
+  });
+}
+
+export function useModuleAuditLog(
+  moduleKey: string,
+  page: number,
+  pageSize: number,
+  options?: { enabled?: boolean },
+) {
+  const canView = useCan(viewKey(moduleKey));
+  return useQuery<PaginatedResult<AuditLogEntry>, Error>({
+    queryKey: queryKeys.moduleAccess.auditLog(moduleKey, { page, pageSize }),
+    queryFn: () =>
+      apiClient.get<PaginatedResult<AuditLogEntry>>(
+        `/module-access/${moduleKey}/audit-log?page=${page}&pageSize=${pageSize}`,
+      ),
+    enabled: canView && (options?.enabled ?? true),
+    staleTime: 60_000,
+    placeholderData: (prev) => prev,
   });
 }

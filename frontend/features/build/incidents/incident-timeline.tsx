@@ -128,7 +128,7 @@ const TimelineEntry = memo(function TimelineEntry({ update }: { update: Incident
           </Badge>
         )}
         <span className="text-[10px] text-muted-foreground">
-          {update.createdBy ?? "System"} · {new Date(update.createdAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
+          {update.createdByName ?? update.createdByEmail?.split("@")[0] ?? "System"} · {new Date(update.createdAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
         </span>
       </div>
       <p className="text-[12px] text-foreground whitespace-pre-wrap">{update.message}</p>

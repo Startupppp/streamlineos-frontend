@@ -33,7 +33,7 @@ const MEMBER_COLUMNS: DataTableColumn<ManagerTeamMember>[] = [
     cell: (row) => (
       <div className="min-w-0">
         <p className="text-[13px] font-medium text-foreground truncate">
-          {row.name ?? row.email ?? row.userId}
+          {row.name ?? row.email ?? "Unknown user"}
         </p>
         {row.email && (
           <p className="text-[11px] text-muted-foreground truncate">{row.email}</p>
@@ -97,7 +97,7 @@ const REWARDS_COLUMNS: DataTableColumn<TeamRewardsMember>[] = [
     key: "name",
     header: "Member",
     cell: (row) => (
-      <span className="text-[12px] font-medium">{row.name ?? row.email ?? row.userId}</span>
+      <span className="text-[12px] font-medium">{row.name ?? row.email ?? "Unknown user"}</span>
     ),
   },
   {
@@ -254,7 +254,7 @@ export function TeamPayrollPageContent() {
                         >
                           <div className="min-w-0">
                             <p className="text-[12px] font-medium text-foreground">
-                              {row.userName ?? row.userId} · {row.category}
+                              {row.userName ?? "Unknown user"} · {row.category}
                             </p>
                             <p className="text-[11px] text-muted-foreground tabular-nums">
                               {formatMoney(row.amount)}
@@ -307,7 +307,7 @@ export function TeamPayrollPageContent() {
                         >
                           <div className="min-w-0">
                             <p className="text-[12px] font-medium text-foreground">
-                              {row.userName ?? row.userId}
+                              {row.userName ?? "Unknown user"}
                             </p>
                             <p className="text-[11px] text-muted-foreground tabular-nums">
                               {formatMoney(row.amount)}

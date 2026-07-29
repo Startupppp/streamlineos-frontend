@@ -42,6 +42,8 @@ export interface JournalEntry {
   createdAt: Date;
   updatedAt: Date;
   lines?: JournalLine[];
+  createdByName?: string | null;
+  createdByEmail?: string | null;
 }
 
 export interface TrialBalanceRow {

@@ -140,20 +140,21 @@ export const useRolePermissionGrants = (
 
 export const useSetRolePermissions = () => {
   const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, SetRolePermissionsInput>({
+  return useMutation<{ success: true; version: number }, Error, SetRolePermissionsInput>({
     mutationKey: ["roles", "set-permissions"],
-    mutationFn: ({ roleId, items }) =>
-      apiClient.put<{ success: boolean }>(`/roles/${roleId}/permissions`, { items }),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
+    mutationFn: ({ roleId, version, items }) =>
+      apiClient.put<{ success: true; version: number }>(`/roles/${roleId}/permissions`, { version, items }),
+    onSuccess: (data, variables) => {
+      queryClient.setQueryData<import("@/types/organization").Role>(
+        queryKeys.roles.detail(variables.roleId),
+        (old) => (old ? { ...old, version: data.version } : old),
+      );
+      void queryClient.invalidateQueries({
         queryKey: queryKeys.roles.permissions(variables.roleId),
       });
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.roles.detail(variables.roleId),
-      });
-      queryClient.invalidateQueries({ queryKey: queryKeys.roles.list() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.access.me() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.roles.permissionsMatrix() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.roles.list() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.access.me() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.roles.permissionsMatrix() });
     },
   });
 };

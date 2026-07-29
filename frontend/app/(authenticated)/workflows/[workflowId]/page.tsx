@@ -92,7 +92,7 @@ interface WorkflowOverviewTabProps {
 function WorkflowOverviewTab({ workflow }: WorkflowOverviewTabProps) {
   const statusCfg = STATUS_CONFIG[workflow.status];
   const fields = [
-    { icon: <User className="h-3.5 w-3.5" />, label: "Created by", value: workflow.createdBy ?? "System" },
+    { icon: <User className="h-3.5 w-3.5" />, label: "Created by", value: workflow.createdByName ?? workflow.createdByEmail?.split("@")[0] ?? "System" },
     { icon: <Calendar className="h-3.5 w-3.5" />, label: "Created", value: format(new Date(workflow.createdAt), "MMM d, yyyy") },
     { icon: <RefreshCcw className="h-3.5 w-3.5" />, label: "Last updated", value: formatDistanceToNow(new Date(workflow.updatedAt), { addSuffix: true }) },
     { icon: <GitBranch className="h-3.5 w-3.5" />, label: "Version", value: `v${workflow.version}` },

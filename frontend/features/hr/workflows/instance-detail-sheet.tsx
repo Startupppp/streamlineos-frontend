@@ -128,11 +128,11 @@ export function InstanceDetailSheet({ instanceId, onClose, showActions = false }
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
                     <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Requested by</p>
-                    <p className="font-medium">{instance.requester ? getUserDisplayName(instance.requester) : instance.requestedBy}</p>
+                    <p className="font-medium">{instance.requester ? getUserDisplayName(instance.requester) : "Unknown user"}</p>
                   </div>
                   <div>
                     <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Subject</p>
-                    <p className="font-medium">{instance.subjectEmployee ? getUserDisplayName(instance.subjectEmployee) : instance.subjectEmployeeId}</p>
+                    <p className="font-medium">{instance.subjectEmployee ? getUserDisplayName(instance.subjectEmployee) : "Unknown user"}</p>
                   </div>
                   {instance.dueAt && (
                     <div className="col-span-2">
@@ -159,7 +159,7 @@ export function InstanceDetailSheet({ instanceId, onClose, showActions = false }
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-sm font-medium">
-                              {action.actedBy ? getUserDisplayName(action.actedBy) : action.actedByUserId}
+                              {action.actedBy ? getUserDisplayName(action.actedBy) : "Unknown user"}
                             </span>
                             <span className="text-xs text-muted-foreground capitalize">{action.action}</span>
                             <span className="text-xs text-muted-foreground ml-auto">

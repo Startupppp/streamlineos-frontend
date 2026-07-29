@@ -2,55 +2,25 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { ChevronRight, ChevronDown } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { ModulePermission, DataScope } from "@/hooks/api/module-access";
-
-type PermDraft = Record<string, DataScope>;
+import {
+  type PermDraft,
+  type ResourceGroup,
+  buildGroups,
+  resourceLabel,
+  deriveRowState,
+  PageIndicator,
+  ActionRow,
+} from "./page-action-picker-parts";
 
 export interface PageActionPickerProps {
   catalog: ModulePermission[];
   draft: PermDraft;
   onDraftChange: (next: PermDraft) => void;
   readOnly: boolean;
-}
-
-interface ResourceGroup {
-  resource: string;
-  permissions: ModulePermission[];
-}
-
-const SCOPE_OPTIONS: { value: DataScope; label: string }[] = [
-  { value: "all", label: "All" },
-  { value: "team", label: "Team" },
-  { value: "own", label: "Own" },
-];
-
-function buildGroups(catalog: ModulePermission[]): ResourceGroup[] {
-  const map = new Map<string, ModulePermission[]>();
-  for (const perm of catalog) {
-    const existing = map.get(perm.resource) ?? [];
-    map.set(perm.resource, [...existing, perm]);
-  }
-  return Array.from(map.entries()).map(([resource, permissions]) => ({
-    resource,
-    permissions,
-  }));
-}
-
-function resourceLabel(resource: string): string {
-  return resource
-    .split(/[-_]/)
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(" ");
 }
 
 interface ResourceRowProps {
@@ -65,34 +35,46 @@ function ResourceRow({ group, draft, onDraftChange, readOnly }: ResourceRowProps
   const { resource, permissions } = group;
 
   const viewPerm = permissions.find((p) => p.action === "view");
-  const grantedKeys = permissions.filter(
+  const rowState = deriveRowState(permissions, draft, viewPerm);
+  const grantedCount = permissions.filter(
     (p) => (draft[p.name] ?? "none") !== "none",
-  );
-  const isAnyGranted = grantedKeys.length > 0;
-  const isAllGranted = grantedKeys.length === permissions.length;
-  const isIndeterminate = isAnyGranted && !isAllGranted;
+  ).length;
+  const label = resourceLabel(resource);
+  const allGranted = grantedCount === permissions.length && permissions.length > 0;
 
-  const handlePageCheck = useCallback(
-    (checked: boolean) => {
-      const next = { ...draft };
-      if (checked) {
-        const target = viewPerm ?? permissions[0];
-        if (target) next[target.name] = "all";
-      } else {
-        for (const p of permissions) {
-          next[p.name] = "none";
-        }
-      }
-      onDraftChange(next);
-    },
-    [draft, permissions, viewPerm, onDraftChange],
-  );
+  const handleIndicatorClick = useCallback(() => {
+    const next = { ...draft };
+    if (rowState === "unchecked") {
+      const target = viewPerm ?? permissions[0];
+      if (target) next[target.name] = "all";
+    } else if (rowState === "view-only") {
+      for (const p of permissions) next[p.name] = "none";
+    } else if (rowState === "partial") {
+      for (const p of permissions) next[p.name] = "all";
+    } else {
+      for (const p of permissions) next[p.name] = "none";
+    }
+    onDraftChange(next);
+  }, [draft, rowState, permissions, viewPerm, onDraftChange]);
+
+  const handleLabelClick = useCallback(() => {
+    if (rowState !== "unchecked" || readOnly) return;
+    const target = viewPerm ?? permissions[0];
+    if (!target) return;
+    onDraftChange({ ...draft, [target.name]: "all" });
+  }, [draft, rowState, readOnly, permissions, viewPerm, onDraftChange]);
+
+  const handleToggleExpand = useCallback(() => setExpanded((v) => !v), []);
 
   const handleActionCheck = useCallback(
     (permName: string, checked: boolean) => {
-      onDraftChange({ ...draft, [permName]: checked ? "all" : "none" });
+      const next: PermDraft = { ...draft, [permName]: checked ? "all" : "none" };
+      if (checked && viewPerm && (next[viewPerm.name] ?? "none") === "none") {
+        next[viewPerm.name] = "all";
+      }
+      onDraftChange(next);
     },
-    [draft, onDraftChange],
+    [draft, viewPerm, onDraftChange],
   );
 
   const handleScopeChange = useCallback(
@@ -102,105 +84,86 @@ function ResourceRow({ group, draft, onDraftChange, readOnly }: ResourceRowProps
     [draft, onDraftChange],
   );
 
-  const handleToggleExpand = useCallback(() => setExpanded((v) => !v), []);
+  const handleBulkToggle = useCallback(() => {
+    const next = { ...draft };
+    for (const p of permissions) {
+      next[p.name] = allGranted ? "none" : "all";
+    }
+    onDraftChange(next);
+  }, [draft, permissions, allGranted, onDraftChange]);
 
   return (
-    <div className="border-b border-border last:border-0">
+    <div>
       <div className="flex items-center gap-3 px-5 py-3 hover:bg-muted/30 transition-colors">
-        <Checkbox
-          id={`page-${resource}`}
-          checked={isIndeterminate ? "indeterminate" : isAnyGranted}
-          onCheckedChange={(v) => handlePageCheck(v === true)}
+        <PageIndicator
+          state={rowState}
+          label={label}
           disabled={readOnly}
-          aria-label={`Grant access to ${resourceLabel(resource)}`}
+          onClick={handleIndicatorClick}
         />
         <button
           type="button"
-          onClick={handleToggleExpand}
-          className="flex flex-1 items-center gap-2 text-left min-w-0"
-          aria-expanded={expanded}
-        >
-          <span className="text-sm font-medium text-foreground min-w-0 truncate">
-            {resourceLabel(resource)}
-          </span>
-          {isAnyGranted && (
-            <Badge variant="secondary" className="text-[10px] shrink-0">
-              {grantedKeys.length}/{permissions.length}
-            </Badge>
+          onClick={handleLabelClick}
+          aria-label={
+            rowState === "unchecked" ? `Select ${label} at view level` : label
+          }
+          className={cn(
+            "flex-1 min-w-0 text-left text-sm font-medium text-foreground truncate",
+            rowState === "unchecked" && !readOnly
+              ? "cursor-pointer hover:text-primary transition-colors"
+              : "cursor-default",
           )}
-          <span className="ml-auto shrink-0 text-muted-foreground">
-            {expanded ? (
-              <ChevronDown className="h-3.5 w-3.5" />
-            ) : (
-              <ChevronRight className="h-3.5 w-3.5" />
-            )}
-          </span>
+        >
+          {label}
+        </button>
+        {grantedCount > 0 && (
+          <Badge variant="secondary" className="text-[10px] shrink-0">
+            {grantedCount}/{permissions.length}
+          </Badge>
+        )}
+        {!readOnly && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={handleBulkToggle}
+            className="h-6 px-2 text-[10px] text-muted-foreground shrink-0"
+            aria-label={
+              allGranted
+                ? `Clear all ${label} permissions`
+                : `Grant all ${label} permissions`
+            }
+          >
+            {allGranted ? "Clear all" : "Select all"}
+          </Button>
+        )}
+        <button
+          type="button"
+          onClick={handleToggleExpand}
+          aria-expanded={expanded}
+          aria-label={expanded ? `Collapse ${label}` : `Expand ${label}`}
+          className="shrink-0 p-0.5 rounded text-muted-foreground hover:text-foreground transition-colors"
+        >
+          {expanded ? (
+            <ChevronDown className="h-3.5 w-3.5" />
+          ) : (
+            <ChevronRight className="h-3.5 w-3.5" />
+          )}
         </button>
       </div>
 
       {expanded && (
         <div className="bg-muted/20 divide-y divide-border/50">
-          {permissions.map((perm) => {
-            const currentScope = draft[perm.name] ?? "none";
-            const isGranted = currentScope !== "none";
-            return (
-              <div
-                key={perm.name}
-                className="flex items-center gap-3 pl-12 pr-5 py-2.5"
-              >
-                <Checkbox
-                  id={`action-${perm.name}`}
-                  checked={isGranted}
-                  onCheckedChange={(v) =>
-                    handleActionCheck(perm.name, v === true)
-                  }
-                  disabled={readOnly}
-                  aria-label={`Grant ${perm.action}`}
-                />
-                <label
-                  htmlFor={`action-${perm.name}`}
-                  className="flex-1 min-w-0 cursor-pointer select-none"
-                >
-                  <span className="text-sm text-foreground capitalize">
-                    {perm.action}
-                  </span>
-                  {perm.description && (
-                    <span className="ml-1.5 text-xs text-muted-foreground">
-                      — {perm.description}
-                    </span>
-                  )}
-                </label>
-                {perm.scopable && isGranted ? (
-                  <Select
-                    value={currentScope as string}
-                    onValueChange={(v) =>
-                      handleScopeChange(perm.name, v as DataScope)
-                    }
-                    disabled={readOnly}
-                  >
-                    <SelectTrigger className="h-7 w-24 text-xs border-input bg-card shrink-0">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-                      {SCOPE_OPTIONS.map((o) => (
-                        <SelectItem
-                          key={o.value}
-                          value={o.value}
-                          className="text-xs"
-                        >
-                          {o.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : isGranted ? (
-                  <span className="text-xs text-muted-foreground w-24 text-right shrink-0">
-                    Granted
-                  </span>
-                ) : null}
-              </div>
-            );
-          })}
+          {permissions.map((perm) => (
+            <ActionRow
+              key={perm.name}
+              perm={perm}
+              currentScope={draft[perm.name] ?? "none"}
+              readOnly={readOnly}
+              onCheck={handleActionCheck}
+              onScopeChange={handleScopeChange}
+            />
+          ))}
         </div>
       )}
     </div>
@@ -214,6 +177,19 @@ export function PageActionPicker({
   readOnly,
 }: PageActionPickerProps) {
   const groups = useMemo(() => buildGroups(catalog), [catalog]);
+
+  const grantedTotal = catalog.filter(
+    (p) => (draft[p.name] ?? "none") !== "none",
+  ).length;
+  const allGranted = grantedTotal === catalog.length && catalog.length > 0;
+
+  const handleModuleBulkToggle = useCallback(() => {
+    const next = { ...draft };
+    for (const p of catalog) {
+      next[p.name] = allGranted ? "none" : "all";
+    }
+    onDraftChange(next);
+  }, [draft, catalog, allGranted, onDraftChange]);
 
   const handleGroupDraftChange = useCallback(
     (next: PermDraft) => onDraftChange(next),
@@ -231,19 +207,42 @@ export function PageActionPicker({
   return (
     <div
       className={cn(
-        "divide-y divide-border rounded-lg border border-border bg-card",
+        "rounded-lg border border-border bg-card",
         readOnly && "opacity-60 pointer-events-none",
       )}
     >
-      {groups.map((group) => (
-        <ResourceRow
-          key={group.resource}
-          group={group}
-          draft={draft}
-          onDraftChange={handleGroupDraftChange}
-          readOnly={readOnly}
-        />
-      ))}
+      {!readOnly && (
+        <div className="flex items-center justify-between px-5 py-2 border-b border-border bg-muted/20">
+          <span className="text-xs text-muted-foreground">
+            {grantedTotal > 0
+              ? `${grantedTotal} of ${catalog.length} granted`
+              : `${catalog.length} permissions available`}
+          </span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={handleModuleBulkToggle}
+            className="h-6 px-2 text-[10px] text-muted-foreground"
+            aria-label={
+              allGranted ? "Clear all permissions" : "Grant all permissions"
+            }
+          >
+            {allGranted ? "Clear all" : "Select all"}
+          </Button>
+        </div>
+      )}
+      <div className="divide-y divide-border">
+        {groups.map((group) => (
+          <ResourceRow
+            key={group.resource}
+            group={group}
+            draft={draft}
+            onDraftChange={handleGroupDraftChange}
+            readOnly={readOnly}
+          />
+        ))}
+      </div>
     </div>
   );
 }

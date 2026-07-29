@@ -95,6 +95,7 @@ export interface Role {
   name: string;
   slug: string;
   isSystem: boolean;
+  version: number;
   createdAt: Date;
   updatedAt: Date;
 }

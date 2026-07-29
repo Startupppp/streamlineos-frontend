@@ -230,18 +230,6 @@ export const HR_PERMISSIONS: Permission[] = [
     description: "Manage employees (admin-level: full CRUD + HR operations)",
   },
   {
-    name: "hr:learning:view",
-    resource: "hr:learning",
-    action: "view",
-    description: "View training programs",
-  },
-  {
-    name: "hr:learning:manage",
-    resource: "hr:learning",
-    action: "manage",
-    description: "Create and manage training programs",
-  },
-  {
     name: "hr:benefits:view",
     resource: "hr:benefits",
     action: "view",
