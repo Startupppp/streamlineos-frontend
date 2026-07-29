@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type {
@@ -38,11 +39,14 @@ export function useOrgTree() {
   });
 }
 
-export function useOrgHierarchyOverview() {
+export function useOrgHierarchyOverview(
+  options?: Omit<UseQueryOptions<OrgHierarchyOverview, Error>, "queryKey" | "queryFn">,
+) {
   return useQuery({
     queryKey: queryKeys.hierarchy.all,
     queryFn: () => apiClient.get<OrgHierarchyOverview>("/org-hierarchy/overview"),
     staleTime: 60_000,
+    ...options,
   });
 }
 

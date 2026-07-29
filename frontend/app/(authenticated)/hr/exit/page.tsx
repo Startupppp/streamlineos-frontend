@@ -21,7 +21,6 @@ import { PlusIcon } from "@animateicons/react/lucide";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import { useSession } from "next-auth/react";
 import { useCan } from "@/hooks/api/access";
-import { ROLES } from "@/lib/constants/roles";
 import { ResignationCard } from "@/features/hr/exit/resignation-card";
 import { ResignationFormSheet } from "@/features/hr/exit/resignation-form-sheet";
 import { RejectRemarksSheet, type RejectDialogState } from "@/features/hr/exit/reject-remarks-sheet";
@@ -40,10 +39,9 @@ export default function ExitManagementPage() {
   const ceoReview = useCeoReviewResignation();
   const withdrawResignation = useWithdrawResignation();
 
-  const role = session?.user?.role;
   const userId = session?.user?.id;
   const isAdmin = useCan("hr:exit:manage");
-  const isHR = role === ROLES.HR;
+  const isHR = isAdmin;
   const isCEO = useCan("hr:exit:approve");
 
   const [sheetOpen, setSheetOpen] = useState(false);

@@ -2,9 +2,7 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
-import { useSession } from "next-auth/react";
 import { useCan } from "@/hooks/api/access";
-import { ROLES } from "@/lib/constants/roles";
 import { isToday, isFuture, parseISO } from "date-fns";
 import { toast } from "sonner";
 import { Plus, AlertCircle } from "lucide-react";
@@ -37,13 +35,11 @@ import { TERMINATION_REASON_OTHER } from "@/lib/constants/hr-separation";
 type StatusFilter = "ALL" | TerminationStatus;
 
 export default function TerminationPage() {
-  const { data: session } = useSession();
   const canApproveExit = useCan("hr:exit:approve");
   const searchParams = useSearchParams();
   const employeeIdParam = searchParams.get("employeeId");
 
-  const role = session?.user?.role;
-  const isHR = role === ROLES.HR;
+  const isHR = useCan("hr:exit:manage");
   const isCEO = canApproveExit;
 
   const [page, setPage] = useState(1);
@@ -132,10 +128,6 @@ export default function TerminationPage() {
     }
 
     const targetEmployee = employees.find((e) => e.id === selectedUserId);
-    if (targetEmployee?.role === ROLES.CEO) {
-      toast.error("CEO cannot be terminated through this workflow");
-      return;
-    }
     if (targetEmployee && !targetEmployee.isActive) {
       toast.error("This employee has already been terminated or is inactive");
       return;

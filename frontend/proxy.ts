@@ -1,6 +1,6 @@
 ﻿import { NextResponse, NextRequest } from "next/server";
 import { getToken, type JWT } from "next-auth/jwt";
-import { PLATFORM_OWNER_ROLE, OWNER_HOME } from "@/lib/platform/role";
+import { OWNER_HOME } from "@/lib/platform/role";
 import { ROLES } from "@/lib/constants/roles";
 import {
   hasSessionCookie,
@@ -127,7 +127,7 @@ function redirectTo(
 }
 
 function isPlatformAdminToken(token: JWT): boolean {
-  return token.isPlatformAdmin === true || token.role === PLATFORM_OWNER_ROLE;
+  return token.isPlatformAdmin === true;
 }
 
 function isOrgOwnerToken(token: JWT): boolean {

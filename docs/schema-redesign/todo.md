@@ -1528,3 +1528,64 @@ Found by actually running the app, not by audit.
 `bumpPermissionsVersion` coverage audited across all 11 module-access mutations and all ownership
 mutations. The three that do not bump — `renameGroup`, `initiateOwnershipTransfer`,
 `cancelOwnershipTransfer` — are **correct**: none of them changes an effective permission.
+
+---
+
+## Wave 23 — RBAC/ORG deep review (2026-07-29)
+
+Ran a 17-agent codebase audit (6 dimensions → adversarial refutation → synthesis) instead of the
+web-search deep-research harness, which would have returned blog posts rather than defects.
+**41 raw findings, 10 confirmed.**
+
+### 🔴 P0 — cross-tenant data destruction
+
+- [x] **Any org owner could purge another tenant's data.** `POST /organization/:orgId/purge/schedule`
+      (and the cancel endpoint) checked `u.isOrgOwner` — which only proves ownership of the CALLER's org —
+      then passed the **path param** `orgId` straight to the service. Nothing tied the two together.
+      Fixed by pinning org owners to `u.orgId` while preserving genuine cross-org capability for platform
+      admins. Swept every other `@Param("orgId")` in the repo: the rest are `@Public()` webhooks that
+      verify a per-org shared secret, or platform-admin-only. This was the only instance.
+
+### P1 — fixed
+
+- [x] **Seat-limit bypass.** `assertWithinLimit` ran in `invite()` but in NEITHER branch of `accept()`.
+      `bulkInvite` re-read the same count snapshot each iteration, so a 10-seat plan could mint ~1000
+      invitations and accept them all. Now checked before both inserts, and the members counter includes
+      pending non-expired invitations so the invitations cannot be minted in the first place.
+      ⚠️ **Residual race honestly reported:** the check uses its own connection, so under READ COMMITTED
+      two exactly-simultaneous accepts with one seat left can both pass. Closing it needs an advisory
+      lock or serializable isolation — a decision, not an oversight.
+- [x] **Department broadcasts reached nobody.** `departmentIds.map(Number)` on **text/UUID** org-unit ids
+      produced all-`NaN`, `Number.isInteger` stripped them, and the empty `inArray` matched zero rows.
+      Silent since the employee migration. Now targets `users.orgDepartmentId` (the live column;
+      `users.departmentId` is stale legacy).
+- [x] **Purged orgs ran cron forever.** The purge worker set only `statusV2`; `cron-hr-engines` filters on
+      the legacy `status`, which stayed `ACTIVE`. Both columns now written atomically.
+      ⚠️ `outbox-publisher.service.ts:102` reads the same legacy column — next-highest risk, not yet done.
+- [x] **Permission matrix silently lied.** Grants were fetched by `orgId` only with `.limit(10000)`;
+      ~33+ full-catalog roles truncated with no error, so roles rendered wrong permissions and the admin
+      could not tell. Now bounded by the actual `roleIds`, served by the existing `(org_id, role_id)`
+      index. ⚠️ The roles list itself is still capped at 100 — orgs beyond that see a partial matrix.
+- [x] **Guaranteed 403 per page load.** `/organization` fired `useOrgHierarchyOverview` ungated against a
+      `settings:view` endpoint. Gated, with a proper access-denied state rather than a blank pane.
+
+### Role-model collapse — reversible half done
+
+Product decision: exactly six roles — Platform Owner (`/owner` only), Org Owner, Org Admin, Module Owner,
+Module Admin, Module Member. CEO/HR/SALES/etc. become **user-created role groups**, not system roles.
+
+The impact map found **~30 sites that route or authorise by role STRING, not permission**. The day those
+slugs stop existing, those queries return an **empty set with no error** — approvals routing to nobody.
+So the order is non-negotiable: migrate every consumer to permissions FIRST, then migrate data.
+
+- [x] New shared primitive `AccessService.membersWithPermission(orgId, permissionKey)` — resolves holders
+      via direct roles, groups, `user_permissions` and module ownership; respects module-enabled and
+      per-user denies; version-keyed cache, ≤9 queries (never N+1), capped at 50.
+- [x] HR workflow approvers, leave routing and expense routing migrated off `HR_ROLE_SLUGS` /
+      `FINANCE_ROLE_SLUGS` onto `hr:leaves:approve` / `accounting:approvals:decide` / `hr:expenses:approve`.
+- [ ] Remaining consumers (exit, resignation, onboarding, weekly recap, leads, clients, recruitment) —
+      in progress.
+- [ ] **Data migration of `organization_members.role` is IRREVERSIBLE and NOT started.** It must not run
+      until every slug consumer is migrated. Known landmines: `termination.service.ts:128` blocks CEO
+      termination via `role === "CEO"` (guard silently evaporates); `support-sla.service.ts:422` escalates
+      to `["OWNER","CEO","ADMIN"]`; `roles.service.ts:309` counts legacy slugs to block role deletion.

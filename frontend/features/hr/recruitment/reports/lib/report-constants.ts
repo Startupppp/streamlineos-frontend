@@ -1,6 +1,6 @@
 import type { ReportEntity } from "@/hooks/api";
 
-export const HR_ROLES = ["CEO", "HR", "ADMIN", "HR_MANAGER", "OWNER"];
+export const HR_ROLES = ["OWNER", "ORG_ADMIN"];
 
 export const ENTITY_OPTIONS: { value: ReportEntity; label: string }[] = [
   { value: "candidates", label: "Candidates" },

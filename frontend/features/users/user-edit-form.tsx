@@ -52,9 +52,7 @@ interface UserEditFormProps {
 
 const ROLES = [
   { value: "MEMBER", label: "Member" },
-  { value: "ADMIN", label: "Admin" },
-  { value: "MANAGER", label: "Manager" },
-  { value: "HR", label: "HR" },
+  { value: "ORG_ADMIN", label: "Org Admin" },
   { value: "OWNER", label: "Owner" },
 ];
 
