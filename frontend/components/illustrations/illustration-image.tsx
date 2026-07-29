@@ -52,6 +52,7 @@ export type IllustrationName =
   | "invitation"
   | "automations"
   | "empty-chart"
+  | "empty-campaigns"
   | "goals";
 
 export interface IllustrationProps {
@@ -134,4 +135,5 @@ export const AiIllustration = createIllustration("ai");
 export const InvitationIllustration = createIllustration("invitation");
 export const AutomationsIllustration = createIllustration("automations");
 export const EmptyChartIllustration = createIllustration("empty-chart");
+export const EmptyCampaignsIllustration = createIllustration("empty-campaigns");
 export const EmptyGoalsIllustration = createIllustration("goals");

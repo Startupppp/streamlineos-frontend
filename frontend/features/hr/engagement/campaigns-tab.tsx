@@ -18,6 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyCampaignsIllustration } from "@/components/illustrations";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import {
@@ -146,10 +148,17 @@ export function CampaignsTab() {
       )}
 
       {(!campaigns || campaigns.length === 0) ? (
-        <div className="flex flex-col items-center justify-center py-16 rounded-lg border border-dashed border-border bg-muted/20">
-          <Megaphone className="w-8 text-muted-foreground mb-3" />
-          <p className="text-sm font-medium text-foreground">No campaigns yet</p>
-        </div>
+        <EmptyState
+          illustration={<EmptyCampaignsIllustration className="h-full w-full" />}
+          title="No campaigns yet"
+          description="Launch your first engagement campaign to survey sentiment and drive participation."
+          action={
+            canManage
+              ? { label: "New Campaign", onClick: () => setSheetOpen(true) }
+              : undefined
+          }
+          className="bg-muted/20"
+        />
       ) : (
         <div className="space-y-3">
           {campaigns.map((c) => (
