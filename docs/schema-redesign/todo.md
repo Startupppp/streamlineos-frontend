@@ -1360,9 +1360,9 @@ Three parallel audits against the module-RBAC spec, then six fix agents.
 - [x] **W-20** Missing tests: member with group A gets exactly A; A+B gets the union; module admin denied
       ownership transfer; org admin blocked from mutating the org owner; the Recruitment-HR-denied-leave-
       approval case.
-- [ ] **W-21** Org-owner uniqueness is application-level only (`is_owner` has a lookup index, not a
+- [x] **W-21** Org-owner uniqueness is application-level only (`is_owner` has a lookup index, not a
       partial unique constraint). Module-owner uniqueness IS enforced at DB level.
-- [ ] **W-22** Unknown permission keys are ignored during resolution but never logged, so stale grants
+- [x] **W-22** Unknown permission keys are ignored during resolution but never logged, so stale grants
       accumulate invisibly.
 
 ---
@@ -1404,3 +1404,34 @@ Built autonomously after the format decision (W-14: keep colons).
 `module-access-page.tsx` went from a monolith to 82 lines, with `roles-tab` (365), `module-members-tab`
 (238), `member-dialogs` (380), `group-detail-panel` (230) and `audit-log-drawer` (216) extracted — all
 under the 500-line cap, all still driven by the backend catalog so a new module needs zero new components.
+
+---
+
+## Wave 20 — module-level pages + core-module correction (2026-07-29)
+
+- [x] **W-21** Org-owner uniqueness is now **DB-enforced**: partial unique index
+      `uniq_org_members_single_owner ON organization_members (org_id) WHERE is_owner = true`
+      (migration `0362`). Previously only a lookup index existed, so nothing but an application-level
+      `SELECT … FOR UPDATE` stopped an org having two owners. Verified in-database: 0 orgs with more
+      than one owner, 0 orgs with none. Module-owner uniqueness was already DB-enforced; org ownership
+      now matches.
+- [x] **W-22** Unknown permission keys are now logged during resolution (deduplicated so the hot
+      authorization path is not flooded) instead of being silently ignored. Behaviour is unchanged —
+      unknown keys are still ignored rather than throwing, because failing closed here would lock users
+      out over cosmetic catalog drift — but stale grants are now visible instead of accumulating unseen.
+- [x] **Module-level access pages for every managed module.** Only 4 of 11 had a per-module route;
+      the other 7 were reachable solely through the generic `/settings/module-access/[moduleKey]`.
+      Added routes for accounting, support, surveys, payroll and sign, and wired an "Access" entry into
+      each module's own sidebar group (the 4 existing entries were repointed from the generic route to
+      their module-level route for consistency).
+- [x] **`kb` and `chat` removed from access management.** Both are `is_core = true` in
+      `modules_catalog` — common to every org and every user — so per-module RBAC pages for them were
+      conceptually wrong. Removed from `ACCESS_MANAGED_MODULES`, which also removes the auto-generated
+      `kb:access:*` / `chat:access:*` keys; deleted their access routes, the frontend union entries,
+      the `MODULE_META` rows and the KB sidebar entry. **9 access-managed modules remain**
+      (hr, crm, build, accounting, inventory, support, surveys, payroll, sign).
+
+### Verified after the change
+- Backend typecheck + lint clean; frontend typecheck clean, 66 documented warnings.
+- **Permission catalog drift between the two repos: 0.** **Ghost keys (enforced but uncatalogued): 0.**
+- Migrations `REACHED_HEAD 83/83`.

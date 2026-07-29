@@ -12,8 +12,6 @@ const MODULE_META: Record<
   build: { label: "Build", permission: "build:access:view" },
   inventory: { label: "Inventory", permission: "inventory:access:view" },
   accounting: { label: "Accounting", permission: "accounting:access:view" },
-  kb: { label: "Knowledge Base", permission: "kb:access:view" },
-  chat: { label: "Chat", permission: "chat:access:view" },
   support: { label: "Support", permission: "support:access:view" },
   surveys: { label: "Surveys", permission: "surveys:access:view" },
   payroll: { label: "Payroll", permission: "payroll:access:view" },

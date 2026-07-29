@@ -666,7 +666,7 @@ export const NAV_GROUPS: NavGroup[] = [
       {
         label: "Access",
         icon: ShieldCheck,
-        href: "/settings/module-access/hr",
+        href: "/hr/access",
         requiredPermission: "hr:access:view",
       },
       {
@@ -939,6 +939,12 @@ export const NAV_GROUPS: NavGroup[] = [
         requiredPermission: "payroll:reports:view",
       },
       {
+        label: "Access",
+        icon: ShieldCheck,
+        href: "/payroll/access",
+        requiredPermission: "payroll:access:view",
+      },
+      {
         label: "Settings",
         icon: SlidersHorizontal,
         href: "/payroll/settings",
@@ -1094,7 +1100,7 @@ export const NAV_GROUPS: NavGroup[] = [
       {
         label: "Access",
         icon: ShieldCheck,
-        href: "/settings/module-access/crm",
+        href: "/crm/access",
         requiredPermission: "crm:access:view",
       },
       {
@@ -1505,6 +1511,12 @@ export const NAV_GROUPS: NavGroup[] = [
         ],
       },
       {
+        label: "Access",
+        icon: ShieldCheck,
+        href: "/accounting/access",
+        requiredPermission: "accounting:access:view",
+      },
+      {
         label: "Settings",
         icon: SlidersHorizontal,
         href: "/accounting/settings",
@@ -1773,7 +1785,7 @@ export const NAV_GROUPS: NavGroup[] = [
       {
         label: "Access",
         icon: ShieldCheck,
-        href: "/settings/module-access/inventory",
+        href: "/inventory/access",
         requiredPermission: "inventory:access:view",
       },
     ],
@@ -1971,7 +1983,7 @@ export const NAV_GROUPS: NavGroup[] = [
       {
         label: "Access",
         icon: ShieldCheck,
-        href: "/settings/module-access/build",
+        href: "/build/access",
         requiredPermission: "build:access:view",
       },
     ],
@@ -2022,6 +2034,12 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: BarChart3,
         href: "/support/reports",
         requiredPermission: "support:reports:view",
+      },
+      {
+        label: "Access",
+        icon: ShieldCheck,
+        href: "/support/access",
+        requiredPermission: "support:access:view",
       },
       {
         label: "Settings",
@@ -2106,6 +2124,12 @@ export const NAV_GROUPS: NavGroup[] = [
         requiredPermission: "sign:audit:view",
       },
       {
+        label: "Access",
+        icon: ShieldCheck,
+        href: "/sign/access",
+        requiredPermission: "sign:access:view",
+      },
+      {
         label: "Settings",
         icon: SlidersHorizontal,
         href: "/sign/settings",
@@ -2142,6 +2166,12 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: ClipboardList,
         href: "/surveys",
         requiredPermission: "surveys:view",
+      },
+      {
+        label: "Access",
+        icon: ShieldCheck,
+        href: "/surveys/access",
+        requiredPermission: "surveys:access:view",
       },
     ],
   },
