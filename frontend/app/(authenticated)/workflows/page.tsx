@@ -406,9 +406,7 @@ export default function WorkflowsPage() {
       }
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
-          <div className="min-w-[180px] max-w-xs flex-1">
-            <SearchInput placeholder="Search workflows…" value={search} onValueChange={handleSearchChange} />
-          </div>
+          <SearchInput placeholder="Search workflows…" value={search} onValueChange={handleSearchChange} />
           <Select value={statusFilter} onValueChange={handleStatusChange}>
             <SelectTrigger className={`w-[140px] ${FILTER_SELECT_TRIGGER}`}>
               <SelectValue placeholder="All statuses" />

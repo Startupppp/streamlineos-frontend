@@ -272,7 +272,6 @@ export function KbManagerContent() {
         placeholder="Search…"
         value={localSearch}
         onValueChange={handleSearchChange}
-        className="w-[200px]"
       />
       <Select value={statusParam} onValueChange={handleStatusChange}>
         <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-[130px]`}>

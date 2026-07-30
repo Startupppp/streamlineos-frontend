@@ -375,7 +375,7 @@ export function HandbookPageClient() {
     >
       <div className="flex flex-1 min-h-0 flex-col gap-4">
         <div className={FILTER_TOOLBAR_ROW}>
-          <SearchInput placeholder="Search versions..." value={searchQuery} onValueChange={handleSearchChange} className="w-48" />
+          <SearchInput placeholder="Search versions..." value={searchQuery} onValueChange={handleSearchChange} />
           <FilterPillGroup>
             {STATUS_FILTERS.map((f) => (
               <FilterPill

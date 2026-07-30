@@ -217,7 +217,6 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
         placeholder="Search..."
         value={search}
         onValueChange={handleSearchChange}
-        className="w-44"
       />
       <Select value={statusFilter} onValueChange={setStatusFilter}>
         <SelectTrigger className="w-40">

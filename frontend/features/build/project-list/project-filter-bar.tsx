@@ -85,14 +85,12 @@ export function ProjectFilterBar({
         </div>
 
         <div className="flex w-full min-w-0 items-center gap-1.5 sm:contents">
-          <div className="min-w-0 flex-1 sm:order-1 sm:w-[200px] sm:max-w-[min(240px,70vw)] sm:flex-none md:w-[240px]">
-            <SearchInput
-              placeholder="Search projects…"
-              value={search}
-              onValueChange={onSearchChange}
-              aria-label="Search projects"
-            />
-          </div>
+          <SearchInput
+            placeholder="Search projects…"
+            value={search}
+            onValueChange={onSearchChange}
+            aria-label="Search projects"
+          />
           {viewMode === "list" && onToggleGroupingSidebar ? (
             <div className="shrink-0 sm:order-5">
               <Button

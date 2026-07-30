@@ -3,7 +3,7 @@ import { MyWorkPage } from "@/features/build/my-work/my-work-page";
 
 export default function MyWorkRoute() {
   return (
-    <RequireModule module="PROJECTS">
+    <RequireModule module="build">
       <MyWorkPage />
     </RequireModule>
   );

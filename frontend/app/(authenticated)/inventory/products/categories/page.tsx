@@ -228,13 +228,11 @@ function CategoriesPageInner() {
 
   const filtersRow = (
     <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
-      <div className="min-w-0 flex-1 lg:max-w-sm w-full">
-        <SearchInput
-          value={searchInput}
-          onValueChange={handleSearchChange}
-          placeholder="Search categories..."
-        />
-      </div>
+      <SearchInput
+        value={searchInput}
+        onValueChange={handleSearchChange}
+        placeholder="Search categories..."
+      />
       <div className="hidden min-w-0 items-center gap-2 sm:flex">
         <Select value={statusParam} onValueChange={handleStatusChange}>
           <SelectTrigger

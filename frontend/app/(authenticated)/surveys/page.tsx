@@ -31,7 +31,7 @@ export default function SurveysPage() {
 
   return (
     <DashboardGate permission="surveys:view">
-      <RequireModule module="SURVEYS">
+      <RequireModule module="surveys">
         <PageWrapper
           title="Surveys"
           subtitle="Build surveys, quizzes, live polls, and lead forms."

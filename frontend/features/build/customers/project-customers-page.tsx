@@ -167,13 +167,11 @@ export function ProjectCustomersPage() {
       noInternalScroll
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
-          <div className="min-w-0 flex-1 lg:max-w-sm">
-            <SearchInput
-              placeholder="Search customers..."
-              value={search}
-              onValueChange={handleSearchChange}
-            />
-          </div>
+          <SearchInput
+            placeholder="Search customers..."
+            value={search}
+            onValueChange={handleSearchChange}
+          />
           <CustomerFilterPopover
             filters={filters}
             onFiltersChange={handleFiltersChange}

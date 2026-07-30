@@ -22,6 +22,35 @@ const MODULE_ALIASES: Readonly<Record<string, readonly string[]>> = {
   helpdesk: ["HELPDESK", "SUPPORT"],
 };
 
+/**
+ * Canonical lowercase org module key for any accepted spelling: the key itself,
+ * its UPPERCASE display name, or a retired name (`projects` → `build`).
+ * The access snapshot is keyed by canonical keys, so every gate must normalize
+ * before looking a module up — an unnormalized key silently reads as enabled.
+ */
+const CANONICAL_MODULE_KEY: Readonly<Record<string, string>> = {
+  hr: "hr",
+  hrms: "hr",
+  crm: "crm",
+  build: "build",
+  projects: "build",
+  accounting: "accounting",
+  finance: "accounting",
+  inventory: "inventory",
+  kb: "kb",
+  chat: "chat",
+  support: "support",
+  helpdesk: "support",
+  surveys: "surveys",
+  payroll: "payroll",
+  sign: "sign",
+};
+
+export function normalizeOrgModuleKey(moduleKeyOrName: string): string {
+  const key = moduleKeyOrName.trim().toLowerCase();
+  return CANONICAL_MODULE_KEY[key] ?? key;
+}
+
 export function orgModuleAliasesFor(moduleKeyOrName: string): readonly string[] {
   const key = moduleKeyOrName.toLowerCase();
   const aliased = MODULE_ALIASES[key];

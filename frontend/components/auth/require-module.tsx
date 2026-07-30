@@ -5,7 +5,8 @@ import { Building2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useEnabledModules } from "@/hooks/api/access/org-modules";
-import { matchesOrgModule } from "@/lib/module-vocabulary";
+import { matchesOrgModule, normalizeOrgModuleKey } from "@/lib/module-vocabulary";
+import { getModuleCatalogEntry } from "@/lib/module-catalog";
 
 interface RequireModuleProps {
   module: string;
@@ -13,7 +14,7 @@ interface RequireModuleProps {
 }
 
 function ModuleDisabledState({ module }: { module: string }) {
-  const label = module.charAt(0).toUpperCase() + module.slice(1).toLowerCase();
+  const { label } = getModuleCatalogEntry(normalizeOrgModuleKey(module));
 
   return (
     <div className="flex flex-col items-center justify-center flex-1 h-full min-h-[40dvh] gap-4 py-16">

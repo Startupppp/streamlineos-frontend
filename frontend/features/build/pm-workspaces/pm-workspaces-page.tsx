@@ -318,7 +318,6 @@ export function PmWorkspacesPage() {
         </SelectContent>
       </Select>
       <SearchInput
-        className="w-52"
         placeholder="Search workspaces…"
         value={search}
         onValueChange={handleSearchChange}

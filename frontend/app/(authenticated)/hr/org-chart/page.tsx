@@ -269,9 +269,7 @@ export default function OrgChartPage() {
       }
       filters={
         <div className="flex items-center gap-2">
-          <div className="min-w-0 w-48">
-          <SearchInput placeholder="Search members…" value={search} onValueChange={handleSearchChange} />
-        </div>
+        <SearchInput placeholder="Search members…" value={search} onValueChange={handleSearchChange} />
           <ViewToggle value={view} options={ORG_VIEW_OPTIONS} onChange={setView} showLabel />
         </div>
       }

@@ -84,7 +84,7 @@ export default function RoadmapPage() {
   const hasActions = Boolean(orgId) || activeTab === "roadmap" || activeTab === "changelog";
 
   return (
-    <RequireModule module="PROJECTS">
+    <RequireModule module="build">
       <Tabs
         value={activeTab}
         onValueChange={handleTabChange}

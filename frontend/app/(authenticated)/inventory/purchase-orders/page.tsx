@@ -357,9 +357,7 @@ export default function PurchaseOrdersListPage() {
 
   const filterBar = (
     <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide lg:gap-3 [&>*]:shrink-0">
-      <div className="w-full max-w-md min-w-[200px]">
-          <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search PO number or vendor…" />
-        </div>
+        <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search PO number or vendor…" />
       <div className="hidden min-w-0 flex-row flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide sm:flex lg:gap-3 [&>*]:shrink-0">
         <Select value={statusParam} onValueChange={handleStatusChange}>
           <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "min-w-0 flex-1 text-xs")}>

@@ -106,7 +106,7 @@ export default function ProjectTemplatesPage() {
   }
 
   return (
-    <RequireModule module="PROJECTS">
+    <RequireModule module="build">
       <PageWrapper
         title="Templates"
         subtitle="Reusable project structures to bootstrap new work"

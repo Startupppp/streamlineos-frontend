@@ -31,7 +31,7 @@ export default function NewSurveyPage() {
 
   return (
     <DashboardGate permission="surveys:create">
-      <RequireModule module="SURVEYS">
+      <RequireModule module="surveys">
         <PageWrapper
           title="New Survey"
           subtitle="Start from a template or build from scratch."

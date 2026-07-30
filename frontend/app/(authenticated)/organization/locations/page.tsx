@@ -371,7 +371,7 @@ export default function OrgLocationsPage() {
   );
 
   return (
-    <RequireModule module="HR">
+    <RequireModule module="hr">
     <PageWrapper
       title="Locations"
       subtitle="Physical work locations and offices."
@@ -399,9 +399,7 @@ export default function OrgLocationsPage() {
         </div>
       }
       filters={
-        <div className="min-w-0 w-full flex-1 md:min-w-[160px] md:max-w-xs">
-          <SearchInput placeholder="Search locations…" value={search} onValueChange={handleSearchInputChange} />
-        </div>
+        <SearchInput placeholder="Search locations…" value={search} onValueChange={handleSearchInputChange} />
       }
     >
       <DataTable

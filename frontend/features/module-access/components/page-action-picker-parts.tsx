@@ -176,7 +176,7 @@ export function ActionRow({
           onValueChange={handleScope}
           disabled={readOnly}
         >
-          <SelectTrigger className="h-7 w-24 text-xs border-input bg-card shrink-0">
+          <SelectTrigger className="w-24 text-xs border-input bg-card shrink-0">
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="min-w-[var(--radix-select-trigger-width)]">

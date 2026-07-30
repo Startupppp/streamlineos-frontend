@@ -51,7 +51,6 @@ export function ListView({ holidays, canManage, onEdit, onDelete, onAdd, yearFil
           placeholder="Search holidays..."
           value={search}
           onValueChange={handleSearchChange}
-          className="max-w-xs"
         />
         <Button variant="outline" size="sm" className="text-xs" onClick={handleSortToggle}>
           Date {sortDir === "asc" ? "↑" : "↓"}

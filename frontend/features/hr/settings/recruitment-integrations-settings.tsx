@@ -183,7 +183,7 @@ export function HrRecruitmentIntegrationsSettings({ embedded = false }: HrRecrui
   }, [refetch]);
 
   const content = (
-    <RequireModule module="HR">
+    <RequireModule module="hr">
       {isError ? (
         <div className="flex flex-col items-center justify-center flex-1 gap-3 py-16 text-center">
           <p className="text-sm text-muted-foreground">Failed to load integrations.</p>

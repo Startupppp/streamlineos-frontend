@@ -234,7 +234,6 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
           placeholder="Search cases..."
           value={search}
           onValueChange={handleSearchChange}
-          className="w-48"
         />
         <Select value={suiteFilter} onValueChange={setSuiteFilter}>
           <SelectTrigger className="w-36">

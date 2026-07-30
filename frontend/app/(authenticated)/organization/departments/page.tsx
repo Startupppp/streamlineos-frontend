@@ -419,7 +419,7 @@ export default function OrgDepartmentsPage() {
   );
 
   return (
-    <RequireModule module="HR">
+    <RequireModule module="hr">
     <PageWrapper
       title="Departments"
       subtitle="Departments organized within branches."
@@ -447,9 +447,7 @@ export default function OrgDepartmentsPage() {
         </div>
       }
       filters={
-        <div className="min-w-0 w-full flex-1 md:min-w-[160px] md:max-w-xs">
-          <SearchInput placeholder="Search departments…" value={search} onValueChange={handleSearchInputChange} />
-        </div>
+        <SearchInput placeholder="Search departments…" value={search} onValueChange={handleSearchInputChange} />
       }
     >
       <DataTable

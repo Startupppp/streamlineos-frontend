@@ -125,7 +125,6 @@ export function ComponentsPageContent() {
         value={searchInput}
         onValueChange={handleSearchChange}
         placeholder="Search components…"
-        className="w-48"
       />
       <Select value={typeFilter || "all"} onValueChange={handleTypeChange}>
         <SelectTrigger className={`${FILTER_SELECT_TRIGGER} h-9 w-44`}>

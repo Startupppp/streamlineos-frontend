@@ -351,7 +351,7 @@ export default function OrgCostCentersPage() {
   );
 
   return (
-    <RequireModule module="HR">
+    <RequireModule module="hr">
     <PageWrapper
       title="Cost Centers"
       subtitle="Cost centers for expense tracking."
@@ -379,9 +379,7 @@ export default function OrgCostCentersPage() {
         </div>
       }
       filters={
-        <div className="min-w-0 w-full flex-1 md:min-w-[160px] md:max-w-xs">
-          <SearchInput placeholder="Search cost centers…" value={search} onValueChange={handleSearchInputChange} />
-        </div>
+        <SearchInput placeholder="Search cost centers…" value={search} onValueChange={handleSearchInputChange} />
       }
     >
       <DataTable

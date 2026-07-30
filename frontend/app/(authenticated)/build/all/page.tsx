@@ -335,7 +335,7 @@ export default function ProjectsPage() {
     Boolean(debouncedSearch) || Object.values(activeFilters).some(Boolean);
 
   return (
-    <RequireModule module="PROJECTS">
+    <RequireModule module="build">
       {(canCreate || createOpen) && (
         <NewProjectDialog
           open={createOpen}

@@ -448,7 +448,7 @@ export default function OrgTeamsPage() {
   );
 
   return (
-    <RequireModule module="HR">
+    <RequireModule module="hr">
     <PageWrapper
       title="Teams"
       subtitle="Teams within departments."
@@ -476,9 +476,7 @@ export default function OrgTeamsPage() {
         </div>
       }
       filters={
-        <div className="min-w-0 w-full flex-1 sm:w-auto sm:min-w-[160px] sm:max-w-xs sm:flex-none">
-          <SearchInput placeholder="Search teams…" value={search} onValueChange={handleSearchInputChange} />
-        </div>
+        <SearchInput placeholder="Search teams…" value={search} onValueChange={handleSearchInputChange} />
       }
     >
       <DataTable

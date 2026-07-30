@@ -287,7 +287,6 @@ export function PortfoliosPage() {
         </SelectContent>
       </Select>
       <SearchInput
-        className="w-52"
         placeholder="Search portfolios…"
         value={search}
         onValueChange={handleSearchChange}

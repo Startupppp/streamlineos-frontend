@@ -267,7 +267,6 @@ export default function CreditNotesPage() {
             </SelectContent>
           </Select>
           <SearchInput
-            className="w-[180px]"
             placeholder="Search customer…"
             value={customerSearch}
             onValueChange={handleCustomerSearchChange}

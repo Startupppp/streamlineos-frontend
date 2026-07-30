@@ -55,11 +55,6 @@ interface UserPreferences {
   timeFormat: string;
   numberFormat: string | null;
   weekStartDay: string | null;
-  accentColor: string | null;
-  density: string | null;
-  fontSize: string | null;
-  reducedMotion: boolean | null;
-  highContrast: boolean | null;
   notificationPreferences: Record<string, boolean>;
   dashboardPreferences: Record<string, unknown>;
   updatedAt: string;

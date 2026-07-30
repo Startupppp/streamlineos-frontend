@@ -104,7 +104,7 @@ export default function OrganizationOverviewPage() {
 
   if (accessData && !canView) {
     return (
-      <RequireModule module="HR">
+      <RequireModule module="hr">
         <PageWrapper title="Organization" subtitle="Manage your company hierarchy and cost centers.">
           <AccessDenied message="You don't have permission to view organization settings." />
         </PageWrapper>
@@ -113,7 +113,7 @@ export default function OrganizationOverviewPage() {
   }
 
   return (
-    <RequireModule module="HR">
+    <RequireModule module="hr">
     <PageWrapper
       title="Organization"
       subtitle={

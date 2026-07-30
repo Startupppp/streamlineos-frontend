@@ -51,7 +51,7 @@ function SelectTrigger({
       data-size={size}
       className={cn(
         FIELD_CONTROL_CLASS,
-        "flex w-full min-w-0 items-center justify-between gap-2 overflow-hidden px-3 font-sans font-medium whitespace-nowrap",
+        "flex w-full min-w-0 items-center justify-between gap-2 overflow-hidden px-3 text-left font-sans font-medium whitespace-nowrap",
         "data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground",
         FIELD_CONTROL_HOVER_CLASS,
         "data-[state=open]:border-ring data-[state=open]:ring-1 data-[state=open]:ring-ring",

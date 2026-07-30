@@ -316,7 +316,6 @@ export function ManagedProductsPage() {
         </SelectContent>
       </Select>
       <SearchInput
-        className="w-52"
         placeholder="Search products…"
         value={search}
         onValueChange={handleSearchChange}

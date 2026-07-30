@@ -256,7 +256,6 @@ export function BugsPage({ projectId }: BugsPageProps) {
         placeholder="Search bugs..."
         value={search}
         onValueChange={handleSearchChange}
-        className="w-44"
       />
       <Select value={statusFilter} onValueChange={setStatusFilter}>
         <SelectTrigger className="w-32"><SelectValue placeholder="Status" /></SelectTrigger>

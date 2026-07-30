@@ -263,7 +263,6 @@ export function RisksPage({ projectId }: RisksPageProps) {
         </SelectContent>
       </Select>
       <SearchInput
-        className="w-52"
         placeholder="Search risks…"
         value={search}
         onValueChange={handleSearchChange}

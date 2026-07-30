@@ -237,7 +237,6 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
             </SelectContent>
           </Select>
           <SearchInput
-            className="w-52"
             placeholder="Search decisions..."
             value={search}
             onValueChange={handleSearchChange}

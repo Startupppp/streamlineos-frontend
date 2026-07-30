@@ -556,8 +556,7 @@ export default function NotificationEventsPage() {
       <SearchInput
         placeholder="Search events…"
         value={search}
-        onValueChange={handleSearchChange}
-        className="min-w-0 flex-1 min-w-[180px] max-w-xs"
+        onValueChange={handleSearchChange} className="min-w-0 flex-1"
       />
       <Select value={moduleFilter} onValueChange={handleModuleChange}>
         <SelectTrigger className={`w-44 ${FILTER_SELECT_TRIGGER}`}>

@@ -147,8 +147,7 @@ function InspectionsPageInner() {
       <SearchInput
         value={sourceParam}
         onValueChange={handleSourceChange}
-        placeholder="Filter by source…"
-        className="flex-1 max-w-xs"
+        placeholder="Filter by source…" className="flex-1"
       />
       <Select value={statusParam || "all"} onValueChange={handleStatusChange}>
         <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "text-xs w-48")}>

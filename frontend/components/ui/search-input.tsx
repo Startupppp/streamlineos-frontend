@@ -5,12 +5,22 @@ import { Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 
+/**
+ * Shared width contract: fills the row on mobile, capped on tablet and up so a
+ * lone search never stretches across a wide page. Opt out with `fill` when the
+ * search sits inside a panel it is meant to span (wide dialog, sheet, drawer).
+ */
+export const SEARCH_INPUT_WIDTH = "w-full min-w-[12rem]";
+export const SEARCH_INPUT_MAX_WIDTH = "sm:max-w-xs lg:max-w-sm";
+
 export interface SearchInputProps
   extends Omit<React.ComponentProps<"input">, "type" | "value" | "onChange"> {
   value: string;
   onValueChange: (value: string) => void;
   onClear?: () => void;
   inputClassName?: string;
+  /** Span the container instead of capping at the shared filter max-width. */
+  fill?: boolean;
 }
 
 export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
@@ -23,6 +33,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
       inputClassName,
       placeholder = "Search…",
       disabled,
+      fill = false,
       id,
       ...props
     },
@@ -40,7 +51,12 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
     return (
       <div
         data-slot="search-input"
-        className={cn("relative w-full min-w-[12rem]", className)}
+        className={cn(
+          "relative",
+          SEARCH_INPUT_WIDTH,
+          !fill && SEARCH_INPUT_MAX_WIDTH,
+          className,
+        )}
       >
         <Search
           className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"

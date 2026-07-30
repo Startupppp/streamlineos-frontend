@@ -116,7 +116,7 @@ export function SoQueuePage({ status, title, emptyTitle, emptyDescription }: SoQ
 
   const filterBar = (
     <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-      <SearchInput className="min-w-0 flex-1 lg:max-w-xs" value={search} onValueChange={handleSearchChange} placeholder="Search SO # or customer…" />
+      <SearchInput className="min-w-0 flex-1" value={search} onValueChange={handleSearchChange} placeholder="Search SO # or customer…" />
     </div>
   );
 

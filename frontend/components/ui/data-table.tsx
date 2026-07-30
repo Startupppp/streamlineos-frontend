@@ -260,8 +260,7 @@ export function DataTable<T>({
               value={search.value}
               onValueChange={handleSearchChange}
               placeholder={search.placeholder ?? "Search…"}
-              aria-label={search.placeholder ?? "Search"}
-              className="w-full min-w-0 sm:w-56 sm:max-w-xs"
+              aria-label={search.placeholder ?? "Search"} className="min-w-0"
             />
           ) : (
             <div className="hidden sm:block" />

@@ -485,9 +485,7 @@ export default function SupportMacrosPage() {
       }
     >
       <div className="flex flex-1 min-h-0 flex-col gap-4">
-        <div className="min-w-0 max-w-sm">
-          <SearchInput placeholder="Search responses…" value={search} onValueChange={handleSearchChange} />
-        </div>
+        <SearchInput placeholder="Search responses…" value={search} onValueChange={handleSearchChange} />
 
         {isLoading ? (
           <LoadingState variant="cards" rows={9} />

@@ -393,7 +393,7 @@ const MemberRoleRow = memo(function MemberRoleRow({
           onValueChange={handleRoleChange}
           disabled={updateRole.isPending}
         >
-          <SelectTrigger className="h-7 w-[100px] text-xs">
+          <SelectTrigger className="w-[100px] text-xs">
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="min-w-[var(--radix-select-trigger-width)]">

@@ -188,9 +188,7 @@ export default function LeadDistributionPage() {
       subtitle={isLoading ? undefined : `${data?.totalCount ?? 0} leads`}
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
-          <div className="min-w-0 flex-1 lg:max-w-md">
-            <SearchInput placeholder="Search leads..." value={inputValue} onValueChange={handleSearchChange} />
-          </div>
+          <SearchInput placeholder="Search leads..." value={inputValue} onValueChange={handleSearchChange} />
           <Select value={statusFilter} onValueChange={handleStatusChange}>
             <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[140px]")}>
               <SelectValue placeholder="All statuses" />

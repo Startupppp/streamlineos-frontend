@@ -96,9 +96,7 @@ export function ActivityFilters({
 
   return (
     <div className={FILTER_TOOLBAR_ROW}>
-      <div className="w-[200px] max-w-[min(200px,70vw)]">
-          <SearchInput placeholder="Search activities..." value={search} onValueChange={handleSearchChange} />
-        </div>
+        <SearchInput placeholder="Search activities..." value={search} onValueChange={handleSearchChange} />
 
       <Select value={typeFilter || "all"} onValueChange={handleTypeChange}>
         <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[120px]")}>

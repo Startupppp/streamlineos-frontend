@@ -68,9 +68,7 @@ export function StepTeam({ draft, updateDraft }: StepSharedProps) {
         )}
       </div>
 
-      <div className="min-w-0">
-          <SearchInput placeholder="Search by name or email…" value={search} onValueChange={handleSearch} />
-        </div>
+        <SearchInput placeholder="Search by name or email…" value={search} onValueChange={handleSearch} />
 
       <ScrollArea className="max-h-72">
       <div className="space-y-1">

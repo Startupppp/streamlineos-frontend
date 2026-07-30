@@ -3,7 +3,7 @@ import { ApprovalsInboxPage } from "@/features/build/approvals/approvals-inbox-p
 
 export default function ApprovalsInboxRoute() {
   return (
-    <RequireModule module="PROJECTS">
+    <RequireModule module="build">
       <ApprovalsInboxPage />
     </RequireModule>
   );

@@ -313,9 +313,7 @@ export default function DealsPage() {
 
   const filterBar = (
     <div className={FILTER_TOOLBAR_ROW}>
-      <div className="w-[200px] max-w-[min(200px,70vw)]">
-        <SearchInput value={searchInput} onValueChange={handleSearchChange} placeholder="Search deals..." aria-label="Search deals" />
-      </div>
+      <SearchInput value={searchInput} onValueChange={handleSearchChange} placeholder="Search deals..." aria-label="Search deals" />
       <Select value={stageFromUrl ?? "all"} onValueChange={handleStageFilterChange}>
         <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[140px]")}>
           <SelectValue placeholder="All stages" />

@@ -166,7 +166,6 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
         value={search}
         onValueChange={handleSearchChange}
         placeholder="Search…"
-        className="w-36"
       />
       <Select value={typeFilter} onValueChange={setTypeFilter}>
         <SelectTrigger className="w-40">

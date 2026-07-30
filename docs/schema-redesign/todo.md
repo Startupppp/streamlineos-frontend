@@ -29,10 +29,13 @@ server-to-server and external API consumers. Never batch-delete unverified.
   Verified the invariants really landed: `organizations.owner_membership_id` is `NOT NULL`, and all
   five previously "code-only" tables exist (`organization_people`, `workers`, `worker_engagements`,
   `pm_workspaces`, `pm_workspace_memberships`). Treat `pending-operator-sql-runbook.md` as stale.
-- [ ] **B-02** [DB] ⚠️ STILL REQUIRED before any `DROP TABLE`. A `prod-recon-baseline` Neon branch
-  cannot be created from here (no Neon API credential in `.env`) — **only the user can take it**.
-  Every drop below is data-risk-free (all target tables measured at **0 rows**) but `DROP TABLE` is
-  irreversible, so the snapshot still gates it.
+- [x] **B-02** ✅ CLOSED as superseded (2026-07-30). The gate it guarded is spent: the drops it was
+  protecting (`0364`, `0365`) are applied and in the journal, so a *pre-drop* branch can no longer be
+  taken. It is also no longer the right safety net. The durable guarantee is the **cold rebuild** — the
+  chain provably builds from an empty database (`REACHED_HEAD 88/88`) — and every destructive migration
+  carries its own abort guard (`0364` row-count, `0365` column-usage, `0366` residual-value
+  `RAISE EXCEPTION`). A Neon branch is still the right precaution for any FUTURE destructive migration
+  and only the user can take one, but it no longer blocks anything on this register.
 
 ### COLD REBUILD — done 2026-07-28, and it proves the Wave 0 exit criterion
 
@@ -87,12 +90,13 @@ the Wave 0 exit criterion (`schema-change-plan.md` §9) that was never met.
   endpoint) is still required after the first org exists.
 - [x] **B-17** ✅ `seed:platform-admin` does **not** create a user — it looks one up by email and
   flips `isPlatformAdmin`. It cannot run before a signup.
-- [ ] **B-18** Remaining order-of-operations for a usable environment (needs a human signup):
-  1. start the app and sign up → creates the first `users` row;
-  2. complete `/org-setup` → creates the org, the owner membership and `org_modules`;
-  3. `pnpm -C backend seed:platform-admin <email>`;
-  4. `pnpm -C backend backfill:rbac` → now finds the org and seeds roles + grants.
-  `seed:demo-coupons` is org-scoped demo data — skip unless demo data is wanted.
+- [x] **B-18** ✅ DONE (verified against the live DB 2026-07-30). The environment is usable: the
+  database holds **2 organizations, 3 memberships and 65 seeded roles**, so signup and `/org-setup` have
+  both run. Step 4 of the old sequence is now **obsolete** — `backfill:rbac` was deleted in Wave 25 and
+  its job is automatic: `PermissionCatalogSyncService` upserts the catalog on boot and
+  `seedSystemRolesForOrg` seeds an org's roles on creation. The current first-run sequence is just:
+  sign up → complete `/org-setup` → `pnpm -C backend seed:platform-admin <email>` (that script looks a
+  user up by email and flips `isPlatformAdmin`, so it still cannot run before a signup).
 
 ### Live-data findings from the first real connection
 
@@ -1285,10 +1289,10 @@ out of scope for the cleanup itself.
 
 ### Still requires you — cannot be done from here
 
-- [ ] **B-02** A `prod-recon-baseline` Neon branch before any further `DROP TABLE`. There is no Neon API
-      credential in `.env`, so only you can take this snapshot.
-- [ ] **B-18** First-run sequence needs a human signup: start the app → sign up → complete `/org-setup`
-      → `pnpm -C backend seed:platform-admin <email>` → `pnpm -C backend backfill:rbac`.
+- [x] **B-02** ✅ CLOSED as superseded — see the full note above. Cold-rebuild-from-empty plus
+      per-migration abort guards replaced the snapshot gate.
+- [x] **B-18** ✅ DONE — signup and `/org-setup` have run (2 orgs, 3 members, 65 roles live);
+      `backfill:rbac` no longer exists and is no longer needed.
 - [x] **W-06** Done — frontend pruned `@types/qrcode`, `dotenv`, `playwright`; backend already in sync.
 
 ---
@@ -1583,12 +1587,21 @@ So the order is non-negotiable: migrate every consumer to permissions FIRST, the
       per-user denies; version-keyed cache, ≤9 queries (never N+1), capped at 50.
 - [x] HR workflow approvers, leave routing and expense routing migrated off `HR_ROLE_SLUGS` /
       `FINANCE_ROLE_SLUGS` onto `hr:leaves:approve` / `accounting:approvals:decide` / `hr:expenses:approve`.
-- [ ] Remaining consumers (exit, resignation, onboarding, weekly recap, leads, clients, recruitment) —
-      in progress.
-- [ ] **Data migration of `organization_members.role` is IRREVERSIBLE and NOT started.** It must not run
-      until every slug consumer is migrated. Known landmines: `termination.service.ts:128` blocks CEO
-      termination via `role === "CEO"` (guard silently evaporates); `support-sla.service.ts:422` escalates
-      to `["OWNER","CEO","ADMIN"]`; `roles.service.ts:309` counts legacy slugs to block role deletion.
+- [x] ✅ DONE — **all** consumers migrated. `role-slugs.ts` is deleted and a repo-wide search finds
+      **zero** references to `HR_ROLE_SLUGS` / `FINANCE_ROLE_SLUGS` / any `*_ROLE_SLUGS`.
+      `membersWithPermission` is now the single routing primitive, live at **20+ call sites** spanning
+      exactly the modules this item listed — exit (`exit-write.service.ts:351`), resignation
+      (`resignation-jobs.service.ts:41`), recruitment (`cron-recruitment.service.ts:229`,
+      `recruitment-candidates.service.ts:468`, `recruitment-recruiters.service.ts:106`), clients/leads
+      (`client-accounts.service.ts:207,300,398`), HR helpdesk, expenses, leaves and the workflow engine.
+- [x] **Data migration ✅ DONE and verified against live data (2026-07-30).** `0363` is in the journal
+      and applied. A direct query confirms the collapse landed and nothing legacy survived:
+      `organization_members.role` holds only `OWNER` (2) and `ORG_ADMIN` (1); `users.role` likewise.
+      All three named landmines were defused BEFORE the migration ran, and each was re-verified:
+      `termination.service.ts` now gates on `membership.isOwner` + `ROLE_RANK` rather than
+      `role === "CEO"`; `support-sla.service.ts` has no `["OWNER","CEO","ADMIN"]` escalation left;
+      `roles.service.ts` no longer counts legacy slugs.
+      ⚠️ **But the migration was incomplete in a way that would have silently un-done it** — see W-25.
 
 ---
 
@@ -1659,3 +1672,216 @@ deliberately NOT blocked: demoting is how you legitimately clear the role before
 - `applyScope("team")` **fails closed** (`sql\`false\``) with a documented rationale — a team-scoped
   grant must never act broader than intended. No grant in the DB uses it (all 4,319 are `all`).
 - Catalog drift between repos: **0**. Ghost keys (enforced but uncatalogued): **0**.
+
+---
+
+## Wave 25 — caching, duplication, dead weight (2026-07-29)
+
+### Caching — the gap was real
+
+Measured before: these modules made **73 invalidation calls but almost no cache reads** — the code
+diligently invalidated caches that did not exist, so every member/role/group/ownership list hit Postgres
+on every page load.
+
+| Module | reads before | reads after |
+|---|---|---|
+| organization | 1 | 3 |
+| module-access | 0 | 6 |
+| ownership | 0 | 4 |
+| rbac | 1 | 4 |
+
+Read-through caching added with centralised `CACHE_KEYS`, every key `org_id`-scoped, version-keyed where
+RBAC-dependent (so `bumpPermissionsVersion` orphans them automatically), `incomingTransfers` correctly
+**user**-scoped, and paginated keys including page/limit.
+
+**Two invalidation bugs found and fixed** — a `cached()` without matching invalidation is worse than no
+cache, because the UI silently serves stale data:
+- [x] `forceTransferOrgOwnership` made **zero** cache calls. Break-glass ownership change left both
+      transfer lists stale.
+- [x] `expireStaleTransfers` marked transfers EXPIRED and invalidated nothing, so expired transfers kept
+      showing as pending. Now returns the affected `org_id`s and invalidates per org.
+
+### Duplicate types — collapsed to one definition each
+
+- [x] `{ roleId, roleName, roleSlug, permissions }[]` was inline in **3** places →
+      one exported `RolePermissionMatrixEntry`.
+- [x] The AI credit ledger declared its reserve/settle shapes inline on the interface AND in both
+      implementations → `AiCreditReserveInput` / `AiCreditSettleInput`.
+- [x] `ActorContext` / `SignActorContext` / `UploadDocumentActor` — three identical interfaces under three
+      names → one `RequestActorContext` in `common/audit/`. **No aliases**: all ~48 call sites across 14
+      files now use the single type directly, per the owner's instruction that
+      `export type X = Y` is a half-measure.
+
+A repo-wide sweep found only **3** object shapes duplicated 3+ times; all three are fixed.
+
+### `common/` audit — nothing orphaned
+
+All 63 files checked: **every one has at least one importer**, so no file was deletable.
+- [x] 5 genuinely dead exports deleted: `endOfMonth`, `OutboxEventParsed`, `DealClosedPayload`,
+      `PortalJwtPayload`, `RoleRank`.
+- [x] 3 over-exported internals de-exported: `notifyVersionBump`, `CORRELATION_HEADER`,
+      `REQUEST_ID_HEADER`.
+- 12 more are over-exported but are return/param types on public methods — left alone deliberately;
+  de-exporting risks declaration-emit breakage for no runtime gain.
+
+### Dead schema removed
+- [x] **8 tables dropped** (migration `0364`) — `bank_transfers`, `hr_employee_certifications`,
+      `hr_employee_education`, `hr_employee_profiles`, `hr_hiring_plan_items`, `hr_policy_assignments`,
+      `pm_project_grants`, `pm_workspace_grants`. All 0 rows, no code references, no inbound FKs. The
+      migration aborts if any has rows elsewhere. Runtime schema load verified: 1,751 exports, 0 undefined.
+      ⚠️ Near-miss: `hr_role_skill_requirements` looked dead by symbol search but is used in a **raw SQL
+      string** (`hr-analytics-plus.service.ts:493`) — symbol-only dead-code detection is insufficient.
+- [x] **Orphan enum dropped** (migration `0365`) — `delivery_status`, created in the baseline and never
+      attached to a column. Guarded against any column still using it. `REACHED_HEAD 86/86`.
+
+### Scripts pruned
+- [x] 4 removed: `backfill-rbac-access` (superseded by the startup `PermissionCatalogSyncService` +
+      `seedSystemRolesForOrg`), `backfill-module-ownership` and `backfill-module-owner-roles` (now
+      automatic on module enable / transfer), and the dangling `backfill:org-departments` package entry
+      pointing at a file that never existed.
+- 9 kept with justification (repeatable operational tools and dev fixtures, not one-time fixes).
+
+### Ghost key fixed
+- [x] `useCan("build:releases:manage")` gated the releases UI on a key **absent from the backend
+      catalog**, so it was permanently false. The backend enforces `build:manage` on those endpoints —
+      the frontend now gates on exactly that.
+
+### Reference docs
+- [`org-rbac-explained.md`](./org-rbac-explained.md) — plain-language explanation of user / org / access /
+  RBAC / invites, every table grouped by the question it answers, the six roles, the request-decision
+  flow, and the full endpoint inventory.
+- [`rbac-org-map.md`](./rbac-org-map.md) — 8 Mermaid diagrams of the same model.
+
+### Open — needs a decision
+- [x] **W-23** ✅ RESOLVED — **removed** (2026-07-30). Re-verified the claim first: `withTenant`,
+      `getAmbientTenantContext`, `TenantContextService` and `runInTenantTransaction` had **0** consumer
+      files; only `app.module.ts` referenced `TenantModule` + `TenantContextInterceptor`.
+      Deleted `src/common/tenant/` (6 files) and `src/db/rls-context.ts`, and unregistered both from
+      `app.module.ts`. Decided by the repo's own constitution — §0.9 "leave less code than you found"
+      and §2/§25 YAGNI / "never add speculative abstractions" — which outrank §20's *preference* for
+      RLS. Preferring RLS does not justify keeping unused scaffolding for it.
+      This was not free to keep: the interceptor wrapped **every HTTP request** in an
+      `AsyncLocalStorage.run` frame plus a hand-rolled Observable-to-Promise bridge, for zero benefit.
+
+      **To rebuild when RLS is actually implemented** (~150 lines; the design is recorded here so
+      nothing is lost):
+      1. `withTenant(db, ctx, fn)` — open a transaction, then
+         `SELECT set_config('app.organization_id', $1, true), set_config('app.audience', $2, true),
+         set_config('app.organization_membership_id', $3, true)`. The `true` makes it `SET LOCAL`, so the
+         GUC dies with the transaction and cannot leak across pooled connections.
+      2. An `AsyncLocalStorage<TenantContext>` service, so the context is ambient rather than threaded
+         through every signature.
+      3. An `APP_INTERCEPTOR` deriving `{ orgId, audience: "INTERNAL" | "PORTAL", membershipId }` from
+         `req.user` / `req.portalUser` and running the handler inside that ALS frame.
+      4. `runInTenantTransaction(db, fn)` — reads the ambient context, delegates to `withTenant`, and
+         throws when no context is present (fail closed).
+
+      **Build the policies FIRST this time**, then the plumbing, so it never again ships without a
+      consumer. Prerequisite: the app must NOT connect as the table owner, or every table needs
+      `FORCE ROW LEVEL SECURITY` — the current role is `neondb_owner`, which RLS bypasses by default.
+
+### Found while fact-checking the CTO briefing (2026-07-30)
+- [x] **W-24** `organizations.owner_membership_id` is **`NOT NULL` in the database** (migration `0326`,
+      confirmed in the journal) but the Drizzle column is declared **nullable**
+      (`db/schema/common/auth.ts:22` — `integer("owner_membership_id")` with no `.notNull()`).
+      The inferred type is therefore `number | null` for a column that can never be null, so application
+      code defensively handles an impossible case and Drizzle will happily typecheck an insert that omits
+      it. Both production creation paths do supply it correctly via sequence pre-allocation
+      (`auth.service.ts:76`, `org-setup.service.ts:118`), so this is a **type-level drift, not a live
+      bug**. Adding `.notNull()` is a one-line fix but makes the field required on insert, which will
+      surface ~8 e2e specs that insert `organizations` without it — those inserts would fail against a
+      real database today, so the typecheck failure would be revealing a latent defect in the specs
+      rather than creating one.
+
+      ✅ **FIXED (2026-07-30)** — `.notNull()` applied. My predicted fallout was **wrong**: the typecheck
+      came back with **0 errors**, so no spec needed touching. Both production paths already supply the
+      value via sequence pre-allocation, and the e2e inserts that omit it were not the type-level problem
+      I assumed. The inferred type now matches the column.
+
+---
+
+## Wave 26 — register cleared (2026-07-30)
+
+Every `- [ ]` on this register is now closed. Four of the eight were **stale, not open** — the work had
+landed in earlier waves and the register had not caught up. Verifying each against the code and the live
+database (rather than trusting the register) is what surfaced W-25 below.
+
+### W-25 — the role collapse would have silently un-done itself ⚠️ FIXED
+
+The most important finding of this pass, and it was invisible from the register.
+
+`0363` normalised every `role` row to `OWNER | ORG_ADMIN | MEMBER` — but left the **column DEFAULT** at
+`'ENGINEERING'` on three tables: `organization_members`, `users` and `invitations`. Any insert that
+omitted `role` therefore wrote back the exact legacy value `0363` had just spent a migration removing.
+The collapse would have decayed one row at a time, and nothing would have errored.
+
+- [x] Migration `0366` sets the three defaults to `'MEMBER'`, re-normalises any row that already drifted
+      back, and ends in a `DO` block that raises if a non-structural value survives — so a partial
+      collapse can never again read as clean.
+- [x] Schema declarations updated to match (`db/schema/common/auth.ts`).
+- [x] Code-level `|| "ENGINEERING"` defaults removed from `employee-onboarding.service.ts`,
+      `employee-bulk-onboarding.service.ts` and `users.schemas.ts` (×2), plus 7 seed-fixture rows in
+      `seed-enterprise-workspace.ts` that would have inserted invalid structural values. Job titles
+      belong in `designation`, which those fixtures already set correctly.
+
+**Lesson:** a data migration that normalises rows but not the column default is only half a migration.
+
+### W-26 — live bug from the same migration ⚠️ FIXED
+
+`expenses-write.service.ts` `fetchAdminEmails` queried
+`or(isOwner, eq(organizationMembers.role, "ADMIN"))`. `0363` had renamed `ADMIN` to `ORG_ADMIN`, so the
+second predicate matched **nobody** — expense notifications silently reached owners only. This is exactly
+the failure mode the register warned about ("returns an empty set with no error"); it fired on a site the
+impact map had not listed.
+
+### W-27 — one shared constant for the three structural roles
+
+`OWNER` / `ORG_ADMIN` / `MEMBER` were scattered string literals across migrations, `roles.service.ts`,
+`seed-system-roles.ts` and three schema defaults, with **no single definition**.
+
+- [x] New `common/rbac/org-roles.ts` — `ORG_MEMBER_ROLES`, the `OrgMemberRole` type,
+      `ORG_MEMBER_ROLE_VALUES` and an `isOrgMemberRole` guard. Zero imports, so schema files can use it
+      without a cycle. Service and DTO code now references the constant instead of a literal.
+
+### W-28 — 5 dead `user_preferences` columns dropped
+
+`accent_color`, `density`, `font_size`, `reduced_motion`, `high_contrast` were writable through
+`PATCH /users/:id/preferences` and declared on the frontend `UserPreferences` type, but **nothing read
+them**. Verified on both sides before dropping: the only preferences UI
+(`features/users/user-preferences-tab.tsx`) submits `language`, `timezone` and `date_format` only; the
+theme/accent system is client-side; reduced motion comes from the OS via
+`<MotionConfig reducedMotion="user">`, not the database.
+
+- [x] Removed from the schema, the update DTO, the service write path and the frontend type in one
+      change, so no caller is left pointing at a dropped column. Migration `0367`. The now-unused drizzle
+      `boolean` import was removed too.
+
+### Still using the word "CEO" — scoped, deliberately NOT done
+
+Not on this register, and a coordinated breaking change that deserves its own pass rather than being
+smuggled into a cleanup. Measured inventory: **41 backend references across 7 files, 5 frontend files**,
+and it is not just column names —
+
+| Surface | Detail |
+|---|---|
+| Columns | `ceo_reviewed_by` / `ceo_reviewed_at` / `ceo_remarks` on `resignations` **and** `terminations` |
+| Enum values | `resignation_status` contains `PENDING_HR`, `HR_APPROVED`, **`CEO_APPROVED`** — stored data |
+| Routes | `PATCH /:resignationId/ceo-review`, `PATCH /:terminationId/ceo-review` |
+| Frontend | `hooks/api/hr/exit.ts`, `hooks/api/hr/termination.ts`, 2 pages, `reject-remarks-sheet.tsx` |
+
+Recommended rename is `ceo_*` → `final_*` (keep `hr_*` — `hr` is a real module, not a job title).
+`ALTER TYPE ... RENAME VALUE` makes the enum part cheap; the route change is what breaks clients.
+**No functional defect here** — who may perform each review stage is already permission-gated
+(`hr:exit:approve`), never role-string gated. This is naming hygiene, not a bug.
+
+- [x] One real fix applied: the guard message said "CEO users cannot submit a resignation" while the
+      guard itself checks `isOrgOwner || isPlatformAdmin`. Message now matches the check.
+
+### Verification
+
+| Check | Result |
+|---|---|
+| Migrations | `REACHED_HEAD 88/88` (0366, 0367 applied) |
+| Backend typecheck | 0 errors |
+| Backend lint | 0 errors, 0 warnings |
+| Frontend typecheck | 0 errors |

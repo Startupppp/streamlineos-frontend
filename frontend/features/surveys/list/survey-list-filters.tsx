@@ -31,7 +31,6 @@ export function SurveyListFilters({
         placeholder="Search surveys..."
         value={search}
         onValueChange={onSearchChange}
-        className="w-48"
       />
       <Select value={status} onValueChange={handleStatusSelect}>
         <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-32")}><SelectValue placeholder="Status" /></SelectTrigger>

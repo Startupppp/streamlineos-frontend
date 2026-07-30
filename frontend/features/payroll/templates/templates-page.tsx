@@ -165,7 +165,7 @@ export function TemplatesPageContent() {
 
   const filters = (
     <>
-      <SearchInput value={searchInput} onValueChange={handleSearchChange} placeholder="Search templates…" className="w-48" />
+      <SearchInput value={searchInput} onValueChange={handleSearchChange} placeholder="Search templates…" />
       <Select value={category} onValueChange={handleCategoryChange}>
         <SelectTrigger className={`${FILTER_SELECT_TRIGGER} h-9 w-44`}>
           <SelectValue placeholder="Category" />

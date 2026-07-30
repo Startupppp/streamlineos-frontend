@@ -303,13 +303,11 @@ export function UserInvitationsPanel() {
         }
         filters={
           <>
-            <div className="min-w-0 w-full flex-1 md:min-w-[160px] md:max-w-xs">
-              <SearchInput
-                value={localSearch}
-                onValueChange={handleSearchChange}
-                placeholder="Search by email…"
-              />
-            </div>
+            <SearchInput
+              value={localSearch}
+              onValueChange={handleSearchChange}
+              placeholder="Search by email…"
+            />
             <Select value={status} onValueChange={handleStatusChange}>
               <SelectTrigger
                 className={`w-[140px] shrink-0 ${FILTER_SELECT_TRIGGER}`}

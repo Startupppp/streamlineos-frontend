@@ -453,13 +453,11 @@ function ProductsPageInner() {
 
   const filtersRow = isFirstLoad ? undefined : (
     <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-      <div className="w-full max-w-md min-w-[200px]">
-        <SearchInput
-          value={search}
-          onValueChange={handleSearchChange}
-          placeholder="Search products by name, SKU, or barcode..."
-        />
-      </div>
+      <SearchInput
+        value={search}
+        onValueChange={handleSearchChange}
+        placeholder="Search products by name, SKU, or barcode..."
+      />
       <div className="hidden min-w-0 flex-row flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide sm:flex [&>*]:shrink-0">
         <Select value={statusParam || "all"} onValueChange={handleStatusChange}>
           <SelectTrigger

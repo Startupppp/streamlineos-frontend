@@ -199,7 +199,7 @@ function filterMembers(
 
 const TRIGGER_CLASS = cn(
   FIELD_CONTROL_CLASS,
-  "w-full justify-start gap-2 px-3 font-medium",
+  "w-full justify-start gap-2 px-3 text-left font-medium",
 );
 
 function MemberAvatar({ member, className }: { member: MemberOption; className?: string }) {

@@ -505,7 +505,7 @@ export default function OrgBranchesPage() {
   ];
 
   return (
-    <RequireModule module="HR">
+    <RequireModule module="hr">
     <PageWrapper
       title="Branches"
       subtitle="Branches within your organization."
@@ -533,9 +533,7 @@ export default function OrgBranchesPage() {
         </div>
       }
       filters={
-        <div className="min-w-0 w-full flex-1 md:min-w-[160px] md:max-w-xs">
-          <SearchInput placeholder="Search branches…" value={search} onValueChange={handleSearchInputChange} />
-        </div>
+        <SearchInput placeholder="Search branches…" value={search} onValueChange={handleSearchInputChange} />
       }
     >
       <DataTable

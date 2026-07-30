@@ -111,9 +111,7 @@ export function LinkParentDialog({
           <DialogTitle className="text-base">Link Parent Company</DialogTitle>
         </DialogHeader>
 
-        <div className="min-w-0">
-          <SearchInput placeholder="Search companies..." value={search} onValueChange={handleSearchChange} />
-        </div>
+        <SearchInput fill placeholder="Search companies..." value={search} onValueChange={handleSearchChange} />
 
         <ScrollArea className="h-56">
           {isLoading ? (

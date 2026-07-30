@@ -155,7 +155,6 @@ export function KpiLibraryTab() {
       <div className="flex items-center gap-2 justify-between">
         <div className={FILTER_TOOLBAR_ROW}>
           <SearchInput
-            className="w-60"
             placeholder="Search KPIs…"
             value={search}
             onValueChange={setSearch}

@@ -166,7 +166,6 @@ export function SafetyPageContent() {
         placeholder="Search..."
         value={search}
         onValueChange={handleSearchChange}
-        className="max-w-sm"
         aria-label="Search incidents"
       />
       <Select

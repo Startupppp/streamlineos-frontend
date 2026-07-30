@@ -97,7 +97,7 @@ export default function DocumentReviewPage() {
       subtitle="Review employee onboarding documents"
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
-          <SearchInput placeholder="Search employees..." value={searchQuery} onValueChange={handleSearchChange} className="w-[200px]" />
+          <SearchInput placeholder="Search employees..." value={searchQuery} onValueChange={handleSearchChange} />
           <Select value={statusFilter} onValueChange={handleStatusChange}>
             <SelectTrigger className={cn("w-[140px]", FILTER_SELECT_TRIGGER)}>
               <SelectValue />

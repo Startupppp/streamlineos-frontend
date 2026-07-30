@@ -76,7 +76,7 @@ export default function SurveyParticipantsPage() {
 
   return (
     <DashboardGate permission="surveys:participants:view">
-      <RequireModule module="SURVEYS">
+      <RequireModule module="surveys">
         <PageWrapper
           title="Participants"
           backHref={`/surveys/${surveyId}`}

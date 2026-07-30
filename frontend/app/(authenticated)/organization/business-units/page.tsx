@@ -399,7 +399,7 @@ export default function BusinessUnitsPage() {
   );
 
   return (
-    <RequireModule module="HR">
+    <RequireModule module="hr">
       <PageWrapper
         title="Business Units"
         subtitle="Top-level divisions of your organization."
@@ -427,13 +427,11 @@ export default function BusinessUnitsPage() {
           </div>
         }
         filters={
-          <div className="min-w-0 w-full flex-1 md:min-w-[160px] md:max-w-xs">
-            <SearchInput
-              value={search}
-              placeholder="Search business units…"
-              onValueChange={handleSearchInputChange}
-            />
-          </div>
+          <SearchInput
+            value={search}
+            placeholder="Search business units…"
+            onValueChange={handleSearchInputChange}
+          />
         }
       >
         <DataTable

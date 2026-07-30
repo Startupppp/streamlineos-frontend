@@ -123,9 +123,7 @@ export default function QuestionBankPage() {
       }
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
-          <div className="min-w-0 w-[200px]">
-            <SearchInput placeholder="Search questions..." value={search} onValueChange={handleSearchChange} />
-          </div>
+          <SearchInput placeholder="Search questions..." value={search} onValueChange={handleSearchChange} />
           <Select value={category} onValueChange={setCategory}>
             <SelectTrigger className={cn("w-[150px]", FILTER_SELECT_TRIGGER)}>
               <SelectValue />

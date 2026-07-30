@@ -205,7 +205,6 @@ export default function HrTemplatesPage() {
                 placeholder="Search templates..."
                 value={search}
                 onValueChange={handleSearchChange}
-                 className="w-56"
                />
             </div>
             <Select value={kind} onValueChange={(v) => { setKind(v as HrTemplateKind | "all"); setPage(1); }}>

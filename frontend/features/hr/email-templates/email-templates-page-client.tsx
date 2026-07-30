@@ -303,9 +303,7 @@ export function EmailTemplatesPageClient() {
       ) : (
         <div className="space-y-3">
           <div className={FILTER_TOOLBAR_ROW}>
-            <div className="min-w-0 w-44">
-              <SearchInput placeholder="Search templates..." value={searchQuery} onValueChange={handleSearchChange} />
-            </div>
+            <SearchInput placeholder="Search templates..." value={searchQuery} onValueChange={handleSearchChange} />
             <FilterPillGroup className="flex-wrap">
               <FilterPill active={activeCategory === "All"} onClick={() => setActiveCategory("All")}>
                 All

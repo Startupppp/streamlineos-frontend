@@ -135,7 +135,7 @@ export function AddChannelMembersDialog({
 
         <div className="px-4 pb-3">
           <div className="min-w-0 bg-muted/30 border-border/30">
-          <SearchInput placeholder="Search people..." value={search} onValueChange={setSearch} autoFocus />
+          <SearchInput fill placeholder="Search people..." value={search} onValueChange={setSearch} autoFocus />
         </div>
         </div>
 

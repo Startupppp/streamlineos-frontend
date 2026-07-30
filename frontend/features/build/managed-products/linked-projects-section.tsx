@@ -97,7 +97,7 @@ export function LinkedProjectsSection({ managedProductId }: Props) {
       {canUpdate ? (
         <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/30 p-2">
           <Select value={selectedProjectId} onValueChange={handleSelectChange}>
-            <SelectTrigger className="h-8 flex-1 text-xs">
+            <SelectTrigger className="flex-1 text-xs">
               <SelectValue placeholder="Select a project to link…" />
             </SelectTrigger>
             <SelectContent className="min-w-[var(--radix-select-trigger-width)]">

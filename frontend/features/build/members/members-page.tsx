@@ -543,16 +543,14 @@ export function MembersPage() {
               ) : null}
             </div>
             <div className="flex w-full min-w-0 items-center gap-1.5 sm:contents">
-              <div className="min-w-0 flex-1 sm:order-1 sm:w-[200px] sm:max-w-[min(240px,70vw)] sm:flex-none md:w-[240px]">
-                <SearchInput
-                  placeholder="Search members…"
-                  value={search}
-                  onValueChange={handleSearchChange}
-                  aria-label="Search members"
-                  className="h-9"
-                  inputClassName="h-9 min-h-9"
-                />
-              </div>
+              <SearchInput
+                placeholder="Search members…"
+                value={search}
+                onValueChange={handleSearchChange}
+                aria-label="Search members"
+                className="h-9"
+                inputClassName="h-9 min-h-9"
+              />
             </div>
           </div>
         }

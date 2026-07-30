@@ -211,7 +211,7 @@ export function RunsPageContent() {
               setPage(1);
             }}
           >
-            <SelectTrigger className="h-8 w-[240px]">
+            <SelectTrigger className="w-[240px]">
               <SelectValue placeholder="All entities" />
             </SelectTrigger>
             <SelectContent>

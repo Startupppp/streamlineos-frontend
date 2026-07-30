@@ -226,7 +226,6 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
         placeholder="Search incidents..."
         value={search}
         onValueChange={setSearch}
-        className="w-44"
       />
       <Select value={statusFilter} onValueChange={setStatusFilter}>
         <SelectTrigger className="w-36">

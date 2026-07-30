@@ -484,13 +484,11 @@ function AuditLogContent() {
               {renderFilterSelects()}
             </PopoverContent>
           </Popover>
-          <div className="min-w-0 flex-1 md:min-w-[160px] md:max-w-xs">
-            <SearchInput
-              placeholder="Search by name or email…"
-              value={userSearch}
-              onValueChange={handleUserSearchChange}
-            />
-          </div>
+          <SearchInput
+            placeholder="Search by name or email…"
+            value={userSearch}
+            onValueChange={handleUserSearchChange}
+          />
           <div className="hidden md:contents">{renderFilterSelects()}</div>
         </>
       }

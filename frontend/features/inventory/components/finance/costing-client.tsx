@@ -185,7 +185,7 @@ export function CostingClient() {
       }
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
-          <SearchInput className="min-w-0 flex-1 lg:max-w-xs" placeholder="Search products..." value={search} onValueChange={handleSearchChange} />
+          <SearchInput className="min-w-0 flex-1" placeholder="Search products..." value={search} onValueChange={handleSearchChange} />
         </div>
       }
     >

@@ -220,7 +220,7 @@ export default function GoalsPage() {
   }
 
   return (
-    <RequireModule module="PROJECTS">
+    <RequireModule module="build">
       <PageWrapper
         title="Goals & OKRs"
         subtitle="Track company, team, and individual objectives and their key results"
@@ -239,13 +239,11 @@ export default function GoalsPage() {
         }
         filters={
           <div className={PM_TOOLBAR}>
-            <div className="min-w-[180px] max-w-sm flex-1">
-              <SearchInput
-                placeholder="Search goals..."
-                value={search}
-                onValueChange={handleSearchChange}
-              />
-            </div>
+            <SearchInput
+              placeholder="Search goals..."
+              value={search}
+              onValueChange={handleSearchChange}
+            />
             <div className="hidden md:block">
               <GoalLevelStatusFilters
                 levelFilter={levelFilter}

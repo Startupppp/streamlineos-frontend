@@ -222,13 +222,11 @@ export function ArchivedUsersPage() {
         title="Archived Users"
         subtitle="Archived members no longer have access."
         filters={
-          <div className="min-w-0 w-full flex-1 md:min-w-[160px] md:max-w-xs">
-            <SearchInput
-              placeholder="Search archived users…"
-              value={search}
-              onValueChange={handleSearchChange}
-            />
-          </div>
+          <SearchInput
+            placeholder="Search archived users…"
+            value={search}
+            onValueChange={handleSearchChange}
+          />
         }
       >
         <div className="flex flex-1 min-h-0 flex-col gap-3">

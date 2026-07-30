@@ -195,7 +195,7 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
   }, []);
 
   return (
-    <RequireModule module="PROJECTS">
+    <RequireModule module="build">
       <PageWrapper
         title="Integrations"
         subtitle="Connect Git repositories to link commits and pull requests to tickets"

@@ -171,7 +171,6 @@ export function CasesPageContent() {
         placeholder="Search cases..."
         value={search}
         onValueChange={handleSearchChange}
-        className="max-w-sm"
         aria-label="Search cases"
       />
       <Select

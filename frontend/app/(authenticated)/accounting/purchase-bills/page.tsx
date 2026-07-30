@@ -298,9 +298,7 @@ export default function PurchaseBillsListPage() {
       }
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
-          <div className="min-w-0 flex-1 max-w-[240px] w-full">
-            <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search by bill number" />
-          </div>
+          <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search by bill number" />
           <Select value={status} onValueChange={handleStatusChange}>
             <SelectTrigger className={`w-[180px] ${FILTER_SELECT_TRIGGER}`}>
               <SelectValue />

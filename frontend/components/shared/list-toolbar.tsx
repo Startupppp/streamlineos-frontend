@@ -31,13 +31,11 @@ export function ListToolbar({
     >
       <div className={cn(FILTER_TOOLBAR_ROW, "flex-1")}>
         {onSearchChange !== undefined ? (
-          <div className="min-w-[200px] max-w-md">
-            <SearchInput
-              value={search ?? ""}
-              onValueChange={onSearchChange}
-              placeholder={searchPlaceholder}
-            />
-          </div>
+          <SearchInput
+            value={search ?? ""}
+            onValueChange={onSearchChange}
+            placeholder={searchPlaceholder}
+          />
         ) : null}
         {filters ? (
           <div className={FILTER_TOOLBAR_ROW}>{filters}</div>

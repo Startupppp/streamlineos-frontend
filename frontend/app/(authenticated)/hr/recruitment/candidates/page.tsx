@@ -237,9 +237,7 @@ export default function CandidatesPage() {
         subtitle="Manage and track your recruiting pipeline"
         filters={
           <div className={FILTER_TOOLBAR_ROW}>
-            <div className="min-w-0 w-[200px]">
-              <SearchInput placeholder="Search candidates…" value={searchQuery} onValueChange={handleSearchChange} />
-            </div>
+            <SearchInput placeholder="Search candidates…" value={searchQuery} onValueChange={handleSearchChange} />
             <FilterPillGroup>
               <FilterPill active={!statusFilter} onClick={handleClearStatusFilter}>
                 All · {candidates?.length ?? 0}

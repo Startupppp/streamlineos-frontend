@@ -55,8 +55,7 @@ export function EmployeesFilters({
         value={search}
         onValueChange={onSearchChange}
         placeholder="Search name, email, or ID…"
-        aria-label="Search employees"
-        className="w-full min-w-0 md:w-56 md:max-w-56 md:shrink-0"
+        aria-label="Search employees" className="min-w-0 md:shrink-0"
       />
 
       <Select

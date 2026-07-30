@@ -54,7 +54,7 @@ export default function LiveSessionHostPage() {
 
   return (
     <DashboardGate permission="surveys:live:host">
-      <RequireModule module="SURVEYS">
+      <RequireModule module="surveys">
         <PageWrapper title="Live session" backHref={`/surveys/${session?.surveyId ?? ""}`}>
           <div className="flex flex-1 min-h-0 flex-col">
             {isLoading || !session ? (

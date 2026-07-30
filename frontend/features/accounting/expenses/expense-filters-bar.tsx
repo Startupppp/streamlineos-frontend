@@ -66,9 +66,7 @@ export function ExpenseFiltersBar({
 
   return (
     <div className={FILTER_TOOLBAR_ROW}>
-      <div className="w-[220px] max-w-[min(220px,70vw)]">
-        <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search merchant or description" />
-      </div>
+      <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search merchant or description" />
       <Select value={status} onValueChange={handleStatusChange}>
         <SelectTrigger className={`w-[170px] ${FILTER_SELECT_TRIGGER}`}>
           <SelectValue />

@@ -274,7 +274,7 @@ function StockSummaryContent() {
       subtitle="Current stock levels across all products"
       filters={
         <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0 lg:gap-3">
-          <SearchInput className="min-w-0 flex-1 lg:max-w-md" value={search} onValueChange={handleSearchChange} placeholder="Search products, SKU…" />
+          <SearchInput className="min-w-0 flex-1" value={search} onValueChange={handleSearchChange} placeholder="Search products, SKU…" />
           <Select value={warehouseParam} onValueChange={handleWarehouseChange}>
             <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[160px] min-w-0 text-xs shrink-0")}>
               <SelectValue placeholder="All warehouses" />

@@ -124,7 +124,7 @@ export function PmWorkspaceMembersSheet({ workspace, open, onOpenChange }: Props
               />
               <div className="flex items-center gap-2">
                 <Select value={role} onValueChange={handleRoleChange}>
-                  <SelectTrigger className="h-8 w-28 text-xs">
+                  <SelectTrigger className="w-28 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
