@@ -1,9 +1,10 @@
 "use client";
 
+import { PageWrapper } from "@/components/ui/page-wrapper";
+
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { Badge } from "@/components/ui/badge";
-import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Skeleton } from "@/components/ui/skeleton";

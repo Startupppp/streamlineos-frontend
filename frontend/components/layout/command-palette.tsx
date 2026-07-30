@@ -130,7 +130,7 @@ export function CommandPalette() {
   const pathname = usePathname();
   const { data: access } = useAccess();
   const role =
-    access?.isOrgOwner === true || access?.isPlatformAdmin === true
+    access?.isOrgOwner === true
       ? "OWNER"
       : "MEMBER";
   const { permissions } = usePermissions();

@@ -192,59 +192,62 @@ function DelegationsContent() {
   );
 
   return (
-    <PageWrapper
-      title="Delegations"
-      subtitle="Share specific permissions with teammates for a set period."
-      actions={
-        <AnimatedIconButton
-          size="sm"
-          icon={PlusIcon}
-          iconSize={14}
-          iconClassName="mr-1.5"
-          className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground"
-          onClick={handleOpenSheet}
-        >
-          Delegate
-        </AnimatedIconButton>
-      }
-      filters={
-        <SearchInput
-          placeholder="Search by name or reason…"
-          value={search}
-          onValueChange={handleSearchChange}
-        />
-      }
+    <Tabs
+      defaultValue="received"
+      className="flex min-h-0 flex-1 flex-col"
     >
-      <div className="flex flex-1 min-h-0 flex-col gap-3">
-        <Tabs
-          defaultValue="received"
-          className="flex min-h-0 flex-1 flex-col gap-3"
-        >
-          <TabsList>
-            <TabsTrigger
-              value="received"
-              className="gap-1.5 truncate"
-            >
-              Received
-              {!loadingReceived && receivedCount > 0 ? (
-                <span className="tabular-nums text-xs opacity-70">
-                  {receivedCount}
-                </span>
-              ) : null}
-            </TabsTrigger>
-            <TabsTrigger
-              value="granted"
-              className="gap-1.5 truncate"
-            >
-              Granted
-              {!loadingGiven && activeGivenCount > 0 ? (
-                <span className="tabular-nums text-xs opacity-70">
-                  {activeGivenCount}
-                </span>
-              ) : null}
-            </TabsTrigger>
-          </TabsList>
-
+      <PageWrapper
+        title="Delegations"
+        subtitle="Share specific permissions with teammates for a set period."
+        actions={
+          <AnimatedIconButton
+            size="sm"
+            icon={PlusIcon}
+            iconSize={14}
+            iconClassName="mr-1.5"
+            className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground"
+            onClick={handleOpenSheet}
+          >
+            Delegate
+          </AnimatedIconButton>
+        }
+        filtersClassName="flex-col items-stretch gap-2 overflow-visible md:flex-row md:items-center md:justify-between [&>[data-slot=search-input]]:flex-none [&>[data-slot=search-input]]:basis-auto"
+        filters={
+          <>
+            <TabsList className="w-full shrink-0 md:w-auto">
+              <TabsTrigger
+                value="received"
+                className="gap-1.5 truncate"
+              >
+                Received
+                {!loadingReceived && receivedCount > 0 ? (
+                  <span className="tabular-nums text-xs opacity-70">
+                    {receivedCount}
+                  </span>
+                ) : null}
+              </TabsTrigger>
+              <TabsTrigger
+                value="granted"
+                className="gap-1.5 truncate"
+              >
+                Granted
+                {!loadingGiven && activeGivenCount > 0 ? (
+                  <span className="tabular-nums text-xs opacity-70">
+                    {activeGivenCount}
+                  </span>
+                ) : null}
+              </TabsTrigger>
+            </TabsList>
+            <SearchInput
+              placeholder="Search by name or reason…"
+              value={search}
+              onValueChange={handleSearchChange}
+              className="w-full min-w-0"
+            />
+          </>
+        }
+      >
+        <div className="flex min-h-0 flex-1 flex-col gap-3">
           <TabsContent value="received" className={TAB_PANEL_CLASS}>
             {loadingReceived ? (
               <DelegationSkeletons count={2} />
@@ -315,16 +318,16 @@ function DelegationsContent() {
               </div>
             )}
           </TabsContent>
-        </Tabs>
-      </div>
+        </div>
 
-      <GrantDelegationSheet
-        open={sheetOpen}
-        onOpenChange={setSheetOpen}
-        onSuccess={handleGrantSuccess}
-        members={members}
-      />
-    </PageWrapper>
+        <GrantDelegationSheet
+          open={sheetOpen}
+          onOpenChange={setSheetOpen}
+          onSuccess={handleGrantSuccess}
+          members={members}
+        />
+      </PageWrapper>
+    </Tabs>
   );
 }
 

@@ -23,11 +23,10 @@ export function DashboardGate({
   if (status === "loading" || accessLoading) return <AppLoadingScreen />;
 
   const userRole = session?.user?.role;
-  const isPlatformAdmin =
-    access?.isPlatformAdmin ?? session?.user?.isPlatformAdmin ?? false;
+
   const isOrgOwner = access?.isOrgOwner ?? session?.user?.isOrgOwner ?? false;
 
-  if (!userRole && !isPlatformAdmin)
+  if (!userRole)
     return (
       <AccessDenied
         currentRole={undefined}
@@ -35,7 +34,7 @@ export function DashboardGate({
       />
     );
 
-  if (isPlatformAdmin || isOrgOwner) return <>{children}</>;
+  if (isOrgOwner) return <>{children}</>;
 
   if (permission) {
     const perms = Array.isArray(permission) ? permission : [permission];

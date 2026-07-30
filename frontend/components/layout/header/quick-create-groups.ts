@@ -165,7 +165,7 @@ export const QUICK_CREATE_GROUPS: CreateGroup[] = [
       {
         id: "kb-page",
         label: "Knowledge page",
-        href: "/knowledge?create=1",
+        href: "/knowledge/wiki?create=1",
         icon: FileText,
         permission: "kb:pages:create",
         module: "KB",

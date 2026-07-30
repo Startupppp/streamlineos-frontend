@@ -7,7 +7,6 @@ export type RolePrincipalType = "user" | "department";
 export interface AccessResponse {
   permissions: string[];
   isOrgOwner: boolean;
-  isPlatformAdmin: boolean;
   modules: Record<string, boolean>;
   enabledModules?: string[];
   dataScopes?: Record<string, string>;

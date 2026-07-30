@@ -308,7 +308,7 @@ export function SuccessChecklist() {
   const { data: access } = useAccess();
   const orgId = session?.orgId;
   const canSetUpWorkspace =
-    access?.isOrgOwner === true || access?.isPlatformAdmin === true;
+    access?.isOrgOwner === true;
   const { data: org } = useOrgSettings({ enabled: canSetUpWorkspace });
   const { completed, doneCount, isLoading } =
     useWorkspaceChecklistProgress(canSetUpWorkspace);

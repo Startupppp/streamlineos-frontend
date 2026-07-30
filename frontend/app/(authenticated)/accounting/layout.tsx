@@ -8,20 +8,19 @@ const ACCOUNTING_ROLES: ReadonlyArray<string> = ["OWNER", "FINAL", "HR"];
 export default async function AccountingLayout({ children }: { children: ReactNode }) {
   const session = await getServerAuth();
   const role = session?.user?.role;
-  const isPlatformAdmin = session?.user?.isPlatformAdmin ?? false;
   const isOrgOwner = session?.user?.isOrgOwner ?? false;
 
-  if (!session?.user) {
+  if (!session?.user) 
     redirect(signInPathForMissingSession());
-  }
+  
 
-  if (isPlatformAdmin || isOrgOwner) {
+  if (isOrgOwner) 
     return <>{children}</>;
-  }
+  
 
-  if (!role || !ACCOUNTING_ROLES.includes(role)) {
+  if (!role || !ACCOUNTING_ROLES.includes(role)) 
     redirect("/dashboard");
-  }
+  
 
   return <>{children}</>;
 }

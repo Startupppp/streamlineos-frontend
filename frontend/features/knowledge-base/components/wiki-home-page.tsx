@@ -1,16 +1,17 @@
 "use client";
 
+import { PageWrapper } from "@/components/ui/page-wrapper";
+
 import { memo, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { EmptyKnowledgeIllustration } from "@/components/illustrations";
 import { toast } from "sonner";
-import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { LoadingState } from "@/components/shared/loading-state";
-import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   useKbPagesRecent,
   useKbPagesFavorites,
@@ -115,15 +116,22 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
   }, [createPage, router, projectId, isProjectScoped, resolvePageHref]);
 
   const newPageAction = (
-    <Button onClick={handleNewPage} disabled={createPage.isPending} size="sm">
-      <KbPlusIcon className="h-4 w-4 mr-1" />
-      New page
-    </Button>
+    <AnimatedIconButton
+      type="button"
+      variant="ghost"
+      size="icon"
+      icon={KbPlusIcon}
+      iconSize={16}
+      className="h-8 w-8 shrink-0"
+      aria-label="New page"
+      onClick={handleNewPage}
+      disabled={createPage.isPending}
+    />
   );
 
   if (isLoading) {
     return (
-      <PageWrapper title="Wiki">
+      <PageWrapper title="Wiki" actions={newPageAction}>
         <LoadingState variant="cards" />
       </PageWrapper>
     );

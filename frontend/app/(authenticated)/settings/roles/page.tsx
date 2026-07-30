@@ -38,10 +38,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  ScrollArea,
-  SCROLL_AREA_PAGE_BODY_CLASS,
-} from "@/components/ui/scroll-area";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   StatCard,
   StatCardGrid,
@@ -186,64 +183,60 @@ function RolesContent() {
         />
       }
     >
-      <ScrollArea
-        fill
-        hideScrollbar
-        className={SCROLL_AREA_PAGE_BODY_CLASS}
-      >
-        <div className="flex min-h-full flex-col gap-3 lg:h-full lg:min-h-0 lg:overflow-hidden">
-          <div className="shrink-0">
-            {metricsLoading ? (
-              <StatCardGridSkeleton cols={5} count={5} />
-            ) : (
-              <StatCardGrid cols={5}>
-                <StatCard
-                  label="Total Roles"
-                  value={analytics?.totalRoles ?? 0}
-                  icon={Layers}
-                />
-                <StatCard
-                  label="Custom Roles"
-                  value={analytics?.customRoles ?? 0}
-                  icon={ShieldCheck}
-                  tone="blue"
-                />
-                <StatCard
-                  label="Users Assigned"
-                  value={analytics?.usersAssigned ?? 0}
-                  icon={Users}
-                  tone="emerald"
-                />
-                <StatCard
-                  label="Total Permissions"
-                  value={analytics?.totalPermissions ?? 0}
-                  icon={KeyRound}
-                  tone="amber"
-                />
-                <StatCard
-                  label="Recent Changes"
-                  value={analytics?.recentChanges ?? 0}
-                  icon={TrendingUp}
-                />
-              </StatCardGrid>
-            )}
-          </div>
+      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
+        <div className="shrink-0">
+          {metricsLoading ? (
+            <StatCardGridSkeleton cols={5} count={5} />
+          ) : (
+            <StatCardGrid cols={5}>
+              <StatCard
+                label="Total Roles"
+                value={analytics?.totalRoles ?? 0}
+                icon={Layers}
+              />
+              <StatCard
+                label="Custom Roles"
+                value={analytics?.customRoles ?? 0}
+                icon={ShieldCheck}
+                tone="blue"
+              />
+              <StatCard
+                label="Users Assigned"
+                value={analytics?.usersAssigned ?? 0}
+                icon={Users}
+                tone="emerald"
+              />
+              <StatCard
+                label="Total Permissions"
+                value={analytics?.totalPermissions ?? 0}
+                icon={KeyRound}
+                tone="amber"
+              />
+              <StatCard
+                label="Recent Changes"
+                value={analytics?.recentChanges ?? 0}
+                icon={TrendingUp}
+              />
+            </StatCardGrid>
+          )}
+        </div>
 
-          <div className="flex flex-col gap-3 lg:grid lg:min-h-0 lg:flex-1 lg:grid-cols-[320px_1fr] lg:overflow-hidden">
-            <RolesListPanel
-              isLoading={isLoading}
-              rolesError={rolesError}
-              filteredRoles={filteredRoles}
-              search={search}
-              selectedRoleId={selectedRoleId}
-              permCountByRoleId={permCountByRoleId}
-              onRetry={handleRetryRoles}
-              onCreate={handleOpenCreate}
-              onSelect={handleSelectRole}
-              onDelete={setDeleteTarget}
-              onRename={setRenameTarget}
-            />
+        <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto lg:grid lg:grid-cols-[320px_1fr] lg:overflow-hidden">
+          <RolesListPanel
+            isLoading={isLoading}
+            rolesError={rolesError}
+            filteredRoles={filteredRoles}
+            search={search}
+            selectedRoleId={selectedRoleId}
+            permCountByRoleId={permCountByRoleId}
+            onRetry={handleRetryRoles}
+            onCreate={handleOpenCreate}
+            onSelect={handleSelectRole}
+            onDelete={setDeleteTarget}
+            onRename={setRenameTarget}
+          />
 
+          <div className="flex min-h-[260px] flex-1 flex-col lg:h-full lg:min-h-0">
             {selectedRole ? (
               <PermissionMatrix
                 role={selectedRole}
@@ -264,7 +257,7 @@ function RolesContent() {
             )}
           </div>
         </div>
-      </ScrollArea>
+      </div>
 
       <CreateRoleDialog open={createOpen} onOpenChange={setCreateOpen} />
       <RenameRoleDialog
@@ -414,7 +407,7 @@ function RolesListPanel({
   }
 
   return (
-    <Card className="flex h-full min-h-0 flex-col overflow-hidden">
+    <Card className="flex max-h-[min(420px,50dvh)] min-h-0 flex-col overflow-hidden lg:h-full lg:max-h-none">
       <CardHeader className="shrink-0 pb-3">
         <CardTitle className="flex items-center gap-2 text-sm font-semibold">
           <Shield className="h-4 w-4" /> Roles

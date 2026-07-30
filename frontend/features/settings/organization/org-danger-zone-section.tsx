@@ -54,7 +54,7 @@ export function OrgDangerZoneSection({ org }: Props) {
   const { update } = useSession();
   const { data: access } = useAccess();
   const isOwner =
-    access?.isOrgOwner === true || access?.isPlatformAdmin === true;
+    access?.isOrgOwner === true;
   const router = useRouter();
   const queryClient = useQueryClient();
 

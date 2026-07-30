@@ -1,5 +1,7 @@
 "use client";
 
+import { PageWrapper } from "@/components/ui/page-wrapper";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -8,7 +10,6 @@ import {
   KbClockIcon,
   KbRotateCcwIcon,
 } from "@/features/knowledge-base/lib/kb-icons";
-import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { TruncatedText } from "@/components/ui/truncated-text";

@@ -22,7 +22,7 @@ export function ModuleAccessPage({ moduleKey, title }: ModuleAccessPageProps) {
 
   const canManage = useMemo(() => {
     if (!myPerms) return false;
-    if (myPerms.isOrgOwner || myPerms.isPlatformAdmin) return true;
+    if (myPerms.isOrgOwner) return true;
     if (myPerms.isModuleOwner || myPerms.isModuleAdmin) return true;
     return myPerms.permissions.some(
       (p) => p.key === `${moduleKey}:access:manage`,

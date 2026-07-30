@@ -18,7 +18,7 @@ export default async function DashboardLayout({
 
   const nonce = (await headers()).get("x-nonce") ?? undefined;
   const cookieStore = await cookies();
-  const isAdminLike = session.user.isPlatformAdmin || session.user.isOrgOwner;
+  const isAdminLike = session.user.isOrgOwner;
   const hasDashboardAccess =
     isAdminLike || session.user.hasDashboardAccess !== false;
 

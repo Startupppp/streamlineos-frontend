@@ -2144,15 +2144,15 @@ export const NAV_GROUPS: NavGroup[] = [
     requiredPermission: ["kb:pages:view"],
     routes: [
       {
-        label: "Wiki",
-        icon: NotebookPen,
-        href: "/knowledge",
-        requiredPermission: "kb:pages:view",
-      },
-      {
         label: "Ask KB",
         icon: Library,
         href: "/knowledge/chat",
+        requiredPermission: "kb:pages:view",
+      },
+      {
+        label: "Wiki",
+        icon: NotebookPen,
+        href: "/knowledge/wiki",
         requiredPermission: "kb:pages:view",
       },
     ],
@@ -2265,18 +2265,6 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Invitations",
         icon: MailOpen,
         href: "/users/invitations",
-        requiredPermission: "hr:employees:view",
-      },
-      {
-        label: "Suspended",
-        icon: ShieldAlert,
-        href: "/users/suspended",
-        requiredPermission: "hr:employees:view",
-      },
-      {
-        label: "Archived",
-        icon: UserX,
-        href: "/users/archived",
         requiredPermission: "hr:employees:view",
       },
     ],
@@ -2516,6 +2504,12 @@ export function shouldHideProductSidebar(navGroups: NavGroup[]): boolean {
   return countProductNavLeaves(navGroups) === 0;
 }
 
+export function isKnowledgeWikiPath(pathname: string): boolean {
+  return (
+    pathname === "/knowledge/wiki" || pathname.startsWith("/knowledge/wiki/")
+  );
+}
+
 export type ProductKey =
   | "home"
   | "crm"
@@ -2550,7 +2544,7 @@ export const PRODUCT_DEFINITIONS: ProductDefinition[] = [
   {
     key: "documents",
     label: "Documents",
-    href: "/knowledge",
+    href: "/knowledge/chat",
     icon: Library,
   },
   { key: "surveys", label: "Surveys", href: "/surveys", icon: ClipboardList },
@@ -2566,7 +2560,7 @@ export const PRODUCT_DEFINITIONS: ProductDefinition[] = [
     href: "/payroll",
     icon: IndianRupee,
   },
-  { key: "sign", label: "SignOS", href: "/sign", icon: PenTool },
+  { key: "sign", label: "E-Sign", href: "/sign", icon: PenTool },
 ];
 
 export const PRODUCT_DESCRIPTIONS: Record<ProductKey, string> = {
@@ -2682,7 +2676,7 @@ const PRODUCT_NAV_GROUP_LABELS: Record<ProductKey, string[]> = {
   inventory: ["Inventory"],
   finance: ["Accounting & Finance"],
   helpdesk: ["Support"],
-  documents: [],
+  documents: ["Knowledge"],
   surveys: ["Surveys"],
   administration: [
     "Organization",
@@ -2697,7 +2691,7 @@ const PRODUCT_NAV_GROUP_LABELS: Record<ProductKey, string[]> = {
     "Developer",
   ],
   payroll: ["Payroll"],
-  sign: ["SignOS"],
+  sign: ["E-Sign"],
 };
 
 export function withoutHrSetupRoute(groups: NavGroup[]): NavGroup[] {
@@ -2715,7 +2709,7 @@ export function getNavGroupsForProduct(
   permissions: string[] | undefined,
   enabledModules: string[] = [],
 ): NavGroup[] {
-  if (productKey === "home") {
+  if (productKey === "home") 
     return [
       {
         label: "Overview",
@@ -2728,29 +2722,7 @@ export function getNavGroupsForProduct(
         ],
       },
     ];
-  }
-  if (productKey === "documents") {
-    const isOwner = role === ROLES.OWNER;
-    const granted = new Set(permissions ?? []);
-    const documentRoutes = [
-      {
-        label: "Wiki",
-        icon: NotebookPen,
-        href: "/knowledge",
-      },
-      {
-        label: "Ask KB",
-        icon: Library,
-        href: "/knowledge/chat",
-      },
-    ];
-    const visibleRoutes = documentRoutes
-      .map((route) => filterRoute(route, isOwner, granted, enabledModules))
-      .filter((route): route is NavRoute => route !== null);
-    if (visibleRoutes.length === 0) return [];
-    return [{ label: "Documents", routes: visibleRoutes }];
-  }
-
+  
   const allGroups = getNavGroupsForUser(role, permissions, enabledModules);
   const labels = PRODUCT_NAV_GROUP_LABELS[productKey];
   return allGroups.filter((g) => labels.includes(g.label));

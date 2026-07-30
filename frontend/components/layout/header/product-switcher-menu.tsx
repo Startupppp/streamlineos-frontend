@@ -341,7 +341,7 @@ export function ProductSwitcherMenu({
   const { permissions } = usePermissions();
   const { data: access } = useAccess();
   const effectiveRole =
-    access?.isOrgOwner === true || access?.isPlatformAdmin === true
+    access?.isOrgOwner === true
       ? "OWNER"
       : "MEMBER";
 

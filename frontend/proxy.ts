@@ -1,6 +1,5 @@
 ﻿import { NextResponse, NextRequest } from "next/server";
 import { getToken, type JWT } from "next-auth/jwt";
-import { OWNER_HOME } from "@/lib/platform/role";
 import { ROLES } from "@/lib/constants/roles";
 import {
   hasSessionCookie,
@@ -126,9 +125,6 @@ function redirectTo(
   return NextResponse.redirect(url);
 }
 
-function isPlatformAdminToken(token: JWT): boolean {
-  return token.isPlatformAdmin === true;
-}
 
 function isOrgOwnerToken(token: JWT): boolean {
   return token.isOrgOwner === true || token.role === ROLES.OWNER;
@@ -218,7 +214,6 @@ export async function proxy(req: NextRequest) {
       return redirectTo(req, "/dashboard");
     }
 
-    const isPlatformAdmin = isPlatformAdminToken(token);
     const isOrgOwner = isOrgOwnerToken(token);
     const hasOrg = Boolean(token.orgId);
     const orgSetupDone = Boolean(req.cookies.get("org-setup-done")?.value);
@@ -228,23 +223,14 @@ export async function proxy(req: NextRequest) {
     const forceOrgSetup = !hasOrg || (ownerSetupPending && !orgSetupDone);
 
     if (matchesRoute(pathname, "/org-setup")) {
-      if (isPlatformAdmin) return redirectTo(req, OWNER_HOME);
       if (!forceOrgSetup) return redirectTo(req, "/dashboard");
     } else if (matchesRoute(pathname, "/onboarding")) {
       return redirectTo(req, "/employee-onboarding");
     } else if (matchesRoute(pathname, "/employee-onboarding")) {
-      if (isPlatformAdmin) return redirectTo(req, OWNER_HOME);
       if (!hasOrg) return redirectTo(req, "/org-setup");
       if (isOrgOwner) return redirectTo(req, "/dashboard");
       if (token.userOnboardingCompletedAt) return redirectTo(req, "/dashboard");
-    } else if (
-      isProtected &&
-      isPlatformAdmin &&
-      !hasOrg &&
-      !matchesRoute(pathname, OWNER_HOME)
-    ) {
-      return redirectTo(req, OWNER_HOME);
-    } else if (isProtected && !isPlatformAdmin) {
+    } else if (isProtected) {
       if (forceOrgSetup) return redirectTo(req, "/org-setup");
 
       if (

@@ -85,7 +85,7 @@ export function AppSidebar({
   const { data: session, status } = useSession();
   const { data: access } = useAccess();
   const isOrgOwner =
-    access?.isOrgOwner === true || access?.isPlatformAdmin === true;
+    access?.isOrgOwner === true;
   const effectiveRole = isOrgOwner ? "OWNER" : "MEMBER";
 
   const pathname = usePathname();

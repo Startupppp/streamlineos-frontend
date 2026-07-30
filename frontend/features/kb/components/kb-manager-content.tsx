@@ -93,7 +93,7 @@ export function KbManagerContent() {
 
   const { data: access } = useAccess();
   const supportEnabled = Boolean(
-    access?.isOrgOwner || access?.isPlatformAdmin || access?.modules?.support,
+    access?.isOrgOwner || access?.modules?.support,
   );
 
   const categoriesQuery = useSupportKbCategories({ enabled: supportEnabled });

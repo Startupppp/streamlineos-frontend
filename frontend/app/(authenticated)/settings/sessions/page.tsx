@@ -184,7 +184,7 @@ export default function SessionsPage() {
           onClick={handleRevokeAllClick}
           disabled={revokeAll.isPending || allSessions.filter((s) => !s.isCurrent).length === 0}
         >
-          Revoke all other sessions
+          Revoke others
         </AnimatedIconButton>
       }
       filters={

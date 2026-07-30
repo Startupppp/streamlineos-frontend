@@ -20,7 +20,6 @@ declare module "next-auth" {
       role: string;
       isActive?: boolean;
       hasDashboardAccess?: boolean;
-      isPlatformAdmin?: boolean;
       isOrgOwner?: boolean;
     } & DefaultSession["user"];
   }
@@ -41,7 +40,6 @@ declare module "next-auth" {
     plan?: Plan | null;
     enabledModules?: string[];
     userOnboardingCompletedAt?: string | null;
-    isPlatformAdmin?: boolean;
     name?: string | null;
     sessionId?: string;
   }
@@ -61,7 +59,6 @@ declare module "next-auth/jwt" {
     mfaEnforced?: boolean;
     permissions?: string[];
     plan?: Plan | null;
-    isPlatformAdmin?: boolean;
     isOrgOwner?: boolean;
     enabledModules?: string[];
     daysUntilExpiry?: number;

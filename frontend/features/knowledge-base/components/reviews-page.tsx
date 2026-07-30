@@ -1,9 +1,10 @@
 "use client";
 
+import { PageWrapper } from "@/components/ui/page-wrapper";
+
 import { useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Badge } from "@/components/ui/badge";

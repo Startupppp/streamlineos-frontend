@@ -11,6 +11,7 @@ import { toast } from "sonner";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { useCan } from "@/hooks/api/access";
 import { SearchInput } from "@/components/ui/search-input";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -64,6 +65,9 @@ export function UserInvitationsPanel() {
     setOpen: openInvite,
   } = useQueryParamOpen("create");
   const [cancelId, setCancelId] = useState<string | null>(null);
+  const canViewInvitations = useCan("hr:employees:view");
+  const canInvite = useCan("hr:employees:create");
+  const canCancelInvitation = useCan("hr:employees:delete");
 
   const q = searchParams.get("q") ?? "";
   const status = (searchParams.get("status") ?? "all") as StatusFilter;
@@ -73,11 +77,14 @@ export function UserInvitationsPanel() {
   const [localSearch, setLocalSearch] = useState(q);
   const debouncedLocalSearch = useDebouncedValue(localSearch, 300);
 
-  const { data, isLoading, isError, refetch } = useInvitations({
-    page,
-    limit: 20,
-    includeAccepted,
-  });
+  const { data, isLoading, isError, refetch } = useInvitations(
+    {
+      page,
+      limit: 20,
+      includeAccepted,
+    },
+    { enabled: canViewInvitations },
+  );
   const { mutate: resend, isPending: isResending } = useResendInvite();
   const { mutate: cancel, isPending: isCancelling } = useCancelInvitation();
 
@@ -231,8 +238,9 @@ export function UserInvitationsPanel() {
       className: "w-[72px]",
       cell: (inv) => {
         const s = getStatus(inv);
-        const canResend = s === "pending" || s === "expired";
-        const canCancel = s === "pending" || s === "expired";
+        const isActionable = s === "pending" || s === "expired";
+        const canResend = isActionable && canInvite;
+        const canCancel = isActionable && canCancelInvitation;
         if (!canResend && !canCancel) return null;
         return (
           <div className="flex items-center gap-0.5">
@@ -278,7 +286,9 @@ export function UserInvitationsPanel() {
       action={
         hasFilters
           ? { label: "Clear filters", onClick: handleClearFilters }
-          : { label: "Invite User", onClick: handleOpenInvite }
+          : canInvite
+            ? { label: "Invite User", onClick: handleOpenInvite }
+            : undefined
       }
       className="border-0 bg-transparent"
     />
@@ -290,16 +300,18 @@ export function UserInvitationsPanel() {
         title="Invitations"
         subtitle="Manage and track team invitations."
         actions={
-          <AnimatedIconButton
-            icon={MailIcon}
-            iconSize={14}
-            iconClassName="mr-1.5"
-            size="sm"
-            className="w-full sm:w-auto"
-            onClick={handleOpenInvite}
-          >
-            Invite User
-          </AnimatedIconButton>
+          canInvite ? (
+            <AnimatedIconButton
+              icon={MailIcon}
+              iconSize={14}
+              iconClassName="mr-1.5"
+              size="sm"
+              className="w-full sm:w-auto"
+              onClick={handleOpenInvite}
+            >
+              Invite User
+            </AnimatedIconButton>
+          ) : undefined
         }
         filters={
           <>

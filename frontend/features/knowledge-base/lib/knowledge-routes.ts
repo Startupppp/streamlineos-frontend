@@ -1,4 +1,6 @@
-﻿export const KNOWLEDGE_BASE = "/knowledge";
+﻿export const KNOWLEDGE_ROOT = "/knowledge";
+export const KNOWLEDGE_BASE = `${KNOWLEDGE_ROOT}/wiki`;
+export const KB_CHAT = `${KNOWLEDGE_ROOT}/chat`;
 
 export function pageHref(id: number): string {
   return `${KNOWLEDGE_BASE}/pages/${id}`;
@@ -28,4 +30,3 @@ export function spaceHref(id: number): string {
 export const KB_REVIEWS = `${KNOWLEDGE_BASE}/reviews`;
 export const KB_SETTINGS = `${KNOWLEDGE_BASE}/settings`;
 export const KB_IMPORT = `${KNOWLEDGE_BASE}/import`;
-export const KB_CHAT = `${KNOWLEDGE_BASE}/chat`;

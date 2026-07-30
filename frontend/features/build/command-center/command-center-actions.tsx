@@ -138,7 +138,7 @@ export function PinnedNav({ defaultProjectId = null }: PinnedNavProps) {
   const can = useCallback(
     (permission: PermissionKey): boolean => {
       if (!access) return false;
-      if (access.isOrgOwner || access.isPlatformAdmin) return true;
+      if (access.isOrgOwner) return true;
       return access.permissions.includes(permission);
     },
     [access],

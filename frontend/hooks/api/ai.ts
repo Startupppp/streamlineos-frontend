@@ -350,7 +350,7 @@ export interface AiUsageData {
 
 export function useAiUsage() {
   const { data: access } = useAccess();
-  const canView = Boolean(access?.isOrgOwner || access?.isPlatformAdmin);
+  const canView = Boolean(access?.isOrgOwner);
   return useQuery({
     queryKey: queryKeys.settings.aiUsage(),
     queryFn: () => apiClient.get<AiUsageData>("/settings/ai-usage"),

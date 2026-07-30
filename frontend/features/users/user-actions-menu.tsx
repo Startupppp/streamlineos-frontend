@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,10 +17,12 @@ import {
 import type { User } from "@/hooks/api/users";
 import { getApiError } from "@/lib/api-client";
 import { toast } from "sonner";
-import { ShieldCheck, ShieldOff, UserX, KeyRound, Trash2 } from "lucide-react";
+import { ShieldCheck, ShieldOff, UserX, KeyRound, Trash2, UserMinus } from "lucide-react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useCan } from "@/hooks/api/access";
+import { useRemoveOrgMember } from "@/hooks/api/organization";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface UserActionsMenuProps {
   user: User;
@@ -29,10 +33,13 @@ export function UserActionsMenu({ user, onView }: UserActionsMenuProps) {
   const { mutate: updateStatus, isPending: isUpdatingStatus } =
     useUpdateUserStatus();
   const { mutate: deleteUser, isPending: isDeleting } = useDeleteUser();
-  const { mutate: resetPassword, isPending: isResettingPassword } =
+  const { mutate: sendSigninLink, isPending: isSendingSigninLink } =
     useSendSigninLink();
+  const { mutate: removeMember, isPending: isRemoving } = useRemoveOrgMember();
   const canManage = useCan("hr:employees:manage");
   const canDelete = useCan("hr:employees:delete");
+  const canRemoveFromOrg = useCan("settings:manage");
+  const [confirmRemove, setConfirmRemove] = useState(false);
 
   function handleActivate() {
     updateStatus(
@@ -71,17 +78,32 @@ export function UserActionsMenu({ user, onView }: UserActionsMenuProps) {
     });
   }
 
-  function handleResetPassword() {
-    resetPassword(user.id, {
-      onSuccess: (r) =>
-        toast.success(`Password reset email sent to ${r.email}`),
+  function handleRemoveFromOrg() {
+    removeMember(user.id, {
+      onSuccess: () => {
+        toast.success("Removed from organization");
+        setConfirmRemove(false);
+      },
       onError: (e) => toast.error(getApiError(e)),
     });
   }
 
-  const isLoading = isUpdatingStatus || isDeleting || isResettingPassword;
+  function handleOpenRemoveConfirm() {
+    setConfirmRemove(true);
+  }
+
+  function handleSendSigninLink() {
+    sendSigninLink(user.id, {
+      onSuccess: (r) =>
+        toast.success(`Sign-in link sent to ${r.email}`),
+      onError: (e) => toast.error(getApiError(e)),
+    });
+  }
+
+  const isLoading = isUpdatingStatus || isDeleting || isSendingSigninLink;
 
   return (
+    <>
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <AnimatedIconButton
@@ -117,9 +139,16 @@ export function UserActionsMenu({ user, onView }: UserActionsMenuProps) {
           </DropdownMenuItem>
         )}
         {canManage && (
-          <DropdownMenuItem onClick={handleResetPassword}>
+          <DropdownMenuItem onClick={handleSendSigninLink}>
             <KeyRound className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
-            Reset password
+            Send sign-in link
+          </DropdownMenuItem>
+        )}
+        {canRemoveFromOrg && <DropdownMenuSeparator />}
+        {canRemoveFromOrg && (
+          <DropdownMenuItem variant="destructive" onClick={handleOpenRemoveConfirm}>
+            <UserMinus className="h-3.5 w-3.5 mr-2" />
+            Remove from organization
           </DropdownMenuItem>
         )}
         {canDelete && <DropdownMenuSeparator />}
@@ -131,5 +160,16 @@ export function UserActionsMenu({ user, onView }: UserActionsMenuProps) {
         )}
       </DropdownMenuContent>
     </DropdownMenu>
+    <ConfirmDialog
+      open={confirmRemove}
+      onOpenChange={setConfirmRemove}
+      title="Remove from organization?"
+      description={`${user.name ?? user.email} will lose access to this organization immediately. Their user account is not deleted.`}
+      confirmLabel="Remove"
+      destructive
+      isPending={isRemoving}
+      onConfirm={handleRemoveFromOrg}
+    />
+    </>
   );
 }

@@ -144,6 +144,19 @@ export const useUpdateMemberRole = () => {
   });
 };
 
+export const useRemoveOrgMember = () => {
+  const queryClient = useQueryClient();
+  return useMutation<void, Error, string>({
+    mutationKey: ["organization", "remove-member"],
+    mutationFn: (userId) => apiClient.delete<void>(`/organization/members/${userId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.organization.members(),
+      });
+    },
+  });
+};
+
 export const useUpdateOrgSettings = () => {
   const queryClient = useQueryClient();
   return useMutation<

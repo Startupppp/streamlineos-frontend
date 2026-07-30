@@ -1,7 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+
+import Link from "next/link";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Skeleton } from "@/components/ui/skeleton";

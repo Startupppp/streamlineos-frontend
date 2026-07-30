@@ -5,16 +5,26 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 import { useKbPagesTree, useKbPagesFavorites, useCreateKbPage } from "@/hooks/api/kb";
 import { useCan } from "@/hooks/api/access";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import PageTree from "./page-tree";
 import QuickFindDialog from "./quick-find-dialog";
 import WikiSidebarNav, { WikiSidebarFooter } from "./wiki-sidebar-nav";
+import {
+  WikiMobileNavProvider,
+  WikiMobileNavTrigger,
+} from "./wiki-mobile-nav-context";
 import {
   KNOWLEDGE_BASE,
   pageHref,
@@ -72,6 +82,10 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
 
   const handleCloseMobile = useCallback(() => {
     setMobileOpen(false);
+  }, []);
+
+  const handleOpenMobile = useCallback(() => {
+    setMobileOpen(true);
   }, []);
 
   const handleQuickFindOpenChange = useCallback((open: boolean) => {
@@ -153,8 +167,8 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
   };
 
   const mobileSidebarContent = (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-3 py-2 shrink-0">
+    <div className="flex h-full flex-col">
+      <div className="flex shrink-0 items-center justify-between px-3 py-2">
         <span className="text-sm font-semibold text-foreground">Wiki</span>
         <Button
           variant="ghost"
@@ -162,6 +176,7 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
           className="h-6 w-6"
           onClick={handleNewPage}
           disabled={createPage.isPending}
+          aria-label="New page"
         >
           <KbPlusIcon className="h-4 w-4" />
         </Button>
@@ -172,101 +187,114 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
 
   return (
     <TooltipProvider delayDuration={0}>
-      <div className="flex min-h-0 flex-1 overflow-hidden bg-background">
-        <aside
-          className={`hidden md:flex flex-col shrink-0 border-r border-border bg-card/50 overflow-hidden transition-[width] duration-300 ease-in-out ${
-            collapsed ? "w-10" : "w-[260px]"
-          }`}
-        >
-          <div className="flex h-full min-w-0 flex-col">
-            <div
-              className={`flex shrink-0 items-center py-2 ${
-                collapsed ? "flex-col gap-1 px-0" : "justify-between px-3"
-              }`}
-            >
-              {collapsed ? (
-                <>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-7"
-                    onClick={handleToggleCollapsed}
-                    aria-label="Expand sidebar"
-                  >
-                    <KbPanelLeftOpenIcon className="size-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-7"
-                    onClick={handleNewPage}
-                    disabled={createPage.isPending}
-                    aria-label="New page"
-                  >
-                    <KbPlusIcon className="size-4" />
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Link
-                    href={KNOWLEDGE_BASE}
-                    className="text-sm font-semibold text-foreground hover:text-foreground/80 transition-colors"
-                  >
-                    Wiki
-                  </Link>
-                  <div className="flex items-center gap-0.5">
+      <WikiMobileNavProvider onOpen={handleOpenMobile}>
+        <div className="flex min-h-0 flex-1 overflow-hidden bg-background">
+          <aside
+            className={`hidden md:flex flex-col shrink-0 border-r border-border bg-card/50 overflow-hidden transition-[width] duration-300 ease-in-out ${
+              collapsed ? "w-10" : "w-[260px]"
+            }`}
+          >
+            <div className="flex h-full min-w-0 flex-col">
+              <div
+                className={`flex shrink-0 items-center py-2 ${
+                  collapsed ? "flex-col gap-1 px-0" : "justify-between px-3"
+                }`}
+              >
+                {collapsed ? (
+                  <>
                     <Button
                       variant="ghost"
                       size="icon"
                       className="size-7"
                       onClick={handleToggleCollapsed}
-                      aria-label="Collapse sidebar"
+                      aria-label="Expand sidebar"
                     >
-                      <KbPanelLeftCloseIcon className="size-4" />
+                      <KbPanelLeftOpenIcon className="size-4" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="size-6"
+                      className="size-7"
                       onClick={handleNewPage}
                       disabled={createPage.isPending}
                       aria-label="New page"
                     >
                       <KbPlusIcon className="size-4" />
                     </Button>
-                  </div>
-                </>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href={KNOWLEDGE_BASE}
+                      className="text-sm font-semibold text-foreground hover:text-foreground/80 transition-colors"
+                    >
+                      Wiki
+                    </Link>
+                    <div className="flex items-center gap-0.5">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-7"
+                        onClick={handleToggleCollapsed}
+                        aria-label="Collapse sidebar"
+                      >
+                        <KbPanelLeftCloseIcon className="size-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-6"
+                        onClick={handleNewPage}
+                        disabled={createPage.isPending}
+                        aria-label="New page"
+                      >
+                        <KbPlusIcon className="size-4" />
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </div>
+              {sidebarInner()}
+            </div>
+          </aside>
+
+          <Drawer
+            open={mobileOpen}
+            onOpenChange={handleMobileOpenChange}
+            direction="bottom"
+            shouldScaleBackground={false}
+          >
+            <DrawerContent
+              className={cn(
+                "flex max-h-[min(92dvh,40rem)] w-full flex-col gap-0 overflow-hidden rounded-t-xl border border-border bg-card p-0 shadow-lg",
+                "pb-[max(0.5rem,env(safe-area-inset-bottom))]",
+                "motion-reduce:transition-none",
+                "[&>[data-slot=drawer-handle]]:mt-2 [&>[data-slot=drawer-handle]]:mb-1 [&>[data-slot=drawer-handle]]:h-1.5 [&>[data-slot=drawer-handle]]:w-10 [&>[data-slot=drawer-handle]]:bg-muted-foreground/25",
               )}
-            </div>
-            {sidebarInner()}
-          </div>
-        </aside>
-
-        <Sheet open={mobileOpen} onOpenChange={handleMobileOpenChange}>
-          <SheetTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden fixed top-[60px] left-3 z-40 h-8 w-8 bg-background shadow-sm border border-border"
             >
-              <KbPanelLeftOpenIcon className="h-4 w-4" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-[260px] p-0 flex flex-col">
-            {mobileSidebarContent}
-          </SheetContent>
-        </Sheet>
+              <DrawerHeader className="sr-only">
+                <DrawerTitle>Wiki navigation</DrawerTitle>
+              </DrawerHeader>
+              <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+                {mobileSidebarContent}
+              </div>
+            </DrawerContent>
+          </Drawer>
 
-        <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-          <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
-            <div className="flex min-h-full flex-1 flex-col overscroll-contain">
-              {children}
+          <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+            <div className="flex shrink-0 items-center gap-1 border-b border-border/60 px-3 py-2 md:hidden">
+              <WikiMobileNavTrigger />
             </div>
-          </ScrollArea>
-        </main>
+            <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
+              <div className="flex min-h-full flex-1 flex-col overscroll-contain">
+                {children}
+              </div>
+            </ScrollArea>
+          </main>
 
-        <QuickFindDialog open={quickFindOpen} onOpenChange={handleQuickFindOpenChange} />
-      </div>
+          <QuickFindDialog open={quickFindOpen} onOpenChange={handleQuickFindOpenChange} />
+        </div>
+      </WikiMobileNavProvider>
     </TooltipProvider>
   );
 }

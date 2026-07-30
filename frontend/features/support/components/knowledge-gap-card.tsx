@@ -8,6 +8,7 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useCan } from "@/hooks/api/access";
 import type { KnowledgeGap } from "@/features/support/lib/knowledge-gap.types";
+import { pageHref } from "@/features/knowledge-base/lib/knowledge-routes";
 import { KnowledgeGapStatusBadge } from "./knowledge-gap-status-badge";
 
 interface KnowledgeGapCardProps {
@@ -110,7 +111,7 @@ export function KnowledgeGapCard({
         )}
         {gap.proposedArticleId !== null && (
           <Link
-            href={`/knowledge/pages/${gap.proposedArticleId}`}
+            href={pageHref(gap.proposedArticleId)}
             className="inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline"
           >
             <ExternalLink className="h-3 w-3" />

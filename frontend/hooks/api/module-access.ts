@@ -107,7 +107,6 @@ export interface AuditLogEntry {
 export interface ModuleMyPermissions {
   permissions: Array<{ key: string; scope: DataScope }>;
   isOrgOwner: boolean;
-  isPlatformAdmin: boolean;
   isModuleOwner: boolean;
   isModuleAdmin: boolean;
 }

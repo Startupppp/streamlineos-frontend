@@ -1,5 +1,4 @@
 interface AbilityContext {
-  isPlatformAdmin: boolean;
   isOrgOwner: boolean;
   permissions: string[];
   enabledModules: string[];
@@ -10,7 +9,7 @@ export interface AppAbility {
 }
 
 function buildAbility(ctx: AbilityContext): AppAbility {
-  const isSuper = ctx.isPlatformAdmin || ctx.isOrgOwner;
+  const isSuper = ctx.isOrgOwner;
   const permSet = new Set(ctx.permissions);
 
   return {

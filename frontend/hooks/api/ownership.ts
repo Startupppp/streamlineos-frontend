@@ -68,7 +68,7 @@ export function useInitiateOrgTransfer() {
 export function usePendingOrgTransfers() {
   const { data: access } = useAccess();
   const isOwner =
-    (access?.isOrgOwner ?? false) || (access?.isPlatformAdmin ?? false);
+    (access?.isOrgOwner ?? false);
 
   return useQuery<OrgTransfersResponse, Error>({
     queryKey: queryKeys.ownership.orgTransfers(),

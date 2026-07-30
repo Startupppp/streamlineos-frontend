@@ -101,7 +101,6 @@ interface SessionData {
   plan: Plan | null;
   orgOnboardingCompletedAt: string | null;
   userOnboardingCompletedAt: string | null;
-  isPlatformAdmin?: boolean;
 }
 
 async function fetchSessionData(userId: string): Promise<SessionData | null> {
@@ -217,7 +216,6 @@ function buildUserFromSessionData(
     hasDashboardAccess: sessionData.hasDashboardAccess,
     orgId: sessionData.orgId ?? null,
     isOrgOwner: sessionData.isOrgOwner,
-    isPlatformAdmin: sessionData.isPlatformAdmin === true,
     branchId: sessionData.branchId ?? null,
     totpEnabled: sessionData.totpEnabled,
     mfaEnforced: sessionData.mfaEnforced,
@@ -329,7 +327,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           user.enabledModules = sessionData.enabledModules;
           user.orgOnboardingCompletedAt = sessionData.orgOnboardingCompletedAt;
           user.userOnboardingCompletedAt = sessionData.userOnboardingCompletedAt;
-          user.isPlatformAdmin = sessionData.isPlatformAdmin === true;
         }
       }
       return true;
@@ -349,7 +346,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.mfaEnforced = user.mfaEnforced ?? false;
         token.userOnboardingCompletedAt =
           user.userOnboardingCompletedAt ?? null;
-        token.isPlatformAdmin = user.isPlatformAdmin ?? false;
         token.sessionId = user.sessionId ?? randomUUID();
         if (user.daysUntilExpiry !== undefined)
           token.daysUntilExpiry = user.daysUntilExpiry;
@@ -422,8 +418,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             fresh?.image ?? (token.picture as string | null | undefined) ?? null;
           session.user.isActive = fresh?.isActive ?? (token.isActive as boolean);
           session.user.hasDashboardAccess = fresh?.hasDashboardAccess ?? true;
-          session.user.isPlatformAdmin =
-            (token.isPlatformAdmin as boolean | undefined) ?? false;
+            false;
           session.user.isOrgOwner = isOrgOwner;
         }
         session.orgId = orgId;
@@ -460,8 +455,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               role,
               enabledModules,
               plan,
-              isPlatformAdmin:
-                (token.isPlatformAdmin as boolean | undefined) === true,
               isOrgOwner,
               sessionId,
             })
@@ -484,8 +477,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             (token.name as string | null | undefined) ?? session.user.name ?? "";
           session.user.role = (token.role as string | undefined) ?? "";
           session.user.isActive = (token.isActive as boolean | undefined) ?? true;
-          session.user.isPlatformAdmin =
-            (token.isPlatformAdmin as boolean | undefined) === true;
+            false;
           session.user.isOrgOwner =
             (token.isOrgOwner as boolean | undefined) === true;
         }

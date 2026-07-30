@@ -130,18 +130,20 @@ export default function PageDocumentHeader({
     <>
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <PageDocumentBreadcrumb page={page} saveState={saveState} />
-        <PageDocumentToolbar
-          page={page}
-          pageId={pageId}
-          onApplyImprovement={onApplyImprovement}
-          onOpenMetaSheet={handleOpenMetaSheet}
-          onOpenComments={handleOpenComments}
-          onOpenHistory={handleOpenHistory}
-          onOpenMove={handleOpenMove}
-          onOpenSaveAsTemplate={handleOpenSaveAsTemplate}
-          onDelete={handleDelete}
-          onNavigate={onNavigate}
-        />
+        <div className="flex items-center gap-2">
+          <PageDocumentToolbar
+            page={page}
+            pageId={pageId}
+            onApplyImprovement={onApplyImprovement}
+            onOpenMetaSheet={handleOpenMetaSheet}
+            onOpenComments={handleOpenComments}
+            onOpenHistory={handleOpenHistory}
+            onOpenMove={handleOpenMove}
+            onOpenSaveAsTemplate={handleOpenSaveAsTemplate}
+            onDelete={handleDelete}
+            onNavigate={onNavigate}
+          />
+        </div>
       </div>
 
       <PageCommentsSheet
