@@ -260,7 +260,7 @@ export function CasesPageContent() {
         onValueChange={(v) => { setActiveTab(v as ActiveTab); setPage(1); }}
         className="flex min-h-0 flex-1 flex-col pb-6"
       >
-        <TabsList className="mb-4 w-max max-w-full shrink-0">
+        <TabsList className="mb-4 w-max">
           <TabsTrigger value="cases">Cases</TabsTrigger>
           <TabsTrigger value="disciplinary">Disciplinary Actions</TabsTrigger>
         </TabsList>

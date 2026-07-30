@@ -201,13 +201,13 @@ export default function GoalsPage() {
     >
       <Tabs defaultValue="all" className="flex min-h-0 flex-1 flex-col gap-4">
         <TabsList>
-          <TabsTrigger value="all" className="text-sm font-medium">
+          <TabsTrigger value="all">
             All Goals ({filtered.length})
           </TabsTrigger>
-          <TabsTrigger value="mine" className="text-sm font-medium">
+          <TabsTrigger value="mine">
             My Goals ({myGoals.length})
           </TabsTrigger>
-          <TabsTrigger value="completed" className="text-sm font-medium">
+          <TabsTrigger value="completed">
             Completed ({completed.length})
           </TabsTrigger>
         </TabsList>

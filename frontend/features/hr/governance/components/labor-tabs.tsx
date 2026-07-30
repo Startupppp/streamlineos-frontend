@@ -226,7 +226,7 @@ export function LaborTabs() {
         </div>
       )}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ActiveTab)} className="mb-4">
-        <TabsList className="w-fit">
+        <TabsList>
           {tabs.map((tab) => (
             <TabsTrigger key={tab.key} value={tab.key}>
               {tab.label}

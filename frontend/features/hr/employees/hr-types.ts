@@ -13,7 +13,7 @@ export interface Employee {
 
 export const PAGE_SIZE = 10;
 
-const PROTECTED_TARGET_ROLES = new Set(["CEO", "OWNER", "ADMIN"]);
+const PROTECTED_TARGET_ROLES = new Set(["FINAL", "OWNER", "ADMIN"]);
 
 export function canDeleteEmployee(
   targetRole: string,

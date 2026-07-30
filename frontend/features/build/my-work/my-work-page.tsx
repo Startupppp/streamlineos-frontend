@@ -325,12 +325,12 @@ export function MyWorkPage() {
         filters={
           <PageTabsToolbar
             tabs={
-              <TabsList className="w-full md:w-auto">
+              <TabsList>
                 {WORK_TABS.map((tab) => (
                   <TabsTrigger
                     key={tab}
                     value={tab}
-                    className="min-w-0 flex-1 md:flex-initial"
+                    className="md:flex-initial"
                   >
                     {TAB_CONFIG[tab].label}
                   </TabsTrigger>

@@ -198,10 +198,10 @@ export function LeavesWfhContent() {
 
           <Tabs defaultValue="my-leaves">
             <div className="overflow-x-auto">
-            <TabsList className="h-auto bg-transparent border-b border-border rounded-none p-0 gap-0 w-max min-w-full justify-start">
+            <TabsList className="h-auto bg-transparent border-b rounded-none p-0 gap-0 w-max min-w-full md:min-w-0">
               <TabsTrigger
                 value="my-leaves"
-                className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-muted-foreground data-[state=active]:text-foreground pb-3 pt-2.5 px-4 text-sm font-medium transition-colors duration-200"
+                className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground pb-3 pt-2.5 px-4 duration-200"
               >
                 My Leaves
                 {myLeaveRequests.length > 0 && (
@@ -212,14 +212,14 @@ export function LeavesWfhContent() {
               </TabsTrigger>
               <TabsTrigger
                 value="wfh"
-                className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-muted-foreground data-[state=active]:text-foreground pb-3 pt-2.5 px-4 text-sm font-medium transition-colors duration-200"
+                className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground pb-3 pt-2.5 px-4 duration-200"
               >
                 Work From Home
               </TabsTrigger>
               {isAdmin && (
                 <TabsTrigger
                   value="approvals"
-                  className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-muted-foreground data-[state=active]:text-foreground pb-3 pt-2.5 px-4 text-sm font-medium transition-colors duration-200"
+                  className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground pb-3 pt-2.5 px-4 duration-200"
                 >
                   Approvals
                   {totalPendingApprovals > 0 && (

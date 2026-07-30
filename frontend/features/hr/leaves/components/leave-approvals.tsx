@@ -122,10 +122,10 @@ export function LeaveApprovalsContent({
           </CardHeader>
           <CardContent className="pt-0 overflow-x-auto">
             <Tabs defaultValue="all" className="space-y-4">
-              <TabsList className="h-auto bg-transparent border-b border-border rounded-none p-0 gap-0 w-full justify-start min-w-max">
+              <TabsList className="h-auto bg-transparent border-b rounded-none p-0 gap-0 min-w-max">
                 <TabsTrigger
                   value="all"
-                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-muted-foreground data-[state=active]:text-foreground pb-3 pt-2 px-4 text-xs font-medium transition-colors duration-200"
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground pb-3 pt-2 px-4 text-xs duration-200"
                 >
                   All
                   <span className="ml-1.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-muted text-[10px] font-semibold text-muted-foreground">
@@ -134,7 +134,7 @@ export function LeaveApprovalsContent({
                 </TabsTrigger>
                 <TabsTrigger
                   value="pending"
-                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-muted-foreground data-[state=active]:text-foreground pb-3 pt-2 px-4 text-xs font-medium transition-colors duration-200"
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground pb-3 pt-2 px-4 text-xs duration-200"
                 >
                   Pending
                   {incomingLeaveRequests.length > 0 && (
@@ -145,7 +145,7 @@ export function LeaveApprovalsContent({
                 </TabsTrigger>
                 <TabsTrigger
                   value="approved"
-                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-muted-foreground data-[state=active]:text-foreground pb-3 pt-2 px-4 text-xs font-medium transition-colors duration-200"
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground pb-3 pt-2 px-4 text-xs duration-200"
                 >
                   Approved
                   {approvedRequests.length > 0 && (
@@ -156,7 +156,7 @@ export function LeaveApprovalsContent({
                 </TabsTrigger>
                 <TabsTrigger
                   value="rejected"
-                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-muted-foreground data-[state=active]:text-foreground pb-3 pt-2 px-4 text-xs font-medium transition-colors duration-200"
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground pb-3 pt-2 px-4 text-xs duration-200"
                 >
                   Rejected
                   {rejectedRequests.length > 0 && (

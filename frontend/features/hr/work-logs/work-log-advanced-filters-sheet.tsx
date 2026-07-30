@@ -63,7 +63,7 @@ export function WorkLogAdvancedFiltersSheet({
   currentQuarter,
   employees,
   departments,
-  isAdminOrCeo,
+  canManageEmployees,
   onApply,
 }: WorkLogAdvancedFiltersSheetProps) {
   const [sheetPickerOpen, setSheetPickerOpen] = useState(false);
@@ -234,7 +234,7 @@ export function WorkLogAdvancedFiltersSheet({
             </div>
           </div>
 
-          {isAdminOrCeo && departments && departments.length > 0 && (
+          {canManageEmployees && departments && departments.length > 0 && (
             <div className="space-y-1.5">
               <Label className="text-[11px] font-semibold text-foreground/80 uppercase tracking-wider">Department</Label>
               <Select value={draftFilters.departmentId || "all"} onValueChange={handleDraftDepartmentChange}>
@@ -249,7 +249,7 @@ export function WorkLogAdvancedFiltersSheet({
             </div>
           )}
 
-          {isAdminOrCeo && employees && employees.length > 0 && (
+          {canManageEmployees && employees && employees.length > 0 && (
             <div className="space-y-1.5">
               <Label className="text-[11px] font-semibold text-foreground/80 uppercase tracking-wider">Employee</Label>
               <Popover open={sheetPickerOpen} onOpenChange={setSheetPickerOpen}>

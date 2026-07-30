@@ -100,7 +100,7 @@ export default function RoadmapPage() {
               <PageTabsToolbar
                 tabsDensity="labeled"
                 tabs={
-                  <TabsList className="shrink-0">
+                  <TabsList>
                     <TabsTrigger value="roadmap" className="gap-1.5">
                       <Sparkles className="h-3.5 w-3.5" />
                       Roadmap

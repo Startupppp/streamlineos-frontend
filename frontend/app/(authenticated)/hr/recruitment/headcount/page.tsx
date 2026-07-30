@@ -68,7 +68,7 @@ const STATUS_COLORS: Record<HeadcountStatus, BadgeVariant> = {
   JOB_CREATED: "default",
 };
 
-const HR_ROLES = ["CEO", "HR", "ADMIN", "HR_MANAGER", "OWNER"];
+const HR_ROLES = ["FINAL", "HR", "ADMIN", "HR_MANAGER", "OWNER"];
 
 function statusLabel(s: HeadcountStatus): string {
   return s === "JOB_CREATED" ? "Job Created" : s.charAt(0) + s.slice(1).toLowerCase();

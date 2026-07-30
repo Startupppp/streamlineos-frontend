@@ -17,7 +17,7 @@ import { SubmissionSheet } from "@/features/hr/recruitment/vendors/submission-sh
 import { VendorCard } from "@/features/hr/recruitment/vendors/vendor-card";
 import { ErrorState } from "@/components/shared/error-state";
 
-const HR_ROLES = ["CEO", "HR", "ADMIN", "HR_MANAGER", "OWNER"];
+const HR_ROLES = ["FINAL", "HR", "ADMIN", "HR_MANAGER", "OWNER"];
 
 export default function VendorsPage() {
   const { data: session } = useSession();

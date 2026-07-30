@@ -139,7 +139,7 @@ export function OffersTab({ candidateId }: Props) {
 
   const handleSubmitForApproval = useCallback((offerId: number) => {
     submitForApproval.mutate(offerId, {
-      onSuccess: () => toast.success("Offer submitted for CEO approval"),
+      onSuccess: () => toast.success("Offer submitted for final approval"),
       onError: (e) => toast.error(getErrorMessage(e)),
     });
   }, [submitForApproval]);

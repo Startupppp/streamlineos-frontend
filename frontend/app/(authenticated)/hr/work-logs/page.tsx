@@ -92,15 +92,15 @@ export default function WorkLogsPage() {
 
   const { year, quarter, selectedUserId } = filters;
 
-  const isAdminOrCeo = useCan("hr:employees:manage");
+  const canManageEmployees = useCan("hr:employees:manage");
   const canEditSavedWorkLogs = useCan("hr:attendance:manage");
 
   const { data: employeesRaw } = useHrEmployees({ limit: 100 });
   const { data: departments } = useLegacyHrDepartments();
 
   const allEmployees = useMemo(
-    () => (isAdminOrCeo ? unwrapEmployees(employeesRaw) : []),
-    [employeesRaw, isAdminOrCeo],
+    () => (canManageEmployees ? unwrapEmployees(employeesRaw) : []),
+    [employeesRaw, canManageEmployees],
   );
 
   const employees = useMemo(
@@ -265,7 +265,7 @@ export default function WorkLogsPage() {
     currentQuarter,
     employees,
     departments,
-    isAdminOrCeo,
+    canManageEmployees,
   };
 
   const handleSaveLog = useCallback(

@@ -213,14 +213,14 @@ function GroupingSidebarBody({
 
       <Tabs defaultValue="priority" className="flex min-h-0 flex-1 flex-col">
         <div className="px-2">
-          <TabsList className="w-full">
-            <TabsTrigger value="priority" className="flex-1">
+          <TabsList>
+            <TabsTrigger value="priority">
               Priority
             </TabsTrigger>
-            <TabsTrigger value="labels" className="flex-1">
+            <TabsTrigger value="labels">
               Labels
             </TabsTrigger>
-            <TabsTrigger value="projects" className="flex-1">
+            <TabsTrigger value="projects">
               Projects
             </TabsTrigger>
           </TabsList>

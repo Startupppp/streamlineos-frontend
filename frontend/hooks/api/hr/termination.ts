@@ -15,7 +15,7 @@ interface TerminationEmployee {
 
 export type TerminationStatus =
   | "DRAFT"
-  | "PENDING_CEO"
+  | "PENDING_FINAL"
   | "APPROVED"
   | "REJECTED"
   | "SENT"
@@ -34,9 +34,9 @@ export interface Termination {
   terminationLetterUrl: string | null;
   supportingDocUrls: string[] | null;
   internalNotes: string | null;
-  ceoRemarks: string | null;
-  ceoReviewedBy: string | null;
-  ceoReviewedAt: string | null;
+  finalRemarks: string | null;
+  finalReviewedBy: string | null;
+  finalReviewedAt: string | null;
   emailSentAt: string | null;
   emailStatus: string | null;
   initiatedBy: string | null;
@@ -52,7 +52,7 @@ export interface Termination {
     joiningDate?: string | null;
   } | null;
   initiator?: { id: string; name: string | null } | null;
-  ceoReviewer?: { id: string; name: string | null } | null;
+  finalReviewer?: { id: string; name: string | null } | null;
 }
 
 interface CreateTerminationInput {
@@ -141,10 +141,10 @@ export function useSubmitTermination() {
   });
 }
 
-export function useCeoReviewTermination() {
+export function useFinalReviewTermination() {
   const qc = useQueryClient();
   return useMutation({
-    mutationKey: [...terminationKeys.all, "ceo-review"],
+    mutationKey: [...terminationKeys.all, "final-review"],
     mutationFn: ({
       id,
       decision,
@@ -155,7 +155,7 @@ export function useCeoReviewTermination() {
       remarks?: string;
     }) =>
       apiClient.patch<{ success: boolean }>(
-        `/hr/termination/${id}/ceo-review`,
+        `/hr/termination/${id}/final-review`,
         {
           decision,
           remarks,

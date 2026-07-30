@@ -366,11 +366,11 @@ export function WorkforcePlanningPage() {
       <div className="space-y-6">
         <AttritionForecastCard />
         <Tabs defaultValue="overview">
-          <TabsList className="mb-4 w-full justify-start overflow-x-auto scrollbar-hide sm:w-fit">
-            <TabsTrigger value="overview" className="min-w-max shrink-0">Overview</TabsTrigger>
-            <TabsTrigger value="hiring" className="min-w-max shrink-0">Hiring Plans</TabsTrigger>
-            <TabsTrigger value="skills" className="min-w-max shrink-0">Skills Gap</TabsTrigger>
-            <TabsTrigger value="succession" className="min-w-max shrink-0">Succession Risk</TabsTrigger>
+          <TabsList className="mb-4">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="hiring">Hiring Plans</TabsTrigger>
+            <TabsTrigger value="skills">Skills Gap</TabsTrigger>
+            <TabsTrigger value="succession">Succession Risk</TabsTrigger>
           </TabsList>
           <TabsContent value="overview" className="space-y-4">
             <OverviewTab />

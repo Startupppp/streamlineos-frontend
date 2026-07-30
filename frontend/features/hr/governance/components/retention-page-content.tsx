@@ -18,7 +18,7 @@ export function RetentionPageContent() {
 
   return (
     <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ActiveTab)} className="mb-6">
-      <TabsList className="w-fit">
+      <TabsList>
         <TabsTrigger value="policies">Retention Policies</TabsTrigger>
         <TabsTrigger value="requests">Data Requests</TabsTrigger>
       </TabsList>

@@ -192,11 +192,11 @@ export function ChannelPublicationsPanel({
           )}
 
           <Tabs value={activeTab} onValueChange={handleTabChange}>
-            <TabsList className="w-full">
-              <TabsTrigger value="all" className="flex-1">
+            <TabsList>
+              <TabsTrigger value="all">
                 All
               </TabsTrigger>
-              <TabsTrigger value="failed" className="flex-1">
+              <TabsTrigger value="failed">
                 Failed
               </TabsTrigger>
             </TabsList>

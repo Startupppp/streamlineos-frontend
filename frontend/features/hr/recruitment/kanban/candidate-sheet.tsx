@@ -103,7 +103,7 @@ export const CandidateSheet = memo(function CandidateSheet({
 
         <div className="shrink-0 px-5 pt-3 pb-3 border-b border-border/60">
           <Tabs value={activeTab} onValueChange={handleTabChange}>
-            <TabsList className="w-fit">
+            <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="resume">Resume</TabsTrigger>
             </TabsList>

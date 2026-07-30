@@ -201,7 +201,7 @@ export function RunDetailContent({ runId }: RunDetailContentProps) {
             <TabsTrigger value="employees">
               Employees
             </TabsTrigger>
-            <TabsTrigger value="exceptions" className="flex items-center gap-1">
+            <TabsTrigger value="exceptions" className="gap-1">
               Exceptions
               {openExceptions > 0 && (
                 <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-red-100 text-red-700 text-[9px] font-bold dark:bg-red-500/10 dark:text-red-300">

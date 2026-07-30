@@ -206,17 +206,17 @@ function GroupingSidebarBody({
       className={cn("flex min-h-0 flex-1 flex-col gap-0", className)}
     >
       <div className="flex shrink-0 items-center gap-1.5 border-b border-border px-2 py-2">
-        <TabsList className="min-w-0 flex-1 p-0.5">
-          <TabsTrigger value="status" className="flex-1 px-1.5">
+        <TabsList className="flex-1 p-0.5 md:flex-none">
+          <TabsTrigger value="status" className="px-1.5">
             Status
           </TabsTrigger>
-          <TabsTrigger value="health" className="flex-1 px-1.5">
+          <TabsTrigger value="health" className="px-1.5">
             Health
           </TabsTrigger>
-          <TabsTrigger value="leads" className="flex-1 px-1.5">
+          <TabsTrigger value="leads" className="px-1.5">
             Leads
           </TabsTrigger>
-          <TabsTrigger value="teams" className="flex-1 px-1.5">
+          <TabsTrigger value="teams" className="px-1.5">
             Teams
           </TabsTrigger>
         </TabsList>

@@ -122,12 +122,12 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
                 />
               ) : (
                 <Tabs defaultValue="profile" className="flex min-h-0 flex-1 flex-col gap-0">
-                  <TabsList className="flex h-9 min-h-9 max-h-9 w-full sm:w-full shrink-0 justify-stretch overflow-hidden bg-muted/50 rounded-md p-0.5 gap-0.5">
+                  <TabsList className="overflow-hidden bg-muted/50 rounded-md p-0.5 gap-0.5">
                     {TAB_ITEMS.map(({ value, label }) => (
                       <TabsTrigger
                         key={value}
                         value={value}
-                        className="h-7 min-w-0 flex-1 shrink px-1 truncate text-sm font-medium"
+                        className="min-w-0 shrink px-1 truncate"
                       >
                         {label}
                       </TabsTrigger>

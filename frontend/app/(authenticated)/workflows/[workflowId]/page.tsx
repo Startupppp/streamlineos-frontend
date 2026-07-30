@@ -262,7 +262,7 @@ export default function WorkflowDetailPage() {
           className="flex min-h-0 flex-1 flex-col"
         >
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex min-h-0 flex-1 flex-col gap-4">
-            <TabsList className="shrink-0">
+            <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="executions">Executions</TabsTrigger>
             </TabsList>

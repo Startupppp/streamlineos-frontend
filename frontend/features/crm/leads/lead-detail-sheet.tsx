@@ -367,22 +367,21 @@ export function LeadDetailSheet({
 
               <div className="pt-2">
                 <Tabs value={activityTab} onValueChange={setActivityTab}>
-                  <TabsList className="w-full">
-                    <TabsTrigger value="details" className="flex-1">
+                  <TabsList>
+                    <TabsTrigger value="details">
                       Details
                     </TabsTrigger>
-                    <TabsTrigger value="activity" className="flex-1">
+                    <TabsTrigger value="activity">
                       Activity
                     </TabsTrigger>
                     <TabsTrigger
                       value="new-activity"
-                      className="flex-1"
                     >
                       Log
                     </TabsTrigger>
                     <TabsTrigger
                       value="follow-up"
-                      className="flex-1 gap-1"
+                      className="gap-1"
                     >
                       <AlarmClock className="h-3 w-3 shrink-0" />
                       Follow-up

@@ -121,7 +121,7 @@ export default function SecurityPage() {
       <LegalSection id="access-control" title="Access control inside your organization">
         <p>
           Every action in {BRAND_NAME} is gated by a role-based permission system.
-          Out-of-the-box roles include CEO, HR, ADMIN, MANAGER, MEMBER, SALES, ENGINEERING,
+          Out-of-the-box roles are Organization Owner, Organization Admin, Module Owner, Module Admin and Module Member,
           DESIGN, plus branch-scoped variants. Permissions are checked on the server, never
           on the client.
         </p>

@@ -53,7 +53,7 @@ export function ModuleAccessPage({ moduleKey, title }: ModuleAccessPageProps) {
       }
     >
       <Tabs defaultValue="roles" className="flex flex-col flex-1 min-h-0 gap-0">
-        <TabsList className="mb-4 shrink-0 self-start">
+        <TabsList className="mb-4 self-start">
           <TabsTrigger value="roles">Roles</TabsTrigger>
           <TabsTrigger value="members">Members</TabsTrigger>
           <TabsTrigger value="ownership">Ownership</TabsTrigger>

@@ -12,16 +12,16 @@ export interface Resignation {
   reasonCategory: string | null;
   lastWorkingDate: string | null;
   noticePeriodDays: number | null;
-  status: "SUBMITTED" | "PENDING_HR" | "HR_APPROVED" | "CEO_APPROVED" | "IN_PROGRESS" | "APPROVED" | "WITHDRAWN" | "COMPLETED" | "REJECTED" | null;
+  status: "SUBMITTED" | "PENDING_HR" | "HR_APPROVED" | "FINAL_APPROVED" | "IN_PROGRESS" | "APPROVED" | "WITHDRAWN" | "COMPLETED" | "REJECTED" | null;
   resignationLetterUrl: string | null;
   approvedBy: string | null;
   approvedAt: Date | string | null;
   hrReviewedBy: string | null;
   hrReviewedAt: Date | string | null;
   hrRemarks: string | null;
-  ceoReviewedBy: string | null;
-  ceoReviewedAt: Date | string | null;
-  ceoRemarks: string | null;
+  finalReviewedBy: string | null;
+  finalReviewedAt: Date | string | null;
+  finalRemarks: string | null;
   willingForExitInterview: boolean | null;
   companyFeedback: string | null;
   exitInterviewNotes: string | null;
@@ -30,7 +30,7 @@ export interface Resignation {
   createdAt: Date | string | null;
   user?: { id: string; name: string | null; image: string | null; email: string; designation: string | null; joiningDate?: string | null } | null;
   hrReviewer?: { id: string; name: string | null } | null;
-  ceoReviewer?: { id: string; name: string | null } | null;
+  finalReviewer?: { id: string; name: string | null } | null;
   checklists?: { id: number; item: string; status: string | null; completedAt: Date | string | null }[];
 }
 
@@ -110,12 +110,12 @@ export function useHrReviewResignation() {
   });
 }
 
-export function useCeoReviewResignation() {
+export function useFinalReviewResignation() {
   const qc = useQueryClient();
   return useMutation({
-    mutationKey: ["hr", "exit", "ceo-review"],
+    mutationKey: ["hr", "exit", "final-review"],
     mutationFn: ({ id, action, remarks }: { id: number; action: "approve" | "reject"; remarks?: string }) =>
-      apiClient.patch<{ success: boolean }>(`/hr/exit/${id}/ceo-review`, { decision: action, remarks }),
+      apiClient.patch<{ success: boolean }>(`/hr/exit/${id}/final-review`, { decision: action, remarks }),
     onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.list() }),
   });
 }

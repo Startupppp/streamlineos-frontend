@@ -26,7 +26,7 @@ import { SuccessionTab } from "@/features/hr/performance/succession-tab";
 import { cn } from "@/lib/utils";
 
 const TAB_TRIGGER_CLASS =
-  "h-9 min-h-9 flex-none shrink-0 gap-1.5 rounded-none border-b-2 border-transparent px-3 text-xs text-muted-foreground shadow-none transition-colors duration-200 hover:text-foreground data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none";
+  "h-9 min-h-9 flex-none gap-1.5 rounded-none border-b-2 border-transparent text-xs shadow-none duration-200 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none";
 
 export function PerformancePageClient() {
   const router = useRouter();

@@ -40,7 +40,7 @@ function statusLabel(status: TerminationStatus | null): string {
 interface TerminationCardProps {
   record: Termination;
   isHR: boolean;
-  isCEO: boolean;
+  canApproveExit: boolean;
   onView: (record: Termination) => void;
   onSubmit: (id: number) => void;
   onApprove: (id: number) => void;
@@ -54,7 +54,7 @@ interface TerminationCardProps {
 function TerminationCard({
   record,
   isHR,
-  isCEO,
+  canApproveExit,
   onView,
   onSubmit,
   onApprove,
@@ -120,9 +120,9 @@ function TerminationCard({
               )}
             </div>
 
-            {status === "REJECTED" && record.ceoRemarks && (
+            {status === "REJECTED" && record.finalRemarks && (
               <p className="text-[11px] text-rose-600 dark:text-rose-300 mt-1 line-clamp-2">
-                CEO: {record.ceoRemarks}
+                FINAL: {record.finalRemarks}
               </p>
             )}
 
@@ -161,7 +161,7 @@ function TerminationCard({
                 className="text-xs gap-1.5 duration-200"
                 onClick={() => onSubmit(record.id)}
                 disabled={isSubmitting}
-                aria-label={`Submit termination for ${employee?.name ?? "employee"} for CEO approval`}
+                aria-label={`Submit termination for ${employee?.name ?? "employee"} for FINAL approval`}
               >
                 <AlertTriangle className="h-3 w-3" />
                 Submit for Approval
@@ -175,14 +175,14 @@ function TerminationCard({
                 className="text-xs gap-1.5 duration-200"
                 onClick={() => onSubmit(record.id)}
                 disabled={isSubmitting}
-                aria-label={`Resubmit termination for ${employee?.name ?? "employee"} for CEO approval`}
+                aria-label={`Resubmit termination for ${employee?.name ?? "employee"} for FINAL approval`}
               >
                 <AlertTriangle className="h-3 w-3" />
                 Resubmit
               </Button>
             )}
 
-            {isCEO && status === "PENDING_CEO" && (
+            {canApproveExit && status === "PENDING_FINAL" && (
               <>
                 <Button
                   size="sm"
@@ -262,7 +262,7 @@ interface TerminationListProps {
   pagination?: TerminationPagination;
   onPageChange: (page: number) => void;
   isHR: boolean;
-  isCEO: boolean;
+  canApproveExit: boolean;
   statusFilter: StatusFilter;
   onStatusFilterChange: (value: StatusFilter) => void;
   onView: (record: Termination) => void;
@@ -281,7 +281,7 @@ export function TerminationList({
   pagination,
   onPageChange,
   isHR,
-  isCEO,
+  canApproveExit,
   statusFilter,
   onStatusFilterChange,
   onView,
@@ -336,7 +336,7 @@ export function TerminationList({
               key={record.id}
               record={record}
               isHR={isHR}
-              isCEO={isCEO}
+              canApproveExit={canApproveExit}
               onView={onView}
               onSubmit={onSubmit}
               onApprove={onApprove}

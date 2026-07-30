@@ -31,7 +31,7 @@ function statusBadgeClass(status: string | null): string {
   if (status === "HR_APPROVED")
     return "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-800";
   if (
-    status === "CEO_APPROVED" ||
+    status === "FINAL_APPROVED" ||
     status === "IN_PROGRESS" ||
     status === "COMPLETED" ||
     status === "APPROVED"
@@ -47,13 +47,13 @@ interface ResignationCardProps {
   isExpanded: boolean;
   isAdmin: boolean;
   isHR: boolean;
-  isCEO: boolean;
+  canApproveExit: boolean;
   userId: string | undefined;
   onToggleExpand: (id: number) => void;
   onHrApprove: (id: number) => void;
   onHrReject: (id: number) => void;
-  onCeoApprove: (id: number) => void;
-  onCeoReject: (id: number) => void;
+  onFinalApprove: (id: number) => void;
+  onFinalReject: (id: number) => void;
   onWithdraw: (id: number) => void;
   onViewLetter?: (id: number) => void;
 }
@@ -63,13 +63,13 @@ export function ResignationCard({
   isExpanded,
   isAdmin,
   isHR,
-  isCEO,
+  canApproveExit,
   userId,
   onToggleExpand,
   onHrApprove,
   onHrReject,
-  onCeoApprove,
-  onCeoReject,
+  onFinalApprove,
+  onFinalReject,
   onWithdraw,
   onViewLetter,
 }: ResignationCardProps) {
@@ -83,7 +83,7 @@ export function ResignationCard({
     (r.status === "SUBMITTED" || r.status === "PENDING_HR");
   const hrCanAct =
     isHR && (r.status === "SUBMITTED" || r.status === "PENDING_HR");
-  const ceoCanAct = isCEO && r.status === "HR_APPROVED";
+  const finalCanAct = canApproveExit && r.status === "HR_APPROVED";
 
   const handleToggle = useCallback(
     () => onToggleExpand(r.id),
@@ -181,13 +181,13 @@ export function ResignationCard({
             </>
           )}
 
-          {ceoCanAct && (
+          {finalCanAct && (
             <>
               <Button
                 size="sm"
                 variant="outline"
                 className="text-xs gap-1.5 duration-200"
-                onClick={() => onCeoApprove(r.id)}
+                onClick={() => onFinalApprove(r.id)}
               >
                 <CheckCircle2 className="h-3 w-3" />
                 Approve
@@ -196,7 +196,7 @@ export function ResignationCard({
                 size="sm"
                 variant="outline"
                 className="text-xs gap-1.5 duration-200 text-rose-600 hover:text-rose-600 border-rose-200 hover:bg-rose-50 dark:border-rose-800 dark:hover:bg-rose-950/30"
-                onClick={() => onCeoReject(r.id)}
+                onClick={() => onFinalReject(r.id)}
               >
                 <XCircle className="h-3 w-3" />
                 Reject

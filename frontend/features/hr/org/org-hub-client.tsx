@@ -76,7 +76,7 @@ export function OrgHubClient() {
     >
       <HeadcountStats groupBy="department" />
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
-        <TabsList className="shrink-0">
+        <TabsList>
           <TabsTrigger value="departments" className="gap-1.5">
             <Building2 className="h-3 w-3" />
             Departments

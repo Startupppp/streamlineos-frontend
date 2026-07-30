@@ -21,7 +21,7 @@ import {
   useCreateTermination,
   useSubmitTermination,
   useCompleteTermination,
-  useCeoReviewTermination,
+  useFinalReviewTermination,
   useSendTerminationEmail,
   useHrEmployees,
   type Termination,
@@ -40,7 +40,6 @@ export default function TerminationPage() {
   const employeeIdParam = searchParams.get("employeeId");
 
   const isHR = useCan("hr:exit:manage");
-  const isCEO = canApproveExit;
 
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
@@ -57,7 +56,7 @@ export default function TerminationPage() {
   const { data: employeesData } = useHrEmployees({ limit: 100 });
   const createTermination = useCreateTermination();
   const submitTermination = useSubmitTermination();
-  const ceoReview = useCeoReviewTermination();
+  const finalReview = useFinalReviewTermination();
   const sendEmail = useSendTerminationEmail();
   const completeTermination = useCompleteTermination();
 
@@ -78,8 +77,8 @@ export default function TerminationPage() {
   const [reviewDecision, setReviewDecision] = useState<
     "approve" | "reject" | null
   >(null);
-  const [ceoRemarks, setCeoRemarks] = useState("");
-  const [ceoSheetOpen, setCeoSheetOpen] = useState(false);
+  const [finalRemarks, setFinalRemarks] = useState("");
+  const [finalSheetOpen, setFinalSheetOpen] = useState(false);
 
   const [emailRecord, setEmailRecord] = useState<Termination | null>(null);
   const [completeId, setCompleteId] = useState<number | null>(null);
@@ -207,30 +206,30 @@ export default function TerminationPage() {
     if (!submitId) return;
     submitTermination.mutate(submitId, {
       onSuccess: () => {
-        toast.success("Submitted for CEO approval");
+        toast.success("Submitted for FINAL approval");
         setSubmitId(null);
       },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
   }, [submitId, submitTermination]);
 
-  const handleOpenCeoReview = useCallback(
+  const handleOpenFinalReview = useCallback(
     (record: Termination, decision: "approve" | "reject") => {
       setReviewRecord(record);
       setReviewDecision(decision);
-      setCeoRemarks("");
-      setCeoSheetOpen(true);
+      setFinalRemarks("");
+      setFinalSheetOpen(true);
     },
     [],
   );
 
-  const handleCeoReviewSubmit = useCallback(() => {
+  const handleFinalReviewSubmit = useCallback(() => {
     if (!reviewRecord || !reviewDecision) return;
-    ceoReview.mutate(
+    finalReview.mutate(
       {
         id: reviewRecord.id,
         decision: reviewDecision,
-        remarks: ceoRemarks.trim() || undefined,
+        remarks: finalRemarks.trim() || undefined,
       },
       {
         onSuccess: () => {
@@ -239,15 +238,15 @@ export default function TerminationPage() {
               ? "Termination approved"
               : "Termination rejected",
           );
-          setCeoSheetOpen(false);
+          setFinalSheetOpen(false);
           setReviewRecord(null);
           setReviewDecision(null);
-          setCeoRemarks("");
+          setFinalRemarks("");
         },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [reviewRecord, reviewDecision, ceoRemarks, ceoReview]);
+  }, [reviewRecord, reviewDecision, finalRemarks, finalReview]);
 
   const handleSendEmailOpen = useCallback((record: Termination) => {
     if (record.emailSentAt) {
@@ -287,17 +286,17 @@ export default function TerminationPage() {
   const handleApprove = useCallback(
     (id: number) => {
       const r = (terminations ?? []).find((t) => t.id === id);
-      if (r) handleOpenCeoReview(r, "approve");
+      if (r) handleOpenFinalReview(r, "approve");
     },
-    [terminations, handleOpenCeoReview],
+    [terminations, handleOpenFinalReview],
   );
 
   const handleReject = useCallback(
     (id: number) => {
       const r = (terminations ?? []).find((t) => t.id === id);
-      if (r) handleOpenCeoReview(r, "reject");
+      if (r) handleOpenFinalReview(r, "reject");
     },
-    [terminations, handleOpenCeoReview],
+    [terminations, handleOpenFinalReview],
   );
 
   const handleViewRecord = useCallback((record: Termination) => {
@@ -320,12 +319,12 @@ export default function TerminationPage() {
     [resetCreateForm],
   );
 
-  const handleCeoSheetOpenChange = useCallback((open: boolean) => {
-    setCeoSheetOpen(open);
+  const handleFinalSheetOpenChange = useCallback((open: boolean) => {
+    setFinalSheetOpen(open);
     if (!open) {
       setReviewRecord(null);
       setReviewDecision(null);
-      setCeoRemarks("");
+      setFinalRemarks("");
     }
   }, []);
 
@@ -352,9 +351,9 @@ export default function TerminationPage() {
       setInternalNotes(e.target.value),
     [],
   );
-  const handleCeoRemarksChange = useCallback(
+  const handleFinalRemarksChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) =>
-      setCeoRemarks(e.target.value),
+      setFinalRemarks(e.target.value),
     [],
   );
   const handleSubmitConfirmClose = useCallback((open: boolean) => {
@@ -413,7 +412,7 @@ export default function TerminationPage() {
       title="Termination Management"
       subtitle="Manage employee terminations"
       actions={
-        isHR || isCEO ? (
+        isHR || canApproveExit ? (
           <Button size="sm" onClick={handleCreateOpen} className="gap-1.5">
             <Plus className="h-3.5 w-3.5" />
             New Termination
@@ -427,7 +426,7 @@ export default function TerminationPage() {
         pagination={terminationsData?.pagination}
         onPageChange={setPage}
         isHR={isHR}
-        isCEO={isCEO}
+        canApproveExit={canApproveExit}
         statusFilter={statusFilter}
         onStatusFilterChange={handleStatusFilterChange}
         onView={handleViewRecord}
@@ -443,7 +442,7 @@ export default function TerminationPage() {
       <TerminationFormSheet
         open={createOpen}
         onOpenChange={handleCreateSheetOpenChange}
-        isCEO={isCEO}
+        canApproveExit={canApproveExit}
         isPending={createTermination.isPending}
         submitDisabled={!canSubmitCreate}
         onSubmit={handleCreateSubmit}
@@ -467,22 +466,22 @@ export default function TerminationPage() {
       <ConfirmSheet
         open={submitId !== null}
         onOpenChange={handleSubmitConfirmClose}
-        title="Submit for CEO Approval"
-        description="Are you sure you want to submit this termination record for CEO approval? The record will move to PENDING_CEO status."
+        title="Submit for FINAL Approval"
+        description="Are you sure you want to submit this termination record for FINAL approval? The record will move to PENDING_FINAL status."
         confirmLabel="Submit"
         onConfirm={handleSubmitForApproval}
         isPending={submitTermination.isPending}
       />
 
       <TerminationDetailSheet
-        open={ceoSheetOpen}
-        onOpenChange={handleCeoSheetOpenChange}
+        open={finalSheetOpen}
+        onOpenChange={handleFinalSheetOpenChange}
         reviewRecord={reviewRecord}
         reviewDecision={reviewDecision}
-        ceoRemarks={ceoRemarks}
-        onCeoRemarksChange={handleCeoRemarksChange}
-        isPending={ceoReview.isPending}
-        onSubmit={handleCeoReviewSubmit}
+        finalRemarks={finalRemarks}
+        onFinalRemarksChange={handleFinalRemarksChange}
+        isPending={finalReview.isPending}
+        onSubmit={handleFinalReviewSubmit}
       />
 
       <TerminationDetailSheet

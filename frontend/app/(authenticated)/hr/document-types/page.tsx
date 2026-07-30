@@ -106,7 +106,7 @@ function useDeleteDocumentType() {
 }
 
 export default function DocumentTypesPage() {
-  const isHROrCEO = useCan("hr:employees:manage");
+  const canManageEmployees = useCan("hr:employees:manage");
 
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -283,7 +283,7 @@ export default function DocumentTypesPage() {
       title="Document Types"
       subtitle="Configure required onboarding documents"
       actions={
-        isHROrCEO ? (
+        canManageEmployees ? (
           <Button size="sm" onClick={openCreate}>
             <Plus className="h-3.5 w-3.5 mr-1" />
             Add Document Type
@@ -294,7 +294,7 @@ export default function DocumentTypesPage() {
       <div className="flex flex-1 min-h-0 flex-col">
         <DocumentTypeList
           items={list}
-          isHROrCEO={isHROrCEO}
+          canManageEmployees={canManageEmployees}
           onEdit={openEdit}
           onDeactivate={setDeactivateTarget}
           onReactivate={setReactivateTarget}

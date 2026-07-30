@@ -140,7 +140,7 @@ export function EditEmployeeForm({
   const updateProfileMutation = useUpdateProfile();
   const { data: orgRoles } = useRoles();
   const assignableRoles = useMemo(
-    () => (orgRoles || []).filter((r) => r.slug !== "CEO"),
+    () => (orgRoles || []).filter((r) => r.slug !== "FINAL"),
     [orgRoles],
   );
 

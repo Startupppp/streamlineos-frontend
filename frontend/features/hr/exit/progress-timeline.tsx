@@ -9,7 +9,7 @@ const PROGRESS_STEPS = [
   { step: "SUBMITTED", label: "Submitted" },
   { step: "PENDING_HR", label: "HR Review" },
   { step: "HR_APPROVED", label: "HR Approved" },
-  { step: "CEO_APPROVED", label: "CEO Approved" },
+  { step: "FINAL_APPROVED", label: "FINAL Approved" },
   { step: "COMPLETED", label: "Completed" },
 ];
 

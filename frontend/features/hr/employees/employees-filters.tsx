@@ -111,7 +111,7 @@ export function EmployeesFilters({
           </SelectTrigger>
           <SelectContent align="start">
             <SelectItem value="all">All roles</SelectItem>
-            <SelectItem value="CEO">CEO</SelectItem>
+            <SelectItem value="FINAL">FINAL</SelectItem>
             <SelectItem value="HR">HR</SelectItem>
             <SelectItem value="SALES">Sales</SelectItem>
             <SelectItem value="CUSTOMER_SUPPORT">Customer Support</SelectItem>

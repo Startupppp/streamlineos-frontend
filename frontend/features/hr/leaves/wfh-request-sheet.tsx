@@ -182,7 +182,7 @@ export function WfhRequestSheet({
                 Approver not configured
               </div>
               <p className="text-xs text-amber-800/80 dark:text-amber-200/80">
-                WFH requests need an approver. Assign the HR or CEO role to a teammate first.
+                WFH requests need an approver. Grant a teammate leave-approval access first.
               </p>
               <Link
                 href="/settings/roles"

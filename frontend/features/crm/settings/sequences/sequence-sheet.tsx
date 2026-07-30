@@ -343,12 +343,12 @@ export function SequenceSheet({ sequence, open, onOpenChange }: Props) {
         </SheetHeader>
         <Tabs defaultValue="details" className="flex flex-col flex-1 min-h-0">
           <div className="shrink-0 border-b px-6 py-2">
-            <TabsList className="rounded-lg border border-border bg-card p-1 h-auto gap-1">
-              <TabsTrigger value="details" className="h-7 rounded-md px-3 text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground">Details</TabsTrigger>
+            <TabsList className="h-auto">
+              <TabsTrigger value="details">Details</TabsTrigger>
               {isEdit && (
                 <>
-                  <TabsTrigger value="steps" className="h-7 rounded-md px-3 text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground">Steps</TabsTrigger>
-                  <TabsTrigger value="enrollments" className="h-7 rounded-md px-3 text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground">Enrollments</TabsTrigger>
+                  <TabsTrigger value="steps">Steps</TabsTrigger>
+                  <TabsTrigger value="enrollments">Enrollments</TabsTrigger>
                 </>
               )}
             </TabsList>

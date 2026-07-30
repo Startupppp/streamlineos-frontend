@@ -213,7 +213,7 @@ export function ReportsView() {
           onValueChange={handleTabChange}
           className="flex min-h-0 flex-1 flex-col gap-4"
         >
-          <TabsList className="overflow-x-auto scrollbar-hide">
+          <TabsList>
             {REPORT_TABS.map((tab) => (
               <TabsTrigger key={tab.value} value={tab.value}>
                 {tab.label}

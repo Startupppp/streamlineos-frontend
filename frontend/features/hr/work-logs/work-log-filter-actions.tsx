@@ -50,7 +50,7 @@ export interface SharedFilterProps {
   currentQuarter: number;
   employees: WorkLogFilterEmployee[] | undefined;
   departments: WorkLogFilterDepartment[] | undefined;
-  isAdminOrCeo: boolean;
+  canManageEmployees: boolean;
 }
 
 interface WorkLogFilterActionsProps extends SharedFilterProps {
@@ -68,7 +68,7 @@ export function WorkLogFilterActions({
   currentQuarter,
   employees,
   departments,
-  isAdminOrCeo,
+  canManageEmployees,
   onExport,
 }: WorkLogFilterActionsProps) {
   const [employeeSearchOpen, setEmployeeSearchOpen] = useState(false);
@@ -132,7 +132,7 @@ export function WorkLogFilterActions({
         </SelectContent>
       </Select>
 
-      {isAdminOrCeo && employees && employees.length > 0 && (
+      {canManageEmployees && employees && employees.length > 0 && (
         <ResponsivePopover open={employeeSearchOpen} onOpenChange={setEmployeeSearchOpen}>
           <ResponsivePopoverTrigger asChild>
             <Button
@@ -202,11 +202,11 @@ export function WorkLogFilterActions({
         currentQuarter={currentQuarter}
         employees={employees}
         departments={departments}
-        isAdminOrCeo={isAdminOrCeo}
+        canManageEmployees={canManageEmployees}
         onApply={handleApplyDraft}
       />
 
-      {isAdminOrCeo && (
+      {canManageEmployees && (
         <AnimatedIconButton icon={DownloadIcon} iconSize={12} iconClassName="mr-0" variant="outline" size="sm" className="gap-1.5 text-xs" onClick={onExport}>
           <span className="hidden sm:inline">Export</span>
         </AnimatedIconButton>

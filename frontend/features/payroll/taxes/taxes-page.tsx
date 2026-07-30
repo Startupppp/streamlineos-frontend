@@ -15,7 +15,7 @@ export function TaxesPageContent() {
       subtitle="Manage declaration windows and employee tax declarations"
     >
       <Tabs defaultValue="windows" className="flex flex-1 min-h-0 flex-col gap-2">
-        <TabsList className="w-fit">
+        <TabsList>
           <TabsTrigger value="windows">Declaration Windows</TabsTrigger>
           <TabsTrigger value="declarations">Declarations</TabsTrigger>
           <TabsTrigger value="statutory">Statutory</TabsTrigger>

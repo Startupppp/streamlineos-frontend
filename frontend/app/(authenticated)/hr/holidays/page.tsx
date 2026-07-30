@@ -143,7 +143,7 @@ export default function HolidaysPage() {
             </Select>
           )}
           <Tabs value={viewMode} onValueChange={handleViewChange}>
-            <TabsList className="grid h-9 min-h-9 w-auto grid-cols-5 gap-1 p-1">
+            <TabsList>
               {VIEW_OPTIONS.map((opt) => {
                 const Icon = opt.icon;
                 return (
@@ -151,7 +151,7 @@ export default function HolidaysPage() {
                     key={opt.value}
                     value={opt.value}
                     title={opt.label}
-                    className="h-7 min-h-7 w-full justify-center gap-1.5 px-3 text-sm"
+                    className="gap-1.5"
                   >
                     <Icon className="size-4" />
                     <span className="hidden sm:inline">{opt.label}</span>

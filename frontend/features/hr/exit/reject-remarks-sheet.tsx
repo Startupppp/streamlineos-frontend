@@ -6,13 +6,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import {
   useHrReviewResignation,
-  useCeoReviewResignation,
+  useFinalReviewResignation,
 } from "@/hooks/api/hr";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 interface RejectDialogState {
   id: number;
-  type: "hr" | "ceo";
+  type: "hr" | "final";
 }
 
 interface RejectRemarksSheetProps {
@@ -27,7 +27,7 @@ export function RejectRemarksSheet({
   onOpenChange,
 }: RejectRemarksSheetProps) {
   const hrReview = useHrReviewResignation();
-  const ceoReview = useCeoReviewResignation();
+  const finalReview = useFinalReviewResignation();
 
   const [rejectRemarks, setRejectRemarks] = useState("");
   const [rejectRemarksError, setRejectRemarksError] = useState<string | null>(null);
@@ -64,7 +64,7 @@ export function RejectRemarksSheet({
       setRejectRemarksError("Remarks are required to reject a resignation.");
       return;
     }
-    const mutate = rejectDialog.type === "hr" ? hrReview.mutate : ceoReview.mutate;
+    const mutate = rejectDialog.type === "hr" ? hrReview.mutate : finalReview.mutate;
     mutate(
       { id: rejectDialog.id, action: "reject", remarks: trimmedRemarks },
       {
@@ -77,7 +77,7 @@ export function RejectRemarksSheet({
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [rejectDialog, rejectRemarks, hrReview, ceoReview, onOpenChange]);
+  }, [rejectDialog, rejectRemarks, hrReview, finalReview, onOpenChange]);
 
   return (
     <HrSheet
@@ -86,7 +86,7 @@ export function RejectRemarksSheet({
       title="Reject Resignation"
       onSubmit={handleConfirm}
       submitLabel="Reject"
-      isPending={hrReview.isPending || ceoReview.isPending}
+      isPending={hrReview.isPending || finalReview.isPending}
     >
       <p className="text-sm text-muted-foreground">
         Provide a reason for rejection. The employee will be notified.

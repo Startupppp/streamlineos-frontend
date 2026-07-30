@@ -75,7 +75,7 @@ async function exportExpenses(params: {
 
 async function emailExpenseReport(
   filters: ExpenseFilters,
-  emailTarget: "CEO" | "HR" | "BOTH",
+  emailTarget: "ADMINS" | "APPROVERS" | "BOTH",
 ): Promise<{ success: boolean; error?: string }> {
   try {
     await apiClient.post("/hr/expenses/email-report", { filters, emailTarget });
@@ -148,7 +148,7 @@ export function ExpenseExportDialog({
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [exportComplete, setExportComplete] = useState(false);
 
-  const [emailTarget, setEmailTarget] = useState<"CEO" | "HR" | "BOTH">("BOTH");
+  const [emailTarget, setEmailTarget] = useState<"ADMINS" | "APPROVERS" | "BOTH">("BOTH");
 
   const [dateFrom, setDateFrom] = useState(filters.startDate || "");
   const [dateTo, setDateTo] = useState(filters.endDate || "");
@@ -211,7 +211,7 @@ export function ExpenseExportDialog({
     setIsSendingEmail(true);
     try {
       const result = await emailExpenseReport(exportFilters, emailTarget);
-      const targetLabel = emailTarget === "BOTH" ? "CEO & HR" : emailTarget;
+      const targetLabel = emailTarget === "BOTH" ? "Admins & Approvers" : emailTarget;
       if (result.success) {
         toast.success(`Expense report emailed to ${targetLabel} successfully!`);
       } else {
@@ -594,7 +594,7 @@ export function ExpenseExportDialog({
               <Select
                 value={emailTarget}
                 onValueChange={(v) =>
-                  setEmailTarget(v as "CEO" | "HR" | "BOTH")
+                  setEmailTarget(v as "ADMINS" | "APPROVERS" | "BOTH")
                 }
               >
                 <SelectTrigger className="w-[130px] shrink-0">
@@ -602,9 +602,9 @@ export function ExpenseExportDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="CEO">CEO Only</SelectItem>
-                  <SelectItem value="HR">HR Only</SelectItem>
-                  <SelectItem value="BOTH">CEO & HR</SelectItem>
+                  <SelectItem value="ADMINS">Admins Only</SelectItem>
+                  <SelectItem value="APPROVERS">Approvers Only</SelectItem>
+                  <SelectItem value="BOTH">Admins &amp; Approvers</SelectItem>
                 </SelectContent>
               </Select>
 

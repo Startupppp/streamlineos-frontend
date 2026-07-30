@@ -75,7 +75,7 @@ Human Resources Department`;
 interface TerminationFormSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  isCEO: boolean;
+  canApproveExit: boolean;
   isPending: boolean;
   submitDisabled?: boolean;
   onSubmit: () => void;
@@ -99,7 +99,7 @@ interface TerminationFormSheetProps {
 export function TerminationFormSheet({
   open,
   onOpenChange,
-  isCEO,
+  canApproveExit,
   isPending,
   submitDisabled = false,
   onSubmit,
@@ -129,7 +129,7 @@ export function TerminationFormSheet({
   const employeeOptions = useMemo(
     () =>
       employees
-        .filter((emp) => emp.role !== "CEO" && emp.isActive)
+        .filter((emp) => emp.role !== "FINAL" && emp.isActive)
         .map((emp) => {
           const label =
             emp.firstName && emp.lastName
@@ -160,12 +160,12 @@ export function TerminationFormSheet({
       onOpenChange={onOpenChange}
       title="New Termination"
       description={
-        isCEO
-          ? "Create a termination record. As CEO, this will be automatically approved."
-          : "Create a termination record. It will be saved as a draft for CEO approval."
+        canApproveExit
+          ? "Create a termination record. As FINAL, this will be automatically approved."
+          : "Create a termination record. It will be saved as a draft for FINAL approval."
       }
       onSubmit={onSubmit}
-      submitLabel={isCEO ? "Create & Approve" : "Save as Draft"}
+      submitLabel={canApproveExit ? "Create & Approve" : "Save as Draft"}
       isPending={isPending}
       submitDisabled={submitDisabled}
     >

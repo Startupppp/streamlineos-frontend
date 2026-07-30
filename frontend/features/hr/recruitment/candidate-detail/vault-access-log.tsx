@@ -16,7 +16,7 @@ interface VaultAccessLogProps {
 export function VaultAccessLog({ candidateId }: VaultAccessLogProps) {
   const { data: session } = useSession();
   const role = session?.user?.role as string | undefined;
-  const isHr = role && ["CEO", "HR", "ADMIN"].includes(role);
+  const isHr = role && ["FINAL", "HR", "ADMIN"].includes(role);
 
   const { data: logs, isLoading } = useVaultAccessLogs(isHr ? candidateId : 0);
 

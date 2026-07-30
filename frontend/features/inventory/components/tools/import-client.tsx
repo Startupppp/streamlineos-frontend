@@ -155,9 +155,9 @@ export function ImportClient() {
       subtitle="Import products, vendors, stock, and more from CSV or Excel files. Export data for offline analysis."
     >
       <Tabs defaultValue="import" className="flex flex-1 min-h-0 flex-col gap-4">
-        <TabsList className="inline-flex h-9 w-full items-center gap-1 rounded-lg border border-border bg-card p-1 overflow-x-auto scrollbar-hide sm:w-fit shrink-0">
-          <TabsTrigger value="import" className="inline-flex h-7 shrink-0 items-center rounded-md px-3 text-sm font-medium whitespace-nowrap transition-colors data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground">Import</TabsTrigger>
-          <TabsTrigger value="export" className="inline-flex h-7 shrink-0 items-center rounded-md px-3 text-sm font-medium whitespace-nowrap transition-colors data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground">Export</TabsTrigger>
+        <TabsList>
+          <TabsTrigger value="import">Import</TabsTrigger>
+          <TabsTrigger value="export">Export</TabsTrigger>
         </TabsList>
 
         <TabsContent value="import" className="flex flex-col gap-4 mt-0">

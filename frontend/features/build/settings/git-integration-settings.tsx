@@ -79,9 +79,6 @@ import {
 
 type IntegrationsTab = "connections" | "agent";
 
-const TAB_TRIGGER_CLASS =
-  "h-7 min-w-0 flex-1 truncate sm:flex-none rounded-md px-3 text-sm font-medium gap-1.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none text-muted-foreground hover:text-foreground transition-colors duration-200";
-
 const PROVIDERS: { value: GitProvider; label: string }[] = [
   { value: "github", label: "GitHub" },
   { value: "gitlab", label: "GitLab" },
@@ -211,13 +208,13 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
             onValueChange={handleTabChange}
             className="flex flex-col gap-0"
           >
-            <TabsList className="mb-4 flex h-9 min-h-9 max-h-9 w-full shrink-0 items-center justify-stretch gap-1 overflow-x-auto rounded-lg border border-border bg-card p-1 scrollbar-hide sm:w-fit sm:justify-start">
-              <TabsTrigger value="connections" className={TAB_TRIGGER_CLASS}>
+            <TabsList className="mb-4">
+              <TabsTrigger value="connections">
                 <GitBranch className="h-3.5 w-3.5" />
                 Connections
               </TabsTrigger>
               {footer ? (
-                <TabsTrigger value="agent" className={TAB_TRIGGER_CLASS}>
+                <TabsTrigger value="agent">
                   <Bot className="h-3.5 w-3.5" />
                   Agent access
                 </TabsTrigger>

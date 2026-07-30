@@ -50,7 +50,7 @@ const FLAG_META: {
   {
     key: "aiWeeklyRecap",
     label: "AI Weekly Recap",
-    description: "Generate a narrative CEO recap from weekly metrics automatically.",
+    description: "Generate a narrative executive recap from weekly metrics automatically.",
     icon: BarChart3,
   },
   {

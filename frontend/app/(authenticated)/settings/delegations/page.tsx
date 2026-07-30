@@ -220,10 +220,10 @@ function DelegationsContent() {
           defaultValue="received"
           className="flex min-h-0 flex-1 flex-col gap-3"
         >
-          <TabsList className="flex w-full justify-stretch sm:w-full">
+          <TabsList>
             <TabsTrigger
               value="received"
-              className="min-w-0 flex-1 gap-1.5 truncate"
+              className="min-w-0 gap-1.5 truncate"
             >
               Received
               {!loadingReceived && receivedCount > 0 ? (
@@ -234,7 +234,7 @@ function DelegationsContent() {
             </TabsTrigger>
             <TabsTrigger
               value="granted"
-              className="min-w-0 flex-1 gap-1.5 truncate"
+              className="min-w-0 gap-1.5 truncate"
             >
               Granted
               {!loadingGiven && activeGivenCount > 0 ? (

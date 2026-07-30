@@ -31,7 +31,7 @@ import { NavButtons } from "./nav-buttons";
 import { StepBody } from "./step-body";
 
 const ROLE_LABELS: Record<string, string> = {
-  CEO: "CEO",
+  FINAL: "FINAL",
   ADMIN: "Admin",
   HR: "Human Resources",
   ENGINEERING: "Engineering",

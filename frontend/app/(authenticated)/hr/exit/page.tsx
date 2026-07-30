@@ -5,7 +5,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useResignations,
   useHrReviewResignation,
-  useCeoReviewResignation,
+  useFinalReviewResignation,
   useWithdrawResignation,
   type Resignation,
 } from "@/hooks/api/hr";
@@ -36,17 +36,17 @@ export default function ExitManagementPage() {
   }, [refetch]);
 
   const hrReview = useHrReviewResignation();
-  const ceoReview = useCeoReviewResignation();
+  const finalReview = useFinalReviewResignation();
   const withdrawResignation = useWithdrawResignation();
 
   const userId = session?.user?.id;
   const isAdmin = useCan("hr:exit:manage");
   const isHR = isAdmin;
-  const isCEO = useCan("hr:exit:approve");
+  const canApproveExit = useCan("hr:exit:approve");
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [hrApproveId, setHrApproveId] = useState<number | null>(null);
-  const [ceoApproveId, setCeoApproveId] = useState<number | null>(null);
+  const [finalApproveId, setFinalApproveId] = useState<number | null>(null);
   const [rejectDialog, setRejectDialog] = useState<RejectDialogState | null>(null);
   const [rejectRemarksOpen, setRejectRemarksOpen] = useState(false);
   const [withdrawId, setWithdrawId] = useState<number | null>(null);
@@ -98,21 +98,21 @@ export default function ExitManagementPage() {
     );
   }, [hrApproveId, hrReview]);
 
-  const handleCeoApprove = useCallback(() => {
-    if (!ceoApproveId) return;
-    ceoReview.mutate(
-      { id: ceoApproveId, action: "approve" },
+  const handleFinalApprove = useCallback(() => {
+    if (!finalApproveId) return;
+    finalReview.mutate(
+      { id: finalApproveId, action: "approve" },
       {
         onSuccess: () => {
-          toast.success("Resignation approved by CEO");
-          setCeoApproveId(null);
+          toast.success("Resignation approved by FINAL");
+          setFinalApproveId(null);
         },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [ceoApproveId, ceoReview]);
+  }, [finalApproveId, finalReview]);
 
-  const handleOpenRejectDialog = useCallback((id: number, type: "hr" | "ceo") => {
+  const handleOpenRejectDialog = useCallback((id: number, type: "hr" | "final") => {
     setRejectDialog({ id, type });
     setRejectRemarksOpen(true);
   }, []);
@@ -141,8 +141,8 @@ export default function ExitManagementPage() {
     if (!open) setHrApproveId(null);
   }, []);
 
-  const handleCeoApproveClose = useCallback((open: boolean) => {
-    if (!open) setCeoApproveId(null);
+  const handleFinalApproveClose = useCallback((open: boolean) => {
+    if (!open) setFinalApproveId(null);
   }, []);
 
   const handleRejectRemarksOpenChange = useCallback(
@@ -162,8 +162,8 @@ export default function ExitManagementPage() {
     [handleOpenRejectDialog],
   );
 
-  const handleCeoReject = useCallback(
-    (id: number) => handleOpenRejectDialog(id, "ceo"),
+  const handleFinalReject = useCallback(
+    (id: number) => handleOpenRejectDialog(id, "final"),
     [handleOpenRejectDialog],
   );
 
@@ -205,7 +205,7 @@ export default function ExitManagementPage() {
       title="Exit Management"
       subtitle="Resignations, exit interviews, and offboarding"
       actions={
-        !isCEO && !hasActiveResignation ? (
+        !canApproveExit && !hasActiveResignation ? (
           <AnimatedIconButton
             icon={PlusIcon}
             iconSize={14}
@@ -227,7 +227,7 @@ export default function ExitManagementPage() {
           illustration={<EmptyPersonIllustration className="h-24 w-24" />}
           title="No resignations on record"
           description={
-            isCEO || isHR
+            canApproveExit || isHR
               ? "Employee resignations will appear here once submitted."
               : "Submit a resignation to start the exit process."
           }
@@ -242,13 +242,13 @@ export default function ExitManagementPage() {
               isExpanded={expandedIds.has(r.id)}
               isAdmin={isAdmin}
               isHR={isHR}
-              isCEO={isCEO}
+              canApproveExit={canApproveExit}
               userId={userId}
               onToggleExpand={toggleExpand}
               onHrApprove={setHrApproveId}
               onHrReject={handleHrReject}
-              onCeoApprove={setCeoApproveId}
-              onCeoReject={handleCeoReject}
+              onFinalApprove={setFinalApproveId}
+              onFinalReject={handleFinalReject}
               onWithdraw={setWithdrawId}
               onViewLetter={handleViewLetter}
             />
@@ -270,20 +270,20 @@ export default function ExitManagementPage() {
         open={hrApproveId !== null}
         onOpenChange={handleHrApproveClose}
         title="Approve Resignation (HR)"
-        description="Are you sure you want to approve this resignation? It will be forwarded to the CEO for final approval."
+        description="Are you sure you want to approve this resignation? It will be forwarded to the FINAL for final approval."
         confirmLabel="Approve"
         onConfirm={handleHrApprove}
         isPending={hrReview.isPending}
       />
 
       <ConfirmSheet
-        open={ceoApproveId !== null}
-        onOpenChange={handleCeoApproveClose}
-        title="Approve Resignation (CEO)"
+        open={finalApproveId !== null}
+        onOpenChange={handleFinalApproveClose}
+        title="Approve Resignation (FINAL)"
         description="Are you sure you want to give final approval for this resignation?"
         confirmLabel="Approve"
-        onConfirm={handleCeoApprove}
-        isPending={ceoReview.isPending}
+        onConfirm={handleFinalApprove}
+        isPending={finalReview.isPending}
       />
 
       <RejectRemarksSheet

@@ -163,7 +163,7 @@ export function RequestWfhDialog({ trigger }: RequestWfhDialogProps = {}) {
                   </Select>
                   {approvers.length === 0 ? (
                     <p className="text-xs text-muted-foreground">
-                      No HR or CEO role is assigned in this organization yet, so a WFH
+                      No one can approve WFH in this organization yet, so a WFH
                       request has no one to approve it.
                     </p>
                   ) : (

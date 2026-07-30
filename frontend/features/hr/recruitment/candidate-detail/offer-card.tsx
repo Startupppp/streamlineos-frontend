@@ -149,7 +149,7 @@ export function OfferCard({
               onClick={handleSubmitForApproval}
               disabled={isSubmittingApproval}
             >
-              Submit for CEO Approval
+              Submit for Final Approval
             </AnimatedIconButton>
           )}
 

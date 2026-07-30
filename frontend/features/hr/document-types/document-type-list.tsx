@@ -29,7 +29,7 @@ interface DocumentType {
 
 interface DocumentTypeListProps {
   items: DocumentType[];
-  isHROrCEO: boolean;
+  canManageEmployees: boolean;
   onEdit: (dt: DocumentType) => void;
   onDeactivate: (dt: DocumentType) => void;
   onReactivate: (dt: DocumentType) => void;
@@ -38,7 +38,7 @@ interface DocumentTypeListProps {
 
 export function DocumentTypeList({
   items,
-  isHROrCEO,
+  canManageEmployees,
   onEdit,
   onDeactivate,
   onReactivate,
@@ -194,9 +194,9 @@ export function DocumentTypeList({
           </div>
         ),
       },
-      ...(isHROrCEO ? [actionsColumn] : []),
+      ...(canManageEmployees ? [actionsColumn] : []),
     ];
-  }, [isHROrCEO, onEdit, onDeactivate, onReactivate]);
+  }, [canManageEmployees, onEdit, onDeactivate, onReactivate]);
 
   const emptyState = (
     <EmptyState
@@ -204,7 +204,7 @@ export function DocumentTypeList({
       title="No document types configured"
       description="Add document types to define what employees must submit during onboarding."
       action={
-        isHROrCEO
+        canManageEmployees
           ? { label: "Add Document Type", onClick: onCreateClick }
           : undefined
       }
