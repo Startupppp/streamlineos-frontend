@@ -1,6 +1,13 @@
 "use client";
 
-import { forwardRef, useCallback, type ComponentPropsWithoutRef } from "react";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ComponentPropsWithoutRef,
+} from "react";
 import Link from "next/link";
 import {
   CircleUser,
@@ -45,6 +52,8 @@ import {
 } from "@/components/theme/theme-switcher";
 import { resolveImageUrl, cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
+
+const HOVER_CLOSE_DELAY_MS = 175;
 
 type MenuLink = {
   href: string;
@@ -259,8 +268,8 @@ interface UserAvatarMenuProps {
 }
 
 export function UserAvatarMenu({
-  open,
-  onOpenChange,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
   hideTrigger = false,
 }: UserAvatarMenuProps) {
   const isMobile = useIsMobile();
@@ -279,6 +288,48 @@ export function UserAvatarMenu({
   const image = resolveImageUrl(session?.user?.image);
   const initials = name.charAt(0).toUpperCase();
 
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+  const enableHoverOpen = !isMobile && !hideTrigger;
+
+  const handleOpenChange = useCallback(
+    (next: boolean) => {
+      if (isControlled) {
+        controlledOnOpenChange?.(next);
+      } else {
+        setInternalOpen(next);
+      }
+    },
+    [isControlled, controlledOnOpenChange],
+  );
+
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearCloseTimeout = useCallback(() => {
+    if (closeTimeoutRef.current !== null) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+  }, []);
+
+  const handleHoverEnter = useCallback(() => {
+    if (!enableHoverOpen) return;
+    clearCloseTimeout();
+    handleOpenChange(true);
+  }, [enableHoverOpen, clearCloseTimeout, handleOpenChange]);
+
+  const handleHoverLeave = useCallback(() => {
+    if (!enableHoverOpen) return;
+    clearCloseTimeout();
+    closeTimeoutRef.current = setTimeout(() => {
+      handleOpenChange(false);
+      closeTimeoutRef.current = null;
+    }, HOVER_CLOSE_DELAY_MS);
+  }, [enableHoverOpen, clearCloseTimeout, handleOpenChange]);
+
+  useEffect(() => clearCloseTimeout, [clearCloseTimeout]);
+
   const handleSignOutClick = useCallback(() => {
     handleSignOut();
   }, [handleSignOut]);
@@ -292,7 +343,13 @@ export function UserAvatarMenu({
   });
 
   const trigger = (
-    <AccountTrigger name={name} image={image} initials={initials} />
+    <AccountTrigger
+      name={name}
+      image={image}
+      initials={initials}
+      onMouseEnter={enableHoverOpen ? handleHoverEnter : undefined}
+      onMouseLeave={enableHoverOpen ? handleHoverLeave : undefined}
+    />
   );
 
   const drawerBody = (
@@ -345,7 +402,7 @@ export function UserAvatarMenu({
       <Drawer
         direction="bottom"
         open={open}
-        onOpenChange={onOpenChange}
+        onOpenChange={handleOpenChange}
       >
         {!hideTrigger ? (
           <DrawerTrigger asChild>{trigger}</DrawerTrigger>
@@ -358,13 +415,15 @@ export function UserAvatarMenu({
   }
 
   return (
-    <DropdownMenu open={open} onOpenChange={onOpenChange}>
+    <DropdownMenu open={open} onOpenChange={handleOpenChange}>
       <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
         side="bottom"
         className="w-56 max-w-56 min-w-0 overflow-x-hidden"
         sideOffset={8}
+        onMouseEnter={enableHoverOpen ? handleHoverEnter : undefined}
+        onMouseLeave={enableHoverOpen ? handleHoverLeave : undefined}
       >
         <UserIdentity name={name} email={email} />
         {entries.map((entry, index) => {

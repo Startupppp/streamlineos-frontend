@@ -44,6 +44,7 @@
   Zap,
   ListChecks,
   History,
+  LogIn,
   BarChart2,
   LifeBuoy,
   Inbox,
@@ -2388,7 +2389,7 @@ export const NAV_GROUPS: NavGroup[] = [
       },
       {
         label: "Login History",
-        icon: History,
+        icon: LogIn,
         href: "/settings/login-history",
         requiredPermission: "settings:manage",
       },

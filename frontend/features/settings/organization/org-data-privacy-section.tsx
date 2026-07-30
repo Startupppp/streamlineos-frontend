@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,14 +11,18 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { Download, AlertTriangle } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Trash2Icon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { getApiError } from "@/lib/api-client";
+import {
+  OrgSettingsCard,
+  OrgSettingsActionRow,
+  SettingsField,
+} from "./org-settings-chrome";
 
 interface OrgDataPrivacySectionProps {
   canEdit: boolean;
@@ -35,21 +39,8 @@ const RETENTION_OPTIONS = [
 
 export function OrgDataPrivacySection({ canEdit }: OrgDataPrivacySectionProps) {
   const [retentionDays, setRetentionDays] = useState("365");
-  const [isExporting, setIsExporting] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isRequestingDelete, setIsRequestingDelete] = useState(false);
-
-  const handleExport = useCallback(async () => {
-    setIsExporting(true);
-    try {
-      await apiClient.post("/organization/data/export-request", {});
-      toast.success("Export request submitted. You will receive an email when it's ready.");
-    } catch (error) {
-      toast.error(getApiError(error));
-    } finally {
-      setIsExporting(false);
-    }
-  }, []);
 
   const handleDeleteRequest = useCallback(async () => {
     setIsRequestingDelete(true);
@@ -70,21 +61,22 @@ export function OrgDataPrivacySection({ canEdit }: OrgDataPrivacySectionProps) {
 
   return (
     <>
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm font-semibold">Data & Privacy</CardTitle>
-          <CardDescription>
-            Manage data retention, exports, and organization deletion.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Audit log retention</Label>
-            <p className="text-xs text-muted-foreground">
+      <OrgSettingsCard
+        title="Data & Privacy"
+        description="Manage data retention and organization deletion."
+        icon={<Shield className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
+        contentClassName="space-y-1"
+      >
+        <div className="flex flex-col gap-2.5 py-1 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+          <SettingsField
+            label="Audit log retention"
+            className="flex-1"
+          >
+            <p className="text-xs text-muted-foreground mb-1.5">
               How long to keep audit logs before automatic deletion.
             </p>
             <Select value={retentionDays} onValueChange={handleRetentionChange} disabled={!canEdit}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="h-8 w-full sm:w-44">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -95,55 +87,31 @@ export function OrgDataPrivacySection({ canEdit }: OrgDataPrivacySectionProps) {
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </SettingsField>
+        </div>
 
-          <div className="border-t pt-4 space-y-3">
-            <div>
-              <p className="text-sm font-medium">Export organization data</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Request a full export of all organization data. You will receive a download link by email.
-              </p>
-            </div>
-            <LoadingButton
-              variant="outline"
+        {canEdit && (
+          <OrgSettingsActionRow
+            title="Delete organization"
+            description="Permanently delete this organization and all its data after a 30-day grace period."
+            showBorder={false}
+            destructive
+            className="border-t border-border mt-2 pt-3"
+          >
+            <AnimatedIconButton
+              icon={Trash2Icon}
+              iconSize={14}
+              iconClassName="mr-0.5"
+              variant="destructive"
               size="sm"
-              className="gap-1"
-              onClick={handleExport}
-              disabled={!canEdit}
-              isPending={isExporting}
-              loadingText="Exporting…"
+              className="h-7 gap-1 text-xs"
+              onClick={handleOpenDeleteDialog}
             >
-              <Download className="h-3.5 w-3.5 mr-0.5" />
-              Request data export
-            </LoadingButton>
-          </div>
-
-          {canEdit && (
-            <div className="border-t pt-4 space-y-3">
-              <div className="flex items-start gap-2">
-                <AlertTriangle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-sm font-medium text-destructive">Delete organization</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Permanently delete this organization and all its data after a 30-day grace period.
-                  </p>
-                </div>
-              </div>
-              <AnimatedIconButton
-                icon={Trash2Icon}
-                iconSize={14}
-                iconClassName="mr-0.5"
-                variant="destructive"
-                size="sm"
-                className="gap-1"
-                onClick={handleOpenDeleteDialog}
-              >
-                Request organization deletion
-              </AnimatedIconButton>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              Request deletion
+            </AnimatedIconButton>
+          </OrgSettingsActionRow>
+        )}
+      </OrgSettingsCard>
 
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md">

@@ -91,8 +91,10 @@ export interface DataTableProps<T> {
 }
 
 function SortIndicator({ sorted }: { sorted: "asc" | "desc" | false }) {
-  if (sorted === "asc") return <ArrowUp className="h-3 w-3" />;
-  if (sorted === "desc") return <ArrowDown className="h-3 w-3" />;
+  if (sorted === "asc")
+    return <ArrowUp className="h-3 w-3 text-primary" />;
+  if (sorted === "desc")
+    return <ArrowDown className="h-3 w-3 text-primary" />;
   return <ArrowUpDown className="h-3 w-3 text-muted-foreground/50" />;
 }
 
@@ -252,9 +254,9 @@ export function DataTable<T>({
   }
 
   return (
-    <div className={cn("border border-border rounded-md flex flex-col min-w-0", className)}>
+    <div className={cn("rounded-md border border-border bg-card flex flex-col min-w-0", className)}>
       {(search !== undefined || toolbar !== undefined) && (
-        <div className="shrink-0 flex flex-col gap-2 border-b border-border bg-card bg-muted/40 px-2 py-1.5 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
+        <div className="shrink-0 flex flex-col gap-2 border-b border-border bg-muted/50 px-2 py-1.5 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
           {search !== undefined ? (
             <SearchInput
               value={search.value}
@@ -279,11 +281,11 @@ export function DataTable<T>({
             className={cn((!minWidth || minWidth === "content") && "min-w-max")}
           >
             <Table containerClassName="overflow-visible">
-              <TableHeader className="sticky top-0 z-10 bg-muted/40 border-b border-border backdrop-blur-sm">
+              <TableHeader className="sticky top-0 z-10 bg-muted/50 border-b border-border">
                 {table.getHeaderGroups().map((hg) => (
                   <TableRow
                     key={hg.id}
-                    className="border-b-2 border-border hover:bg-transparent"
+                    className="border-b border-border hover:bg-transparent"
                   >
                     {hg.headers.map((header) => {
                       const canSort = header.column.getCanSort();
@@ -300,7 +302,10 @@ export function DataTable<T>({
                             <button
                               type="button"
                               onClick={header.column.getToggleSortingHandler()}
-                              className="flex items-center gap-1 hover:text-foreground transition-colors"
+                              className={cn(
+                                "flex items-center gap-1 transition-colors hover:text-primary",
+                                sorted && "text-primary",
+                              )}
                             >
                               {flexRender(header.column.columnDef.header, header.getContext())}
                               <SortIndicator sorted={sorted} />
@@ -372,11 +377,11 @@ export function DataTable<T>({
             )}
           >
             <Table containerClassName="overflow-visible">
-              <TableHeader className="sticky top-0 z-10 bg-muted/40 border-b border-border backdrop-blur-sm">
+              <TableHeader className="sticky top-0 z-10 bg-muted/50 border-b border-border">
                 {table.getHeaderGroups().map((hg) => (
                   <TableRow
                     key={hg.id}
-                    className="border-b-2 border-border hover:bg-transparent"
+                    className="border-b border-border hover:bg-transparent"
                   >
                     {hg.headers.map((header) => {
                       const canSort = header.column.getCanSort();
@@ -400,7 +405,10 @@ export function DataTable<T>({
                             <button
                               type="button"
                               onClick={header.column.getToggleSortingHandler()}
-                              className="flex items-center gap-1 hover:text-foreground transition-colors"
+                              className={cn(
+                                "flex items-center gap-1 transition-colors hover:text-primary",
+                                sorted && "text-primary",
+                              )}
                             >
                               {flexRender(header.column.columnDef.header, header.getContext())}
                               <SortIndicator sorted={sorted} />
@@ -419,7 +427,7 @@ export function DataTable<T>({
                   <TableRow
                     key={row.id}
                     className={cn(
-                      "h-10 hover:bg-muted/30 transition-colors",
+                      "h-10 hover:bg-muted/50 transition-colors",
                       onRowClick && "cursor-pointer active:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
                       rowClassName?.(row.original, rowIndex),
                     )}
@@ -489,9 +497,9 @@ export function DataTableSkeleton({
   className?: string;
 }) {
   return (
-    <div className={cn("border border-border rounded-md overflow-hidden", className)}>
+    <div className={cn("rounded-md border border-border bg-card overflow-hidden", className)}>
       <Table>
-        <TableHeader className="bg-muted/40 border-b border-border">
+        <TableHeader className="bg-muted/50 border-b border-border">
           <TableRow className="hover:bg-transparent">
             {Array.from({ length: columns }).map((_, colIdx) => (
               <TableHead key={colIdx} className="px-2 py-2">

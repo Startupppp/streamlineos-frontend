@@ -291,7 +291,9 @@ export default function BusinessUnitsPage() {
       key: "code",
       header: "Code",
       cell: (u) => (
-        <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{u.code}</code>
+        <code className="rounded-md border border-border bg-muted px-1.5 py-0.5 text-xs font-medium text-foreground">
+          {u.code}
+        </code>
       ),
     },
     {
@@ -299,15 +301,8 @@ export default function BusinessUnitsPage() {
       header: "Status",
       cell: (u) => (
         <Badge
-          variant={u.status === "ACTIVE" ? "outline" : "secondary"}
-          className={cn(
-            "h-4 px-1.5 py-0 text-[9px]",
-            u.status === "ACTIVE"
-              ? "text-emerald-700 border-emerald-200 bg-emerald-50 dark:bg-emerald-900/20 dark:text-emerald-400"
-              : u.status === "ARCHIVED"
-                ? "text-amber-700 border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400"
-                : "",
-          )}
+          variant={u.status === "ACTIVE" ? "default" : "secondary"}
+          className="h-5 px-1.5 py-0 text-[10px]"
         >
           {u.status}
         </Badge>

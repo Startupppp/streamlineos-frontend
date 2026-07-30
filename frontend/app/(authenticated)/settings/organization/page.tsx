@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback } from "react";
 import { useCan } from "@/hooks/api/access";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyProjectsIllustration } from "@/components/illustrations";
-import { useOrgSettings, useUpdateOrgSettings, useUpdateOrgSecuritySettings } from "@/hooks/api/organization";
-import { useUploadFile } from "@/hooks/api/use-upload-file";
+import { useOrgSettings, useUpdateOrgSettings } from "@/hooks/api/organization";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -16,7 +15,6 @@ import { OrgLocalizationSection } from "@/features/settings/organization/org-loc
 import { OrgBusinessHoursSection } from "@/features/settings/organization/org-business-hours-section";
 import { OrgHolidayCalendarSection } from "@/features/settings/organization/org-holiday-calendar-section";
 import { OrgConfigSection } from "@/features/settings/organization/org-config-section";
-import { OrgSecuritySection } from "@/features/settings/organization/org-security-section";
 import { OrgDataPrivacySection } from "@/features/settings/organization/org-data-privacy-section";
 import { OrgDangerZoneSection } from "@/features/settings/organization/org-danger-zone-section";
 import { OrgIncomingTransferSection } from "@/features/settings/organization/org-incoming-transfer-section";
@@ -28,99 +26,40 @@ function isCurrencyCode(value: string): value is CurrencyCode {
   return (CURRENCY_CODES as readonly string[]).includes(value);
 }
 
-function isValidOctet(part: string): boolean {
-  if (!/^\d{1,3}$/.test(part)) return false;
-  const n = Number(part);
-  return n >= 0 && n <= 255;
-}
-
-function isValidIpOrPrefix(value: string): boolean {
-  if (value.endsWith(".")) {
-    const parts = value.slice(0, -1).split(".");
-    if (parts.length < 1 || parts.length > 3) return false;
-    return parts.every(isValidOctet);
-  }
-  const parts = value.split(".");
-  if (parts.length !== 4) return false;
-  return parts.every(isValidOctet);
-}
-
-function isValidDomain(value: string): boolean {
-  return /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/.test(value);
-}
-
 export default function OrganizationSettingsPage() {
   const { data: org, isLoading } = useOrgSettings();
 
   const [configInitialized, setConfigInitialized] = useState(false);
-  const [logoUrl, setLogoUrl] = useState<string>("");
-  const [logoUploading, setLogoUploading] = useState(false);
-  const logoInputRef = useRef<HTMLInputElement>(null);
   const [timezone, setTimezone] = useState<string>("");
   const [currency, setCurrency] = useState<CurrencyCode | "">("");
   const [fiscalYearStart, setFiscalYearStart] = useState<string>("");
   const [directoryPublic, setDirectoryPublic] = useState<boolean>(false);
-  const [primaryColor, setPrimaryColor] = useState<string>("");
-  const [loginBgUrl, setLoginBgUrl] = useState<string>("");
   const [isEditingConfig, setIsEditingConfig] = useState(false);
 
-  const [ipAllowlist, setIpAllowlist] = useState<string[]>([]);
-  const [ipInput, setIpInput] = useState("");
-  const [ipAllowlistInitialized, setIpAllowlistInitialized] = useState(false);
-
-  const [mfaEnforced, setMfaEnforced] = useState(false);
-  const [maxConcurrentSessions, setMaxConcurrentSessions] = useState<string>("");
-  const [allowedEmailDomains, setAllowedEmailDomains] = useState<string[]>([]);
-  const [domainInput, setDomainInput] = useState("");
-  const [securityInitialized, setSecurityInitialized] = useState(false);
-  const domainInputRef = useRef<HTMLInputElement>(null);
-
-  const uploadFileMutation = useUploadFile();
   const canEdit = useCan("settings:manage");
 
   const { mutate: updateOrg, isPending: isUpdatingOrg } = useUpdateOrgSettings();
-  const { mutate: updateSecurity, isPending: isUpdatingSecurity } = useUpdateOrgSecuritySettings();
-
-  const initSecurity = useCallback(() => {
-    if (!securityInitialized && org) {
-      setMfaEnforced(org.mfaEnforced ?? false);
-      setMaxConcurrentSessions(String(org.maxConcurrentSessions ?? ""));
-      setAllowedEmailDomains(org.allowedEmailDomains ?? []);
-      setSecurityInitialized(true);
-    }
-  }, [securityInitialized, org]);
 
   const initConfig = useCallback(() => {
     if (!configInitialized && org) {
-      setLogoUrl(org.logo ?? "");
       setTimezone(org.timezone ?? "Asia/Kolkata");
       const orgCurrency = org.currency ?? "INR";
       setCurrency(isCurrencyCode(orgCurrency) ? orgCurrency : "INR");
       setFiscalYearStart(String(org.fiscalYearStart ?? 4));
       setDirectoryPublic(org.directoryPublic ?? false);
-      setPrimaryColor(org.primaryColor ?? "");
-      setLoginBgUrl(org.loginBgUrl ?? "");
       setConfigInitialized(true);
     }
-    if (!ipAllowlistInitialized && org) {
-      setIpAllowlist(org.ipAllowlist ?? []);
-      setIpAllowlistInitialized(true);
-    }
-  }, [configInitialized, ipAllowlistInitialized, org]);
+  }, [configInitialized, org]);
 
-  if (!securityInitialized && org) initSecurity();
-  if ((!configInitialized || !ipAllowlistInitialized) && org) initConfig();
+  if (!configInitialized && org) initConfig();
 
   const handleStartEditConfig = useCallback(() => {
     if (!org) return;
-    setLogoUrl(org.logo ?? "");
     setTimezone(org.timezone ?? "Asia/Kolkata");
     const editCurrency = org.currency ?? "INR";
     setCurrency(isCurrencyCode(editCurrency) ? editCurrency : "INR");
     setFiscalYearStart(String(org.fiscalYearStart ?? 4));
     setDirectoryPublic(org.directoryPublic ?? false);
-    setPrimaryColor(org.primaryColor ?? "");
-    setLoginBgUrl(org.loginBgUrl ?? "");
     setIsEditingConfig(true);
   }, [org]);
 
@@ -128,20 +67,12 @@ export default function OrganizationSettingsPage() {
 
   const handleSaveConfig = useCallback(() => {
     const fiscalNum = fiscalYearStart ? parseInt(fiscalYearStart, 10) : undefined;
-    const colorVal = primaryColor.trim();
-    if (colorVal && !/^#[0-9a-fA-F]{6}$/.test(colorVal)) {
-      toast.error("Primary color must be a valid hex color (e.g. #bd882c)");
-      return;
-    }
     updateOrg(
       {
-        logo: logoUrl.trim() || null,
         timezone: timezone || undefined,
         currency: currency || undefined,
         fiscalYearStart: fiscalNum,
         directoryPublic,
-        primaryColor: colorVal || null,
-        loginBgUrl: loginBgUrl.trim() || null,
       },
       {
         onSuccess: () => {
@@ -153,127 +84,35 @@ export default function OrganizationSettingsPage() {
         },
       },
     );
-  }, [logoUrl, timezone, currency, fiscalYearStart, directoryPublic, primaryColor, loginBgUrl, updateOrg]);
+  }, [timezone, currency, fiscalYearStart, directoryPublic, updateOrg]);
 
-  const handleAddIp = useCallback(() => {
-    const ip = ipInput.trim();
-    if (!ip) return;
-    if (!isValidIpOrPrefix(ip)) {
-      toast.error("Enter a valid IP address (e.g. 203.0.113.5) or prefix (e.g. 192.168.1.)");
-      return;
-    }
-    if (ipAllowlist.includes(ip)) {
-      toast.error("This IP is already in the allowlist");
-      return;
-    }
-    setIpAllowlist((prev) => [...prev, ip]);
-    setIpInput("");
-  }, [ipInput, ipAllowlist]);
-
-  const handleRemoveIp = useCallback((ip: string) => {
-    setIpAllowlist((prev) => prev.filter((i) => i !== ip));
-  }, []);
-
-  const handleSaveIpAllowlist = useCallback(() => {
-    updateOrg(
-      { ipAllowlist },
-      {
-        onSuccess: () => toast.success("IP allowlist saved"),
-        onError: (e) => toast.error(getErrorMessage(e)),
-      },
-    );
-  }, [ipAllowlist, updateOrg]);
-
-  const handleLogoUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setLogoUploading(true);
-    try {
-      const result = await uploadFileMutation.mutateAsync({ file, folder: "org-logos" });
-      setLogoUrl(result.url);
-      toast.success("Logo uploaded");
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setLogoUploading(false);
-      if (logoInputRef.current) logoInputRef.current.value = "";
-    }
-  }, [uploadFileMutation]);
-
-  const handleLogoUploadClick = useCallback(() => logoInputRef.current?.click(), []);
-  const handleLogoUrlChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setLogoUrl(e.target.value), []);
   const handleTimezoneChange = useCallback((value: string) => setTimezone(value), []);
   const handleCurrencyChange = useCallback((value: string) => {
     if (isCurrencyCode(value)) setCurrency(value);
   }, []);
   const handleFiscalYearStartChange = useCallback((value: string) => setFiscalYearStart(value), []);
   const handleDirectoryPublicChange = useCallback((checked: boolean) => setDirectoryPublic(checked), []);
-  const handlePrimaryColorChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setPrimaryColor(e.target.value), []);
-  const handleLoginBgUrlChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setLoginBgUrl(e.target.value), []);
-  const handleMaxConcurrentSessionsChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setMaxConcurrentSessions(e.target.value), []);
-
-  const handleAddDomain = useCallback(() => {
-    const domain = domainInput.trim().toLowerCase().replace(/^@/, "");
-    if (!domain) return;
-    if (!isValidDomain(domain)) {
-      toast.error("Enter a valid domain (e.g. company.com)");
-      return;
-    }
-    if (allowedEmailDomains.includes(domain)) {
-      toast.error("This domain is already in the list");
-      return;
-    }
-    setAllowedEmailDomains((prev) => [...prev, domain]);
-    setDomainInput("");
-    domainInputRef.current?.focus();
-  }, [domainInput, allowedEmailDomains]);
-
-  const handleRemoveDomain = useCallback((domain: string) => {
-    setAllowedEmailDomains((prev) => prev.filter((d) => d !== domain));
-  }, []);
-
-  const handleDomainInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setDomainInput(e.target.value), []);
-  const handleDomainInputKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") { e.preventDefault(); handleAddDomain(); }
-  }, [handleAddDomain]);
-
-  const handleIpInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setIpInput(e.target.value), []);
-  const handleIpInputKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") { e.preventDefault(); handleAddIp(); }
-  }, [handleAddIp]);
-
-  const handleSaveSecurity = useCallback(() => {
-    let maxSessionsNum: number | null = null;
-    if (maxConcurrentSessions) {
-      const parsedSessions = parseInt(maxConcurrentSessions, 10);
-      if (isNaN(parsedSessions) || parsedSessions < 1 || parsedSessions > 100) {
-        toast.error("Max concurrent sessions must be between 1 and 100");
-        return;
-      }
-      maxSessionsNum = parsedSessions;
-    }
-    updateSecurity(
-      { mfaEnforced, allowedEmailDomains, maxConcurrentSessions: maxSessionsNum },
-      {
-        onSuccess: () => toast.success("Security settings saved"),
-        onError: (err) => toast.error(getErrorMessage(err)),
-      },
-    );
-  }, [mfaEnforced, maxConcurrentSessions, allowedEmailDomains, updateSecurity]);
 
   if (isLoading) {
     return (
       <PageWrapper title="Organization" subtitle="Manage your organization profile, branding, and lifecycle settings">
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-8 w-48 mb-2" />
-            <Skeleton className="h-4 w-64" />
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-          </CardContent>
-        </Card>
+        <div className="space-y-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i} className="rounded-lg shadow-sm">
+              <CardHeader className="gap-1 px-4 pt-3.5 pb-2">
+                <Skeleton className="h-4 w-36" />
+                <Skeleton className="h-3 w-64 max-w-full" />
+              </CardHeader>
+              <CardContent className="px-4 pb-3.5 space-y-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full hidden lg:block" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </PageWrapper>
     );
   }
@@ -281,17 +120,17 @@ export default function OrganizationSettingsPage() {
   if (!org) {
     return (
       <PageWrapper title="Organization" subtitle="Manage your organization profile, branding, and lifecycle settings">
-        <Card>
-          <CardHeader className="text-center">
-            <div className="flex justify-center mb-4">
+        <Card className="rounded-lg shadow-sm">
+          <CardHeader className="text-center px-4 pt-6 pb-2">
+            <div className="flex justify-center mb-3">
               <EmptyProjectsIllustration />
             </div>
-            <CardTitle>No Organization Found</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-sm font-semibold">No Organization Found</CardTitle>
+            <CardDescription className="text-xs">
               Create your first organization to start managing your team and projects.
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex justify-center pb-6">
+          <CardContent className="flex justify-center px-4 pb-5">
             <p className="text-sm text-muted-foreground">
               Please contact your administrator to set up an organization.
             </p>
@@ -303,7 +142,7 @@ export default function OrganizationSettingsPage() {
 
   return (
     <PageWrapper title="Organization" subtitle="Manage your organization profile, branding, and lifecycle settings">
-      <div className="space-y-4">
+      <div className="space-y-3.5">
         <OrgProfileSection org={org} canEdit={canEdit} />
 
         <OrgBrandingSection org={org} canEdit={canEdit} />
@@ -320,54 +159,18 @@ export default function OrganizationSettingsPage() {
           <OrgConfigSection
             org={org}
             isEditingConfig={isEditingConfig}
-            logoUrl={logoUrl}
-            logoUploading={logoUploading}
             timezone={timezone}
             currency={currency}
             fiscalYearStart={fiscalYearStart}
             directoryPublic={directoryPublic}
-            primaryColor={primaryColor}
-            loginBgUrl={loginBgUrl}
             isUpdating={isUpdatingOrg}
-            logoInputRef={logoInputRef}
             onStartEdit={handleStartEditConfig}
             onCancel={handleCancelEditConfig}
             onSave={handleSaveConfig}
-            onLogoUrlChange={handleLogoUrlChange}
-            onLogoUpload={handleLogoUpload}
-            onLogoUploadClick={handleLogoUploadClick}
             onTimezoneChange={handleTimezoneChange}
             onCurrencyChange={handleCurrencyChange}
             onFiscalYearStartChange={handleFiscalYearStartChange}
             onDirectoryPublicChange={handleDirectoryPublicChange}
-            onPrimaryColorChange={handlePrimaryColorChange}
-            onLoginBgUrlChange={handleLoginBgUrlChange}
-          />
-        )}
-
-        {canEdit && (
-          <OrgSecuritySection
-            mfaEnforced={mfaEnforced}
-            maxConcurrentSessions={maxConcurrentSessions}
-            allowedEmailDomains={allowedEmailDomains}
-            domainInput={domainInput}
-            domainInputRef={domainInputRef}
-            ipAllowlist={ipAllowlist}
-            ipInput={ipInput}
-            isUpdatingSecurity={isUpdatingSecurity}
-            isUpdatingOrg={isUpdatingOrg}
-            onMfaChange={setMfaEnforced}
-            onMaxConcurrentSessionsChange={handleMaxConcurrentSessionsChange}
-            onDomainInputChange={handleDomainInputChange}
-            onDomainInputKeyDown={handleDomainInputKeyDown}
-            onAddDomain={handleAddDomain}
-            onRemoveDomain={handleRemoveDomain}
-            onSaveSecurity={handleSaveSecurity}
-            onIpInputChange={handleIpInputChange}
-            onIpInputKeyDown={handleIpInputKeyDown}
-            onAddIp={handleAddIp}
-            onRemoveIp={handleRemoveIp}
-            onSaveIpAllowlist={handleSaveIpAllowlist}
           />
         )}
 

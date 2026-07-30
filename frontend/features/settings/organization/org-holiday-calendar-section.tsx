@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Button } from "@/components/ui/button";
@@ -19,9 +18,15 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { CalendarDays } from "lucide-react";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { InfoIcon, PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
@@ -29,6 +34,7 @@ import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { format, parseISO } from "date-fns";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { OrgSettingsCard } from "./org-settings-chrome";
 
 type OrgHoliday = {
   id: string;
@@ -100,6 +106,29 @@ function DeleteHolidayButton({ holidayId, onDelete, disabled }: { holidayId: str
   );
 }
 
+function HolidayUsageInfo() {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <TooltipProvider delayDuration={200}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            className="inline-flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
+            aria-label="Holiday calendar usage"
+            {...hoverHandlers}
+          >
+            <InfoIcon ref={iconRef} size={14} />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom" className="max-w-[16rem] text-xs">
+          Used for attendance, leave, and SLA calculations
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
 export function OrgHolidayCalendarSection({ canEdit }: OrgHolidayCalendarSectionProps) {
   const { data: holidays, isLoading } = useOrgHolidays();
   const createMutation = useCreateHoliday();
@@ -124,62 +153,77 @@ export function OrgHolidayCalendarSection({ canEdit }: OrgHolidayCalendarSection
   const handleCancelAdd = useCallback(() => { setShowAdd(false); form.reset(); }, [form]);
   const handleDelete = useCallback((id: string) => { deleteMutation.mutate(id); }, [deleteMutation]);
 
+  const holidayCount = holidays?.length ?? 0;
+
   return (
-    <Card className="rounded-lg border border-border">
-      <CardHeader className="pb-2 flex flex-row items-start justify-between">
-        <div>
-          <CardTitle className="text-sm font-semibold flex items-center gap-2">
-            <CalendarDays className="h-4 w-4 text-primary" />
-            Holiday Calendar
-          </CardTitle>
-          <CardDescription>Public holidays and non-working days for your organization.</CardDescription>
-        </div>
-        {canEdit && !showAdd && (
-          <AnimatedIconButton icon={PlusIcon} iconSize={12} iconClassName="mr-1.5" variant="outline" size="sm" onClick={handleOpenAdd} className="h-8 text-xs">
+    <OrgSettingsCard
+      title="Holiday Calendar"
+      description="Public holidays and non-working days for your organization."
+      icon={<CalendarDays className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
+      titleExtra={
+        <>
+          {!isLoading && (
+            <span className="text-xs font-normal text-muted-foreground tabular-nums">
+              {holidayCount}
+            </span>
+          )}
+          <HolidayUsageInfo />
+        </>
+      }
+      action={
+        canEdit && !showAdd ? (
+          <AnimatedIconButton icon={PlusIcon} iconSize={12} iconClassName="mr-1.5" variant="outline" size="sm" onClick={handleOpenAdd} className="h-7 px-2.5 text-xs shrink-0">
             Add
           </AnimatedIconButton>
-        )}
-      </CardHeader>
-      <CardContent className="pb-5 space-y-3">
-        {showAdd && (
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleAdd)} className="border rounded-lg p-3 space-y-3 bg-muted/30">
-              <div className="grid grid-cols-2 gap-3">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Holiday name <span className="text-destructive">*</span></FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Republic Day" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="date"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Date <span className="text-destructive">*</span></FormLabel>
-                      <FormControl>
-                        <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+        ) : undefined
+      }
+      contentClassName="space-y-3"
+    >
+      {showAdd && (
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleAdd)} className="space-y-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem className="gap-1.5">
+                    <FormLabel className="text-xs">Holiday name <span className="text-destructive">*</span></FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Republic Day" className="h-8" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="date"
+                render={({ field }) => (
+                  <FormItem className="gap-1.5">
+                    <FormLabel className="text-xs">Date <span className="text-destructive">*</span></FormLabel>
+                    <FormControl>
+                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
               <FormField
                 control={form.control}
                 name="recurring"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="gap-0">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <FormControl>
-                        <Checkbox checked={field.value ?? false} onCheckedChange={field.onChange} id="recurring" />
+                        <Checkbox
+                          id="recurring"
+                          checked={field.value ?? false}
+                          onCheckedChange={field.onChange}
+                          className="bg-card border-border"
+                        />
                       </FormControl>
                       <span className="text-sm">Repeat annually</span>
                     </label>
@@ -187,7 +231,7 @@ export function OrgHolidayCalendarSection({ canEdit }: OrgHolidayCalendarSection
                   </FormItem>
                 )}
               />
-              <div className="flex gap-2">
+              <div className="flex gap-2 sm:ml-auto">
                 <LoadingButton type="submit" size="sm" isPending={createMutation.isPending} className="gap-1.5 h-8" loadingText="Saving…">
                   Save
                 </LoadingButton>
@@ -195,38 +239,35 @@ export function OrgHolidayCalendarSection({ canEdit }: OrgHolidayCalendarSection
                   Cancel
                 </Button>
               </div>
-            </form>
-          </Form>
-        )}
+            </div>
+          </form>
+        </Form>
+      )}
 
-        {isLoading ? (
-          <div className="space-y-2">
-            {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-9 w-full" />)}
-          </div>
-        ) : !holidays || holidays.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-4 text-center">No holidays added yet.</p>
-        ) : (
-          <div className="space-y-1 max-h-72 overflow-y-auto">
-            {holidays.map((h) => (
-              <div key={h.id} className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted/50 group">
-                <div className="flex-1 min-w-0">
-                  <TruncatedText text={h.name} className="text-sm font-medium" />
-                  <p className="text-xs text-muted-foreground">
-                    {format(parseISO(h.date), "dd MMM yyyy")}
-                    {h.recurring && " · Recurring annually"}
-                  </p>
-                </div>
-                {canEdit && (
-                  <DeleteHolidayButton holidayId={h.id} onDelete={handleDelete} disabled={deleteMutation.isPending} />
-                )}
+      {isLoading ? (
+        <div className="space-y-1.5">
+          {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-9 w-full" />)}
+        </div>
+      ) : !holidays || holidays.length === 0 ? (
+        <p className="text-sm text-muted-foreground py-3 text-center">No holidays added yet.</p>
+      ) : (
+        <div className="space-y-0.5 max-h-72 overflow-y-auto">
+          {holidays.map((h) => (
+            <div key={h.id} className="flex items-center gap-3 px-2.5 py-1.5 rounded-md hover:bg-muted/50 group">
+              <div className="flex-1 min-w-0">
+                <TruncatedText text={h.name} className="text-sm font-medium" />
+                <p className="text-xs text-muted-foreground">
+                  {format(parseISO(h.date), "dd MMM yyyy")}
+                  {h.recurring && " · Recurring annually"}
+                </p>
               </div>
-            ))}
-          </div>
-        )}
-        <p className="text-[11px] text-muted-foreground">
-          {(holidays?.length ?? 0)} holiday{(holidays?.length ?? 0) !== 1 ? "s" : ""} · Used for attendance, leave, and SLA calculations
-        </p>
-      </CardContent>
-    </Card>
+              {canEdit && (
+                <DeleteHolidayButton holidayId={h.id} onDelete={handleDelete} disabled={deleteMutation.isPending} />
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </OrgSettingsCard>
   );
 }

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { memo } from "react";
 import Link from "next/link";
@@ -79,6 +79,7 @@ export const RecentProjectsCard = memo(function RecentProjectsCard({ projects, i
               label: "Create Project",
               onClick: onCreateProject,
             }}
+            className="h-full min-h-0 overflow-y-auto scrollbar-hide"
           />
         )}
       </CardContent>

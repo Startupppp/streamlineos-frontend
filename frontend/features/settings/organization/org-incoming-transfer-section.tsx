@@ -3,7 +3,6 @@
 import { useState, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import { ArrowRightLeft, Clock } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -14,6 +13,7 @@ import {
 } from "@/hooks/api/ownership";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { OrgSettingsCard } from "./org-settings-chrome";
 
 export function OrgIncomingTransferSection() {
   const { data: incomingData } = useIncomingOrgTransfers();
@@ -89,63 +89,61 @@ export function OrgIncomingTransferSection() {
 
   return (
     <>
-      <Card className="border-amber-300/60 dark:border-amber-700/50">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold flex items-center gap-2 text-amber-800 dark:text-amber-400">
-            <ArrowRightLeft className="h-4 w-4 shrink-0" />
-            Incoming Ownership Transfer
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-0">
-          <div className="flex items-start justify-between gap-4 py-3">
-            <div className="min-w-0 space-y-1">
-              <p className="text-sm font-medium">
-                {senderName
-                  ? `${senderName} is transferring organization ownership to you`
-                  : "The current organization owner is transferring ownership to you"}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Accepting makes you the org owner and demotes the current owner.
-                This cannot be undone.
-              </p>
-              <div className="flex flex-wrap items-center gap-2 pt-1">
-                <Badge
-                  variant="outline"
-                  className="text-xs gap-1 text-amber-700 border-amber-300 bg-amber-50 dark:text-amber-400 dark:border-amber-700/50 dark:bg-amber-500/10"
-                >
-                  <Clock className="h-3 w-3" />
-                  Expires {expiresLabel}
-                </Badge>
-                {incomingTransfer.reason && (
-                  <span className="text-xs text-muted-foreground">
-                    Reason: {incomingTransfer.reason}
-                  </span>
-                )}
-              </div>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <LoadingButton
+      <OrgSettingsCard
+        title="Incoming Ownership Transfer"
+        icon={<ArrowRightLeft className="h-3.5 w-3.5 shrink-0" />}
+        className="border-amber-300/60 dark:border-amber-700/50"
+        titleClassName="text-amber-800 dark:text-amber-400"
+        contentClassName="space-y-0"
+      >
+        <div className="flex flex-col gap-3 py-1 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+          <div className="min-w-0 space-y-1">
+            <p className="text-sm font-medium">
+              {senderName
+                ? `${senderName} is transferring organization ownership to you`
+                : "The current organization owner is transferring ownership to you"}
+            </p>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Accepting makes you the org owner and demotes the current owner.
+              This cannot be undone.
+            </p>
+            <div className="flex flex-wrap items-center gap-2 pt-0.5">
+              <Badge
                 variant="outline"
-                size="sm"
-                className="h-7 text-xs"
-                isPending={declineMutation.isPending}
-                onClick={handleOpenDecline}
+                className="text-xs gap-1 text-amber-700 border-amber-300 bg-amber-50 dark:text-amber-400 dark:border-amber-700/50 dark:bg-amber-500/10"
               >
-                Decline
-              </LoadingButton>
-              <LoadingButton
-                variant="default"
-                size="sm"
-                className="h-7 text-xs"
-                isPending={acceptMutation.isPending}
-                onClick={handleOpenAccept}
-              >
-                Accept
-              </LoadingButton>
+                <Clock className="h-3 w-3" />
+                Expires {expiresLabel}
+              </Badge>
+              {incomingTransfer.reason && (
+                <span className="text-xs text-muted-foreground">
+                  Reason: {incomingTransfer.reason}
+                </span>
+              )}
             </div>
           </div>
-        </CardContent>
-      </Card>
+          <div className="flex items-center gap-2 shrink-0 [&_button]:flex-1 sm:[&_button]:flex-none">
+            <LoadingButton
+              variant="outline"
+              size="sm"
+              className="h-7 text-xs"
+              isPending={declineMutation.isPending}
+              onClick={handleOpenDecline}
+            >
+              Decline
+            </LoadingButton>
+            <LoadingButton
+              variant="default"
+              size="sm"
+              className="h-7 text-xs"
+              isPending={acceptMutation.isPending}
+              onClick={handleOpenAccept}
+            >
+              Accept
+            </LoadingButton>
+          </div>
+        </div>
+      </OrgSettingsCard>
 
       <ConfirmDialog
         open={acceptOpen}

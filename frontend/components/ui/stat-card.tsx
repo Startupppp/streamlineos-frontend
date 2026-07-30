@@ -3,6 +3,12 @@
 import Link from "next/link";
 import { Children, memo, type ComponentType, type ReactNode } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 export type StatTone =
@@ -172,6 +178,27 @@ export function StatCardGridSkeleton({
   );
 }
 
+function TruncatedTooltipText({
+  text,
+  className,
+}: {
+  text: string;
+  className?: string;
+}) {
+  return (
+    <TooltipProvider delayDuration={200}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <p className={className}>{text}</p>
+        </TooltipTrigger>
+        <TooltipContent side="bottom" className="max-w-xs text-xs">
+          {text}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
 export const StatCard = memo(function StatCard({
   label,
   value,
@@ -230,14 +257,13 @@ export const StatCard = memo(function StatCard({
         </div>
       )}
       <div className="min-w-0 flex-1 space-y-0.5">
-        <p
+        <TruncatedTooltipText
+          text={label}
           className={cn(
             "text-[11px] font-medium leading-tight truncate",
             featured ? "text-primary-foreground/70" : "text-muted-foreground",
           )}
-        >
-          {label}
-        </p>
+        />
         {isLoading ? (
           <Skeleton
             className={cn("h-5 w-14", featured && "bg-primary-foreground/20")}
@@ -266,14 +292,13 @@ export const StatCard = memo(function StatCard({
           </p>
         )}
         {!isLoading && !effectiveDelta && effectiveHint && (
-          <p
+          <TruncatedTooltipText
+            text={effectiveHint}
             className={cn(
               "text-[11px] leading-snug truncate",
               featured ? "text-primary-foreground/70" : "text-muted-foreground",
             )}
-          >
-            {effectiveHint}
-          </p>
+          />
         )}
       </div>
       {!isLoading && sparkData && sparkData.length > 1 ? (

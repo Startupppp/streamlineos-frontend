@@ -6,7 +6,6 @@ import { AlertTriangle, Clock } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,10 +37,17 @@ import {
 import { clearBackendTokenCache } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { OrgSettings } from "@/types/organization";
+import {
+  OrgSettingsCard,
+  OrgSettingsActionRow,
+} from "./org-settings-chrome";
 
 interface Props {
   org: OrgSettings;
 }
+
+const DESTRUCTIVE_OUTLINE_BTN =
+  "shrink-0 border-destructive/50 text-destructive hover:border-destructive hover:bg-destructive/10 hover:text-destructive";
 
 export function OrgDangerZoneSection({ org }: Props) {
   const canManage = useCan("settings:manage");
@@ -240,26 +246,25 @@ export function OrgDangerZoneSection({ org }: Props) {
 
   return (
     <>
-      <Card className="border-destructive/40">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold text-destructive flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4" />
-            Danger Zone
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-0">
+      <OrgSettingsCard
+        title="Danger Zone"
+        description="Irreversible and high-impact organization actions."
+        icon={<AlertTriangle className="h-3.5 w-3.5 shrink-0" />}
+        className="border-destructive/40"
+        titleClassName="text-destructive"
+        contentClassName="space-y-0 pt-0"
+      >
           {isOwner && (
-            <div className="flex items-center justify-between py-3 border-b">
-              <div>
-                <p className="text-sm font-medium">Transfer Ownership</p>
-                <p className="text-xs text-muted-foreground">
-                  {pendingTransfer
-                    ? "Awaiting acceptance — the selected member must confirm the transfer"
-                    : "Send a transfer request to hand over organization ownership"}
-                </p>
-              </div>
+            <OrgSettingsActionRow
+              title="Transfer Ownership"
+              description={
+                pendingTransfer
+                  ? "Awaiting acceptance — the selected member must confirm the transfer"
+                  : "Send a transfer request to hand over organization ownership"
+              }
+            >
               {pendingTransfer ? (
-                <div className="flex items-center gap-2 shrink-0">
+                <>
                   <Badge
                     variant="outline"
                     className="text-xs gap-1 text-amber-700 border-amber-300 bg-amber-50 dark:text-amber-400 dark:border-amber-700/50 dark:bg-amber-500/10"
@@ -276,98 +281,87 @@ export function OrgDangerZoneSection({ org }: Props) {
                   >
                     Cancel
                   </LoadingButton>
-                </div>
+                </>
               ) : (
                 <Button
                   variant="outline"
                   size="sm"
-                  className="border-destructive/50 text-destructive hover:bg-destructive/10 shrink-0"
+                  className={DESTRUCTIVE_OUTLINE_BTN}
                   onClick={handleOpenTransfer}
                   disabled={pendingTransfersQuery.isLoading}
                 >
                   Transfer
                 </Button>
               )}
-            </div>
+            </OrgSettingsActionRow>
           )}
 
           {!isOwner && (
-            <div className="flex items-center justify-between py-3 border-b">
-              <div>
-                <p className="text-sm font-medium">Leave Organization</p>
-                <p className="text-xs text-muted-foreground">
-                  Remove yourself from this organization. This cannot be undone.
-                </p>
-              </div>
+            <OrgSettingsActionRow
+              title="Leave Organization"
+              description="Remove yourself from this organization. This cannot be undone."
+            >
               <Button
                 variant="outline"
                 size="sm"
-                className="border-destructive/50 text-destructive hover:bg-destructive/10 shrink-0"
+                className={DESTRUCTIVE_OUTLINE_BTN}
                 onClick={handleOpenLeave}
               >
                 Leave
               </Button>
-            </div>
+            </OrgSettingsActionRow>
           )}
 
           {isOwner && (
             <>
               {org.status === "ARCHIVED" ? (
-                <div className="flex items-center justify-between py-3 border-b">
-                  <div>
-                    <p className="text-sm font-medium">Restore Organization</p>
-                    <p className="text-xs text-muted-foreground">
-                      Restore access for all members
-                    </p>
-                  </div>
+                <OrgSettingsActionRow
+                  title="Restore Organization"
+                  description="Restore access for all members"
+                >
                   <Button
                     variant="outline"
                     size="sm"
-                    className="border-destructive/50 text-destructive hover:bg-destructive/10 shrink-0"
+                    className={DESTRUCTIVE_OUTLINE_BTN}
                     onClick={handleOpenRestore}
                   >
                     Restore
                   </Button>
-                </div>
+                </OrgSettingsActionRow>
               ) : (
-                <div className="flex items-center justify-between py-3 border-b">
-                  <div>
-                    <p className="text-sm font-medium">Archive Organization</p>
-                    <p className="text-xs text-muted-foreground">
-                      Members will lose access until the org is restored
-                    </p>
-                  </div>
+                <OrgSettingsActionRow
+                  title="Archive Organization"
+                  description="Members will lose access until the org is restored"
+                >
                   <Button
                     variant="outline"
                     size="sm"
-                    className="border-destructive/50 text-destructive hover:bg-destructive/10 shrink-0"
+                    className={DESTRUCTIVE_OUTLINE_BTN}
                     onClick={handleOpenArchive}
                   >
                     Archive
                   </Button>
-                </div>
+                </OrgSettingsActionRow>
               )}
 
-              <div className="flex items-center justify-between py-3">
-                <div>
-                  <p className="text-sm font-medium">Delete Organization</p>
-                  <p className="text-xs text-muted-foreground">
-                    Permanently delete this organization and all its data. This cannot be undone.
-                  </p>
-                </div>
+              <OrgSettingsActionRow
+                title="Delete Organization"
+                description="Permanently delete this organization and all its data. This cannot be undone."
+                showBorder={false}
+                destructive
+              >
                 <Button
                   variant="outline"
                   size="sm"
-                  className="border-destructive/50 text-destructive hover:bg-destructive/10 shrink-0"
+                  className={DESTRUCTIVE_OUTLINE_BTN}
                   onClick={handleOpenDelete}
                 >
                   Delete
                 </Button>
-              </div>
+              </OrgSettingsActionRow>
             </>
           )}
-        </CardContent>
-      </Card>
+      </OrgSettingsCard>
 
       {isOwner && (
         <Dialog open={transferOpen} onOpenChange={handleTransferOpenChange}>

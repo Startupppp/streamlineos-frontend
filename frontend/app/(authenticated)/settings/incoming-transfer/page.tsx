@@ -1,7 +1,8 @@
 "use client";
 
-import { ArrowRightLeft } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyTransferIllustration } from "@/components/illustrations";
 import { OrgIncomingTransferSection } from "@/features/settings/organization/org-incoming-transfer-section";
 import { useIncomingOrgTransfers } from "@/hooks/api/ownership";
 import { Card, CardContent } from "@/components/ui/card";
@@ -27,13 +28,14 @@ export default function IncomingTransferPage() {
       ) : hasPendingTransfer ? (
         <OrgIncomingTransferSection />
       ) : (
-        <Card>
-          <CardContent className="py-12 flex flex-col items-center gap-3 text-center">
-            <ArrowRightLeft className="h-8 w-8 text-muted-foreground/40" />
-            <p className="text-sm text-muted-foreground">No pending ownership transfer</p>
-            <p className="text-xs text-muted-foreground/60">
-              If an organization owner nominates you, the transfer request will appear here.
-            </p>
+        <Card className="flex min-h-0 flex-1 flex-col">
+          <CardContent className="flex flex-1 flex-col p-0">
+            <EmptyState
+              illustration={<EmptyTransferIllustration />}
+              title="No pending ownership transfer"
+              description="If an organization owner nominates you, the transfer request will appear here."
+              className="flex-1 border-0 bg-transparent rounded-none"
+            />
           </CardContent>
         </Card>
       )}

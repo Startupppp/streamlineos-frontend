@@ -237,20 +237,38 @@ function ProductGrid({
   onClose,
   shouldReduceMotion,
 }: ProductGridProps) {
-  const visibleProducts = useMemo(
-    () =>
-      PRODUCT_DEFINITIONS.filter((product) => {
-        const groups = getNavGroupsForProduct(
-          product.key,
-          effectiveRole,
-          permissions,
-          enabledModules,
-        );
-        const hasAccess = groups.some((group) => group.routes.length > 0);
-        return hasAccess || canManageModules;
-      }),
-    [effectiveRole, permissions, enabledModules, canManageModules],
-  );
+  const visibleProducts = useMemo(() => {
+    const products = PRODUCT_DEFINITIONS.filter((product) => {
+      if (product.key === "administration") return false;
+      const groups = getNavGroupsForProduct(
+        product.key,
+        effectiveRole,
+        permissions,
+        enabledModules,
+      );
+      const hasAccess = groups.some((group) => group.routes.length > 0);
+      return hasAccess || canManageModules;
+    });
+
+    return products.sort((a, b) => {
+      const aLockedKey = PRODUCT_TO_LOCKED_MODULE[a.key];
+      const bLockedKey = PRODUCT_TO_LOCKED_MODULE[b.key];
+      const aEnabled =
+        isModuleEnabled(a.key, enabledModules) &&
+        !(aLockedKey !== undefined && lockedModules.includes(aLockedKey));
+      const bEnabled =
+        isModuleEnabled(b.key, enabledModules) &&
+        !(bLockedKey !== undefined && lockedModules.includes(bLockedKey));
+      if (aEnabled === bEnabled) return 0;
+      return aEnabled ? -1 : 1;
+    });
+  }, [
+    effectiveRole,
+    permissions,
+    enabledModules,
+    lockedModules,
+    canManageModules,
+  ]);
 
   return (
     <>

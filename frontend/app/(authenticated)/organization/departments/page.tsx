@@ -432,7 +432,7 @@ export default function OrgDepartmentsPage() {
             onClick={handleToggleArchived}
           >
             <Archive className="h-4 w-4 mr-1.5" />
-            {showArchived ? "Show Active" : `Archived (${archived.length})`}
+            {showArchived ? "Show Active" : "Archived"}
           </Button>
           <AnimatedIconButton
             icon={PlusIcon}

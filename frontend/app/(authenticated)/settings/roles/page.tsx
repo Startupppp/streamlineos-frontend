@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, type ReactNode } from "react";
 import Link from "next/link";
 import {
   Loader2,
@@ -38,7 +38,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  ScrollArea,
+  SCROLL_AREA_PAGE_BODY_CLASS,
+} from "@/components/ui/scroll-area";
 import {
   StatCard,
   StatCardGrid,
@@ -183,140 +186,85 @@ function RolesContent() {
         />
       }
     >
-      <div className="flex flex-1 min-h-0 flex-col gap-3">
-        {metricsLoading ? (
-          <StatCardGridSkeleton cols={5} count={5} />
-        ) : (
-          <StatCardGrid cols={5}>
-            <StatCard
-              label="Total Roles"
-              value={analytics?.totalRoles ?? 0}
-              icon={Layers}
-            />
-            <StatCard
-              label="Custom Roles"
-              value={analytics?.customRoles ?? 0}
-              icon={ShieldCheck}
-              tone="blue"
-            />
-            <StatCard
-              label="Users Assigned"
-              value={analytics?.usersAssigned ?? 0}
-              icon={Users}
-              tone="emerald"
-            />
-            <StatCard
-              label="Total Permissions"
-              value={analytics?.totalPermissions ?? 0}
-              icon={KeyRound}
-              tone="amber"
-            />
-            <StatCard
-              label="Recent Changes"
-              value={analytics?.recentChanges ?? 0}
-              icon={TrendingUp}
-            />
-          </StatCardGrid>
-        )}
-
-        <div className="grid flex-1 min-h-0 gap-3 lg:grid-cols-[320px_1fr]">
-          <Card className="flex flex-col lg:min-h-0">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Shield className="h-4 w-4" /> Roles
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0 lg:flex-1 lg:min-h-0">
-              {isLoading ? (
-                <div className="divide-y divide-border/60">
-                  {Array.from({ length: 6 }).map((_, i) => (
-                    <div
-                      key={i}
-                      className="px-4 py-3 flex items-center justify-between"
-                    >
-                      <div className="space-y-1.5">
-                        <Skeleton className="h-4 w-28" />
-                        <Skeleton className="h-3 w-16" />
-                      </div>
-                      <Skeleton className="h-4 w-12 rounded-full" />
-                    </div>
-                  ))}
-                </div>
-              ) : rolesError ? (
-                <div className="flex flex-col items-center justify-center py-12 gap-3 px-4 text-center">
-                  <Shield className="h-10 w-10 text-destructive/50" />
-                  <div>
-                    <p className="text-sm font-medium">Failed to load roles</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Something went wrong
-                    </p>
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={handleRetryRoles}
-                    className="gap-1.5"
-                  >
-                    Retry
-                  </Button>
-                </div>
-              ) : filteredRoles.length === 0 ? (
-                <EmptyState
-                  illustrationPreset="security"
-                  title={search.trim() ? "No matching roles" : "No roles yet"}
-                  description={
-                    search.trim()
-                      ? "Try a different search term."
-                      : "Create a role to manage permissions."
-                  }
-                  action={
-                    search.trim()
-                      ? undefined
-                      : { label: "New role", onClick: handleOpenCreate }
-                  }
-                  compact
-                  className="border-0 bg-transparent py-10"
+      <ScrollArea
+        fill
+        hideScrollbar
+        className={SCROLL_AREA_PAGE_BODY_CLASS}
+      >
+        <div className="flex min-h-full flex-col gap-3 lg:h-full lg:min-h-0 lg:overflow-hidden">
+          <div className="shrink-0">
+            {metricsLoading ? (
+              <StatCardGridSkeleton cols={5} count={5} />
+            ) : (
+              <StatCardGrid cols={5}>
+                <StatCard
+                  label="Total Roles"
+                  value={analytics?.totalRoles ?? 0}
+                  icon={Layers}
                 />
-              ) : (
-                <ScrollArea className="lg:h-full" type="auto">
-                  <div className="divide-y divide-border/60">
-                    {filteredRoles.map((role) => (
-                      <RoleListItem
-                        key={role.id}
-                        role={role}
-                        isSelected={selectedRoleId === role.id}
-                        onSelect={handleSelectRole}
-                        onDelete={setDeleteTarget}
-                        onRename={setRenameTarget}
-                        permCount={permCountByRoleId.get(role.id) ?? 0}
-                      />
-                    ))}
-                  </div>
-                </ScrollArea>
-              )}
-            </CardContent>
-          </Card>
+                <StatCard
+                  label="Custom Roles"
+                  value={analytics?.customRoles ?? 0}
+                  icon={ShieldCheck}
+                  tone="blue"
+                />
+                <StatCard
+                  label="Users Assigned"
+                  value={analytics?.usersAssigned ?? 0}
+                  icon={Users}
+                  tone="emerald"
+                />
+                <StatCard
+                  label="Total Permissions"
+                  value={analytics?.totalPermissions ?? 0}
+                  icon={KeyRound}
+                  tone="amber"
+                />
+                <StatCard
+                  label="Recent Changes"
+                  value={analytics?.recentChanges ?? 0}
+                  icon={TrendingUp}
+                />
+              </StatCardGrid>
+            )}
+          </div>
 
-          {selectedRole ? (
-            <PermissionMatrix
-              role={selectedRole}
-              onOpenAssignments={handleOpenAssignments}
+          <div className="flex flex-col gap-3 lg:grid lg:min-h-0 lg:flex-1 lg:grid-cols-[320px_1fr] lg:overflow-hidden">
+            <RolesListPanel
+              isLoading={isLoading}
+              rolesError={rolesError}
+              filteredRoles={filteredRoles}
+              search={search}
+              selectedRoleId={selectedRoleId}
+              permCountByRoleId={permCountByRoleId}
+              onRetry={handleRetryRoles}
+              onCreate={handleOpenCreate}
+              onSelect={handleSelectRole}
+              onDelete={setDeleteTarget}
+              onRename={setRenameTarget}
             />
-          ) : (
-            <Card className="flex items-center justify-center min-h-[260px] lg:min-h-0 lg:h-full">
-              <div className="text-center px-6">
-                <EmptyApprovalIllustration className="mx-auto mb-3 w-40 h-40" />
-                <p className="text-sm font-medium text-foreground">
-                  Select a role
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Choose a role from the list to view and edit permissions
-                </p>
-              </div>
-            </Card>
-          )}
+
+            {selectedRole ? (
+              <PermissionMatrix
+                role={selectedRole}
+                onOpenAssignments={handleOpenAssignments}
+              />
+            ) : (
+              <Card className="flex h-full min-h-[260px] items-center justify-center overflow-hidden">
+                <div className="px-6 text-center">
+                  <EmptyApprovalIllustration className="mx-auto mb-3 h-40 w-40" />
+                  <p className="text-sm font-medium text-foreground">
+                    Select a role
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Choose a role from the list to view and edit permissions
+                  </p>
+                </div>
+              </Card>
+            )}
+          </div>
         </div>
-      </div>
+      </ScrollArea>
 
       <CreateRoleDialog open={createOpen} onOpenChange={setCreateOpen} />
       <RenameRoleDialog
@@ -357,6 +305,125 @@ function RolesContent() {
         </AlertDialogContent>
       </AlertDialog>
     </PageWrapper>
+  );
+}
+
+interface RolesListPanelProps {
+  isLoading: boolean;
+  rolesError: boolean;
+  filteredRoles: Role[];
+  search: string;
+  selectedRoleId: number | null;
+  permCountByRoleId: Map<number, number>;
+  onRetry: () => void;
+  onCreate: () => void;
+  onSelect: (roleId: number) => void;
+  onDelete: (role: Role) => void;
+  onRename: (role: Role) => void;
+}
+
+function RolesListPanel({
+  isLoading,
+  rolesError,
+  filteredRoles,
+  search,
+  selectedRoleId,
+  permCountByRoleId,
+  onRetry,
+  onCreate,
+  onSelect,
+  onDelete,
+  onRename,
+}: RolesListPanelProps) {
+  let body: ReactNode;
+
+  if (isLoading) {
+    body = (
+      <div className="divide-y divide-border/60">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div
+            key={i}
+            className="flex items-center justify-between px-4 py-3"
+          >
+            <div className="space-y-1.5">
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-3 w-16" />
+            </div>
+            <Skeleton className="h-4 w-12 rounded-full" />
+          </div>
+        ))}
+      </div>
+    );
+  } else if (rolesError) {
+    body = (
+      <div className="flex flex-col items-center justify-center gap-3 px-4 py-12 text-center">
+        <Shield className="h-10 w-10 text-destructive/50" />
+        <div>
+          <p className="text-sm font-medium">Failed to load roles</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Something went wrong
+          </p>
+        </div>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={onRetry}
+          className="gap-1.5"
+        >
+          Retry
+        </Button>
+      </div>
+    );
+  } else if (filteredRoles.length === 0) {
+    body = (
+      <EmptyState
+        illustrationPreset="security"
+        title={search.trim() ? "No matching roles" : "No roles yet"}
+        description={
+          search.trim()
+            ? "Try a different search term."
+            : "Create a role to manage permissions."
+        }
+        action={
+          search.trim()
+            ? undefined
+            : { label: "New role", onClick: onCreate }
+        }
+        compact
+        className="border-0 bg-transparent py-10"
+      />
+    );
+  } else {
+    body = (
+      <ScrollArea className="min-h-0 flex-1" type="auto">
+        <div className="divide-y divide-border/60">
+          {filteredRoles.map((role) => (
+            <RoleListItem
+              key={role.id}
+              role={role}
+              isSelected={selectedRoleId === role.id}
+              onSelect={onSelect}
+              onDelete={onDelete}
+              onRename={onRename}
+              permCount={permCountByRoleId.get(role.id) ?? 0}
+            />
+          ))}
+        </div>
+      </ScrollArea>
+    );
+  }
+
+  return (
+    <Card className="flex h-full min-h-0 flex-col overflow-hidden">
+      <CardHeader className="shrink-0 pb-3">
+        <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+          <Shield className="h-4 w-4" /> Roles
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="flex min-h-0 flex-1 flex-col overflow-hidden p-0">
+        {body}
+      </CardContent>
+    </Card>
   );
 }
 

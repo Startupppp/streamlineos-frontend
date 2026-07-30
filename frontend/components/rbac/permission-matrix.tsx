@@ -160,8 +160,8 @@ export function PermissionMatrix({
   }, [grantsQuery]);
 
   return (
-    <Card className="flex flex-col lg:min-h-0 lg:h-full">
-      <div className="flex items-start justify-between gap-3 p-4 pb-3">
+    <Card className="flex h-full min-h-0 flex-col overflow-hidden">
+      <div className="flex shrink-0 items-start justify-between gap-3 p-4 pb-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <TruncatedText text={role.name} className="text-base font-semibold" />
@@ -260,7 +260,7 @@ export function PermissionMatrix({
         </div>
       ) : (
         <ScrollArea
-          className="max-h-[65dvh] lg:max-h-none lg:flex-1 lg:min-h-0"
+          className="min-h-0 flex-1 max-h-[65dvh] lg:max-h-none"
           type="auto"
         >
           <div className="divide-y divide-border/30">

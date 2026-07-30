@@ -4,16 +4,21 @@ import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Globe } from "lucide-react";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Pencil, Globe } from "lucide-react";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
 import { useUpdateOrgSettings } from "@/hooks/api/organization";
 import type { OrgSettings } from "@/types/organization";
 import { getErrorMessage } from "@/lib/get-error-message";
+import {
+  OrgSettingsCard,
+  OrgSettingsEditButton,
+  OrgSettingsFormActions,
+  SettingsField,
+  SettingsFieldGrid,
+} from "./org-settings-chrome";
 
 const TIMEZONES = [
   { value: "Asia/Kolkata", label: "Asia/Kolkata (IST, UTC+5:30)" },
@@ -108,6 +113,17 @@ function extractSettings(settings: Record<string, unknown> | null | undefined) {
   };
 }
 
+const FIELD_LABELS: Record<keyof LocalizationValues, string> = {
+  timezone: "Timezone",
+  currency: "Currency",
+  fiscalYearStart: "Fiscal year starts",
+  language: "Language",
+  dateFormat: "Date format",
+  timeFormat: "Time format",
+  numberFormat: "Number format",
+  weekStartDay: "Week starts on",
+};
+
 interface OrgLocalizationSectionProps {
   org: OrgSettings;
   canEdit: boolean;
@@ -175,10 +191,10 @@ export function OrgLocalizationSection({ org, canEdit }: OrgLocalizationSectionP
     );
   }, [updateOrg]);
 
-  const displayValues = {
+  const displayValues: Record<keyof LocalizationValues, string> = {
     timezone: org.timezone ?? "Asia/Kolkata",
     currency: org.currency ?? "INR",
-    fiscalYearStart: MONTHS[(org.fiscalYearStart ?? 4) - 1],
+    fiscalYearStart: MONTHS[(org.fiscalYearStart ?? 4) - 1] ?? "April",
     language: LANGUAGES.find((l) => l.value === extracted.language)?.label ?? extracted.language,
     dateFormat: extracted.dateFormat,
     timeFormat: extracted.timeFormat === "12h" ? "12-hour (2:30 PM)" : "24-hour (14:30)",
@@ -187,102 +203,101 @@ export function OrgLocalizationSection({ org, canEdit }: OrgLocalizationSectionP
   };
 
   return (
-    <Card className="rounded-lg border border-border">
-      <CardHeader className="pb-2 flex flex-row items-start justify-between">
-        <div>
-          <CardTitle className="text-sm font-semibold flex items-center gap-2">
-            <Globe className="h-4 w-4 text-primary" />
-            Localization
-          </CardTitle>
-          <CardDescription>Timezone, currency, language, and date/time format defaults.</CardDescription>
-        </div>
-        {canEdit && !isEditing && (
-          <Button variant="outline" size="sm" onClick={handleEdit} className="gap-1.5 h-8 text-xs">
-            <Pencil className="h-3 w-3" /> Edit
-          </Button>
-        )}
-      </CardHeader>
-      <CardContent className="pb-5">
-        {!isEditing ? (
-          <div className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm">
-            {(Object.entries(displayValues) as [string, string][]).map(([key, val]) => (
-              <div key={key} className="space-y-0.5">
-                <p className="text-sm font-medium text-foreground capitalize">{key.replace(/([A-Z])/g, " $1")}</p>
-                <p className="text-sm">{val}</p>
-              </div>
-            ))}
+    <OrgSettingsCard
+      title="Localization"
+      description="Timezone, currency, language, and date/time format defaults."
+      icon={<Globe className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
+      action={canEdit && !isEditing ? <OrgSettingsEditButton onClick={handleEdit} /> : undefined}
+    >
+      {!isEditing ? (
+        <SettingsFieldGrid>
+          {(Object.keys(FIELD_LABELS) as (keyof LocalizationValues)[]).map((key) => (
+            <SettingsField key={key} label={FIELD_LABELS[key]} value={displayValues[key]} />
+          ))}
+        </SettingsFieldGrid>
+      ) : (
+        <form onSubmit={form.handleSubmit(handleSave)} className="space-y-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Timezone</Label>
+              <Select onValueChange={(v) => form.setValue("timezone", v)} value={form.watch("timezone")}>
+                <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+                  {TIMEZONES.map((tz) => <SelectItem key={tz.value} value={tz.value}>{tz.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Currency</Label>
+              <Select onValueChange={(v) => form.setValue("currency", v)} value={form.watch("currency")}>
+                <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+                  {CURRENCIES.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Fiscal year starts</Label>
+              <Select onValueChange={(v) => form.setValue("fiscalYearStart", parseInt(v))} value={String(form.watch("fiscalYearStart"))}>
+                <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {MONTHS.map((m, i) => <SelectItem key={i + 1} value={String(i + 1)}>{m}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Language</Label>
+              <Select onValueChange={(v) => form.setValue("language", v)} value={form.watch("language")}>
+                <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {LANGUAGES.map((l) => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Date format</Label>
+              <Select onValueChange={(v) => form.setValue("dateFormat", v)} value={form.watch("dateFormat")}>
+                <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+                  {DATE_FORMATS.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Time format</Label>
+              <Select onValueChange={(v) => form.setValue("timeFormat", v as "12h" | "24h")} value={form.watch("timeFormat")}>
+                <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {TIME_FORMATS.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Number format</Label>
+              <Select onValueChange={(v) => form.setValue("numberFormat", v)} value={form.watch("numberFormat")}>
+                <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+                  {NUMBER_FORMATS.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Week starts on</Label>
+              <Select onValueChange={(v) => form.setValue("weekStartDay", v as "monday" | "sunday" | "saturday")} value={form.watch("weekStartDay")}>
+                <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {WEEK_START_DAYS.map((d) => <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-        ) : (
-          <form onSubmit={form.handleSubmit(handleSave)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <Label className="text-sm font-medium">Timezone</Label>
-                <Select onValueChange={(v) => form.setValue("timezone", v)} value={form.watch("timezone")}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{TIMEZONES.map((tz) => <SelectItem key={tz.value} value={tz.value}>{tz.label}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-sm font-medium">Currency</Label>
-                <Select onValueChange={(v) => form.setValue("currency", v)} value={form.watch("currency")}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{CURRENCIES.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-sm font-medium">Fiscal year starts</Label>
-                <Select onValueChange={(v) => form.setValue("fiscalYearStart", parseInt(v))} value={String(form.watch("fiscalYearStart"))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{MONTHS.map((m, i) => <SelectItem key={i + 1} value={String(i + 1)}>{m}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-sm font-medium">Language</Label>
-                <Select onValueChange={(v) => form.setValue("language", v)} value={form.watch("language")}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{LANGUAGES.map((l) => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-sm font-medium">Date format</Label>
-                <Select onValueChange={(v) => form.setValue("dateFormat", v)} value={form.watch("dateFormat")}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{DATE_FORMATS.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-sm font-medium">Time format</Label>
-                <Select onValueChange={(v) => form.setValue("timeFormat", v as "12h" | "24h")} value={form.watch("timeFormat")}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{TIME_FORMATS.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-sm font-medium">Number format</Label>
-                <Select onValueChange={(v) => form.setValue("numberFormat", v)} value={form.watch("numberFormat")}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{NUMBER_FORMATS.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-sm font-medium">Week starts on</Label>
-                <Select onValueChange={(v) => form.setValue("weekStartDay", v as "monday" | "sunday" | "saturday")} value={form.watch("weekStartDay")}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{WEEK_START_DAYS.map((d) => <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="flex gap-2 pt-2">
-              <LoadingButton type="submit" isPending={isPending} size="sm" className="gap-1.5" loadingText="Saving…">
-                Save localization
-              </LoadingButton>
-              <Button type="button" variant="ghost" size="sm" onClick={handleCancel} disabled={isPending}>
-                Cancel
-              </Button>
-            </div>
-          </form>
-        )}
-      </CardContent>
-    </Card>
+          <OrgSettingsFormActions onCancel={handleCancel} isPending={isPending}>
+            <LoadingButton type="submit" isPending={isPending} size="sm" className="h-8 gap-1.5" loadingText="Saving…">
+              Save localization
+            </LoadingButton>
+          </OrgSettingsFormActions>
+        </form>
+      )}
+    </OrgSettingsCard>
   );
 }

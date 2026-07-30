@@ -195,28 +195,6 @@ export const useUpdateOrgSettings = () => {
   });
 };
 
-export const useUpdateOrgSecuritySettings = () => {
-  const queryClient = useQueryClient();
-  return useMutation<
-    { success: boolean },
-    Error,
-    {
-      mfaEnforced?: boolean;
-      allowedEmailDomains?: string[];
-      maxConcurrentSessions?: number | null;
-    }
-  >({
-    mutationKey: ["organization", "security", "update"],
-    mutationFn: (data) =>
-      apiClient.patch<{ success: boolean }>("/organization/security", data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.organization.settings(),
-      });
-    },
-  });
-};
-
 interface OrgHoliday {
   id: string;
   name: string;
