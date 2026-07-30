@@ -44,6 +44,7 @@ export interface EssOverview {
     net: string | null;
     downloadHref: string;
   } | null;
+  nextPayDate: { date: string; label: string } | null;
   ytd: { gross: string; net: string };
   activeLoanBalance: string;
   pendingReimbursementsCount: number;

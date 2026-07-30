@@ -247,7 +247,12 @@ export function StepBasics({
       </section>
 
       <section className="min-w-0 space-y-2">
-        <p className="text-[13px] font-semibold text-foreground">Company</p>
+        <div className="min-w-0 space-y-0.5">
+          <p className="text-[13px] font-semibold text-foreground">Company</p>
+          <p className="text-xs text-muted-foreground">
+            You can change all of this later in Settings.
+          </p>
+        </div>
         <div className="grid min-w-0 grid-cols-1 gap-2.5 sm:grid-cols-2">
           <div className="min-w-0 space-y-1">
             <Label htmlFor="company-name" className="text-xs">
@@ -329,9 +334,6 @@ export function StepBasics({
             <InlineError id="org-phone-error" message={errors.phone} />
           </div>
         </div>
-        <p className="text-xs text-muted-foreground">
-          You can change all of this later in Settings.
-        </p>
       </section>
     </StepBody>
   );

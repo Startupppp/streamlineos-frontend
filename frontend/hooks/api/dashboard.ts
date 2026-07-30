@@ -420,7 +420,7 @@ export const useExecutiveDashboard = (
   });
 };
 
-export const usePublicDocuments = (limit = 6) => {
+export const usePublicDocuments = (limit = 6, enabled = true) => {
   const { data: session } = useSession();
   const orgId = session?.orgId ?? "";
   return useQuery<PublicDoc[]>({
@@ -430,6 +430,6 @@ export const usePublicDocuments = (limit = 6) => {
       return res.data;
     },
     staleTime: 5 * 60_000,
-    enabled: !!orgId,
+    enabled: !!orgId && enabled,
   });
 };

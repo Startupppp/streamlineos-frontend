@@ -237,7 +237,7 @@ export function useHrLeavesThisWeek() {
   });
 }
 
-export function useHrMyLeaveRequests() {
+export function useHrMyLeaveRequests(enabled = true) {
   return useQuery({
     queryKey: queryKeys.hr.leavesMyRequests(),
     queryFn: () =>
@@ -245,6 +245,7 @@ export function useHrMyLeaveRequests() {
         "/hr/leaves/my",
       ),
     staleTime: 2 * 60_000,
+    enabled,
   });
 }
 
