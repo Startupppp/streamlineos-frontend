@@ -118,7 +118,7 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
     refetch,
   } = useReleases(projectId);
   const deleteRelease = useDeleteRelease(projectId);
-  const canManage = useCan("build:releases:manage");
+  const canManage = useCan("build:manage");
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Release | null>(null);

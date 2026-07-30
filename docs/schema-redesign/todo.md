@@ -1589,3 +1589,73 @@ So the order is non-negotiable: migrate every consumer to permissions FIRST, the
       until every slug consumer is migrated. Known landmines: `termination.service.ts:128` blocks CEO
       termination via `role === "CEO"` (guard silently evaporates); `support-sla.service.ts:422` escalates
       to `["OWNER","CEO","ADMIN"]`; `roles.service.ts:309` counts legacy slugs to block role deletion.
+
+---
+
+## Wave 24 — role model collapsed to six roles (2026-07-29)
+
+Product decision: exactly six structural roles. CEO / HR / SALES / ENGINEERING etc. were only ever
+**examples** — they become user-created module role groups, not system roles.
+
+| Role | Lives in | Per module |
+|---|---|---|
+| Platform Owner | `users.is_platform_admin` | no — `/owner` only |
+| Org Owner | `is_owner` + role `OWNER` | no — one per org |
+| Org Admin | role `ORG_ADMIN` | no — many |
+| Module Owner | role `{MOD}_MODULE_OWNER` (rank 15) **+** `module_ownerships` row | yes — one each |
+| Module Admin | role `{MOD}_MODULE_ADMIN` (rank 20) | yes — many |
+| Module Member | role `{MOD}_MODULE_MEMBER` (rank 30) | yes — many |
+
+### The order that made this safe
+
+~30 sites answered "who are the HR people?" with `inArray(role, HR_ROLE_SLUGS)`. Retiring the slugs
+first would have made every one of those return an **empty set with no error** — approvals routing to
+nobody, silently, with nothing in the logs. So:
+
+1. [x] Built ONE primitive — `AccessService.membersWithPermission(orgId, permissionKey)`. Resolves via
+       direct roles, groups, `user_permissions` and module ownership; respects module-enabled and
+       per-user denies; version-keyed cache; ≤9 queries, never N+1; cap parameterised (50 default,
+       500 for distribution pools) with truncation **logged, not silent**.
+2. [x] Migrated all ~30 consumers to it. Deleted `role-slugs.ts`, `hr-role-constants.ts`,
+       `recruitment-roles.ts`.
+3. [x] Collapsed `ROLE_DEFAULT_PERMISSIONS` 25 → 3; re-homed `ROLE_TEMPLATES` as module role-group
+       presets; rewrote the `deleteRole` guard (it counted legacy slugs — always 0 after the collapse,
+       so the guard would have silently vanished).
+4. [x] Seeded the three module tiers for all 9 access-managed modules (60 roles), and made the
+       `{MOD}_MODULE_OWNER` assignment **follow** the `module_ownerships` row on seed / transfer /
+       force-set. Reconciliation found **7 ownership rows with no owner role** — exactly the drift it
+       exists to catch.
+5. [x] **Migration `0363`** — normalised `organization_members.role` to OWNER/ORG_ADMIN/MEMBER and
+       dropped the 22 legacy system roles. It **aborts with a named exception** if any legacy role still
+       has a `role_assignment` or `group_role_assignment`, because dropping a role cascades to its
+       grants. `REACHED_HEAD 84/84`.
+
+### Live DB after
+`organization_members.role` = `OWNER(2)` · legacy system roles **0** · roles by rank: ORG_ADMIN 2,
+MODULE_OWNER 18, MODULE_ADMIN 22, MODULE_MEMBER 19 · `role_assignments` **7 ↔ 7** `module_ownerships` ·
+user data preserved (`ADMIN`, `CRM_CRM__1785302958385`).
+
+### Silently-dead code the collapse exposed
+- [x] `termination.service.ts` — `actorRole === "CEO"` auto-approved CEO-initiated terminations. Always
+      false after the collapse → every termination would need an extra approval round. Re-keyed to
+      org owner / platform admin.
+- [x] `sales.service.ts` — `actor.role !== "BRANCH_MANAGER"` was a **slug bypass of the permission
+      check**. Dead clause removed; the guard is now purely permission-driven.
+- [x] `branch-filter.ts` — gated on `BRANCH_MANAGER`/`BRANCH_HR`, both retired, so every branch filter
+      was already an unconditional no-op. It also duplicated `DataScope`, which is passed alongside it at
+      every call site. Deleted; 7 consumers routed through `applyScope`. **Zero effective behaviour
+      change** — but branch-scoped visibility is a capability that is now formally gone, and restoring
+      it properly means adding `branchIds` to `ScopeColumns`, not re-introducing a role-slug Set.
+- [x] `exit.service.ts` "CEO Review" — a workflow **stage** with its own `ceoReviewer`/`ceoReviewedAt`
+      columns, not a role. Correctly left alone.
+
+### Termination / removal protection (product rule)
+Blocked for Org Owner, Module Owner, Org Admin and Module Admin across terminate / remove / suspend.
+Gated on **`roles.rank <= MODULE_ADMIN`, not role name** — deliberately, because names were being
+rewritten during the work and a name check would have quietly stopped matching. `updateMemberRole` is
+deliberately NOT blocked: demoting is how you legitimately clear the role before removal.
+
+### Verified correct (do not re-audit)
+- `applyScope("team")` **fails closed** (`sql\`false\``) with a documented rationale — a team-scoped
+  grant must never act broader than intended. No grant in the DB uses it (all 4,319 are `all`).
+- Catalog drift between repos: **0**. Ghost keys (enforced but uncatalogued): **0**.

@@ -100,16 +100,3 @@ export interface Role {
   updatedAt: Date;
 }
 
-export interface Permission {
-  id: number;
-  name: string;
-  description: string | null;
-  module: string | null;
-}
-
-export interface RolePermission {
-  role: string;
-  permissionId: number;
-  orgId: string;
-  permission: Permission | null;
-}

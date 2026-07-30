@@ -26,4 +26,3 @@ export const PERMISSIONS = [
   ...OWNERSHIP_PERMISSIONS,
 ];
 
-export const SYSTEM_ROLES = ["OWNER", "ORG_ADMIN", "MEMBER"] as const;
