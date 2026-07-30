@@ -162,7 +162,12 @@ export function StepGeneration({ data }: StepGenerationProps) {
 
       const inviteGroups = groupInviteesByRole(dataRef.current.invitees);
       for (const group of inviteGroups) {
-        await bulkInviteRef.current.mutateAsync(group).catch(() => null);
+        await bulkInviteRef.current.mutateAsync({
+          ...group,
+          orgId: res?.orgId,
+        }).catch((err) => {
+          console.error("Failed to send invitations:", err);
+        });
       }
 
       await handleSuccess(res?.autoLoginToken ?? null);
