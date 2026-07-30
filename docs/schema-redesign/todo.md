@@ -1885,3 +1885,111 @@ Recommended rename is `ceo_*` → `final_*` (keep `hr_*` — `hr` is a real modu
 | Backend typecheck | 0 errors |
 | Backend lint | 0 errors, 0 warnings |
 | Frontend typecheck | 0 errors |
+
+---
+
+## Wave 27 — the job title "CEO" removed everywhere (2026-07-30)
+
+The Wave 26 note scoped this and recommended holding it. Owner said do it, so it is done — end to end,
+both repos, including routes and stored enum values.
+
+**Naming rule applied:** `hr_*` is KEPT (`hr` is a real module); only `ceo_*` — a job title implying a
+role the six-role model does not have — is renamed. The neutral replacement is `final_*`: it is the FINAL
+review stage, whoever performs it. The weekly leadership digest became `exec` rather than `final`, because
+"weekly final recap" is meaningless.
+
+**53 files changed** (23 backend, 30 frontend).
+
+| Surface | Before | After |
+|---|---|---|
+| Columns ×2 tables | `ceo_reviewed_by/at`, `ceo_remarks` | `final_reviewed_by/at`, `final_remarks` |
+| Enum value | `resignation_status.CEO_APPROVED` | `FINAL_APPROVED` |
+| Enum value | `termination_status.PENDING_CEO` | `PENDING_FINAL` |
+| Routes | `PATCH /hr/exit/:id/ceo-review`, `PATCH /hr/termination/:id/ceo-review` | `…/final-review` |
+| Route | `GET/POST /cron/hr/weekly-ceo-recap` | `weekly-exec-recap` |
+| Handlers/DTOs | `ceoReview`, `resignationCeoReviewSchema`, `ResignationCeoReviewInput` | `finalReview`, `resignationFinalReviewSchema`, `ResignationFinalReviewInput` |
+| Hooks | `useCeoReviewResignation`, `useCeoReviewTermination` | `useFinalReview…` |
+| Audit/notification values | `ceo_approved`, `ceo_rejected`, `ceo_decision` | `final_*` |
+
+Migration `0368`: column renames are metadata-only; enum labels use `ALTER TYPE … RENAME VALUE`, which
+rewrites the label in place so **existing rows need no UPDATE**. Both renames are guarded by a
+`pg_enum` existence check, and the migration ends by raising if any `CEO` label or `ceo_*` column
+survived. `REACHED_HEAD 89/89`.
+
+### Permission-bound flags renamed after the permission they hold
+
+`isCEO`, `isHROrCEO`, `isAdminOrCeo` were **already** bound to `useCan(...)` — no authorisation bug, just
+names that described a role the system no longer has. They now say what they mean: `canApproveExit`,
+`canManageEmployees`. Same for `isCeoInitiator` → `isOrgAdminInitiator`.
+
+### Two places a blind sweep got semantically wrong — caught and fixed
+
+- `role: "CEO"` in 5 spec files would have become `role: "FINAL"`, which is **not a legal
+  `organization_members.role` value** after `0363`/`0366`. Set to `OWNER` per context. In
+  `employee-mutations.service.spec.ts` the value is deliberately arbitrary — the test asserts a legacy
+  role CLAIM grants nothing without an RBAC grant — so it became `LEGACY_ROLE_CLAIM` and the test title
+  now says so.
+- Expense report routing was `sendTo: ["CEO", "HR", "BOTH"]`, rendering as "CEO Only / HR Only". "FINAL
+  Only" would have been nonsense. Renamed to the **audience** each option actually reaches:
+  `["ADMINS", "APPROVERS", "BOTH"]` → "Admins Only / Approvers Only / Admins & Approvers".
+
+### User-facing text that promised roles the product no longer has
+
+- `/legal/security` (a **public** page) claimed "Out-of-the-box roles include CEO, HR, ADMIN, MANAGER,
+  MEMBER, SALES, ENGINEERING" — factually wrong about our own model. Now lists the five org-visible
+  structural roles.
+- Landing copy framed job titles as roles; recruiters empty-state promised `HR_MANAGER`/`CEO`/`RECRUITER`
+  roles; two WFH surfaces told users to "assign the HR or CEO role"; offer approval said "Submit for CEO
+  Approval"; a termination error message promised "CEO approval". All corrected to describe permissions
+  and stages instead of titles.
+
+### Deliberately KEPT
+
+A CRM contact's `title: "CEO"` (`vcard.spec.ts`, `contact-roles.service.spec.ts`, the leads CSV sample
+row) is a **real person's job title at a customer's company** — nothing to do with our role model. Those
+were excluded from the rename by path.
+
+### Process note — my sweep sentinel was itself buggy
+
+I masked `instanceof` before the sweep because it contains a literal lowercase "ceo"
+(instan-**ceo**-f). The mask I chose was `\x00INSTANCEOF\x00` — which contains **"CEO"**, so the
+`CEO`→`FINAL` pass corrupted the mask itself and left 3 lines holding NUL bytes and `INSTANFINALF`.
+Caught immediately by typecheck (`TS1127 Invalid character`), located by scanning every `.ts`/`.tsx` for
+NUL, and repaired. Lesson: a masking sentinel must not contain any pattern the sweep replaces.
+
+### Also found: the e2e specs never run ⚠️
+
+- [ ] **W-29** `package.json` jest config sets `testPathIgnorePatterns: ["e2e-spec", …]`, so **every
+      `*.e2e-spec.ts` file is excluded from `pnpm test`**. The 317 passing suites are unit specs only.
+      Confirmed by consequence: `leads-extended.controller.e2e-spec.ts` asserts the response
+      `"Only CEO or HR can distribute leads"` and `expenses-import.controller.e2e-spec.ts` asserts
+      `"Only HR and CEO can import expenses"` — **neither string exists in the backend any more**. Those
+      assertions have been dead for some time and nothing noticed.
+      This matters beyond tidiness: CLAUDE.md §27 makes controller e2e specs (auth + RBAC + scope
+      allow/deny, cross-tenant isolation) part of Definition of Done, and §26 counts them toward "Tests
+      present". That coverage is currently **not executing**. Either wire the e2e suite into a real
+      command with a test database (`test:e2e`) and fix the stale assertions, or delete the files —
+      keeping non-running specs is worse than having none, because they read as coverage.
+
+### Verification
+
+| Check | Result |
+|---|---|
+| Migrations | `REACHED_HEAD 89/89` |
+| Backend typecheck | 0 errors |
+| Backend lint | 0 errors, 0 warnings |
+| Frontend typecheck | 0 errors |
+| `CEO`/`Ceo` identifiers remaining | 0 (only CRM contact job titles, intentional) |
+
+### W-30 — a systemic stale-mock class, found by the rename run
+
+- [x] `getEffectiveModuleMap` is called unconditionally by `AccessService.resolveModuleFlags`, but **9
+      mock sites across 3 spec files** stubbed only `isModuleEnabled` + `getModuleMap`. The forced cast
+      `entitlements as unknown as EntitlementsService` hid the gap from the type checker — which is
+      exactly why CLAUDE.md §7 bans forcing types. Added the missing stub at all 9 sites.
+      `module.guard.spec.ts` was correct already: it types its mock as
+      `jest.Mocked<Pick<EntitlementsService, "isModuleEnabled">>`, so the compiler enforces the shape.
+      That typed-`Pick` pattern is the fix for this whole class of bug and should replace the
+      `as unknown as` mocks.
+- [x] While fixing it: the failing test was titled "…marks every module enabled" but **never asserted
+      on `snapshot.modules`**. It now does, so the test verifies the behaviour its name claims.

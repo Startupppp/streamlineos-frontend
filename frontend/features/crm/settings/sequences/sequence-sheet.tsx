@@ -343,7 +343,7 @@ export function SequenceSheet({ sequence, open, onOpenChange }: Props) {
         </SheetHeader>
         <Tabs defaultValue="details" className="flex flex-col flex-1 min-h-0">
           <div className="shrink-0 border-b px-6 py-2">
-            <TabsList className="h-auto">
+            <TabsList>
               <TabsTrigger value="details">Details</TabsTrigger>
               {isEdit && (
                 <>

@@ -127,7 +127,7 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
                       <TabsTrigger
                         key={value}
                         value={value}
-                        className="min-w-0 shrink px-1 truncate"
+                        className="px-1 truncate"
                       >
                         {label}
                       </TabsTrigger>

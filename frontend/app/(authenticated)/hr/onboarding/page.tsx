@@ -169,34 +169,34 @@ export default function OnboardingPage() {
     >
       {canManageEmployees ? (
         <Tabs defaultValue={initialTab} className="space-y-4">
-          <TabsList className="rounded-xl border-border/70 h-auto bg-muted/30 backdrop-blur-sm">
+          <TabsList className="rounded-xl border-border/70 bg-muted/30 backdrop-blur-sm">
             <TabsTrigger
               value="workflow"
-              className="text-xs h-8"
+              className="text-xs"
             >
               Workflow
             </TabsTrigger>
             <TabsTrigger
               value="plans"
-              className="text-xs h-8"
+              className="text-xs"
             >
               Plans
             </TabsTrigger>
             <TabsTrigger
               value="wizard"
-              className="text-xs h-8"
+              className="text-xs"
             >
               New Employee
             </TabsTrigger>
             <TabsTrigger
               value="documents"
-              className="text-xs h-8"
+              className="text-xs"
             >
               Documents
             </TabsTrigger>
             <TabsTrigger
               value="probation"
-              className="text-xs h-8"
+              className="text-xs"
             >
               Probation
             </TabsTrigger>
@@ -227,7 +227,7 @@ export default function OnboardingPage() {
           <TabsList className="bg-muted/40">
             <TabsTrigger
               value="checklist"
-              className="text-xs h-8"
+              className="text-xs"
             >
               My Documents
             </TabsTrigger>

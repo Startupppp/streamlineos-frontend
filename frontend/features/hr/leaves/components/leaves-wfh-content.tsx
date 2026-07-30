@@ -198,7 +198,7 @@ export function LeavesWfhContent() {
 
           <Tabs defaultValue="my-leaves">
             <div className="overflow-x-auto">
-            <TabsList className="h-auto bg-transparent border-b rounded-none p-0 gap-0 w-max min-w-full md:min-w-0">
+            <TabsList className="bg-transparent border-b rounded-none p-0 gap-0">
               <TabsTrigger
                 value="my-leaves"
                 className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground pb-3 pt-2.5 px-4 duration-200"

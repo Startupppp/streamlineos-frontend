@@ -67,7 +67,7 @@ export function CandidateDetailTabs({
   return (
     <div className="lg:col-span-2">
       <Tabs defaultValue="applications">
-        <TabsList className="mb-4 flex-wrap h-auto">
+        <TabsList className="mb-4 flex-wrap">
           <TabsTrigger value="applications">
             <Briefcase className="h-3.5 w-3.5 mr-1.5" />
             Applications

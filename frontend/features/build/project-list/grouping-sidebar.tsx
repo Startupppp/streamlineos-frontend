@@ -206,7 +206,7 @@ function GroupingSidebarBody({
       className={cn("flex min-h-0 flex-1 flex-col gap-0", className)}
     >
       <div className="flex shrink-0 items-center gap-1.5 border-b border-border px-2 py-2">
-        <TabsList className="flex-1 p-0.5 md:flex-none">
+        <TabsList className="p-0.5">
           <TabsTrigger value="status" className="px-1.5">
             Status
           </TabsTrigger>

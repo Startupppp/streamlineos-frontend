@@ -2,8 +2,7 @@
 
 import * as React from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { InboxList } from "@/features/build/inbox/inbox-list";
-import { InboxPreviewPane } from "@/features/build/inbox/inbox-preview-pane";
+import { InboxList, InboxPreviewPane } from "@/features/build/inbox";
 import type { Notification } from "@/types/notifications";
 import { cn } from "@/lib/utils";
 

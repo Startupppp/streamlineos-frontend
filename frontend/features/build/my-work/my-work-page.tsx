@@ -330,7 +330,6 @@ export function MyWorkPage() {
                   <TabsTrigger
                     key={tab}
                     value={tab}
-                    className="md:flex-initial"
                   >
                     {TAB_CONFIG[tab].label}
                   </TabsTrigger>
