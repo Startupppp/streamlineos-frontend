@@ -108,6 +108,7 @@ export function unwrapEmployees(
 }
 
 export function useHrEmployees(params?: HrEmployeesParams, options?: { enabled?: boolean }) {
+  const canRead = useCan("hr:employees:read");
   const limit = params?.limit ?? 20;
   return useQuery({
     queryKey: queryKeys.hr.employees(params),
@@ -119,7 +120,7 @@ export function useHrEmployees(params?: HrEmployeesParams, options?: { enabled?:
       return normalizeEmployeesResponse(res, limit);
     },
     staleTime: 2 * 60_000,
-    enabled: options?.enabled ?? true,
+    enabled: canRead && (options?.enabled ?? true),
   });
 }
 
@@ -130,12 +131,12 @@ export function useHrEmployees(params?: HrEmployeesParams, options?: { enabled?:
 export function useHrEmployeeOptions(
   params?: Omit<HrEmployeesParams, "page"> & { enabled?: boolean },
 ) {
-  const canView = useCan("hr:employees:view");
+  const canRead = useCan("hr:employees:read");
   const { enabled, ...rest } = params ?? {};
   const merged = { limit: 100, isActive: "true" as const, ...rest, page: 1 };
   const query = useHrEmployees(
     { ...merged, limit: Math.min(merged.limit, 100) },
-    { enabled: canView && (enabled ?? true) },
+    { enabled: canRead && (enabled ?? true) },
   );
   return {
     ...query,
@@ -149,16 +150,21 @@ export function useUpdateProfile() {
     mutationKey: ["hr", "employees", "update"],
     mutationFn: ({ userId, ...data }: UpdateProfileInput) =>
       apiClient.patch<{ success: boolean }>(`/hr/employees/${userId}`, data),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.employees() }),
+    onSuccess: (_, { userId }) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.employees() });
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.employee(userId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.employeeStats(userId) });
+    },
   });
 }
 
 export function useHrOrgChart() {
+  const canView = useCan("hr:employees:view");
   return useQuery({
     queryKey: queryKeys.hr.orgChart(),
     queryFn: () => apiClient.get<OrgChartNode[]>("/hr/org-chart"),
     staleTime: 2 * 60_000,
+    enabled: canView,
   });
 }
 

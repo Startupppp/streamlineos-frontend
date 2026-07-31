@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseMutationOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   AttendanceStatusResult,
   AttendanceLog,
@@ -20,11 +21,14 @@ import type {
 export function useHrAttendanceStatus(
   options?: Omit<import("@tanstack/react-query").UseQueryOptions<AttendanceStatusResult, Error>, "queryKey" | "queryFn">
 ) {
+  const canAttendance = useCan("hr:attendance:view");
+  const { enabled: optEnabled, ...restOptions } = options ?? {};
   return useQuery({
     queryKey: queryKeys.hr.attendanceStatus(),
     queryFn: () => apiClient.get<AttendanceStatusResult>("/hr/attendance/status"),
     staleTime: 2 * 60_000,
-    ...options,
+    ...restOptions,
+    enabled: canAttendance && (optEnabled ?? true),
   });
 }
 
@@ -33,11 +37,13 @@ export function useHrAttendanceLogs(params?: {
   year?: number;
   month?: number;
 }) {
+  const canAttendance = useCan("hr:attendance:view");
   return useQuery({
     queryKey: queryKeys.hr.attendanceLogs(params),
     queryFn: () =>
       apiClient.get<AttendanceLog[]>("/hr/attendance/logs", params as Record<string, unknown>),
     staleTime: 2 * 60_000,
+    enabled: canAttendance,
   });
 }
 
@@ -172,16 +178,18 @@ export function useHrToggleBreak(
 }
 
 export function useHrMonthlyAttendance(params: GetMonthlyAttendanceInput) {
+  const canAttendance = useCan("hr:attendance:view");
   return useQuery({
     queryKey: queryKeys.hr.monthlyAttendance(params),
     queryFn: () =>
       apiClient.get<AttendanceLog[]>("/hr/attendance/monthly", params as unknown as Record<string, unknown>),
     staleTime: 2 * 60_000,
-    enabled: !!params.userId,
+    enabled: canAttendance && !!params.userId,
   });
 }
 
 export function useAttendanceHeatmap(params: { userId: string; year: number }) {
+  const canAttendance = useCan("hr:attendance:view");
   return useQuery({
     queryKey: queryKeys.hr.attendanceHeatmap(params),
     queryFn: () =>
@@ -192,11 +200,12 @@ export function useAttendanceHeatmap(params: { userId: string; year: number }) {
         summary: { totalDays: number; totalHours: string; avgHoursPerDay: string; longestStreak: number };
       }>("/hr/attendance/heatmap", params as unknown as Record<string, unknown>),
     staleTime: 2 * 60_000,
-    enabled: !!params.userId,
+    enabled: canAttendance && !!params.userId,
   });
 }
 
 export function useGetWorkLogs(input: GetWorkLogsInput) {
+  const canAttendance = useCan("hr:attendance:view");
   const params: Record<string, unknown> = {
     year: input.year,
     quarter: input.quarter,
@@ -210,6 +219,7 @@ export function useGetWorkLogs(input: GetWorkLogsInput) {
     queryKey: queryKeys.hr.workLogs(params),
     queryFn: () => apiClient.get<WorkLog[]>("/hr/work-logs", params),
     staleTime: 2 * 60_000,
+    enabled: canAttendance,
   });
 }
 
@@ -248,6 +258,7 @@ export function useUpdateWorkLogStatus(
 }
 
 export function useHrTeamAttendanceStatus(params?: TeamAttendanceStatusQuery) {
+  const canAttendance = useCan("hr:attendance:view");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "team-attendance-status", params ?? {}] as const,
     queryFn: () =>
@@ -258,6 +269,7 @@ export function useHrTeamAttendanceStatus(params?: TeamAttendanceStatusQuery) {
     staleTime: 65_000,
     refetchInterval: 60_000,
     placeholderData: (prev) => prev,
+    enabled: canAttendance,
   });
 }
 
@@ -295,6 +307,7 @@ export function useHrRegularizations(params?: {
   page?: number;
   limit?: number;
 }) {
+  const canAttendance = useCan("hr:attendance:view");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "regularizations", params] as const,
     queryFn: () =>
@@ -303,6 +316,7 @@ export function useHrRegularizations(params?: {
         params as Record<string, unknown>,
       ),
     staleTime: 30_000,
+    enabled: canAttendance,
   });
 }
 

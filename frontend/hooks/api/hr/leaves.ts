@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   RequestLeaveInput,
   AddHolidayInput,
@@ -221,11 +222,12 @@ export function useHrLeaveContext() {
 }
 
 export function useHrLeaveApprovals(options?: { enabled?: boolean }) {
+  const canLeaves = useCan("hr:leaves:view");
   return useQuery({
     queryKey: queryKeys.hr.leavesTeam(),
     queryFn: () => apiClient.get<LeaveApprovalsResult>("/hr/leaves/team"),
     staleTime: 2 * 60_000,
-    enabled: options?.enabled ?? true,
+    enabled: canLeaves && (options?.enabled ?? true),
   });
 }
 

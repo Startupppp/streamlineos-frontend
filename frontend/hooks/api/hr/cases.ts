@@ -81,14 +81,14 @@ export interface ListCasesParams {
 }
 
 const caseKeys = {
-  all: ["streamlineos", "hr-cases"] as const,
-  list: (params: ListCasesParams) => ["streamlineos", "hr-cases", "list", params] as const,
-  detail: (id: number) => ["streamlineos", "hr-cases", "detail", id] as const,
-  notes: (id: number) => ["streamlineos", "hr-cases", "notes", id] as const,
-  documents: (id: number) => ["streamlineos", "hr-cases", "documents", id] as const,
-  stats: ["streamlineos", "hr-cases", "stats"] as const,
-  disciplinary: ["streamlineos", "hr-disciplinary"] as const,
-  disciplinaryList: (params: Record<string, unknown>) => ["streamlineos", "hr-disciplinary", "list", params] as const,
+  all: ["streamlineos", "hr", "cases"] as const,
+  list: (params: ListCasesParams) => ["streamlineos", "hr", "cases", "list", params] as const,
+  detail: (id: number) => ["streamlineos", "hr", "cases", "detail", id] as const,
+  notes: (id: number) => ["streamlineos", "hr", "cases", "notes", id] as const,
+  documents: (id: number) => ["streamlineos", "hr", "cases", "documents", id] as const,
+  stats: ["streamlineos", "hr", "cases", "stats"] as const,
+  disciplinary: ["streamlineos", "hr", "disciplinary"] as const,
+  disciplinaryList: (params: Record<string, unknown>) => ["streamlineos", "hr", "disciplinary", "list", params] as const,
 };
 
 export function useHrCases(params: ListCasesParams = {}) {

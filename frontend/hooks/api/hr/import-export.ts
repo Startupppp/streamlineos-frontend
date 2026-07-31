@@ -86,14 +86,20 @@ export interface PaginatedJobs {
   };
 }
 
-export function useHrImportJobs(entity?: HrImportEntity) {
-  const entityParam = entity ? `&entity=${entity}` : "";
+export function useHrImportJobs(
+  entity?: HrImportEntity,
+  pagination?: { page?: number; limit?: number },
+) {
+  const page = pagination?.page ?? 1;
+  const limit = pagination?.limit ?? 20;
   return useQuery<PaginatedJobs>({
-    queryKey: queryKeys.hr.importJobs(entity),
+    queryKey: [...queryKeys.hr.importJobs(entity), page, limit] as const,
     queryFn: () =>
-      apiClient.get<PaginatedJobs>(
-        `/hr/import/jobs?page=1&limit=20${entityParam}`,
-      ),
+      apiClient.get<PaginatedJobs>("/hr/import/jobs", {
+        page: String(page),
+        limit: String(limit),
+        ...(entity ? { entity } : {}),
+      }),
     staleTime: 30_000,
   });
 }

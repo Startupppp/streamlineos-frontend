@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useCan } from "@/hooks/api/access";
 import type {
   HrWebhookSubscription,
   HrWebhookDelivery,
@@ -21,35 +22,36 @@ export const hrWebhookKeys = {
 };
 
 export function useHrWebhooks(params?: { page?: number; limit?: number }) {
+  const canManage = useCan("hr:integrations:manage");
   return useQuery({
     queryKey: hrWebhookKeys.list(params),
-    queryFn: () => {
-      const qs = new URLSearchParams();
-      if (params?.page) qs.set("page", String(params.page));
-      if (params?.limit) qs.set("limit", String(params.limit));
-      const q = qs.toString();
-      return apiClient.get<HrWebhookSubscription[]>(`/hr/webhooks${q ? `?${q}` : ""}`);
-    },
+    queryFn: () =>
+      apiClient.get<HrWebhookSubscription[]>("/hr/webhooks", params as Record<string, unknown>),
     staleTime: 30_000,
+    enabled: canManage,
   });
 }
 
 export function useHrWebhookEvents() {
+  const canManage = useCan("hr:integrations:manage");
   return useQuery({
     queryKey: hrWebhookKeys.events(),
     queryFn: () => apiClient.get<HrWebhookEventsResponse>("/hr/webhooks/events"),
     staleTime: 5 * 60_000,
+    enabled: canManage,
   });
 }
 
-export function useHrWebhookDeliveries(subscriptionId: number, page = 1) {
+export function useHrWebhookDeliveries(subscriptionId: number, page = 1, limit = 50) {
+  const canManage = useCan("hr:integrations:manage");
   return useQuery({
     queryKey: hrWebhookKeys.deliveries(subscriptionId, page),
     queryFn: () =>
-      apiClient.get<HrWebhookDelivery[]>(
-        `/hr/webhooks/${subscriptionId}/deliveries?page=${page}&limit=50`,
-      ),
-    enabled: subscriptionId > 0,
+      apiClient.get<HrWebhookDelivery[]>(`/hr/webhooks/${subscriptionId}/deliveries`, {
+        page: String(page),
+        limit: String(limit),
+      }),
+    enabled: canManage && subscriptionId > 0,
     staleTime: 15_000,
   });
 }
