@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { QUESTION_TYPE_LIST, QUESTION_TYPE_META, type SurveyQuestionType } from "@/features/surveys/shared/question-type-meta";
 import { ChoicesEditor } from "./choices-editor";
 import { QuestionTypeSettings } from "./question-type-settings";
@@ -112,7 +112,7 @@ export function QuestionEditorSheet({ surveyId, sectionId, question, sections, l
       }
       onOpenChange(false);
     } catch (error) {
-      toast.error(getApiError(error));
+      toast.error(getErrorMessage(error));
     }
   }
 

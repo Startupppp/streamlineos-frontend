@@ -12,7 +12,7 @@ import {
   useUpdateOrgLocation,
   useDeleteOrgLocation,
 } from "@/hooks/api/org-hierarchy";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -188,7 +188,7 @@ export default function OrgLocationsPage() {
             toast.success("Location created");
             setShowCreate(false);
           },
-          onError: (err) => toast.error(getApiError(err)),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -205,7 +205,7 @@ export default function OrgLocationsPage() {
             toast.success("Location updated");
             setEditing(null);
           },
-          onError: (err) => toast.error(getApiError(err)),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -221,7 +221,7 @@ export default function OrgLocationsPage() {
             toast.success("Location archived");
             setShowArchived(true);
           },
-          onError: (err) => toast.error(getApiError(err)),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -237,7 +237,7 @@ export default function OrgLocationsPage() {
             toast.success("Location restored");
             setShowArchived(false);
           },
-          onError: (err) => toast.error(getApiError(err)),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -251,7 +251,7 @@ export default function OrgLocationsPage() {
         toast.success("Location deleted");
         setDeleting(null);
       },
-      onError: (err) => toast.error(getApiError(err)),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }, [deleting, remove]);
 

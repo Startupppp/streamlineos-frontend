@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
-import { apiClient, getApiError } from "@/lib/api-client";
+import { apiClient } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 type Props = { params: Promise<{ token: string }> };
 
@@ -40,7 +41,7 @@ export default function ApplicationStatusPage({ params }: Props) {
       const data = await apiClient.get<ApplicationStatus>(`/public/application-status/${token}`);
       setData(data);
     } catch (e) {
-      setError(getApiError(e) || "Application not found");
+      setError(getErrorMessage(e) || "Application not found");
     } finally {
       setLoading(false);
     }

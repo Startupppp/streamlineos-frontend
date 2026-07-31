@@ -17,7 +17,7 @@ import { Trash2Icon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   OrgSettingsCard,
   OrgSettingsActionRow,
@@ -49,7 +49,7 @@ export function OrgDataPrivacySection({ canEdit }: OrgDataPrivacySectionProps) {
       toast.success("Delete request submitted. Your account will be reviewed within 30 days.");
       setDeleteDialogOpen(false);
     } catch (error) {
-      toast.error(getApiError(error));
+      toast.error(getErrorMessage(error));
     } finally {
       setIsRequestingDelete(false);
     }

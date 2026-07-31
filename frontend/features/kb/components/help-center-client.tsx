@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { usePublicSupportKb } from "@/hooks/api/support/kb";
 import { KbAskPanel } from "@/components/support/kb-ask-panel";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 
 const CATEGORY_ALL = "all";
@@ -82,7 +82,7 @@ export function HelpCenterClient({ orgId }: HelpCenterClientProps) {
           <LoadingState variant="cards" />
         ) : error ? (
           <ErrorState
-            description={getApiError(error)}
+            description={getErrorMessage(error)}
             onRetry={() => refetch()}
           />
         ) : (

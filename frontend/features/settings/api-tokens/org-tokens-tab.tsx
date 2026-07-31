@@ -11,7 +11,7 @@ import {
   type ApiToken,
   type CreateApiTokenResponse,
 } from "@/hooks/api/api-tokens";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Badge } from "@/components/ui/badge";
@@ -110,7 +110,7 @@ export function OrgTokensTab({ showCreate, onShowCreateChange }: OrgTokensTabPro
         toast.success("Token revoked");
         setRevoking(null);
       },
-      onError: (err) => toast.error(getApiError(err)),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }, [revoking, revoke]);
 
@@ -121,7 +121,7 @@ export function OrgTokensTab({ showCreate, onShowCreateChange }: OrgTokensTabPro
         toast.success("Token deleted");
         setDeleting(null);
       },
-      onError: (err) => toast.error(getApiError(err)),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }, [deleting, del]);
 

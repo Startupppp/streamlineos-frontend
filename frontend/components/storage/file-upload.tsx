@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Upload, X, File } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { apiClient, getApiError } from "@/lib/api-client";
+import { apiClient } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 interface FileUploadProps {
   onUploadComplete: (url: string, key: string) => void;
@@ -95,7 +96,7 @@ export function FileUpload({
           setUploadedFiles((prev) => [...prev, newFile]);
           onUploadComplete(result.url, result.key);
         } catch (err) {
-          toast.error(`Failed to upload ${file.name}: ${getApiError(err)}`);
+          toast.error(`Failed to upload ${file.name}: ${getErrorMessage(err)}`);
           continue;
         }
       }

@@ -15,7 +15,7 @@ import {
   useSendSigninLink,
 } from "@/hooks/api/users";
 import type { User } from "@/hooks/api/users";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { ShieldCheck, ShieldOff, UserX, KeyRound, Trash2, UserMinus } from "lucide-react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
@@ -46,7 +46,7 @@ export function UserActionsMenu({ user, onView }: UserActionsMenuProps) {
       { userId: user.id, status: "active" },
       {
         onSuccess: () => toast.success("User activated"),
-        onError: (e) => toast.error(getApiError(e)),
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }
@@ -56,7 +56,7 @@ export function UserActionsMenu({ user, onView }: UserActionsMenuProps) {
       { userId: user.id, status: "suspended" },
       {
         onSuccess: () => toast.success("User suspended"),
-        onError: (e) => toast.error(getApiError(e)),
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }
@@ -66,7 +66,7 @@ export function UserActionsMenu({ user, onView }: UserActionsMenuProps) {
       { userId: user.id, status: "archived" },
       {
         onSuccess: () => toast.success("User archived"),
-        onError: (e) => toast.error(getApiError(e)),
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }
@@ -74,7 +74,7 @@ export function UserActionsMenu({ user, onView }: UserActionsMenuProps) {
   function handleDelete() {
     deleteUser(user.id, {
       onSuccess: () => toast.success("User deleted"),
-      onError: (e) => toast.error(getApiError(e)),
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
   }
 
@@ -84,7 +84,7 @@ export function UserActionsMenu({ user, onView }: UserActionsMenuProps) {
         toast.success("Removed from organization");
         setConfirmRemove(false);
       },
-      onError: (e) => toast.error(getApiError(e)),
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
   }
 
@@ -96,7 +96,7 @@ export function UserActionsMenu({ user, onView }: UserActionsMenuProps) {
     sendSigninLink(user.id, {
       onSuccess: (r) =>
         toast.success(`Sign-in link sent to ${r.email}`),
-      onError: (e) => toast.error(getApiError(e)),
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
   }
 

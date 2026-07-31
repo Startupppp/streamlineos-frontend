@@ -1,8 +1,6 @@
-import { getErrorMessage } from "./get-error-message";
-
-if (!process.env.NEXT_PUBLIC_API_URL) {
+if (!process.env.NEXT_PUBLIC_API_URL) 
   throw new Error("NEXT_PUBLIC_API_URL is not set");
-}
+
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const PUBLIC_AUTH_PATHS = new Set([
@@ -292,12 +290,6 @@ export const apiClient = {
   upload,
   download,
 } as const;
-
-export function getApiError(error: unknown): string {
-  return getErrorMessage(error);
-}
-
-export { getErrorMessage };
 
 export type ApiResponse<T = void> =
   | { success: true; data: T }

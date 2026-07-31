@@ -4,7 +4,7 @@ import { useCallback } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { useOrgModules, useToggleOrgModule } from "@/hooks/api/access/org-modules";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { ErrorState } from "@/components/shared/error-state";
@@ -116,7 +116,7 @@ function ModulesContent() {
             toast.success(
               `${entry.label} ${enabled ? "enabled" : "disabled"}`,
             ),
-          onError: (err) => toast.error(getApiError(err)),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },

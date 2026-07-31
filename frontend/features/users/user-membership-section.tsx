@@ -14,7 +14,7 @@ import { useUserMembership, useUpdateUserMembership } from "@/hooks/api/users";
 import { useOrgBranches, useOrgDepartments } from "@/hooks/api/org-hierarchy";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { toast } from "sonner";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Building2, GitBranch, Network, Pencil } from "lucide-react";
 import { XIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -73,7 +73,7 @@ export function UserMembershipSection({ userId }: UserMembershipSectionProps) {
           toast.success("Membership updated");
           setIsEditing(false);
         },
-        onError: (e) => toast.error(getApiError(e)),
+        onError: (e) => toast.error(getErrorMessage(e)),
       }
     );
   }

@@ -9,7 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { apiClient, getApiError } from "@/lib/api-client";
+import { apiClient } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { format } from "date-fns";
 import { Share2 } from "lucide-react";
 
@@ -67,7 +68,7 @@ export default function ExternalReferrerPortalPage({ params }: Props) {
       const result = await apiClient.get<PortalData>(`/public/referrals/${token}`);
       setData(result);
     } catch (e) {
-      setLoadError(getApiError(e) || "Referral link not found.");
+      setLoadError(getErrorMessage(e) || "Referral link not found.");
     } finally {
       setLoading(false);
     }
@@ -104,7 +105,7 @@ export default function ExternalReferrerPortalPage({ params }: Props) {
       setJobPostingId("");
       void fetchPortal();
     } catch (e) {
-      setSubmitError(getApiError(e) || "Something went wrong. Please try again.");
+      setSubmitError(getErrorMessage(e) || "Something went wrong. Please try again.");
     } finally {
       setSubmitting(false);
     }

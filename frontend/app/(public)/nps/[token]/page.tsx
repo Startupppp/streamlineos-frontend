@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Loader2, CheckCircle2, ThumbsUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePublicNpsSurvey, useSubmitNpsResponse } from "@/hooks/api/crm";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const SCORES = Array.from({ length: 11 }, (_, i) => i);
 
@@ -140,7 +140,7 @@ export default function PublicNpsPage() {
 
               {submitMutation.isError && (
                 <p className="text-sm text-destructive" role="alert">
-                  {getApiError(submitMutation.error) || "Failed to submit. Please try again."}
+                  {getErrorMessage(submitMutation.error) || "Failed to submit. Please try again."}
                 </p>
               )}
 

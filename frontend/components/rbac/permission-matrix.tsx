@@ -16,7 +16,8 @@ import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { getApiError, isApiError } from "@/lib/api-client";
+import { isApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useRolePermissionGrants,
   useSetRolePermissions,
@@ -148,7 +149,7 @@ export function PermissionMatrix({
               action: { label: "Reload", onClick: () => { void grantsQuery.refetch(); } },
             });
           } else {
-            toast.error(getApiError(error));
+            toast.error(getErrorMessage(error));
           }
         },
       },
@@ -251,7 +252,7 @@ export function PermissionMatrix({
               Couldn&apos;t load permissions
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {getApiError(grantsQuery.error)}
+              {getErrorMessage(grantsQuery.error)}
             </p>
           </div>
           <Button variant="outline" size="sm" onClick={handleRetry}>

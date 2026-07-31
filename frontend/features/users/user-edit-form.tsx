@@ -58,6 +58,8 @@ const RELATIONS = ["Spouse", "Parent", "Sibling", "Child", "Friend", "Other"];
 export function UserEditForm({ user, onSuccess, onCancel }: UserEditFormProps) {
   const { mutate: updateUser, isPending } = useUpdateUser();
 
+  const isOwner = user.role === ORG_OWNER_ROLE;
+
   const form = useForm<EditFormValues>({
     resolver: zodResolver(editSchema),
     defaultValues: {
@@ -174,23 +176,28 @@ export function UserEditForm({ user, onSuccess, onCancel }: UserEditFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Role <span className="text-destructive">*</span></FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
+              <Select
+                onValueChange={field.onChange}
+                value={field.value}
+                disabled={isOwner}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {field.value === ORG_OWNER_ROLE && (
+                  {isOwner ? (
                     <SelectItem value={ORG_OWNER_ROLE} disabled>
                       Owner — transfer ownership to change
                     </SelectItem>
+                  ) : (
+                    ROLES.map((r) => (
+                      <SelectItem key={r.value} value={r.value}>
+                        {r.label}
+                      </SelectItem>
+                    ))
                   )}
-                  {ROLES.map((r) => (
-                    <SelectItem key={r.value} value={r.value}>
-                      {r.label}
-                    </SelectItem>
-                  ))}
                 </SelectContent>
               </Select>
               <FormMessage />

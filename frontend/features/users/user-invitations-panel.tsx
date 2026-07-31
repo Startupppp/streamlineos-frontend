@@ -35,7 +35,6 @@ import {
   useChangeInvitationRole,
 } from "@/hooks/api/users";
 import type { Invitation } from "@/hooks/api/users";
-import { getApiError } from "@/lib/api-client";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { LoadingButton } from "@/components/ui/loading-button";
 
@@ -170,7 +169,7 @@ export function UserInvitationsPanel() {
       resend(id, {
         onSuccess: () => toast.success("Invitation resent"),
         onError: (e) => {
-          const message = getApiError(e);
+          const message = getErrorMessage(e);
           toast.error(
             message.includes("not found")
               ? "This invitation can no longer be resent."
@@ -204,7 +203,7 @@ export function UserInvitationsPanel() {
         setCancelId(null);
       },
       onError: (e) => {
-        const message = getApiError(e);
+        const message = getErrorMessage(e);
         toast.error(
           message.includes("not found") || message.includes("already accepted")
             ? "This invitation can no longer be cancelled."

@@ -6,7 +6,8 @@ import { Loader2, AlertCircle, MailOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PortalHeader } from "@/features/portal/components/portal-header";
 import { useAcceptInvitation } from "@/hooks/api/portal/use-accept-invitation";
-import { setPortalToken, getErrorMessage } from "@/lib/portal-api-client";
+import { setPortalToken } from "@/lib/portal-api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { BRAND_SUPPORT_EMAIL } from "@/lib/branding";
 
 function StatusLayout({ children }: { children: React.ReactNode }) {

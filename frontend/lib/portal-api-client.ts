@@ -1,4 +1,3 @@
-import { getErrorMessage } from "./get-error-message";
 
 if (!process.env.NEXT_PUBLIC_API_URL) {
   throw new Error("NEXT_PUBLIC_API_URL is not set");
@@ -155,5 +154,3 @@ async function post<T>(
 }
 
 export const portalApiClient = { get, post } as const;
-
-export { getErrorMessage };

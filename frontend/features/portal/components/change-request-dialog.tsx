@@ -29,7 +29,7 @@ import {
   changeRequestSchema,
   type ChangeRequestInput,
 } from "@/features/portal/lib/change-request-schema";
-import { getErrorMessage } from "@/lib/portal-api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 interface ChangeRequestDialogProps {
   open: boolean;

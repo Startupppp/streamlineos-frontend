@@ -1,40 +1,43 @@
-export type ToggleKey =
-  | "pf"
-  | "esi"
-  | "professionalTax"
-  | "tds"
-  | "gratuity"
-  | "lwf"
-  | "lopFromAttendance"
-  | "overtime"
-  | "timesheets"
-  | "leaveSync"
-  | "expenseSync"
-  | "salesIncentives"
-  | "manualAdjustments"
-  | "reimbursements"
-  | "bonuses"
-  | "incentives"
-  | "loans"
-  | "contractorPayments"
-  | "multiCurrency"
-  | "employeeDeclarations"
-  | "payrollVarianceWarnings"
-  | "requireLockedPayrollInputs"
-  | "countryComplianceChecklist"
-  | "globalPaymentReport"
-  | "bankPayoutFile"
-  | "payslipPublishing"
-  | "emailPayslips"
-  | "approvalWorkflow"
-  | "managerApproval"
-  | "financeApproval"
-  | "lockAfterApproval"
-  | "essShowSalaryStructure"
-  | "essAllowBankUpdate"
-  | "essAllowLoanRequests"
-  | "essAllowTaxDeclarations"
-  | "essAllowReimbursements";
+export const TOGGLE_KEYS = [
+  "pf",
+  "esi",
+  "professionalTax",
+  "tds",
+  "gratuity",
+  "lwf",
+  "lopFromAttendance",
+  "overtime",
+  "timesheets",
+  "leaveSync",
+  "expenseSync",
+  "salesIncentives",
+  "manualAdjustments",
+  "reimbursements",
+  "bonuses",
+  "incentives",
+  "loans",
+  "contractorPayments",
+  "multiCurrency",
+  "employeeDeclarations",
+  "payrollVarianceWarnings",
+  "requireLockedPayrollInputs",
+  "countryComplianceChecklist",
+  "globalPaymentReport",
+  "bankPayoutFile",
+  "payslipPublishing",
+  "emailPayslips",
+  "approvalWorkflow",
+  "managerApproval",
+  "financeApproval",
+  "lockAfterApproval",
+  "essShowSalaryStructure",
+  "essAllowBankUpdate",
+  "essAllowLoanRequests",
+  "essAllowTaxDeclarations",
+  "essAllowReimbursements",
+] as const;
+
+export type ToggleKey = (typeof TOGGLE_KEYS)[number];
 
 export type ComponentType =
   | "EARNING"
@@ -55,7 +58,14 @@ export type CalcMethod =
 
 export type Complexity = "SIMPLE" | "MODERATE" | "ADVANCED";
 
-export type PayFrequency = "MONTHLY" | "SEMI_MONTHLY" | "BI_WEEKLY" | "WEEKLY";
+export const PAY_FREQUENCIES = [
+  "MONTHLY",
+  "SEMI_MONTHLY",
+  "BI_WEEKLY",
+  "WEEKLY",
+] as const;
+
+export type PayFrequency = (typeof PAY_FREQUENCIES)[number];
 
 export type PolicyStatus = "DRAFT" | "ACTIVE" | "SUPERSEDED" | "ARCHIVED";
 

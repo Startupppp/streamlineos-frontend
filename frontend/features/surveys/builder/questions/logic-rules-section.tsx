@@ -9,7 +9,7 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import type { SurveyBuilderQuestion, SurveyBuilderSection, SurveyBuilderLogicRule } from "@/hooks/api/surveys/builder";
 import {
   useCreateLogicRule,
@@ -98,7 +98,7 @@ export function LogicRulesSection({ surveyId, question, sections, rules }: Logic
       setTargetQuestionId("");
       setTargetSectionId("");
     } catch (error) {
-      toast.error(getApiError(error));
+      toast.error(getErrorMessage(error));
     }
   }
 
@@ -106,7 +106,7 @@ export function LogicRulesSection({ surveyId, question, sections, rules }: Logic
     try {
       await deleteRule.mutateAsync(ruleId);
     } catch (error) {
-      toast.error(getApiError(error));
+      toast.error(getErrorMessage(error));
     }
   }
 

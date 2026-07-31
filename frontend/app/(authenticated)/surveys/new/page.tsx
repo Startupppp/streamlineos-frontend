@@ -6,7 +6,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { RequireModule } from "@/components/auth/require-module";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateSurvey, useSurveyTemplates, type SurveyMode } from "@/hooks/api/surveys/forms";
 import { SURVEY_MODE_META } from "@/features/surveys/shared/survey-mode-meta";
 import { TemplatePickerCard } from "@/features/surveys/templates/template-picker-card";
@@ -23,7 +23,7 @@ export default function NewSurveyPage() {
       const survey = await createSurvey.mutateAsync({ title, mode, templateKey });
       router.push(`/surveys/${survey.id}`);
     } catch (error) {
-      toast.error(getApiError(error));
+      toast.error(getErrorMessage(error));
     }
   }
 

@@ -37,7 +37,8 @@ import {
   TABS_CONTENT_PAGE_BODY_CLASS,
 } from "@/components/ui/tabs";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiClient, getApiError } from "@/lib/api-client";
+import { apiClient } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { PlusIcon, XIcon } from "@animateicons/react/lucide";
@@ -125,7 +126,7 @@ function DelegationsContent() {
       setRevoking(null);
     },
     onError: (error) => {
-      toast.error(getApiError(error));
+      toast.error(getErrorMessage(error));
       setRevoking(null);
     },
   });
@@ -487,7 +488,7 @@ function GrantDelegationSheet({
       setPermSearch("");
       onSuccess();
     },
-    onError: (error) => toast.error(getApiError(error)),
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 
   const handleDelegateeChange = useCallback(

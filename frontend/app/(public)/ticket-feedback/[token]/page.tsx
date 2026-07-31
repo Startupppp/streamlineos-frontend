@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Loader2, CheckCircle2, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePublicCsatSurvey, useSubmitCsatResponse } from "@/hooks/api/support/csat";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const SCORES = [1, 2, 3, 4, 5] as const;
 
@@ -126,7 +126,7 @@ export default function TicketFeedbackPage() {
 
               {submitMutation.isError && (
                 <p className="text-sm text-destructive" role="alert">
-                  {getApiError(submitMutation.error) || "Failed to submit. Please try again."}
+                  {getErrorMessage(submitMutation.error) || "Failed to submit. Please try again."}
                 </p>
               )}
 

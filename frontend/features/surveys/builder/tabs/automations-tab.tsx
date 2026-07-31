@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import type { SurveyForm } from "@/hooks/api/surveys/forms";
 import {
   useSurveyAutomations,
@@ -68,7 +68,7 @@ export function AutomationsTab({ survey }: { survey: SurveyForm }) {
       setScoreThreshold("");
       setCreateFollowUpTask(false);
     } catch (error) {
-      toast.error(getApiError(error));
+      toast.error(getErrorMessage(error));
     }
   }
 
@@ -76,7 +76,7 @@ export function AutomationsTab({ survey }: { survey: SurveyForm }) {
     try {
       await deleteRule.mutateAsync(automationId);
     } catch (error) {
-      toast.error(getApiError(error));
+      toast.error(getErrorMessage(error));
     }
   }
 

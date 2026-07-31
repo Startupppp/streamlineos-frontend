@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   usePublicSurvey,
   useStartSurveySession,
@@ -65,7 +65,7 @@ export default function PublicSurveyPage() {
       setSessionId(session.id);
       setPhase("running");
     } catch (error) {
-      toast.error(getApiError(error));
+      toast.error(getErrorMessage(error));
     }
   }
 
@@ -80,7 +80,7 @@ export default function PublicSurveyPage() {
       setOutcome(finishOutcome);
       setPhase("done");
     } catch (error) {
-      toast.error(getApiError(error));
+      toast.error(getErrorMessage(error));
     }
   }
 

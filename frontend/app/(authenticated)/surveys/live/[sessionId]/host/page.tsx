@@ -11,7 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { RequireModule } from "@/components/auth/require-module";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useLiveSession,
   useLiveSessionResults,
@@ -42,7 +42,7 @@ export default function LiveSessionHostPage() {
     try {
       await action.mutateAsync(sessionId);
     } catch (error) {
-      toast.error(getApiError(error) || `Failed to ${label}`);
+      toast.error(getErrorMessage(error) || `Failed to ${label}`);
     }
   }
 

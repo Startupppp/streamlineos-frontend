@@ -13,7 +13,7 @@ import {
   useUpdateOrgDepartment,
   useDeleteOrgDepartment,
 } from "@/hooks/api/org-hierarchy";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -228,7 +228,7 @@ export default function OrgDepartmentsPage() {
             toast.success("Department created");
             setShowCreate(false);
           },
-          onError: (err) => toast.error(getApiError(err)),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -252,7 +252,7 @@ export default function OrgDepartmentsPage() {
             toast.success("Department updated");
             setEditing(null);
           },
-          onError: (err) => toast.error(getApiError(err)),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -268,7 +268,7 @@ export default function OrgDepartmentsPage() {
             toast.success("Department archived");
             setShowArchived(true);
           },
-          onError: (err) => toast.error(getApiError(err)),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -284,7 +284,7 @@ export default function OrgDepartmentsPage() {
             toast.success("Department restored");
             setShowArchived(false);
           },
-          onError: (err) => toast.error(getApiError(err)),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -298,7 +298,7 @@ export default function OrgDepartmentsPage() {
         toast.success("Department deleted");
         setDeleting(null);
       },
-      onError: (err) => toast.error(getApiError(err)),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }, [deleting, remove]);
 

@@ -36,7 +36,7 @@ import {
   useUnsaveMessage,
 } from "@/hooks/api/chat";
 import { queryKeys } from "@/lib/query-keys";
-import { apiClient, getApiError } from "@/lib/api-client";
+import { apiClient } from "@/lib/api-client";
 import { useChatRealtime } from "@/hooks/api/chat-realtime";
 import {
   useStartHuddle,
@@ -471,7 +471,7 @@ export function MessagePanel({
               },
             ]);
           } catch (err) {
-            toast.error(`Failed: ${getApiError(err) || file.name}`);
+            toast.error(`Failed: ${getErrorMessage(err) || file.name}`);
             continue;
           }
         }
@@ -515,7 +515,7 @@ export function MessagePanel({
             },
           ]);
         } catch (err) {
-          toast.error(`Failed: ${getApiError(err) || file.name}`);
+          toast.error(`Failed: ${getErrorMessage(err) || file.name}`);
         }
       }
     } catch (error) {

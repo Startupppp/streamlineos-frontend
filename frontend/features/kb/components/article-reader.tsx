@@ -31,7 +31,7 @@ import {
 import { ArticleContent, prepareArticle } from "@/components/kb/article-content";
 import { TableOfContents } from "@/components/blog/table-of-contents";
 import type { TocItem } from "@/lib/blog-utils";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { formatFileSize } from "@/lib/format-utils";
 import { toast } from "sonner";
@@ -153,7 +153,7 @@ export function ArticleReader({ orgId, slug }: ArticleReaderProps) {
           setShowComment(false);
           toast.success("Thanks for your feedback!");
         },
-        onError: (e) => toast.error(getApiError(e)),
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }
@@ -179,7 +179,7 @@ export function ArticleReader({ orgId, slug }: ArticleReaderProps) {
         ) : error || !article ? (
           <ErrorState
             title="Article not available"
-            description={error ? getApiError(error) : "This article does not exist or is not published."}
+            description={error ? getErrorMessage(error) : "This article does not exist or is not published."}
             onRetry={() => refetch()}
           />
         ) : (

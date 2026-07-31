@@ -42,7 +42,7 @@ import {
 } from "@/hooks/api/users";
 import type { User } from "@/hooks/api/users";
 import { useOrgBranches, useOrgDepartments } from "@/hooks/api/org-hierarchy";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { UserStatusBadge } from "./user-status-badge";
 import { UserDetailSheet } from "./user-detail-sheet";
 import { UserInviteDialog } from "./user-invite-dialog";
@@ -206,7 +206,7 @@ export function UsersPage() {
           toast.success(`${r.succeeded} user(s) suspended`);
           setSelectedIds(new Set());
         },
-        onError: (e) => toast.error(getApiError(e)),
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }
@@ -219,7 +219,7 @@ export function UsersPage() {
           toast.success(`${r.succeeded} user(s) archived`);
           setSelectedIds(new Set());
         },
-        onError: (e) => toast.error(getApiError(e)),
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }
@@ -232,7 +232,7 @@ export function UsersPage() {
           toast.success(`${r.succeeded} user(s) restored`);
           setSelectedIds(new Set());
         },
-        onError: (e) => toast.error(getApiError(e)),
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }

@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { usePublicLiveSession, useJoinLiveSession, useSubmitLiveAnswer } from "@/hooks/api/surveys/live-session";
 import type { AnswerValue } from "@/features/surveys/respondent/answer-value";
 import { QuestionInput } from "@/features/surveys/respondent/question-input";
@@ -39,7 +39,7 @@ export default function LiveSessionJoinPage() {
       const result = await join.mutateAsync({ name: name.trim() || undefined });
       setParticipantToken(result.participantToken);
     } catch (error) {
-      toast.error(getApiError(error));
+      toast.error(getErrorMessage(error));
     }
   }
 
@@ -54,7 +54,7 @@ export default function LiveSessionJoinPage() {
       });
       setAnsweredQuestionId(currentQuestion.id);
     } catch (error) {
-      toast.error(getApiError(error));
+      toast.error(getErrorMessage(error));
     }
   }
 

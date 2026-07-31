@@ -6,7 +6,7 @@ import { DownloadIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useSurveyResponses, useExportResponses, type SurveyResponseSession } from "@/hooks/api/surveys/analytics";
 import { ResponseDetailSheet } from "./response-detail-sheet";
 
@@ -36,7 +36,7 @@ export function ResponseTable({ surveyId }: { surveyId: number }) {
       link.click();
       URL.revokeObjectURL(url);
     } catch (error) {
-      toast.error(getApiError(error));
+      toast.error(getErrorMessage(error));
     }
   }
 

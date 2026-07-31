@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Progress } from "@/components/ui/progress";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import type { PublicSurveySection, PublicSurveyLogicRule } from "@/hooks/api/surveys/public-runtime";
 import type { AnswerValue } from "./answer-value";
 import { QuestionInput } from "./question-input";
@@ -156,7 +156,7 @@ export function RuntimeFlow({
         goToQuestion(nextId, 1);
       }
     } catch (error) {
-      toast.error(getApiError(error));
+      toast.error(getErrorMessage(error));
     } finally {
       setSaving(false);
     }

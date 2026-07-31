@@ -12,7 +12,7 @@ import {
   useUpdateBusinessUnit,
   useDeleteBusinessUnit,
 } from "@/hooks/api/org-hierarchy";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -182,7 +182,7 @@ export default function BusinessUnitsPage() {
             toast.success("Business unit created");
             setShowCreate(false);
           },
-          onError: (err) => toast.error(getApiError(err)),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -199,7 +199,7 @@ export default function BusinessUnitsPage() {
             toast.success("Business unit updated");
             setEditing(null);
           },
-          onError: (err) => toast.error(getApiError(err)),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -215,7 +215,7 @@ export default function BusinessUnitsPage() {
             toast.success("Business unit archived");
             setShowArchived(true);
           },
-          onError: (err) => toast.error(getApiError(err)),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -231,7 +231,7 @@ export default function BusinessUnitsPage() {
             toast.success("Business unit restored");
             setShowArchived(false);
           },
-          onError: (err) => toast.error(getApiError(err)),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -245,7 +245,7 @@ export default function BusinessUnitsPage() {
         toast.success("Business unit deleted");
         setDeleting(null);
       },
-      onError: (err) => toast.error(getApiError(err)),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }, [deleting, remove]);
 

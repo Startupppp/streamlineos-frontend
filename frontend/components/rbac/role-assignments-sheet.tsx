@@ -26,7 +26,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useRoleMembers,
   useAssignRoleMember,
@@ -176,7 +176,7 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
         { roleId, principalType: "user", principalId: userId },
         {
           onSuccess: () => toast.success("Member assigned"),
-          onError: (error) => toast.error(getApiError(error)),
+          onError: (error) => toast.error(getErrorMessage(error)),
         },
       );
     },
@@ -189,7 +189,7 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
         { roleId, principalType: "user", principalId: userId },
         {
           onSuccess: () => toast.success("Member removed"),
-          onError: (error) => toast.error(getApiError(error)),
+          onError: (error) => toast.error(getErrorMessage(error)),
         },
       );
     },
@@ -202,7 +202,7 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
         { roleId, principalType: "department", principalId: departmentId },
         {
           onSuccess: () => toast.success("Department assigned"),
-          onError: (error) => toast.error(getApiError(error)),
+          onError: (error) => toast.error(getErrorMessage(error)),
         },
       );
     },
@@ -215,7 +215,7 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
         { roleId, principalType: "department", principalId: departmentId },
         {
           onSuccess: () => toast.success("Department removed"),
-          onError: (error) => toast.error(getApiError(error)),
+          onError: (error) => toast.error(getErrorMessage(error)),
         },
       );
     },
@@ -251,7 +251,7 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
               Couldn&apos;t load members
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {getApiError(membersQuery.error)}
+              {getErrorMessage(membersQuery.error)}
             </p>
           </div>
           <Button variant="outline" size="sm" onClick={handleRetry}>

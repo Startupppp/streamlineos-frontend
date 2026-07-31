@@ -6,7 +6,8 @@ import { toast } from "sonner";
 import { ImagePlus, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { apiClient, getApiError } from "@/lib/api-client";
+import { apiClient } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { resolveImageUrl } from "@/lib/utils";
 
 interface CoverImageUploadProps {
@@ -37,7 +38,7 @@ export function CoverImageUpload({ value, onChange }: CoverImageUploadProps) {
       onChange(result.url);
       toast.success("Cover image uploaded");
     } catch (err) {
-      toast.error(getApiError(err) || "Upload failed");
+      toast.error(getErrorMessage(err) || "Upload failed");
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = "";

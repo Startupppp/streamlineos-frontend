@@ -12,7 +12,7 @@ import {
   useConfirmInterviewBooking,
   usePublicInterviewBooking,
 } from "@/hooks/api/public-booking";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 export default function InterviewBookingPage() {
   const params = useParams<{ token: string }>();
@@ -68,14 +68,14 @@ export default function InterviewBookingPage() {
             <div className="text-center py-8">
               <p className="text-lg font-semibold text-destructive">Error</p>
               <p className="text-sm text-slate-500 mt-2">
-                {getApiError(bookingQuery.error) || "Failed to load booking details."}
+                {getErrorMessage(bookingQuery.error) || "Failed to load booking details."}
               </p>
             </div>
           )}
 
           {confirmMutation.isError && (
             <p className="text-sm text-destructive mb-4" role="alert">
-              {getApiError(confirmMutation.error) || "Failed to book."}
+              {getErrorMessage(confirmMutation.error) || "Failed to book."}
             </p>
           )}
 

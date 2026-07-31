@@ -15,7 +15,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { getErrorMessage } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useMyDelegations, useCreateDelegation, useDeleteDelegation } from "@/hooks/api/hr/hr-workflows";
 import { HR_WORKFLOW_OBJECT_TYPES, HR_WORKFLOW_OBJECT_TYPE_LABELS } from "@/types/hr/workflows";
 

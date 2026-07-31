@@ -13,7 +13,7 @@ import { AvatarCropDialog } from "@/components/ui/avatar-crop-dialog";
 import { Camera, Loader2 } from "lucide-react";
 import { Trash2Icon, CheckIcon, XIcon } from "@animateicons/react/lucide";
 import { useUpdateProfile } from "@/hooks/api/hr";
-import { apiClient, getApiError } from "@/lib/api-client";
+import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { resolveImageUrl } from "@/lib/utils";
@@ -110,7 +110,7 @@ export function SettingsProfile() {
       setCropDialogOpen(false);
       setCropImageSrc(null);
     } catch (err) {
-      toast.error(getApiError(err) || "Failed to upload photo");
+      toast.error(getErrorMessage(err) || "Failed to upload photo");
       setPreviewUrl(null);
     } finally {
       setUploading(false);

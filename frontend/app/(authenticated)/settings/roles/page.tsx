@@ -45,7 +45,7 @@ import {
 } from "@/components/ui/stat-card";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -127,7 +127,7 @@ function RolesContent() {
         setDeleteTarget(null);
         toast.success("Role deleted");
       },
-      onError: (error) => toast.error(getApiError(error)),
+      onError: (error) => toast.error(getErrorMessage(error)),
     });
   }, [deleteRole, deleteTarget, selectedRoleId]);
 
