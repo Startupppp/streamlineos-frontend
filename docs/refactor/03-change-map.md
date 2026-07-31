@@ -639,13 +639,249 @@ still `pending`** so a delivery awaiting retry is never destroyed. Exposed as
 **registered in `cron.module.ts` providers** (an unregistered provider is a boot-time DI failure that
 tsc cannot see — the inert-code trap again).
 
-### Still outstanding in the schema
+### Feedbucket JSONB — MY EARLIER FINDING WAS WRONG. Corrected, and the real bug fixed.
 
-1. **Unbounded JSONB** — `feedbucket_submissions.console_logs`/`network_logs`. These live in
-   `db/schema/build/feedback.ts` but are **owned by the `feedbucket` module**, so the split crosses a
-   module boundary — worth an explicit go-ahead.
-2. **Retention policy decision** for `ticket_activity_log` and `project_daily_snapshots` (above).
-3. **Contract phase** — drop `projects.budget` / `project_members.hourly_rate` once nothing reads them.
+Phase 1 (and `04-schema-design.md` §3.2) called `feedbucket_submissions.console_logs` /
+`network_logs` "unbounded JSONB entity collections" and proposed splitting them into a child table
+with an ingest cap. **That was incorrect** — I propagated a lane claim without checking the ingest path.
+
+**The arrays are already bounded:**
+- `feedbucket.schemas.ts:80-81` — `z.array(...).max(50)` rejects anything larger at the boundary
+- `frontend/feedbucket-widget/src/api.ts:64` — the widget sends `.slice(-30)`
+
+A capped ≤50-entry value list belongs on its parent row. It is the *documented deliberate* category
+(like `project_webhooks.events`), **not** the invites-in-an-array anti-pattern. Building a child table
+would have been churn justified by a false premise. **No schema change made.**
+
+**But the investigation found a real defect underneath it.** `FeedbucketSubmissionsService.list()`
+used `findMany({ where, with: {...} })` with **no column projection**, so every list page selected
+`console_logs` and `network_logs` for every row — up to 100 log entries per submission, serialized out
+of Postgres and thrown away, since only the detail view (`feedbucket-submission-detail.tsx:306-311`)
+renders them.
+
+Fixed at the query, which is where a hot/cold split belongs when the data is bounded:
+```ts
+columns: { consoleLogs: false, networkLogs: false }
+```
+`findOne` is deliberately left unprojected so the detail view still gets the logs.
+
+**Lesson recorded:** "unbounded collection" is a claim about the *write path*, not the column type. A
+`jsonb[]` with a validated cap is bounded; the cost was in an unprojected read. Check ingest before
+proposing a table split.
+
+### Still outstanding
+
+1. **Retention policy decision** for `ticket_activity_log` and `project_daily_snapshots` (above) —
+   product call, not a technical one.
+2. **Contract phase** — drop `projects.budget` / `project_members.hourly_rate` once nothing reads them.
+3. **B13 `ModuleGuard`** — still blocked on the one `org_modules` query. Build's paid-module
+   entitlement is unenforced until then.
+
+---
+
+## 1j. Batch 6 completion — backend service splits + triple-check
+
+### Splits
+
+| File | Before → After | Extracted |
+|---|---|---|
+| `build/core/projects.service.ts` | **683 → 65** (facade) | `projects-query.service.ts` (351), `projects-write.service.ts` (343) |
+| `build/core/projects-members.service.ts` | **619 → 411** | `projects-custom-states.service.ts` (273), `projects-labels.service.ts` (46) |
+| `build/core/projects-ticket-subresources.service.ts` | **544 → 433** | `projects-ticket-checklists` (170), `-links` (197), `-relations` (182) |
+
+`projects.service.ts` became a **thin delegating facade** keeping every public method name, so the ~6
+external modules importing it (`ai`, `agent-access`, `feedbucket`, `integrations-git`, …) needed no change.
+
+**Tenant scoping verified by count, not by assertion.** A split is exactly where an `eq(x.orgId, …)`
+silently disappears, so each was diffed against `git HEAD`:
+
+| Family | orgId conditions before | after | |
+|---|---|---|---|
+| `projects.service` → query + write + facade | 19 | **19** | ✅ |
+| `projects-members` → + custom-states + labels | 23 | **24** | ✅ |
+| `projects-ticket-subresources` → + checklists/links/relations | 18 | **18** | ✅ |
+
+**All 7 new providers confirmed registered** in `projects.module.ts` (2 refs each: import + providers
+array). An unregistered provider is a boot-time DI failure the compiler cannot see — checked explicitly,
+not assumed.
+
+Files over the 500-line cap in Build: **29 → 20**.
+
+### A gap I introduced and then caught
+
+The money work updated `ProjectsBudgetService` but missed `createFromDeal` in
+`projects-provision.service.ts:167`, which still wrote only the legacy `budget` column — so a project
+created from a deal would have had a NULL `budget_minor` and shown a zero budget. Fixed by writing both
+during the expand phase.
+
+---
+
+## 1k. Triple-check — Pass 2 (compliance), evidence table
+
+| Rule | Verdict | Evidence |
+|---|---|---|
+| H1 destructive SQL reviewed + reversible | **Pass** | `0370` has a `.down.sql`; 2 × `RAISE EXCEPTION` guards; chunked backfill; **not applied** |
+| H2 no secrets | **Pass** | grep for hardcoded password/secret/api-key across changed dirs → none |
+| H3 nothing working broken | **Pass** | 69/69 Build routes still build; 4 intentional breaks registered in §4; 2 lost routes are the user's RBAC work |
+| H4 no forced types | **Pass** | grep `: any` / `as unknown as` / `@ts-ignore` across Build + schema + validation → **none**. A global-pipe attempt needing `any` was **deleted** rather than shipped; a `!` was removed during the split |
+| H5 logic in NestJS only | **Pass** | no business logic added to Next; frontend changes are components/hooks only |
+| H6 authz not in middleware | **Pass** | `proxy.ts` unmodified; its role check is pre-existing and advisory (§17); enforcement is `PermissionGuard` |
+| H7 every query tenant-scoped | **Pass** | **81/81 Build tables carry `org_id`**; orgId condition counts preserved across all 3 splits; 2 unscoped queries found and fixed in the budget service |
+| H8 nothing unbounded | **Partial** | `webhook_deliveries` now pruned; feedbucket arrays proven **bounded** (`.max(50)`); `ticket_activity_log` / `project_daily_snapshots` retention **raised as a product decision, not taken** |
+| H9 LOC caps | **Improved** | over-500 files 29 → 20; largest `app/` route 707 → 496 |
+| H10 typecheck/lint green | **Pass** | BE: **0 errors in `modules/build`/`db/schema`**, eslint 0. FE: typecheck 0, build 0 |
+| H11 branch / commits | **Pass** | no branch created, no commit run by me; still on `refactoring-hrms` |
+| H12 CLAUDE.md wins + flag conflicts | **Pass** | 4 conflicts flagged and resolved in CLAUDE.md's favour: branching, LOC cap, prepared statements, class-validator |
+
+### Pass 3 — adversarial objections, answered
+
+1. *"The splits dropped a tenant filter."* — Answered by count-diff against `git HEAD`: 19/19, 23→24, 18/18.
+2. *"A new service isn't registered, so it 500s at runtime."* — All 7 checked in `projects.module.ts`.
+3. *"`org_id NOT NULL` will fail on a populated table."* — That is why `0370` is expand→backfill→contract with an orphan guard, not a generated `ADD COLUMN NOT NULL`.
+4. *"Widening PKs breaks referencing FKs."* — Verified **zero** inbound FKs to all four tables before widening.
+5. *"The feedbucket 'fix' churned a non-problem."* — Caught before acting: arrays are capped at 50; no schema change made, and the real defect (unprojected list read) was fixed instead.
+6. *"Money change breaks the frontend."* — Response shape preserved; `currency` added additively.
+7. *"Retention deletes user data."* — Only `webhook_deliveries` (operational) is pruned; the two user-visible tables were deliberately left alone.
+
+---
+
+## 1l. Migration APPLIED to the database + Build naming — 2026-07-31
+
+### `0370` applied and verified
+
+H1 dry-run counts first (all Build tables empty — a dev database):
+`project_members` 0 rows / 0 orphans · `project_template_tickets` 0 / 0 ·
+`ticket_activity_log` 0 (max id 0) · `webhook_deliveries` 0 · `projects` with budget 0.
+
+**The DB was in a partially-applied state** — `org_id` already present on both tables, but PKs not
+widened, `idx_tickets_org_project` still there, trgm index and money columns absent. And the journal
+is drifted: **91 migration files, 88 journal entries, 91 rows applied**. That drift is pre-existing,
+not from this work.
+
+Because the journal cannot be trusted to sequence correctly, `0370` was made **fully idempotent**
+(every `ADD CONSTRAINT` wrapped in a `pg_constraint` existence guard, on top of the existing
+`IF NOT EXISTS` / `RAISE EXCEPTION` guards) and applied directly. Postgres emitted exactly the
+expected "column already exists, skipping" notices — the guards doing their job.
+
+**Verified end state — 12/12 checks PASS:**
+
+| Check | Result |
+|---|---|
+| `project_members.org_id` NOT NULL | ✅ |
+| `project_template_tickets.org_id` NOT NULL + `created_at` | ✅ |
+| `ticket_activity_log.id` / `ticket_comment_mentions.id` / `project_daily_snapshots.id` / `webhook_deliveries.id` = **bigint** | ✅ ×4 |
+| `projects.budget_minor`, `project_members.hourly_rate_minor` | ✅ |
+| `idx_tickets_org_project` **dropped** | ✅ |
+| `idx_projects_name_trgm` **created** | ✅ |
+| `uniq_project_members_org_id` constraint | ✅ |
+
+⚠️ **Journal drift is still open and is a real risk** — a future `drizzle-kit migrate` on a fresh
+database will not reproduce this state, because 3 applied migrations are missing from
+`meta/_journal.json`. Reconciling the journal against `migrations/*.sql` should happen before the next
+cold rebuild.
+
+### Build naming — module vs entity
+
+13 module classes and 16 files renamed `Projects*` → `Build*` (`BuildQaModule`, `BuildFormsModule`,
+`build-approvals.module.ts`, …). QA, forms, governance, incidents, meetings, portfolios, teams,
+workflow and managed-products are **not projects** — calling them `Projects*` was exactly the
+vocabulary drift the naming rules forbid.
+
+**`build/core/` was deliberately left as `Projects*`.** It manages the **`projects` entity**, and
+`project` ≠ `product` ≠ `Build module` are three distinct concepts (north-star is explicit that a
+Project is a delivery record and a Managed Product is a strategic product). Renaming `ProjectsService`
+to `BuildService` would have erased that distinction and conflated the module with one of its entities.
+Recorded in CLAUDE.md §18: **name the module for the module, the entity service for the entity.**
+
+**Verification:** backend typecheck **0 errors in `modules/build`** · eslint **exit 0** ·
+jest **21/21 suites, 159/159 tests — all green** (the previously-failing stale platform-admin
+assertion is now resolved) · frontend typecheck **exit 0**.
+
+---
+
+## 1m. Session 2026-07-31b — journal repair, schema hardening, automations
+
+### The migration journal was lying, in two directions
+
+The prior session recorded "journal drift is still open". It was worse than recorded. Verified by
+hashing every migration file and matching it against `drizzle.__drizzle_migrations`:
+
+| Finding | Detail |
+|---|---|
+| `0366`, `0367`, `0368` | **applied to the DB, absent from `meta/_journal.json`** → a cold rebuild would silently produce a database missing three migrations |
+| `0370` | **in the journal, but no `__drizzle_migrations` row matched its hash** — it had been applied by direct execution and the file edited afterwards (made idempotent), so the record never existed |
+| `0352_custom_fields_consolidation` | one applied row whose hash matches no current file — the file was edited after being applied. Outside Build; recorded, not touched |
+| `when` ordering | non-monotonic once the missing three were considered, which breaks drizzle's `when > max(created_at)` gate for any database at an intermediate state |
+
+**Repair.** The three missing tags were inserted in numeric order with `when` values that keep the
+sequence **strictly increasing** (asserted in the repair script, not eyeballed), `idx` renumbered, and
+`0370` moved to `1784993503607` — past the DB's max applied timestamp — so its missing record could be
+written without re-running any DDL. One row was then inserted into `drizzle.__drizzle_migrations` for
+`0370`. Result: **93 forward migration files, 93 journal entries, zero entries that would re-run.**
+
+`0370` was audited for idempotency **before** relying on that (16 guards; every `ADD COLUMN`,
+`ADD CONSTRAINT`, `CREATE INDEX` and `DROP INDEX` guarded) rather than trusting the previous session's
+claim.
+
+**Invariant now defended:** `count(migrations/*.sql) == count(journal entries)`. A migration that is
+deliberately unapplied lives in `migrations/pending/` with a README, so it cannot be mistaken for drift.
+
+### Both long-standing blockers resolved with one DB query
+
+- **B13 `ModuleGuard`** — `org_modules` holds `module_key = 'build'` (2 orgs, enabled) and **zero**
+  `'projects'` rows. The data migration already ran; the sequencing hazard is gone.
+- **B12 automations** — `project_automations` is **empty** (0 rows, 0 orgs), and `automation_rules` is
+  too. The H1 data migration that made this a large task collapses to nothing.
+
+### B12 fixed — Build automations now actually fire
+
+Users could create Build automations that no runner ever read. **Design decision: keep
+`project_automations` and the existing UI; make them execute.** Migrating into the org-scoped
+`automation_rules` was rejected — it has no `projectId`, its action vocabulary cannot mutate Build
+tickets, and retiring the Build table would delete a working UI surface (H3).
+
+`build-automation-runner.service.ts` (232 LOC) loads active rules for `(orgId, projectId, trigger)`
+with `orgId` in the WHERE clause, reuses the existing `shared-condition-evaluator`, and executes the
+five Build actions. Wired into ticket create/update for `ticket.created`, `ticket.updated`,
+`ticket.status_changed`, `ticket.assigned` — trigger strings taken verbatim from
+`dto/automation.schemas.ts`, not invented. 5/5 unit tests pass including cross-tenant isolation.
+
+> **Known remaining gap, deliberately not papered over:** `sprint.started` and `sprint.completed` are
+> valid stored trigger values with no emit point. They stay unfired because all five Build actions
+> mutate a *ticket*, and a sprint event has no ticket in context. A sensible semantic ("apply to every
+> ticket in the sprint") would be **inventing product behaviour**, so it is raised rather than guessed.
+
+### Schema: three migrations authored, one deferred by design
+
+| Migration | Contents | State |
+|---|---|---|
+| `0371_build_status_check_constraints` | CHECK on 5 status columns, `NOT VALID` + `VALIDATE` so a populated table is not locked for a scan | registered |
+| `0372_build_pk_widening_round2` | `ticket_comments`, `ticket_assignees`, `ticket_label_mappings`, `ticket_watchers` → `bigint`, plus the 3 FK columns referencing `ticket_comments.id` | registered |
+| `0375_build_drop_dead_reports` | drop the dead `reports` table, guarded by a row-count `RAISE EXCEPTION` | registered |
+| `pending/0373_build_money_contract` | drop the legacy `numeric` money columns | **unregistered on purpose** — two dual-writes must be removed first |
+
+**Two CHECK constraints were deliberately NOT added, and this is the important part.**
+`tickets.status` looked like an obvious candidate. It is not: it is a legacy fallback for the
+user-definable `custom_states` FK (`stateId`), and its DTO validates `status: z.string()`. A CHECK
+there would reject values the API accepts today — a working-flow break dressed up as a cleanup.
+`git_ticket_links.status` is populated from external git providers, whose vocabulary is not ours to
+constrain. Every value set that *was* constrained came from the owning Zod schema, verified per column.
+
+**`tickets.id` was deliberately not widened.** It is referenced by **27 tables** (counted from
+`information_schema`, not estimated). At ~100-200M rows/year it has 10-20 years of int4 headroom, so
+the cost/benefit is the inverse of the four junction tables.
+
+### Partial indexes — safe because the codebase was checked, not assumed
+
+Converting soft-delete list indexes to `WHERE deleted_at IS NULL` only works if no query lists deleted
+rows. `src/modules/build/` has **66** `isNull(x.deletedAt)` filters and **zero** reads of `deleted_at`
+without `isNull` — there is no trash view. Conversion (not addition) keeps index count flat.
+
+### LOC
+
+Files over the 500 cap in `features/build/`: **18 → 0**, via 4 parallel agents with exclusive file
+ownership. Forced types across `features/build/`: **0**. Every agent disclosed its dependency-array
+decisions; the only changes were identifier renames with provably identical values.
 
 ---
 

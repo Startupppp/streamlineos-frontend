@@ -1,25 +1,13 @@
-﻿"use client";
+"use client";
 
-import {
-  useMemo,
-  useCallback,
-  useEffect,
-  useState,
-  type ReactNode,
-  type UIEvent,
-} from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useMemo, useCallback, useState, type UIEvent } from "react";
+import { format, subDays } from "date-fns";
 import { motion, useReducedMotion } from "framer-motion";
+import { Briefcase, CheckSquare, AlertCircle } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
-import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { ArrowRight, Briefcase, CheckSquare, AlertCircle, Loader2 } from "lucide-react";
-import { format, subDays } from "date-fns";
+import { ErrorState } from "@/components/shared/error-state";
 import { useCan } from "@/hooks/api/access";
 import { useProjects } from "@/hooks/api/build/projects";
 import {
@@ -27,196 +15,30 @@ import {
   useAllWork,
   useInfiniteAllWork,
 } from "@/hooks/api/build/all-work";
-import type { MyWorkItem } from "@/types/projects/my-work";
 import { useCommandPalette } from "@/features/command-palette/hooks/use-command-palette";
 import { ProjectCreateWizard } from "@/features/build/project-create/project-create-wizard";
-import {
-  CreateIssueButton,
-  PinnedNav,
-  QuickCreateMenu,
-} from "./command-center-actions";
-import { MyWorkRow, ProjectCard } from "./command-center-rows";
+import { QuickCreateMenu, PinnedNav } from "./command-center-actions";
 import {
   PmPageShell,
-  PmPanel,
   PmSection,
-  PmStaggerList,
+  PmPanel,
   PM_PANEL,
 } from "@/features/build/shared/pm-chrome";
 import { pmSnappy } from "@/features/build/shared/pm-motion";
 import { cn } from "@/lib/utils";
-
-function useKeyboardShortcuts(
-  onCreateProject: () => void,
-  onCreateIssue: () => void,
-) {
-  const router = useRouter();
-  const [pendingKey, setPendingKey] = useState<string | null>(null);
-
-  useEffect(() => {
-    let timer: ReturnType<typeof setTimeout>;
-
-    function handleKeyDown(e: KeyboardEvent) {
-      const target = e.target as HTMLElement;
-      if (
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.tagName === "SELECT" ||
-        target.isContentEditable
-      ) {
-        return;
-      }
-
-      if (e.key === "/") {
-        e.preventDefault();
-        const searchEl = document.querySelector<HTMLElement>("[data-search-input]");
-        searchEl?.focus();
-        return;
-      }
-
-      if (e.key === "g" && !pendingKey) {
-        setPendingKey("g");
-        timer = setTimeout(() => setPendingKey(null), 1000);
-        return;
-      }
-
-      if (e.key === "c" && !pendingKey) {
-        setPendingKey("c");
-        timer = setTimeout(() => setPendingKey(null), 1000);
-        return;
-      }
-
-      if (pendingKey === "g" && e.key === "m") {
-        setPendingKey(null);
-        router.push("/build/my-work");
-        return;
-      }
-
-      if (pendingKey === "g" && e.key === "p") {
-        setPendingKey(null);
-        router.push("/build/all");
-        return;
-      }
-
-      if (pendingKey === "c" && e.key === "p") {
-        setPendingKey(null);
-        onCreateProject();
-        return;
-      }
-
-      if (pendingKey === "c" && e.key === "t") {
-        setPendingKey(null);
-        onCreateIssue();
-        return;
-      }
-
-      setPendingKey(null);
-    }
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      clearTimeout(timer);
-    };
-  }, [pendingKey, onCreateProject, onCreateIssue, router]);
-}
-
-type EmptyAction = { label: string; onClick?: () => void; href?: string };
-
-function resolveMyIssuesEmptyActions(params: {
-  canCreateIssue: boolean;
-  canCreateProject: boolean;
-  hasProjects: boolean;
-  onCreateIssue: () => void;
-  onCreateProject: () => void;
-}): { action: EmptyAction; secondaryAction?: EmptyAction } {
-  const { canCreateIssue, canCreateProject, hasProjects, onCreateIssue, onCreateProject } =
-    params;
-  if (hasProjects && canCreateIssue) {
-    return {
-      action: { label: "New issue", onClick: onCreateIssue },
-      secondaryAction: { label: "View all", href: "/build/my-work" },
-    };
-  }
-  if (canCreateProject) {
-    return {
-      action: { label: "New project", onClick: onCreateProject },
-      secondaryAction: hasProjects
-        ? { label: "View all", href: "/build/my-work" }
-        : { label: "All projects", href: "/build/all" },
-    };
-  }
-  if (hasProjects) {
-    return { action: { label: "View all", href: "/build/my-work" } };
-  }
-  return { action: { label: "All projects", href: "/build/all" } };
-}
-
-function PanelHeader({
-  title,
-  actions,
-}: {
-  title: string;
-  actions?: ReactNode;
-}) {
-  return (
-    <div className="flex shrink-0 min-w-0 items-center justify-between gap-2 border-b border-border/50 px-3 py-2">
-      <h2 className="min-w-0 truncate text-xs font-semibold tracking-wide text-foreground">
-        {title}
-      </h2>
-      {actions ? (
-        <div className="flex shrink-0 items-center gap-1">{actions}</div>
-      ) : null}
-    </div>
-  );
-}
-
-const MY_ISSUES_LOAD_MORE_THRESHOLD = 120;
-
-const COMMAND_CENTER_LIST_PANEL_HEIGHT =
-  "max-h-[min(50dvh,24rem)] lg:h-[min(380px,calc(100dvh-24rem))]";
-
-const COMMAND_CENTER_LIST_PANEL = cn(
-  "flex h-full min-h-0 w-full max-w-full flex-col overflow-hidden",
-  COMMAND_CENTER_LIST_PANEL_HEIGHT,
-);
-
-const COMMAND_CENTER_PANEL_BODY_SCROLL = "min-h-0 min-w-0 max-w-full flex-1";
-
-const COMMAND_CENTER_PAGE_SHELL =
-  "flex-none min-h-min min-w-0 w-full max-w-full overflow-x-hidden overflow-y-visible";
-
-const COMMAND_CENTER_JUMP_PANEL =
-  "flex min-w-0 w-full max-w-full flex-col overflow-hidden p-2.5";
-
-const COMMAND_CENTER_PANELS_GRID =
-  "grid min-w-0 w-full max-w-full gap-4 lg:grid-cols-5 lg:items-stretch";
-
-function mapAllWorkTicketToMyWorkItem(ticket: {
-  id: number;
-  projectId: number;
-  projectName: string;
-  projectKey: string;
-  ticketNumber: number;
-  title: string;
-  status: string;
-  priority: string | null;
-  type: string;
-  dueDate: string | null;
-}): MyWorkItem {
-  return {
-    id: ticket.id,
-    projectId: ticket.projectId,
-    projectName: ticket.projectName,
-    projectKey: ticket.projectKey,
-    ticketNumber: ticket.ticketNumber,
-    title: ticket.title,
-    status: ticket.status,
-    priority: ticket.priority,
-    type: ticket.type,
-    dueDate: ticket.dueDate,
-  };
-}
+import { useKeyboardShortcuts } from "./use-keyboard-shortcuts";
+import {
+  resolveMyIssuesEmptyActions,
+  mapAllWorkTicketToMyWorkItem,
+} from "./command-center-utils";
+import {
+  MY_ISSUES_LOAD_MORE_THRESHOLD,
+  COMMAND_CENTER_PAGE_SHELL,
+  COMMAND_CENTER_JUMP_PANEL,
+  COMMAND_CENTER_PANELS_GRID,
+} from "./command-center-constants";
+import { MyIssuesPanel } from "./command-center-my-issues-panel";
+import { ProjectsPanel } from "./command-center-projects-panel";
 
 export function CommandCenterPage() {
   const [wizardOpen, setWizardOpen] = useState(false);
@@ -242,9 +64,7 @@ export function CommandCenterPage() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useInfiniteAllWork(COMMAND_CENTER_MY_ISSUES_FILTERS, {
-    enabled: canViewTickets,
-  });
+  } = useInfiniteAllWork(COMMAND_CENTER_MY_ISSUES_FILTERS, { enabled: canViewTickets });
 
   const { data: openIssuesSummary } = useAllWork(
     { ...COMMAND_CENTER_MY_ISSUES_FILTERS, limit: 1, page: 1 },
@@ -252,26 +72,19 @@ export function CommandCenterPage() {
   );
 
   const { data: overdueIssuesSummary } = useAllWork(
-    {
-      ...COMMAND_CENTER_MY_ISSUES_FILTERS,
-      limit: 1,
-      page: 1,
-      dueDateTo: overdueDueDateTo,
-    },
+    { ...COMMAND_CENTER_MY_ISSUES_FILTERS, limit: 1, page: 1, dueDateTo: overdueDueDateTo },
     { enabled: canViewTickets },
   );
+
+  const projects = useMemo(() => projectsData?.data ?? [], [projectsData]);
 
   const handleOpenWizard = useCallback(() => {
     if (!canCreateProject) return;
     setWizardOpen(true);
   }, [canCreateProject]);
 
-  const projects = useMemo(() => projectsData?.data ?? [], [projectsData]);
-
   const handleCreateForProject = useCallback(
-    (projectId: number) => {
-      openCreateTicket(projectId);
-    },
+    (projectId: number) => openCreateTicket(projectId),
     [openCreateTicket],
   );
 
@@ -287,6 +100,8 @@ export function CommandCenterPage() {
     void refetchProjects();
     void refetchMyIssues();
   }, [refetchProjects, refetchMyIssues]);
+
+  const handleMyIssuesRetry = useCallback(() => void refetchMyIssues(), [refetchMyIssues]);
 
   const myWorkItems = useMemo(() => {
     if (!myIssuesPages?.pages) return [];
@@ -304,22 +119,6 @@ export function CommandCenterPage() {
     };
   }, [projectsData, openIssuesSummary, overdueIssuesSummary]);
 
-  const handleMyIssuesScroll = useCallback(
-    (e: UIEvent<HTMLDivElement>) => {
-      const el = e.currentTarget;
-      const distanceFromBottom =
-        el.scrollHeight - el.scrollTop - el.clientHeight;
-      if (
-        distanceFromBottom <= MY_ISSUES_LOAD_MORE_THRESHOLD &&
-        hasNextPage &&
-        !isFetchingNextPage
-      ) {
-        void fetchNextPage();
-      }
-    },
-    [hasNextPage, isFetchingNextPage, fetchNextPage],
-  );
-
   const myIssuesEmpty = useMemo(
     () =>
       resolveMyIssuesEmptyActions({
@@ -329,19 +128,21 @@ export function CommandCenterPage() {
         onCreateIssue: handleCreateIssueShortcut,
         onCreateProject: handleOpenWizard,
       }),
-    [
-      canCreateIssue,
-      canCreateProject,
-      projects.length,
-      handleCreateIssueShortcut,
-      handleOpenWizard,
-    ],
+    [canCreateIssue, canCreateProject, projects.length, handleCreateIssueShortcut, handleOpenWizard],
   );
 
-  const isLoading = projectsLoading;
-  const isError = projectsError;
+  const handleMyIssuesScroll = useCallback(
+    (e: UIEvent<HTMLDivElement>) => {
+      const el = e.currentTarget;
+      const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+      if (distanceFromBottom <= MY_ISSUES_LOAD_MORE_THRESHOLD && hasNextPage && !isFetchingNextPage) {
+        void fetchNextPage();
+      }
+    },
+    [hasNextPage, isFetchingNextPage, fetchNextPage],
+  );
 
-  if (isLoading) {
+  if (projectsLoading) {
     return (
       <PageWrapper title="Home" contentClassName="pb-0 sm:pb-0">
         <PmPageShell className={COMMAND_CENTER_PAGE_SHELL}>
@@ -360,7 +161,7 @@ export function CommandCenterPage() {
     );
   }
 
-  if (isError) {
+  if (projectsError) {
     return (
       <PageWrapper title="Home" contentClassName="pb-0 sm:pb-0">
         <PmPageShell withGlow={false} className={COMMAND_CENTER_PAGE_SHELL}>
@@ -396,27 +197,13 @@ export function CommandCenterPage() {
                 whileHover={shouldReduceMotion ? undefined : { y: -2 }}
                 transition={pmSnappy}
               >
-                <StatCard
-                  label="Projects"
-                  value={stats.activeProjects}
-                  icon={Briefcase}
-                  tone="default"
-                  index={0}
-                  href="/build/all"
-                />
+                <StatCard label="Projects" value={stats.activeProjects} icon={Briefcase} tone="default" index={0} href="/build/all" />
               </motion.div>
               <motion.div
                 whileHover={shouldReduceMotion ? undefined : { y: -2 }}
                 transition={pmSnappy}
               >
-                <StatCard
-                  label="Open issues"
-                  value={stats.openIssues}
-                  icon={CheckSquare}
-                  tone="default"
-                  index={1}
-                  href="/build/my-work"
-                />
+                <StatCard label="Open issues" value={stats.openIssues} icon={CheckSquare} tone="default" index={1} href="/build/my-work" />
               </motion.div>
               <motion.div
                 whileHover={shouldReduceMotion ? undefined : { y: -2 }}
@@ -427,14 +214,7 @@ export function CommandCenterPage() {
                     : undefined
                 }
               >
-                <StatCard
-                  label="Overdue"
-                  value={stats.overdueIssues}
-                  icon={AlertCircle}
-                  tone={stats.overdueIssues > 0 ? "red" : "default"}
-                  index={2}
-                  href="/build/my-work"
-                />
+                <StatCard label="Overdue" value={stats.overdueIssues} icon={AlertCircle} tone={stats.overdueIssues > 0 ? "red" : "default"} index={2} href="/build/my-work" />
               </motion.div>
             </StatCardGrid>
           </PmSection>
@@ -449,143 +229,25 @@ export function CommandCenterPage() {
           </PmSection>
 
           <div className={COMMAND_CENTER_PANELS_GRID}>
-            <PmSection index={2} className="flex min-h-0 min-w-0 w-full max-w-full flex-col lg:col-span-3">
-              <PmPanel className={COMMAND_CENTER_LIST_PANEL}>
-                <PanelHeader
-                  title="My issues"
-                  actions={
-                    <>
-                      <CreateIssueButton
-                        projects={projects}
-                        onCreateForProject={handleCreateForProject}
-                        onCreateIssue={handleCreateIssueShortcut}
-                      />
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="gap-1 text-xs"
-                        asChild
-                      >
-                        <Link href="/build/my-work">
-                          View all <ArrowRight className="h-3 w-3" />
-                        </Link>
-                      </Button>
-                    </>
-                  }
-                />
-                {myIssuesLoading ? (
-                  <div className="flex min-h-0 flex-1 flex-col gap-1 p-1.5">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Skeleton key={i} className="h-12 shrink-0 rounded-lg" />
-                    ))}
-                  </div>
-                ) : myIssuesError ? (
-                  <ErrorState
-                    className="min-h-[12rem] flex-1"
-                    title="Failed to load your issues"
-                    description="Could not fetch tickets. Please try again."
-                    onRetry={() => void refetchMyIssues()}
-                  />
-                ) : myWorkItems.length === 0 ? (
-                  <EmptyState
-                    illustrationPreset="projects"
-                    title="Inbox zero"
-                    description={
-                      projects.length === 0
-                        ? "Create a project to start tracking issues."
-                        : "No open issues assigned to you. Create one or open the board."
-                    }
-                    className="min-h-[12rem] flex-1"
-                    action={myIssuesEmpty.action}
-                    secondaryAction={myIssuesEmpty.secondaryAction}
-                  />
-                ) : (
-                  <ScrollArea
-                    fill
-                    hideScrollbar
-                    className={COMMAND_CENTER_PANEL_BODY_SCROLL}
-                    onViewportScroll={handleMyIssuesScroll}
-                  >
-                    <div className="min-w-0 w-full max-w-full overscroll-contain">
-                      <PmStaggerList>
-                        {myWorkItems.map((item) => (
-                          <MyWorkRow key={item.id} item={item} />
-                        ))}
-                      </PmStaggerList>
-                      {isFetchingNextPage ? (
-                        <div className="flex justify-center py-3">
-                          <Loader2
-                            className="h-4 w-4 animate-spin text-muted-foreground"
-                            aria-label="Loading more issues"
-                          />
-                        </div>
-                      ) : null}
-                    </div>
-                  </ScrollArea>
-                )}
-              </PmPanel>
-            </PmSection>
-
-            <PmSection index={3} className="flex min-h-0 min-w-0 w-full max-w-full flex-col lg:col-span-2">
-              <PmPanel className={COMMAND_CENTER_LIST_PANEL}>
-                <PanelHeader
-                  title="Projects"
-                  actions={
-                    <>
-                      {canCreateProject ? (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="gap-1 text-xs text-muted-foreground"
-                          onClick={handleOpenWizard}
-                        >
-                          New
-                        </Button>
-                      ) : null}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="gap-1 text-xs"
-                        asChild
-                      >
-                        <Link href="/build/all">
-                          All <ArrowRight className="h-3 w-3" />
-                        </Link>
-                      </Button>
-                    </>
-                  }
-                />
-                <ScrollArea fill hideScrollbar className={COMMAND_CENTER_PANEL_BODY_SCROLL}>
-                  <div className="min-w-0 w-full max-w-full overscroll-contain p-1.5">
-                    {projects.length === 0 ? (
-                      <EmptyState
-                        illustrationPreset="projects"
-                        title="No projects yet"
-                        description="Create a project to start shipping."
-                        className="min-h-[12rem]"
-                        action={
-                          canCreateProject
-                            ? { label: "New project", onClick: handleOpenWizard }
-                            : { label: "All projects", href: "/build/all" }
-                        }
-                      />
-                    ) : (
-                      <PmStaggerList className="flex flex-col gap-1">
-                        {projects.slice(0, 8).map((project) => (
-                          <ProjectCard
-                            key={project.id}
-                            project={project}
-                            onCreateIssue={
-                              canCreateIssue ? handleCreateForProject : undefined
-                            }
-                          />
-                        ))}
-                      </PmStaggerList>
-                    )}
-                  </div>
-                </ScrollArea>
-              </PmPanel>
-            </PmSection>
+            <MyIssuesPanel
+              items={myWorkItems}
+              projects={projects}
+              isLoading={myIssuesLoading}
+              isError={myIssuesError}
+              isFetchingNextPage={isFetchingNextPage}
+              emptyActions={myIssuesEmpty}
+              onRetry={handleMyIssuesRetry}
+              onScroll={handleMyIssuesScroll}
+              onCreateIssue={handleCreateIssueShortcut}
+              onCreateForProject={handleCreateForProject}
+            />
+            <ProjectsPanel
+              projects={projects}
+              canCreateProject={canCreateProject}
+              canCreateIssue={canCreateIssue}
+              onCreateProject={handleOpenWizard}
+              onCreateForProject={handleCreateForProject}
+            />
           </div>
 
           <motion.p

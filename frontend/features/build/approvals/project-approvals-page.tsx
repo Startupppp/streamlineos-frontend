@@ -1,9 +1,8 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { ChevronDownIcon, EllipsisIcon, PlusIcon } from "@animateicons/react/lucide";
 import {
   useProjectApprovals,
   useCreateApproval,
@@ -13,144 +12,30 @@ import {
 } from "@/hooks/api/build";
 import { useCan } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable } from "@/components/ui/data-table";
-import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { DataTableSkeleton } from "@/components/ui/data-table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { ApprovalStatusBadge, entityTypeLabel } from "./approval-status-badge";
 import { DecideDialog } from "./decide-dialog";
 import { DelegateDialog } from "./delegate-dialog";
 import { RequestApprovalSheet } from "./request-approval-sheet";
-import type { Approval, ApprovalEntityType, ApprovalStatus, CreateApprovalInput, DecideApprovalInput } from "@/types/projects";
+import { RequestApprovalMenuButton } from "./approvals-toolbar";
+import { ApprovalsFilterBar } from "./approvals-filter-bar";
+import { useApprovalsColumns } from "./use-approvals-columns";
+import type {
+  Approval,
+  ApprovalEntityType,
+  CreateApprovalInput,
+  DecideApprovalInput,
+} from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   PmPageShell,
   PmSection,
   PM_FILL_PANEL,
 } from "@/features/build/shared/pm-chrome";
-import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
-import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
-import { TruncatedText } from "@/components/ui/truncated-text";
-
-const STATUS_OPTIONS: { value: string; label: string }[] = [
-  { value: "all", label: "All statuses" },
-  { value: "pending", label: "Pending" },
-  { value: "requested", label: "Requested" },
-  { value: "approved", label: "Approved" },
-  { value: "rejected", label: "Rejected" },
-  { value: "changes_requested", label: "Changes Requested" },
-  { value: "escalated", label: "Escalated" },
-  { value: "cancelled", label: "Cancelled" },
-];
-
-const ENTITY_OPTIONS: { value: string; label: string }[] = [
-  { value: "all", label: "All types" },
-  { value: "task", label: "Task" },
-  { value: "milestone", label: "Milestone" },
-  { value: "budget", label: "Budget" },
-  { value: "release", label: "Release" },
-  { value: "change_request", label: "Change Request" },
-  { value: "document", label: "Document" },
-  { value: "timesheet", label: "Timesheet" },
-  { value: "client_approval", label: "Client Approval" },
-];
-
-const DECIDABLE = new Set<ApprovalStatus>(["pending", "requested", "escalated", "changes_requested"]);
-
-function RequestApprovalMenuButton({
-  onRequestTask,
-  onRequestRelease,
-  onRequestMilestone,
-}: {
-  onRequestTask: () => void;
-  onRequestRelease: () => void;
-  onRequestMilestone: () => void;
-}) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button size="sm" className="gap-1.5 text-xs" {...hoverHandlers}>
-          <PlusIcon ref={iconRef} size={14} />
-          Request approval
-          <ChevronDownIcon size={12} className="ml-0.5 opacity-70" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-52">
-        <DropdownMenuItem onClick={onRequestTask}>Request task approval</DropdownMenuItem>
-        <DropdownMenuItem onClick={onRequestRelease}>Request release approval</DropdownMenuItem>
-        <DropdownMenuItem onClick={onRequestMilestone}>Request milestone approval</DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
-
-function ApprovalActions({
-  canDecideRow,
-  canManage,
-  decidable,
-  isEscalated,
-  onDecide,
-  onDelegate,
-  onEscalate,
-  onCancel,
-  onDelete,
-}: {
-  canDecideRow: boolean;
-  canManage: boolean;
-  decidable: boolean;
-  isEscalated: boolean;
-  onDecide: () => void;
-  onDelegate: () => void;
-  onEscalate: () => void;
-  onCancel: () => void;
-  onDelete: () => void;
-}) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  if (!canDecideRow && !canManage) return null;
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="w-7" aria-label="Approval actions" {...hoverHandlers}>
-          <EllipsisIcon ref={iconRef} size={16} />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        {canDecideRow ? <DropdownMenuItem onClick={onDecide}>Decide</DropdownMenuItem> : null}
-        {canManage && decidable ? <DropdownMenuItem onClick={onDelegate}>Delegate</DropdownMenuItem> : null}
-        {canManage && decidable && !isEscalated ? (
-          <DropdownMenuItem onClick={onEscalate}>Escalate</DropdownMenuItem>
-        ) : null}
-        {canManage && decidable ? <DropdownMenuItem onClick={onCancel}>Cancel</DropdownMenuItem> : null}
-        {canManage ? (
-          <DropdownMenuItem variant="destructive" onClick={onDelete}>
-            Delete
-          </DropdownMenuItem>
-        ) : null}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
 
 interface ProjectApprovalsPageProps {
   projectId: number;
@@ -195,17 +80,9 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
     setRequestOpen(true);
   }, []);
 
-  const handleRequestTask = useCallback(() => {
-    handleOpenRequest("task");
-  }, [handleOpenRequest]);
-
-  const handleRequestRelease = useCallback(() => {
-    handleOpenRequest("release");
-  }, [handleOpenRequest]);
-
-  const handleRequestMilestone = useCallback(() => {
-    handleOpenRequest("milestone");
-  }, [handleOpenRequest]);
+  const handleRequestTask = useCallback(() => handleOpenRequest("task"), [handleOpenRequest]);
+  const handleRequestRelease = useCallback(() => handleOpenRequest("release"), [handleOpenRequest]);
+  const handleRequestMilestone = useCallback(() => handleOpenRequest("milestone"), [handleOpenRequest]);
 
   const handleCreate = useCallback((input: CreateApprovalInput) => {
     createApproval.mutate(input, {
@@ -285,6 +162,8 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
     setEntityType("all");
   }, []);
 
+  const handleRetry = useCallback(() => void refetch(), [refetch]);
+
   const handleDecideDialogChange = useCallback((open: boolean) => {
     if (!open) setDecideTarget(null);
   }, []);
@@ -301,110 +180,17 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
     if (!open) setDeleteTarget(null);
   }, []);
 
-  const handleRetry = useCallback(() => {
-    void refetch();
-  }, [refetch]);
-
-  const columns = useMemo<DataTableColumn<Approval>[]>(() => [
-    {
-      key: "entityType",
-      header: "Type",
-      cell: (row) => (
-        <Badge variant="outline" className="px-1.5 py-0.5 text-[10px]">
-          {entityTypeLabel(row.entityType)}
-        </Badge>
-      ),
-    },
-    {
-      key: "title",
-      header: "Title",
-      className: TABLE_TITLE_CELL,
-      cell: (row) => (
-        <TruncatedText text={row.title} className="font-medium text-foreground" />
-      ),
-      sortable: true,
-      sortValue: (row) => row.title,
-    },
-    {
-      key: "approver",
-      header: "Approver",
-      cell: (row) => {
-        const name = memberName(row.approverId);
-        return (
-          <TruncatedText text={name} className="max-w-[8rem] text-muted-foreground" />
-        );
-      },
-    },
-    {
-      key: "level",
-      header: "Level",
-      cell: (row) => <span className="font-mono tabular-nums text-muted-foreground">{row.level}</span>,
-      className: "w-16",
-    },
-    {
-      key: "dueAt",
-      header: "Due",
-      cell: (row) =>
-        row.dueAt ? (
-          <span className="tabular-nums text-muted-foreground">{row.dueAt.slice(0, 10)}</span>
-        ) : (
-          <span className="text-muted-foreground">—</span>
-        ),
-      sortable: true,
-      sortValue: (row) => row.dueAt ?? "",
-    },
-    {
-      key: "status",
-      header: "Status",
-      cell: (row) => <ApprovalStatusBadge status={row.status} />,
-    },
-    {
-      key: "actions",
-      header: "",
-      className: "w-10",
-      cell: (row) => {
-        const canDecideRow = canDecide && DECIDABLE.has(row.status) && (canManage || row.approverId === currentUserId);
-        return (
-          <ApprovalActions
-            canDecideRow={canDecideRow}
-            canManage={canManage}
-            decidable={DECIDABLE.has(row.status)}
-            isEscalated={row.status === "escalated"}
-            onDecide={() => setDecideTarget(row)}
-            onDelegate={() => setDelegateTarget(row)}
-            onEscalate={() => handleEscalate(row)}
-            onCancel={() => setCancelTarget(row)}
-            onDelete={() => setDeleteTarget(row)}
-          />
-        );
-      },
-    },
-  ], [canDecide, canManage, currentUserId, memberName, handleEscalate]);
-
-  const filtersBar = (
-    <div className={FILTER_TOOLBAR_ROW}>
-      <Select value={status} onValueChange={setStatus}>
-        <SelectTrigger className="w-40">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {STATUS_OPTIONS.map((o) => (
-            <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <Select value={entityType} onValueChange={setEntityType}>
-        <SelectTrigger className="w-40">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {ENTITY_OPTIONS.map((o) => (
-            <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
-  );
+  const columns = useApprovalsColumns({
+    canDecide,
+    canManage,
+    currentUserId,
+    memberName,
+    setDecideTarget,
+    setDelegateTarget,
+    handleEscalate,
+    setCancelTarget,
+    setDeleteTarget,
+  });
 
   const items = data ?? [];
   const isFiltered = status !== "all" || entityType !== "all";
@@ -413,7 +199,14 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
     <PageWrapper
       title="Approvals"
       subtitle="Review and manage approval requests for this project"
-      filters={filtersBar}
+      filters={
+        <ApprovalsFilterBar
+          status={status}
+          entityType={entityType}
+          onStatusChange={setStatus}
+          onEntityTypeChange={setEntityType}
+        />
+      }
       actions={
         canRequest ? (
           <RequestApprovalMenuButton
@@ -445,7 +238,13 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
               }
             />
           ) : (
-            <DataTable data={items} columns={columns} getRowKey={(row) => row.id} minWidth="720px" className={PM_FILL_PANEL} />
+            <DataTable
+              data={items}
+              columns={columns}
+              getRowKey={(row) => row.id}
+              minWidth="720px"
+              className={PM_FILL_PANEL}
+            />
           )}
         </PmSection>
       </PmPageShell>

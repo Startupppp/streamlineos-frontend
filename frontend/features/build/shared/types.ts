@@ -105,7 +105,7 @@ export const priorityConfig: Record<
   URGENT: { label: "Urgent", color: "text-red-500", icon: "AlertTriangle" },
   HIGH: { label: "High", color: "text-orange-500", icon: "ArrowUp" },
   MEDIUM: { label: "Medium", color: "text-yellow-500", icon: "Minus" },
-  LOW: { label: "Low", color: "text-blue-500", icon: "ArrowDown" },
+  LOW: { label: "Low", color: "text-blue-400", icon: "ArrowDown" },
 };
 
 export interface StatusConfigEntry {

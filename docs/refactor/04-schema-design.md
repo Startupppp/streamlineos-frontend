@@ -97,7 +97,16 @@ INDEX (org_id, user_id)                   -- owning query: "my projects"
 Migration is expand → backfill → enforce (§5). The composite FK is what makes the wrong thing
 *impossible* rather than merely detected.
 
-### 3.2 Split unbounded JSONB entity collections out of hot rows — **P0**
+### 3.2 ~~Split unbounded JSONB entity collections out of hot rows~~ — **RETRACTED 2026-07-31**
+
+> **This section was wrong and is superseded by `03-change-map.md` §"Feedbucket JSONB".**
+> The arrays are **bounded** — `feedbucket.schemas.ts:80-81` caps ingest at `.max(50)` and the widget
+> sends `.slice(-30)`. No child table is needed; building one would be churn on a false premise.
+> The real defect was an **unprojected list query** selecting the log columns on every row, fixed with
+> `columns: { consoleLogs: false, networkLogs: false }`. Original (incorrect) analysis retained below
+> for provenance.
+
+### 3.2-original (superseded) — split unbounded JSONB entity collections out of hot rows
 
 `feedback.ts:145-146`:
 ```

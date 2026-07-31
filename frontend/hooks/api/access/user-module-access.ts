@@ -1,5 +1,6 @@
 "use client";
 
+import { useCan } from "@/hooks/api/access";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 
@@ -12,12 +13,13 @@ const userModuleAccessKey = (userId: string) =>
   ["access", "user-module-access", userId] as const;
 
 export function useUserModuleAccess(userId: string, enabled = true) {
+  const canViewEmployees = useCan("hr:employees:view");
   return useQuery<UserModuleAccess[]>({
     queryKey: userModuleAccessKey(userId),
     queryFn: () =>
       apiClient.get<UserModuleAccess[]>(`/access/user-module-access/${userId}`),
     staleTime: 30_000,
-    enabled: enabled && !!userId,
+    enabled: canViewEmployees && enabled && !!userId,
   });
 }
 

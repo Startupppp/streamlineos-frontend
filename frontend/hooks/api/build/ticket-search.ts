@@ -14,7 +14,7 @@ export function useTicketSearch(
 ) {
   const canView = useCan("build:tickets:view");
   return useQuery<TicketSearchResult[]>({
-    queryKey: [...queryKeys.projects.all, "search", "tickets", q],
+    queryKey: queryKeys.projects.ticketSearch(q),
     queryFn: () =>
       apiClient.get<TicketSearchResult[]>("/build/search/tickets", { q, limit: 10 }),
     staleTime: 30_000,

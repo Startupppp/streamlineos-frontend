@@ -333,19 +333,33 @@ export const queryKeys = {
       [...base, "projects", "list", filters] as const,
     detail: (id: number) => [...base, "projects", "detail", id] as const,
     sprints: (projectId?: number) =>
-      [...base, "projects", "sprints", projectId] as const,
+      projectId === undefined
+        ? ([...base, "projects", "sprints"] as const)
+        : ([...base, "projects", "sprints", projectId] as const),
     sprint: (id: number) =>
       [...base, "projects", "sprints", "detail", id] as const,
     tickets: (params?: Record<string, unknown>) =>
       [...base, "projects", "tickets", params] as const,
     ticket: (id: number) =>
       [...base, "projects", "tickets", "detail", id] as const,
+    ticketRelations: (ticketId: number) =>
+      [...base, "projects", "tickets", "detail", ticketId, "relations"] as const,
+    subtasks: (ticketId: number) =>
+      [...base, "projects", "subtasks", { ticketId }] as const,
+    ticketSearch: (q: string) =>
+      [...base, "projects", "search", "tickets", q] as const,
     members: (projectId?: number) =>
-      [...base, "projects", "members", projectId] as const,
+      projectId === undefined
+        ? ([...base, "projects", "members"] as const)
+        : ([...base, "projects", "members", projectId] as const),
     labels: (projectId?: number) =>
-      [...base, "projects", "labels", projectId] as const,
+      projectId === undefined
+        ? ([...base, "projects", "labels"] as const)
+        : ([...base, "projects", "labels", projectId] as const),
     timeEntries: (params?: Record<string, unknown>) =>
-      [...base, "projects", "timeEntries", params] as const,
+      params === undefined
+        ? ([...base, "projects", "timeEntries"] as const)
+        : ([...base, "projects", "timeEntries", params] as const),
     epics: (projectId: number) =>
       [...base, "projects", "epics", projectId] as const,
     cycles: (projectId: number) =>
@@ -373,19 +387,25 @@ export const queryKeys = {
       case: (projectId?: number, id?: number) =>
         [...base, "projects", projectId, "qa", "cases", id] as const,
       runs: (projectId?: number, status?: string) =>
-        [...base, "projects", projectId, "qa", "runs", status] as const,
+        status === undefined
+          ? ([...base, "projects", projectId, "qa", "runs"] as const)
+          : ([...base, "projects", projectId, "qa", "runs", status] as const),
       run: (projectId?: number, runId?: number) =>
         [...base, "projects", projectId, "qa", "runs", runId] as const,
     },
     bugs: {
       list: (projectId?: number, params?: Record<string, unknown>) =>
-        [...base, "projects", projectId, "bugs", params] as const,
+        params === undefined
+          ? ([...base, "projects", projectId, "bugs"] as const)
+          : ([...base, "projects", projectId, "bugs", params] as const),
       detail: (projectId?: number, bugId?: number) =>
         [...base, "projects", projectId, "bugs", bugId] as const,
     },
     changeRequests: {
       list: (projectId: number, params?: Record<string, unknown>) =>
-        [...base, "projects", projectId, "change-requests", params] as const,
+        params === undefined
+          ? ([...base, "projects", projectId, "change-requests"] as const)
+          : ([...base, "projects", projectId, "change-requests", params] as const),
       detail: (projectId: number, crId: number) =>
         [...base, "projects", projectId, "change-requests", crId] as const,
     },
@@ -401,19 +421,25 @@ export const queryKeys = {
     approvals: {
       inbox: () => [...base, "projects", "approvals", "inbox"] as const,
       list: (projectId: number, params?: Record<string, unknown>) =>
-        [...base, "projects", projectId, "approvals", params] as const,
+        params === undefined
+          ? ([...base, "projects", projectId, "approvals"] as const)
+          : ([...base, "projects", projectId, "approvals", params] as const),
       detail: (projectId: number, id: number) =>
         [...base, "projects", projectId, "approvals", id] as const,
     },
     risks: {
       list: (projectId: number, params?: Record<string, unknown>) =>
-        [...base, "projects", projectId, "risks", params] as const,
+        params === undefined
+          ? ([...base, "projects", projectId, "risks"] as const)
+          : ([...base, "projects", projectId, "risks", params] as const),
       detail: (projectId: number, id: number) =>
         [...base, "projects", projectId, "risks", id] as const,
     },
     decisions: {
       list: (projectId: number, params?: Record<string, unknown>) =>
-        [...base, "projects", projectId, "decisions", params] as const,
+        params === undefined
+          ? ([...base, "projects", projectId, "decisions"] as const)
+          : ([...base, "projects", projectId, "decisions", params] as const),
       detail: (projectId: number, id: number) =>
         [...base, "projects", projectId, "decisions", id] as const,
     },
@@ -436,13 +462,17 @@ export const queryKeys = {
     },
     incidents: {
       list: (projectId?: number, params?: Record<string, unknown>) =>
-        [...base, "projects", projectId, "incidents", params] as const,
+        params === undefined
+          ? ([...base, "projects", projectId, "incidents"] as const)
+          : ([...base, "projects", projectId, "incidents", params] as const),
       detail: (projectId?: number, id?: number) =>
         [...base, "projects", projectId, "incidents", id] as const,
     },
     forms: {
       list: (projectId: number, params?: Record<string, unknown>) =>
-        [...base, "projects", projectId, "forms", params] as const,
+        params === undefined
+          ? ([...base, "projects", projectId, "forms"] as const)
+          : ([...base, "projects", projectId, "forms", params] as const),
       detail: (projectId: number, formId: number) =>
         [...base, "projects", projectId, "forms", formId] as const,
       submissions: (projectId: number, formId: number) =>
@@ -487,6 +517,12 @@ export const queryKeys = {
     },
     allWork: (filters?: Record<string, unknown>) =>
       [...base, "projects", "all-work", filters] as const,
+    allWorkInfinite: (filters: Record<string, unknown>) =>
+      [...base, "projects", "all-work", filters, "infinite"] as const,
+    webhooks: (projectId: number) =>
+      [...base, "projects", projectId, "webhooks"] as const,
+    webhookDeliveries: (projectId: number, webhookId: number) =>
+      [...base, "projects", projectId, "webhooks", webhookId, "deliveries"] as const,
     workspaceViews: () => [...base, "projects", "workspace-views"] as const,
     agentTokens: () => [...base, "projects", "agent-tokens"] as const,
     commentDrafts: {
@@ -560,8 +596,10 @@ export const queryKeys = {
       [...base, "dashboard", "recentProjects", orgId] as const,
     teamAvailability: (orgId: string) =>
       [...base, "dashboard", "teamAvailability", orgId] as const,
-    myIssues: (userId: string) =>
-      [...base, "dashboard", "myIssues", userId] as const,
+    myIssues: (userId?: string) =>
+      userId === undefined
+        ? ([...base, "dashboard", "myIssues"] as const)
+        : ([...base, "dashboard", "myIssues", userId] as const),
     activeSprintSummary: (orgId: string) =>
       [...base, "dashboard", "activeSprintSummary", orgId] as const,
     recentActivity: (orgId: string) =>
@@ -893,9 +931,13 @@ export const queryKeys = {
     velocity: (projectId: number) =>
       [...base, "projectReports", "velocity", projectId] as const,
     burnup: (projectId: number, sprintId?: number) =>
-      [...base, "projectReports", "burnup", projectId, sprintId] as const,
+      sprintId === undefined
+        ? ([...base, "projectReports", "burnup", projectId] as const)
+        : ([...base, "projectReports", "burnup", projectId, sprintId] as const),
     cfd: (projectId: number, params?: Record<string, unknown>) =>
-      [...base, "projectReports", "cfd", projectId, params] as const,
+      params === undefined
+        ? ([...base, "projectReports", "cfd", projectId] as const)
+        : ([...base, "projectReports", "cfd", projectId, params] as const),
     criticalPath: (projectId: number) =>
       [...base, "projectReports", "criticalPath", projectId] as const,
     cycleTime: (projectId: number) =>

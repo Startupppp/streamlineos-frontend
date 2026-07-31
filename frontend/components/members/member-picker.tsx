@@ -44,6 +44,7 @@ interface MemberPickerBaseProps {
   disabled?: boolean;
   className?: string;
   excludeUserId?: string;
+  excludeUserIds?: string[];
   trigger?: ReactNode;
   contentAlign?: "start" | "center" | "end";
   contentClassName?: string;
@@ -184,9 +185,12 @@ function filterMembers(
   search: string,
   serverFiltered: boolean,
   excludeUserId?: string,
+  excludeUserIds?: string[],
 ) {
-  const eligible = excludeUserId
-    ? members.filter((m) => m.id !== excludeUserId)
+  const excludeSet = new Set<string>(excludeUserIds ?? []);
+  if (excludeUserId) excludeSet.add(excludeUserId);
+  const eligible = excludeSet.size > 0
+    ? members.filter((m) => !excludeSet.has(m.id))
     : members;
   if (serverFiltered || !search.trim()) return eligible;
   const q = search.toLowerCase();
@@ -218,6 +222,7 @@ export function MemberPicker(props: MemberPickerProps) {
     disabled,
     className,
     excludeUserId,
+    excludeUserIds,
     trigger,
     contentAlign = "start",
     contentClassName,
@@ -237,8 +242,8 @@ export function MemberPicker(props: MemberPickerProps) {
   );
   const serverFiltered = projectId === undefined;
   const filtered = useMemo(
-    () => filterMembers(members, search, serverFiltered, excludeUserId),
-    [members, search, serverFiltered, excludeUserId],
+    () => filterMembers(members, search, serverFiltered, excludeUserId, excludeUserIds),
+    [members, search, serverFiltered, excludeUserId, excludeUserIds],
   );
 
   const handleSearchChange = useCallback((v: string) => {

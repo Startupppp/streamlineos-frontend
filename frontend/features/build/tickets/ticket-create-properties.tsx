@@ -25,6 +25,7 @@ import { popoverOptionBaseClass, popoverOptionSelectedClass } from "../shared/po
 import { LabelsSearchCommand } from "../shared/labels-search-command";
 import { StatusConfigDot } from "../shared/status-badge";
 import { buildStatusConfig, getStatusEntry } from "../shared/types";
+import { getPriorityColor } from "../shared/priority-badge";
 import { getUserDisplayName, getUserInitials } from "../shared/resolve-user-name";
 import type { ProjectStatusRecord, ProjectMemberRecord, Cycle, TicketLabel } from "@/types/projects";
 import type { TicketPriority } from "@/types/projects";
@@ -35,13 +36,6 @@ const PRIORITIES: { value: TicketPriority; label: string; Icon: typeof Minus }[]
   { value: "MEDIUM", label: "Medium", Icon: Minus },
   { value: "LOW", label: "Low", Icon: ArrowDown },
 ];
-
-const PRIORITY_COLOR: Record<TicketPriority, string> = {
-  URGENT: "text-red-500",
-  HIGH: "text-orange-500",
-  MEDIUM: "text-yellow-500",
-  LOW: "text-blue-400",
-};
 
 export interface CreateTicketPropertiesValue {
   status: string;
@@ -126,7 +120,7 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
 
   const selectedPriorityDef = value.priority ? PRIORITIES.find((p) => p.value === value.priority) : null;
   const PriorityIcon = selectedPriorityDef?.Icon ?? Minus;
-  const priorityColor = value.priority ? PRIORITY_COLOR[value.priority] : "text-muted-foreground";
+  const priorityColor = value.priority ? getPriorityColor(value.priority) : "text-muted-foreground";
 
   function makeStatusHandler(s: string) {
     return function selectStatus() {
@@ -245,7 +239,7 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
                   value.priority === pVal && popoverOptionSelectedClass,
                 )}
               >
-                <Icon className={cn("h-3.5 w-3.5 shrink-0", PRIORITY_COLOR[pVal])} />
+                <Icon className={cn("h-3.5 w-3.5 shrink-0", getPriorityColor(pVal))} />
                 {label}
                 {value.priority === pVal && <Check className="ml-auto h-3 w-3" />}
               </button>

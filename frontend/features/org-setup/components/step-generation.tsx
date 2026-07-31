@@ -178,7 +178,7 @@ export function StepGeneration({ data }: StepGenerationProps) {
       // the failure instead of completing silently as if everyone was invited.
       if (inviteFailures.length > 0) {
         toast.error(
-          `Workspace created, but ${inviteFailures.length} invitation batch(es) failed: ${inviteFailures[0]}`,
+          `Organization created, but ${inviteFailures.length} invitation batch(es) failed: ${inviteFailures[0]}`,
         );
       }
 

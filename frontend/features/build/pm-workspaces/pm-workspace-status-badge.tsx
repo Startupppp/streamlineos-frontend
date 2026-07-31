@@ -1,17 +1,10 @@
 import { memo } from "react";
-import { Badge } from "@/components/ui/badge";
 import type { PmWorkspaceStatus } from "@/types/projects";
-import { cn } from "@/lib/utils";
+import { StatusMapBadge, type StatusEntry } from "@/components/ui/status-map-badge";
 
-const STATUS_STYLE: Record<PmWorkspaceStatus, string> = {
-  active:
-    "text-emerald-700 border-emerald-200 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  archived: "text-muted-foreground border-border bg-muted dark:bg-muted/40",
-};
-
-const STATUS_LABEL: Record<PmWorkspaceStatus, string> = {
-  active: "Active",
-  archived: "Archived",
+const PM_WORKSPACE_STATUS_MAP: Record<PmWorkspaceStatus, StatusEntry> = {
+  active: { label: "Active", tone: "success" },
+  archived: { label: "Archived", tone: "neutral", className: "dark:bg-muted/40" },
 };
 
 export const PmWorkspaceStatusBadge = memo(function PmWorkspaceStatusBadge({
@@ -19,12 +12,5 @@ export const PmWorkspaceStatusBadge = memo(function PmWorkspaceStatusBadge({
 }: {
   status: PmWorkspaceStatus;
 }) {
-  return (
-    <Badge
-      variant="outline"
-      className={cn("px-1.5 py-0.5 text-[10px]", STATUS_STYLE[status])}
-    >
-      {STATUS_LABEL[status]}
-    </Badge>
-  );
+  return <StatusMapBadge status={status} map={PM_WORKSPACE_STATUS_MAP} />;
 });

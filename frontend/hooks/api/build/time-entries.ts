@@ -16,7 +16,7 @@ export function useLogTime(options?: Parameters<typeof useMutation>[0]) {
       ),
     onSuccess: (_: unknown, variables: LogTimeInput) => {
       queryClient.invalidateQueries({
-        queryKey: [...queryKeys.projects.all, "timeEntries"],
+        queryKey: queryKeys.projects.timeEntries(),
       });
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.ticket(variables.ticketId),

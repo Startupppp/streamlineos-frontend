@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import { LoadingButton } from "@/components/ui/loading-button";
 import { useState, useCallback, useMemo, useTransition, useEffect } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
@@ -157,7 +158,7 @@ export function UsersPage() {
           : undefined,
       role: role !== "all" ? role : undefined,
       departmentId: departmentId !== "all" ? Number(departmentId) : undefined,
-      branchId: branchId !== "all" ? Number(branchId) : undefined,
+      branchId: branchId !== "all" ? branchId : undefined,
       sortBy,
       sortOrder,
     },
@@ -175,8 +176,8 @@ export function UsersPage() {
   const canExport = useCan("hr:export:manage");
 
   const branchMap = useMemo(() => {
-    const m = new Map<number, string>();
-    for (const b of branchesData?.data ?? []) m.set(Number(b.id), b.name);
+    const m = new Map<string, string>();
+    for (const b of branchesData?.data ?? []) m.set(String(b.id), b.name);
     return m;
   }, [branchesData]);
 
@@ -316,7 +317,7 @@ export function UsersPage() {
       header: "Branch",
       cell: (user) => (
         <span className="text-muted-foreground">
-          {user.branchId != null ? (branchMap.get(user.branchId) ?? String(user.branchId)) : "—"}
+          {user.branchId != null ? (branchMap.get(String(user.branchId)) ?? String(user.branchId)) : "—"}
         </span>
       ),
     },
@@ -540,40 +541,43 @@ export function UsersPage() {
               </span>
               <div className="flex items-center gap-1.5 ml-auto flex-wrap">
                 {canManage && (
-                  <Button
+                  <LoadingButton
                     variant="outline"
                     size="sm"
                     className="h-7 text-xs"
                     onClick={handleBulkSuspend}
+                    isPending={isSuspending}
                     disabled={bulkIsPending}
                   >
                     <ShieldOff className="h-3 w-3 mr-1" />
                     Suspend
-                  </Button>
+                  </LoadingButton>
                 )}
                 {canManage && (
-                  <Button
+                  <LoadingButton
                     variant="outline"
                     size="sm"
                     className="h-7 text-xs"
                     onClick={handleBulkArchive}
+                    isPending={isArchiving}
                     disabled={bulkIsPending}
                   >
                     <UserX className="h-3 w-3 mr-1" />
                     Archive
-                  </Button>
+                  </LoadingButton>
                 )}
                 {canManage && (
-                  <Button
+                  <LoadingButton
                     variant="outline"
                     size="sm"
                     className="h-7 text-xs"
                     onClick={handleBulkRestore}
+                    isPending={isRestoring}
                     disabled={bulkIsPending}
                   >
                     <RefreshCw className="h-3 w-3 mr-1" />
                     Restore
-                  </Button>
+                  </LoadingButton>
                 )}
                 {canManage && (
                   <Button

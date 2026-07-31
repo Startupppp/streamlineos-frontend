@@ -38,7 +38,7 @@ import {
 import { LoadingButton } from "@/components/ui/loading-button";
 import { TeamFormSheet } from "./team-form-sheet";
 import { TeamProjectsSection } from "./team-projects-section";
-import { WorkspaceMemberPicker } from "./workspace-member-picker";
+import { MemberPicker } from "@/components/members/member-picker";
 import type { ProjectTeamMember, UpdateTeamInput } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -316,10 +316,12 @@ export function TeamHomePage({ teamId }: Props) {
             </p>
             {canManage ? (
               <div className="flex min-w-0 flex-wrap items-center gap-2">
-                <WorkspaceMemberPicker
+                <MemberPicker
                   value={addMemberId}
-                  onChange={(id) => setAddMemberId(id)}
+                  onChange={(id) => setAddMemberId(id ?? undefined)}
                   excludeUserIds={data.members.map((m) => m.userId)}
+                  placeholder="Add a member…"
+                  className="h-8 min-w-[180px]"
                 />
                 <Select
                   value={addMemberRole}

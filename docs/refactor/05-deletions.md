@@ -42,15 +42,23 @@ live file because from-based scanners cannot see that form.
 | Present in migrations | 1 (the `0000` baseline) |
 | Exported from the barrel? | Yes, but only transitively via `export * from "./core"` in `db/schema/build/index.ts` — exported, never consumed |
 
-**Verdict: dead application-side.** Deletion is deferred rather than executed because H1 requires a
-reviewed, reversible migration with dry-run row counts, and that needs a live DB connection which this
-session does not have. Required before dropping:
-```sql
-SELECT count(*) FROM reports;              -- dry-run row count
-SELECT count(*) FROM reports WHERE org_id IS NOT NULL;
-```
-Then an expand/contract migration with a tested rollback. If the table holds rows, they must be
-exported to a backup path first.
+**Verdict: dead application-side. Deletion migration AUTHORED — `0375_build_drop_dead_reports.sql`.**
+
+Re-verified from scratch on 2026-07-31 rather than inherited from the earlier pass:
+
+| Re-check | Result |
+|---|---|
+| `grep -rnE "(from\|insert\|update\|delete)\(\s*reports\s*\)" backend/src` | **0 matches** |
+| Bare side-effect imports repo-wide (`^\s*import\s+"[^"]+";`) | **5 hits, all `reflect-metadata`** — the trap does not apply |
+| Every other `reports` hit | a different concept: `accounting/reports` routes, `support:reports:overview` cache keys, `projectReports` (a service), prose in seeds/specs |
+| What actually serves Build reporting | `projects-reports.service.ts` → `project_daily_snapshots`, `tickets`, `sprints`, `custom_states` — never this table |
+
+The migration does **not** trust that proof blindly: a `DO` block reads `count(*)` and
+`RAISE EXCEPTION`s if the table holds any rows, so a production database with unexpected data fails
+loudly instead of losing it. `0375_…down.sql` recreates the table with its exact columns, defaults,
+both FKs, the `uniq_reports_org_id` candidate key and `idx_reports_org_type`.
+
+The Drizzle symbol is removed from `db/schema/build/core.ts` in the same change.
 
 ---
 

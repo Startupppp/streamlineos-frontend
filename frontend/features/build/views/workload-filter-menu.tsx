@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useMemo, useRef, useState } from "react";
 import {
@@ -9,153 +9,22 @@ import {
 import { Button } from "@/components/ui/button";
 import {
   ListFilter,
-  ChevronRight,
   CircleDot,
   AlertTriangle,
   Layers,
   User,
   Zap,
   RefreshCw,
-  Check,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import {
-  FilterAssigneeLeading,
-  FilterPriorityLeading,
-  FilterTypeLeading,
-} from "@/features/build/shared/filter-option-leading";
-import { getUserDisplayName } from "@/features/build/shared/resolve-user-name";
-import { resolveColumnColor } from "@/features/build/shared/column-colors";
 import type { FilterState } from "./workload-types";
+import {
+  type WorkloadFilterMenuProps,
+  type WorkloadFilterCategory,
+} from "./workload-filter-types";
+import { CategoryRow } from "./workload-filter-rows";
+import { WorkloadSubmenu } from "./workload-filter-submenu";
 
-interface WorkloadMember {
-  id: string;
-  name: string | null;
-  firstName: string | null;
-  lastName: string | null;
-  image?: string | null;
-}
-
-interface StatusOption {
-  name: string;
-  color: string | null;
-  type?: string | null;
-}
-
-interface SprintOption {
-  id: number;
-  name: string;
-}
-
-interface CycleOption {
-  id: number;
-  name: string;
-}
-
-export interface WorkloadFilterMenuProps {
-  filters: FilterState;
-  members: WorkloadMember[];
-  sprints: SprintOption[];
-  cycles: CycleOption[];
-  projectStatuses?: StatusOption[];
-  activeFilterCount: number;
-  onFilterChange: <K extends keyof FilterState>(key: K, value: FilterState[K]) => void;
-}
-
-type WorkloadFilterCategory =
-  | "sprint"
-  | "cycle"
-  | "priority"
-  | "type"
-  | "status"
-  | "assignee";
-
-const TICKET_TYPES = ["TASK", "BUG", "STORY", "EPIC", "SUBTASK"] as const;
-const PRIORITIES = ["URGENT", "HIGH", "MEDIUM", "LOW"] as const;
-
-function formatEnumLabel(value: string): string {
-  return value.charAt(0) + value.slice(1).toLowerCase();
-}
-
-interface CategoryRowProps {
-  icon: React.ReactNode;
-  label: string;
-  activeCount: number;
-  hovered: boolean;
-  onMouseEnter: () => void;
-  onFocus: () => void;
-  onKeyDown: (e: React.KeyboardEvent) => void;
-}
-
-function CategoryRow({
-  icon,
-  label,
-  activeCount,
-  hovered,
-  onMouseEnter,
-  onFocus,
-  onKeyDown,
-}: CategoryRowProps) {
-  return (
-    <div
-      role="menuitem"
-      tabIndex={0}
-      aria-haspopup="true"
-      aria-expanded={hovered}
-      onMouseEnter={onMouseEnter}
-      onFocus={onFocus}
-      onKeyDown={onKeyDown}
-      className={cn(
-        "flex h-9 cursor-default select-none items-center gap-2.5 rounded-md px-3 text-sm outline-none transition-colors motion-reduce:transition-none",
-        hovered
-          ? "bg-primary/10 text-foreground"
-          : "text-foreground/90 hover:bg-muted/70 focus-visible:bg-primary/10",
-      )}
-    >
-      <span className="shrink-0 text-muted-foreground [&_svg]:h-4 [&_svg]:w-4">{icon}</span>
-      <span className="min-w-0 flex-1 truncate font-medium tracking-tight">{label}</span>
-      {activeCount > 0 ? (
-        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground">
-          {activeCount}
-        </span>
-      ) : null}
-      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-    </div>
-  );
-}
-
-interface OptionRowProps {
-  active: boolean;
-  label: string;
-  leading?: React.ReactNode;
-  color?: string | null;
-  onClick: () => void;
-}
-
-function OptionRow({ active, label, leading, color, onClick }: OptionRowProps) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex h-9 w-full items-center gap-2.5 rounded-md px-3 text-left text-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:outline-none motion-reduce:transition-none"
-    >
-      <Check
-        className={cn(
-          "h-4 w-4 shrink-0 transition-opacity motion-reduce:transition-none",
-          active ? "opacity-100" : "opacity-0",
-        )}
-      />
-      {leading}
-      {!leading && color ? (
-        <span
-          className="h-2.5 w-2.5 shrink-0 rounded-full"
-          style={{ backgroundColor: color }}
-        />
-      ) : null}
-      <span className="min-w-0 flex-1 truncate text-left">{label}</span>
-    </button>
-  );
-}
+export type { WorkloadFilterMenuProps };
 
 export function WorkloadFilterMenu({
   filters,
@@ -167,7 +36,8 @@ export function WorkloadFilterMenu({
   onFilterChange,
 }: WorkloadFilterMenuProps) {
   const [open, setOpen] = useState(false);
-  const [hoveredCategory, setHoveredCategory] = useState<WorkloadFilterCategory | null>(null);
+  const [hoveredCategory, setHoveredCategory] =
+    useState<WorkloadFilterCategory | null>(null);
   const submenuRef = useRef<HTMLDivElement>(null);
   const categoryListRef = useRef<HTMLDivElement>(null);
 
@@ -234,20 +104,26 @@ export function WorkloadFilterMenu({
     setOpen(false);
   }, []);
 
-  const handleMenuMouseLeave = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    const next = e.relatedTarget;
-    if (next instanceof Node && e.currentTarget.contains(next)) return;
-    setHoveredCategory(null);
-  }, []);
+  const handleMenuMouseLeave = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      const next = e.relatedTarget;
+      if (next instanceof Node && e.currentTarget.contains(next)) return;
+      setHoveredCategory(null);
+    },
+    [],
+  );
 
   const handleSubmenuClose = useCallback(() => {
     setHoveredCategory(null);
     categoryListRef.current?.focus();
   }, []);
 
-  const handleCategoryMouseEnter = useCallback((key: WorkloadFilterCategory) => {
-    setHoveredCategory(key);
-  }, []);
+  const handleCategoryMouseEnter = useCallback(
+    (key: WorkloadFilterCategory) => {
+      setHoveredCategory(key);
+    },
+    [],
+  );
 
   const handleCategoryFocus = useCallback((key: WorkloadFilterCategory) => {
     setHoveredCategory(key);
@@ -403,102 +279,20 @@ export function WorkloadFilterMenu({
               onKeyDown={handleSubmenuKeyDown}
               className="max-h-[280px] w-[240px] overflow-y-auto scrollbar-hide border-l border-border bg-muted/20 p-1 outline-none"
             >
-              {hoveredCategory === "sprint"
-                ? sprints.map((s) => {
-                    const id = String(s.id);
-                    function handleClick() {
-                      handleSelectSprint(id);
-                    }
-                    return (
-                      <OptionRow
-                        key={s.id}
-                        active={filters.sprintId === id}
-                        label={s.name}
-                        onClick={handleClick}
-                      />
-                    );
-                  })
-                : null}
-              {hoveredCategory === "cycle"
-                ? cycles.map((c) => {
-                    const id = String(c.id);
-                    function handleClick() {
-                      handleSelectCycle(id);
-                    }
-                    return (
-                      <OptionRow
-                        key={c.id}
-                        active={filters.cycleId === id}
-                        label={c.name}
-                        onClick={handleClick}
-                      />
-                    );
-                  })
-                : null}
-              {hoveredCategory === "priority"
-                ? PRIORITIES.map((p) => {
-                    function handleClick() {
-                      handleSelectPriority(p);
-                    }
-                    return (
-                      <OptionRow
-                        key={p}
-                        active={filters.priority === p}
-                        label={formatEnumLabel(p)}
-                        leading={<FilterPriorityLeading priority={p} />}
-                        onClick={handleClick}
-                      />
-                    );
-                  })
-                : null}
-              {hoveredCategory === "type"
-                ? TICKET_TYPES.map((t) => {
-                    function handleClick() {
-                      handleSelectType(t);
-                    }
-                    return (
-                      <OptionRow
-                        key={t}
-                        active={filters.type === t}
-                        label={formatEnumLabel(t)}
-                        leading={<FilterTypeLeading type={t} />}
-                        onClick={handleClick}
-                      />
-                    );
-                  })
-                : null}
-              {hoveredCategory === "status" && projectStatuses
-                ? projectStatuses.map((s) => {
-                    function handleClick() {
-                      handleSelectStatus(s.name);
-                    }
-                    return (
-                      <OptionRow
-                        key={s.name}
-                        active={filters.status === s.name}
-                        label={s.name.replace(/_/g, " ")}
-                        color={s.color ? resolveColumnColor(s.color) : null}
-                        onClick={handleClick}
-                      />
-                    );
-                  })
-                : null}
-              {hoveredCategory === "assignee"
-                ? members.map((m) => {
-                    function handleClick() {
-                      handleSelectAssignee(m.id);
-                    }
-                    return (
-                      <OptionRow
-                        key={m.id}
-                        active={filters.assigneeId === m.id}
-                        label={getUserDisplayName(m)}
-                        leading={<FilterAssigneeLeading assigneeId={m.id} member={m} />}
-                        onClick={handleClick}
-                      />
-                    );
-                  })
-                : null}
+              <WorkloadSubmenu
+                hoveredCategory={hoveredCategory}
+                sprints={sprints}
+                cycles={cycles}
+                projectStatuses={projectStatuses}
+                members={members}
+                filters={filters}
+                onSelectSprint={handleSelectSprint}
+                onSelectCycle={handleSelectCycle}
+                onSelectPriority={handleSelectPriority}
+                onSelectType={handleSelectType}
+                onSelectStatus={handleSelectStatus}
+                onSelectAssignee={handleSelectAssignee}
+              />
             </div>
           ) : null}
         </div>

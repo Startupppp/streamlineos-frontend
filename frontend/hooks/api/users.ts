@@ -12,7 +12,7 @@ interface UserListParams {
   status?: "active" | "suspended" | "archived";
   role?: string;
   departmentId?: number;
-  branchId?: number;
+  branchId?: string;
   teamId?: string;
   managerUserId?: string;
   sortBy?: "name" | "joinedAt" | "status";
@@ -78,7 +78,7 @@ interface User {
   designation: string | null;
   phone: string | null;
   departmentId: number | null;
-  branchId: number | null;
+  branchId: string | null;
   isActive: boolean;
   hasDashboardAccess: boolean;
   reportingTo: string | null;
@@ -384,7 +384,7 @@ interface UserMembership {
   userId: string;
   orgId: string;
   businessUnitId: string | null;
-  branchId: number | null;
+  branchId: string | null;
   departmentId: number | null;
   teamId: string | null;
   managerUserId: string | null;
@@ -435,6 +435,21 @@ export const useResendInvite = () => {
     mutationKey: ["resend", "invite"],
     mutationFn: (invitationId) =>
       apiClient.post<{ success: boolean }>(`/users/invitations/${invitationId}/resend`, {}),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.invitations() });
+    },
+  });
+};
+
+export const useChangeInvitationRole = () => {
+  const queryClient = useQueryClient();
+  return useMutation<{ success: boolean }, Error, { invitationId: string; role: string }>({
+    mutationKey: ["change", "invitation-role"],
+    mutationFn: ({ invitationId, role }) =>
+      apiClient.patch<{ success: boolean }>(
+        `/users/invitations/${invitationId}/role`,
+        { role },
+      ),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.invitations() });
     },

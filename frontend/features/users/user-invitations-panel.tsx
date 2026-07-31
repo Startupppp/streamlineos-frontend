@@ -1,5 +1,6 @@
 "use client";
 
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useState, useCallback, useTransition, useEffect } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
@@ -27,10 +28,12 @@ import { ErrorState } from "@/components/shared/error-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { UserInviteDialog } from "@/features/users/user-invite-dialog";
+import { USER_INVITE_ROLES } from "@/features/users/user-invite-roles";
 import {
   useInvitations,
   useResendInvite,
   useCancelInvitation,
+  useChangeInvitationRole,
 } from "@/hooks/api/users";
 import type { Invitation } from "@/hooks/api/users";
 import { getApiError } from "@/lib/api-client";
@@ -55,6 +58,38 @@ function getStatus(inv: Invitation): InvStatus {
   return "pending";
 }
 
+function InvitationRoleSelect({
+  invitationId,
+  role,
+  disabled,
+  onChange,
+}: {
+  invitationId: string;
+  role: string;
+  disabled: boolean;
+  onChange: (invitationId: string, role: string) => void;
+}) {
+  const handleValueChange = useCallback(
+    (value: string) => onChange(invitationId, value),
+    [invitationId, onChange],
+  );
+
+  return (
+    <Select value={role} onValueChange={handleValueChange} disabled={disabled}>
+      <SelectTrigger className="h-6 w-fit min-w-[7rem] border-input bg-card text-[11px]">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+        {USER_INVITE_ROLES.map((r) => (
+          <SelectItem key={r.value} value={r.value}>
+            {r.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
 export function UserInvitationsPanel() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -66,7 +101,7 @@ export function UserInvitationsPanel() {
     setOpen: openInvite,
   } = useQueryParamOpen("create");
   const [cancelId, setCancelId] = useState<string | null>(null);
-  const canViewInvitations = useCan("hr:employees:view");
+  const canViewInvitations = useCan("hr:employees:manage");
   const canInvite = useCan("hr:employees:create");
   const canCancelInvitation = useCan("hr:employees:delete");
 
@@ -88,6 +123,7 @@ export function UserInvitationsPanel() {
   );
   const { mutate: resend, isPending: isResending } = useResendInvite();
   const { mutate: cancel, isPending: isCancelling } = useCancelInvitation();
+  const { mutate: changeRole, isPending: isChangingRole } = useChangeInvitationRole();
 
   const allRows = data?.data ?? [];
   const filtered = allRows.filter((inv) => {
@@ -148,6 +184,19 @@ export function UserInvitationsPanel() {
 
   const handleCancelRequest = useCallback((id: string) => setCancelId(id), []);
 
+  const handleRoleChange = useCallback(
+    (invitationId: string, role: string) => {
+      changeRole(
+        { invitationId, role },
+        {
+          onSuccess: () => toast.success("Invitation role updated"),
+          onError: (err) => toast.error(getErrorMessage(err)),
+        },
+      );
+    },
+    [changeRole],
+  );
+
   const handleCancelConfirm = useCallback(() => {
     if (!cancelId) return;
     cancel(cancelId, {
@@ -199,11 +248,25 @@ export function UserInvitationsPanel() {
     {
       key: "role",
       header: "Role",
-      cell: (inv) => (
-        <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0">
-          {inv.role}
-        </Badge>
-      ),
+      cell: (inv) => {
+        const status = getStatus(inv);
+        const editable = (status === "pending" || status === "expired") && canInvite;
+        if (!editable) {
+          return (
+            <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0">
+              {inv.role}
+            </Badge>
+          );
+        }
+        return (
+          <InvitationRoleSelect
+            invitationId={inv.id}
+            role={inv.role}
+            disabled={isChangingRole}
+            onChange={handleRoleChange}
+          />
+        );
+      },
     },
     {
       key: "invited",

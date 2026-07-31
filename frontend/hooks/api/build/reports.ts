@@ -130,7 +130,7 @@ export function useCaptureSnapshot(projectId: number) {
     mutationFn: () =>
       apiClient.post<CaptureSnapshotResult>(`/build/${projectId}/reports/snapshot`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: [...queryKeys.projectReports.all, "cfd", projectId] });
+      qc.invalidateQueries({ queryKey: queryKeys.projectReports.cfd(projectId) });
     },
   });
 }

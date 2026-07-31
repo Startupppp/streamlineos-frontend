@@ -13,7 +13,8 @@ export type BadgeTone =
   | "green"
   | "yellow"
   | "orange"
-  | "teal";
+  | "teal"
+  | "cyan";
 
 const TONE_CLASSES: Record<BadgeTone, string> = {
   success: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
@@ -26,6 +27,7 @@ const TONE_CLASSES: Record<BadgeTone, string> = {
   yellow: "bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-500/10 dark:text-yellow-300 dark:border-yellow-500/30",
   orange: "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-500/10 dark:text-orange-300 dark:border-orange-500/30",
   teal: "bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-500/10 dark:text-teal-300 dark:border-teal-500/30",
+  cyan: "bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-500/10 dark:text-cyan-300 dark:border-cyan-500/30",
 };
 
 const SIZE_CLASSES = {

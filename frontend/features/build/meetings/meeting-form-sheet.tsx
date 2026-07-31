@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import {
   Sheet,
   SheetContent,
@@ -13,19 +12,22 @@ import {
   SheetFooter,
   SheetBody,
 } from "@/components/ui/sheet";
-import {
-  Form, FormField, FormItem, FormLabel, FormControl, FormMessage,
-} from "@/components/ui/form";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { SparklesIcon, ChevronDownIcon } from "@animateicons/react/lucide";
 import { MeetingAttendeePicker } from "./meeting-attendees-picker";
+import { MeetingBasicFields } from "./meeting-basic-fields";
+import { MeetingSchedulingFields } from "./meeting-scheduling-fields";
+import { MeetingAgendaField } from "./meeting-agenda-field";
+import { MeetingRecurrenceFields } from "./meeting-recurrence-fields";
+import {
+  meetingSchema,
+  CREATE_DEFAULTS,
+  getDefaultStart,
+  getDefaultEnd,
+  meetingToFormValues,
+  type MeetingFormValues,
+} from "./meeting-form-schema";
 import type { MeetingTemplate } from "./new-meeting-button";
 import type {
   Meeting,
@@ -35,93 +37,6 @@ import type {
   ProjectMemberRecord,
 } from "@/types/projects";
 import type { AgendaSource } from "./generate-agenda";
-
-const SYMBOL_ONLY_RE = /^[^a-zA-Z0-9]+$/;
-
-const meetingSchema = z
-  .object({
-    title: z
-      .string()
-      .min(1, "Title is required")
-      .max(200, "Title must be 200 characters or fewer")
-      .transform((v) => v.trim())
-      .refine((v) => v.length > 0, "Title cannot be blank or whitespace only")
-      .refine((v) => !SYMBOL_ONLY_RE.test(v), "Title must contain at least one letter or number"),
-    type: z.enum(["meeting", "standup", "retro", "planning", "review"] as const),
-    status: z.enum(["scheduled", "in_progress", "completed", "cancelled"] as const),
-    agenda: z.string(),
-    scheduledAt: z.string(),
-    endAt: z.string(),
-    durationMinutes: z.string(),
-    timezone: z.string(),
-    recurrenceEnabled: z.boolean(),
-    recurrenceFrequency: z.enum(["daily", "weekly", "biweekly", "custom"] as const),
-    recurrenceEndDate: z.string(),
-  })
-  .refine(
-    (data) => {
-      if (data.scheduledAt && data.endAt) {
-        return new Date(data.endAt) > new Date(data.scheduledAt);
-      }
-      return true;
-    },
-    { message: "End time must be after start time", path: ["endAt"] },
-  )
-  .refine(
-    (data) => {
-      if (data.scheduledAt) {
-        return new Date(data.scheduledAt) >= new Date(Date.now() - 60_000);
-      }
-      return true;
-    },
-    { message: "Meeting cannot be scheduled in the past", path: ["scheduledAt"] },
-  );
-
-type MeetingFormValues = z.infer<typeof meetingSchema>;
-
-
-function getDefaultStart(): string {
-  const d = new Date();
-  d.setMinutes(d.getMinutes() + 5, 0, 0);
-  return d.toISOString().slice(0, 16);
-}
-
-function getDefaultEnd(startStr: string, durationMin: number): string {
-  if (!startStr) return "";
-  const d = new Date(startStr);
-  d.setMinutes(d.getMinutes() + durationMin);
-  return d.toISOString().slice(0, 16);
-}
-
-const CREATE_DEFAULTS: MeetingFormValues = {
-  title: "",
-  type: "meeting",
-  status: "scheduled",
-  agenda: "",
-  scheduledAt: "",
-  endAt: "",
-  durationMinutes: "30",
-  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-  recurrenceEnabled: false,
-  recurrenceFrequency: "weekly",
-  recurrenceEndDate: "",
-};
-
-function meetingToFormValues(m: Meeting): MeetingFormValues {
-  return {
-    title: m.title,
-    type: m.type,
-    status: m.status,
-    agenda: m.agenda ?? "",
-    scheduledAt: m.scheduledAt ? m.scheduledAt.slice(0, 16) : "",
-    endAt: m.endAt ? m.endAt.slice(0, 16) : "",
-    durationMinutes: m.durationMinutes != null ? String(m.durationMinutes) : "",
-    timezone: m.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone,
-    recurrenceEnabled: !!m.recurrenceRule,
-    recurrenceFrequency: m.recurrenceRule?.frequency ?? "weekly",
-    recurrenceEndDate: m.recurrenceRule?.endDate ?? "",
-  };
-}
 
 interface MeetingFormSheetProps {
   open: boolean;
@@ -256,9 +171,6 @@ export function MeetingFormSheet({
     }
   }
 
-  const recurrenceEnabled = form.watch("recurrenceEnabled");
-  const tz = form.watch("timezone");
-
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-lg flex flex-col gap-0 p-0">
@@ -271,253 +183,13 @@ export function MeetingFormSheet({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col flex-1 min-h-0">
             <SheetBody className="px-6 py-5 space-y-4">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Title <span className="text-destructive">*</span></FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Sprint 12 Planning" className="text-sm" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+              <MeetingBasicFields />
+              <MeetingSchedulingFields />
+              <MeetingAgendaField
+                onGenerateAgenda={onGenerateAgenda}
+                hasActiveSprint={hasActiveSprint}
               />
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="type"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Type</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="meeting">Meeting</SelectItem>
-                          <SelectItem value="standup">Standup</SelectItem>
-                          <SelectItem value="retro">Retro</SelectItem>
-                          <SelectItem value="planning">Planning</SelectItem>
-                          <SelectItem value="review">Review</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="scheduled">Scheduled</SelectItem>
-                          <SelectItem value="in_progress">In Progress</SelectItem>
-                          <SelectItem value="completed">Completed</SelectItem>
-                          <SelectItem value="cancelled">Cancelled</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="scheduledAt"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Start <span className="text-destructive">*</span></FormLabel>
-                      <FormControl>
-                        <Input {...field} type="datetime-local" className="text-sm" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="endAt"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>End</FormLabel>
-                      <FormControl>
-                        <Input {...field} type="datetime-local" className="text-sm" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="durationMinutes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Duration (min)</FormLabel>
-                      <FormControl>
-                        <Input {...field} type="number" min="1" placeholder="30" className="text-sm" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="timezone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Timezone</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="UTC" className="text-sm" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              {tz && (
-                <p className="text-[11px] text-muted-foreground -mt-2">
-                  Timezone: <span className="font-medium">{tz}</span>
-                </p>
-              )}
-
-              <FormField
-                control={form.control}
-                name="agenda"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex items-center justify-between">
-                      <FormLabel>Agenda (optional)</FormLabel>
-                      {onGenerateAgenda && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 text-[11px] gap-1 text-primary hover:text-primary/80 px-2"
-                            >
-                              <SparklesIcon className="h-3 w-3" />
-                              Generate
-                              <ChevronDownIcon className="h-2.5 w-2.5" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-52 text-xs">
-                            {hasActiveSprint && (
-                              <DropdownMenuItem
-                                onClick={() => field.onChange(onGenerateAgenda(["sprint"]))}
-                              >
-                                From current sprint tickets
-                              </DropdownMenuItem>
-                            )}
-                            <DropdownMenuItem
-                              onClick={() => field.onChange(onGenerateAgenda(["overdue"]))}
-                            >
-                              Overdue tickets
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => field.onChange(onGenerateAgenda(["blocked"]))}
-                            >
-                              Blocked tickets
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => field.onChange(onGenerateAgenda(["recently_completed"]))}
-                            >
-                              Recently completed
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() =>
-                                field.onChange(
-                                  onGenerateAgenda([
-                                    ...(hasActiveSprint ? (["sprint"] as AgendaSource[]) : []),
-                                    "overdue",
-                                    "blocked",
-                                    "open_action_items",
-                                  ]),
-                                )
-                              }
-                            >
-                              All sources
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
-                    </div>
-                    <FormControl>
-                      <Textarea {...field} rows={4} placeholder="Meeting agenda…" className="text-sm resize-none" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="recurrence-toggle"
-                    checked={recurrenceEnabled}
-                    onChange={(e) => form.setValue("recurrenceEnabled", e.target.checked)}
-                    className="rounded border-border"
-                  />
-                  <label htmlFor="recurrence-toggle" className="text-sm font-medium cursor-pointer">
-                    Recurring meeting
-                  </label>
-                </div>
-
-                {recurrenceEnabled && (
-                  <div className="pl-5 space-y-3">
-                    <FormField
-                      control={form.control}
-                      name="recurrenceFrequency"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs">Repeat</FormLabel>
-                          <Select value={field.value} onValueChange={field.onChange}>
-                            <FormControl>
-                              <SelectTrigger><SelectValue /></SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="daily">Daily</SelectItem>
-                              <SelectItem value="weekly">Weekly</SelectItem>
-                              <SelectItem value="biweekly">Biweekly</SelectItem>
-                              <SelectItem value="custom">Custom weekday</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="recurrenceEndDate"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs">End date (optional)</FormLabel>
-                          <FormControl>
-                            <Input {...field} type="date" className="text-xs" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                )}
-              </div>
-
+              <MeetingRecurrenceFields />
               {mode === "create" && projectMembers.length > 0 && (
                 <MeetingAttendeePicker
                   projectMembers={projectMembers}

@@ -65,6 +65,7 @@ export const useOrgMembersByIds = (
   >,
 ) => {
   const ids = [...userIds].sort();
+  const canViewMembers = useCan("settings:view");
   const { enabled: callerEnabled, ...restOptions } = options ?? {};
   return useQuery<MembersResponse, Error>({
     queryKey: [...queryKeys.organization.members(), { userIds: ids }] as const,
@@ -75,28 +76,13 @@ export const useOrgMembersByIds = (
         userIds: ids.join(","),
       }),
     staleTime: 5 * 60_000,
-    enabled: ids.length > 0 && (callerEnabled ?? true),
     ...restOptions,
+    enabled: canViewMembers && ids.length > 0 && (callerEnabled ?? true),
   });
 };
 
 
 
-export const useCancelInvitation = () => {
-  const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, { invitationId: string }>({
-    mutationKey: ["cancel", "invitation"],
-    mutationFn: (data) =>
-      apiClient.delete<{ success: boolean }>("/organization/invitations", {
-        data,
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.organization.invitations(),
-      });
-    },
-  });
-};
 
 export const useUpdateMemberRole = () => {
   const queryClient = useQueryClient();

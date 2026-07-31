@@ -53,10 +53,7 @@ export function useInfiniteAllWork(
 ) {
   const { enabled: enabledOption, ...restOptions } = options ?? {};
   return useInfiniteQuery({
-    queryKey: [
-      ...queryKeys.projects.allWork({ ...filters }),
-      "infinite",
-    ] as const,
+    queryKey: queryKeys.projects.allWorkInfinite({ ...filters }),
     queryFn: ({ pageParam }) =>
       apiClient.get<PaginatedResponse<AllWorkTicket>>("/build/all-work", {
         ...filters,

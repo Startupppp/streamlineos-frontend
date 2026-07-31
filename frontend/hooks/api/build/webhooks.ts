@@ -1,17 +1,14 @@
-﻿"use client";
+"use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 import type { ProjectWebhook, WebhookDelivery } from "@/types/projects";
 export type { ProjectWebhook, WebhookDelivery } from "@/types/projects";
 
-function webhookKeys(projectId: number) {
-  return ["streamlineos", "projects", projectId, "webhooks"] as const;
-}
-
 export function useWebhooks(projectId: number) {
   return useQuery<ProjectWebhook[]>({
-    queryKey: webhookKeys(projectId),
+    queryKey: queryKeys.projects.webhooks(projectId),
     queryFn: () => apiClient.get<ProjectWebhook[]>(`/build/${projectId}/webhooks`),
     enabled: !!projectId,
     staleTime: 30_000,
@@ -20,7 +17,7 @@ export function useWebhooks(projectId: number) {
 
 export function useWebhookDeliveries(projectId: number, webhookId: number, enabled = false) {
   return useQuery<WebhookDelivery[]>({
-    queryKey: [...webhookKeys(projectId), webhookId, "deliveries"],
+    queryKey: queryKeys.projects.webhookDeliveries(projectId, webhookId),
     queryFn: () => apiClient.get<WebhookDelivery[]>(`/build/${projectId}/webhooks/${webhookId}/deliveries`),
     enabled: enabled && !!projectId && !!webhookId,
     staleTime: 15_000,
@@ -33,7 +30,7 @@ export function useCreateWebhook(projectId: number) {
     mutationKey: ["projects", projectId, "webhooks", "create"],
     mutationFn: (data: { url: string; events: string[]; secret?: string }) =>
       apiClient.post<ProjectWebhook>(`/build/${projectId}/webhooks`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: webhookKeys(projectId) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.projects.webhooks(projectId) }),
   });
 }
 
@@ -43,7 +40,7 @@ export function useDeleteWebhook(projectId: number) {
     mutationKey: ["projects", projectId, "webhooks", "delete"],
     mutationFn: (webhookId: number) =>
       apiClient.delete(`/build/${projectId}/webhooks/${webhookId}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: webhookKeys(projectId) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.projects.webhooks(projectId) }),
   });
 }
 
@@ -57,7 +54,7 @@ export function useSendTestWebhook(projectId: number) {
         {},
       ),
     onSuccess: (_, webhookId) => {
-      void qc.invalidateQueries({ queryKey: [...webhookKeys(projectId), webhookId, "deliveries"] });
+      void qc.invalidateQueries({ queryKey: queryKeys.projects.webhookDeliveries(projectId, webhookId) });
     },
   });
 }

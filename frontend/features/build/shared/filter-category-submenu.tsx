@@ -1,79 +1,43 @@
-﻿"use client";
+"use client";
 
 import {
   useState,
   useCallback,
   useRef,
   useEffect,
-  type ChangeEvent,
   type KeyboardEvent,
-  type ReactNode,
-  type RefObject,
 } from "react";
-import { Check, Search, CalendarRange } from "lucide-react";
-import { DatePicker } from "@/components/ui/date-picker";
-import { cn } from "@/lib/utils";
 import { getUserDisplayName } from "@/features/build/shared/resolve-user-name";
+import { resolveColumnColor } from "@/features/build/shared/column-colors";
+import { getStatusEntry, type StatusConfigEntry } from "@/features/build/shared/types";
 import {
   FilterAssigneeLeading,
   FilterLabelDot,
   FilterPriorityLeading,
   FilterTypeLeading,
 } from "./filter-option-leading";
-import { resolveColumnColor } from "@/features/build/shared/column-colors";
-import { StatusConfigDot } from "@/features/build/shared/status-badge";
 import {
-  getStatusEntry,
-  type StatusConfigEntry,
-} from "@/features/build/shared/types";
+  OptionRow,
+  FilterMenuSearch,
+  PanelShell,
+  EmptyHint,
+  FilterDatesPanel,
+} from "./filter-submenu-internals";
+import {
+  PRIORITIES,
+  TYPES,
+  type FilterCategory,
+  type StatusFilterOption,
+  type Member,
+  type Label,
+  type Cycle,
+  type Sprint,
+  type ProjectOption,
+} from "./filter-types";
 
-export interface StatusFilterOption {
-  name: string;
-  color: string | null;
-  type?: string | null;
-}
-
-interface Member {
-  id: string;
-  name: string | null;
-  firstName: string | null;
-  lastName: string | null;
-  image?: string | null;
-  email?: string | null;
-}
-
-interface Label {
-  id: number;
-  name: string;
-  color?: string | null;
-}
-
-interface Cycle {
-  id: number;
-  name: string;
-}
-
-interface Sprint {
-  id: number;
-  name: string;
-}
-
-export type FilterCategory =
-  | "status"
-  | "priority"
-  | "type"
-  | "assignee"
-  | "label"
-  | "cycle"
-  | "sprint"
-  | "dates"
-  | "project";
-
-interface ProjectOption {
-  id: number;
-  name: string;
-  key: string;
-}
+export type { FilterCategory, StatusFilterOption } from "./filter-types";
+export { FILTER_CATEGORY_TITLES } from "./filter-types";
+export { StatusFilterDot, FilterDatesPanel } from "./filter-submenu-internals";
 
 interface FilterCategorySubmenuProps {
   category: FilterCategory;
@@ -108,155 +72,6 @@ interface FilterCategorySubmenuProps {
   showTitle?: boolean;
   className?: string;
   listClassName?: string;
-}
-
-const PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
-const TYPES = ["TASK", "BUG", "STORY", "EPIC", "SUBTASK"] as const;
-
-export const FILTER_CATEGORY_TITLES: Record<FilterCategory, string> = {
-  status: "Status",
-  priority: "Priority",
-  type: "Type",
-  assignee: "Assignee",
-  label: "Label",
-  cycle: "Cycle",
-  sprint: "Sprint",
-  dates: "Due Dates",
-  project: "Project",
-};
-
-function OptionRow({
-  active,
-  label,
-  color,
-  dotClassName,
-  leading,
-  onClick,
-}: {
-  active: boolean;
-  label: string;
-  color?: string | null;
-  dotClassName?: string;
-  leading?: ReactNode;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "flex h-9 w-full items-center gap-2 rounded-md px-3 text-left text-sm",
-        "transition-colors motion-reduce:transition-none",
-        "hover:bg-accent hover:text-accent-foreground",
-        "focus-visible:outline-none focus-visible:bg-accent",
-      )}
-    >
-      <Check
-        className={cn(
-          "h-4 w-4 shrink-0 transition-opacity motion-reduce:transition-none",
-          active ? "opacity-100" : "opacity-0",
-        )}
-      />
-      {leading}
-      {!leading && color ? (
-        <span
-          className="h-2.5 w-2.5 shrink-0 rounded-full"
-          style={{ backgroundColor: color }}
-        />
-      ) : !leading && dotClassName ? (
-        <span className={cn("h-2.5 w-2.5 shrink-0 rounded-full", dotClassName)} />
-      ) : null}
-      <span className="min-w-0 flex-1 truncate text-left">{label}</span>
-    </button>
-  );
-}
-
-export function StatusFilterDot({
-  status,
-  config,
-  className = "h-2.5 w-2.5 shrink-0 rounded-full",
-}: {
-  status: StatusFilterOption;
-  config: Record<string, StatusConfigEntry>;
-  className?: string;
-}) {
-  const entry = getStatusEntry(config, status.name);
-  return (
-    <StatusConfigDot
-      entry={status.color ? { ...entry, color: status.color } : entry}
-      className={className}
-    />
-  );
-}
-
-function FilterMenuSearch({
-  value,
-  onValueChange,
-  placeholder,
-}: {
-  value: string;
-  onValueChange: (v: string) => void;
-  placeholder: string;
-}) {
-  function handleChange(e: ChangeEvent<HTMLInputElement>) {
-    onValueChange(e.target.value);
-  }
-
-  return (
-    <div className="flex h-10 items-center gap-2 border-b border-border px-3">
-      <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
-      <input
-        autoFocus
-        type="text"
-        value={value}
-        onChange={handleChange}
-        placeholder={placeholder}
-        className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-      />
-    </div>
-  );
-}
-
-function PanelShell({
-  category,
-  children,
-  onKeyDown,
-  containerRef,
-  withSearch = false,
-  showTitle = true,
-  className,
-}: {
-  category: FilterCategory;
-  children: ReactNode;
-  onKeyDown: (e: KeyboardEvent) => void;
-  containerRef: RefObject<HTMLDivElement | null>;
-  withSearch?: boolean;
-  showTitle?: boolean;
-  className?: string;
-}) {
-  return (
-    <div
-      ref={containerRef}
-      tabIndex={-1}
-      onKeyDown={onKeyDown}
-      className={cn("flex w-[260px] flex-col outline-none", className)}
-    >
-      {showTitle && !withSearch ? (
-        <div className="flex h-10 shrink-0 items-center border-b border-border px-3">
-          <span className="text-sm font-medium text-foreground">
-            {FILTER_CATEGORY_TITLES[category]}
-          </span>
-        </div>
-      ) : null}
-      {children}
-    </div>
-  );
-}
-
-function EmptyHint({ message }: { message: string }) {
-  return (
-    <p className="px-3 py-6 text-center text-sm text-muted-foreground">{message}</p>
-  );
 }
 
 export function FilterCategorySubmenu({
@@ -426,7 +241,6 @@ export function FilterCategorySubmenu({
         category={category}
         containerRef={containerRef}
         onKeyDown={handleKeyDown}
-       
         withSearch
         showTitle={showTitle}
         className={className}
@@ -468,7 +282,6 @@ export function FilterCategorySubmenu({
         category={category}
         containerRef={containerRef}
         onKeyDown={handleKeyDown}
-       
         withSearch
         showTitle={showTitle}
         className={className}
@@ -563,7 +376,6 @@ export function FilterCategorySubmenu({
         category={category}
         containerRef={containerRef}
         onKeyDown={handleKeyDown}
-       
         withSearch
         showTitle={showTitle}
         className={className}
@@ -597,46 +409,4 @@ export function FilterCategorySubmenu({
   }
 
   return null;
-}
-
-interface FilterDatesPanelProps {
-  dueDateFrom: string;
-  dueDateTo: string;
-  onDueDateFromChange: (v: string) => void;
-  onDueDateToChange: (v: string) => void;
-}
-
-export function FilterDatesPanel({
-  dueDateFrom,
-  dueDateTo,
-  onDueDateFromChange,
-  onDueDateToChange,
-}: FilterDatesPanelProps) {
-  const hasDate = Boolean(dueDateFrom || dueDateTo);
-  return (
-    <div className="px-3 py-3">
-      <div className="mb-2.5 flex items-center gap-2 text-xs text-muted-foreground">
-        <CalendarRange className="h-3.5 w-3.5 shrink-0" />
-        {hasDate ? (
-          <span className="font-medium text-foreground">Range active</span>
-        ) : (
-          <span>Select a date range</span>
-        )}
-      </div>
-      <div className="grid grid-cols-1 gap-2.5">
-        <DatePicker
-          value={dueDateFrom}
-          onChange={onDueDateFromChange}
-          placeholder="From"
-          className="w-full text-sm"
-        />
-        <DatePicker
-          value={dueDateTo}
-          onChange={onDueDateToChange}
-          placeholder="To"
-          className="w-full text-sm"
-        />
-      </div>
-    </div>
-  );
 }

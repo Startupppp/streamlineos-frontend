@@ -37,6 +37,12 @@ const config = {
   },
 } as const;
 
+export function getPriorityColor(priority: string | null | undefined): string {
+  const key = (priority ?? "MEDIUM").toUpperCase();
+  const isKey = (k: string): k is keyof typeof config => k in config;
+  return isKey(key) ? config[key].color : "text-muted-foreground";
+}
+
 interface PriorityBadgeProps {
   priority: string | null | undefined;
   showLabel?: boolean;

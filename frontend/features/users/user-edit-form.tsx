@@ -28,7 +28,7 @@ import { useUpdateUser } from "@/hooks/api/users";
 import type { User } from "@/hooks/api/users";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
-import { USER_INVITE_ROLES } from "@/features/users/user-invite-roles";
+import { ORG_OWNER_ROLE, USER_INVITE_ROLES } from "@/features/users/user-invite-roles";
 
 const editSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -181,6 +181,11 @@ export function UserEditForm({ user, onSuccess, onCancel }: UserEditFormProps) {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
+                  {field.value === ORG_OWNER_ROLE && (
+                    <SelectItem value={ORG_OWNER_ROLE} disabled>
+                      Owner — transfer ownership to change
+                    </SelectItem>
+                  )}
                   {ROLES.map((r) => (
                     <SelectItem key={r.value} value={r.value}>
                       {r.label}

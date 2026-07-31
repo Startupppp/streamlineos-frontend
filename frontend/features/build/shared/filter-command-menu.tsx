@@ -1,14 +1,11 @@
-﻿"use client";
+"use client";
 
 import {
   useState,
   useCallback,
   useRef,
-  forwardRef,
-  type ComponentPropsWithoutRef,
   type KeyboardEvent,
   type ReactNode,
-  type ChangeEvent,
 } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -21,80 +18,41 @@ import {
 } from "@/components/ui/drawer";
 import { Command, CommandInput } from "@/components/ui/command";
 import { Button } from "@/components/ui/button";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { ArrowLeft, Search } from "lucide-react";
-import { SlidersHorizontalIcon } from "@animateicons/react/lucide";
+import { ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/common/use-mobile";
 import { useHorizontalSwipe } from "@/hooks/common/use-horizontal-swipe";
+import { FilterCategorySubmenu } from "./filter-category-submenu";
+import { FilterFlatSearch } from "./filter-flat-search";
+import { FilterAssigneeLeading } from "./filter-option-leading";
+import { FilterTriggerButton, MobileFilterSearch } from "./filter-trigger-button";
+import { FilterCategoryList } from "./filter-category-list";
 import {
-  FilterCategorySubmenu,
   FILTER_CATEGORY_TITLES,
   type FilterCategory,
   type StatusFilterOption,
-} from "./filter-category-submenu";
-import { FilterCategoryRow } from "./filter-category-row";
-import { FilterFlatSearch } from "./filter-flat-search";
-import { FilterAssigneeLeading } from "./filter-option-leading";
+  type Member,
+  type Label,
+  type Cycle,
+  type Sprint,
+  type ProjectOption,
+  type FilterState,
+  type CategoryDefinition,
+} from "./filter-types";
 import type { StatusConfigEntry } from "@/features/build/shared/types";
 import {
-  listContainer,
-  listItem,
-  listItemReduced,
   pmSnappy,
   stepSlide,
   stepSlideReduced,
 } from "@/features/build/shared/pm-motion";
 
-interface Member {
-  id: string;
-  name: string | null;
-  firstName: string | null;
-  lastName: string | null;
-  image?: string | null;
-  email?: string | null;
-}
-
-interface Label {
-  id: number;
-  name: string;
-  color?: string | null;
-}
-
-interface Cycle {
-  id: number;
-  name: string;
-}
-
-interface Sprint {
-  id: number;
-  name: string;
-}
-
-export interface FilterState {
-  selectedStatuses: string[];
-  selectedPriorities: string[];
-  selectedTypes: string[];
-  selectedAssignees: string[];
-  selectedLabels: string[];
-  selectedCycles: string[];
-  selectedProjectIds: string[];
-  sprintParam: string;
-  dueDateFrom: string;
-  dueDateTo: string;
-}
-
-interface ProjectOption {
-  id: number;
-  name: string;
-  key: string;
-}
+export type { FilterState } from "./filter-types";
 
 export interface FilterCommandMenuProps {
   activeFilterCount: number;
@@ -120,83 +78,6 @@ export interface FilterCommandMenuProps {
   onDueDateFromChange: (value: string) => void;
   onDueDateToChange: (value: string) => void;
 }
-
-interface CategoryDefinition {
-  key: FilterCategory;
-  label: string;
-  leading?: ReactNode;
-  visible: boolean;
-  activeCount: number;
-}
-
-function MobileFilterSearch({
-  value,
-  onValueChange,
-}: {
-  value: string;
-  onValueChange: (value: string) => void;
-}) {
-  function handleChange(e: ChangeEvent<HTMLInputElement>) {
-    onValueChange(e.target.value);
-  }
-
-  return (
-    <div className="flex h-11 shrink-0 items-center gap-2 border-b border-border px-3">
-      <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
-      <input
-        type="search"
-        value={value}
-        onChange={handleChange}
-        placeholder="Filter by…"
-        className="h-full flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-        aria-label="Search filters"
-      />
-    </div>
-  );
-}
-
-type FilterTriggerButtonProps = Omit<
-  ComponentPropsWithoutRef<typeof AnimatedIconButton>,
-  "icon" | "iconSize" | "children"
-> & {
-  activeFilterCount: number;
-};
-
-const FilterTriggerButton = forwardRef<
-  HTMLButtonElement,
-  FilterTriggerButtonProps
->(function FilterTriggerButton(
-  { activeFilterCount, className, ...props },
-  ref,
-) {
-  return (
-    <AnimatedIconButton
-      ref={ref}
-      variant="outline"
-      size="sm"
-      {...props}
-      icon={SlidersHorizontalIcon}
-      iconSize={14}
-      className={cn(
-        "relative size-9 shrink-0 gap-1 p-0 text-xs font-normal md:h-9 md:w-auto md:px-2",
-        "data-[state=open]:border-primary data-[state=open]:focus-visible:border-primary",
-        className,
-      )}
-      aria-label={
-        activeFilterCount > 0
-          ? `Add filter (${activeFilterCount} active)`
-          : "Add filter"
-      }
-    >
-      <span className="hidden md:inline">Add filter</span>
-      {activeFilterCount > 0 ? (
-        <span className="absolute -right-1 -top-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-primary px-0.5 text-[10px] font-semibold text-primary-foreground md:static md:ml-0.5 md:h-4 md:min-w-4 md:px-1">
-          {activeFilterCount}
-        </span>
-      ) : null}
-    </AnimatedIconButton>
-  );
-});
 
 export function FilterCommandMenu({
   activeFilterCount,
@@ -423,60 +304,15 @@ export function FilterCommandMenu({
     onDueDateToChange: handleDueDateToChange,
   };
 
-  function renderCategoryList(dense: boolean) {
-    if (visibleCategories.length === 0) {
-      return (
-        <p className="px-3 py-8 text-center text-sm text-muted-foreground">
-          No filters available.
-        </p>
-      );
-    }
-
-    return (
-      <motion.div
-        ref={categoryListRef}
-        role="menu"
-        aria-label="Filter categories"
-        tabIndex={-1}
-        className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-1.5 outline-none"
-        variants={listContainer}
-        initial="hidden"
-        animate="show"
-      >
-        {visibleCategories.map((cat) => {
-          const selected = resolvedCategory === cat.key;
-          function onSelect() {
-            handleSelectCategory(cat.key);
-          }
-          function onMouseEnter() {
-            if (!isMobile) handleSelectCategory(cat.key);
-          }
-          function onKeyDown(e: KeyboardEvent) {
-            handleCategoryKeyDown(cat.key, e);
-          }
-          return (
-            <motion.div
-              key={cat.key}
-              variants={shouldReduceMotion ? listItemReduced : listItem}
-              transition={pmSnappy}
-            >
-              <FilterCategoryRow
-                category={cat.key}
-                label={cat.label}
-                leading={cat.leading}
-                activeCount={cat.activeCount}
-                selected={selected}
-                dense={dense}
-                onSelect={onSelect}
-                onMouseEnter={onMouseEnter}
-                onKeyDown={onKeyDown}
-              />
-            </motion.div>
-          );
-        })}
-      </motion.div>
-    );
-  }
+  const categoryListProps = {
+    visibleCategories,
+    resolvedCategory,
+    containerRef: categoryListRef,
+    isMobile,
+    shouldReduceMotion,
+    onSelectCategory: handleSelectCategory,
+    onCategoryKeyDown: handleCategoryKeyDown,
+  };
 
   if (isMobile) {
     const drillTitle = activeCategory
@@ -555,7 +391,7 @@ export function FilterCommandMenu({
                 ) : (
                   <div className="flex min-h-0 flex-1 flex-col pb-[max(0.75rem,env(safe-area-inset-bottom))]">
                     <MobileFilterSearch value={search} onValueChange={handleSearchChange} />
-                    {renderCategoryList(false)}
+                    <FilterCategoryList {...categoryListProps} dense={false} />
                   </div>
                 )}
               </motion.div>
@@ -621,7 +457,7 @@ export function FilterCommandMenu({
                   onValueChange={handleSearchChange}
                 />
               </Command>
-              {renderCategoryList(true)}
+              <FilterCategoryList {...categoryListProps} dense />
             </div>
 
             <AnimatePresence initial={false} mode="wait">
