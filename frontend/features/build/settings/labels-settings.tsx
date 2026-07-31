@@ -7,17 +7,7 @@ import { Button } from "@/components/ui/button";
 import { LabelCreateForm } from "@/components/labels";
 import { DEFAULT_LABEL_COLOR, resolveLabelColor } from "@/components/labels/label-colors";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -40,8 +30,8 @@ function DeleteLabelButton({ onConfirm }: { onConfirm: () => void }) {
   }
 
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
+    <ConfirmDialog
+      trigger={
         <button
           type="button"
           className={cn(
@@ -55,25 +45,13 @@ function DeleteLabelButton({ onConfirm }: { onConfirm: () => void }) {
         >
           <Trash2Icon ref={iconRef} size={14} />
         </button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Delete label?</AlertDialogTitle>
-          <AlertDialogDescription>
-            This removes the label from all tickets.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={handleConfirm}
-            className="bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-500"
-          >
-            Delete
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+      }
+      title="Delete label?"
+      description="This removes the label from all tickets."
+      confirmLabel="Delete"
+      destructive
+      onConfirm={handleConfirm}
+    />
   );
 }
 

@@ -38,16 +38,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   Select,
   SelectContent,
@@ -551,25 +542,15 @@ export function AgentTokensSection() {
 
       <CreateTokenDialog open={dialogOpen} onOpenChange={setDialogOpen} />
 
-      <AlertDialog open={revokeId !== null} onOpenChange={handleRevokeDialogChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Revoke token?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Any agent using this token will immediately lose access. This cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive hover:bg-destructive/90"
-              onClick={handleConfirmRevoke}
-            >
-              Revoke
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={revokeId !== null}
+        onOpenChange={handleRevokeDialogChange}
+        title="Revoke token?"
+        description="Any agent using this token will immediately lose access. This cannot be undone."
+        confirmLabel="Revoke"
+        destructive
+        onConfirm={handleConfirmRevoke}
+      />
     </div>
   );
 }

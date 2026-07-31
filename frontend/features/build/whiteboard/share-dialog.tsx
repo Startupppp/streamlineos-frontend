@@ -9,7 +9,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  ResponsivePopover,
+  ResponsivePopoverContent,
+  ResponsivePopoverTrigger,
+} from "@/components/ui/responsive-popover";
 import { cn } from "@/lib/utils";
 import { Lock, Globe, Users, Link2, RefreshCw, Eye, Pencil } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -172,11 +176,11 @@ export function ShareDialog({ projectId, whiteboard, open, onOpenChange }: Share
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">People</Label>
-              <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
-                <PopoverTrigger asChild>
+              <ResponsivePopover open={pickerOpen} onOpenChange={setPickerOpen}>
+                <ResponsivePopoverTrigger asChild>
                   <Button size="sm" variant="outline" className="h-7 text-xs">Add people</Button>
-                </PopoverTrigger>
-                <PopoverContent className="p-0 w-64" align="end">
+                </ResponsivePopoverTrigger>
+                <ResponsivePopoverContent title="Add people" className="p-0 w-64" align="end">
                   <Command shouldFilter={false}>
                     <CommandInput placeholder="Search members…" value={searchInput} onValueChange={setSearchInput} />
                     <CommandList className="max-h-48">
@@ -193,8 +197,8 @@ export function ShareDialog({ projectId, whiteboard, open, onOpenChange }: Share
                       </CommandGroup>
                     </CommandList>
                   </Command>
-                </PopoverContent>
-              </Popover>
+                </ResponsivePopoverContent>
+              </ResponsivePopover>
             </div>
             {shares.length === 0 ? (
               <p className="text-xs text-muted-foreground py-1">No individual shares yet.</p>

@@ -18,17 +18,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -330,8 +320,8 @@ export const StatusRow = memo(function StatusRow({
       )}
 
       {canManage ? (
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
+        <ConfirmDialog
+          trigger={
             <button
               type="button"
               className={cn(
@@ -345,27 +335,13 @@ export const StatusRow = memo(function StatusRow({
             >
               <Trash2Icon ref={deleteIconRef} size={14} />
             </button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete status?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Tickets using &ldquo;{state.name}&rdquo; will move to another
-                Unstarted status. At least one Unstarted and one Completed
-                status must remain.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDelete}
-                className="bg-red-600 hover:bg-red-700"
-              >
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+          }
+          title="Delete status?"
+          description={`Tickets using “${state.name}” will move to another Unstarted status. At least one Unstarted and one Completed status must remain.`}
+          confirmLabel="Delete"
+          destructive
+          onConfirm={handleDelete}
+        />
       ) : null}
     </motion.div>
   );

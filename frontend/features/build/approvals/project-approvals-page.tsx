@@ -36,16 +36,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ApprovalStatusBadge, entityTypeLabel } from "./approval-status-badge";
 import { DecideDialog } from "./decide-dialog";
 import { DelegateDialog } from "./delegate-dialog";
@@ -483,40 +474,28 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
         members={members}
         currentApproverId={delegateTarget?.approverId}
       />
-      <AlertDialog open={!!cancelTarget} onOpenChange={handleCancelDialogChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Cancel this approval?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {cancelTarget?.title
-                ? `"${cancelTarget.title}" will be marked cancelled and removed from the approver's inbox.`
-                : "The request will be marked cancelled and removed from the approver's inbox."}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Keep</AlertDialogCancel>
-            <AlertDialogAction onClick={handleCancelConfirm}>Cancel approval</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-      <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteDialogChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete this approval?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {deleteTarget?.title
-                ? `"${deleteTarget.title}" will be permanently deleted.`
-                : "This action cannot be undone."}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction className="bg-destructive text-destructive-foreground" onClick={handleDeleteConfirm}>
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={!!cancelTarget}
+        onOpenChange={handleCancelDialogChange}
+        title="Cancel this approval?"
+        description={cancelTarget?.title
+          ? `"${cancelTarget.title}" will be marked cancelled and removed from the approver's inbox.`
+          : "The request will be marked cancelled and removed from the approver's inbox."}
+        confirmLabel="Cancel approval"
+        cancelLabel="Keep"
+        onConfirm={handleCancelConfirm}
+      />
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={handleDeleteDialogChange}
+        title="Delete this approval?"
+        description={deleteTarget?.title
+          ? `"${deleteTarget.title}" will be permanently deleted.`
+          : "This action cannot be undone."}
+        confirmLabel="Delete"
+        destructive
+        onConfirm={handleDeleteConfirm}
+      />
     </PageWrapper>
   );
 }

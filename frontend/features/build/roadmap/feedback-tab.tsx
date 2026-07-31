@@ -5,16 +5,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyMailIllustration } from "@/components/illustrations";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import {
   useFeedbackPosts,
@@ -111,25 +102,15 @@ export function FeedbackTab({ search }: FeedbackTabProps) {
         ))}
       </PmStaggerList>
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteDialogChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete feedback?</AlertDialogTitle>
-            <AlertDialogDescription>
-              &ldquo;{deleteTarget?.title}&rdquo; will be permanently deleted.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={handleDelete}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={handleDeleteDialogChange}
+        title="Delete feedback?"
+        description={`"${deleteTarget?.title ?? ""}" will be permanently deleted.`}
+        confirmLabel="Delete"
+        destructive
+        onConfirm={handleDelete}
+      />
     </>
   );
 }

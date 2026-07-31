@@ -5,16 +5,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTicketIllustration } from "@/components/illustrations";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import {
   useChangelog,
@@ -149,25 +140,15 @@ export function ChangelogTab({ createOpen, onCreateOpenChange }: ChangelogTabPro
       {sheetOpen ? <ChangelogSheet onClose={handleCloseSheet} /> : null}
       {editTarget ? <ChangelogSheet entry={editTarget} onClose={handleCloseEdit} /> : null}
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteDialogChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete changelog entry?</AlertDialogTitle>
-            <AlertDialogDescription>
-              &ldquo;{deleteTarget?.title}&rdquo; will be permanently deleted.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={handleDelete}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={handleDeleteDialogChange}
+        title="Delete changelog entry?"
+        description={`"${deleteTarget?.title ?? ""}" will be permanently deleted.`}
+        confirmLabel="Delete"
+        destructive
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }

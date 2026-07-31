@@ -6,10 +6,10 @@ import { Button } from "@/components/ui/button";
 import { LabelCreateForm } from "@/components/labels";
 import { DEFAULT_LABEL_COLOR } from "@/components/labels/label-colors";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  ResponsivePopover,
+  ResponsivePopoverContent,
+  ResponsivePopoverTrigger,
+} from "@/components/ui/responsive-popover";
 import { Tag } from "lucide-react";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -123,8 +123,8 @@ export function LabelPicker({
             <RemoveLabelButton labelId={label.id} labelName={label.name} onRemove={handleRemoveLabel} />
           </Badge>
         ))}
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger asChild>
+        <ResponsivePopover open={open} onOpenChange={setOpen}>
+          <ResponsivePopoverTrigger asChild>
             <Button
               variant="ghost"
               size="sm"
@@ -134,8 +134,9 @@ export function LabelPicker({
             >
               <PlusIcon ref={plusIconRef} size={14} />
             </Button>
-          </PopoverTrigger>
-          <PopoverContent
+          </ResponsivePopoverTrigger>
+          <ResponsivePopoverContent
+            title="Labels"
             className="w-[min(20rem,calc(100vw-2rem))] p-4"
             align="start"
           >
@@ -173,8 +174,8 @@ export function LabelPicker({
                 />
               </div>
             </div>
-          </PopoverContent>
-        </Popover>
+          </ResponsivePopoverContent>
+        </ResponsivePopover>
       </div>
     </div>
   );

@@ -8,10 +8,10 @@ import { cn } from "@/lib/utils";
 import { SearchInput } from "@/components/ui/search-input";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  ResponsivePopover,
+  ResponsivePopoverContent,
+  ResponsivePopoverTrigger,
+} from "@/components/ui/responsive-popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -85,8 +85,8 @@ export function ProjectSwitcher({
 
   return (
     <>
-      <Popover open={open} onOpenChange={handleOpenChange}>
-        <PopoverTrigger asChild>
+      <ResponsivePopover open={open} onOpenChange={handleOpenChange}>
+        <ResponsivePopoverTrigger asChild>
           <button
             type="button"
             className="flex min-w-0 flex-1 items-center gap-0.5 text-sm font-semibold transition-colors hover:text-foreground/80"
@@ -97,8 +97,8 @@ export function ProjectSwitcher({
             <TruncatedText text={displayName} />
             <ChevronsUpDown className="ml-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
           </button>
-        </PopoverTrigger>
-        <PopoverContent className="w-64 p-0" align="start" sideOffset={8}>
+        </ResponsivePopoverTrigger>
+        <ResponsivePopoverContent title="Switch project" className="w-64 p-0" align="start" sideOffset={8}>
           <div className="border-b p-2">
             <SearchInput
               value={search}
@@ -176,8 +176,8 @@ export function ProjectSwitcher({
               Browse all projects
             </Link>
           </div>
-        </PopoverContent>
-      </Popover>
+        </ResponsivePopoverContent>
+      </ResponsivePopover>
 
       {canCreate ? (
         <NewProjectDialog

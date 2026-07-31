@@ -9,6 +9,7 @@ import type {
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { AllWorkFilters, AllWorkTicket, PaginatedResponse } from "@/types/projects";
+import { useCan } from "@/hooks/api/access";
 
 export const COMMAND_CENTER_MY_ISSUES_PAGE_SIZE = 15;
 
@@ -24,6 +25,7 @@ export function useAllWork(
   filters?: AllWorkFilters,
   options?: Omit<UseQueryOptions<PaginatedResponse<AllWorkTicket>>, "queryKey" | "queryFn">
 ) {
+  const canView = useCan("build:tickets:view");
   const { enabled: enabledOption, ...restOptions } = options ?? {};
   return useQuery<PaginatedResponse<AllWorkTicket>>({
     queryKey: queryKeys.projects.allWork(filters ? { ...filters } : undefined),
@@ -32,7 +34,7 @@ export function useAllWork(
     staleTime: 30_000,
     placeholderData: (prev) => prev,
     ...restOptions,
-    enabled: enabledOption ?? true,
+    enabled: canView && (enabledOption ?? true),
   });
 }
 

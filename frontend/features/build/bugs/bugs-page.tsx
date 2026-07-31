@@ -18,10 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SearchInput } from "@/components/ui/search-input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
@@ -32,7 +29,7 @@ import {
   PmSection,
   PM_FILL_PANEL,
 } from "@/features/build/shared/pm-chrome";
-import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { BugSheet } from "./bug-sheet";
@@ -258,8 +255,10 @@ export function BugsPage({ projectId }: BugsPageProps) {
         onValueChange={handleSearchChange}
       />
       <Select value={statusFilter} onValueChange={setStatusFilter}>
-        <SelectTrigger className="w-32"><SelectValue placeholder="Status" /></SelectTrigger>
-        <SelectContent>
+        <SelectTrigger className={cn("h-9 w-32", FILTER_SELECT_TRIGGER)}>
+          <SelectValue placeholder="Status" />
+        </SelectTrigger>
+        <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
           <SelectItem value="all">All statuses</SelectItem>
           {BUG_STATUSES.map((s) => (
             <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>
@@ -267,8 +266,10 @@ export function BugsPage({ projectId }: BugsPageProps) {
         </SelectContent>
       </Select>
       <Select value={severityFilter} onValueChange={setSeverityFilter}>
-        <SelectTrigger className="w-28"><SelectValue placeholder="Severity" /></SelectTrigger>
-        <SelectContent>
+        <SelectTrigger className={cn("h-9 w-28", FILTER_SELECT_TRIGGER)}>
+          <SelectValue placeholder="Severity" />
+        </SelectTrigger>
+        <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
           <SelectItem value="all">All severities</SelectItem>
           {BUG_SEVERITIES.map((s) => (
             <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>
@@ -276,8 +277,10 @@ export function BugsPage({ projectId }: BugsPageProps) {
         </SelectContent>
       </Select>
       <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
-        <SelectTrigger className="w-32"><SelectValue placeholder="Assignee" /></SelectTrigger>
-        <SelectContent>
+        <SelectTrigger className={cn("h-9 w-32", FILTER_SELECT_TRIGGER)}>
+          <SelectValue placeholder="Assignee" />
+        </SelectTrigger>
+        <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
           <SelectItem value="all">All assignees</SelectItem>
           {members.map((m) => (
             <SelectItem key={m.id} value={m.id}>{getUserDisplayName(m)}</SelectItem>
@@ -330,23 +333,15 @@ export function BugsPage({ projectId }: BugsPageProps) {
         editBug={editBug}
       />
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteDialogChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete bug?</AlertDialogTitle>
-            <AlertDialogDescription>
-              BUG-{deleteTarget?.bugNumber}
-              {deleteTarget?.title ? ` · ${deleteTarget.title}` : ""} will be permanently deleted.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={handleDeleteDialogChange}
+        title="Delete bug?"
+        description={`BUG-${deleteTarget?.bugNumber ?? ""}${deleteTarget?.title ? ` · ${deleteTarget.title}` : ""} will be permanently deleted.`}
+        confirmLabel="Delete"
+        destructive
+        onConfirm={handleDelete}
+      />
     </PageWrapper>
   );
 }

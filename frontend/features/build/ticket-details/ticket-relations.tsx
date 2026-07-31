@@ -14,8 +14,10 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  Popover, PopoverContent, PopoverTrigger,
-} from "@/components/ui/popover";
+  ResponsivePopover,
+  ResponsivePopoverContent,
+  ResponsivePopoverTrigger,
+} from "@/components/ui/responsive-popover";
 import {
   Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
 } from "@/components/ui/command";
@@ -157,8 +159,8 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
           <Link2 className="h-3.5 w-3.5" />
           Relations
         </h4>
-        <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
-          <PopoverTrigger asChild>
+        <ResponsivePopover open={pickerOpen} onOpenChange={setPickerOpen}>
+          <ResponsivePopoverTrigger asChild>
             <AnimatedIconButton
               variant="outline"
               size="sm"
@@ -169,8 +171,8 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
             >
               Add
             </AnimatedIconButton>
-          </PopoverTrigger>
-          <PopoverContent className="w-80 p-3 space-y-3" align="end">
+          </ResponsivePopoverTrigger>
+          <ResponsivePopoverContent title="Link issue" className="w-80 p-3 space-y-3" align="end">
             <p className="text-xs font-medium">Add Relation</p>
             <Select value={selectedType} onValueChange={handleTypeChange}>
               <SelectTrigger><SelectValue /></SelectTrigger>
@@ -211,8 +213,8 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
             >
               {addRelation.isPending ? "Adding..." : "Add Relation"}
             </Button>
-          </PopoverContent>
-        </Popover>
+          </ResponsivePopoverContent>
+        </ResponsivePopover>
       </div>
 
       {(relations ?? []).length === 0 ? (

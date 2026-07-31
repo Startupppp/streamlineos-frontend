@@ -42,3 +42,40 @@ export interface UpdatePortfolioInput {
   health?: PortfolioHealth;
   strategicGoal?: string;
 }
+
+export interface Program {
+  id: number;
+  orgId: string;
+  portfolioId: number | null;
+  name: string;
+  description: string | null;
+  ownerId: string | null;
+  status: PortfolioStatus;
+  health: PortfolioHealth | null;
+  createdBy: string | null;
+  createdAt: string;
+  updatedAt: string;
+  projectCount?: number;
+}
+
+export interface ProgramDetail extends Program {
+  projects: LinkedProject[];
+}
+
+export interface CreateProgramInput {
+  name: string;
+  description?: string;
+  portfolioId?: number;
+  ownerId?: string;
+  status?: PortfolioStatus;
+  health?: PortfolioHealth;
+}
+
+export interface UpdateProgramInput {
+  name?: string;
+  description?: string | null;
+  portfolioId?: number | null;
+  ownerId?: string | null;
+  status?: PortfolioStatus;
+  health?: PortfolioHealth | null;
+}

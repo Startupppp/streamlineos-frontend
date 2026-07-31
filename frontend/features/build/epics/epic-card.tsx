@@ -14,21 +14,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  ResponsivePopover,
+  ResponsivePopoverContent,
+  ResponsivePopoverTrigger,
+} from "@/components/ui/responsive-popover";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -326,21 +317,21 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
                   Add
                 </Button>
                 {unlinkedStories.length > 0 ? (
-                  <Popover open={linkOpen} onOpenChange={setLinkOpen}>
-                    <PopoverTrigger asChild>
+                  <ResponsivePopover open={linkOpen} onOpenChange={setLinkOpen}>
+                    <ResponsivePopoverTrigger asChild>
                       <Button variant="outline" size="sm" className=" border-border/70 bg-background/60 px-2.5 text-xs backdrop-blur-sm">
                         <Link2 className="mr-1 h-3.5 w-3.5" />
                         Link
                       </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-72 p-1.5" align="end">
+                    </ResponsivePopoverTrigger>
+                    <ResponsivePopoverContent title="Link story" className="w-72 p-1.5" align="end">
                       <div className="max-h-48 space-y-0.5 overflow-y-auto">
                         {unlinkedStories.map((s) => (
                           <LinkStoryItem key={s.id} story={s} onSelect={handleSelectLink} />
                         ))}
                       </div>
-                    </PopoverContent>
-                  </Popover>
+                    </ResponsivePopoverContent>
+                  </ResponsivePopover>
                 ) : null}
               </div>
             </div>
@@ -348,26 +339,16 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
         ) : null}
       </Card>
 
-      <AlertDialog open={showDeleteAlert} onOpenChange={handleDeleteAlertOpenChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete epic?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Child stories will be unlinked. This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={handleDelete}
-              disabled={isDeleting}
-            >
-              {isDeleting ? "Deleting..." : "Delete"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={showDeleteAlert}
+        onOpenChange={handleDeleteAlertOpenChange}
+        title="Delete epic?"
+        description="Child stories will be unlinked. This action cannot be undone."
+        confirmLabel="Delete"
+        destructive
+        isPending={isDeleting}
+        onConfirm={handleDelete}
+      />
     </>
   );
 });

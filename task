@@ -1,6 +1,7 @@
 you should act as 50 years experienced full stack developer and code reviewer the code and you should fix it as 50 years experienced developer in the best way
 task summary :- 
-Review the code and you should fix the bugs, schema, api, refactoring UI and UX etc on RBAC and ORG 
+Review the code and you should fix the bugs, schema, api, refactoring UI and UX etc on Build
+i want to manage Projects, Products, Clients, Freelancing Users and remove the unnecesssary schemas, dead code, types, functions etc whatall the unnecessary 
 
 task flow :- 
 you should check the each and every api, schema, components, pages, everything without missing the single point and you should make a proper map of what are need to change based on the rules mentioned below format 
@@ -28,9 +29,11 @@ so keep this in mind and you should make the schema the best and it is easy to s
 
 10. remove the unnecessary files, types, zod validations, components, and reduce the bundle sizes and make sure everything should be loaded properly and skeletons everything 
 
-11. test all the api's before fixing saying it is completed and feel free to ask the questions 
+11. test all the api's before fixing saying it is completed and do the testing api's only at the end only not inbetween and if you found bugs you should fix untill everything is completed and feel free to ask the questions 
 
 12. Add AI features inline and also don't break anything because most of the code it is working also 
+
+13. Make sure schema, efficient, clean, future proof, optimized, best coding pratices, and use wisely org, module level rbac etc and before starting you shold explore the platform indetailed 
 
 <!-- 13. i want to migrate the rag model or else any vectordb instead of SQL and make sure it should be scalable and best coding pratices and let me know what are all needed so that like RAG and vector db and quadrant and keep this in mind this app will need to serve for Millions of users so keep this in mind and you should write the code and follow the @claude.md and @ui-ux-system.md file as well and i find a final robust, bug free, reliable, super efficint, fastest and best animatied super cool UI and UX and performance as well it should scale as well 
 

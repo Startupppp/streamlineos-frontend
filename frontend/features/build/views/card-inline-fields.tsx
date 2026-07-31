@@ -4,6 +4,11 @@ import { useState, memo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
+  ResponsivePopover,
+  ResponsivePopoverContent,
+  ResponsivePopoverTrigger,
+} from "@/components/ui/responsive-popover";
+import {
   Command,
   CommandEmpty,
   CommandGroup,
@@ -15,10 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { cn, resolveImageUrl } from "@/lib/utils";
-import {
-  FIELD_POPOVER_CONTENT_CLASS,
-  INLINE_POPOVER_MIN_CLASS,
-} from "@/components/ui/field-control";
+import { INLINE_POPOVER_MIN_CLASS } from "@/components/ui/field-control";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useUpdateTicket } from "@/hooks/api/build/tickets";
@@ -79,8 +81,8 @@ export const InlinePriority = memo(function InlinePriority({
 
   return (
     <InlineFieldWrapper>
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
+      <ResponsivePopover open={open} onOpenChange={setOpen}>
+        <ResponsivePopoverTrigger asChild>
           <button
             type="button"
             className="inline-flex rounded p-0.5 hover:bg-muted/60 transition-colors"
@@ -88,8 +90,8 @@ export const InlinePriority = memo(function InlinePriority({
           >
             <PriorityBadge priority={currentPriority} />
           </button>
-        </PopoverTrigger>
-        <PopoverContent className={cn("p-1", INLINE_POPOVER_MIN_CLASS, "min-w-36")} align="start">
+        </ResponsivePopoverTrigger>
+        <ResponsivePopoverContent title="Priority" className={cn("p-1", INLINE_POPOVER_MIN_CLASS, "min-w-36")} align="start">
           {PRIORITIES.map(({ value, label, Icon }) => (
             <button
               key={value}
@@ -105,8 +107,8 @@ export const InlinePriority = memo(function InlinePriority({
               {currentPriority === value && <Check className="ml-auto h-3 w-3" />}
             </button>
           ))}
-        </PopoverContent>
-      </Popover>
+        </ResponsivePopoverContent>
+      </ResponsivePopover>
     </InlineFieldWrapper>
   );
 });
@@ -162,13 +164,13 @@ export const InlineAssignee = memo(function InlineAssignee({
 
   return (
     <InlineFieldWrapper>
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
+      <ResponsivePopover open={open} onOpenChange={setOpen}>
+        <ResponsivePopoverTrigger asChild>
           <button type="button" aria-label="Change assignee">
             {trigger}
           </button>
-        </PopoverTrigger>
-        <PopoverContent className={cn("p-0", INLINE_POPOVER_MIN_CLASS, "min-w-52")} align="end">
+        </ResponsivePopoverTrigger>
+        <ResponsivePopoverContent title="Assignee" className={cn("p-0", INLINE_POPOVER_MIN_CLASS, "min-w-52")} align="end">
           <Command>
             <CommandInput placeholder="Search members..." className="text-xs" />
             <CommandList className="max-h-48">
@@ -192,8 +194,8 @@ export const InlineAssignee = memo(function InlineAssignee({
               </CommandGroup>
             </CommandList>
           </Command>
-        </PopoverContent>
-      </Popover>
+        </ResponsivePopoverContent>
+      </ResponsivePopover>
     </InlineFieldWrapper>
   );
 });
@@ -351,8 +353,8 @@ export const InlineStatus = memo(function InlineStatus({
 
   return (
     <InlineFieldWrapper>
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
+      <ResponsivePopover open={open} onOpenChange={setOpen}>
+        <ResponsivePopoverTrigger asChild>
           <button
             type="button"
             className="inline-flex items-center gap-1 rounded px-1 py-0.5 hover:bg-muted/60 transition-colors"
@@ -361,8 +363,8 @@ export const InlineStatus = memo(function InlineStatus({
             <StatusConfigDot entry={currentEntry} className="h-1.5 w-1.5 rounded-full shrink-0" />
             <span className="text-[10px] text-muted-foreground">{currentEntry.label}</span>
           </button>
-        </PopoverTrigger>
-        <PopoverContent className={cn("p-1", INLINE_POPOVER_MIN_CLASS, "min-w-44")} align="start">
+        </ResponsivePopoverTrigger>
+        <ResponsivePopoverContent title="Status" className={cn("p-1", INLINE_POPOVER_MIN_CLASS, "min-w-44")} align="start">
           {statusList.map((status) => {
             const entry = getStatusEntry(resolvedConfig, status);
             return (
@@ -381,8 +383,8 @@ export const InlineStatus = memo(function InlineStatus({
               </button>
             );
           })}
-        </PopoverContent>
-      </Popover>
+        </ResponsivePopoverContent>
+      </ResponsivePopover>
     </InlineFieldWrapper>
   );
 });
@@ -445,7 +447,7 @@ export const InlineTitle = memo(function InlineTitle({
             {currentTitle}
           </button>
         </PopoverTrigger>
-        <PopoverContent className={cn("p-2", FIELD_POPOVER_CONTENT_CLASS)} align="start">
+        <PopoverContent className="p-2 min-w-[var(--radix-popover-trigger-width)]" align="start">
           <Input
             autoFocus
             value={value}
@@ -525,7 +527,7 @@ export const InlineDescription = memo(function InlineDescription({
             {preview || "Add description…"}
           </button>
         </PopoverTrigger>
-        <PopoverContent className={cn("p-2", FIELD_POPOVER_CONTENT_CLASS)} align="start">
+        <PopoverContent className="p-2 min-w-[var(--radix-popover-trigger-width)]" align="start">
           <Textarea
             autoFocus
             value={value}

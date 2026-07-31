@@ -1,23 +1,13 @@
-﻿"use client";
+"use client";
 
-import dynamic from "next/dynamic";
 import { useRef, useCallback, useEffect, useState, useMemo } from "react";
-import { useDebouncedValue } from "@/hooks/common/use-debounce";
-import { LoadingButton } from "@/components/ui/loading-button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
 import {
   Select,
   SelectContent,
@@ -25,17 +15,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import {
-  FileText,
-  File,
-  AlertTriangle,
-} from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { PlusIcon, PaperclipIcon, XIcon, LinkIcon } from "@animateicons/react/lucide";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { useProjects } from "@/hooks/api/build/projects";
-import { useTicketSearch } from "@/hooks/api/build/ticket-search";
 import {
   useCreateTicketAi,
   CreateTicketAiFieldTrigger,
@@ -44,104 +26,16 @@ import {
 import { AiInlinePreview, type AiInlineSession } from "@/components/ai";
 import { useCreateTicketForm } from "./use-create-ticket-form";
 import { TicketCreateProperties } from "./ticket-create-properties";
-import { TicketRelatedLinksEditor } from "./ticket-related-links-editor";
-
-const TiptapEditorDynamic = dynamic(
-  () =>
-    import("@/components/editor/tiptap-editor").then((m) => ({
-      default: m.TiptapEditor,
-    })),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="min-h-[120px] animate-pulse rounded-md border border-border bg-muted/40" />
-    ),
-  },
-);
-
-const MAX_FILES = 10;
-const MAX_TOTAL_BYTES = 100 * 1024 * 1024;
-const MAX_FILE_BYTES = 25 * 1024 * 1024;
-
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes}B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)}KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
-}
-
-function isImageMime(mime: string): boolean {
-  return mime.startsWith("image/");
-}
-
-interface AttachmentPreviewProps {
-  file: File;
-  previewUrl: string | null;
-  onRemove: () => void;
-}
-
-function AttachmentPreview({
-  file,
-  previewUrl,
-  onRemove,
-}: AttachmentPreviewProps) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  const isImage = isImageMime(file.type);
-
-  return (
-    <div className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2">
-      {isImage && previewUrl ? (
-        <img
-          src={previewUrl}
-          alt={file.name}
-          className="h-10 w-10 rounded object-cover shrink-0 border border-border"
-        />
-      ) : (
-        <div className="h-10 w-10 rounded border border-border bg-muted flex items-center justify-center shrink-0">
-          {file.type === "application/pdf" ? (
-            <FileText className="h-5 w-5 text-red-500" />
-          ) : (
-            <File className="h-5 w-5 text-muted-foreground" />
-          )}
-        </div>
-      )}
-      <div className="flex-1 min-w-0">
-        <p className="truncate text-xs font-medium" title={file.name}>{file.name}</p>
-        <p className="text-[10px] text-muted-foreground">
-          {formatBytes(file.size)}
-        </p>
-      </div>
-      <button
-        type="button"
-        onClick={onRemove}
-        aria-label={`Remove ${file.name}`}
-        className="text-muted-foreground hover:text-destructive transition-colors shrink-0"
-        {...hoverHandlers}
-      >
-        <XIcon ref={iconRef} size={14} />
-      </button>
-    </div>
-  );
-}
-
-function useDuplicateTitleWarning(title: string, projectId: number | null) {
-  const debouncedTitle = useDebouncedValue(title, 500);
-
-  const trimmed = debouncedTitle.trim().toLowerCase();
-  const enabled = trimmed.length >= 3 && projectId != null;
-
-  const { data } = useTicketSearch(trimmed, { enabled });
-
-  const matches = (data ?? []).filter(
-    (r) =>
-      projectId != null &&
-      r.projectId === projectId &&
-      r.title.trim().toLowerCase() === trimmed &&
-      r.status !== "DONE" &&
-      r.status !== "CANCELLED",
-  );
-
-  return matches;
-}
+import {
+  MAX_FILES,
+  MAX_TOTAL_BYTES,
+  MAX_FILE_BYTES,
+  isImageMime,
+} from "./ticket-attachment-preview";
+import { useDuplicateTitleWarning } from "./use-duplicate-title-warning";
+import { TicketDialogTitleField } from "./ticket-dialog-title-field";
+import { TicketDialogDescriptionSection } from "./ticket-dialog-description-section";
+import { TicketDialogFooter } from "./ticket-dialog-footer";
 
 interface CreateTicketDialogProps {
   projectId?: number;
@@ -162,8 +56,6 @@ export function CreateTicketDialog({
   externalOpen,
   onExternalOpenChange,
 }: CreateTicketDialogProps) {
-  const { iconRef: attachIconRef, hoverHandlers: attachHoverHandlers } = useAnimatedIcon();
-  const { iconRef: linksIconRef, hoverHandlers: linksHoverHandlers } = useAnimatedIcon();
   const projectLocked = lockedProjectId != null;
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(
     lockedProjectId ?? null,
@@ -217,7 +109,6 @@ export function CreateTicketDialog({
   const [descriptionInlineSession, setDescriptionInlineSession] = useState<AiInlineSession | null>(null);
   const [fieldsInlineSession, setFieldsInlineSession] = useState<AiInlineSession | null>(null);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrls, setPreviewUrls] = useState<(string | null)[]>([]);
   const [fileError, setFileError] = useState<string | null>(null);
   const dragCounterRef = useRef(0);
@@ -332,10 +223,6 @@ export function CreateTicketDialog({
     setSelectedProjectId(Number.isFinite(parsed) ? parsed : null);
   }, []);
 
-  const handleAttachClick = useCallback(
-    () => fileInputRef.current?.click(),
-    [],
-  );
   const handleShowLinksEditor = useCallback(() => setShowLinksEditor(true), []);
   const handleCreateMoreChange = useCallback(
     (_: boolean) => {
@@ -384,12 +271,6 @@ export function CreateTicketDialog({
     [handleRemoveFile],
   );
 
-  function makeRemoveFileHandler(idx: number) {
-    return function removeFile() {
-      handleRemoveFileWithPreview(idx);
-    };
-  }
-
   const handleDragEnter = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -426,7 +307,6 @@ export function CreateTicketDialog({
     [form, handleSubmit],
   );
 
-  const totalSize = files.reduce((sum, f) => sum + f.size, 0);
   const canSubmit = selectedProjectId != null;
   const projectSelectValue =
     selectedProjectId != null ? String(selectedProjectId) : undefined;
@@ -434,6 +314,8 @@ export function CreateTicketDialog({
     project?.key ??
     projects.find((p) => p.id === selectedProjectId)?.key ??
     (projectsLoading ? "Loading…" : "Select project");
+  const currentProjectKey =
+    project?.key ?? projects.find((p) => p.id === selectedProjectId)?.key;
 
   return (
     <>
@@ -494,153 +376,31 @@ export function CreateTicketDialog({
               onDragOver={handleDragOver}
               onDrop={handleDrop}
             >
-              <div className="shrink-0 space-y-2 border-b border-border/60 px-5 pb-3 pt-4">
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <div className="flex items-start gap-1.5">
-                        <FormControl>
-                          <input
-                            {...field}
-                            ref={(el) => {
-                              field.ref(el);
-                              titleRef.current = el;
-                            }}
-                            autoFocus
-                            autoCapitalize="off"
-                            autoCorrect="off"
-                            spellCheck={false}
-                            placeholder="Issue title"
-                            className="min-w-0 flex-1 border-0 bg-transparent p-0 text-lg font-semibold leading-tight text-foreground outline-none placeholder:text-muted-foreground/50 focus:ring-0"
-                          />
-                        </FormControl>
-                        {createTicketAi.canUseAI ? (
-                          <CreateTicketAiFieldTrigger
-                            {...createTicketAi.titleTrigger}
-                            className="mt-0.5"
-                          />
-                        ) : null}
-                      </div>
-                      <FormMessage className="text-xs" />
-                      {titleInlineSession ? (
-                        <AiInlinePreview
-                          session={titleInlineSession}
-                          applyLabel="Replace"
-                          previewMode="title"
-                          className="mt-2"
-                        />
-                      ) : null}
-                      {duplicates.length > 0 && (
-                        <div className="mt-1 flex items-start gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-2 dark:border-amber-500/30 dark:bg-amber-500/10">
-                          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500 dark:text-amber-400" />
-                          <div className="min-w-0">
-                            <p className="text-[11px] font-medium text-amber-700 dark:text-amber-300">
-                              Similar open{" "}
-                              {duplicates.length === 1 ? "ticket" : "tickets"}{" "}
-                              already exist — you can still create this one.
-                            </p>
-                            <ul className="mt-0.5 space-y-0.5">
-                              {duplicates.slice(0, 3).map((d) => (
-                                <li
-                                  key={d.id}
-                                  className="text-[11px] text-amber-600 dark:text-amber-400"
-                                >
-                                  {d.projectKey}-{d.ticketNumber}: {d.title}{" "}
-                                  <span className="text-amber-500 dark:text-amber-400">
-                                    ({d.status})
-                                  </span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        </div>
-                      )}
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <TicketDialogTitleField
+                control={form.control}
+                titleRef={titleRef}
+                canUseAI={createTicketAi.canUseAI}
+                titleTriggerProps={createTicketAi.titleTrigger}
+                titleInlineSession={titleInlineSession}
+                duplicates={duplicates}
+              />
 
-              <ScrollArea
-                hideScrollbar
-                className="min-h-[120px] flex-1"
-                viewportClassName="overscroll-contain px-5 py-3"
-              >
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => {
-                    function handleDescriptionHtmlChange(html: string) {
-                      field.onChange(html);
-                    }
-                    return (
-                      <FormItem className="min-h-[120px]">
-                        <div className="relative min-h-[120px] cursor-text">
-                          {createTicketAi.canUseAI ? (
-                            <div className="absolute right-0 top-0 z-10">
-                              <CreateTicketAiFieldTrigger
-                                {...createTicketAi.descriptionTrigger}
-                              />
-                            </div>
-                          ) : null}
-                          <TiptapEditorDynamic
-                            content={field.value ?? ""}
-                            contentKey={descriptionEditorKey}
-                            onChangeHtml={handleDescriptionHtmlChange}
-                            output="html"
-                            minHeightClassName="min-h-[120px]"
-                            placeholder="Add description…"
-                            embedded
-                          />
-                        </div>
-                        <FormMessage className="text-xs" />
-                        {descriptionInlineSession ? (
-                          <AiInlinePreview
-                            session={descriptionInlineSession}
-                            applyLabel="Replace"
-                            previewMode="description"
-                            className="mt-2"
-                          />
-                        ) : null}
-                      </FormItem>
-                    );
-                  }}
-                />
-
-                {files.length > 0 && (
-                  <div className="mt-3 space-y-1.5">
-                    {files.map((file, idx) => (
-                      <AttachmentPreview
-                        key={`${file.name}-${file.size}-${file.lastModified}`}
-                        file={file}
-                        previewUrl={previewUrls[idx] ?? null}
-                        onRemove={makeRemoveFileHandler(idx)}
-                      />
-                    ))}
-                  </div>
-                )}
-
-                {(showLinksEditor || relatedLinks.length > 0) && (
-                  <div className="mt-3">
-                    <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">
-                      Related links
-                    </p>
-                    <TicketRelatedLinksEditor
-                      links={relatedLinks}
-                      onChange={setRelatedLinks}
-                      projectId={selectedProjectId}
-                      projectKey={project?.key ?? projects.find((p) => p.id === selectedProjectId)?.key}
-                    />
-                  </div>
-                )}
-
-                {fileError && (
-                  <p className="mt-2 text-[11px] text-destructive">
-                    {fileError}
-                  </p>
-                )}
-              </ScrollArea>
+              <TicketDialogDescriptionSection
+                control={form.control}
+                descriptionEditorKey={descriptionEditorKey}
+                canUseAI={createTicketAi.canUseAI}
+                descriptionTriggerProps={createTicketAi.descriptionTrigger}
+                descriptionInlineSession={descriptionInlineSession}
+                files={files}
+                previewUrls={previewUrls}
+                onRemoveFile={handleRemoveFileWithPreview}
+                showLinksEditor={showLinksEditor}
+                relatedLinks={relatedLinks}
+                onRelatedLinksChange={setRelatedLinks}
+                selectedProjectId={selectedProjectId}
+                projectKey={currentProjectKey}
+                fileError={fileError}
+              />
 
               <div className="relative z-10 shrink-0 border-t border-border bg-background px-5 py-3">
                 {fieldsInlineSession ? (
@@ -671,69 +431,16 @@ export function CreateTicketDialog({
                 </div>
               </div>
 
-              <div className="relative z-10 grid shrink-0 grid-cols-[1fr_auto] items-center gap-x-3 gap-y-2 border-t border-border bg-background px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] [grid-template-areas:'tools_more'_'submit_submit'] md:flex md:justify-between md:gap-3 md:pb-3">
-                <div className="flex min-w-0 items-center gap-2 [grid-area:tools]">
-                  <button
-                    type="button"
-                    onClick={handleAttachClick}
-                    disabled={files.length >= MAX_FILES}
-                    aria-label="Attach file"
-                    className="inline-flex items-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-xs text-muted-foreground transition-colors hover:border-border hover:bg-muted/60 hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
-                    {...attachHoverHandlers}
-                  >
-                    <PaperclipIcon ref={attachIconRef} size={14} />
-                    {files.length >= MAX_FILES ? "Limit reached" : "Attach"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleShowLinksEditor}
-                    aria-label="Add related links"
-                    className="inline-flex items-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-xs text-muted-foreground transition-colors hover:border-border hover:bg-muted/60 hover:text-foreground"
-                    {...linksHoverHandlers}
-                  >
-                    <LinkIcon ref={linksIconRef} size={14} />
-                    Links
-                  </button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    className="hidden"
-                    accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
-                    multiple
-                    onChange={handleFileChange}
-                  />
-                  <span className="sr-only text-[10px] text-muted-foreground md:not-sr-only md:inline md:truncate">
-                    Up to {MAX_FILES} files, 25MB each, 100MB total
-                    {files.length > 0 &&
-                      ` · ${files.length}/${MAX_FILES} · ${formatBytes(totalSize)}`}
-                  </span>
-                </div>
-
-                <div className="contents md:flex md:items-center md:gap-3">
-                  <label className="flex cursor-pointer select-none items-center gap-2 justify-self-end rounded-md border border-input bg-muted px-2 py-1 [grid-area:more]">
-                    <Switch
-                      checked={createMore}
-                      onCheckedChange={handleCreateMoreChange}
-                      aria-label="Create more"
-                      className="border border-border data-[state=unchecked]:bg-input"
-                    />
-                    <span className="text-xs text-muted-foreground">
-                      Create more
-                    </span>
-                  </label>
-
-                  <LoadingButton
-                    type="submit"
-                    isPending={isPending || isUploading}
-                    loadingText="Creating…"
-                    className="w-full px-4 text-xs [grid-area:submit] md:w-auto"
-                    size="sm"
-                    disabled={!canSubmit}
-                  >
-                    Create issue
-                  </LoadingButton>
-                </div>
-              </div>
+              <TicketDialogFooter
+                files={files}
+                onFileChange={handleFileChange}
+                onShowLinksEditor={handleShowLinksEditor}
+                createMore={createMore}
+                onCreateMoreChange={handleCreateMoreChange}
+                isPending={isPending}
+                isUploading={isUploading}
+                canSubmit={canSubmit}
+              />
             </form>
           </Form>
         </DialogContent>

@@ -7,6 +7,7 @@ import type {
 } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   Project,
   ProjectListItem,
@@ -117,6 +118,7 @@ export function useProjects(
     "queryKey" | "queryFn"
   >,
 ) {
+  const canView = useCan("build:view");
   return useQuery<PaginatedResponse<ProjectListItem>>({
     queryKey: queryKeys.projects.list(filters ? { ...filters } : undefined),
     queryFn: () =>
@@ -126,6 +128,7 @@ export function useProjects(
       ),
     staleTime: 30_000,
     ...options,
+    enabled: canView && (options?.enabled ?? true),
   });
 }
 
@@ -136,10 +139,11 @@ export function useProject(
     "queryKey" | "queryFn" | "enabled"
   >,
 ) {
+  const canView = useCan("build:view");
   return useQuery<ProjectWithDetails | null>({
     queryKey: queryKeys.projects.detail(id),
     queryFn: () => apiClient.get<ProjectWithDetails | null>(`/build/${id}`),
-    enabled: !!id,
+    enabled: canView && !!id,
     staleTime: 30_000,
     ...options,
   });
@@ -345,11 +349,12 @@ export function useProjectMembers(
     "queryKey" | "queryFn" | "enabled"
   >,
 ) {
+  const canView = useCan("build:view");
   return useQuery<ProjectMemberRecord[]>({
     queryKey: queryKeys.projects.members(projectId),
     queryFn: () =>
       apiClient.get<ProjectMemberRecord[]>(`/build/${projectId}/members`),
-    enabled: !!projectId,
+    enabled: canView && !!projectId,
     staleTime: 30_000,
     ...options,
   });
@@ -440,6 +445,7 @@ export function useProjectLabels(
   projectId?: number,
   options?: Omit<UseQueryOptions<TicketLabel[]>, "queryKey" | "queryFn">,
 ) {
+  const canView = useCan("build:view");
   return useQuery<TicketLabel[]>({
     queryKey: queryKeys.projects.labels(projectId),
     queryFn: () =>
@@ -448,5 +454,6 @@ export function useProjectLabels(
         : apiClient.get<TicketLabel[]>("/build/labels"),
     staleTime: 60_000,
     ...options,
+    enabled: canView && (options?.enabled ?? true),
   });
 }

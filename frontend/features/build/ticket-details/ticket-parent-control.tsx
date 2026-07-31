@@ -4,7 +4,11 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ChevronsUpDown, CornerLeftUp, Search } from "lucide-react";
 import { XIcon } from "@animateicons/react/lucide";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  ResponsivePopover,
+  ResponsivePopoverContent,
+  ResponsivePopoverTrigger,
+} from "@/components/ui/responsive-popover";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Input } from "@/components/ui/input";
 import { useTicketSearch } from "@/hooks/api/build/ticket-search";
@@ -85,7 +89,8 @@ export function TicketParentControl({
   }
 
   const picker = (
-    <PopoverContent
+    <ResponsivePopoverContent
+      title="Parent ticket"
       align="start"
       className={cn(
         "p-0",
@@ -130,7 +135,7 @@ export function TicketParentControl({
           ))
         )}
       </div>
-    </PopoverContent>
+    </ResponsivePopoverContent>
   );
 
   if (variant === "breadcrumb") {
@@ -192,8 +197,8 @@ export function TicketParentControl({
                 density="field"
                 className="min-w-0 flex-1 px-0 hover:bg-transparent"
               />
-              <Popover open={open} onOpenChange={handleOpenChange}>
-                <PopoverTrigger asChild>
+              <ResponsivePopover open={open} onOpenChange={handleOpenChange}>
+                <ResponsivePopoverTrigger asChild>
                   <button
                     type="button"
                     className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
@@ -202,9 +207,9 @@ export function TicketParentControl({
                   >
                     <ChevronsUpDown className="h-3.5 w-3.5" />
                   </button>
-                </PopoverTrigger>
+                </ResponsivePopoverTrigger>
                 {picker}
-              </Popover>
+              </ResponsivePopover>
             </div>
             <AnimatedIconButton
               type="button"
@@ -219,8 +224,8 @@ export function TicketParentControl({
             />
           </>
         ) : (
-          <Popover open={open} onOpenChange={handleOpenChange}>
-            <PopoverTrigger asChild>
+          <ResponsivePopover open={open} onOpenChange={handleOpenChange}>
+            <ResponsivePopoverTrigger asChild>
               <button
                 type="button"
                 className={cn(FIELD_CONTROL_CLASS, "text-muted-foreground")}
@@ -229,9 +234,9 @@ export function TicketParentControl({
                 <CornerLeftUp className="h-3.5 w-3.5 shrink-0" />
                 <span className="min-w-0 flex-1 truncate">Add parent</span>
               </button>
-            </PopoverTrigger>
+            </ResponsivePopoverTrigger>
             {picker}
-          </Popover>
+          </ResponsivePopover>
         )}
       </div>
     </div>

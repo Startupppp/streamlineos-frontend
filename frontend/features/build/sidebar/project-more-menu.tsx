@@ -8,10 +8,10 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  ResponsivePopover,
+  ResponsivePopoverContent,
+  ResponsivePopoverTrigger,
+} from "@/components/ui/responsive-popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   SidebarAnimatedNavIcon,
@@ -81,8 +81,8 @@ export function ProjectMoreMenu({
   }, [onCustomize]);
 
   return (
-    <Popover open={open} onOpenChange={handleOpenChange}>
-      <PopoverTrigger asChild>
+    <ResponsivePopover open={open} onOpenChange={handleOpenChange}>
+      <ResponsivePopoverTrigger asChild>
         <Button
           variant="ghost"
           {...animatedNavHoverHandlers}
@@ -102,8 +102,9 @@ export function ProjectMoreMenu({
           />
           {!collapsed ? <span>More</span> : null}
         </Button>
-      </PopoverTrigger>
-      <PopoverContent
+      </ResponsivePopoverTrigger>
+      <ResponsivePopoverContent
+        title="More tools"
         side={collapsed ? "right" : "top"}
         align="start"
         sideOffset={8}
@@ -169,8 +170,8 @@ export function ProjectMoreMenu({
             </button>
           </div>
         ) : null}
-      </PopoverContent>
-    </Popover>
+      </ResponsivePopoverContent>
+    </ResponsivePopover>
   );
 }
 

@@ -6,11 +6,13 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { TicketSearchResult } from "@/types/projects";
 export type { TicketSearchResult } from "@/types/projects";
+import { useCan } from "@/hooks/api/access";
 
 export function useTicketSearch(
   q: string,
   options?: Omit<UseQueryOptions<TicketSearchResult[]>, "queryKey" | "queryFn">
 ) {
+  const canView = useCan("build:tickets:view");
   return useQuery<TicketSearchResult[]>({
     queryKey: [...queryKeys.projects.all, "search", "tickets", q],
     queryFn: () =>
@@ -18,5 +20,6 @@ export function useTicketSearch(
     staleTime: 30_000,
     placeholderData: keepPreviousData,
     ...options,
+    enabled: canView && (options?.enabled ?? true),
   });
 }

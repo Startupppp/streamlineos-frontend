@@ -2,7 +2,11 @@
 
 import { useState, useRef } from "react";
 import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  ResponsivePopover,
+  ResponsivePopoverContent,
+  ResponsivePopoverTrigger,
+} from "@/components/ui/responsive-popover";
 import {
   Command,
   CommandEmpty,
@@ -131,8 +135,8 @@ export function SubtaskComposer({ ticketId, projectId, projectStatuses }: Subtas
 
   return (
     <div className="flex items-center gap-1.5 rounded-lg border border-dashed border-border bg-muted/20 px-2 py-1.5">
-      <Popover open={statusOpen} onOpenChange={setStatusOpen}>
-        <PopoverTrigger asChild>
+      <ResponsivePopover open={statusOpen} onOpenChange={setStatusOpen}>
+        <ResponsivePopoverTrigger asChild>
           <button
             type="button"
             className="inline-flex items-center gap-1 rounded px-1 py-0.5 hover:bg-muted/60 transition-colors shrink-0"
@@ -150,8 +154,8 @@ export function SubtaskComposer({ ticketId, projectId, projectStatuses }: Subtas
               <span className="h-2 w-2 rounded-full border border-dashed border-muted-foreground/40 shrink-0" />
             )}
           </button>
-        </PopoverTrigger>
-        <PopoverContent className="w-44 p-1" align="start">
+        </ResponsivePopoverTrigger>
+        <ResponsivePopoverContent title="Status" className="w-44 p-1" align="start">
           {statusList.map((s) => {
             const entry = getStatusEntry(resolvedConfig, s);
             return (
@@ -170,8 +174,8 @@ export function SubtaskComposer({ ticketId, projectId, projectStatuses }: Subtas
               </button>
             );
           })}
-        </PopoverContent>
-      </Popover>
+        </ResponsivePopoverContent>
+      </ResponsivePopover>
 
       <Input
         ref={inputRef}
@@ -182,8 +186,8 @@ export function SubtaskComposer({ ticketId, projectId, projectStatuses }: Subtas
         onKeyDown={handleKeyDown}
       />
 
-      <Popover open={priorityOpen} onOpenChange={setPriorityOpen}>
-        <PopoverTrigger asChild>
+      <ResponsivePopover open={priorityOpen} onOpenChange={setPriorityOpen}>
+        <ResponsivePopoverTrigger asChild>
           <button
             type="button"
             className="inline-flex rounded p-0.5 hover:bg-muted/60 transition-colors shrink-0"
@@ -191,8 +195,8 @@ export function SubtaskComposer({ ticketId, projectId, projectStatuses }: Subtas
           >
             <PriorityBadge priority={priority} />
           </button>
-        </PopoverTrigger>
-        <PopoverContent className="w-36 p-1" align="end">
+        </ResponsivePopoverTrigger>
+        <ResponsivePopoverContent title="Priority" className="w-36 p-1" align="end">
           {PRIORITIES.map(({ value, label, Icon }) => (
             <button
               key={value}
@@ -208,11 +212,11 @@ export function SubtaskComposer({ ticketId, projectId, projectStatuses }: Subtas
               {priority === value && <Check className="ml-auto h-3 w-3" />}
             </button>
           ))}
-        </PopoverContent>
-      </Popover>
+        </ResponsivePopoverContent>
+      </ResponsivePopover>
 
-      <Popover open={assigneeOpen} onOpenChange={setAssigneeOpen}>
-        <PopoverTrigger asChild>
+      <ResponsivePopover open={assigneeOpen} onOpenChange={setAssigneeOpen}>
+        <ResponsivePopoverTrigger asChild>
           <button type="button" aria-label="Set assignee" className="shrink-0">
             {selectedMember ? (
               <Avatar className="h-5 w-5 border border-background cursor-pointer hover:ring-2 hover:ring-primary/20 transition-all">
@@ -226,8 +230,8 @@ export function SubtaskComposer({ ticketId, projectId, projectStatuses }: Subtas
               </div>
             )}
           </button>
-        </PopoverTrigger>
-        <PopoverContent className="w-52 p-0" align="end">
+        </ResponsivePopoverTrigger>
+        <ResponsivePopoverContent title="Assignee" className="w-52 p-0" align="end">
           <Command>
             <CommandInput placeholder="Search members..." className="text-xs" />
             <CommandList className="max-h-48">
@@ -255,8 +259,8 @@ export function SubtaskComposer({ ticketId, projectId, projectStatuses }: Subtas
               </CommandGroup>
             </CommandList>
           </Command>
-        </PopoverContent>
-      </Popover>
+        </ResponsivePopoverContent>
+      </ResponsivePopover>
 
       <AnimatedIconButton
         size="sm"

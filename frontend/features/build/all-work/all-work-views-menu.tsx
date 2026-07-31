@@ -11,10 +11,10 @@ import {
   Trash2Icon,
 } from "@animateicons/react/lucide";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  ResponsivePopover,
+  ResponsivePopoverContent,
+  ResponsivePopoverTrigger,
+} from "@/components/ui/responsive-popover";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -284,8 +284,8 @@ export function AllWorkViewsMenu({
   return (
     <>
       <div className="flex items-center gap-1">
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger asChild>
+        <ResponsivePopover open={open} onOpenChange={setOpen}>
+          <ResponsivePopoverTrigger asChild>
             <AnimatedIconButton
               variant="outline"
               className="shrink-0 gap-1 px-2.5 text-xs font-normal"
@@ -295,8 +295,8 @@ export function AllWorkViewsMenu({
               <span>Views</span>
               <ChevronDown className="h-3 w-3 shrink-0 text-muted-foreground" />
             </AnimatedIconButton>
-          </PopoverTrigger>
-          <PopoverContent align="start" className="w-72 p-1">
+          </ResponsivePopoverTrigger>
+          <ResponsivePopoverContent title="Views" align="start" className="w-72 p-1">
             {isLoading && (
               <div className="space-y-1 p-1">
                 {Array.from({ length: 3 }).map((_, i) => (
@@ -348,8 +348,8 @@ export function AllWorkViewsMenu({
                 </button>
               </>
             )}
-          </PopoverContent>
-        </Popover>
+          </ResponsivePopoverContent>
+        </ResponsivePopover>
 
         {hasActiveFilters && (
           <AnimatedIconButton

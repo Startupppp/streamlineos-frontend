@@ -1952,6 +1952,12 @@ export const NAV_GROUPS: NavGroup[] = [
         requiredPermission: "build:portfolios:view",
       },
       {
+        label: "Programs",
+        icon: Layers,
+        href: "/build/programs",
+        requiredPermission: "build:programs:view",
+      },
+      {
         label: "Managed Products",
         icon: Layers,
         href: "/build/managed-products",

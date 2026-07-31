@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions, UseMutationOptions } from "@tanstack/react-query";
+import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type {
@@ -23,11 +24,12 @@ export function useTickets(
   filters?: TicketFilters,
   options?: Omit<UseQueryOptions<PaginatedResponse<Ticket>>, "queryKey" | "queryFn" | "enabled">
 ) {
+  const canView = useCan("build:tickets:view");
   return useQuery<PaginatedResponse<Ticket>>({
     queryKey: queryKeys.projects.tickets({ projectId, ...filters }),
     queryFn: () =>
       apiClient.get<PaginatedResponse<Ticket>>(`/build/${projectId}/tickets`, filters ? { ...filters } : undefined),
-    enabled: !!projectId,
+    enabled: canView && !!projectId,
     staleTime: 30_000,
     placeholderData: (prev) => prev,
     ...options,
@@ -41,6 +43,7 @@ export function useProjectBoardTickets(
   projectId: number,
   options?: Omit<UseQueryOptions<Ticket[]>, "queryKey" | "queryFn" | "enabled">
 ) {
+  const canView = useCan("build:tickets:view");
   return useQuery<Ticket[]>({
     queryKey: queryKeys.projects.tickets({ projectId, view: "board" }),
     queryFn: async () => {
@@ -62,7 +65,7 @@ export function useProjectBoardTickets(
       );
       return [...(first.data ?? []), ...rest.flatMap((p) => p.data ?? [])];
     },
-    enabled: !!projectId,
+    enabled: canView && !!projectId,
     staleTime: 30_000,
     placeholderData: (prev) => prev,
     ...options,
@@ -74,11 +77,12 @@ export function useTicket(
   ticketId: number,
   options?: Omit<UseQueryOptions<Ticket | null>, "queryKey" | "queryFn" | "enabled">
 ) {
+  const canView = useCan("build:tickets:view");
   return useQuery<Ticket | null>({
     queryKey: queryKeys.projects.ticket(ticketId),
     queryFn: () =>
       apiClient.get<Ticket | null>(`/build/${projectId}/tickets/${ticketId}`),
-    enabled: !!ticketId && !!projectId,
+    enabled: canView && !!ticketId && !!projectId,
     staleTime: 30_000,
     ...options,
   });
@@ -422,10 +426,11 @@ export function useSubtasks(
   projectId?: number,
   options?: Omit<UseQueryOptions<Ticket[]>, "queryKey" | "queryFn" | "enabled">
 ) {
+  const canView = useCan("build:tickets:view");
   return useQuery<Ticket[]>({
     queryKey: [...queryKeys.projects.all, "subtasks", { ticketId }],
     queryFn: () => apiClient.get<Ticket[]>(`/build/${projectId ?? 0}/tickets/${ticketId}/subtasks`),
-    enabled: ticketId > 0 && (projectId ?? 0) > 0,
+    enabled: canView && ticketId > 0 && (projectId ?? 0) > 0,
     staleTime: 30_000,
     ...options,
   });
@@ -521,12 +526,13 @@ export interface TicketRelation {
 }
 
 export function useTicketRelations(ticketId: number, projectId: number) {
+  const canView = useCan("build:tickets:view");
   return useQuery({
     queryKey: [...queryKeys.projects.ticket(ticketId), "relations"],
     queryFn: () =>
       apiClient.get<TicketRelation[]>(`/build/${projectId}/tickets/${ticketId}/relations`),
     staleTime: 2 * 60_000,
-    enabled: !!ticketId && !!projectId,
+    enabled: canView && !!ticketId && !!projectId,
   });
 }
 

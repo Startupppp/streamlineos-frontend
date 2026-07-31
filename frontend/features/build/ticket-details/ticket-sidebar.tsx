@@ -8,7 +8,7 @@ import { Clock, User, Calendar, Building2, X } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { XIcon } from "@animateicons/react/lucide";
 import { format } from "date-fns";
-import { resolveImageUrl, cn } from "@/lib/utils";
+import { resolveImageUrl } from "@/lib/utils";
 import {
   planningEndPickerProps,
   planningStartPickerProps,
@@ -32,10 +32,10 @@ import {
 } from "@/features/build/shared/resolve-user-name";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  ResponsivePopover,
+  ResponsivePopoverContent,
+  ResponsivePopoverTrigger,
+} from "@/components/ui/responsive-popover";
 import {
   Command,
   CommandInput,
@@ -46,7 +46,6 @@ import {
 } from "@/components/ui/command";
 import { useCrmOrganizationsForPicker } from "@/hooks/api/crm";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
-import { FIELD_SEARCH_POPOVER_CONTENT_CLASS } from "@/components/ui/field-control";
 
 interface CustomerPickerProps {
   customerId: number | null | undefined;
@@ -82,8 +81,8 @@ function CustomerPicker({
         Customer
       </span>
       <div className="flex min-w-0 items-center gap-1">
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger asChild>
+        <ResponsivePopover open={open} onOpenChange={setOpen}>
+          <ResponsivePopoverTrigger asChild>
             <button
               type="button"
               className="flex min-h-10 min-w-0 flex-1 touch-manipulation items-center gap-1.5 rounded-md border border-input bg-background px-3 py-2 text-xs text-left transition-colors hover:bg-accent @[18rem]:min-h-9 md:min-h-9"
@@ -98,8 +97,8 @@ function CustomerPicker({
                 </span>
               )}
             </button>
-          </PopoverTrigger>
-          <PopoverContent className={cn(FIELD_SEARCH_POPOVER_CONTENT_CLASS, "p-0")} align="start">
+          </ResponsivePopoverTrigger>
+          <ResponsivePopoverContent title="Customer" className="min-w-[var(--radix-popover-trigger-width)] p-0" align="start">
             <Command shouldFilter={false}>
               <CommandInput
                 placeholder="Search customers..."
@@ -138,8 +137,8 @@ function CustomerPicker({
                 </CommandGroup>
               </CommandList>
             </Command>
-          </PopoverContent>
-        </Popover>
+          </ResponsivePopoverContent>
+        </ResponsivePopover>
         {customerId != null && (
           <button
             type="button"

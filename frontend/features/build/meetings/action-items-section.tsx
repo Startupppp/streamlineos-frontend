@@ -15,10 +15,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ActionItemStatusBadge } from "./meeting-badges";
 import { ActionItemFormSheet } from "./action-item-form-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -231,24 +228,15 @@ export function ActionItemsSection({
         projectMembers={projectMembers}
       />
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteDialogChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete this action item?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {deleteTarget?.title
-                ? `"${deleteTarget.title}" will be permanently deleted.`
-                : "This action cannot be undone."}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction className="bg-destructive text-destructive-foreground" onClick={handleDeleteConfirm}>
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={handleDeleteDialogChange}
+        title="Delete this action item?"
+        description={deleteTarget?.title ? `"${deleteTarget.title}" will be permanently deleted.` : "This action cannot be undone."}
+        confirmLabel="Delete"
+        destructive
+        onConfirm={handleDeleteConfirm}
+      />
     </div>
   );
 }

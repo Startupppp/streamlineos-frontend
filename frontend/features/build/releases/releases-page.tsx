@@ -8,16 +8,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Tag, CheckCircle2, Archive, Clock, Pencil } from "lucide-react";
 import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import {
@@ -335,29 +326,16 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
           />
         ) : null}
 
-        <AlertDialog open={!!deleteTarget} onOpenChange={handleAlertOpenChange}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete release?</AlertDialogTitle>
-              <AlertDialogDescription>
-                &ldquo;{deleteTarget?.name} {deleteTarget?.version}&rdquo; will
-                be permanently deleted.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel disabled={deleteRelease.isPending}>
-                Cancel
-              </AlertDialogCancel>
-              <AlertDialogAction
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                onClick={handleConfirmDelete}
-                disabled={deleteRelease.isPending}
-              >
-                {deleteRelease.isPending ? "Deleting…" : "Delete"}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <ConfirmDialog
+          open={!!deleteTarget}
+          onOpenChange={handleAlertOpenChange}
+          title="Delete release?"
+          description={`“${deleteTarget?.name ?? ""} ${deleteTarget?.version ?? ""}” will be permanently deleted.`}
+          confirmLabel="Delete"
+          destructive
+          isPending={deleteRelease.isPending}
+          onConfirm={handleConfirmDelete}
+        />
       </PmPageShell>
     </PageWrapper>
   );

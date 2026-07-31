@@ -1,7 +1,11 @@
 ﻿"use client";
 
 import { useState, useEffect, memo } from "react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  ResponsivePopover,
+  ResponsivePopoverContent,
+  ResponsivePopoverTrigger,
+} from "@/components/ui/responsive-popover";
 import { cn } from "@/lib/utils";
 import { INLINE_POPOVER_MIN_CLASS } from "@/components/ui/field-control";
 import { toast } from "sonner";
@@ -45,8 +49,8 @@ export const InlineType = memo(function InlineType({
 
   return (
     <InlineFieldWrapper>
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
+      <ResponsivePopover open={open} onOpenChange={setOpen}>
+        <ResponsivePopoverTrigger asChild>
           <button
             type="button"
             className="inline-flex items-center rounded p-0.5 hover:bg-muted/60 transition-colors"
@@ -54,8 +58,8 @@ export const InlineType = memo(function InlineType({
           >
             <TicketTypeIcon type={currentType ?? "TASK"} size="sm" />
           </button>
-        </PopoverTrigger>
-        <PopoverContent className={cn("p-1", INLINE_POPOVER_MIN_CLASS, "min-w-32")} align="start">
+        </ResponsivePopoverTrigger>
+        <ResponsivePopoverContent title="Type" className={cn("p-1", INLINE_POPOVER_MIN_CLASS, "min-w-32")} align="start">
           {INLINE_TYPES.map((t) => (
             <button
               key={t}
@@ -71,8 +75,8 @@ export const InlineType = memo(function InlineType({
               {currentType === t && <Check className="ml-auto h-3 w-3" />}
             </button>
           ))}
-        </PopoverContent>
-      </Popover>
+        </ResponsivePopoverContent>
+      </ResponsivePopover>
     </InlineFieldWrapper>
   );
 });
@@ -132,8 +136,8 @@ export const InlineLabels = memo(function InlineLabels({
 
   return (
     <InlineFieldWrapper>
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
+      <ResponsivePopover open={open} onOpenChange={setOpen}>
+        <ResponsivePopoverTrigger asChild>
           <button
             type="button"
             className="inline-flex items-center gap-0.5 rounded p-0.5 hover:bg-muted/60 transition-colors"
@@ -149,8 +153,8 @@ export const InlineLabels = memo(function InlineLabels({
               <span className="text-[9px] text-muted-foreground font-mono">{selectedIds.length}</span>
             )}
           </button>
-        </PopoverTrigger>
-        <PopoverContent className={cn("p-1", INLINE_POPOVER_MIN_CLASS, "min-w-48")} align="start">
+        </ResponsivePopoverTrigger>
+        <ResponsivePopoverContent title="Labels" className={cn("p-1", INLINE_POPOVER_MIN_CLASS, "min-w-48")} align="start">
           <LabelsSearchCommand
             labels={labels}
             selectedIds={selectedIds}
@@ -158,8 +162,8 @@ export const InlineLabels = memo(function InlineLabels({
             onCreated={handleLabelCreated}
             open={open}
           />
-        </PopoverContent>
-      </Popover>
+        </ResponsivePopoverContent>
+      </ResponsivePopover>
     </InlineFieldWrapper>
   );
 });
@@ -192,8 +196,8 @@ export const InlineCycle = memo(function InlineCycle({
 
   return (
     <InlineFieldWrapper>
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
+      <ResponsivePopover open={open} onOpenChange={setOpen}>
+        <ResponsivePopoverTrigger asChild>
           <button
             type="button"
             className="inline-flex items-center gap-1 rounded px-1 py-0.5 hover:bg-muted/60 transition-colors"
@@ -214,8 +218,8 @@ export const InlineCycle = memo(function InlineCycle({
               {currentCycle ? currentCycle.name : "No cycle"}
             </span>
           </button>
-        </PopoverTrigger>
-        <PopoverContent className={cn("p-1", INLINE_POPOVER_MIN_CLASS, "min-w-44")} align="start">
+        </ResponsivePopoverTrigger>
+        <ResponsivePopoverContent title="Cycle" className={cn("p-1", INLINE_POPOVER_MIN_CLASS, "min-w-44")} align="start">
           <button
             type="button"
             onClick={makeCycleHandler(null)}
@@ -240,8 +244,8 @@ export const InlineCycle = memo(function InlineCycle({
               {currentCycleId === cycle.id && <Check className="ml-auto h-3 w-3 shrink-0" />}
             </button>
           ))}
-        </PopoverContent>
-      </Popover>
+        </ResponsivePopoverContent>
+      </ResponsivePopover>
     </InlineFieldWrapper>
   );
 });
@@ -275,8 +279,8 @@ export const InlineSprint = memo(function InlineSprint({
 
   return (
     <InlineFieldWrapper>
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
+      <ResponsivePopover open={open} onOpenChange={setOpen}>
+        <ResponsivePopoverTrigger asChild>
           <button
             type="button"
             className="inline-flex items-center gap-1 rounded px-1 py-0.5 hover:bg-muted/60 transition-colors"
@@ -292,8 +296,8 @@ export const InlineSprint = memo(function InlineSprint({
               {currentSprint ? currentSprint.name : "No sprint"}
             </span>
           </button>
-        </PopoverTrigger>
-        <PopoverContent className={cn("p-1", INLINE_POPOVER_MIN_CLASS, "min-w-44")} align="start">
+        </ResponsivePopoverTrigger>
+        <ResponsivePopoverContent title="Sprint" className={cn("p-1", INLINE_POPOVER_MIN_CLASS, "min-w-44")} align="start">
           <button
             type="button"
             onClick={makeSprintHandler(null)}
@@ -318,8 +322,8 @@ export const InlineSprint = memo(function InlineSprint({
               {currentSprintId === sprint.id && <Check className="ml-auto h-3 w-3 shrink-0" />}
             </button>
           ))}
-        </PopoverContent>
-      </Popover>
+        </ResponsivePopoverContent>
+      </ResponsivePopover>
     </InlineFieldWrapper>
   );
 });

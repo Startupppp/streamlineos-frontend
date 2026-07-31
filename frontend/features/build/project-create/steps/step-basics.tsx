@@ -23,7 +23,11 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  ResponsivePopover,
+  ResponsivePopoverContent,
+  ResponsivePopoverTrigger,
+} from "@/components/ui/responsive-popover";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Select,
@@ -271,8 +275,8 @@ export const StepBasics = forwardRef<BasicsHandle, StepSharedProps>(
                     <span className="text-muted-foreground font-normal">(Optional)</span>
                   </FormLabel>
                   <FormControl>
-                    <Popover open={managerOpen} onOpenChange={setManagerOpen}>
-                      <PopoverTrigger asChild>
+                    <ResponsivePopover open={managerOpen} onOpenChange={setManagerOpen}>
+                      <ResponsivePopoverTrigger asChild>
                         <Button
                           type="button"
                           variant="outline"
@@ -302,8 +306,8 @@ export const StepBasics = forwardRef<BasicsHandle, StepSharedProps>(
                           )}
                           <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
                         </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                      </ResponsivePopoverTrigger>
+                      <ResponsivePopoverContent title="Project Manager" className="min-w-[var(--radix-popover-trigger-width)] p-0" align="start">
                         <Command shouldFilter={false}>
                           <CommandInput
                             placeholder="Search by name or email…"
@@ -352,8 +356,8 @@ export const StepBasics = forwardRef<BasicsHandle, StepSharedProps>(
                             </CommandGroup>
                           </CommandList>
                         </Command>
-                      </PopoverContent>
-                    </Popover>
+                      </ResponsivePopoverContent>
+                    </ResponsivePopover>
                   </FormControl>
                   <FormMessage />
                 </FormItem>

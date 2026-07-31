@@ -21,10 +21,10 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  ResponsivePopover,
+  ResponsivePopoverContent,
+  ResponsivePopoverTrigger,
+} from "@/components/ui/responsive-popover";
 import { Separator } from "@/components/ui/separator";
 import {
   Check,
@@ -187,8 +187,8 @@ export function MembersSelector({
   );
 
   return (
-    <Popover>
-      <PopoverTrigger asChild>
+    <ResponsivePopover>
+      <ResponsivePopoverTrigger asChild>
         <Button
           variant="outline"
           className="w-full justify-between text-left font-normal"
@@ -199,9 +199,10 @@ export function MembersSelector({
             : "Select members"}
           <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
         </Button>
-      </PopoverTrigger>
-      <PopoverContent
-        className="w-[var(--radix-popover-trigger-width)] p-2"
+      </ResponsivePopoverTrigger>
+      <ResponsivePopoverContent
+        title="Select members"
+        className="min-w-[var(--radix-popover-trigger-width)] p-2"
         align="start"
       >
         <SearchInput
@@ -229,8 +230,8 @@ export function MembersSelector({
             </p>
           )}
         </div>
-      </PopoverContent>
-    </Popover>
+      </ResponsivePopoverContent>
+    </ResponsivePopover>
   );
 }
 

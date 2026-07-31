@@ -121,6 +121,11 @@ const nextConfig: NextConfig = {
       destination: "/signin",
       permanent: true,
     },
+    {
+      source: "/build/:projectId/workload",
+      destination: "/build/:projectId?view=workload",
+      permanent: false,
+    },
   ],
   images: {
     remotePatterns: [

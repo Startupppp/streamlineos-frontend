@@ -11,10 +11,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  ResponsivePopover,
+  ResponsivePopoverContent,
+  ResponsivePopoverTrigger,
+} from "@/components/ui/responsive-popover";
 import { Input } from "@/components/ui/input";
 import type { Sprint } from "@/types/projects";
 import { getUserDisplayName } from "@/features/build/shared/resolve-user-name";
@@ -96,13 +96,13 @@ function ParentPickerPopover({
   }
 
   return (
-    <Popover open={open} onOpenChange={handleOpenChange}>
-      <PopoverTrigger asChild>
+    <ResponsivePopover open={open} onOpenChange={handleOpenChange}>
+      <ResponsivePopoverTrigger asChild>
         <Button variant="outline" size="sm" className="h-8 shrink-0 text-xs">
           Set parent
         </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-72 p-2" align="start">
+      </ResponsivePopoverTrigger>
+      <ResponsivePopoverContent title="Set parent" className="w-72 p-2" align="start">
         <Input
           ref={inputRef}
           placeholder="Search tickets…"
@@ -135,8 +135,8 @@ function ParentPickerPopover({
             </button>
           ))}
         </div>
-      </PopoverContent>
-    </Popover>
+      </ResponsivePopoverContent>
+    </ResponsivePopover>
   );
 }
 

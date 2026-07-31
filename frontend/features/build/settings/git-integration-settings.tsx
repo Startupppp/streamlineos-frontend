@@ -36,16 +36,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyDevicesIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared/error-state";
@@ -367,26 +358,15 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
           <CreatedSecretDialog created={created} onClose={handleCloseCreated} />
         ) : null}
 
-        <AlertDialog open={deleteId !== null} onOpenChange={handleDeleteDialogChange}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete connection?</AlertDialogTitle>
-              <AlertDialogDescription>
-                The webhook will stop linking commits and pull requests. Existing links are kept.
-                This action cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                className="bg-destructive hover:bg-destructive/90"
-                onClick={handleConfirmDelete}
-              >
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <ConfirmDialog
+          open={deleteId !== null}
+          onOpenChange={handleDeleteDialogChange}
+          title="Delete connection?"
+          description="The webhook will stop linking commits and pull requests. Existing links are kept. This action cannot be undone."
+          confirmLabel="Delete"
+          destructive
+          onConfirm={handleConfirmDelete}
+        />
       </PageWrapper>
     </RequireModule>
   );

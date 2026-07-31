@@ -1993,3 +1993,91 @@ NUL, and repaired. Lesson: a masking sentinel must not contain any pattern the s
       `as unknown as` mocks.
 - [x] While fixing it: the failing test was titled "…marks every module enabled" but **never asserted
       on `snapshot.modules`**. It now does, so the test verifies the behaviour its name claims.
+
+---
+
+## Wave 28 — RBAC/invite audit + platform-owner removal (2026-07-30)
+
+### The P0 was real, and its root cause ran deeper than the audit said
+
+`AccessService.computeUserPermissions` resolves from `role_assignments`, groups, module
+ownership and `user_permissions` — it **never reads `organization_members.role`**. Yet
+`insert(roleAssignments)` existed in only 4 places, none of them invite-accept, `createUser`
+or role change. An invited `ORG_ADMIN` got the label and **zero permissions**, silently.
+
+The half the audit missed: **`seedSystemRolesForOrg` was never called at org creation.** Both
+creation paths instead made an ad-hoc role with slug `ADMIN` — `auth.service.ts` with **no
+grants at all**, `org-setup.service.ts` with *every* permission but assigned to nobody. Nothing
+anywhere looks up slug `ADMIN`. So even a correct assignment had no `ORG_ADMIN` role to target.
+
+- [x] **A1–A4** One shared `syncStructuralRoleAssignment(tx, orgId, membershipId, role)` links or
+      unlinks the org's `ORG_ADMIN` role and bumps the permissions version in the SAME
+      transaction. Wired into all **7** membership create/update sites.
+- [x] Both dead `ADMIN` role creations replaced with real `seedSystemRolesForOrg`.
+- [x] **G1** 5 specs — including that demotion REMOVES the assignment, and that the version bump
+      happens so the cache cannot serve a stale answer.
+
+### C6 — a live privilege escalation, coupled to the P0
+
+`POST /users/invite` is gated on `hr:employees:create` (an HR permission) but took
+`role: z.string().min(1)` — **any string**. So anyone who could add an employee could invite an
+`ORG_ADMIN`, or an `OWNER`. Before the P0 fix that label was inert; **after it, it grants every
+permission** — so fixing A1–A4 without this would have armed the hole.
+
+- [x] `assertInvitableRole` at the single `invite()` choke point: role must be structural,
+      `OWNER` is never invitable (transfer flow only), `ORG_ADMIN` only from an owner/org-admin.
+      Schemas tightened to `z.enum(ORG_MEMBER_ROLE_VALUES)` at both boundaries.
+
+### Verified INVALID — 6 of the audit's claims
+
+Checked against source, not assumed:
+
+| ID | Claim | Why it is wrong |
+|---|---|---|
+| A5 | accept doesn't verify session email | accept is `@Public` + token-based + rate-limited; there is no session to compare |
+| A7 | `expireStaleInvitations` unwired | wired at `cron-platform.controller.ts:164` |
+| A9 | reset-password doesn't send email | **there is no password** — auth is magic-link/OTP/Google. The real defect was a mislabelled button calling `useSendSigninLink` aliased as `resetPassword` |
+| A12 | dual invite APIs | one endpoint |
+| C1 | module-access has no authz | every read calls `assertAccess(view)`, writes `assertAccess(manage)`; keys are dynamic `${moduleKey}:access:*` so a static `@RequirePermission` cannot express them |
+| C8 | JwtAuthGuard accepts portal `aud` | rejects `PORTAL_AUDIENCE` at lines 157-165 |
+| F2 | no Copy invite link | only `tokenHash` is stored — the raw token exists solely in the email. Copy-link would require weakening that; Resend covers it |
+
+### Fixed
+- [x] **A6** cancel accepted only `PENDING`, so Cancel 404'd on exactly the expired rows an admin
+      most wants to clear → now `PENDING | EXPIRED`.
+- [x] **A11** `.catch(() => {})` made a misconfigured mail provider look identical to a delivered
+      invite → now logged, delivery still non-blocking.
+- [x] **A9** mislabelled action → "Send sign-in link".
+- [x] **C3/F1/F16** invitations panel had **zero** `useCan`; a `view`-only user saw Invite/Resend/
+      Cancel and got 403s. Now gated on the exact backend keys, and the query itself is gated.
+- [x] **F5** backend `DELETE /organization/members/:id` existed with no UI → `useRemoveOrgMember`
+      + a "Remove from organization" action with a confirm dialog, distinct from "Delete user".
+- [x] **D5** 19 "SignOS" labels → "E-Sign".
+
+### Platform owner removed from this repo
+
+Decision: platform owner moves to a separate app. Anything gated ONLY by platform-admin had to be
+**deleted, not un-gated** — leaving it would have been fail-open.
+
+- [x] 216 usages across **167 backend files** + 21 frontend files stripped.
+- [x] Deleted: `/owner` section, blog admin UI, `platform-owner.guard.ts`, `feature-flags` module
+      (no tenant consumers), `seed-platform-admin` script, `lib/platform/`, 16 platform admin
+      endpoints, 8 blog admin endpoints, 3 platform-admin management service methods.
+- [x] **KEPT** the `@Public` marketing endpoints this repo's public site needs: `/blog/feed`,
+      `/blog/by-slug`, `/platform/visit`, `/platform/contact`.
+- [x] `forceTransferOrgOwnership` **removed entirely** — it was the platform break-glass; re-gating
+      it on `ownership:org:transfer` would have let any holder force a transfer without the
+      recipient's consent.
+- [x] 18 now-meaningless tests deleted (they asserted a bypass that no longer exists; equivalent
+      org-owner coverage already sat beside each one).
+- [x] Migration `0369` drops `users.is_platform_admin`, guarded to abort if any row still sets it
+      (0 on this DB). A flag nothing enforces reads like a live privilege.
+
+### Still open
+- [ ] **B1** legacy `users.role` / `organization_members.role` columns not retired (structural).
+- [ ] **B3** explicit DENY model absent. **B4** typed `resource_grants` absent.
+- [ ] **B5/E2** RLS never built — see W-23 for the rebuild design and the `neondb_owner` caveat.
+- [ ] **`DataScope: "team"` is inert** — no table links a member to an org team, nothing feeds
+      `teamIds` into `applyScope`, so team scope always denies and
+      `hr-policy-evaluation.service.ts:153` hardcodes `teamIds: []`. Either wire team membership
+      or drop `team` from `DataScope`; offering a scope that can never grant is worse than neither.

@@ -5,17 +5,7 @@ import dynamic from "next/dynamic";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Pencil } from "lucide-react";
 import { SendIcon, LinkIcon, Trash2Icon, XIcon, CirclePlusIcon } from "@animateicons/react/lucide";
 import { resolveImageUrl } from "@/lib/utils";
@@ -310,8 +300,8 @@ function CommentItemComponent({
               </button>
             )}
             {canDelete && (
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
+              <ConfirmDialog
+                trigger={
                   <button
                     type="button"
                     className="text-[11px] text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100 flex items-center gap-1"
@@ -321,26 +311,14 @@ function CommentItemComponent({
                     <Trash2Icon size={12} />
                     Delete
                   </button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete comment?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This will permanently delete the comment and all replies. This cannot be
-                      undone.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={handleDeleteConfirm}
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                    >
-                      Delete
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+                }
+                title="Delete comment?"
+                description="This will permanently delete the comment and all replies. This cannot be undone."
+                confirmLabel="Delete"
+                destructive
+                isPending={isDeletingComment}
+                onConfirm={handleDeleteConfirm}
+              />
             )}
           </div>
         )}

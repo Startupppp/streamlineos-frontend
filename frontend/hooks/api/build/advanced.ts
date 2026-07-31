@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
+import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type {
@@ -27,10 +28,11 @@ export function useEpics(
   projectId: number,
   options?: Omit<UseQueryOptions<Epic[]>, "queryKey" | "queryFn" | "enabled">
 ) {
+  const canView = useCan("build:view");
   return useQuery<Epic[]>({
     queryKey: queryKeys.projects.epics(projectId),
     queryFn: () => apiClient.get<Epic[]>(`/build/${projectId}/epics`),
-    enabled: !!projectId,
+    enabled: canView && !!projectId,
     staleTime: 30_000,
     ...options,
   });
@@ -66,10 +68,11 @@ export function useCycles(
   projectId: number,
   options?: Omit<UseQueryOptions<Cycle[]>, "queryKey" | "queryFn" | "enabled">
 ) {
+  const canView = useCan("build:view");
   return useQuery<Cycle[]>({
     queryKey: queryKeys.projects.cycles(projectId),
     queryFn: () => apiClient.get<Cycle[]>(`/build/${projectId}/cycles`),
-    enabled: !!projectId,
+    enabled: canView && !!projectId,
     staleTime: 60_000,
     ...options,
   });
@@ -112,10 +115,11 @@ export function useModules(
   projectId: number,
   options?: Omit<UseQueryOptions<Module[]>, "queryKey" | "queryFn" | "enabled">
 ) {
+  const canView = useCan("build:view");
   return useQuery<Module[]>({
     queryKey: queryKeys.projects.modules(projectId),
     queryFn: () => apiClient.get<Module[]>(`/build/${projectId}/modules`),
-    enabled: !!projectId,
+    enabled: canView && !!projectId,
     staleTime: 60_000,
     ...options,
   });
@@ -158,10 +162,11 @@ export function useViews(
   projectId: number,
   options?: Omit<UseQueryOptions<ProjectView[]>, "queryKey" | "queryFn" | "enabled">
 ) {
+  const canView = useCan("build:view");
   return useQuery<ProjectView[]>({
     queryKey: queryKeys.projects.views(projectId),
     queryFn: () => apiClient.get<ProjectView[]>(`/build/${projectId}/views`),
-    enabled: !!projectId,
+    enabled: canView && !!projectId,
     staleTime: 60_000,
     ...options,
   });
@@ -215,11 +220,13 @@ export function useDeleteView(options?: Parameters<typeof useMutation>[0]) {
 export function useWorkspaceViews(
   options?: Omit<UseQueryOptions<ProjectView[]>, "queryKey" | "queryFn">
 ) {
+  const canView = useCan("build:view");
   return useQuery<ProjectView[]>({
     queryKey: queryKeys.projects.workspaceViews(),
     queryFn: () => apiClient.get<ProjectView[]>("/build/views"),
     staleTime: 60_000,
     ...options,
+    enabled: canView && (options?.enabled ?? true),
   });
 }
 
@@ -276,6 +283,7 @@ export function useIntakeRequests(
     "queryKey" | "queryFn" | "enabled"
   >
 ) {
+  const canView = useCan("build:view");
   return useQuery<{ items: IntakeRequest[]; total: number }>({
     queryKey: queryKeys.projects.intake(projectId),
     queryFn: () =>
@@ -283,7 +291,7 @@ export function useIntakeRequests(
         `/build/${projectId}/intake`,
         status ? { status } : undefined
       ),
-    enabled: !!projectId,
+    enabled: canView && !!projectId,
     staleTime: 30_000,
     ...options,
   });
@@ -329,11 +337,12 @@ export function useProjectAnalytics(
   projectId: number,
   options?: Omit<UseQueryOptions<ProjectAnalytics>, "queryKey" | "queryFn" | "enabled">
 ) {
+  const canView = useCan("build:view");
   return useQuery<ProjectAnalytics>({
     queryKey: queryKeys.projects.analytics(projectId),
     queryFn: () =>
       apiClient.get<ProjectAnalytics>(`/build/${projectId}/analytics`),
-    enabled: !!projectId,
+    enabled: canView && !!projectId,
     staleTime: 5 * 60_000,
     ...options,
   });

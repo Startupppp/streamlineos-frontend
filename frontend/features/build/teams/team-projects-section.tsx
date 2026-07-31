@@ -15,16 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   Command,
   CommandEmpty,
@@ -34,10 +25,10 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  ResponsivePopover,
+  ResponsivePopoverContent,
+  ResponsivePopoverTrigger,
+} from "@/components/ui/responsive-popover";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -111,8 +102,8 @@ function AddProjectPicker({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
+      <ResponsivePopover open={open} onOpenChange={setOpen}>
+        <ResponsivePopoverTrigger asChild>
           <Button
             type="button"
             variant="outline"
@@ -134,8 +125,8 @@ function AddProjectPicker({
               "Pick a project…"
             )}
           </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-72 p-0" align="start">
+        </ResponsivePopoverTrigger>
+        <ResponsivePopoverContent title="Select project" className="w-72 p-0" align="start">
           <Command shouldFilter={false}>
             <CommandInput
               placeholder="Search by name or key…"
@@ -164,8 +155,8 @@ function AddProjectPicker({
               </CommandGroup>
             </CommandList>
           </Command>
-        </PopoverContent>
-      </Popover>
+        </ResponsivePopoverContent>
+      </ResponsivePopover>
       <LoadingButton
         size="sm"
         className="gap-1 text-xs"
@@ -309,26 +300,16 @@ export function TeamProjectsSection({ teamId }: TeamProjectsSectionProps) {
         )}
       </PmSection>
 
-      <AlertDialog open={removeTarget !== null} onOpenChange={(o) => { if (!o) handleRemoveCancel(); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remove &ldquo;{removeTarget?.name}&rdquo;?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will remove the project from the team. Team members will lose
-              the access they gained through this team.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleRemoveCancel}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground"
-              onClick={handleRemoveConfirm}
-            >
-              {removeProject.isPending ? "Removing…" : "Remove"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={removeTarget !== null}
+        onOpenChange={(o) => { if (!o) handleRemoveCancel(); }}
+        title={`Remove "${removeTarget?.name ?? ""}"?`}
+        description="This will remove the project from the team. Team members will lose the access they gained through this team."
+        confirmLabel="Remove"
+        destructive
+        isPending={removeProject.isPending}
+        onConfirm={handleRemoveConfirm}
+      />
     </>
   );
 }
