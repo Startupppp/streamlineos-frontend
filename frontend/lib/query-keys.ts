@@ -663,7 +663,6 @@ export const queryKeys = {
   organization: {
     all: [...base, "organization"] as const,
     members: () => [...base, "organization", "members"] as const,
-    invitations: () => [...base, "organization", "invitations"] as const,
     settings: () => [...base, "organization", "settings"] as const,
   },
 

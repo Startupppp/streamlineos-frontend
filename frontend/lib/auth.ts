@@ -418,7 +418,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             fresh?.image ?? (token.picture as string | null | undefined) ?? null;
           session.user.isActive = fresh?.isActive ?? (token.isActive as boolean);
           session.user.hasDashboardAccess = fresh?.hasDashboardAccess ?? true;
-            false;
           session.user.isOrgOwner = isOrgOwner;
         }
         session.orgId = orgId;
@@ -477,7 +476,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             (token.name as string | null | undefined) ?? session.user.name ?? "";
           session.user.role = (token.role as string | undefined) ?? "";
           session.user.isActive = (token.isActive as boolean | undefined) ?? true;
-            false;
           session.user.isOrgOwner =
             (token.isOrgOwner as boolean | undefined) === true;
         }

@@ -1803,6 +1803,7 @@ export const NAV_GROUPS: NavGroup[] = [
       "timesheets:payroll:view",
       "timesheets:reports:view",
       "timesheets:settings:view",
+      "timesheets:access:view",
     ],
     routes: [
       {
@@ -1853,6 +1854,12 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: SlidersHorizontal,
         href: "/timesheets/settings",
         requiredPermission: "timesheets:settings:view",
+      },
+      {
+        label: "Access",
+        icon: ShieldCheck,
+        href: "/timesheets/access",
+        requiredPermission: "timesheets:access:view",
       },
     ],
   },

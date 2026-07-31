@@ -196,7 +196,7 @@ export interface TeamAttendanceStatusQuery {
   limit?: number;
   search?: string;
   status?: TeamAttendanceEntry["status"];
-  departmentId?: number;
+  departmentId?: string;
 }
 
 export interface TeamAttendanceStatusResponse {

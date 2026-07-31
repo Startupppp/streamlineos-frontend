@@ -60,17 +60,3 @@ export function useResetMfa() {
   });
 }
 
-export function useResendInvitation() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["resend", "invitation"],
-    mutationFn: (data: { invitationId: string }) =>
-      apiClient.post<{ success: boolean }>(
-        "/organization/invitations/resend",
-        data,
-      ),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.organization.invitations() });
-    },
-  });
-}

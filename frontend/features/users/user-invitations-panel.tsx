@@ -11,7 +11,6 @@ import { MailIcon, XIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Button } from "@/components/ui/button";
 import { useCan } from "@/hooks/api/access";
 import { SearchInput } from "@/components/ui/search-input";
 import { Badge } from "@/components/ui/badge";

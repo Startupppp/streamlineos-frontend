@@ -154,12 +154,16 @@ export function StepGeneration({ data }: StepGenerationProps) {
       const res = await completeOrgSetupRef.current.mutateAsync(payload);
       clearBackendTokenCache();
 
+      let generationFailure: string | null = null;
       await generateWorkspaceRef.current
         .mutateAsync({
           industry: payload.industry,
           enabledModules: payload.enabledModules,
         })
-        .catch(() => null);
+        .catch((err: unknown) => {
+          generationFailure = getErrorMessage(err);
+          return null;
+        });
 
       const inviteGroups = groupInviteesByRole(dataRef.current.invitees);
       const inviteFailures: string[] = [];
@@ -174,11 +178,13 @@ export function StepGeneration({ data }: StepGenerationProps) {
         }
       }
 
-      // Setup itself succeeded — invitations are a follow-up step, so surface
-      // the failure instead of completing silently as if everyone was invited.
+      // Setup itself succeeded, so surface these instead of completing silently
+      if (generationFailure) {
+        toast.warning(`Organization created, but starter content was not generated: ${generationFailure}`);
+      }
       if (inviteFailures.length > 0) {
         toast.error(
-          `Organization created, but ${inviteFailures.length} invitation batch(es) failed: ${inviteFailures[0]}`,
+          `Organization created, but ${inviteFailures.length} invitation batch(es) failed: ${inviteFailures.join(" · ")}`,
         );
       }
 

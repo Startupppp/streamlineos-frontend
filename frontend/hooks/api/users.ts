@@ -11,7 +11,7 @@ interface UserListParams {
   search?: string;
   status?: "active" | "suspended" | "archived";
   role?: string;
-  departmentId?: number;
+  departmentId?: string;
   branchId?: string;
   teamId?: string;
   managerUserId?: string;
@@ -77,7 +77,7 @@ interface User {
   role: string;
   designation: string | null;
   phone: string | null;
-  departmentId: number | null;
+  departmentId: string | null;
   branchId: string | null;
   isActive: boolean;
   hasDashboardAccess: boolean;
@@ -385,19 +385,13 @@ interface UserMembership {
   orgId: string;
   businessUnitId: string | null;
   branchId: string | null;
-  departmentId: number | null;
+  departmentId: string | null;
   teamId: string | null;
   managerUserId: string | null;
   isPrimary: boolean;
 }
 
-/**
- * Payload for PATCH /users/:id/membership.
- *
- * Every field is an org-unit id (`org_units.id`, a string) — it is NOT the
- * `UserMembership` response shape, whose `branchId`/`departmentId` are numeric
- * legacy columns. Mixing the two is what produced `Number(uuid)` -> NaN.
- */
+/** Payload for PATCH /users/:id/membership. */
 export interface UpdateUserMembershipPayload {
   businessUnitId?: string | null;
   branchId?: string | null;
@@ -557,8 +551,8 @@ export const useBulkRestore = () => {
 interface BulkUpdatePayload {
   userIds: string[];
   role?: string;
-  departmentId?: number | null;
-  branchId?: number | null;
+  departmentId?: string | null;
+  branchId?: string | null;
   teamId?: string | null;
   managerUserId?: string | null;
 }

@@ -16,7 +16,7 @@ import { useOrgMembers } from "@/hooks/api/organization";
 import { toast } from "sonner";
 import { getApiError } from "@/lib/api-client";
 import { Building2, GitBranch, Network, Pencil } from "lucide-react";
-import { CheckIcon, XIcon } from "@animateicons/react/lucide";
+import { XIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { LoadingButton } from "@/components/ui/loading-button";
 

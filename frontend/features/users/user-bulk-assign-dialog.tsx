@@ -81,8 +81,8 @@ export function UserBulkAssignDialog({
     const payload: BulkUpdatePayload = {
       userIds: Array.from(selectedIds),
       ...(values.role !== KEEP ? { role: values.role } : {}),
-      ...(values.branchId !== KEEP ? { branchId: Number(values.branchId) } : {}),
-      ...(values.departmentId !== KEEP ? { departmentId: Number(values.departmentId) } : {}),
+      ...(values.branchId !== KEEP ? { branchId: values.branchId } : {}),
+      ...(values.departmentId !== KEEP ? { departmentId: values.departmentId } : {}),
     };
     bulkUpdate(payload, {
       onSuccess: () => {

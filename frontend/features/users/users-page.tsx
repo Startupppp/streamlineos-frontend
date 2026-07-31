@@ -157,7 +157,7 @@ export function UsersPage() {
           ? (status as "active" | "suspended" | "archived")
           : undefined,
       role: role !== "all" ? role : undefined,
-      departmentId: departmentId !== "all" ? Number(departmentId) : undefined,
+      departmentId: departmentId !== "all" ? departmentId : undefined,
       branchId: branchId !== "all" ? branchId : undefined,
       sortBy,
       sortOrder,
@@ -182,8 +182,8 @@ export function UsersPage() {
   }, [branchesData]);
 
   const deptMap = useMemo(() => {
-    const m = new Map<number, string>();
-    for (const d of departmentsData?.data ?? []) m.set(Number(d.id), d.name);
+    const m = new Map<string, string>();
+    for (const d of departmentsData?.data ?? []) m.set(String(d.id), d.name);
     return m;
   }, [departmentsData]);
 
@@ -327,7 +327,7 @@ export function UsersPage() {
       cell: (user) => (
         <span className="text-muted-foreground">
           {user.departmentId != null
-            ? (deptMap.get(user.departmentId) ?? String(user.departmentId))
+            ? (deptMap.get(String(user.departmentId)) ?? String(user.departmentId))
             : "—"}
         </span>
       ),
