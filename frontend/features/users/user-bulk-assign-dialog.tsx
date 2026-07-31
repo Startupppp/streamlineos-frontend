@@ -33,6 +33,7 @@ import { useBulkUpdateUsers } from "@/hooks/api/users";
 import type { BulkUpdatePayload } from "@/hooks/api/users";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
+import { USER_INVITE_ROLES } from "@/features/users/user-invite-roles";
 
 const KEEP = "all";
 
@@ -102,7 +103,7 @@ export function UserBulkAssignDialog({
       <DialogContent className="max-w-[95vw] sm:max-w-sm">
         <DialogHeader>
           <DialogTitle className="text-sm">
-            Bulk Assign — {selectedIds.size} user(s)
+            Assign role — {selectedIds.size} user(s)
           </DialogTitle>
         </DialogHeader>
         <Form {...form}>
@@ -121,10 +122,11 @@ export function UserBulkAssignDialog({
                     </FormControl>
                     <SelectContent>
                       <SelectItem value={KEEP}>Keep unchanged</SelectItem>
-                      <SelectItem value="MEMBER">Member</SelectItem>
-                      <SelectItem value="ADMIN">Admin</SelectItem>
-                      <SelectItem value="MANAGER">Manager</SelectItem>
-                      <SelectItem value="HR">HR</SelectItem>
+                      {USER_INVITE_ROLES.map((role) => (
+                        <SelectItem key={role.value} value={role.value}>
+                          {role.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />

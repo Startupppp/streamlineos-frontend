@@ -1,3 +1,15 @@
+import { AUDIT_LOG_PERMISSIONS } from "./audit-log";
+import { BILLING_PERMISSIONS } from "./billing";
+import { BRANCH_PERMISSIONS } from "./branch";
+import { BUILD_PERMISSIONS } from "./build";
+import { CALENDAR_PERMISSIONS } from "./calendar";
+import { REPORTS_PERMISSIONS } from "./reports";
+import { SALES_PERMISSIONS } from "./sales";
+import { SELF_PERMISSIONS } from "./self";
+import { SETTINGS_PERMISSIONS } from "./settings";
+import { SIGN_PERMISSIONS } from "./sign";
+import { TASKS_PERMISSIONS } from "./tasks";
+import { WORKFLOWS_PERMISSIONS } from "./workflows";
 import { HR_PERMISSIONS } from "./hr";
 import { CRM_PERMISSIONS } from "./crm";
 import { SHARED_PERMISSIONS } from "./shared";
@@ -24,5 +36,17 @@ export const PERMISSIONS = [
   ...ACCOUNTING_PERMISSIONS,
   ...PAYROLL_PERMISSIONS,
   ...OWNERSHIP_PERMISSIONS,
+  ...AUDIT_LOG_PERMISSIONS,
+  ...BILLING_PERMISSIONS,
+  ...BRANCH_PERMISSIONS,
+  ...BUILD_PERMISSIONS,
+  ...CALENDAR_PERMISSIONS,
+  ...REPORTS_PERMISSIONS,
+  ...SALES_PERMISSIONS,
+  ...SELF_PERMISSIONS,
+  ...SETTINGS_PERMISSIONS,
+  ...SIGN_PERMISSIONS,
+  ...TASKS_PERMISSIONS,
+  ...WORKFLOWS_PERMISSIONS,
 ];
 

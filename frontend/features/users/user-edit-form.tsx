@@ -28,6 +28,7 @@ import { useUpdateUser } from "@/hooks/api/users";
 import type { User } from "@/hooks/api/users";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
+import { USER_INVITE_ROLES } from "@/features/users/user-invite-roles";
 
 const editSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -50,11 +51,7 @@ interface UserEditFormProps {
   onCancel: () => void;
 }
 
-const ROLES = [
-  { value: "MEMBER", label: "Member" },
-  { value: "ORG_ADMIN", label: "Org Admin" },
-  { value: "OWNER", label: "Owner" },
-];
+const ROLES = USER_INVITE_ROLES;
 
 const RELATIONS = ["Spouse", "Parent", "Sibling", "Child", "Friend", "Other"];
 

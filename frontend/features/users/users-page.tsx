@@ -67,6 +67,7 @@ import { formatDistanceToNow } from "date-fns";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getUserDisplayName, getUserInitials } from "@/features/build/shared/resolve-user-name";
 import { useCan } from "@/hooks/api/access";
+import { USER_STRUCTURAL_ROLES } from "@/features/users/user-invite-roles";
 
 export function UsersPage() {
   const router = useRouter();
@@ -406,11 +407,11 @@ export function UsersPage() {
           </SelectTrigger>
           <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
             <SelectItem value="all">All roles</SelectItem>
-            <SelectItem value="OWNER">Owner</SelectItem>
-            <SelectItem value="ADMIN">Admin</SelectItem>
-            <SelectItem value="MANAGER">Manager</SelectItem>
-            <SelectItem value="MEMBER">Member</SelectItem>
-            <SelectItem value="HR">HR</SelectItem>
+            {USER_STRUCTURAL_ROLES.map((role) => (
+              <SelectItem key={role.value} value={role.value}>
+                {role.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
         <Select value={departmentId} onValueChange={handleDeptChange}>

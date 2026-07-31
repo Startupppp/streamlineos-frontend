@@ -35,6 +35,7 @@ import {
 import type { Invitation } from "@/hooks/api/users";
 import { getApiError } from "@/lib/api-client";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { LoadingButton } from "@/components/ui/loading-button";
 
 type InvStatus = "pending" | "accepted" | "expired";
 type StatusFilter = "all" | InvStatus;
@@ -245,16 +246,17 @@ export function UserInvitationsPanel() {
         return (
           <div className="flex items-center gap-0.5">
             {canResend && (
-              <Button
+              <LoadingButton
                 variant="ghost"
                 size="icon"
                 className="h-7 w-7"
                 onClick={() => handleResend(inv.id)}
-                disabled={isResending || isCancelling}
+                isPending={isResending}
+                disabled={isCancelling}
                 aria-label="Resend invitation"
               >
                 <RefreshCw className="h-4 w-4" />
-              </Button>
+              </LoadingButton>
             )}
             {canCancel && (
               <AnimatedIconButton

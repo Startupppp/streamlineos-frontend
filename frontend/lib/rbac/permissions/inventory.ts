@@ -43,4 +43,8 @@ export const INVENTORY_PERMISSIONS: Permission[] = [
   { name: "inventory:import", resource: "inventory", action: "import", description: "Import inventory data via CSV or Excel" },
   { name: "inventory:export", resource: "inventory", action: "export", description: "Export inventory data" },
   { name: "inventory:webhooks:manage", resource: "inventory:webhooks", action: "manage", description: "Manage inventory webhooks" },
+  { name: "inventory:ai:manage", resource: "inventory:ai", action: "manage", description: "Dismiss or update AI-generated inventory insights" },
+  { name: "inventory:ai:propose", resource: "inventory:ai", action: "propose", description: "Propose AI-generated reorder draft POs and confirm them" },
+  { name: "inventory:export", resource: "inventory:export", action: "export", description: "Export inventory data" },
+  { name: "inventory:import", resource: "inventory:import", action: "import", description: "Import inventory data" },
 ];

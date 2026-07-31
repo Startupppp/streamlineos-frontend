@@ -5,6 +5,7 @@ import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { OrgSettings, OrgMember, Invitation } from "@/types/organization";
+import { useCan } from "@/hooks/api/access";
 
 interface MembersResponse {
   data: OrgMember[];
@@ -37,6 +38,8 @@ export const useOrgMembers = (
   >,
 ) => {
   const safeLimit = Math.min(Math.max(limit, 1), 200);
+  const canViewMembers = useCan("settings:view");
+  const { enabled: callerEnabled, ...restOptions } = options ?? {};
   return useQuery<MembersResponse, Error>({
     queryKey: [
       ...queryKeys.organization.members(),
@@ -49,7 +52,8 @@ export const useOrgMembers = (
         ...(search ? { search } : {}),
       }),
     staleTime: 30_000,
-    ...options,
+    ...restOptions,
+    enabled: canViewMembers && (callerEnabled ?? true),
   });
 };
 
@@ -76,37 +80,7 @@ export const useOrgMembersByIds = (
   });
 };
 
-export const useInvitations = (
-  options?: Omit<UseQueryOptions<Invitation[], Error>, "queryKey" | "queryFn">,
-) => {
-  return useQuery<Invitation[], Error>({
-    queryKey: queryKeys.organization.invitations(),
-    queryFn: () => apiClient.get<Invitation[]>("/organization/invitations"),
-    ...options,
-    staleTime: 30_000,
-  });
-};
 
-export const useInviteUser = () => {
-  const queryClient = useQueryClient();
-  return useMutation<
-    { success: boolean; invitationId: string },
-    Error,
-    { email: string; role: string }
-  >({
-    mutationKey: ["organization", "invite-user"],
-    mutationFn: (data) =>
-      apiClient.post<{ success: boolean; invitationId: string }>(
-        "/organization/members",
-        data,
-      ),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.organization.invitations(),
-      });
-    },
-  });
-};
 
 export const useCancelInvitation = () => {
   const queryClient = useQueryClient();

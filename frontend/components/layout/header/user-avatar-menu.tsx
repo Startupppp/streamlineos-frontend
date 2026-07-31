@@ -19,9 +19,7 @@ import {
   Link2,
   LogOut,
   Shield,
-  ShieldAlert,
   ShieldCheck,
-  UserCheck,
   Users,
   Zap,
   type LucideIcon,
@@ -125,16 +123,6 @@ function buildMenuEntries(opts: {
     if (canManageRbac) {
       accessLinks.push(
         { href: "/settings/roles", label: "Roles", icon: Shield },
-        {
-          href: "/settings/permissions",
-          label: "Permission Matrix",
-          icon: ShieldAlert,
-        },
-        {
-          href: "/settings/rbac",
-          label: "Role Assignment",
-          icon: UserCheck,
-        },
         {
           href: "/settings/delegations",
           label: "Access Policies",

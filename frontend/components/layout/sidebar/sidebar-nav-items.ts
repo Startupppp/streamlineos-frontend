@@ -2566,7 +2566,7 @@ export const PRODUCT_DEFINITIONS: ProductDefinition[] = [
     href: "/payroll",
     icon: IndianRupee,
   },
-  { key: "sign", label: "E-Sign", href: "/sign", icon: PenTool },
+  { key: "sign", label: "SignOS", href: "/sign", icon: PenTool },
 ];
 
 export const PRODUCT_DESCRIPTIONS: Record<ProductKey, string> = {
@@ -2697,7 +2697,7 @@ const PRODUCT_NAV_GROUP_LABELS: Record<ProductKey, string[]> = {
     "Developer",
   ],
   payroll: ["Payroll"],
-  sign: ["E-Sign"],
+  sign: ["SignOS"],
 };
 
 export function withoutHrSetupRoute(groups: NavGroup[]): NavGroup[] {

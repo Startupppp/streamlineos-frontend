@@ -426,6 +426,229 @@ migration collapses to steps 1/2/4 and becomes low-risk.
 
 ---
 
+## 1h. NestJS structure + global validation — EXECUTED 2026-07-31 (user directive)
+
+### Module folders: 15 flat `build-*` → nested under `build/`
+
+Per https://docs.nestjs.com/modules. 182 files moved.
+
+```
+modules/build/
+  build.module.ts     ← aggregates all 16 sub-modules
+  core/               ← was modules/build/ (the module's own controllers/services)
+  approvals/  client-portal/  comment-drafts/  execution/  forms/  governance/
+  incidents/  managed-products/  meetings/  pm-workspaces/  portfolios/  qa/
+  teams/  workflow/
+```
+
+Import rewriting: every relative import in the moved files gained one `../` (517 sites); intra-build
+refs retargeted to `build/core/`; 17 external importers across `agent-access`, `ai`, `chat`, `cron`,
+`feedbucket`, `integrations-git` updated.
+
+**The trap that bit — and why the sed alone was insufficient.** A `from "..."` rewrite misses
+`jest.mock("…")` and dynamic `import("…")` strings. Four spec files broke
+(`import("../rbac/permissions")` ×3, `jest.mock("../email/app-url")`), showing as *suite* failures with
+zero test failures. This is the same class of blind spot recorded in
+[[dead-code-scanning-blind-spots]]: **module references are not always `from` clauses.** Fixed by
+scanning for *any* string literal beginning `../`, not just import statements.
+
+### `app.module.ts`: 16 build imports → 1
+
+Rather than a plain `index.ts` barrel (which still lists 16 names at the call site), this uses the
+NestJS **feature-module composition** pattern: `BuildModule` imports **and re-exports** all 16
+sub-modules, and the root module imports `BuildModule` alone.
+
+**Inert-code check performed** (a module can compile perfectly and simply not be registered): all 16
+`*.module.ts` classes that exist on disk were diffed against the 16 registered in `BUILD_MODULES` —
+**zero missing** — and `BuildModule` confirmed present in `app.module.ts`'s `imports` array.
+
+### Global Zod validation
+
+`class-validator` was **rejected with evidence**, and the user confirmed: the repo has **2,177
+`ZodValidationPipe` sites, 0 class-validator decorators, and neither `class-validator` nor
+`class-transformer` installed**. Migrating would be a platform-wide rewrite contradicting §7 and §29.4.
+
+Instead the NestJS *principle* (validate globally, not per-handler-by-memory) was implemented on Zod:
+
+| File | Role |
+|---|---|
+| `common/validation/validate.decorator.ts` | `@Validate({ body, query, params })` → route metadata |
+| `common/validation/zod-validation.interceptor.ts` | reads that metadata, parses `req.body/query/params` |
+| `app.module.ts` | `{ provide: APP_INTERCEPTOR, useClass: ZodValidationInterceptor }` |
+
+**Interceptor, not pipe — deliberately.** A first attempt as a global `PipeTransform` was written and
+**deleted**: a pipe receives only `ArgumentMetadata`, not `ExecutionContext`, so it cannot resolve
+per-route metadata without an `any` cast — which violates H4. An interceptor gets the context legitimately.
+
+**Non-breaking by construction:** it is a pass-through when a handler has no `@Validate`, so all 2,177
+existing per-parameter pipes are unaffected. `z.object().strict()` is the Zod equivalent of
+`whitelist` + `forbidNonWhitelisted`; a thrown `ZodError` already maps to 400 via `AllExceptionsFilter`.
+
+### Verification
+
+- backend `pnpm typecheck`: **14 errors — exactly the pre-existing baseline, 0 in `modules/build/**`**
+- backend `eslint` (build + validation + app.module): **exit 0**
+- backend unit tests: **17/18 suites, 150/151** — the single failure is the pre-existing stale
+  platform-admin assertion in `whiteboard-access.spec.ts`, unrelated to this work
+- frontend `pnpm type-check`: **exit 0, 0 errors**
+
+⚠️ **backend `pnpm build` exits 1** — but on **exactly those same 14 pre-existing errors**
+(`automation/*`, `users/*`, `organization/invitations.service.ts`, 2 seed scripts). `HEAD` has been
+broken independently of this work since `automation.module.ts:7` began importing a `feature-flags`
+module deleted in an earlier commit. Fixing them is outside Build scope and would mean guessing intent
+in three unrelated modules — flagged for a decision rather than silently expanded into.
+
+**CLAUDE.md updated** with both rules: §9 (nested module folders, pointer) and §18 (full nested-module
+rule, the Zod-over-class-validator decision with its evidence, and the global-validation mechanism).
+
+---
+
+## 1i. Schema batch — EXECUTED 2026-07-31 (migration `0370`)
+
+**Correction to my own process.** B7–B11 were deferred as "needs DB access". That was wrong:
+*generating* a migration needs no DB, only *applying* it does. The user caught the gap. Corrected.
+
+### Tenant scoping — Build is now 100% covered
+
+| Before | After |
+|---|---|
+| 81 Build tables, **2** without `org_id` | **81 / 81 carry `org_id`** — 0 gaps |
+
+- `project_members` (`members.ts:27`) — held `hourly_rate`, which feeds billing, with tenancy only as a
+  two-hop chain through `projects`. Now `org_id NOT NULL` + FK + `(org_id, user_id)` index +
+  `(org_id, id)` candidate key.
+- `project_template_tickets` (`core.ts:247`) — also had **no timestamps at all**; gained
+  `created_at`/`updated_at` alongside `org_id`.
+
+**The compiler found 7 latent bugs.** Making `org_id` `NOT NULL` broke every insert that was creating a
+row with no tenant — `projects-members.service`, `projects-provision.service` (×3),
+`projects-templates.service` (×2), `projects.service`. All fixed. This is the point of a DB-level
+constraint over a convention: the wrong thing became *impossible*, not merely *detected*.
+
+**Phase 1 lane claim corrected:** the recon lane reported **three** tables missing `org_id`.
+`ticket_checklist_items` was a **false positive** — it has had `org_id NOT NULL` all along
+(`tasks.ts:329-331`). A scripted pgTable-body parse over all 81 tables found the true count was two.
+
+**Repo-wide context (out of scope, for a later decision):** the same scan over all **757** tables finds
+**89** without a tenant column — `common` (21), `hr` (21), `inventory` (15), `chat` (8), `crm` (7),
+`accounting` (4), `billing` (4), `blog` (3), `support` (2), `e-sign`/`kb`/`payroll` (1 each), `build` (0).
+**Not all 89 are defects** — `users`, `organizations`, plan catalogs and enum/lookup tables are
+legitimately global, and adding `org_id` there would be wrong. Each module needs the same
+table-by-table judgement Build just got.
+
+### PK capacity — the four append-only tables widened to `bigint`
+
+`serial` is int4 (max 2,147,483,647); the repo had **zero** `bigserial`. `ticket_activity_log` and
+`webhook_deliveries` are append-only, never pruned, and exhaust int4 in **under a year** at the stated
+target scale. Exhaustion is a hard `INSERT` failure, and the repair on a billion-row table is brutal.
+
+**Verified zero inbound foreign keys** reference any of these four ids, so each widening is a
+single-table operation — the risk I had originally priced in does not exist here.
+
+`ticket_activity_log` · `ticket_comment_mentions` · `project_daily_snapshots` · `webhook_deliveries`
+→ `bigserial("id", { mode: "number" })`. Mode `number` keeps the TS type as `number` (safe to 2^53), so
+no downstream type churn.
+
+### Index corrections
+
+- **DROP** `idx_tickets_org_project` — strict prefix duplicate of `idx_tickets_org_project_status`;
+  pure write overhead on the hottest table.
+- **ADD** `idx_projects_name_trgm` (GIN trigram) — `ProjectsService.list` searches `projects.name` with
+  a leading-wildcard `ILIKE` and had **no index at all**; `tickets.title` already had one.
+
+### Migration `0370` — hand-authored, and why
+
+`pnpm db:generate` is **TTY-blocked** here (pre-existing interactive enum-conflict prompt). That was
+fortunate: drizzle-kit emits a single `ADD COLUMN … NOT NULL`, which **aborts on any non-empty table**.
+`0370` is therefore authored as proper expand → backfill → contract (§19 endorses discrete
+hand-authored migrations; it forbids editing *generated* SQL, which this is not):
+
+- chunked backfill (10k rows/iteration) so a large table never holds one long transaction
+- a `RAISE EXCEPTION` guard if any row has an unresolvable `org_id` — fails loudly rather than
+  silently shipping a null tenant
+- `SET statement_timeout = 0` (Neon cancels long single statements)
+- `0370_…down.sql` reverses everything, and **refuses to narrow bigint→int4 if `max(id)` would
+  truncate**
+- registered in `migrations/meta/_journal.json` (idx 87)
+
+**Per H1 it is reviewed and reversible but NOT applied** — that requires the DB.
+
+### Verification
+
+backend `typecheck` **0 errors in `modules/build` or `db/schema`** · backend `eslint` **exit 0** ·
+frontend `type-check` **exit 0, 0 errors**.
+
+(Total backend error count reads 20 = the 14 pre-existing + 6 from concurrent user edits in
+`ownership.service.ts`, outside this work.)
+
+### Money → integer minor units + ISO-4217 (also in `0370`)
+
+`projects.budget` and `project_members.hourly_rate` were `numeric(x,2)` with **no currency column**,
+and `ProjectsBudgetService` read them through `Number()` and did **float arithmetic** —
+`cost: hours * rate`, then summed across members, accumulating drift on billing figures.
+
+| Added | Type |
+|---|---|
+| `projects.budget_minor` / `budget_currency` | `bigint` / `text` |
+| `project_members.hourly_rate_minor` / `rate_currency` | `bigint NOT NULL DEFAULT 0` / `text` |
+
+Service now computes in integer minor units — `Math.round(hours * rateMinor)` **per member**, summed as
+integers — and converts to major units only at the response boundary via a single `minorToMajor`
+helper. Currency is backfilled from `organizations.currency` (a real column, default `INR`), not guessed.
+
+**EXPAND only:** the original `numeric` columns are deliberately retained, so the migration is
+reversible and any un-migrated reader keeps working. Dropping them is a separate contract migration.
+
+**API compatibility (H3):** `plannedBudget`, `actualCost`, `remaining` keep their existing shape and
+major-unit values; `currency` is **added** (additive, so no consumer breaks). A move to exposing minor
+units over the wire would be a breaking change requiring the matching frontend change in the same
+batch (API §13) — not done here.
+
+### Two more tenant gaps found while editing — fixed
+
+Reading the budget service closely surfaced defects no lane reported:
+
+- `getBudget` fetched `projectMembers` filtered by `projectId` **only** — no `orgId`. Now that the
+  column exists (above), the query is org-scoped.
+- `assertProjectAccess`'s membership check had the same gap. Also scoped.
+
+Both were previously "safe" only via an upstream check — exactly the defence-in-depth debt the schema
+change was meant to retire.
+
+### Retention (H8) — implemented for the operational log ONLY, and that is deliberate
+
+`bigint` buys headroom; it does not make unbounded growth correct. But "add a purge job for the four
+append-only tables" would have been the wrong instruction to follow literally. Checking what each table
+actually feeds:
+
+| Table | What reads it | Verdict |
+|---|---|---|
+| `webhook_deliveries` | nothing user-facing; heavy `payload jsonb` + `response_body text` | **PRUNE — implemented** |
+| `ticket_activity_log` | `features/build/ticket-details/activity-feed.tsx` | **DO NOT PRUNE** — user-visible ticket history |
+| `project_daily_snapshots` | `projects-reports.service.ts:130` (burnup / CFD) | **DO NOT PRUNE** — deleting rows silently changes historical charts |
+| `ticket_comment_mentions` | mention records; small per row | no pressure |
+
+Deleting the middle two is a **product decision about data retention**, not a technical cleanup —
+silently dropping a user's ticket history or rewriting their burndown chart would be exactly the kind
+of "clean" change H3 forbids. Raised rather than done.
+
+**Implemented:** `cron/cron-build-retention.service.ts` — `pruneWebhookDeliveries()`, 90-day window,
+batched 500/iteration (matching the existing `CronIdempotencyService` precedent), and it **skips rows
+still `pending`** so a delivery awaiting retry is never destroyed. Exposed as
+`GET|POST /cron/build-retention-prune` on the existing `@Public()` + `assertCronSecret` controller, and
+**registered in `cron.module.ts` providers** (an unregistered provider is a boot-time DI failure that
+tsc cannot see — the inert-code trap again).
+
+### Still outstanding in the schema
+
+1. **Unbounded JSONB** — `feedbucket_submissions.console_logs`/`network_logs`. These live in
+   `db/schema/build/feedback.ts` but are **owned by the `feedbucket` module**, so the split crosses a
+   module boundary — worth an explicit go-ahead.
+2. **Retention policy decision** for `ticket_activity_log` and `project_daily_snapshots` (above).
+3. **Contract phase** — drop `projects.budget` / `project_members.hourly_rate` once nothing reads them.
+
+---
+
 ## 2. Target folder tree (changes only)
 
 ```

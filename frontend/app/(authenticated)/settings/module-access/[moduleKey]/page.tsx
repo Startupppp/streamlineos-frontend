@@ -15,7 +15,7 @@ const MODULE_META: Record<
   support: { label: "Support", permission: "support:access:view" },
   surveys: { label: "Surveys", permission: "surveys:access:view" },
   payroll: { label: "Payroll", permission: "payroll:access:view" },
-  sign: { label: "E-Sign", permission: "sign:access:view" },
+  sign: { label: "SignOS", permission: "sign:access:view" },
 };
 
 type Params = Promise<{ moduleKey: string }>;

@@ -79,4 +79,9 @@ export const SURVEYS_PERMISSIONS: Permission[] = [
     action: "manage",
     description: "Manage survey automations and lead routing rules",
   },
+  { name: "surveys:create", resource: "surveys", action: "create", description: "Create surveys" },
+  { name: "surveys:delete", resource: "surveys", action: "delete", description: "Delete or archive surveys" },
+  { name: "surveys:publish", resource: "surveys", action: "publish", description: "Publish, pause, and close surveys" },
+  { name: "surveys:update", resource: "surveys", action: "update", description: "Edit survey builder content" },
+  { name: "surveys:view", resource: "surveys", action: "view", description: "View surveys, assessments, live sessions, and lead qualification forms" },
 ];

@@ -16,6 +16,7 @@ import type { Invitee, WizardData } from "../lib/wizard-data-schema";
 import { DEFAULT_APPS, GENERATION_STEPS } from "../lib/constants";
 import { GenerationProgressStage } from "./generation-progress-stage";
 import { WelcomeCelebration } from "./welcome-celebration";
+import { toast } from "sonner";
 
 const SETUP_DONE_KEY = "org-setup-complete";
 
@@ -161,13 +162,24 @@ export function StepGeneration({ data }: StepGenerationProps) {
         .catch(() => null);
 
       const inviteGroups = groupInviteesByRole(dataRef.current.invitees);
+      const inviteFailures: string[] = [];
       for (const group of inviteGroups) {
-        await bulkInviteRef.current.mutateAsync({
-          ...group,
-          orgId: res?.orgId,
-        }).catch((err) => {
-          console.error("Failed to send invitations:", err);
-        });
+        try {
+          await bulkInviteRef.current.mutateAsync({
+            ...group,
+            orgId: res?.orgId,
+          });
+        } catch (err) {
+          inviteFailures.push(getErrorMessage(err));
+        }
+      }
+
+      // Setup itself succeeded — invitations are a follow-up step, so surface
+      // the failure instead of completing silently as if everyone was invited.
+      if (inviteFailures.length > 0) {
+        toast.error(
+          `Workspace created, but ${inviteFailures.length} invitation batch(es) failed: ${inviteFailures[0]}`,
+        );
       }
 
       await handleSuccess(res?.autoLoginToken ?? null);

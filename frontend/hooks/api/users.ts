@@ -391,6 +391,21 @@ interface UserMembership {
   isPrimary: boolean;
 }
 
+/**
+ * Payload for PATCH /users/:id/membership.
+ *
+ * Every field is an org-unit id (`org_units.id`, a string) — it is NOT the
+ * `UserMembership` response shape, whose `branchId`/`departmentId` are numeric
+ * legacy columns. Mixing the two is what produced `Number(uuid)` -> NaN.
+ */
+export interface UpdateUserMembershipPayload {
+  businessUnitId?: string | null;
+  branchId?: string | null;
+  departmentId?: string | null;
+  teamId?: string | null;
+  managerUserId?: string | null;
+}
+
 interface BulkActionResult {
   results: Array<{ userId: string; success: boolean; error?: string }>;
   succeeded: number;
@@ -476,7 +491,7 @@ export const useUpdateUserMembership = () => {
   return useMutation<
     { success: boolean },
     Error,
-    { userId: string; data: Partial<UserMembership> }
+    { userId: string; data: UpdateUserMembershipPayload }
   >({
     mutationKey: ["users", "update-membership"],
     mutationFn: ({ userId, data }) =>
