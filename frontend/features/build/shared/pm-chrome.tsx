@@ -18,9 +18,6 @@ export const PM_FILL_SECTION = "flex min-h-0 flex-1 flex-col overflow-hidden";
 export const PM_TOOLBAR =
   "flex w-full min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between";
 
-export const PM_CONTROL =
-  "border-input bg-card text-foreground [&_svg:not([class*='text-'])]:text-muted-foreground";
-
 export const PM_ROW =
   "group flex min-w-0 items-center gap-2.5 border-b border-border/70 px-3 py-2 last:border-b-0 transition-colors duration-150 hover:bg-primary/[0.035]";
 

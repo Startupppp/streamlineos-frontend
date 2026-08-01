@@ -44,7 +44,8 @@ Never hallucinate · Inspect before changing · Reuse before creating · Simplic
 - When I name a page: **AUDIT and show a plan** (change / remove / add). **Wait for confirmation** before editing.
 - Ambiguous + structural → **ask briefly** before coding. Don't guess.
 - Check `.claude/` rules before starting any task.
-- After fixing: run **build + lint + typecheck**, fix all errors, then update `PAGES.md` (mark done + one-line summary).
+- After fixing: run **typecheck** (and **build** where it is the only way to prove the change), fix all errors, then update `PAGES.md` (mark done + one-line summary).
+- **Never run lint or tests unprompted (living rule, 2026-08-01):** `eslint`, `jest` and any test/spec run happen ONLY when I explicitly ask for them. They are slow and I will decide when they are worth the wait. `tsc --noEmit` is always allowed and remains the default proof. This narrows §26: a change is reportable as done on a green typecheck, with lint/tests called out as *not run* rather than silently claimed.
 - When I say **"go"**, pick the next unchecked page in `PAGES.md`.
 - **Parallelism:** decompose into independent sub-tasks, dispatch each to a separate subagent via the Task tool, commit between tasks.
 
@@ -428,7 +429,7 @@ Remove dead/duplicate code, unused schemas/APIs/hooks/components/types — and d
 
 ## 26. Definition of Done
 
-Build ✓ · Lint ✓ · Types ✓ · CRUD complete · RBAC complete (gated + scoped) · Tenant-scoped queries ✓ · Caching correct + invalidated on mutation · Responsive (375/768/1280) · Accessible · Secure (BOLA re-asserted, inputs validated, no secrets leaked) · Tests present (§27) · No file over the 500-line cap without a §9 exception · `PAGES.md` updated.
+Types ✓ (Build ✓ where run; Lint ✓ / Tests ✓ **only when explicitly requested** — otherwise report them as not run, never as passing) · CRUD complete · RBAC complete (gated + scoped) · Tenant-scoped queries ✓ · Caching correct + invalidated on mutation · Responsive (375/768/1280) · Accessible · Secure (BOLA re-asserted, inputs validated, no secrets leaked) · Tests present (§27) · No file over the 500-line cap without a §9 exception · `PAGES.md` updated.
 
 ## 27. Testing
 

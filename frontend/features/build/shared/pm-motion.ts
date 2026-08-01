@@ -2,11 +2,6 @@ import type { Transition, Variants } from "framer-motion";
 
 export const PM_EASE = [0.22, 1, 0.36, 1] as const;
 
-export const pmFast: Transition = {
-  duration: 0.16,
-  ease: PM_EASE,
-};
-
 export const pmSnappy: Transition = {
   duration: 0.2,
   ease: PM_EASE,
@@ -35,16 +30,6 @@ export const fadeUp: Variants = {
 export const fadeUpReduced: Variants = {
   hidden: { opacity: 0 },
   show: { opacity: 1 },
-};
-
-export const fadeIn: Variants = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1 },
-};
-
-export const scaleIn: Variants = {
-  hidden: { opacity: 0, scale: 0.97 },
-  show: { opacity: 1, scale: 1 },
 };
 
 export const listContainer: Variants = {
@@ -97,7 +82,3 @@ export const viewSwapReduced: Variants = {
   exit: { opacity: 0 },
 };
 
-export const dropHighlight: Variants = {
-  idle: { backgroundColor: "transparent" },
-  over: { backgroundColor: "color-mix(in srgb, var(--primary) 6%, transparent)" },
-};

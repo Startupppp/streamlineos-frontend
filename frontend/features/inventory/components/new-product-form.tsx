@@ -31,20 +31,6 @@ import {
   productDescriptionSchema,
 } from "@/features/inventory/lib/new-product-schema";
 
-export {
-  productSchema,
-  productNameSchema,
-  productSkuSchema,
-  productSkuOptionalSchema,
-  productDescriptionSchema,
-  SKU_PATTERN,
-  DECIMAL_PATTERN,
-  CONTAINS_ALPHANUMERIC,
-  NAME_MAX,
-  SKU_MIN,
-  SKU_MAX,
-  DESCRIPTION_MAX,
-};
 export type { ProductFormValues };
 
 interface NewProductFormProps {

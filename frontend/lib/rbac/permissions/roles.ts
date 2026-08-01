@@ -1,4 +1,4 @@
-import { TIMESHEETS_ACCESS_PERMISSIONS } from "./timesheets";
+import { MODULE_ACCESS_PERMISSIONS } from "./module-access";
 import { AUDIT_LOG_PERMISSIONS } from "./audit-log";
 import { BILLING_PERMISSIONS } from "./billing";
 import { BRANCH_PERMISSIONS } from "./branch";
@@ -49,6 +49,6 @@ export const PERMISSIONS = [
   ...SIGN_PERMISSIONS,
   ...TASKS_PERMISSIONS,
   ...WORKFLOWS_PERMISSIONS,
-  ...TIMESHEETS_ACCESS_PERMISSIONS,
+  ...MODULE_ACCESS_PERMISSIONS,
 ];
 

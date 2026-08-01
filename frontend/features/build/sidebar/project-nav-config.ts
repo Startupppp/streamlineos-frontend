@@ -110,12 +110,6 @@ export function isDefaultProjectNavHidden(
   return true;
 }
 
-export function flattenProjectNavItems(
-  groups: ProjectNavGroup[],
-): ProjectNavItem[] {
-  return groups.flatMap((group) => group.items);
-}
-
 export function filterVisibleNavGroups(
   groups: ProjectNavGroup[],
   hiddenIds: ReadonlySet<string>,

@@ -1,13 +1,3 @@
-import {
-  WIZARD_COL_PAD,
-  WIZARD_COL_PAD_X,
-  WIZARD_COL_PAD_Y,
-} from "@/components/wizard-shell";
-
-export const ONBOARDING_COL_PAD_X = WIZARD_COL_PAD_X;
-export const ONBOARDING_COL_PAD_Y = WIZARD_COL_PAD_Y;
-export const ONBOARDING_COL_PAD = WIZARD_COL_PAD;
-
 export const STEP_IDS = {
   PERSONAL: "personal",
   BANK: "bank",

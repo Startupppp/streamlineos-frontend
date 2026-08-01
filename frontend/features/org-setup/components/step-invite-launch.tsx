@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { INVITE_ROLES } from "../lib/constants";
+import { USER_INVITE_ROLES } from "@/features/users/user-invite-roles";
 import type { Invitee, WizardData } from "../lib/wizard-data-schema";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { StepGeneration } from "./step-generation";
@@ -26,6 +27,13 @@ type StepInviteLaunchProps = {
   onChangeInvitees: (invitees: Invitee[]) => void;
 };
 
+function getInviteRoleLabel(roleValue: string): string {
+  return (
+    USER_INVITE_ROLES.find((option) => option.value === roleValue)?.label ??
+    roleValue
+  );
+}
+
 export function StepInviteLaunch({
   data,
   onChangeInvitees,
@@ -33,7 +41,7 @@ export function StepInviteLaunch({
 }: StepInviteLaunchProps) {
   const reduceMotion = useReducedMotion();
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState<string>(INVITE_ROLES[0] ?? "ADMIN");
+  const [role, setRole] = useState<string>(INVITE_ROLES[0] ?? "ORG_ADMIN");
   const [phase, setPhase] = useState<"form" | "pending" | "generating">("form");
 
   function handleAdd() {
@@ -89,7 +97,7 @@ export function StepInviteLaunch({
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="teammate@company.com"
-          className="min-w-0 w-full flex-1 text-sm sm:h-10"
+          className="min-w-0 h-9 w-full flex-1 text-sm"
           disabled={isPending}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
@@ -98,15 +106,15 @@ export function StepInviteLaunch({
             }
           }}
         />
-        <div className="flex min-w-0 gap-2 sm:w-auto sm:shrink-0">
+        <div className="flex min-w-0 items-stretch gap-2 sm:w-auto sm:shrink-0">
           <Select value={role} onValueChange={setRole} disabled={isPending}>
-            <SelectTrigger className="min-w-0 flex-1 text-sm sm:w-32 sm:flex-initial">
+            <SelectTrigger className="h-9 min-w-0 flex-1 text-sm sm:w-36 sm:flex-initial">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-              {INVITE_ROLES.map((r) => (
-                <SelectItem key={r} value={r}>
-                  {r}
+              {INVITE_ROLES.map((roleValue) => (
+                <SelectItem key={roleValue} value={roleValue}>
+                  {getInviteRoleLabel(roleValue)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -115,7 +123,7 @@ export function StepInviteLaunch({
             type="button"
             size="icon"
             variant="outline"
-            className="w-11 shrink-0 sm:w-10"
+            className="size-9 shrink-0"
             onClick={handleAdd}
             disabled={isPending}
             aria-label="Add invitee"
@@ -126,28 +134,28 @@ export function StepInviteLaunch({
       </div>
 
       {data.invitees.length > 0 && (
-        <ul className="min-w-0 space-y-1.5">
+        <ul className="min-w-0 space-y-1">
           {data.invitees.map((invitee, i) => (
             <motion.li
               key={invitee.email}
               initial={{ opacity: 0, x: reduceMotion ? 0 : -6 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.03, duration: 0.2, ease: "easeOut" }}
-              className="flex min-w-0 items-center justify-between gap-2 rounded-xl border border-border/80 bg-background/50 px-3 py-2"
+              className="flex h-10 min-w-0 items-center justify-between gap-2 rounded-lg border border-border bg-card pl-2.5 pr-0"
             >
               <TruncatedText
                 text={invitee.email}
-                className="min-w-0 text-[13px]"
+                className="min-w-0 text-[13px] font-semibold leading-none text-foreground"
               />
-              <div className="flex shrink-0 items-center gap-1">
-                <span className="text-xs text-muted-foreground">
-                  {invitee.role}
+              <div className="flex shrink-0 items-center gap-1.5">
+                <span className="text-xs font-medium text-muted-foreground">
+                  {getInviteRoleLabel(invitee.role)}
                 </span>
                 <button
                   type="button"
                   onClick={() => handleRemove(invitee.email)}
                   disabled={isPending}
-                  className="inline-flex w-9 items-center justify-center text-muted-foreground transition-colors hover:text-destructive disabled:pointer-events-none disabled:opacity-50 sm:h-9 sm:w-9"
+                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-destructive disabled:pointer-events-none disabled:opacity-50"
                   aria-label={`Remove ${invitee.email}`}
                 >
                   <X className="h-3.5 w-3.5" />

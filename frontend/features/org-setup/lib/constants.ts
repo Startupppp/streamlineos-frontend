@@ -1,15 +1,6 @@
 import type { OrgModuleKey, WizardData } from "./wizard-data-schema";
-import {
-  WIZARD_COL_PAD,
-  WIZARD_COL_PAD_X,
-  WIZARD_COL_PAD_Y,
-} from "@/components/wizard-shell";
 
 export const DRAFT_KEY = "org-setup-draft";
-
-export const ORG_SETUP_COL_PAD_X = WIZARD_COL_PAD_X;
-export const ORG_SETUP_COL_PAD_Y = WIZARD_COL_PAD_Y;
-export const ORG_SETUP_COL_PAD = WIZARD_COL_PAD;
 
 export type StepId = "welcome" | "basics" | "invite";
 

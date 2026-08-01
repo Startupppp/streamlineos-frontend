@@ -41,6 +41,11 @@ export function UserActionsMenu({ user, onView }: UserActionsMenuProps) {
   const canRemoveFromOrg = useCan("settings:manage");
   const [confirmRemove, setConfirmRemove] = useState(false);
 
+  const canSuspendUser = canManage && !user.isOwner;
+  const canArchiveUser = canManage && !user.isOwner;
+  const canRemoveUser = canRemoveFromOrg && !user.isOwner;
+  const canDeleteUser = canDelete && !user.isOwner;
+
   function handleActivate() {
     updateStatus(
       { userId: user.id, status: "active" },
@@ -126,13 +131,13 @@ export function UserActionsMenu({ user, onView }: UserActionsMenuProps) {
             Activate
           </DropdownMenuItem>
         )}
-        {canManage && user.isActive && (
+        {canSuspendUser && user.isActive && (
           <DropdownMenuItem onClick={handleSuspend}>
             <ShieldOff className="h-3.5 w-3.5 mr-2 text-yellow-600" />
             Suspend
           </DropdownMenuItem>
         )}
-        {canManage && (
+        {canArchiveUser && (
           <DropdownMenuItem onClick={handleArchive}>
             <UserX className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
             Archive
@@ -144,19 +149,28 @@ export function UserActionsMenu({ user, onView }: UserActionsMenuProps) {
             Send sign-in link
           </DropdownMenuItem>
         )}
-        {canRemoveFromOrg && <DropdownMenuSeparator />}
-        {canRemoveFromOrg && (
+        {canRemoveUser && <DropdownMenuSeparator />}
+        {canRemoveUser && (
           <DropdownMenuItem variant="destructive" onClick={handleOpenRemoveConfirm}>
             <UserMinus className="h-3.5 w-3.5 mr-2" />
             Remove from organization
           </DropdownMenuItem>
         )}
-        {canDelete && <DropdownMenuSeparator />}
-        {canDelete && (
+        {canDeleteUser && <DropdownMenuSeparator />}
+        {canDeleteUser && (
           <DropdownMenuItem variant="destructive" onClick={handleDelete}>
             <Trash2 className="h-3.5 w-3.5 mr-2" />
             Delete user
           </DropdownMenuItem>
+        )}
+        {user.isOwner && (canManage || canDelete || canRemoveFromOrg) && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem disabled>
+              <ShieldCheck className="h-3.5 w-3.5 mr-2" />
+              Owner — transfer ownership first
+            </DropdownMenuItem>
+          </>
         )}
       </DropdownMenuContent>
     </DropdownMenu>

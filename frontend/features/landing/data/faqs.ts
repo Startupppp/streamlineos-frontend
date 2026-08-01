@@ -36,4 +36,3 @@ export const faqs: FAQ[] = [
   },
 ];
 
-export { PRICING_TIERS as pricingTiers } from "@/lib/pricing";

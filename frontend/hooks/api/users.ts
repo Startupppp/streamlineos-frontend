@@ -76,6 +76,7 @@ interface User {
   lastName: string | null;
   image: string | null;
   role: string;
+  isOwner: boolean;
   designation: string | null;
   phone: string | null;
   departmentId: string | null;

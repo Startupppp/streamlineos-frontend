@@ -3,6 +3,12 @@
 import { useCallback, useMemo, useState, type MouseEvent } from "react";
 import { getAllCountries } from "countries-and-timezones";
 import {
+  getCountryCallingCode,
+  isSupportedCountry,
+  parsePhoneNumber,
+  type Country as PhoneCountry,
+} from "react-phone-number-input";
+import {
   TrendingUpIcon,
   UsersIcon,
   BoxesIcon,
@@ -57,8 +63,48 @@ const GOAL_ICONS: Record<string, AnimatedIcon> = {
 };
 
 const ALL_COUNTRIES = Object.values(getAllCountries())
-  .map((c) => ({ name: c.name, timezone: c.timezones[0] ?? "UTC" }))
+  .map((c) => ({
+    id: c.id,
+    name: c.name,
+    timezone: c.timezones[0] ?? "UTC",
+  }))
   .sort((a, b) => a.name.localeCompare(b.name));
+
+const DEFAULT_PHONE_COUNTRY: PhoneCountry = "IN";
+
+function toPhoneCountry(iso: string | undefined): PhoneCountry {
+  if (iso && isSupportedCountry(iso)) return iso;
+  return DEFAULT_PHONE_COUNTRY;
+}
+
+function rewritePhoneForCountry(
+  phone: string,
+  prevCountry: PhoneCountry,
+  newCountry: PhoneCountry,
+): string {
+  if (prevCountry === newCountry) return phone;
+
+  const newCallingCode = getCountryCallingCode(newCountry);
+  const parsed = parsePhoneNumber(phone, prevCountry);
+
+  if (parsed?.nationalNumber) {
+    const remapped = parsePhoneNumber(parsed.nationalNumber, newCountry);
+    return remapped?.number ?? `+${newCallingCode}${parsed.nationalNumber}`;
+  }
+
+  const prevPrefix = `+${getCountryCallingCode(prevCountry)}`;
+  if (phone.startsWith(prevPrefix)) {
+    const nationalPart = phone.slice(prevPrefix.length);
+    return nationalPart ? `+${newCallingCode}${nationalPart}` : `+${newCallingCode}`;
+  }
+
+  if (phone.startsWith("+")) {
+    return `+${newCallingCode}`;
+  }
+
+  const digitsOnly = phone.replace(/\D/g, "");
+  return digitsOnly ? `+${newCallingCode}${digitsOnly}` : `+${newCallingCode}`;
+}
 
 const OTHER_INDUSTRY = "__other";
 
@@ -92,10 +138,12 @@ export function StepBasics({
     () => data.industry.trim() !== "" && !INDUSTRIES.includes(data.industry),
   );
 
-  const selectedCountryTimezone = useMemo(
-    () => ALL_COUNTRIES.find((c) => c.name === data.country)?.timezone ?? "",
+  const selectedCountry = useMemo(
+    () => ALL_COUNTRIES.find((c) => c.name === data.country),
     [data.country],
   );
+  const selectedCountryTimezone = selectedCountry?.timezone ?? "";
+  const phoneCountry = toPhoneCountry(selectedCountry?.id);
 
   const industrySelectValue = otherSelected
     ? OTHER_INDUSTRY
@@ -144,12 +192,31 @@ export function StepBasics({
   }
 
   function handleCountrySelect(name: string) {
-    const tz = ALL_COUNTRIES.find((c) => c.name === name)?.timezone ?? "";
-    patch({ country: name, timezone: tz });
+    const match = ALL_COUNTRIES.find((c) => c.name === name);
+    const newPhoneCountry = toPhoneCountry(match?.id);
+    const updates: Partial<WizardData> = {
+      country: name,
+      timezone: match?.timezone ?? "",
+    };
+    if (data.phone && phoneCountry !== newPhoneCountry) {
+      updates.phone = rewritePhoneForCountry(
+        data.phone,
+        phoneCountry,
+        newPhoneCountry,
+      );
+    }
+    patch(updates);
   }
 
   function handlePhoneChange(value: string) {
     patch({ phone: value });
+  }
+
+  function handlePhoneCountryChange(iso?: PhoneCountry) {
+    if (!iso) return;
+    const match = ALL_COUNTRIES.find((c) => c.id === iso);
+    if (!match || match.name === data.country) return;
+    patch({ country: match.name, timezone: match.timezone });
   }
 
   function handleNext() {
@@ -322,12 +389,14 @@ export function StepBasics({
               Mobile number *
             </Label>
             <PhoneInput
+              key={phoneCountry}
               id="org-phone"
-              defaultCountry="IN"
+              defaultCountry={phoneCountry}
               placeholder="Enter mobile number"
               maxLength={17}
               value={data.phone}
               onChange={handlePhoneChange}
+              onCountryChange={handlePhoneCountryChange}
               className="w-full"
               aria-invalid={!!errors.phone}
               aria-describedby={errors.phone ? "org-phone-error" : undefined}

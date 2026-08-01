@@ -214,7 +214,7 @@ export function StepGeneration({ data }: StepGenerationProps) {
   const companyName = data.companyName?.trim();
 
   return (
-    <>
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       <GenerationProgressStage
         steps={generationSteps}
         completedSteps={completedSteps}
@@ -234,6 +234,6 @@ export function StepGeneration({ data }: StepGenerationProps) {
           />
         )}
       </AnimatePresence>
-    </>
+    </div>
   );
 }

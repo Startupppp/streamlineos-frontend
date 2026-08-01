@@ -1,6 +1,6 @@
 "use client";
 
-import { memo } from "react";
+import { Fragment, memo } from "react";
 import { Check } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -18,8 +18,8 @@ function StepRailInner({ sequence, currentIndex, saveState, onStepSelect }: Step
   const minutesLeft = ESTIMATED_MINUTES_REMAINING[sequence[currentIndex] ?? "welcome"] ?? 0;
 
   return (
-    <div className="mb-2 hidden min-w-0 md:block">
-      <ol className="flex min-w-0 items-center gap-1" aria-label="Setup steps">
+    <div className="mb-2 hidden w-full min-w-0 md:block">
+      <ol className="flex w-full min-w-0 items-center" aria-label="Setup steps">
         {sequence.map((stepId, i) => {
           const done = i < currentIndex;
           const active = i === currentIndex;
@@ -27,56 +27,59 @@ function StepRailInner({ sequence, currentIndex, saveState, onStepSelect }: Step
           const isLast = i === sequence.length - 1;
 
           return (
-            <li key={stepId} className="flex min-w-0 flex-1 items-center gap-1">
-              {clickable ? (
-                <button
-                  type="button"
-                  onClick={() => onStepSelect(i)}
-                  className={cn(
-                    "flex shrink-0 items-center gap-1.5 rounded-lg px-1.5 py-1 text-left press-scale transition-colors",
-                    "hover:bg-muted",
-                  )}
-                >
-                  <StepMarker done={done} active={active} index={i} />
-                  <span
+            <Fragment key={stepId}>
+              <li className="flex shrink-0 items-center">
+                {clickable ? (
+                  <button
+                    type="button"
+                    onClick={() => onStepSelect(i)}
                     className={cn(
-                      "whitespace-nowrap text-[12px] font-medium",
-                      active ? "text-brand-deep" : "text-foreground",
+                      "flex shrink-0 items-center gap-1.5 rounded-lg px-1.5 py-1 text-left press-scale transition-colors",
+                      "hover:bg-muted",
                     )}
                   >
-                    {STEP_TITLES[stepId]}
-                  </span>
-                </button>
-              ) : (
-                <div
-                  className="flex shrink-0 items-center gap-1.5 rounded-lg px-1.5 py-1"
-                  aria-current={active ? "step" : undefined}
-                >
-                  <StepMarker done={done} active={active} index={i} />
-                  <span
-                    className={cn(
-                      "whitespace-nowrap text-[12px] font-medium",
-                      active
-                        ? "text-brand-deep"
-                        : done
-                          ? "text-foreground"
-                          : "text-muted-foreground",
-                    )}
+                    <StepMarker done={done} active={active} index={i} />
+                    <span
+                      className={cn(
+                        "whitespace-nowrap text-[12px] font-medium",
+                        active ? "text-brand-deep" : "text-foreground",
+                      )}
+                    >
+                      {STEP_TITLES[stepId]}
+                    </span>
+                  </button>
+                ) : (
+                  <div
+                    className="flex shrink-0 items-center gap-1.5 rounded-lg px-1.5 py-1"
+                    aria-current={active ? "step" : undefined}
                   >
-                    {STEP_TITLES[stepId]}
-                  </span>
-                </div>
-              )}
-              {!isLast && (
-                <div
-                  className={cn(
-                    "mx-0.5 h-px min-w-2 flex-1 transition-colors duration-300",
-                    done ? "bg-foreground" : "bg-border",
-                  )}
-                  aria-hidden
-                />
-              )}
-            </li>
+                    <StepMarker done={done} active={active} index={i} />
+                    <span
+                      className={cn(
+                        "whitespace-nowrap text-[12px] font-medium",
+                        active
+                          ? "text-brand-deep"
+                          : done
+                            ? "text-foreground"
+                            : "text-muted-foreground",
+                      )}
+                    >
+                      {STEP_TITLES[stepId]}
+                    </span>
+                  </div>
+                )}
+              </li>
+              {!isLast ? (
+                <li className="flex min-w-2 flex-1 items-center" aria-hidden>
+                  <div
+                    className={cn(
+                      "mx-0.5 h-px w-full transition-colors duration-300",
+                      done ? "bg-foreground" : "bg-border",
+                    )}
+                  />
+                </li>
+              ) : null}
+            </Fragment>
           );
         })}
       </ol>

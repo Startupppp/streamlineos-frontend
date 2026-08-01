@@ -99,10 +99,6 @@ export function serializeExpenseReceipts(receipts: ExpenseReceipt[]): {
   };
 }
 
-export function isReceiptImageUrl(url: string, fileName?: string | null): boolean {
-  return getReceiptFileKind(url, fileName) === "image";
-}
-
 export type ReceiptFileKind = "image" | "pdf" | "doc" | "file";
 
 export function getReceiptFileKind(
