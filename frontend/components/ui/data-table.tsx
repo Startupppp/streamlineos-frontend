@@ -27,6 +27,11 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 declare module "@tanstack/react-table" {
   interface ColumnMeta<TData extends RowData, TValue> {
@@ -64,6 +69,7 @@ export interface DataTableProps<T> {
   selection?: {
     selected: Set<string | number>;
     onChange: (sel: Set<string | number>) => void;
+    isRowSelectable?: (row: T) => boolean;
   };
   pagination?: ClientPagination | ServerPagination;
   isLoading?: boolean;
@@ -129,6 +135,8 @@ export function DataTable<T>({
   const clientPag = !isServerPagination ? (pagination as ClientPagination | undefined) : null;
   const clientPageSize = clientPag?.pageSize ?? 50;
 
+  const isRowSelectable = selection?.isRowSelectable;
+
   const rowSelection = useMemo<RowSelectionState>(() => {
     if (!selection) return localRowSelection;
     return Object.fromEntries([...selection.selected].map((id) => [String(id), true]));
@@ -147,14 +155,31 @@ export function DataTable<T>({
             aria-label="Select all"
           />
         ),
-        cell: ({ row }) => (
-          <Checkbox
-            checked={row.getIsSelected()}
-            onCheckedChange={(v) => row.toggleSelected(!!v)}
-            aria-label="Select row"
-            onClick={(e) => e.stopPropagation()}
-          />
-        ),
+        cell: ({ row }) =>
+          row.getCanSelect() ? (
+            <Checkbox
+              checked={row.getIsSelected()}
+              onCheckedChange={(v) => row.toggleSelected(!!v)}
+              aria-label="Select row"
+              onClick={(e) => e.stopPropagation()}
+            />
+          ) : (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span
+                  className="inline-flex cursor-not-allowed"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Checkbox
+                    checked={false}
+                    disabled
+                    aria-label="Owner — transfer ownership first"
+                  />
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>Owner — transfer ownership first</TooltipContent>
+            </Tooltip>
+          ),
         enableSorting: false,
         meta: { className: "w-8" },
       });
@@ -196,7 +221,11 @@ export function DataTable<T>({
     pageCount: isServerPagination
       ? Math.ceil(serverPag!.total / serverPag!.pageSize)
       : undefined,
-    enableRowSelection: !!selection,
+    enableRowSelection: !selection
+      ? false
+      : isRowSelectable
+        ? (row) => isRowSelectable(row.original)
+        : true,
     onSortingChange: (updater) => {
       const prev = sortState ? externalSorting : sorting;
       const next = typeof updater === "function" ? updater(prev) : updater;

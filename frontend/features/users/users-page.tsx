@@ -189,8 +189,11 @@ export function UsersPage() {
 
   const users = data?.data ?? [];
   const pagination = data?.pagination;
+  const selectableUsers = useMemo(() => users.filter((u) => !u.isOwner), [users]);
+  const ownerCount = users.length - selectableUsers.length;
   const someSelected = selectedIds.size > 0;
-  const allSelected = users.length > 0 && users.every((u) => selectedIds.has(u.id));
+  const allSelected =
+    selectableUsers.length > 0 && selectableUsers.every((u) => selectedIds.has(u.id));
   const bulkIsPending = isSuspending || isArchiving || isRestoring;
 
   function handleRowClick(user: User) {
@@ -603,22 +606,22 @@ export function UsersPage() {
             </div>
           )}
 
-          {allSelected && !selectAllMatching && pagination && pagination.total > users.length && (
+          {allSelected && !selectAllMatching && pagination && pagination.total - ownerCount > selectableUsers.length && (
             <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-primary/5 border border-primary/20 text-xs text-foreground flex-wrap">
-              <span>All {users.length} users on this page are selected.</span>
+              <span>All {selectableUsers.length} users on this page are selected.</span>
               <button
                 type="button"
                 className="font-medium underline hover:no-underline ml-1"
                 onClick={handleSelectAllMatching}
               >
-                Select all {pagination.total} matching users
+                Select all {pagination.total - ownerCount} matching users
               </button>
             </div>
           )}
 
           {selectAllMatching && (
             <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-primary/5 border border-primary/20 text-xs text-foreground flex-wrap">
-              <span>All {pagination?.total} matching users are selected.</span>
+              <span>All {pagination ? pagination.total - ownerCount : 0} matching users are selected.</span>
               <button
                 type="button"
                 className="font-medium underline hover:no-underline ml-2"
@@ -647,6 +650,7 @@ export function UsersPage() {
               selection={{
                 selected: selectedIds,
                 onChange: handleSelectionChange,
+                isRowSelectable: (user) => !user.isOwner,
               }}
               sortState={{
                 field: sortBy,
