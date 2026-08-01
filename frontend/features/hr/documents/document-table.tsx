@@ -19,8 +19,6 @@ import {
 } from "./document-table-constants";
 import { DocumentRowActions } from "./document-row-actions";
 
-export { formatFileSize } from "./document-table-constants";
-
 export interface FolderItem {
   name: string;
   count: number;

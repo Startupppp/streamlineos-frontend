@@ -12,11 +12,6 @@ export interface SupportTag {
   createdAt: string | null;
 }
 
-interface CreateTagInput {
-  name: string;
-  color?: string;
-}
-
 export function useSupportTags() {
   return useQuery({
     queryKey: queryKeys.supportTags.list(),
@@ -31,15 +26,6 @@ export function useTicketTags(ticketId: number) {
     queryFn: () => apiClient.get<SupportTag[]>(`/support/${ticketId}/tags`),
     enabled: Number.isFinite(ticketId) && ticketId > 0,
     staleTime: 30_000,
-  });
-}
-
-export function useCreateTag() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["create", "tag"],
-    mutationFn: (input: CreateTagInput) => apiClient.post<SupportTag>("/support/tags", input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportTags.all }),
   });
 }
 

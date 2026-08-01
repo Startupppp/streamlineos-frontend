@@ -22,26 +22,6 @@ function normalizeRow(row: unknown[]): string[] {
   return row.map((cell) => (cell === null || cell === undefined ? "" : String(cell)));
 }
 
-export function parseCsvText(text: string): ParsedCsv {
-  const result = Papa.parse<unknown[]>(text, {
-    header: false,
-    skipEmptyLines: true,
-  });
-
-  const rawRows = result.data.map(normalizeRow);
-
-  if (rawRows.length === 0) {
-    return { headers: [], rows: [], rowCount: 0 };
-  }
-
-  const firstRow = rawRows[0] ?? [];
-  const hasHeader = looksLikeHeader(firstRow);
-  const headers = hasHeader ? firstRow : firstRow.map((_, i) => `Column ${i + 1}`);
-  const dataRows = hasHeader ? rawRows.slice(1) : rawRows;
-
-  return { headers, rows: dataRows, rowCount: dataRows.length };
-}
-
 export function parseCsvFile(file: File): Promise<ParsedCsv> {
   return new Promise((resolve, reject) => {
     Papa.parse<unknown[]>(file, {

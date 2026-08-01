@@ -111,14 +111,4 @@ export function useUpdateExpense() {
   });
 }
 
-export function useDeleteExpense() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "expenses", "delete"],
-    mutationFn: (expenseId: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/expenses/${expenseId}`),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.expenses() }),
-  });
-}
 

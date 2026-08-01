@@ -182,18 +182,6 @@ export function useAddHelpdeskComment(ticketId: number) {
   });
 }
 
-export function useUpsertHelpdeskRouting() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "helpdesk", "routing", "upsert"],
-    mutationFn: (data: { category: string; assigneeUserId: string }) =>
-      apiClient.post<HelpdeskRoutingRule>("/hr/helpdesk/routing", data),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: keys.routing() });
-    },
-  });
-}
-
 export function useDeleteHelpdeskRouting() {
   const qc = useQueryClient();
   return useMutation({

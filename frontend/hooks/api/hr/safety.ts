@@ -72,15 +72,6 @@ export function useSafetyIncidents(params: ListIncidentsParams = {}) {
   });
 }
 
-export function useSafetyIncident(id: number) {
-  return useQuery({
-    queryKey: queryKeys.hrSafety.incident(id),
-    queryFn: () => apiClient.get<SafetyIncident>(`/hr/safety/incidents/${id}`),
-    enabled: id > 0,
-    staleTime: 30_000,
-  });
-}
-
 export function useReportIncident() {
   const qc = useQueryClient();
   return useMutation({
@@ -97,39 +88,6 @@ export function useReportIncident() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.hrSafety.all });
       toast.success("Incident reported");
-    },
-    onError: (e) => toast.error(getErrorMessage(e)),
-  });
-}
-
-export function useUpdateSafetyIncident(id: number) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr-safety", "incident", "update", id],
-    mutationFn: (body: Partial<{
-      status: IncidentStatus;
-      severity: IncidentSeverity;
-      description: string;
-      confidentialMedicalNote: string | null;
-      medicalAttention: boolean;
-    }>) => apiClient.patch<SafetyIncident>(`/hr/safety/incidents/${id}`, body),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hrSafety.incident(id) });
-      void qc.invalidateQueries({ queryKey: queryKeys.hrSafety.all });
-      toast.success("Incident updated");
-    },
-    onError: (e) => toast.error(getErrorMessage(e)),
-  });
-}
-
-export function useDeleteSafetyIncident() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr-safety", "incident", "delete"],
-    mutationFn: (id: number) => apiClient.delete(`/hr/safety/incidents/${id}`),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hrSafety.all });
-      toast.success("Incident deleted");
     },
     onError: (e) => toast.error(getErrorMessage(e)),
   });

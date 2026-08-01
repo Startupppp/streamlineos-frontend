@@ -151,7 +151,6 @@ export interface PaginatedResponse<T> {
 
 const DEVICES_KEY = ["streamlineos", "hr", "enterprise", "comp", "devices"] as const;
 const SYNC_LOGS_KEY = ["streamlineos", "hr", "enterprise", "comp", "syncLogs"] as const;
-const MAPPINGS_KEY = ["streamlineos", "hr", "enterprise", "comp", "mappings"] as const;
 
 export function useTimeDevices(params?: Record<string, unknown>) {
   return useQuery({
@@ -198,111 +197,11 @@ export function useDeviceSyncLogs(params?: Record<string, unknown>) {
   });
 }
 
-export function useIngestSyncLog() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: [...SYNC_LOGS_KEY, "ingest"],
-    mutationFn: (data: { deviceId: number; status: string; recordsCount: number; error?: string }) =>
-      apiClient.post<DeviceSyncLog>("/hr/enterprise/comp/devices/sync-logs", data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: SYNC_LOGS_KEY });
-      qc.invalidateQueries({ queryKey: DEVICES_KEY });
-    },
-  });
-}
-
 export function useFailedSyncs() {
   return useQuery({
     queryKey: [...SYNC_LOGS_KEY, "failed"],
     queryFn: () => apiClient.get<DeviceSyncLog[]>("/hr/enterprise/comp/devices/failed-syncs"),
     staleTime: 30_000,
-  });
-}
-
-export function useDeviceMappings(params?: Record<string, unknown>) {
-  return useQuery({
-    queryKey: [...MAPPINGS_KEY, params],
-    queryFn: () => apiClient.get<PaginatedResponse<DeviceMapping>>("/hr/enterprise/comp/devices/mappings", { params }),
-    staleTime: 5 * 60_000,
-  });
-}
-
-export function useCreateDeviceMapping() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: [...MAPPINGS_KEY, "create"],
-    mutationFn: (data: { deviceId: number; userId: string; biometricId?: string; effectiveFrom?: string; effectiveTo?: string }) =>
-      apiClient.post<DeviceMapping>("/hr/enterprise/comp/devices/mappings", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: MAPPINGS_KEY }),
-  });
-}
-
-// ─── Payroll Compliance Hooks ──────────────────────────────────────────────────
-
-const VARIANCE_KEY = ["streamlineos", "hr", "enterprise", "comp", "variance"] as const;
-const ARREARS_KEY = ["streamlineos", "hr", "enterprise", "comp", "arrears"] as const;
-const COMPLIANCE_TASKS_KEY = ["streamlineos", "hr", "enterprise", "comp", "complianceTasks"] as const;
-
-export function useVarianceApprovals(params?: Record<string, unknown>) {
-  return useQuery({
-    queryKey: [...VARIANCE_KEY, params],
-    queryFn: () => apiClient.get<PaginatedResponse<VarianceApproval>>("/hr/enterprise/comp/payroll-compliance/variance", { params }),
-    staleTime: 60_000,
-  });
-}
-
-export function useResolveVariance() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: [...VARIANCE_KEY, "resolve"],
-    mutationFn: ({ id, ...data }: { id: number; action: "approved" | "rejected"; note?: string }) =>
-      apiClient.patch<VarianceApproval>(`/hr/enterprise/comp/payroll-compliance/variance/${id}/resolve`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: VARIANCE_KEY }),
-  });
-}
-
-export function useArrearsAdjustments(params?: Record<string, unknown>) {
-  return useQuery({
-    queryKey: [...ARREARS_KEY, params],
-    queryFn: () => apiClient.get<PaginatedResponse<ArrearsAdjustment>>("/hr/enterprise/comp/payroll-compliance/arrears", { params }),
-    staleTime: 60_000,
-  });
-}
-
-export function useCreateArrears() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: [...ARREARS_KEY, "create"],
-    mutationFn: (data: { userId: string; reason: string; amountCents: number; sourcePeriod: string; targetPeriod: string }) =>
-      apiClient.post<ArrearsAdjustment>("/hr/enterprise/comp/payroll-compliance/arrears", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ARREARS_KEY }),
-  });
-}
-
-export function useApplyArrears() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: [...ARREARS_KEY, "apply"],
-    mutationFn: (id: number) => apiClient.patch(`/hr/enterprise/comp/payroll-compliance/arrears/${id}/apply`, {}),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ARREARS_KEY }),
-  });
-}
-
-export function useComplianceTasks(params?: Record<string, unknown>) {
-  return useQuery({
-    queryKey: [...COMPLIANCE_TASKS_KEY, params],
-    queryFn: () => apiClient.get<PaginatedResponse<ComplianceTask>>("/hr/enterprise/comp/payroll-compliance/tasks", { params }),
-    staleTime: 60_000,
-  });
-}
-
-export function useUpdateComplianceTask() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: [...COMPLIANCE_TASKS_KEY, "update"],
-    mutationFn: ({ id, ...data }: { id: number } & Record<string, unknown>) =>
-      apiClient.patch<ComplianceTask>(`/hr/enterprise/comp/payroll-compliance/tasks/${id}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: COMPLIANCE_TASKS_KEY }),
   });
 }
 
@@ -339,34 +238,12 @@ export function useCreateCompCycle() {
   });
 }
 
-export function useUpdateCompCycle() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: [...COMP_CYCLES_KEY, "update"],
-    mutationFn: ({ id, ...data }: { id: number } & Record<string, unknown>) =>
-      apiClient.patch<CompCycle>(`/hr/enterprise/comp/planning/cycles/${id}`, data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: COMP_CYCLES_KEY });
-    },
-  });
-}
-
 export function useCompRecommendations(cycleId?: number, params?: Record<string, unknown>) {
   return useQuery({
     queryKey: [...COMP_RECS_KEY, cycleId, params],
     queryFn: () => apiClient.get<PaginatedResponse<CompRecommendation>>("/hr/enterprise/comp/planning/recommendations", { params: { ...params, ...(cycleId ? { cycleId } : {}) } }),
     staleTime: 60_000,
     enabled: !!cycleId,
-  });
-}
-
-export function useCreateRecommendation() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: [...COMP_RECS_KEY, "create"],
-    mutationFn: (data: { cycleId: number; userId: string; currentSalaryCents: number; recommendedIncreaseCents: number; recommendedPct: number; rating?: string; managerNote?: string }) =>
-      apiClient.post<CompRecommendation>("/hr/enterprise/comp/planning/recommendations", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: COMP_RECS_KEY }),
   });
 }
 
@@ -377,19 +254,6 @@ export function useCalibrateRecommendation() {
     mutationFn: ({ id, hrCalibratedCents }: { id: number; hrCalibratedCents: number }) =>
       apiClient.patch<CompRecommendation>(`/hr/enterprise/comp/planning/recommendations/${id}/calibrate`, { hrCalibratedCents }),
     onSuccess: () => qc.invalidateQueries({ queryKey: COMP_RECS_KEY }),
-  });
-}
-
-export function useApproveRecommendation() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: [...COMP_RECS_KEY, "approve"],
-    mutationFn: ({ id, ...data }: { id: number; employmentId: number; effectiveFrom: string }) =>
-      apiClient.patch(`/hr/enterprise/comp/planning/recommendations/${id}/approve`, data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: COMP_RECS_KEY });
-      qc.invalidateQueries({ queryKey: COMP_BUDGET_KEY });
-    },
   });
 }
 
@@ -414,15 +278,6 @@ export function useEquityGrants(params?: Record<string, unknown>) {
   });
 }
 
-export function useEquityGrant(grantId: number) {
-  return useQuery({
-    queryKey: [...EQUITY_GRANTS_KEY, grantId],
-    queryFn: () => apiClient.get<EquityGrant & { vestingEvents: VestingEvent[]; exercises: EquityExercise[] }>(`/hr/enterprise/comp/equity/grants/${grantId}`),
-    staleTime: 5 * 60_000,
-    enabled: !!grantId,
-  });
-}
-
 export function useCreateEquityGrant() {
   const qc = useQueryClient();
   return useMutation({
@@ -433,34 +288,12 @@ export function useCreateEquityGrant() {
   });
 }
 
-export function useUpdateEquityGrant() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: [...EQUITY_GRANTS_KEY, "update"],
-    mutationFn: ({ id, ...data }: { id: number } & Record<string, unknown>) =>
-      apiClient.patch<EquityGrant>(`/hr/enterprise/comp/equity/grants/${id}`, data),
-    onSuccess: (_, { id }) => {
-      qc.invalidateQueries({ queryKey: EQUITY_GRANTS_KEY });
-      qc.invalidateQueries({ queryKey: [...EQUITY_GRANTS_KEY, id as number] });
-    },
-  });
-}
-
 export function useVestingSchedule(grantId: number) {
   return useQuery({
     queryKey: [...EQUITY_GRANTS_KEY, grantId, "vesting"],
     queryFn: () => apiClient.get<VestingEvent[]>(`/hr/enterprise/comp/equity/grants/${grantId}/vesting-schedule`),
     staleTime: 10 * 60_000,
     enabled: !!grantId,
-  });
-}
-
-export function useExitTreatment(grantId: number, exitDate: string) {
-  return useQuery({
-    queryKey: [...EQUITY_GRANTS_KEY, grantId, "exitTreatment", exitDate],
-    queryFn: () => apiClient.get<Record<string, unknown>>(`/hr/enterprise/comp/equity/grants/${grantId}/exit-treatment`, { params: { exitDate } }),
-    staleTime: 5 * 60_000,
-    enabled: !!grantId && !!exitDate,
   });
 }
 
@@ -503,11 +336,3 @@ export function useCostByLocation() {
   });
 }
 
-export function useForecastedCost(cycleId: number) {
-  return useQuery({
-    queryKey: [...COSTING_KEY, "forecasted", cycleId],
-    queryFn: () => apiClient.get<Record<string, unknown>>("/hr/enterprise/comp/costing/forecasted", { params: { cycleId } }),
-    staleTime: 2 * 60_000,
-    enabled: !!cycleId,
-  });
-}

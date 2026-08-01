@@ -164,18 +164,6 @@ export function useSaveTourProgress() {
   });
 }
 
-export function useCompleteTour() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationKey: ["onboarding", "tours", "complete"],
-    mutationFn: (tourKey: string) =>
-      apiClient.post<GuidedTourProgress>(`/onboarding/tours/${tourKey}/complete`, {}),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.onboardingFlow.tours() });
-    },
-  });
-}
-
 export function useDismissTour() {
   const queryClient = useQueryClient();
   return useMutation({

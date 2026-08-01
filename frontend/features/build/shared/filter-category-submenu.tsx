@@ -36,8 +36,7 @@ import {
 } from "./filter-types";
 
 export type { FilterCategory, StatusFilterOption } from "./filter-types";
-export { FILTER_CATEGORY_TITLES } from "./filter-types";
-export { StatusFilterDot, FilterDatesPanel } from "./filter-submenu-internals";
+export { StatusFilterDot } from "./filter-submenu-internals";
 
 interface FilterCategorySubmenuProps {
   category: FilterCategory;

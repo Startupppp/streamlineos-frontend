@@ -154,16 +154,6 @@ export function useVendorReturns(filters?: VendorReturnFilters) {
   });
 }
 
-export function useVendorReturn(returnId: number) {
-  const canView = useCan("inventory:vendor-returns:manage");
-  return useQuery<VendorReturnSummary, Error>({
-    queryKey: queryKeys.inventory.vendorReturn(returnId),
-    queryFn: () => apiClient.get<VendorReturnSummary>(`/inventory/vendor-returns/${returnId}`),
-    staleTime: 2 * 60_000,
-    enabled: canView && returnId > 0,
-  });
-}
-
 export function useCreateVendorReturn() {
   const qc = useQueryClient();
   return useMutation<VendorReturnSummary, Error, CreateVendorReturnInput>({

@@ -22,15 +22,6 @@ export interface HrGoal {
   createdAt: string;
 }
 
-export interface HrKeyResult {
-  id: number;
-  title: string;
-  progress: number;
-  targetValue?: string;
-  currentValue?: string;
-  unit?: string;
-}
-
 export function useHrGoals(params?: { userId?: string }) {
   return useQuery({
     queryKey: queryKeys.hr.goals(params?.userId),
@@ -38,17 +29,6 @@ export function useHrGoals(params?: { userId?: string }) {
       apiClient.get<HrGoal[]>(
         "/hr/performance/goals",
         params as Record<string, unknown> | undefined,
-      ),
-    staleTime: 60_000,
-  });
-}
-
-export function useHrKeyResults(goalId: number) {
-  return useQuery({
-    queryKey: [...queryKeys.hr.goals(), "keyResults", goalId],
-    queryFn: () =>
-      apiClient.get<HrKeyResult[]>(
-        `/hr/performance/key-results?goalId=${goalId}`,
       ),
     staleTime: 60_000,
   });

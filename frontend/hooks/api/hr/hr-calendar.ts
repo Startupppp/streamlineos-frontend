@@ -1,9 +1,5 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
-
 export const HR_CALENDAR_EVENT_TYPES = [
   "HOLIDAY",
   "LEAVE",
@@ -45,21 +41,3 @@ export interface HrCalendarEvent {
   meta?: Record<string, unknown>;
 }
 
-export function useHrCalendar(params: {
-  from: string;
-  to: string;
-  types?: HrCalendarEventType[];
-}) {
-  const types = params.types?.join(",");
-  return useQuery({
-    queryKey: queryKeys.hr.hrCalendar(params.from, params.to, types),
-    queryFn: () =>
-      apiClient.get<HrCalendarEvent[]>("/hr/calendar", {
-        from: params.from,
-        to: params.to,
-        ...(types ? { types } : {}),
-      }),
-    staleTime: 5 * 60_000,
-    enabled: Boolean(params.from && params.to),
-  });
-}

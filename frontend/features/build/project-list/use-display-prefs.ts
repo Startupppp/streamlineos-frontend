@@ -2,13 +2,6 @@
 
 import { useCallback, useState } from "react";
 
-export type ProjectSortField =
-  | "name"
-  | "status"
-  | "lead"
-  | "targetDate"
-  | "progress";
-
 export type ProjectGroupBy = "none" | "status" | "lead";
 
 export type ProjectOrderBy = "name" | "status" | "targetDate" | "progress" | "createdAt";

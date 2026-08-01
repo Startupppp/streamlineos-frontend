@@ -35,29 +35,6 @@ export function useProbationList() {
   });
 }
 
-export function useStartProbationReview() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "probation", "start-review"],
-    mutationFn: ({
-      employmentId,
-      reviewNotes,
-      templateId,
-    }: {
-      employmentId: number;
-      reviewNotes?: Record<string, unknown>;
-      templateId?: number;
-    }) =>
-      apiClient.post<{ reviewId: number }>(`/hr/probation/${employmentId}/start-review`, {
-        reviewNotes,
-        templateId,
-      }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: probationKeys.list() });
-    },
-  });
-}
-
 export function useExtendProbation() {
   const qc = useQueryClient();
   return useMutation({

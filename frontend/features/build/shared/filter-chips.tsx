@@ -1,9 +1,8 @@
 "use client";
 
-import type { MouseEvent, ReactNode } from "react";
+import type { MouseEvent } from "react";
 import { XIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
 export interface FilterChipProps {
@@ -45,19 +44,5 @@ export function FilterChip({ label, color, onRemove, className }: FilterChipProp
         <XIcon ref={iconRef} size={10} />
       </button>
     </span>
-  );
-}
-
-export interface FilterSectionProps {
-  label: string;
-  children: ReactNode;
-}
-
-export function FilterSection({ label, children }: FilterSectionProps) {
-  return (
-    <div className="space-y-1.5">
-      <Label className="text-[11px] font-medium text-muted-foreground">{label}</Label>
-      {children}
-    </div>
   );
 }

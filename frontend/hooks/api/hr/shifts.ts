@@ -88,16 +88,6 @@ export function useShiftAssignments() {
   });
 }
 
-export function useAssignShift() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "shifts", "assign"],
-    mutationFn: (data: { userId: string; shiftId: number; effectiveFrom: string; effectiveTo?: string }) =>
-      apiClient.post<ShiftAssignment>("/hr/shifts/assignments", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "shiftAssignments"] }),
-  });
-}
-
 export function useShiftSwaps() {
   const canView = useCan("hr:attendance:view");
   return useQuery({
@@ -105,16 +95,6 @@ export function useShiftSwaps() {
     queryFn: () => apiClient.get<ShiftSwap[]>("/hr/shifts/swaps"),
     staleTime: 30_000,
     enabled: canView,
-  });
-}
-
-export function useCreateSwapRequest() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "shifts", "swap"],
-    mutationFn: (data: { targetUserId: string; requestDate: string; targetDate: string; reason?: string }) =>
-      apiClient.post<ShiftSwap>("/hr/shifts/swaps", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "shiftSwaps"] }),
   });
 }
 

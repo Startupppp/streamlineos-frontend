@@ -49,16 +49,3 @@ export const testimonials: Testimonial[] = [
     initials: "LI",
   },
 ];
-
-export const trustedBy = [
-  "FinScale",
-  "BuildBridge",
-  "TechNest",
-  "Lumen",
-  "Cohort",
-  "Northwind",
-  "Ardent",
-  "Helix Labs",
-  "Riverpoint",
-  "Quantumly",
-];

@@ -54,15 +54,6 @@ export function useLegalHolds(params?: { status?: string; subjectUserId?: string
   });
 }
 
-export function useLegalHold(holdId: number | undefined) {
-  return useQuery<LegalHold>({
-    queryKey: [...HOLDS_KEY, holdId],
-    queryFn: () => apiClient.get<LegalHold>(`/hr/governance/legal-holds/${holdId}`),
-    enabled: holdId !== undefined,
-    staleTime: 30_000,
-  });
-}
-
 export function useHoldItems(holdId: number | undefined) {
   return useQuery<HoldItem[]>({
     queryKey: [...HOLDS_KEY, holdId, "items"],

@@ -106,19 +106,6 @@ export function useUpdateEmergencyEvent(eventId: string) {
   });
 }
 
-export function useDeleteEmergencyEvent() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr-emergency", "delete"],
-    mutationFn: (eventId: string) => apiClient.delete(`${BASE}/events/${eventId}`),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: emergencyKeys.all });
-      toast.success("Emergency event deleted");
-    },
-    onError: (e) => toast.error(getErrorMessage(e)),
-  });
-}
-
 export function useBroadcastEmergency(eventId: string) {
   const qc = useQueryClient();
   return useMutation({

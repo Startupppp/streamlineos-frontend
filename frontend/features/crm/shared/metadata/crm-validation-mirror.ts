@@ -1,5 +1,4 @@
 import type { CrmValidationRule } from "@/types/crm/metadata";
-import type { UseFormSetError, FieldPath, FieldValues } from "react-hook-form";
 
 export interface ValidationContext {
   stageKey?: string | null;
@@ -179,21 +178,3 @@ export function buildFieldErrors(
   return errors;
 }
 
-export function applyRulesToForm<TFieldValues extends FieldValues>(
-  rules: CrmValidationRule[],
-  values: Record<string, unknown>,
-  ctx: ValidationContext,
-  setError: UseFormSetError<TFieldValues>
-): boolean {
-  const errors = buildFieldErrors(rules, values, ctx);
-  const fieldNames = Object.keys(errors);
-
-  for (const field of fieldNames) {
-    setError(field as FieldPath<TFieldValues>, {
-      type: "manual",
-      message: errors[field],
-    });
-  }
-
-  return fieldNames.length === 0;
-}

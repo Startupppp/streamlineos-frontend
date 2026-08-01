@@ -6,7 +6,6 @@ import type {
   HrFormSubmission,
   HrFormSubmissionListResponse,
   HrFormSubmissionStatus,
-  SubmitHrFormPayload,
 } from "../lib/types";
 
 function submissionsKey(formId: number, params?: Record<string, unknown>) {
@@ -29,24 +28,6 @@ export function useHrFormSubmissions(
       return apiClient.get<HrFormSubmissionListResponse>(`/hr/forms/${formId}/submissions`, p);
     },
     staleTime: 15_000,
-  });
-}
-
-export function useMyHrSubmissions() {
-  return useQuery<HrFormSubmission[]>({
-    queryKey: ["hr", "forms", "submissions", "my"],
-    queryFn: () => apiClient.get<HrFormSubmission[]>("/hr/forms/submissions/my"),
-    staleTime: 30_000,
-  });
-}
-
-export function useSubmitHrForm(formId: number) {
-  const qc = useQueryClient();
-  return useMutation<HrFormSubmission, Error, SubmitHrFormPayload>({
-    mutationKey: ["hr", "forms", formId, "submit"],
-    mutationFn: (payload) =>
-      apiClient.post<HrFormSubmission>(`/hr/forms/${formId}/submissions`, payload),
-    onSuccess: () => qc.invalidateQueries({ queryKey: submissionsKey(formId) }),
   });
 }
 

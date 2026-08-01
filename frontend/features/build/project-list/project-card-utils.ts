@@ -1,14 +1,6 @@
 import { differenceInDays, format, isPast } from "date-fns";
 import type { ProjectListItem } from "@/types/projects/projects";
 
-export const statusAccentBar: Record<string, string> = {
-  ACTIVE: "bg-emerald-500",
-  PLANNING: "bg-blue-500",
-  COMPLETED: "bg-slate-400",
-  ON_HOLD: "bg-amber-500",
-  ARCHIVED: "bg-slate-300 dark:bg-slate-600",
-};
-
 export const statusStripe: Record<string, string> = {
   ACTIVE: "border-l-emerald-500",
   PLANNING: "border-l-blue-500",

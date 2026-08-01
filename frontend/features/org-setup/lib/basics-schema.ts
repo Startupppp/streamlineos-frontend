@@ -11,5 +11,3 @@ export const basicsStepSchema = z.object({
     .min(1, "Enter your mobile number.")
     .refine((val) => isValidPhoneNumber(val), "Enter a valid mobile number."),
 });
-
-export type BasicsStepValues = z.infer<typeof basicsStepSchema>;

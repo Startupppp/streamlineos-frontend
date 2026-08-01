@@ -37,15 +37,6 @@ export function useHrPolicies(params?: {
   });
 }
 
-export function useHrPolicy(policyId: number) {
-  return useQuery({
-    queryKey: queryKeys.hr.hrPolicyDetail(policyId),
-    queryFn: () => apiClient.get<HrPolicy>(`/hr/policies/${policyId}`),
-    staleTime: 60_000,
-    enabled: policyId > 0,
-  });
-}
-
 export function useCreateHrPolicy() {
   const qc = useQueryClient();
   return useMutation({
@@ -124,26 +115,6 @@ export function useOrgPolicyConflicts(type?: HrPolicyType) {
     queryFn: () =>
       apiClient.get<{ conflicts: PolicyConflict[] }>(`/hr/policies/conflicts${qs}`),
     staleTime: 30_000,
-  });
-}
-
-export function useSimulatePolicy() {
-  return useMutation({
-    mutationKey: ["hr", "policies", "simulate"],
-    mutationFn: (data: {
-      employeeId: string;
-      policyType: HrPolicyType;
-      date: string;
-      rules?: Record<string, unknown>;
-    }) =>
-      apiClient.post<{
-        date: string;
-        employeeId: string;
-        policyType: string;
-        matched: PolicyPreviewResult | null;
-        simulatedRules: Record<string, unknown> | null;
-        explanation: string;
-      }>("/hr/policies/simulate", data),
   });
 }
 

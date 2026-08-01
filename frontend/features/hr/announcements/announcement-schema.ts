@@ -115,10 +115,6 @@ export function buildAnnouncementSchema(options?: { isEdit?: boolean }) {
     });
 }
 
-export const announcementSchema = buildAnnouncementSchema();
-
-export type AnnouncementFormValues = z.infer<ReturnType<typeof buildAnnouncementSchema>>;
-
 export function zodFieldErrors(error: ZodError): Record<string, string> {
   const out: Record<string, string> = {};
   for (const issue of error.issues) {

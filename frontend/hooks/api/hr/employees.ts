@@ -20,7 +20,6 @@ import type {
   HrEmployment,
   HrTimelineResponse,
   HrSensitiveData,
-  HrEffectiveDatedChange,
 } from "@/types/hr/core";
 
 export function useHrDepartments() {
@@ -368,31 +367,3 @@ export function useUpdateSensitive(employmentId: number) {
   });
 }
 
-export function useEffectiveChanges(params?: { employmentId?: number; page?: number; limit?: number }) {
-  return useQuery({
-    queryKey: queryKeys.hr.effectiveChanges(params as Record<string, unknown>),
-    queryFn: () => apiClient.get<{ data: HrEffectiveDatedChange[]; pagination: { page: number; limit: number; total: number; totalPages: number } }>("/hr/effective-changes", params as Record<string, unknown>),
-    enabled: !!params?.employmentId,
-    staleTime: 30_000,
-  });
-}
-
-export function useCreateEffectiveChange() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "effectiveChange", "create"],
-    mutationFn: (data: { employmentId: number; changeType: string; newValue: Record<string, unknown>; effectiveFrom: string; effectiveTo?: string }) =>
-      apiClient.post<HrEffectiveDatedChange>("/hr/effective-changes", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.effectiveChanges() }),
-  });
-}
-
-export function useApproveEffectiveChange() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "effectiveChange", "approve"],
-    mutationFn: (changeId: number) =>
-      apiClient.patch<{ success: boolean }>(`/hr/effective-changes/${changeId}/approve`, {}),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.effectiveChanges() }),
-  });
-}

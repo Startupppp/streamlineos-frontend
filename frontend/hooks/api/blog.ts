@@ -1,24 +1,12 @@
 "use client";
 
-import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type {
   BlogPostWithRelations,
-  CategoryWithCount,
   FeedResponse,
-  PostPayload,
-  CategoryPayload,
-  BlogCategory,
-  BlogPost,
 } from "@/types/blog";
-
-const blogKeys = {
-  all: ["streamlineos", "blog"] as const,
-  posts: () => [...blogKeys.all, "posts"] as const,
-  post: (id: string) => [...blogKeys.all, "post", id] as const,
-  categories: () => [...blogKeys.all, "categories"] as const,
-};
 
 interface BlogFeedParams {
   category?: string;
@@ -54,81 +42,3 @@ export function useInfiniteBlogFeed(
   });
 }
 
-// ── Posts ────────────────────────────────────────────────────────────────────
-
-export function useAdminPosts() {
-  return useQuery({
-    queryKey: blogKeys.posts(),
-    queryFn: () => apiClient.get<BlogPostWithRelations[]>("/blog/posts"),
-    staleTime: 2 * 60_000,
-  });
-}
-
-export function useCreatePost() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["create", "post"],
-    mutationFn: (data: PostPayload) => apiClient.post<BlogPost>("/blog/posts", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: blogKeys.all }),
-  });
-}
-
-export function useUpdatePost() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["update", "post"],
-    mutationFn: ({ id, ...data }: Partial<PostPayload> & { id: string }) =>
-      apiClient.patch<BlogPost>(`/blog/posts/${id}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: blogKeys.all }),
-  });
-}
-
-export function useDeletePost() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["delete", "post"],
-    mutationFn: (id: string) =>
-      apiClient.delete<{ success: boolean }>(`/blog/posts/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: blogKeys.all }),
-  });
-}
-
-// ── Categories ───────────────────────────────────────────────────────────────
-
-export function useCategories() {
-  return useQuery({
-    queryKey: blogKeys.categories(),
-    queryFn: () => apiClient.get<CategoryWithCount[]>("/blog/categories"),
-    staleTime: 2 * 60_000,
-  });
-}
-
-export function useCreateCategory() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["create", "category"],
-    mutationFn: (data: CategoryPayload) =>
-      apiClient.post<BlogCategory>("/blog/categories", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: blogKeys.categories() }),
-  });
-}
-
-export function useUpdateCategory() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["update", "category"],
-    mutationFn: ({ id, ...data }: Partial<CategoryPayload> & { id: string }) =>
-      apiClient.patch<BlogCategory>(`/blog/categories/${id}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: blogKeys.categories() }),
-  });
-}
-
-export function useDeleteCategory() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["delete", "category"],
-    mutationFn: (id: string) =>
-      apiClient.delete<{ success: boolean }>(`/blog/categories/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: blogKeys.categories() }),
-  });
-}

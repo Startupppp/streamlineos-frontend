@@ -8,7 +8,6 @@ import type {
   HrWorkflowDelegation,
   HrWorkflowObjectType,
   HrWorkflowStatus,
-  HrWorkflowInstanceStatus,
   HrWorkflowApproverType,
   HrWorkflowStepMode,
   PaginatedResult,
@@ -163,14 +162,6 @@ export function useWorkflowActed(page = 1, limit = 50, options?: { enabled?: boo
   });
 }
 
-export function useWorkflowInstances(params?: { objectType?: HrWorkflowObjectType; status?: HrWorkflowInstanceStatus; page?: number; limit?: number }) {
-  return useQuery({
-    queryKey: [...INSTANCES_KEY, params],
-    queryFn: () => apiClient.get<PaginatedResult<HrWorkflowInstance>>("/hr/workflows/instances", params),
-    staleTime: 30_000,
-  });
-}
-
 export function useWorkflowInstanceDetail(instanceId: number | null) {
   return useQuery({
     queryKey: [...INSTANCES_KEY, "detail", instanceId],
@@ -207,50 +198,12 @@ export function useRejectInstance() {
   });
 }
 
-export function useCancelInstance() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "workflow-instances", "cancel"],
-    mutationFn: ({ instanceId, comment }: { instanceId: number; comment?: string }) =>
-      apiClient.post<HrWorkflowInstance>(`/hr/workflows/instances/${instanceId}/cancel`, { comment }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: INSTANCES_KEY }),
-  });
-}
-
-export function useReopenInstance() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "workflow-instances", "reopen"],
-    mutationFn: ({ instanceId, comment }: { instanceId: number; comment?: string }) =>
-      apiClient.post<HrWorkflowInstance>(`/hr/workflows/instances/${instanceId}/reopen`, { comment }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: INSTANCES_KEY }),
-  });
-}
-
-export function useCommentInstance() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "workflow-instances", "comment"],
-    mutationFn: ({ instanceId, ...body }: ActPayload & { instanceId: number }) =>
-      apiClient.post<HrWorkflowInstance>(`/hr/workflows/instances/${instanceId}/comment`, body),
-    onSuccess: () => qc.invalidateQueries({ queryKey: INSTANCES_KEY }),
-  });
-}
-
 export function useMyDelegations(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: [...DELEGATIONS_KEY, "mine"],
     queryFn: () => apiClient.get<HrWorkflowDelegation[]>("/hr/workflows/delegations/mine"),
     staleTime: 2 * 60_000,
     enabled: options?.enabled ?? true,
-  });
-}
-
-export function useOrgDelegations() {
-  return useQuery({
-    queryKey: [...DELEGATIONS_KEY, "org"],
-    queryFn: () => apiClient.get<HrWorkflowDelegation[]>("/hr/workflows/delegations"),
-    staleTime: 2 * 60_000,
   });
 }
 
@@ -265,16 +218,6 @@ export function useCreateDelegation() {
       endsAt: string;
       reason?: string;
     }) => apiClient.post<HrWorkflowDelegation>("/hr/workflows/delegations", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: DELEGATIONS_KEY }),
-  });
-}
-
-export function useUpdateDelegation() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "workflow-delegations", "update"],
-    mutationFn: ({ id, ...data }: { id: number; active?: boolean; endsAt?: string; reason?: string }) =>
-      apiClient.patch<HrWorkflowDelegation>(`/hr/workflows/delegations/${id}`, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: DELEGATIONS_KEY }),
   });
 }

@@ -179,8 +179,6 @@ export const CANONICAL_COLUMN_KEYS = [
   "entryCount",
 ] as const;
 
-export type CanonicalColumnKey = (typeof CANONICAL_COLUMN_KEYS)[number];
-
 export const DEFAULT_PAYROLL_MAPPING: PayrollMapping = {
   provider: "GENERIC",
   columns: [

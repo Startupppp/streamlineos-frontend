@@ -142,15 +142,6 @@ export function useAutomations(params?: AutomationListParams) {
   });
 }
 
-export function useAutomation(id: number) {
-  return useQuery({
-    queryKey: queryKeys.automations.detail(id),
-    queryFn: () => apiClient.get<AutomationRule>(`/settings/automations/${id}`),
-    enabled: Number.isFinite(id) && id > 0,
-    staleTime: 30_000,
-  });
-}
-
 export function useAutomationRuns(ruleId: number) {
   return useQuery({
     queryKey: queryKeys.automations.runs(ruleId),

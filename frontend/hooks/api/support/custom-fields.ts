@@ -49,11 +49,6 @@ export interface UpdateCustomFieldInput {
   isActive?: boolean;
 }
 
-export interface CustomFieldValueInput {
-  fieldId: number;
-  value: string | null;
-}
-
 export function useSupportCustomFields(activeOnly?: boolean) {
   return useQuery({
     queryKey: queryKeys.supportCustomFields.list(activeOnly),
@@ -68,15 +63,6 @@ export function usePortalActiveCustomFields() {
     queryKey: queryKeys.supportCustomFields.portalActive(),
     queryFn: () => apiClient.get<SupportCustomField[]>("/support/portal/custom-fields"),
     staleTime: 60_000,
-  });
-}
-
-export function useTicketCustomFieldValues(ticketId: number) {
-  return useQuery({
-    queryKey: queryKeys.supportCustomFields.ticketValues(ticketId),
-    queryFn: () => apiClient.get<CustomFieldValue[]>(`/support/${ticketId}/custom-fields`),
-    enabled: Number.isFinite(ticketId) && ticketId > 0,
-    staleTime: 30_000,
   });
 }
 

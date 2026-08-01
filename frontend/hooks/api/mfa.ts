@@ -48,15 +48,3 @@ export function useMfaDisable() {
   });
 }
 
-export function useResetMfa() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["reset", "mfa"],
-    mutationFn: (data: { userId: string }) =>
-      apiClient.post<{ reset: boolean }>("/auth/mfa/reset", data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.organization.members() });
-    },
-  });
-}
-

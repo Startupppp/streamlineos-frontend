@@ -26,5 +26,3 @@ export const successionFormSchema = z
       });
     }
   });
-
-export type SuccessionFormValues = z.infer<typeof successionFormSchema>;

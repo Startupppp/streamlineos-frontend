@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -18,20 +18,6 @@ export interface SupportSavedView {
   updatedAt: string | null;
 }
 
-interface CreateSavedViewInput {
-  name: string;
-  filter?: Record<string, unknown>;
-  visibility?: SavedViewVisibility;
-  sortOrder?: number;
-}
-
-interface UpdateSavedViewInput {
-  name?: string;
-  filter?: Record<string, unknown>;
-  visibility?: SavedViewVisibility;
-  sortOrder?: number;
-}
-
 export function useSupportSavedViews() {
   return useQuery({
     queryKey: queryKeys.supportViews.list(),
@@ -40,30 +26,3 @@ export function useSupportSavedViews() {
   });
 }
 
-export function useCreateSavedView() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["create", "saved", "view"],
-    mutationFn: (input: CreateSavedViewInput) => apiClient.post<SupportSavedView>("/support/views", input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportViews.all }),
-  });
-}
-
-export function useUpdateSavedView() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["update", "saved", "view"],
-    mutationFn: ({ id, ...input }: UpdateSavedViewInput & { id: number }) =>
-      apiClient.patch<SupportSavedView>(`/support/views/${id}`, input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportViews.all }),
-  });
-}
-
-export function useDeleteSavedView() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["delete", "saved", "view"],
-    mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/support/views/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportViews.all }),
-  });
-}

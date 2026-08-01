@@ -1,6 +1,5 @@
 ﻿export const KNOWLEDGE_ROOT = "/knowledge";
 export const KNOWLEDGE_BASE = `${KNOWLEDGE_ROOT}/wiki`;
-export const KB_CHAT = `${KNOWLEDGE_ROOT}/chat`;
 
 export function pageHref(id: number): string {
   return `${KNOWLEDGE_BASE}/pages/${id}`;

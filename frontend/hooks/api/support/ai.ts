@@ -4,19 +4,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
-export type AiSuggestionType =
-  | "summary"
-  | "sentiment"
-  | "category"
-  | "priority"
-  | "spam"
-  | "reply"
-  | "macro"
-  | "kb_article"
-  | "duplicate"
-  | "handoff_summary"
-  | "root_cause_cluster";
-
 export type AiSuggestionStatus = "pending" | "accepted" | "rejected";
 export type AiSuggestionFeedback = "helpful" | "not_helpful";
 export type AiSentimentValue = "positive" | "neutral" | "negative";
@@ -292,10 +279,6 @@ export interface TranslateDraftResult {
   detectedSourceLanguage: string;
 }
 
-export interface SupportAiSettings {
-  confidenceThreshold: number;
-}
-
 export interface SupportAiReportParams {
   dateFrom?: string;
   dateTo?: string;
@@ -348,22 +331,3 @@ export function useSupportAiReport(params?: SupportAiReportParams) {
   });
 }
 
-export function useSupportAiSettings() {
-  return useQuery({
-    queryKey: queryKeys.supportAiSettings.get(),
-    queryFn: () => apiClient.get<SupportAiSettings>(`/support/settings`),
-    staleTime: 5 * 60_000,
-  });
-}
-
-export function useUpdateSupportAiSettings() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["supportAiSettings", "update"],
-    mutationFn: (input: Partial<SupportAiSettings>) =>
-      apiClient.patch<SupportAiSettings>(`/support/settings`, input),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.supportAiSettings.all });
-    },
-  });
-}

@@ -46,9 +46,6 @@ export const vendorBaseSchema = z.object({
   notes: z.string().max(2000, "Notes must be at most 2000 characters"),
 });
 
-export const vendorCreateSchema = vendorBaseSchema;
-export type VendorCreateFormValues = z.infer<typeof vendorCreateSchema>;
-
 export const vendorEditSchema = vendorBaseSchema.extend({
   isActive: z.boolean(),
 });

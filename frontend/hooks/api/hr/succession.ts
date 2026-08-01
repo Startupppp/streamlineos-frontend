@@ -41,16 +41,6 @@ export function useCreateSuccessionPlan() {
   });
 }
 
-export function useUpdateSuccessionPlan() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "succession", "update"],
-    mutationFn: ({ id, ...body }: Partial<SuccessionPlan> & { id: number }) =>
-      apiClient.patch<SuccessionPlan>(`/hr/succession/${id}`, body),
-    onSuccess: () => qc.invalidateQueries({ queryKey: keys.list() }),
-  });
-}
-
 export function useDeleteSuccessionPlan() {
   const qc = useQueryClient();
   return useMutation({

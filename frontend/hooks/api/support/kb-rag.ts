@@ -36,19 +36,6 @@ interface IndexAllResult {
   failures: { articleId: number; error: string }[];
 }
 
-interface AskKbInput {
-  question: string;
-  articleId?: number;
-}
-
-export function useSupportAskKb() {
-  return useMutation({
-    mutationKey: ["supportKb", "rag", "ask"],
-    mutationFn: (input: AskKbInput) =>
-      apiClient.post<KbAnswer>("/support/kb/ask", input),
-  });
-}
-
 interface PublicAskKbInput {
   orgId: string;
   question: string;

@@ -39,15 +39,6 @@ export function useHrAutomations(params?: { search?: string; triggerEvent?: stri
   });
 }
 
-export function useHrAutomation(id: number) {
-  return useQuery({
-    queryKey: hrAutomationKeys.detail(id),
-    queryFn: () => apiClient.get<HrAutomationRule>(`/hr/automations/${id}`),
-    enabled: Number.isFinite(id) && id > 0,
-    staleTime: 30_000,
-  });
-}
-
 export function useHrAutomationEvents() {
   return useQuery({
     queryKey: hrAutomationKeys.events(),

@@ -19,7 +19,6 @@ import {
   RateDialog,
 } from "./fin-settings-dialogs";
 
-export type { PaymentTermsSectionProps } from "./payment-terms-section";
 export { PaymentTermsSection } from "./payment-terms-section";
 
 export const PURPOSE_LABELS: Record<SystemAccountPurpose, string> = {

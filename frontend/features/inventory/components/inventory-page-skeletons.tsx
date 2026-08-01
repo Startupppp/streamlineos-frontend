@@ -9,23 +9,6 @@ export function DetailActionSkeleton() {
   );
 }
 
-export function ListActionSkeleton() {
-  return <Skeleton className="h-9 w-20" />;
-}
-
-export function ListFilterSkeleton({ count = 2 }: { count?: number }) {
-  return (
-    <div className="flex gap-2">
-      {Array.from({ length: count }).map((_, i) => (
-        <Skeleton
-          key={i}
-          className={i === 0 ? "h-9 flex-1 max-w-md" : "h-9 w-36"}
-        />
-      ))}
-    </div>
-  );
-}
-
 export function InventoryTableSkeleton({ rows = 12 }: { rows?: number }) {
   return (
     <div className="rounded-lg border border-border bg-card overflow-hidden">

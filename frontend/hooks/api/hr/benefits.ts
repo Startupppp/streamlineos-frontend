@@ -19,16 +19,6 @@ export interface BenefitPlan {
   updatedAt: string;
 }
 
-export interface EnrollmentWindow {
-  id: number;
-  orgId: string;
-  planId: number | null;
-  opensAt: string;
-  closesAt: string;
-  status: "upcoming" | "open" | "closed";
-  createdAt: string;
-}
-
 export interface BenefitEnrollment {
   id: number;
   orgId: string;
@@ -70,17 +60,6 @@ export interface InsuranceClaim {
   plan?: BenefitPlan | null;
 }
 
-export function useAvailableBenefitPlans() {
-  return useQuery({
-    queryKey: queryKeys.hr.benefitAvailable(),
-    queryFn: () =>
-      apiClient.get<{ data: BenefitPlan[]; total: number; page: number; limit: number }>(
-        "/hr/benefits/plans/available",
-      ),
-    staleTime: 5 * 60_000,
-  });
-}
-
 export function useBenefitPlans(query?: { status?: string; category?: string; page?: number; limit?: number }) {
   return useQuery({
     queryKey: queryKeys.hr.benefitPlans(query),
@@ -90,14 +69,6 @@ export function useBenefitPlans(query?: { status?: string; category?: string; pa
         query as Record<string, unknown>,
       ),
     staleTime: 2 * 60_000,
-  });
-}
-
-export function useBenefitPlan(planId: number) {
-  return useQuery({
-    queryKey: queryKeys.hr.benefitPlan(planId),
-    queryFn: () => apiClient.get<BenefitPlan>(`/hr/benefits/plans/${planId}`),
-    staleTime: 5 * 60_000,
   });
 }
 
@@ -118,33 +89,6 @@ export function useUpdateBenefitPlan() {
     mutationFn: ({ id, ...data }: Partial<BenefitPlan> & { id: number }) =>
       apiClient.patch<BenefitPlan>(`/hr/benefits/plans/${id}`, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.benefitsAll }),
-  });
-}
-
-export function useDeleteBenefitPlan() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "benefits", "plans", "delete"],
-    mutationFn: (id: number) => apiClient.delete<{ ok: boolean }>(`/hr/benefits/plans/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.benefitsAll }),
-  });
-}
-
-export function useEnrollmentWindows() {
-  return useQuery({
-    queryKey: queryKeys.hr.benefitWindows,
-    queryFn: () => apiClient.get<EnrollmentWindow[]>("/hr/benefits/windows"),
-    staleTime: 2 * 60_000,
-  });
-}
-
-export function useCreateEnrollmentWindow() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "benefits", "windows", "create"],
-    mutationFn: (data: { planId?: number; opensAt: string; closesAt: string; status?: string }) =>
-      apiClient.post<EnrollmentWindow>("/hr/benefits/windows", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.benefitWindows }),
   });
 }
 
@@ -198,16 +142,6 @@ export function useAddDependent() {
   });
 }
 
-export function useUpdateDependent() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "benefits", "dependents", "update"],
-    mutationFn: ({ id, ...data }: Partial<Dependent> & { id: number }) =>
-      apiClient.patch<Dependent>(`/hr/benefits/dependents/${id}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.benefitDependents }),
-  });
-}
-
 export function useDeleteDependent() {
   const qc = useQueryClient();
   return useMutation({
@@ -229,16 +163,6 @@ export function useInsuranceClaims(query?: { status?: string; userId?: string; p
   });
 }
 
-export function useSubmitClaim() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "benefits", "claims", "submit"],
-    mutationFn: (data: { planId: number; claimNumber: string; amountCents: number; documents?: { url: string; name: string }[] }) =>
-      apiClient.post<InsuranceClaim>("/hr/benefits/claims", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.benefitsAll }),
-  });
-}
-
 export function useReviewClaim() {
   const qc = useQueryClient();
   return useMutation({
@@ -256,51 +180,3 @@ export function useReviewClaim() {
   });
 }
 
-export function useSetClaimPayoutRoute() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "benefits", "claims", "payout-route"],
-    mutationFn: ({ claimId, payoutRoute }: { claimId: number; payoutRoute: string }) =>
-      apiClient.patch<InsuranceClaim>(`/hr/benefits/claims/${claimId}/payout-route`, { payoutRoute }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.benefitsAll }),
-  });
-}
-
-export interface TravelVisitLog {
-  id: number;
-  orgId: string;
-  travelRequestId: number;
-  userId: string;
-  visitedAt: string;
-  location: string;
-  lat: string | null;
-  lng: string | null;
-  note: string | null;
-  createdAt: string;
-}
-
-export function useTravelVisitLogs(travelRequestId: number) {
-  return useQuery({
-    queryKey: queryKeys.hr.travelVisitLogs(travelRequestId),
-    queryFn: () => apiClient.get<TravelVisitLog[]>(`/hr/travel-visits/${travelRequestId}`),
-    staleTime: 60_000,
-  });
-}
-
-export function useAddTravelVisitLog() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "travel-visits", "add"],
-    mutationFn: (data: {
-      travelRequestId: number;
-      visitedAt: string;
-      location: string;
-      lat?: string;
-      lng?: string;
-      note?: string;
-    }) => apiClient.post<TravelVisitLog>("/hr/travel-visits", data),
-    onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.travelVisitLogs(vars.travelRequestId) });
-    },
-  });
-}

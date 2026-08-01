@@ -100,14 +100,6 @@ export function useHrCases(params: ListCasesParams = {}) {
   });
 }
 
-export function useHrCaseStats() {
-  return useQuery({
-    queryKey: caseKeys.stats,
-    queryFn: () => apiClient.get<{ status: CaseStatus; total: number }[]>("/hr/cases/stats"),
-    staleTime: 60_000,
-  });
-}
-
 export function useHrCase(id: number) {
   return useQuery({
     queryKey: caseKeys.detail(id),
@@ -174,19 +166,6 @@ export function useUpdateCase(id: number) {
   });
 }
 
-export function useDeleteCase() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr-cases", "delete"],
-    mutationFn: (id: number) => apiClient.delete(`/hr/cases/${id}`),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: caseKeys.all });
-      toast.success("Case deleted");
-    },
-    onError: (e) => toast.error(getErrorMessage(e)),
-  });
-}
-
 export function useStartInvestigation(id: number) {
   const qc = useQueryClient();
   return useMutation({
@@ -230,20 +209,6 @@ export function useCaseDocuments(caseId: number) {
     queryFn: () => apiClient.get<CaseDocument[]>(`/hr/cases/${caseId}/documents`),
     enabled: caseId > 0,
     staleTime: 30_000,
-  });
-}
-
-export function useAddCaseDocument(caseId: number) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr-cases", "documents", "add", caseId],
-    mutationFn: (body: { name: string; url: string; restricted?: boolean }) =>
-      apiClient.post<CaseDocument>(`/hr/cases/${caseId}/documents`, body),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: caseKeys.documents(caseId) });
-      toast.success("Document added");
-    },
-    onError: (e) => toast.error(getErrorMessage(e)),
   });
 }
 

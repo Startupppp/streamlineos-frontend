@@ -103,37 +103,6 @@ export function useCreateProvisioning() {
   });
 }
 
-export function useUpdateProvisioning(id: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr-identity", "provisioning-update", id],
-    mutationFn: (body: Partial<{
-      status: ProvisioningStatus;
-      completedAt: string;
-      verifiedBy: string | null;
-    }>) => apiClient.patch<AccessProvisioningRecord>(`${BASE}/provisioning/${id}`, body),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: identityKeys.all });
-      toast.success("Provisioning updated");
-    },
-    onError: (e) => toast.error(getErrorMessage(e)),
-  });
-}
-
-export function useGenerateProvisioning() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr-identity", "generate"],
-    mutationFn: (body: { userId: string; triggeredBy: "joiner" | "mover" | "leaver" }) =>
-      apiClient.post<{ generated: number }>(`${BASE}/provisioning/generate`, body),
-    onSuccess: (data) => {
-      void qc.invalidateQueries({ queryKey: identityKeys.all });
-      toast.success(`Generated ${data.generated} provisioning tasks`);
-    },
-    onError: (e) => toast.error(getErrorMessage(e)),
-  });
-}
-
 export function useCreateProvisioningTemplate() {
   const qc = useQueryClient();
   return useMutation({
@@ -146,23 +115,6 @@ export function useCreateProvisioningTemplate() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: identityKeys.templates });
       toast.success("Template created");
-    },
-    onError: (e) => toast.error(getErrorMessage(e)),
-  });
-}
-
-export function useUpdateProvisioningTemplate(id: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr-identity", "template-update", id],
-    mutationFn: (body: Partial<{
-      name: string;
-      triggeredBy: "joiner" | "mover" | "leaver";
-      systemsConfig: Array<{ systemName: string; action: ProvisioningAction }>;
-    }>) => apiClient.patch<ProvisioningTemplate>(`${BASE}/templates/${id}`, body),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: identityKeys.templates });
-      toast.success("Template updated");
     },
     onError: (e) => toast.error(getErrorMessage(e)),
   });

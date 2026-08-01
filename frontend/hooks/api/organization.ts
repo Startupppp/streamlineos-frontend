@@ -81,29 +81,6 @@ export const useOrgMembersByIds = (
   });
 };
 
-
-
-
-export const useUpdateMemberRole = () => {
-  const queryClient = useQueryClient();
-  return useMutation<
-    { success: boolean },
-    Error,
-    { userId: string; role: string }
-  >({
-    mutationKey: ["organization", "update-member-role"],
-    mutationFn: ({ userId, role }) =>
-      apiClient.patch<{ success: boolean }>(`/organization/members/${userId}`, {
-        role,
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.organization.members(),
-      });
-    },
-  });
-};
-
 export const useRemoveOrgMember = () => {
   const queryClient = useQueryClient();
   return useMutation<void, Error, string>({
@@ -163,56 +140,6 @@ export const useUpdateOrgSettings = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.organization.settings(),
-      });
-    },
-  });
-};
-
-interface OrgHoliday {
-  id: string;
-  name: string;
-  date: string;
-  recurring: boolean;
-  createdAt: string;
-}
-
-export const useOrgHolidays = (
-  options?: Omit<UseQueryOptions<OrgHoliday[], Error>, "queryKey" | "queryFn">,
-) =>
-  useQuery<OrgHoliday[], Error>({
-    queryKey: [...queryKeys.organization.all, "holidays"],
-    queryFn: () => apiClient.get<OrgHoliday[]>("/organization/holidays"),
-    staleTime: 60_000,
-    ...options,
-  });
-
-export const useCreateOrgHoliday = () => {
-  const queryClient = useQueryClient();
-  return useMutation<
-    { id: string },
-    Error,
-    { name: string; date: string; recurring?: boolean }
-  >({
-    mutationKey: ["organization", "holidays", "create"],
-    mutationFn: (data) =>
-      apiClient.post<{ id: string }>("/organization/holidays", data),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: [...queryKeys.organization.all, "holidays"],
-      });
-    },
-  });
-};
-
-export const useDeleteOrgHoliday = () => {
-  const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, string>({
-    mutationKey: ["delete", "org", "holiday"],
-    mutationFn: (id) =>
-      apiClient.delete<{ success: boolean }>(`/organization/holidays/${id}`),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: [...queryKeys.organization.all, "holidays"],
       });
     },
   });

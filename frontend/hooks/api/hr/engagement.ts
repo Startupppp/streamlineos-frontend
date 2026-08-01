@@ -106,14 +106,12 @@ const KEYS = {
   moodAggregate: ["hr", "engagement", "mood", "aggregate"] as const,
   badges: ["hr", "engagement", "badges"] as const,
   myBadges: ["hr", "engagement", "badges", "my"] as const,
-  myPoints: ["hr", "engagement", "points", "my"] as const,
   leaderboard: (top?: number) => ["hr", "engagement", "leaderboard", top] as const,
   polls: ["hr", "engagement", "polls"] as const,
   pollResults: (pollId: number) => ["hr", "engagement", "polls", pollId, "results"] as const,
   communities: ["hr", "engagement", "communities"] as const,
   communityMembers: (id: number) => ["hr", "engagement", "communities", id, "members"] as const,
   campaigns: ["hr", "engagement", "campaigns"] as const,
-  eom: ["hr", "engagement", "eom"] as const,
 };
 
 export function useEngagementOverview() {
@@ -158,25 +156,6 @@ export function useEngagementBadges() {
   });
 }
 
-export function useCreateBadge() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "engagement", "badges", "create"],
-    mutationFn: (data: { name: string; description: string; icon: string; points?: number }) =>
-      apiClient.post<HrBadge>("/hr/engagement/badges", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEYS.badges }),
-  });
-}
-
-export function useDeleteBadge() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "engagement", "badges", "delete"],
-    mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/hr/engagement/badges/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEYS.badges }),
-  });
-}
-
 export function useAwardBadge() {
   const qc = useQueryClient();
   return useMutation({
@@ -187,22 +166,6 @@ export function useAwardBadge() {
       qc.invalidateQueries({ queryKey: KEYS.myBadges });
       qc.invalidateQueries({ queryKey: KEYS.leaderboard() });
     },
-  });
-}
-
-export function useMyBadges() {
-  return useQuery<HrBadgeAward[]>({
-    queryKey: KEYS.myBadges,
-    queryFn: () => apiClient.get<HrBadgeAward[]>("/hr/engagement/badges/my"),
-    staleTime: 2 * 60_000,
-  });
-}
-
-export function useMyPoints() {
-  return useQuery<PointsEntry[]>({
-    queryKey: KEYS.myPoints,
-    queryFn: () => apiClient.get<PointsEntry[]>("/hr/engagement/points/my"),
-    staleTime: 2 * 60_000,
   });
 }
 
@@ -349,10 +312,3 @@ export function useDeleteCampaign() {
   });
 }
 
-export function useEmployeeOfMonth() {
-  return useQuery<EmployeeOfMonth>({
-    queryKey: KEYS.eom,
-    queryFn: () => apiClient.get<EmployeeOfMonth>("/hr/engagement/employee-of-month"),
-    staleTime: 10 * 60_000,
-  });
-}

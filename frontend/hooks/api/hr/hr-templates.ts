@@ -6,7 +6,6 @@ import { queryKeys } from "@/lib/query-keys";
 import type {
   HrTemplate,
   HrTemplateKind,
-  HrTemplateRender,
   HrTemplateStatus,
   RenderResponse,
   TemplateListResponse,
@@ -45,15 +44,6 @@ export function useHrTemplateVariables() {
     queryKey: queryKeys.hr.hrTemplateVariables(),
     queryFn: () => apiClient.get<TemplateVariable[]>("/hr/templates/variables"),
     staleTime: 10 * 60_000,
-  });
-}
-
-export function useHrTemplateRenders(templateId: number) {
-  return useQuery({
-    queryKey: queryKeys.hr.hrTemplateRenders(templateId),
-    queryFn: () => apiClient.get<HrTemplateRender[]>(`/hr/templates/${templateId}/renders`),
-    staleTime: 30_000,
-    enabled: !!templateId,
   });
 }
 
@@ -108,16 +98,6 @@ export function useTransitionHrTemplate() {
       qc.invalidateQueries({ queryKey: queryKeys.hr.hrTemplates() });
       qc.invalidateQueries({ queryKey: queryKeys.hr.hrTemplate(id) });
     },
-  });
-}
-
-export function useCreateHrTemplateVersion() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "templates", "version"],
-    mutationFn: (templateId: number) =>
-      apiClient.post<HrTemplate>(`/hr/templates/${templateId}/versions`, {}),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.hrTemplates() }),
   });
 }
 

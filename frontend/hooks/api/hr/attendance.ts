@@ -12,7 +12,6 @@ import type {
   GetMonthlyAttendanceInput,
   WorkLog,
   UpsertWorkLogInput,
-  UpdateWorkLogStatusInput,
   GetWorkLogsInput,
   TeamAttendanceStatusQuery,
   TeamAttendanceStatusResponse,
@@ -29,21 +28,6 @@ export function useHrAttendanceStatus(
     staleTime: 2 * 60_000,
     ...restOptions,
     enabled: canAttendance && (optEnabled ?? true),
-  });
-}
-
-export function useHrAttendanceLogs(params?: {
-  userId?: string;
-  year?: number;
-  month?: number;
-}) {
-  const canAttendance = useCan("hr:attendance:view");
-  return useQuery({
-    queryKey: queryKeys.hr.attendanceLogs(params),
-    queryFn: () =>
-      apiClient.get<AttendanceLog[]>("/hr/attendance/logs", params as Record<string, unknown>),
-    staleTime: 2 * 60_000,
-    enabled: canAttendance,
   });
 }
 
@@ -240,23 +224,6 @@ export function useUpsertWorkLog(
   });
 }
 
-export function useUpdateWorkLogStatus(
-  options?: Omit<UseMutationOptions<WorkLog, Error, UpdateWorkLogStatusInput>, "mutationFn">
-) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "work-logs", "update-status"],
-    mutationFn: (data: UpdateWorkLogStatusInput) =>
-      apiClient.patch<WorkLog>("/hr/work-logs/status", data),
-    onSuccess: (...args) => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.workLogs() });
-      options?.onSuccess?.(...args);
-    },
-    onError: options?.onError,
-    ...options,
-  });
-}
-
 export function useHrTeamAttendanceStatus(params?: TeamAttendanceStatusQuery) {
   const canAttendance = useCan("hr:attendance:view");
   return useQuery({
@@ -297,27 +264,6 @@ export interface CreateRegularizationInput {
   requestedCheckIn?: string;
   requestedCheckOut?: string;
   reason: string;
-}
-
-export function useHrRegularizations(params?: {
-  userId?: string;
-  status?: string;
-  startDate?: string;
-  endDate?: string;
-  page?: number;
-  limit?: number;
-}) {
-  const canAttendance = useCan("hr:attendance:view");
-  return useQuery({
-    queryKey: [...queryKeys.hr.all, "regularizations", params] as const,
-    queryFn: () =>
-      apiClient.get<{ data: AttendanceRegularization[]; page: number; limit: number }>(
-        "/hr/attendance/regularizations",
-        params as Record<string, unknown>,
-      ),
-    staleTime: 30_000,
-    enabled: canAttendance,
-  });
 }
 
 export function useCreateRegularization(

@@ -29,8 +29,6 @@ import { StepWorkflow } from "./steps/step-workflow";
 import { StepTeam } from "./steps/step-team";
 import { StepReview } from "./steps/step-review";
 
-export type { StepSharedProps };
-
 interface ProjectCreateWizardProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;

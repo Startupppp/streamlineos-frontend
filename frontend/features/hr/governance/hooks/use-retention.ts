@@ -83,19 +83,6 @@ export function useCreateRetentionPolicy() {
   });
 }
 
-export function useUpdateRetentionPolicy() {
-  const qc = useQueryClient();
-  return useMutation<RetentionPolicy, Error, { policyId: number; data: Partial<RetentionPolicy> }>({
-    mutationKey: [...POLICIES_KEY, "update"],
-    mutationFn: ({ policyId, data }) => apiClient.patch<RetentionPolicy>(`/hr/governance/retention/policies/${policyId}`, data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: POLICIES_KEY });
-      toast.success("Retention policy updated");
-    },
-    onError: (err) => toast.error(getErrorMessage(err)),
-  });
-}
-
 export function useDeleteRetentionPolicy() {
   const qc = useQueryClient();
   return useMutation<void, Error, number>({

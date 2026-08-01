@@ -102,26 +102,6 @@ export function useCreateAccommodation() {
   });
 }
 
-export function useUpdateAccommodation(id: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr-accommodations", "update", id],
-    mutationFn: (body: Partial<{
-      type: AccommodationType;
-      description: string;
-      confidentialMedicalNote: string | null;
-      status: AccommodationStatus;
-      note: string | null;
-    }>) => apiClient.patch<AccommodationRequest>(`${BASE}/${id}`, body),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: accKeys.detail(id) });
-      void qc.invalidateQueries({ queryKey: accKeys.all });
-      toast.success("Accommodation updated");
-    },
-    onError: (e) => toast.error(getErrorMessage(e)),
-  });
-}
-
 export function useApproveAccommodation(id: string) {
   const qc = useQueryClient();
   return useMutation({
@@ -139,56 +119,3 @@ export function useApproveAccommodation(id: string) {
   });
 }
 
-export function useDeleteAccommodation() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr-accommodations", "delete"],
-    mutationFn: (id: string) => apiClient.delete(`${BASE}/${id}`),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: accKeys.all });
-      toast.success("Accommodation deleted");
-    },
-    onError: (e) => toast.error(getErrorMessage(e)),
-  });
-}
-
-export function useCreateAccommodationTask(requestId: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr-accommodations", "task-create", requestId],
-    mutationFn: (body: { title: string; assigneeUserId?: string; dueDate?: string }) =>
-      apiClient.post<AccommodationTask>(`${BASE}/${requestId}/tasks`, body),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: accKeys.tasks(requestId) });
-      toast.success("Task created");
-    },
-    onError: (e) => toast.error(getErrorMessage(e)),
-  });
-}
-
-export function useUpdateAccommodationTask(requestId: string, taskId: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr-accommodations", "task-update", taskId],
-    mutationFn: (body: Partial<{ title: string; status: AccommodationTaskStatus; dueDate: string | null }>) =>
-      apiClient.patch<AccommodationTask>(`${BASE}/${requestId}/tasks/${taskId}`, body),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: accKeys.tasks(requestId) });
-      toast.success("Task updated");
-    },
-    onError: (e) => toast.error(getErrorMessage(e)),
-  });
-}
-
-export function useDeleteAccommodationTask(requestId: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr-accommodations", "task-delete"],
-    mutationFn: (taskId: string) => apiClient.delete(`${BASE}/${requestId}/tasks/${taskId}`),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: accKeys.tasks(requestId) });
-      toast.success("Task deleted");
-    },
-    onError: (e) => toast.error(getErrorMessage(e)),
-  });
-}
