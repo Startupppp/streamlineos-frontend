@@ -12,13 +12,13 @@
 -- After running this script, bump access_versions so cached permission sets are
 -- invalidated:
 --
---   UPDATE access_versions SET version = version + 1, updated_at = now();
+--   UPDATE access_versions SET permissions_version = permissions_version + 1, updated_at = now();
 --
 -- Or scope to specific affected orgs:
 --
 --   UPDATE access_versions
---   SET    version    = version + 1,
---          updated_at = now()
+--   SET    permissions_version = permissions_version + 1,
+--          updated_at          = now()
 --   WHERE  org_id IN (
 --     SELECT DISTINCT org_id FROM role_permission_grants
 --     WHERE  permission_key IN ('hr:employees:view', 'hr:employees:create',

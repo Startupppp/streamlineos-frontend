@@ -9,16 +9,16 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -157,7 +157,12 @@ export function RolesTab({ moduleKey, canManage }: RolesTabProps) {
   const handleSelectGroup = useCallback((id: number) => setSelectedGroupId(id), []);
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
   const handleGroupCreated = useCallback((id: number) => setSelectedGroupId(id), []);
-  const handleDeleteDialogClose = useCallback(() => setDeleteTarget(null), []);
+  const handleDeleteDialogOpenChange = useCallback(
+    (open: boolean) => {
+      if (!open) setDeleteTarget(null);
+    },
+    [],
+  );
   const handleSetDeleteTarget = useCallback(
     (group: ModuleRoleGroup) => setDeleteTarget(group),
     [],
@@ -314,52 +319,42 @@ export function RolesTab({ moduleKey, canManage }: RolesTabProps) {
         onCreated={handleGroupCreated}
       />
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteDialogClose}>
-        <AlertDialogContent className="sm:max-w-sm">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete role group</AlertDialogTitle>
-            <AlertDialogDescription>
-              Delete <span className="font-semibold">{deleteTarget?.name}</span>?
-              Members of this group will lose its permissions.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              disabled={deleteGroup.isPending}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={handleDeleteDialogOpenChange}
+        title="Delete role group"
+        description={`Delete "${deleteTarget?.name ?? ""}"? Members of this group will lose its permissions.`}
+        confirmLabel="Delete"
+        destructive
+        isPending={deleteGroup.isPending}
+        onConfirm={handleDeleteConfirm}
+      />
 
-      <AlertDialog open={!!renameTarget} onOpenChange={handleRenameDialogOpenChange}>
-        <AlertDialogContent className="sm:max-w-sm">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Rename group</AlertDialogTitle>
-          </AlertDialogHeader>
+      <Dialog open={!!renameTarget} onOpenChange={handleRenameDialogOpenChange}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Rename group</DialogTitle>
+          </DialogHeader>
           <Input
             value={renameName}
             onChange={handleRenameNameChange}
             placeholder="Group name"
             autoFocus
           />
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleRenameDialogClose}>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleRenameDialogClose}>
               Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
+            </Button>
+            <LoadingButton
               onClick={handleRenameSave}
+              isPending={renameGroup.isPending}
               disabled={renameGroup.isPending || !renameName.trim()}
             >
               Rename
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </LoadingButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

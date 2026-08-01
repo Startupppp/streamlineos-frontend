@@ -415,6 +415,7 @@ export const useInvitations = (
   params?: { page?: number; limit?: number; includeAccepted?: boolean },
   options?: Omit<UseQueryOptions<InvitationsResponse, Error>, "queryKey" | "queryFn">
 ) => {
+  const canView = useCan("hr:employees:manage");
   return useQuery<InvitationsResponse, Error>({
     queryKey: queryKeys.users.invitations(params as Record<string, unknown> | undefined),
     queryFn: () =>
@@ -425,6 +426,7 @@ export const useInvitations = (
       }),
     staleTime: 30_000,
     ...options,
+    enabled: canView && (options?.enabled ?? true),
   });
 };
 
@@ -622,6 +624,7 @@ export const useOrgAuditLog = (
   params?: { page?: number; limit?: number; actorUserId?: string; action?: string; from?: string; to?: string },
   options?: Omit<UseQueryOptions<AuditResponse, Error>, "queryKey" | "queryFn">
 ) => {
+  const canView = useCan("hr:employees:manage");
   return useQuery<AuditResponse, Error>({
     queryKey: queryKeys.users.orgAuditLog(params as Record<string, unknown> | undefined),
     queryFn: () =>
@@ -635,6 +638,7 @@ export const useOrgAuditLog = (
       }),
     staleTime: 30_000,
     ...options,
+    enabled: canView && (options?.enabled ?? true),
   });
 };
 

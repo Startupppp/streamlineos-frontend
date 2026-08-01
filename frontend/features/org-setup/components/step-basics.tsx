@@ -179,6 +179,7 @@ export function StepBasics({
                 key={goal.id}
                 goalId={goal.id}
                 label={goal.label}
+                outcome={goal.outcome}
                 selected={selected}
                 Icon={Icon}
                 onToggle={handleGoalToggle}

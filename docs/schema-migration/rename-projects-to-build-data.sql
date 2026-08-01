@@ -60,16 +60,17 @@ COMMIT;
 --    This invalidates the Redis RBAC cache so all sessions pick up the new
 --    'build:*' keys immediately.
 --    Run as a separate statement (bumpPermissionsVersion increments the
---    org's access_versions.version; the app reads it on next request).
+--    org's access_versions.permissions_version; the app reads it on next request).
 --
 --    Option A — call the app helper (recommended, runs in a transaction):
 --      pnpm -C backend ts-node src/scripts/bump-all-permissions-versions.ts
 --
 --    Option B — raw SQL (if the helper script doesn't exist yet):
---      INSERT INTO access_versions (org_id, version)
+--      INSERT INTO access_versions (org_id, permissions_version)
 --        SELECT id, 1
 --        FROM   organizations
---        ON CONFLICT (org_id) DO UPDATE SET version = access_versions.version + 1;
+--        ON CONFLICT (org_id) DO UPDATE
+--          SET permissions_version = access_versions.permissions_version + 1;
 --
 -- Note: physical table names are UNCHANGED:
 --   projects, tickets, sprints, cycles, managed_products,
