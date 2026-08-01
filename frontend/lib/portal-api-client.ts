@@ -40,10 +40,6 @@ export class PortalApiError extends Error {
   }
 }
 
-export function isPortalApiError(error: unknown): error is PortalApiError {
-  return error instanceof PortalApiError;
-}
-
 function buildUrl(path: string, params?: Record<string, unknown>): string {
   const url = `${BACKEND_API_URL}${path}`;
   if (!params || Object.keys(params).length === 0) return url;

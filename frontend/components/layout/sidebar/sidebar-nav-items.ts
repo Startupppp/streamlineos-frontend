@@ -2479,10 +2479,6 @@ export function getNavGroupsForUser(
     });
 }
 
-export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
-  return getNavGroupsForUser(role, role === ROLES.OWNER ? undefined : []);
-}
-
 export function flattenNavRoutes(routes: NavRoute[]): NavRoute[] {
   const out: NavRoute[] = [];
   for (const r of routes) {
