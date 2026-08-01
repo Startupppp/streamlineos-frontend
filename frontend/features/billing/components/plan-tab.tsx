@@ -23,6 +23,7 @@ import { PlanCard } from "@/features/billing/components/plan-card";
 import { CouponSection } from "@/features/billing/components/coupon-section";
 import { SeatsBlock } from "@/features/billing/components/seats-block";
 import { PlanUsageMeters } from "@/features/billing/components/plan-usage-meters";
+import { EntitlementGate } from "@/components/entitlement-gate";
 import { PRICING } from "@/lib/pricing";
 
 function planConfigFromDefinition(
@@ -82,6 +83,7 @@ export function PlanTab() {
   >;
 
   const [upgradingPlan, setUpgradingPlan] = useState<SubscriptionPlan | null>(null);
+  const [upgradeError, setUpgradeError] = useState<unknown>(null);
   const [billingCycle, setBillingCycle] = useState<BillingCycle>("monthly");
   const [couponInput, setCouponInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<CouponValidationResult | null>(null);
@@ -106,6 +108,10 @@ export function PlanTab() {
   function handleRetry() {
     void refetch();
     void refetchPlans();
+  }
+
+  function handleRetryUpgrade() {
+    setUpgradeError(null);
   }
 
   const planLabel = useCallback((plan: SubscriptionPlan): string => {
@@ -148,6 +154,7 @@ export function PlanTab() {
       }
       setSelectedPlanForCoupon(plan);
       setUpgradingPlan(plan);
+      setUpgradeError(null);
       try {
         const order = await createOrder({
           plan,
@@ -184,6 +191,7 @@ export function PlanTab() {
         });
         rzp.open();
       } catch (err) {
+        setUpgradeError(err);
         toast.error(getErrorMessage(err));
         setUpgradingPlan(null);
       }
@@ -302,28 +310,30 @@ export function PlanTab() {
         </button>
       </div>
 
-      {planCatalog.length === 0 ? (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
-          Plan catalog is unavailable. Refresh the page or contact support to upgrade.
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {planCatalog.map((plan) => (
-            <PlanCard
-              key={plan.id}
-              plan={plan.id}
-              config={planConfigFromDefinition(plan)}
-              billingCycle={billingCycle}
-              currentPlan={currentPlan}
-              currentStatus={currentStatus}
-              upgradingPlan={upgradingPlan}
-              isBusy={isBusy}
-              isConfigured={data?.isConfigured}
-              onUpgrade={handleUpgrade}
-            />
-          ))}
-        </div>
-      )}
+      <EntitlementGate error={upgradeError} onRetry={handleRetryUpgrade} compact>
+        {planCatalog.length === 0 ? (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+            Plan catalog is unavailable. Refresh the page or contact support to upgrade.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {planCatalog.map((plan) => (
+              <PlanCard
+                key={plan.id}
+                plan={plan.id}
+                config={planConfigFromDefinition(plan)}
+                billingCycle={billingCycle}
+                currentPlan={currentPlan}
+                currentStatus={currentStatus}
+                upgradingPlan={upgradingPlan}
+                isBusy={isBusy}
+                isConfigured={data?.isConfigured}
+                onUpgrade={handleUpgrade}
+              />
+            ))}
+          </div>
+        )}
+      </EntitlementGate>
 
       <CouponSection
         couponInput={couponInput}

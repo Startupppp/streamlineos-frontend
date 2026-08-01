@@ -91,6 +91,11 @@ export function PlanUsageMeters({ onUpgradeClick }: PlanUsageMetersProps) {
     return e.used / e.limit >= 0.8;
   });
 
+  const atLimitEntries = entries.filter(([, e]) => {
+    if (e.limit === null) return false;
+    return e.used >= e.limit;
+  });
+
   return (
     <div className="rounded-xl border border-border bg-card shadow-sm p-5 space-y-4">
       <div className="flex items-center justify-between">
@@ -110,6 +115,17 @@ export function PlanUsageMeters({ onUpgradeClick }: PlanUsageMetersProps) {
           </Button>
         )}
       </div>
+
+      {atLimitEntries.length > 0 && (
+        <div className="flex items-start gap-2.5 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2.5">
+          <AlertCircle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
+          <p className="text-xs text-destructive leading-snug">
+            <span className="font-semibold">Limit reached:</span>{" "}
+            {atLimitEntries.map(([k]) => LIMIT_LABELS[k] ?? k).join(", ")}.{" "}
+            Actions that create new records will be blocked until you upgrade.
+          </p>
+        </div>
+      )}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {entries.map(([key, entry]) => (
           <UsageMeter

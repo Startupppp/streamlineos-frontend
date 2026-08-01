@@ -1,7 +1,15 @@
-if (!process.env.NEXT_PUBLIC_API_URL) 
+if (!process.env.NEXT_PUBLIC_API_URL)
   throw new Error("NEXT_PUBLIC_API_URL is not set");
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL;
+const REQUEST_TIMEOUT_MS = 30_000;
+
+function makeRequestSignal(external?: AbortSignal): AbortSignal {
+  const timeout = AbortSignal.timeout(REQUEST_TIMEOUT_MS);
+  if (!external) return timeout;
+  if (typeof AbortSignal.any === "function") return AbortSignal.any([timeout, external]);
+  return timeout;
+}
 
 const PUBLIC_AUTH_PATHS = new Set([
   "/auth/magic-link",
@@ -63,9 +71,11 @@ export async function authedFetch(
   url: string,
   init: RequestInit,
   path: string,
+  signal?: AbortSignal,
 ): Promise<Response> {
   const headers = new Headers(init.headers);
   const isPublic = isPublicPath(path);
+  const combinedSignal = makeRequestSignal(signal);
 
   if (!isPublic) {
     const token = await getBackendToken();
@@ -73,14 +83,14 @@ export async function authedFetch(
   }
 
   try {
-    let res = await fetch(url, { ...init, headers, credentials: "omit" });
+    let res = await fetch(url, { ...init, headers, credentials: "omit", signal: combinedSignal });
 
     if (!isPublic && res.status === 401) {
       cachedToken = null;
       const token = await getBackendToken();
       if (token) {
         headers.set("Authorization", `Bearer ${token}`);
-        res = await fetch(url, { ...init, headers, credentials: "omit" });
+        res = await fetch(url, { ...init, headers, credentials: "omit", signal: combinedSignal });
       }
       if (
         res.status === 401 &&
@@ -94,6 +104,12 @@ export async function authedFetch(
     }
     return res;
   } catch (error: unknown) {
+    if (error instanceof DOMException && error.name === "TimeoutError") {
+      throw new ApiError("Request timed out. Please try again.", undefined, "TIMEOUT");
+    }
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new ApiError("Request was cancelled.", undefined, "ABORTED");
+    }
     const host = requestHost(url);
     if (host) {
       throw new ApiError(
@@ -168,7 +184,8 @@ async function parseResponse<T>(res: Response): Promise<T> {
       } else if (typeof body?.error === "string" && body.error)
         message = body.error;
       if (typeof body?.code === "string") code = body.code;
-      if ("details" in body) details = body.details;
+      const { message: _m, error: _e, code: _c, statusCode: _s, success: _su, ...rest } = body;
+      if (Object.keys(rest).length > 0) details = rest;
     } catch {}
     throw new ApiError(message, res.status, code, details);
   }
@@ -188,11 +205,13 @@ async function parseResponse<T>(res: Response): Promise<T> {
 async function get<T>(
   url: string,
   params?: Record<string, unknown>,
+  signal?: AbortSignal,
 ): Promise<T> {
   const res = await authedFetch(
     buildUrl(url, params),
     { method: "GET", headers: { "Content-Type": "application/json" } },
     url,
+    signal,
   );
   return parseResponse<T>(res);
 }
@@ -200,7 +219,7 @@ async function get<T>(
 async function post<T>(
   url: string,
   data?: unknown,
-  config?: { headers?: Record<string, string> },
+  config?: { headers?: Record<string, string>; signal?: AbortSignal },
 ): Promise<T> {
   const res = await authedFetch(
     buildUrl(url),
@@ -213,11 +232,12 @@ async function post<T>(
       body: data !== undefined ? JSON.stringify(data) : undefined,
     },
     url,
+    config?.signal,
   );
   return parseResponse<T>(res);
 }
 
-async function put<T>(url: string, data?: unknown): Promise<T> {
+async function put<T>(url: string, data?: unknown, signal?: AbortSignal): Promise<T> {
   const res = await authedFetch(
     buildUrl(url),
     {
@@ -226,11 +246,12 @@ async function put<T>(url: string, data?: unknown): Promise<T> {
       body: data !== undefined ? JSON.stringify(data) : undefined,
     },
     url,
+    signal,
   );
   return parseResponse<T>(res);
 }
 
-async function patch<T>(url: string, data?: unknown): Promise<T> {
+async function patch<T>(url: string, data?: unknown, signal?: AbortSignal): Promise<T> {
   const res = await authedFetch(
     buildUrl(url),
     {
@@ -239,11 +260,12 @@ async function patch<T>(url: string, data?: unknown): Promise<T> {
       body: data !== undefined ? JSON.stringify(data) : undefined,
     },
     url,
+    signal,
   );
   return parseResponse<T>(res);
 }
 
-async function del<T>(url: string, data?: unknown): Promise<T> {
+async function del<T>(url: string, data?: unknown, signal?: AbortSignal): Promise<T> {
   const res = await authedFetch(
     buildUrl(url),
     {
@@ -252,6 +274,7 @@ async function del<T>(url: string, data?: unknown): Promise<T> {
       body: data !== undefined ? JSON.stringify(data) : undefined,
     },
     url,
+    signal,
   );
   return parseResponse<T>(res);
 }
