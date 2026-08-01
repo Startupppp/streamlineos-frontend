@@ -33,6 +33,8 @@ interface UploadDocSheetProps {
   userId: string | null;
   userName: string | null;
   onOpenChange: (open: boolean) => void;
+  /** Uploading for yourself rather than on behalf of an employee. */
+  selfUpload?: boolean;
 }
 
 function useUploadOnboardingDoc() {
@@ -52,7 +54,13 @@ function useUploadOnboardingDoc() {
   });
 }
 
-export function UploadDocSheet({ open, userId, userName, onOpenChange }: UploadDocSheetProps) {
+export function UploadDocSheet({
+  open,
+  userId,
+  userName,
+  onOpenChange,
+  selfUpload = false,
+}: UploadDocSheetProps) {
   const { data: documentTypes } = useHrDocumentTypes();
   const uploadFileMutation = useUploadFile();
   const uploadDocMutation = useUploadOnboardingDoc();
@@ -118,14 +126,24 @@ export function UploadDocSheet({ open, userId, userName, onOpenChange }: UploadD
         mimeType: uploaded.mimeType,
         targetUserId: userId,
       });
-      toast.success("Document uploaded on behalf of employee");
+      toast.success(
+        selfUpload ? "Document uploaded" : "Document uploaded on behalf of employee",
+      );
       handleCloseSheet(false);
     } catch (e) {
       toast.error(getErrorMessage(e));
     } finally {
       setIsUploading(false);
     }
-  }, [userId, uploadDocTypeId, uploadFile, uploadFileMutation, uploadDocMutation, handleCloseSheet]);
+  }, [
+    userId,
+    uploadDocTypeId,
+    uploadFile,
+    uploadFileMutation,
+    uploadDocMutation,
+    handleCloseSheet,
+    selfUpload,
+  ]);
 
   return (
     <Sheet open={open} onOpenChange={handleCloseSheet}>
@@ -133,8 +151,14 @@ export function UploadDocSheet({ open, userId, userName, onOpenChange }: UploadD
         <SheetHeader className="shrink-0 px-5 pt-4 pb-3 border-b">
           <SheetTitle className="text-base font-semibold">Upload Document</SheetTitle>
           <SheetDescription className="text-xs">
-            Upload an onboarding document on behalf of{" "}
-            <strong>{userName ?? "this employee"}</strong>.
+            {selfUpload ? (
+              "Upload one of your required onboarding documents. HR will review it."
+            ) : (
+              <>
+                Upload an onboarding document on behalf of{" "}
+                <strong>{userName ?? "this employee"}</strong>.
+              </>
+            )}
           </SheetDescription>
         </SheetHeader>
 

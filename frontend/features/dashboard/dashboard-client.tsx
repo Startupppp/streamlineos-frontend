@@ -55,6 +55,9 @@ import {
 import { PublicDocumentsCard } from "@/features/dashboard/public-documents-card";
 import { MyAttendanceWidget } from "@/features/dashboard/my-attendance-widget";
 import { PayrollWidget } from "@/features/dashboard/payroll-widget";
+import { ExpensesWidget } from "@/features/dashboard/expenses-widget";
+import { RecruitmentWidget } from "@/features/dashboard/recruitment-widget";
+import { AlertsWidget } from "@/features/dashboard/alerts-widget";
 import { MyTasksWidget } from "@/components/dashboard/my-tasks-widget";
 import { TimesheetWidget } from "@/components/dashboard/timesheet-widget";
 import { AnnouncementsWidget } from "@/components/dashboard/announcements-widget";
@@ -93,6 +96,8 @@ export function DashboardClient() {
     canViewExecutive,
     canViewCrmLeads,
     canViewTickets,
+    signEnabled,
+    canViewSignEnvelopes,
   } = access;
 
   const [headerClock, setHeaderClock] = useState<{
@@ -227,6 +232,8 @@ export function DashboardClient() {
 
   const showHrTeamRow =
     hrEnabled && (canViewLeaves || canViewAttendance || canApproveLeaves);
+  const showDocumentsCard =
+    hrEnabled || (signEnabled && canViewSignEnvelopes);
   const showProjectsRow = projectsEnabled;
   const showBottomRow =
     (projectsEnabled && canViewTickets) || (hrEnabled && canViewAttendance);
@@ -344,11 +351,14 @@ export function DashboardClient() {
           {projectsEnabled && <MyTasksWidget />}
           {projectsEnabled && <TimesheetWidget />}
           {hrEnabled && <LeaveBalanceWidget />}
+          <AlertsWidget />
           <AnnouncementsWidget />
           <UpcomingEventsWidget />
           {canViewExecutive && <BusinessPulseWidget />}
           {hrEnabled && canViewAttendance && <MyAttendanceWidget />}
           <PayrollWidget />
+          <ExpensesWidget />
+          <RecruitmentWidget />
         </motion.div>
 
         {showHrTeamRow && (
@@ -376,7 +386,7 @@ export function DashboardClient() {
           </motion.div>
         )}
 
-        {hrEnabled && (
+        {showDocumentsCard && (
           <motion.div variants={fadeUp} initial="hidden" animate="visible">
             <PublicDocumentsCard />
           </motion.div>

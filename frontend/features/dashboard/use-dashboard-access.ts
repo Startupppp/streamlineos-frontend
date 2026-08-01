@@ -13,6 +13,7 @@ export interface DashboardAccess {
   projectsEnabled: boolean;
   payrollEnabled: boolean;
   signEnabled: boolean;
+  accountingEnabled: boolean;
   canViewEmployees: boolean;
   canCreateEmployees: boolean;
   canViewAttendance: boolean;
@@ -25,6 +26,11 @@ export interface DashboardAccess {
   canViewPayrollSelf: boolean;
   canViewPayrollAdmin: boolean;
   canViewOnboardingDocsSummary: boolean;
+  canViewExpenses: boolean;
+  canCreateExpenses: boolean;
+  canApproveExpenses: boolean;
+  canViewInterviews: boolean;
+  canViewSignEnvelopes: boolean;
 }
 
 export function useDashboardAccess(): DashboardAccess {
@@ -45,6 +51,7 @@ export function useDashboardAccess(): DashboardAccess {
       projectsEnabled: moduleOn("PROJECTS"),
       payrollEnabled: moduleOn("PAYROLL"),
       signEnabled: moduleOn("SIGN"),
+      accountingEnabled: moduleOn("accounting"),
       canViewEmployees: can("hr:employees:view"),
       canCreateEmployees: can("hr:employees:create"),
       canViewAttendance: can("hr:attendance:view"),
@@ -57,6 +64,11 @@ export function useDashboardAccess(): DashboardAccess {
       canViewPayrollSelf: can("self:payroll"),
       canViewPayrollAdmin: can("payroll:runs:view"),
       canViewOnboardingDocsSummary: can("hr:onboarding:manage"),
+      canViewExpenses: can("hr:expenses:view"),
+      canCreateExpenses: can("hr:expenses:create"),
+      canApproveExpenses: can("hr:expenses:approve"),
+      canViewInterviews: can("hr:interviews:view"),
+      canViewSignEnvelopes: can("sign:envelope:view"),
     };
   }, [data, isLoading, enabledModules]);
 }

@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 interface UserListParams {
   page?: number;
@@ -118,6 +119,7 @@ export const useUsers = (
   params?: UserListParams,
   options?: Omit<UseQueryOptions<UsersResponse, Error>, "queryKey" | "queryFn">
 ) => {
+  const canView = useCan("hr:employees:view");
   return useQuery<UsersResponse, Error>({
     queryKey: queryKeys.users.list(params as Record<string, unknown> | undefined),
     queryFn: () =>
@@ -134,6 +136,7 @@ export const useUsers = (
       }),
     staleTime: 30_000,
     ...options,
+    enabled: canView && (options?.enabled ?? true),
   });
 };
 
@@ -192,11 +195,13 @@ export const useUserPreferences = (
 export const useUserStats = (
   options?: Omit<UseQueryOptions<UserStats, Error>, "queryKey" | "queryFn">
 ) => {
+  const canView = useCan("hr:employees:view");
   return useQuery<UserStats, Error>({
     queryKey: queryKeys.users.stats(),
     queryFn: () => apiClient.get<UserStats>("/users/stats"),
     staleTime: 60_000,
     ...options,
+    enabled: canView && (options?.enabled ?? true),
   });
 };
 

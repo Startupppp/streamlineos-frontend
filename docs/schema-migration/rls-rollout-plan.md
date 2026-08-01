@@ -1,7 +1,8 @@
 ---
 type: RLS rollout plan
-status: AUTHORED — NOT EXECUTED (see GATE 0.5 below)
-date: 2026-07-27
+status: EXECUTED — 740/740 tenant tables carry tenant_isolation; app-role cutover pending a restart
+date: 2026-07-27 (executed 2026-08-01)
+live-source: backend/src/common/tenant/README.md
 owner: platform-engineering
 depends-on: wave-0-rls-matrix.md, rls-phase1.sql, rls-phase2.sql, rls-phase3.sql
 ---
@@ -28,7 +29,13 @@ RLS is the DB-enforced backstop for tenant isolation. The app layer (BOLA guards
 5. Expected result: `''` or `NULL` — the GUC was cleared by the COMMIT in step 2.
 6. Confirm with Neon support that their pooler operates in transaction-pooling mode (not session-pooling).
 
-**Until POOL-01 passes, all `.sql` files in this plan are AUTHORED ONLY and must not be applied to any production or production-like environment.**
+**GATE 0.5 — PASSED (2026-08-01).** POOL-01 was run against the live pooled Neon endpoint. The tenant id does NOT survive COMMIT, and two concurrent transactions never observe each other's value. It is now a permanent regression check: `pnpm db:verify-rls` asserts it on every run, alongside ten isolation checks executed as a non-BYPASSRLS role.
+
+**Three findings from executing this plan correct what is written below — read them before following any SQL here:**
+
+1. **`current_setting` does NOT reliably raise on an unset GUC.** Once a custom parameter has been set even once in a session it stays *known* and afterwards reads as `''`, so the no-`missing_ok` form raises only on a connection that has never served a request. Every later connection would compare against `''`, match nothing, and deny **silently**. Policies therefore call `app.current_org_id()` (migration `0374`), which raises `42501` explicitly.
+2. **A RESTRICTIVE-only policy denies everything.** Postgres shows a row only if some *permissive* policy allows it; restrictive policies subtract but never grant. The shipped policies are PERMISSIVE.
+3. **`FORCE ROW LEVEL SECURITY` is not required** — see the correction under "App Role Requirement" below.
 
 ---
 
@@ -41,7 +48,9 @@ The runtime NestJS process must connect as **`streamline_app`**, a Postgres role
 - `USAGE` on the `public` schema
 - `SELECT, INSERT, UPDATE, DELETE` on all tenant tables
 
-**Why FORCE ROW LEVEL SECURITY is required:**
+**CORRECTION — FORCE ROW LEVEL SECURITY is NOT required.** `BYPASSRLS` is checked *before* table ownership, so a role holding it ignores policies whether or not FORCE is set — and the migration role (`neondb_owner`, verified `rolbypassrls = true`) holds it. FORCE would therefore change nothing for the only role it could apply to. The real boundary is the role the app connects as, which is why the app now connects as `streamline_app` (verified: not owner, no BYPASSRLS, cannot create objects) and why a boot-time check refuses to serve production traffic when policies exist but the connected role can bypass them. The original reasoning is preserved below for context but is superseded.
+
+**Original reasoning (superseded):**
 
 In Postgres, `ENABLE ROW LEVEL SECURITY` applies to non-owner roles only. The table owner bypasses the policy. On Neon, the Neon admin / project-owner credential IS the table owner. If `streamline_app` were the table owner (or if `FORCE` were omitted), a bug in the migration scripts or a maintenance operation connecting with the owner credential would bypass RLS entirely — defeating the backstop. `FORCE ROW LEVEL SECURITY` subjects even the table owner to policies, closing this gap. The migration role (`streamline_migrator`) must therefore either DISABLE its own policy temporarily during DDL operations, or connect as a superuser that the policy explicitly exempts (not recommended).
 

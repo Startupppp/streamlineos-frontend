@@ -1,4 +1,3 @@
-import { PERMISSIONS } from "@/lib/rbac/permissions";
 import type { Permission } from "@/lib/rbac/permissions";
 import type { DataScope } from "@/types/access";
 
@@ -106,9 +105,9 @@ export function toEditableScope(scope: DataScope): EditableScope {
   return isEditableScope(scope) ? scope : "all";
 }
 
-export function buildCatalog(): CatalogModule[] {
+export function buildCatalog(permissions: readonly Permission[]): CatalogModule[] {
   const modules = new Map<string, Map<string, Permission[]>>();
-  for (const perm of PERMISSIONS) {
+  for (const perm of permissions) {
     const key = moduleOf(perm.name);
     let resources = modules.get(key);
     if (!resources) {
@@ -141,7 +140,6 @@ export function buildCatalog(): CatalogModule[] {
   return result;
 }
 
-export const CATALOG = buildCatalog();
 
 export function scopeMapsEqual(a: ScopeMap, b: ScopeMap): boolean {
   const aKeys = Object.keys(a);

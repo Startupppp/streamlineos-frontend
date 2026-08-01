@@ -31,8 +31,9 @@ function unwrapDocumentTypes(
   return [];
 }
 
-export function useHrDocumentTypes() {
+export function useHrDocumentTypes(options?: { enabled?: boolean }) {
   return useQuery<HrDocumentType[]>({
+    enabled: options?.enabled ?? true,
     queryKey: [...queryKeys.hr.documentTypes(), "all"] as const,
     queryFn: async () => {
       const res = await apiClient.get<PaginatedDocumentTypes>("/hr/document-types", {

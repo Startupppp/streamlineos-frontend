@@ -1,8 +1,16 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useCallback, useState } from "react";
 import Link from "next/link";
-import { FileText, AlertTriangle, PenLine, UserX, type LucideIcon } from "lucide-react";
+import { useSession } from "next-auth/react";
+import {
+  FileText,
+  AlertTriangle,
+  PenLine,
+  UserX,
+  Upload,
+  type LucideIcon,
+} from "lucide-react";
 import { EyeIcon, DownloadIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +30,11 @@ import {
   useMissingOnboardingDocsCount,
 } from "@/hooks/api/hr/documents";
 import { useSignDashboard } from "@/hooks/api/sign/reports";
+import { UploadDocSheet } from "@/features/hr/document-review/upload-doc-sheet";
+import {
+  useMyPendingDocuments,
+  type PendingDocumentReason,
+} from "@/features/dashboard/use-my-pending-documents";
 import { cn } from "@/lib/utils";
 
 function SummaryChip({
@@ -134,6 +147,68 @@ function DocumentItem({ doc }: DocumentItemProps) {
   );
 }
 
+const PENDING_REASON_LABEL: Record<PendingDocumentReason, string> = {
+  NOT_SUBMITTED: "Not submitted",
+  RE_UPLOAD: "Re-upload requested",
+};
+
+const MAX_PENDING_SHOWN = 4;
+
+function MyPendingUploadsSection() {
+  const { data: session } = useSession();
+  const userId = session?.user?.id;
+  const { pending, count, isLoading } = useMyPendingDocuments();
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
+
+  const handleOpenUpload = useCallback(() => setIsUploadOpen(true), []);
+
+  if (isLoading || count === 0 || !userId) return null;
+
+  return (
+    <>
+      <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-2.5 dark:border-amber-800 dark:bg-amber-900/20">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-[11px] font-medium text-amber-800 dark:text-amber-300">
+            {count} document{count === 1 ? "" : "s"} to upload
+          </p>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 px-2 text-[11px]"
+            onClick={handleOpenUpload}
+          >
+            <Upload className="mr-1 h-3 w-3" aria-hidden="true" />
+            Upload
+          </Button>
+        </div>
+        <ul className="mt-1.5 space-y-1">
+          {pending.slice(0, MAX_PENDING_SHOWN).map((doc) => (
+            <li
+              key={`${doc.documentTypeId}-${doc.reason}`}
+              className="flex items-center justify-between gap-2 text-[10px] text-amber-700 dark:text-amber-400"
+            >
+              <TruncatedText text={doc.documentTypeName} className="min-w-0 flex-1" />
+              <span className="shrink-0">{PENDING_REASON_LABEL[doc.reason]}</span>
+            </li>
+          ))}
+          {count > MAX_PENDING_SHOWN && (
+            <li className="text-[10px] text-amber-700 dark:text-amber-400">
+              +{count - MAX_PENDING_SHOWN} more
+            </li>
+          )}
+        </ul>
+      </div>
+      <UploadDocSheet
+        open={isUploadOpen}
+        onOpenChange={setIsUploadOpen}
+        userId={userId}
+        userName={null}
+        selfUpload
+      />
+    </>
+  );
+}
+
 export const PublicDocumentsCard = memo(function PublicDocumentsCard() {
   const canViewDocStats = useCan("hr:documents:view");
   const canViewSignEnvelopes = useCan("sign:envelope:view");
@@ -144,6 +219,7 @@ export const PublicDocumentsCard = memo(function PublicDocumentsCard() {
   const { missingCount } = useMissingOnboardingDocsCount({
     enabled: canViewOnboardingDocsSummary,
   });
+  const { count: pendingUploadCount } = useMyPendingDocuments();
 
   const showSignatureChip = signEnabled && canViewSignEnvelopes;
   const showSummaryStrip =
@@ -170,6 +246,7 @@ export const PublicDocumentsCard = memo(function PublicDocumentsCard() {
         </Link>
       </CardHeader>
       <CardContent className="px-4 pt-0 pb-4" aria-live="polite">
+        <MyPendingUploadsSection />
         {showSummaryStrip && (
           <div className="flex flex-wrap gap-1.5 mb-3">
             {canViewDocStats && (
@@ -192,6 +269,14 @@ export const PublicDocumentsCard = memo(function PublicDocumentsCard() {
               />
             )}
           </div>
+        )}
+        {!canViewDocStats && !showSummaryStrip && pendingUploadCount === 0 && (
+          <EmptyState
+            illustration={<EmptyPublicDocsIllustration className="h-24 w-24" />}
+            title="Nothing pending"
+            description="Documents awaiting your signature or upload will appear here."
+            compact
+          />
         )}
         {canViewDocStats &&
           (isLoading ? (

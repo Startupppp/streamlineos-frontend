@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { AccessResponse } from "@/types/access";
-import type { PermissionKey } from "@/lib/rbac/permissions";
+import type { Permission, PermissionKey } from "@/lib/rbac/permissions";
 import { normalizeOrgModuleKey } from "@/lib/module-vocabulary";
 
 export const useAccess = (
@@ -45,3 +45,14 @@ export function useModuleEnabled(moduleKey: string): boolean {
   if (!data) return true;
   return data.modules[normalizeOrgModuleKey(moduleKey)] !== false;
 }
+
+
+export const usePermissionCatalog = (
+  options?: Omit<UseQueryOptions<Permission[], Error>, "queryKey" | "queryFn">,
+) =>
+  useQuery<Permission[], Error>({
+    queryKey: queryKeys.roles.permissionCatalog(),
+    queryFn: () => apiClient.get<Permission[]>("/rbac/permissions"),
+    staleTime: 30 * 60_000,
+    ...options,
+  });

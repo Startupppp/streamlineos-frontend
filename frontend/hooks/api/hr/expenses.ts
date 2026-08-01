@@ -32,12 +32,16 @@ interface ExpensePageFilters {
   maxAmount?: number;
 }
 
-export function useExpensePageData(filters: ExpensePageFilters = {}) {
+export function useExpensePageData(
+  filters: ExpensePageFilters = {},
+  options?: { enabled?: boolean },
+) {
   const params: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(filters)) {
     if (v !== undefined && v !== "" && v !== null) params[k] = v;
   }
   return useQuery({
+    enabled: options?.enabled ?? true,
     queryKey: [...queryKeys.hr.expenses(), "pageData", params] as const,
     queryFn: () =>
       apiClient.get<{

@@ -200,8 +200,9 @@ export interface InterviewStats {
   failed: number;
 }
 
-export function useInterviewStats() {
+export function useInterviewStats(options?: { enabled?: boolean }) {
   return useQuery({
+    enabled: options?.enabled ?? true,
     queryKey: INTERVIEW_STATS_KEY,
     queryFn: () => apiClient.get<InterviewStats>("/hr/recruitment/interviews/stats"),
     staleTime: 2 * 60_000,
@@ -224,7 +225,10 @@ export type InterviewsParams = {
  * Backend returns `{ items, total, page, pageSize, totalPages }`.
  * Hook normalizes to Interview[] so list/calendar UIs keep working.
  */
-export function useInterviews(params?: InterviewsParams) {
+export function useInterviews(
+  params?: InterviewsParams,
+  options?: { enabled?: boolean },
+) {
   const pageSize = params?.pageSize ?? params?.limit ?? 100;
   const page =
     params?.page ??
@@ -235,6 +239,7 @@ export function useInterviews(params?: InterviewsParams) {
   if (params?.relevant != null) queryParams.relevant = params.relevant ? "true" : "false";
 
   return useQuery({
+    enabled: options?.enabled ?? true,
     queryKey: queryKeys.hr.interviews(queryParams),
     queryFn: async (): Promise<Interview[]> => {
       const res = await apiClient.get<Interview[] | RecruitmentListResponse<Interview>>(

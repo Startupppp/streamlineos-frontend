@@ -49,6 +49,50 @@ export function useHrDocumentStats(options?: { enabled?: boolean }) {
   });
 }
 
+export type MyOnboardingDocStatus =
+  | "PENDING"
+  | "SUBMITTED"
+  | "APPROVED"
+  | "REJECTED"
+  | "RE_UPLOAD_REQUESTED";
+
+export interface MyOnboardingDoc {
+  id: number;
+  documentTypeId: number;
+  documentTypeName: string;
+  isMandatory: boolean | null;
+  status: MyOnboardingDocStatus;
+  remarks: string | null;
+  version: number | null;
+  createdAt: string | null;
+}
+
+interface MyOnboardingDocsResponse {
+  data: MyOnboardingDoc[];
+  pagination: { page: number; limit: number; total: number; totalPages: number };
+}
+
+const MY_DOCS_LIMIT = 100;
+
+/**
+ * The caller's OWN onboarding documents. `userId` is always sent explicitly:
+ * the backend widens this endpoint to the whole org for `hr:onboarding:manage`
+ * holders, so omitting it would return every employee's documents to an admin.
+ */
+export function useMyOnboardingDocs(
+  userId: string | undefined,
+  options?: { enabled?: boolean },
+) {
+  const params = { userId, page: 1, limit: MY_DOCS_LIMIT };
+  return useQuery({
+    queryKey: queryKeys.hr.onboardingDocs(params),
+    queryFn: () =>
+      apiClient.get<MyOnboardingDocsResponse>("/hr/onboarding-docs", params),
+    staleTime: 60_000,
+    enabled: !!userId && (options?.enabled ?? true),
+  });
+}
+
 interface OnboardingDocsSummaryTotals {
   pagination: { total: number };
 }

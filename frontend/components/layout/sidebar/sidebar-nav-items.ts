@@ -2716,26 +2716,91 @@ export function withoutHrSetupRoute(groups: NavGroup[]): NavGroup[] {
     .filter((group) => group.routes.length > 0);
 }
 
+const HOME_OVERVIEW_GROUP: NavGroup = {
+  label: "Overview",
+  routes: [
+    { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { label: "Mail", href: "/mail", icon: Inbox },
+    { label: "Calendar", href: "/calendar", icon: CalendarDays },
+    { label: "Chat", href: "/chat", icon: MessageSquareText },
+    { label: "Notifications", href: "/notifications", icon: Bell },
+    {
+      label: "Leave",
+      href: "/hr/leaves",
+      icon: CalendarCheck,
+      badge: "leaves" as const,
+      requiredPermission: "hr:leaves:view",
+      module: "hrms",
+    },
+    {
+      label: "Attendance",
+      href: "/hr/attendance",
+      icon: Clock,
+      requiredPermission: "hr:attendance:view",
+      module: "hrms",
+    },
+    {
+      label: "My Payroll",
+      href: "/payroll/me",
+      icon: Wallet,
+      requiredPermission: ["self:payroll", "self:payslips"],
+      module: "payroll",
+    },
+    {
+      label: "Expenses",
+      href: "/hr/expenses",
+      icon: Receipt,
+      requiredPermission: "hr:expenses:view",
+      module: "finance",
+    },
+    {
+      label: "Documents",
+      href: "/hr/documents",
+      icon: FileText,
+      requiredPermission: "hr:documents:view",
+      module: "hrms",
+    },
+    {
+      label: "Interviews",
+      href: "/hr/recruitment/interviews",
+      icon: Video,
+      requiredPermission: "hr:interviews:view",
+      module: "hrms",
+    },
+    {
+      label: "Announcements",
+      href: "/hr/announcements",
+      icon: Megaphone,
+      requiredPermission: "hr:employees:view",
+      module: "hrms",
+    },
+  ],
+};
+
+function getHomeNavGroups(
+  role: string | undefined,
+  permissions: string[] | undefined,
+  enabledModules: string[],
+): NavGroup[] {
+  const isOwner = role === ROLES.OWNER;
+  const granted = new Set(permissions ?? []);
+
+  const routes = HOME_OVERVIEW_GROUP.routes
+    .map((r) => filterRoute(r, isOwner, granted, enabledModules))
+    .filter((r): r is NavRoute => r !== null);
+
+  return [{ ...HOME_OVERVIEW_GROUP, routes }];
+}
+
 export function getNavGroupsForProduct(
   productKey: ProductKey,
   role: string | undefined,
   permissions: string[] | undefined,
   enabledModules: string[] = [],
 ): NavGroup[] {
-  if (productKey === "home") 
-    return [
-      {
-        label: "Overview",
-        routes: [
-          { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-          { label: "Mail", href: "/mail", icon: Inbox },
-          { label: "Calendar", href: "/calendar", icon: CalendarDays },
-          { label: "Chat", href: "/chat", icon: MessageSquareText },
-          { label: "Notifications", href: "/notifications", icon: Bell },
-        ],
-      },
-    ];
-  
+  if (productKey === "home")
+    return getHomeNavGroups(role, permissions, enabledModules);
+
   const allGroups = getNavGroupsForUser(role, permissions, enabledModules);
   const labels = PRODUCT_NAV_GROUP_LABELS[productKey];
   return allGroups.filter((g) => labels.includes(g.label));

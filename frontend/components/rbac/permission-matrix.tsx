@@ -3,7 +3,6 @@
 import { useState, useMemo, useCallback } from "react";
 import {
   Lock,
-  Loader2,
   Save,
   RotateCcw,
   Users,
@@ -12,6 +11,7 @@ import {
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -22,13 +22,12 @@ import {
   useRolePermissionGrants,
   useSetRolePermissions,
 } from "@/hooks/api/roles";
-import { useAccess } from "@/hooks/api/access";
-import { PERMISSIONS } from "@/lib/rbac/permissions";
+import { useAccess, usePermissionCatalog } from "@/hooks/api/access";
 import type { Role } from "@/types/organization";
 import {
   type EditableScope,
   type ScopeMap,
-  CATALOG,
+  buildCatalog,
   scopeMapsEqual,
   toEditableScope,
 } from "./permission-matrix-types";
@@ -55,6 +54,9 @@ export function PermissionMatrix({
   );
 
   const isReadOnly = role.isSystem;
+  const catalogQuery = usePermissionCatalog();
+  const permissions = useMemo(() => catalogQuery.data ?? [], [catalogQuery.data]);
+  const catalog = useMemo(() => buildCatalog(permissions), [permissions]);
 
   const baseline = useMemo<ScopeMap>(() => {
     const map: ScopeMap = {};
@@ -113,7 +115,7 @@ export function PermissionMatrix({
   const handleToggleModule = useCallback(
     (moduleKey: string, enable: boolean) => {
       if (isReadOnly || isModuleLocked(moduleKey)) return;
-      const catalogModule = CATALOG.find(
+      const catalogModule = catalog.find(
         (entry) => entry.moduleKey === moduleKey,
       );
       if (!catalogModule) return;
@@ -127,7 +129,7 @@ export function PermissionMatrix({
       }
       setEffective(next);
     },
-    [effective, isReadOnly, isModuleLocked, setEffective],
+    [catalog, effective, isReadOnly, isModuleLocked, setEffective],
   );
 
   const handleReset = useCallback(() => setDraft(null), []);
@@ -178,7 +180,7 @@ export function PermissionMatrix({
             )}
           </div>
           <p className="text-xs text-muted-foreground mt-0.5">
-            {enabledTotal} of {PERMISSIONS.length} permissions enabled
+            {enabledTotal} of {permissions.length} permissions enabled
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -201,19 +203,15 @@ export function PermissionMatrix({
               >
                 <RotateCcw className="h-3.5 w-3.5" /> Reset
               </Button>
-              <Button
+              <LoadingButton
                 size="sm"
                 onClick={handleSave}
-                disabled={setRolePermissions.isPending}
+                isPending={setRolePermissions.isPending}
                 className="gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground"
               >
-                {setRolePermissions.isPending ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Save className="h-3.5 w-3.5" />
-                )}
+                {!setRolePermissions.isPending && <Save className="h-3.5 w-3.5" />}
                 Save
-              </Button>
+              </LoadingButton>
             </>
           )}
         </div>
@@ -229,7 +227,7 @@ export function PermissionMatrix({
 
       <Separator />
 
-      {grantsQuery.isLoading ? (
+      {grantsQuery.isLoading || catalogQuery.isLoading ? (
         <div className="divide-y divide-border/30">
           {Array.from({ length: 8 }).map((_, index) => (
             <div
@@ -244,7 +242,7 @@ export function PermissionMatrix({
             </div>
           ))}
         </div>
-      ) : grantsQuery.isError ? (
+      ) : grantsQuery.isError || catalogQuery.isError ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 py-12 text-center">
           <AlertTriangle className="w-8 text-muted-foreground" />
           <div>
@@ -252,7 +250,7 @@ export function PermissionMatrix({
               Couldn&apos;t load permissions
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {getErrorMessage(grantsQuery.error)}
+              {getErrorMessage(grantsQuery.error ?? catalogQuery.error)}
             </p>
           </div>
           <Button variant="outline" size="sm" onClick={handleRetry}>
@@ -265,7 +263,7 @@ export function PermissionMatrix({
           type="auto"
         >
           <div className="divide-y divide-border/30">
-            {CATALOG.map((module) => (
+            {catalog.map((module) => (
               <ModuleSection
                 key={module.moduleKey}
                 module={module}
