@@ -115,12 +115,6 @@ export interface ProposedActionItem {
   rationale: string;
 }
 
-export interface MeetingExtractActionsResult {
-  actions: ProposedActionItem[];
-  summary: string;
-  suggestions: boolean;
-}
-
 export interface TicketHandoffCitation {
   source: "description" | "comment" | "decision";
   excerpt: string;

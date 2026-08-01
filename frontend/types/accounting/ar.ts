@@ -46,16 +46,6 @@ export interface ArInvoice {
   payments?: ArPayment[];
 }
 
-export interface ArInvoiceStats {
-  draft: number;
-  issued: number;
-  paid: number;
-  failed: number;
-  voided: number;
-  totalOutstanding: number;
-  totalPaid: number;
-}
-
 export interface ArPaymentAllocation {
   invoiceId: number;
   amount: string;

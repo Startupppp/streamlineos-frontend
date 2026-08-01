@@ -11,7 +11,6 @@ export type DocumentType =
 export type TicketPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 export type TicketStatus = "TODO" | "IN_PROGRESS" | "IN_REVIEW" | "DONE";
 export type DeviceStatusExtended = "ACTIVE" | "INACTIVE" | "LOST" | "RETURNED";
-export type WorkLogStatus = "PENDING" | "APPROVED" | "REJECTED";
 
 export interface Department {
   id: string;
@@ -278,24 +277,11 @@ export interface CreateDocumentInput {
   tags?: string[];
 }
 
-export interface CreateHelpdeskTicketInput {
-  title: string;
-  description?: string;
-  category?: string;
-  priority?: TicketPriority;
-}
-
 export interface UpsertWorkLogInput {
   date: Date | string;
   hours?: number;
   description?: string;
   workLink?: string;
-}
-
-export interface UpdateWorkLogStatusInput {
-  id: number;
-  status: "APPROVED" | "REJECTED";
-  rejectionReason?: string;
 }
 
 export interface GetWorkLogsInput {
@@ -305,34 +291,6 @@ export interface GetWorkLogsInput {
   month?: number;
   dateFrom?: string;
   dateTo?: string;
-}
-
-export interface CreateDeviceInput {
-  userId: string;
-  deviceType: string;
-  deviceName: string;
-  serialNumber?: string;
-  brand?: string;
-  model?: string;
-  notes?: string;
-  assignedDate?: Date | string;
-}
-
-export interface UpdateDeviceInput {
-  deviceId: number;
-  userId?: string;
-  deviceType?: string;
-  deviceName?: string;
-  serialNumber?: string;
-  brand?: string;
-  model?: string;
-  notes?: string;
-  status?: DeviceStatusExtended;
-  returnDate?: Date | string;
-}
-
-export interface DeleteDeviceInput {
-  deviceId: number;
 }
 
 export interface OnboardEmployeeInput {

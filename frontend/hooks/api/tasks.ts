@@ -180,13 +180,3 @@ interface TaskSequenceStep {
   order: number;
 }
 
-export interface TaskSequence {
-  id: number;
-  orgId: string;
-  name: string;
-  description: string | null;
-  createdBy: string | null;
-  createdAt: string | null;
-  steps: TaskSequenceStep[];
-}
-

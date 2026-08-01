@@ -384,23 +384,3 @@ export interface OverrideForecastInput {
   overrideAmount?: number;
   overrideNote?: string;
 }
-
-export interface CrmPersonProfile {
-  slug: string;
-  name: string;
-  initials: string;
-  role: string;
-  title: string;
-  department: string;
-  email: string;
-  phone: string;
-  location: string;
-  joinDate: string;
-  bio: string;
-  stats: PersonStat[];
-  monthlyPerformance: { month: string; value: number }[];
-  deals: PersonDeal[];
-  accounts: PersonAccount[];
-  activities: PersonActivity[];
-  skills: string[];
-}

@@ -128,10 +128,6 @@ export interface Message {
   reactions?: Record<string, string[]>;
 }
 
-export interface MessageWithChannel extends Message {
-  channel: { id: number; name: string; type: ChannelType } | null;
-}
-
 export interface TypingIndicator {
   userId: string;
   name: string;
@@ -210,10 +206,6 @@ export interface EditMessageInput {
   content: string;
 }
 
-export interface DeleteMessageInput {
-  messageId: number;
-}
-
 export interface PollOption {
   id: number;
   text: string;
@@ -233,22 +225,6 @@ export interface Poll {
   votes: PollVote[];
   endsAt: Date | string | null;
   createdAt: Date | string | null;
-}
-
-export interface CreatePollInput {
-  channelId: number;
-  question: string;
-  options: string[];
-  endsAt?: string;
-}
-
-export interface VotePollInput {
-  pollId: number;
-  optionId: number;
-}
-
-export interface UnreadTotalResponse {
-  total: number;
 }
 
 export interface ThreadPage {

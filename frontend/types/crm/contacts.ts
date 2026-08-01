@@ -49,16 +49,6 @@ export interface Contact {
   deal?: { id: number; name: string } | null;
 }
 
-export interface ContactSearchResult {
-  id: number;
-  name: string;
-  email: string | null;
-  phone: string | null;
-  company: string | null;
-  jobTitle: string | null;
-  image: string | null;
-}
-
 export interface ContactFilters {
   search?: string;
   source?: string;

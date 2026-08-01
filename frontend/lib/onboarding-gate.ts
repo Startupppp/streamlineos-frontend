@@ -1,5 +1,5 @@
 const GATE_COOKIE_MAX_AGE = 60 * 60 * 24 * 30;
-const CLAIM_REFRESH_TIMEOUT_MS = 2500;
+const CLAIM_REFRESH_TIMEOUT_MS = 18_000;
 
 type SessionUpdate = (data?: unknown) => Promise<unknown>;
 

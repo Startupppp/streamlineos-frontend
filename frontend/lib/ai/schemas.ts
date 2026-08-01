@@ -45,7 +45,6 @@ export const ChurnRiskSchema = z.object({
   riskFactors: z.array(z.string()),
   retentionActions: z.array(z.string()),
 });
-export type ChurnRiskResult = z.infer<typeof ChurnRiskSchema>;
 
 export const LeadEnrichmentSchema = z.object({
   companyInsight: z.string(),
@@ -88,7 +87,6 @@ export const HelpdeskReplySchema = z.object({
   estimatedResolutionTime: z.string().describe("e.g. 24 hours, 2-3 business days"),
   followUpActions: z.array(z.string()),
 });
-export type HelpdeskReplyResult = z.infer<typeof HelpdeskReplySchema>;
 
 export const AttritionRiskSchema = z.object({
   attritionRiskScore: z.number().min(0).max(100),
@@ -113,7 +111,6 @@ export const PolicyQaSchema = z.object({
   disclaimer: z.string().optional(),
   suggestTicket: z.boolean().optional(),
 });
-export type PolicyQaResult = z.infer<typeof PolicyQaSchema>;
 
 export const InterviewKitRoundSchema = z.object({
   round: z.string(),
@@ -143,7 +140,6 @@ export const LetterDraftSchema = z.object({
   disclaimer: z.string(),
   advisory: z.boolean().optional(),
 });
-export type LetterDraftResult = z.infer<typeof LetterDraftSchema>;
 
 export const InterviewNotesSummarySchema = z.object({
   overallRecommendation: z.string(),

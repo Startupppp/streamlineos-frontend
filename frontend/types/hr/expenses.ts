@@ -102,53 +102,6 @@ export interface ExpensePageData {
   isAdmin: boolean;
 }
 
-export interface CategorySpending {
-  categoryId: number;
-  categoryName: string;
-  budgetLimit: number;
-  budgetPeriod: string;
-  totalSpent: number;
-  pendingAmount: number;
-  approvedAmount: number;
-  paidAmount: number;
-  expenseCount: number;
-}
-
-export interface ReportData {
-  summary: ExpenseStats;
-  byCategory: {
-    category: string;
-    count: number;
-    amount: number;
-    percentage: number;
-  }[];
-  byEmployee: {
-    userId: string;
-    userName: string;
-    count: number;
-    amount: number;
-  }[];
-  byMonth: {
-    month: string;
-    count: number;
-    amount: number;
-  }[];
-  byStatus: {
-    status: string;
-    count: number;
-    amount: number;
-  }[];
-  topExpenses: {
-    id: number;
-    category: string;
-    amount: number;
-    description: string;
-    userName: string;
-    expenseDate: string;
-    status: string;
-  }[];
-}
-
 export type ExpenseStatus = "PENDING" | "APPROVED" | "REJECTED" | "PAID";
 
 export interface Expense {

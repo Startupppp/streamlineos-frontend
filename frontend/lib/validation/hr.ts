@@ -131,5 +131,3 @@ export const onboardEmployeeInputSchema = z.object({
     })
     .optional(),
 });
-
-export type OnboardEmployeeFormValues = z.infer<typeof onboardEmployeeInputSchema>;

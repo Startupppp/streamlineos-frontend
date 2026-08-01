@@ -36,14 +36,6 @@ export interface HrBadgeAward {
   badge: HrBadge;
 }
 
-export interface PointsEntry {
-  id: number;
-  points: number;
-  source: "kudos" | "badge" | "manual" | "redemption";
-  note?: string;
-  createdAt: string;
-}
-
 export interface LeaderboardEntry {
   userId: string;
   total: number;

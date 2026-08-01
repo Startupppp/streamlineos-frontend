@@ -75,12 +75,6 @@ export interface LeaveRequest {
   createdAt: Date | string | null;
 }
 
-export interface LeavesResult {
-  balances: LeaveBalance[];
-  types: LeaveType[];
-  requests: LeaveRequest[];
-}
-
 export interface WfhRequest {
   id: number;
   orgId: string;
@@ -136,12 +130,6 @@ export interface RequestLeaveInput {
   attachmentUrl?: string;
   isHalfDay?: boolean;
   halfDayPeriod?: "AM" | "PM";
-}
-
-export interface ApproveLeaveInput {
-  requestId: number;
-  status: "APPROVED" | "REJECTED";
-  rejectionReason?: string;
 }
 
 export interface CreateWfhRequestInput {

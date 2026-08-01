@@ -28,53 +28,6 @@ export interface DeviceSyncLog {
   syncedAt: string;
 }
 
-export interface DeviceMapping {
-  id: number;
-  deviceId: number;
-  userId: string;
-  biometricId: string | null;
-  effectiveFrom: string | null;
-  effectiveTo: string | null;
-  createdAt: string;
-}
-
-export interface VarianceApproval {
-  id: number;
-  payrollPeriodKey: string;
-  variancePct: string;
-  thresholdPct: string;
-  status: "pending" | "approved" | "rejected";
-  approverId: string | null;
-  note: string | null;
-  createdAt: string;
-  resolvedAt: string | null;
-}
-
-export interface ArrearsAdjustment {
-  id: number;
-  userId: string;
-  reason: string;
-  amountCents: number;
-  sourcePeriod: string;
-  targetPeriod: string;
-  status: "pending" | "applied";
-  createdBy: string | null;
-  appliedAt: string | null;
-  createdAt: string;
-}
-
-export interface ComplianceTask {
-  id: number;
-  countryCode: string;
-  name: string;
-  dueDate: string;
-  status: "pending" | "completed" | "overdue";
-  notes: string | null;
-  completedBy: string | null;
-  completedAt: string | null;
-  createdAt: string;
-}
-
 export interface CompCycle {
   id: number;
   name: string;

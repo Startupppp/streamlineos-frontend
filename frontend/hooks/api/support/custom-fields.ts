@@ -21,14 +21,6 @@ export interface SupportCustomField {
   updatedAt: string;
 }
 
-export interface CustomFieldValue {
-  fieldId: number;
-  value: string | null;
-  key: string;
-  label: string;
-  fieldType: CustomFieldType;
-}
-
 export interface CreateCustomFieldInput {
   key: string;
   label: string;

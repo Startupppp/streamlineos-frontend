@@ -138,23 +138,6 @@ export interface TimeEntry {
   updatedAt: string | Date | null;
 }
 
-export interface TimeEntryWithUser extends TimeEntry {
-  user?: {
-    id: string;
-    firstName: string | null;
-    lastName: string | null;
-    email: string | null;
-    image: string | null;
-  } | null;
-  ticket?: {
-    id: number;
-    title: string;
-    ticketNumber: number;
-    projectId: number | null;
-    project?: { id: number; name: string; key: string } | null;
-  } | null;
-}
-
 export interface CreateTicketInput {
   projectId: number;
   title: string;
@@ -210,12 +193,6 @@ export interface LogTimeInput {
   description?: string;
   imageUrl?: string;
   workLink?: string;
-}
-
-export interface UpdateTimeEntryInput {
-  entryId: number;
-  hours?: number;
-  description?: string;
 }
 
 export interface CreateLabelInput {
@@ -280,17 +257,6 @@ export interface AllWorkTicket {
   updatedAt: string | Date | null;
   assignee: TicketUser | null;
   labels: AllWorkTicketLabel[];
-}
-
-export interface TimeEntryFilters {
-  ticketId?: number;
-  userId?: string;
-  projectId?: number;
-  startDate?: string;
-  endDate?: string;
-  page?: number;
-  limit?: number;
-  status?: import("./shared").TimesheetStatus;
 }
 
 export interface ChecklistItem {

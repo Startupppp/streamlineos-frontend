@@ -20,22 +20,6 @@ export interface DocumentTemplate {
   updatedAt: string | null;
 }
 
-export interface CandidateDocument {
-  id: number;
-  candidateId: number;
-  orgId: string;
-  templateId: number | null;
-  title: string;
-  htmlContent: string;
-  status: string;
-  sentAt: string | null;
-  viewedAt: string | null;
-  signedAt: string | null;
-  createdBy: string;
-  createdAt: string | null;
-  updatedAt: string | null;
-}
-
 export interface CreateDocumentTemplateInput {
   title: string;
   type: string;
@@ -48,11 +32,6 @@ export interface UpdateDocumentTemplateInput {
   type?: string;
   htmlContent?: string;
   variables?: string[];
-}
-
-export interface GenerateCandidateDocumentInput {
-  templateId: number;
-  variables: Record<string, string>;
 }
 
 

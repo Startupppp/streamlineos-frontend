@@ -116,3 +116,68 @@ surviving agents; repaired one real breakage; verified both repos green.
 | targeted tests   | n/a | 4 suites / 44 tests PASS (incl. cron-leave-policy-accrual, crypto.helpers) |
 
 Full backend `pnpm test` exceeded a 10-minute timeout and was not run to completion.
+
+---
+
+## Orchestrator-executed work (inline, no subagents)
+
+### Dependencies removed — 10 total, each verified by grep + build
+
+**Frontend (7):** `@aws-sdk/client-s3`, `@aws-sdk/s3-request-presigner`, `@emoji-mart/react`,
+`emoji-mart`, `@floating-ui/dom`, `@platejs/autoformat`, `tsx` (devDep).
+`tsx` became dead as a RESULT of Wave 1 — it only existed for the 10 npm scripts whose
+targets were missing.
+
+**Backend (3, all devDeps):** `ts-loader` (nest-cli.json has no `webpack: true`, so the
+tsc builder is used), `tsconfig-paths` (zero references; no script does
+`-r tsconfig-paths/register`), `@types/bcryptjs` (bcryptjs v3 ships its own types —
+`types: umd/index.d.ts`, so the @types package is redundant).
+
+### Dependencies knip flagged that are FALSE POSITIVES — deliberately KEPT
+
+| package | why it must stay |
+|---|---|
+| `tailwindcss` | `globals.css:1` `@import "tailwindcss"` + `postcss.config.mjs` |
+| `@tailwindcss/typography` | `globals.css:3` `@plugin "@tailwindcss/typography"` |
+| `@zumer/snapdom` | `feedbucket-widget/src/screenshot.ts:1` — esbuild bundle, invisible to knip |
+| `sharp` | Next.js uses it for PRODUCTION image optimization. Never imported in source, so every static scanner calls it dead. Removing it degrades `next/image`. |
+| `multer` + `@types/multer` (backend) | `FileInterceptor` (@nestjs/platform-express) needs multer at runtime; `Express.Multer.File` types come from @types/multer. Used in `feedbucket-public.controller.ts`. |
+
+### Files deleted (orchestrator)
+- `features/crm/shared/metadata/crm-pipeline-select.tsx`
+- `features/crm/shared/metadata/crm-validation-mirror.ts`
+  Both: zero repo-wide refs, and the sibling `index.ts` barrel (6 lines, read in full)
+  re-exports neither.
+
+### Symbols deleted (verified 0 external references each)
+- `lib/theme-constants.ts` — `stageColors`, `rankStyles`, `payrollStatusColors`,
+  `roleBadgeConfig` + their now-orphaned type aliases `DealStage`, `PayrollStatus`, `CrmRole`
+- `lib/portal-api-client.ts` — `isPortalApiError`
+- `components/layout/sidebar/sidebar-nav-items.ts` — `getNavGroupsForRole`
+
+`QUICK_CREATE_GROUPS` was flagged by knip but has a real external reference — KEPT.
+
+## FINAL VERIFICATION
+
+| gate | frontend | backend |
+|---|---|---|
+| build     | PASS | PASS |
+| typecheck | PASS | PASS |
+| lint      | 2 errors = baseline, no regression | PASS |
+
+## REMAINING WORK (not done)
+
+- **~286 frontend + ~218 backend export/type candidates.** Fresh list:
+  `docs/refactor/dead-code/fe-remaining.txt`, `knip-fe-3.json`, `knip-backend-2.json`.
+- These need a POLICY DECISION before bulk removal, because they split into 3 kinds:
+  1. **Barrel re-exports** (`components/illustrations/index.ts`, `components/shared/index.ts`,
+     `components/wizard-shell/index.ts`). CLAUDE.md §9 says a feature's barrel IS its public
+     surface. knip flags a barrel export whenever nothing imports THROUGH the barrel, even
+     though the component is alive and used by deep path. Removing these shrinks the intended
+     public API rather than deleting dead code — a design decision, not a cleanup.
+  2. **shadcn/ui primitives** (`card.tsx: CardFooter`, `dialog.tsx: DialogClose`) — §9
+     exception, OFF LIMITS.
+  3. **Genuine orphan symbols in live files** — safe, but each needs individual verification
+     (the pattern executed above).
+- **Docs/tasks/testing cruft audit** — never started.
+- **Unreachable backend endpoint audit** — never completed.
