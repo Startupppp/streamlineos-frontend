@@ -3,7 +3,6 @@
 import { useState, useCallback, useMemo, type ReactNode } from "react";
 import Link from "next/link";
 import {
-  Loader2,
   Pencil,
   Shield,
   ClipboardList,
@@ -18,6 +17,7 @@ import { PlusIcon, Trash2Icon, CopyIcon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { SearchInput } from "@/components/ui/search-input";
 import { EmptyApprovalIllustration } from "@/components/illustrations";
@@ -240,13 +240,14 @@ export function RolesPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteRole}
-              disabled={deleteRole.isPending}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {deleteRole.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
-              Delete
+            <AlertDialogAction asChild>
+              <LoadingButton
+                onClick={handleDeleteRole}
+                isPending={deleteRole.isPending}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete
+              </LoadingButton>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

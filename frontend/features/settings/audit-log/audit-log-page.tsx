@@ -2,16 +2,12 @@
 
 import { useState, useCallback, useTransition, useMemo } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { format } from "date-fns";
-import { Activity, SlidersHorizontal } from "lucide-react";
-import { InfoIcon } from "@animateicons/react/lucide";
+import { SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ErrorState } from "@/components/shared/error-state";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Select,
   SelectContent,
@@ -19,248 +15,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetBody,
-} from "@/components/ui/sheet";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { SearchInput } from "@/components/ui/search-input";
 import { EmptyState } from "@/components/ui/empty-state";
-import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import {
   useAuditLogs,
   useAuditLogActions,
   useAuditLogTargetTypes,
   type AuditLogRow,
 } from "@/hooks/api/audit-log";
-import { resolveImageUrl } from "@/lib/utils";
-import { getInitials } from "@/lib/format-utils";
-
-const ACTION_COLORS: Record<string, string> = {
-  "user.login": "bg-emerald-500/10 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  "user.logout": "bg-muted text-muted-foreground border-border",
-  "user.deactivated": "bg-red-500/10 text-red-600 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
-  "org.member_invited": "bg-blue-500/10 text-blue-600 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  "org.member_removed": "bg-red-500/10 text-red-600 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
-  "org.member_role_changed": "bg-blue-500/10 text-blue-600 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  "org.archived": "bg-red-500/10 text-red-600 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
-  "org.restored": "bg-emerald-500/10 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  "org.ownership_transferred": "bg-blue-500/10 text-blue-600 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  "org.businessUnit": "bg-blue-500/10 text-blue-600 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  "org.branch": "bg-blue-500/10 text-blue-600 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  "org.department": "bg-blue-500/10 text-blue-600 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  "org.team": "bg-fuchsia-500/10 text-fuchsia-600 border-fuchsia-200 dark:bg-fuchsia-500/10 dark:text-fuchsia-300 dark:border-fuchsia-500/30",
-  "org.holiday": "bg-orange-500/10 text-orange-600 border-orange-200 dark:bg-orange-500/10 dark:text-orange-300 dark:border-orange-500/30",
-  "org.domain": "bg-cyan-500/10 text-cyan-600 border-cyan-200 dark:bg-cyan-500/10 dark:text-cyan-300 dark:border-cyan-500/30",
-  "org.setup": "bg-teal-500/10 text-teal-600 border-teal-200 dark:bg-teal-500/10 dark:text-teal-300 dark:border-teal-500/30",
-  "expense.approved": "bg-emerald-500/10 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  "expense.rejected": "bg-red-500/10 text-red-600 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
-  "hr.leave_approved": "bg-emerald-500/10 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  "hr.leave_rejected": "bg-red-500/10 text-red-600 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
-  "hr.payroll_generated": "bg-blue-500/10 text-blue-600 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  "role.changed": "bg-blue-500/10 text-blue-600 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  "settings.updated": "bg-amber-500/10 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  "file.upload": "bg-sky-500/10 text-sky-600 border-sky-200 dark:bg-sky-500/10 dark:text-sky-300 dark:border-sky-500/30",
-};
-
-const ACTION_LABELS: Record<string, string> = {
-  "org.archived": "Org Archived",
-  "org.restored": "Org Restored",
-  "org.ownership_transferred": "Ownership Transferred",
-  "org.setup.completed": "Setup Completed",
-  "org.businessUnit.created": "Business Unit Created",
-  "org.businessUnit.updated": "Business Unit Updated",
-  "org.businessUnit.deleted": "Business Unit Deleted",
-  "org.branch.created": "Branch Created",
-  "org.branch.updated": "Branch Updated",
-  "org.branch.deleted": "Branch Deleted",
-  "org.department.created": "Department Created",
-  "org.department.updated": "Department Updated",
-  "org.department.deleted": "Department Deleted",
-  "org.team.created": "Team Created",
-  "org.team.updated": "Team Updated",
-  "org.team.deleted": "Team Deleted",
-  "org.holiday.created": "Holiday Added",
-  "org.holiday.deleted": "Holiday Removed",
-  "org.domain.added": "Custom Domain Added",
-  "org.domain.verified": "Custom Domain Verified",
-  "org.domain.removed": "Custom Domain Removed",
-  "role.changed": "Role Updated",
-  "user.registered": "User Registered",
-  "user.login": "Login",
-  "user.logout": "Logout",
-  "user.deactivated": "User Deactivated",
-  "org.member_invited": "Member Invited",
-  "org.member_removed": "Member Removed",
-  "org.member_role_changed": "Member Role Changed",
-};
-
-function formatActionLabel(action: string): string {
-  if (ACTION_LABELS[action]) return ACTION_LABELS[action];
-  return action
-    .split(".")
-    .map((part) => part.replace(/_/g, " "))
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" — ");
-}
-
-const PAGE_SIZE_OPTIONS = [15, 25, 50, 100] as const;
-type PageSize = (typeof PAGE_SIZE_OPTIONS)[number];
-
-function isValidPageSize(n: number): n is PageSize {
-  return (PAGE_SIZE_OPTIONS as readonly number[]).includes(n);
-}
-
-function actionBadgeClass(action: string) {
-  for (const [key, cls] of Object.entries(ACTION_COLORS)) {
-    if (action.startsWith(key)) return cls;
-  }
-  return "bg-muted text-muted-foreground border-border";
-}
-
-function DetailField({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-        {label}
-      </p>
-      {children}
-    </div>
-  );
-}
-
-function LogDetailSheet({ log, onClose }: { log: AuditLogRow; onClose: () => void }) {
-  return (
-    <Sheet open onOpenChange={(v) => !v && onClose()}>
-      <SheetContent className="flex flex-col p-0 sm:max-w-[420px]">
-        <SheetHeader className="px-6 py-4 border-b shrink-0">
-          <SheetTitle className="flex items-center gap-2 text-sm font-semibold">
-            <Activity className="h-4 w-4 text-muted-foreground" />
-            Event Details
-          </SheetTitle>
-        </SheetHeader>
-        <SheetBody className="px-6 py-5 space-y-4">
-          <DetailField label="Action">
-            <Badge variant="outline" className={`text-xs ${actionBadgeClass(log.action)}`}>
-              {log.action}
-            </Badge>
-          </DetailField>
-          <DetailField label="User">
-            <div className="flex items-center gap-2.5">
-              <Avatar className="w-7">
-                <AvatarImage src={resolveImageUrl(log.userImage)} />
-                <AvatarFallback className="text-[10px]">{getInitials(log.userName)}</AvatarFallback>
-              </Avatar>
-              <div className="min-w-0">
-                <p className="text-sm font-medium leading-tight truncate">{log.userName ?? "Unknown"}</p>
-                <p className="text-xs text-muted-foreground truncate">{log.userEmail}</p>
-              </div>
-            </div>
-          </DetailField>
-          {log.targetType && (
-            <DetailField label="Target">
-              <p className="text-sm font-medium capitalize">{log.targetType}</p>
-            </DetailField>
-          )}
-          <DetailField label="Timestamp">
-            <p className="text-sm">{format(new Date(log.createdAt), "PPpp")}</p>
-          </DetailField>
-          {log.ipAddress && (
-            <DetailField label="IP Address">
-              <p className="text-sm font-mono">{log.ipAddress}</p>
-            </DetailField>
-          )}
-          {log.metadata && Object.keys(log.metadata).length > 0 && (
-            <DetailField label="Metadata">
-              <pre className="text-[11px] bg-muted/60 rounded-md p-3 border text-foreground overflow-y-auto overflow-x-hidden whitespace-pre-wrap wrap-break-word max-h-none h-[calc(100dvh-360px)] min-h-[120px]">
-                {JSON.stringify(log.metadata, null, 2)}
-              </pre>
-            </DetailField>
-          )}
-        </SheetBody>
-      </SheetContent>
-    </Sheet>
-  );
-}
-
-const AUDIT_LOG_COLUMNS: DataTableColumn<AuditLogRow>[] = [
-  {
-    key: "createdAt",
-    header: "Timestamp",
-    cell: (log) => (
-      <span className="text-[12px] text-muted-foreground font-mono whitespace-nowrap">
-        {format(new Date(log.createdAt), "dd MMM, HH:mm:ss")}
-      </span>
-    ),
-    className: "w-[170px]",
-  },
-  {
-    key: "user",
-    header: "User",
-    cell: (log) => (
-      <div className="flex items-center gap-2 min-w-[140px]">
-        <Avatar className="h-6 w-6 shrink-0">
-          <AvatarImage src={resolveImageUrl(log.userImage)} />
-          <AvatarFallback className="text-[9px]">{getInitials(log.userName)}</AvatarFallback>
-        </Avatar>
-        <span className="text-[13px] font-medium truncate max-w-[120px]">
-          {log.userName ?? log.userEmail ?? "Unknown user"}
-        </span>
-      </div>
-    ),
-    className: "w-[190px]",
-  },
-  {
-    key: "action",
-    header: "Action",
-    cell: (log) => (
-      <Badge variant="outline" className={`text-[11px] ${actionBadgeClass(log.action)}`}>
-        {formatActionLabel(log.action)}
-      </Badge>
-    ),
-  },
-  {
-    key: "entity",
-    header: "Entity",
-    cell: (log) => (
-      <span className="text-[12px] text-muted-foreground capitalize whitespace-nowrap">
-        {log.targetType ?? "—"}
-      </span>
-    ),
-    className: "w-[110px]",
-  },
-  {
-    key: "ipAddress",
-    header: "IP Address",
-    cell: (log) => (
-      <span className="text-[12px] font-mono text-muted-foreground whitespace-nowrap">
-        {log.ipAddress ?? "—"}
-      </span>
-    ),
-    className: "w-[110px]",
-  },
-  {
-    key: "details",
-    header: "",
-    cell: () => (
-      <AnimatedIconButton
-        icon={InfoIcon}
-        iconSize={14}
-        variant="ghost"
-        size="icon"
-        className="w-7"
-        aria-label="View details"
-        iconClassName="text-muted-foreground"
-      />
-    ),
-    className: "w-[50px]",
-  },
-];
+import { PAGE_SIZE_OPTIONS, type PageSize, isValidPageSize } from "./audit-log-constants";
+import { LogDetailSheet } from "./log-detail-sheet";
+import { AUDIT_LOG_COLUMNS } from "./audit-log-columns";
 
 export function AuditLogPage() {
   const searchParams = useSearchParams();

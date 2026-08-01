@@ -28,9 +28,9 @@ import {
 } from "@/components/ui/select";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { PERMISSIONS } from "@/lib/rbac/permissions";
 import { toast } from "sonner";
 import { delegationSchema, type DelegationFormValues } from "./delegation-schema";
+import { usePermissionCatalog } from "@/hooks/api/access";
 
 export interface Member {
   userId: string;
@@ -129,15 +129,17 @@ export function GrantDelegationSheet({
     [mutation],
   );
 
+  const { data: permissionCatalog } = usePermissionCatalog();
+
   const filteredPerms = useMemo(
     () =>
-      PERMISSIONS.filter(
+      (permissionCatalog ?? []).filter(
         (p) =>
           !permSearch ||
           p.name.toLowerCase().includes(permSearch.toLowerCase()) ||
           p.description.toLowerCase().includes(permSearch.toLowerCase()),
       ),
-    [permSearch],
+    [permissionCatalog, permSearch],
   );
 
   const today = new Date().toISOString().slice(0, 16);
