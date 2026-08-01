@@ -38,7 +38,7 @@ import type { Invitation } from "@/hooks/api/users";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { LoadingButton } from "@/components/ui/loading-button";
 
-type InvStatus = "pending" | "accepted" | "expired";
+type InvStatus = "pending" | "accepted" | "expired" | "revoked";
 type StatusFilter = "all" | InvStatus;
 
 const STATUS_CLASSES: Record<InvStatus, string> = {
@@ -48,10 +48,13 @@ const STATUS_CLASSES: Record<InvStatus, string> = {
     "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
   expired:
     "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  revoked:
+    "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-500/30",
 };
 
 function getStatus(inv: Invitation): InvStatus {
-  if (inv.acceptedAt) return "accepted";
+  if (inv.status === "REVOKED") return "revoked";
+  if (inv.acceptedAt || inv.status === "ACCEPTED") return "accepted";
   if (isPast(new Date(inv.expiresAt))) return "expired";
   return "pending";
 }
@@ -106,7 +109,7 @@ export function UserInvitationsPanel() {
   const q = searchParams.get("q") ?? "";
   const status = (searchParams.get("status") ?? "all") as StatusFilter;
   const page = Number(searchParams.get("page") ?? "1");
-  const includeAccepted = status === "all" || status === "accepted";
+  const includeAccepted = status === "all" || status === "accepted" || status === "revoked";
 
   const [localSearch, setLocalSearch] = useState(q);
   const debouncedLocalSearch = useDebouncedValue(localSearch, 300);
@@ -394,6 +397,7 @@ export function UserInvitationsPanel() {
                 <SelectItem value="pending">Pending</SelectItem>
                 <SelectItem value="accepted">Accepted</SelectItem>
                 <SelectItem value="expired">Expired</SelectItem>
+                <SelectItem value="revoked">Revoked</SelectItem>
               </SelectContent>
             </Select>
           </>

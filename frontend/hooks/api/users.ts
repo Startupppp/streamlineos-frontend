@@ -356,6 +356,8 @@ interface Invitation {
   expiresAt: string;
   acceptedAt: string | null;
   createdAt: string;
+  status: "PENDING" | "ACCEPTED" | "DECLINED" | "EXPIRED" | "REVOKED";
+  revokedAt: string | null;
 }
 
 interface InvitationsResponse {
@@ -645,7 +647,6 @@ export type {
   UserDevice,
   UserPreferences,
   UserStats,
-  Invitation,
   InvitationsResponse,
   LoginHistoryItem,
   LoginHistoryResponse,
