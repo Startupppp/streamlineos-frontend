@@ -138,23 +138,3 @@ export interface SignPublicFormDefinition {
   form: { slug: string; requiresAccessCode: boolean; embedAllowed: boolean };
   template: { id: number; name: string; description: string | null };
 }
-
-export function useSignPublicForm(slug: string) {
-  return useQuery({
-    queryKey: queryKeys.signPublic.form(slug),
-    queryFn: () => publicGet<SignPublicFormDefinition>(`/public/sign/forms/${slug}`, "This form is not available."),
-    staleTime: 30_000,
-  });
-}
-
-export function useSubmitSignPublicForm(slug: string) {
-  return useMutation({
-    mutationKey: ["signPublic", "submit-form", slug],
-    mutationFn: (input: { name: string; email: string; phone?: string; accessCode?: string }) =>
-      publicPost<{ token: string; recipientId: number; envelopeId: number; redirectUrl: string | null }>(
-        `/public/sign/forms/${slug}/submit`,
-        input,
-        "Unable to submit this form.",
-      ),
-  });
-}

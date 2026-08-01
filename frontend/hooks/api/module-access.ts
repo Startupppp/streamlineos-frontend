@@ -133,20 +133,6 @@ export function useModuleAccessCatalog(
   });
 }
 
-export function useModuleAccessRoles(
-  moduleKey: string,
-  options?: { enabled?: boolean },
-) {
-  const canView = useCan(viewKey(moduleKey));
-  return useQuery<ModuleRoleView[], Error>({
-    queryKey: queryKeys.moduleAccess.roles(moduleKey),
-    queryFn: () =>
-      apiClient.get<ModuleRoleView[]>(`/module-access/${moduleKey}/roles`),
-    enabled: canView && (options?.enabled ?? true),
-    staleTime: 5 * 60_000,
-  });
-}
-
 export function useModuleRoleGroups(moduleKey: string) {
   const canView = useCan(viewKey(moduleKey));
   return useQuery<ModuleRoleGroup[], Error>({
@@ -233,31 +219,6 @@ export function useSetModuleGroupPermissions(moduleKey: string) {
         queryKey: queryKeys.moduleAccess.roleGroups(moduleKey),
       });
       void queryClient.invalidateQueries({ queryKey: queryKeys.access.me() });
-    },
-  });
-}
-
-export function useSetModuleRolePermissions(moduleKey: string) {
-  const queryClient = useQueryClient();
-  return useMutation<
-    { success: true; version: number },
-    Error,
-    { roleId: number; version: number; items: { permissionKey: string; scope: DataScope }[] }
-  >({
-    mutationKey: ["moduleAccess", moduleKey, "set-permissions"],
-    mutationFn: ({ roleId, version, items }) =>
-      apiClient.put<{ success: true; version: number }>(
-        `/module-access/${moduleKey}/roles/${roleId}/permissions`,
-        { version, items },
-      ),
-    onSuccess: (_, variables) => {
-      void queryClient.invalidateQueries({
-        queryKey: queryKeys.moduleAccess.roles(moduleKey),
-      });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.access.me() });
-      void queryClient.invalidateQueries({
-        queryKey: [...queryKeys.moduleAccess.all, moduleKey, variables.roleId],
-      });
     },
   });
 }

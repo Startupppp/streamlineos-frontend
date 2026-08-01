@@ -31,16 +31,6 @@ export function usePrograms(filters?: ListFilters) {
   });
 }
 
-export function useProgram(id: number) {
-  const canView = useCan("build:programs:view");
-  return useQuery<ProgramDetail>({
-    queryKey: queryKeys.projects.programs.detail(id),
-    queryFn: () => apiClient.get<ProgramDetail>(`/build/programs/${id}`),
-    enabled: canView && !!id,
-    staleTime: 60_000,
-  });
-}
-
 export function useCreateProgram() {
   const qc = useQueryClient();
   return useMutation({
@@ -75,39 +65,6 @@ export function useDeleteProgram() {
     mutationFn: (id: number) => apiClient.delete<void>(`/build/programs/${id}`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.projects.programs.list() });
-    },
-  });
-}
-
-export function useLinkProgramProject(programId: number) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["projects", "programs", programId, "link"],
-    mutationFn: (projectId: number) =>
-      apiClient.post<{ success: boolean }>(
-        `/build/programs/${programId}/projects`,
-        { projectId },
-      ),
-    onSuccess: () => {
-      qc.invalidateQueries({
-        queryKey: queryKeys.projects.programs.detail(programId),
-      });
-    },
-  });
-}
-
-export function useUnlinkProgramProject(programId: number) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["projects", "programs", programId, "unlink"],
-    mutationFn: (projectId: number) =>
-      apiClient.delete<void>(
-        `/build/programs/${programId}/projects/${projectId}`,
-      ),
-    onSuccess: () => {
-      qc.invalidateQueries({
-        queryKey: queryKeys.projects.programs.detail(programId),
-      });
     },
   });
 }

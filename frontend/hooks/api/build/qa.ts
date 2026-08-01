@@ -38,46 +38,6 @@ export function useTestSuites(projectId?: number) {
   });
 }
 
-export function useCreateTestSuite() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["projects", "qa", "suites", "create"],
-    mutationFn: ({ projectId, ...data }: CreateTestSuiteInput & { projectId: number }) =>
-      apiClient.post<TestSuite>(`/build/${projectId}/test-suites`, data),
-    onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.qa.suites(vars.projectId) });
-    },
-  });
-}
-
-export function useUpdateTestSuite() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["projects", "qa", "suites", "update"],
-    mutationFn: ({
-      projectId,
-      id,
-      ...data
-    }: UpdateTestSuiteInput & { projectId: number; id: number }) =>
-      apiClient.patch<TestSuite>(`/build/${projectId}/test-suites/${id}`, data),
-    onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.qa.suites(vars.projectId) });
-    },
-  });
-}
-
-export function useDeleteTestSuite() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["projects", "qa", "suites", "delete"],
-    mutationFn: ({ projectId, id }: { projectId: number; id: number }) =>
-      apiClient.delete<unknown>(`/build/${projectId}/test-suites/${id}`),
-    onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.qa.suites(vars.projectId) });
-    },
-  });
-}
-
 export function useTestCases(projectId?: number, filters?: TestCaseFilters) {
   const params: Record<string, string> = {};
   if (filters?.q) params["q"] = filters.q;

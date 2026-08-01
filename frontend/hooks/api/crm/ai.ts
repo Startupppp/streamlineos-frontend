@@ -256,20 +256,3 @@ export function useMeetingFollowUpDraft() {
       apiClient.post<MeetingFollowUpResult>("/ai/crm/meeting-follow-up", input),
   });
 }
-
-export function useStalePipelineDigest(inactiveDays?: number) {
-  return useMutation({
-    mutationKey: ["ai-crm-stale-pipeline"],
-    mutationFn: () => {
-      const params = inactiveDays !== undefined ? `?inactiveDays=${inactiveDays}` : "";
-      return apiClient.get<StalePipelineResult>(`/ai/crm/stale-pipeline${params}`);
-    },
-  });
-}
-
-export function useDataQualityCopilot() {
-  return useMutation({
-    mutationKey: ["ai-crm-data-quality-copilot"],
-    mutationFn: () => apiClient.get<DataQualityCopilotResult>("/ai/crm/data-quality"),
-  });
-}

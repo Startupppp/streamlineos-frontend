@@ -95,25 +95,6 @@ export function useDeleteProjectTeam() {
   });
 }
 
-export function useProjectTeamMembers(
-  teamId: number,
-  params?: { page?: number; pageSize?: number },
-) {
-  const query: Record<string, unknown> = {};
-  if (params?.page) query["page"] = params.page;
-  if (params?.pageSize) query["pageSize"] = params.pageSize;
-  return useQuery<TeamMembersResponse>({
-    queryKey: teamQueryKeys.members(teamId, Object.keys(query).length ? query : undefined),
-    queryFn: () =>
-      apiClient.get<TeamMembersResponse>(
-        `/build/teams/${teamId}/members`,
-        query as Record<string, string>,
-      ),
-    enabled: !!teamId,
-    staleTime: 60_000,
-  });
-}
-
 export function useAddProjectTeamMember(teamId: number) {
   const qc = useQueryClient();
   return useMutation({

@@ -14,16 +14,6 @@ export interface TicketRelatedLink {
 const relatedLinksKey = (projectId: number, ticketId: number) =>
   ["projects", projectId, "tickets", ticketId, "related-links"] as const;
 
-export function useTicketRelatedLinks(projectId: number, ticketId: number) {
-  return useQuery<TicketRelatedLink[]>({
-    queryKey: relatedLinksKey(projectId, ticketId),
-    queryFn: () =>
-      apiClient.get<TicketRelatedLink[]>(`/build/${projectId}/tickets/${ticketId}/related-links`),
-    enabled: !!projectId && !!ticketId,
-    staleTime: 60_000,
-  });
-}
-
 interface AddLinkVars {
   projectId: number;
   ticketId: number;
@@ -51,20 +41,4 @@ interface DeleteLinkVars {
   projectId: number;
   ticketId: number;
   linkId: number;
-}
-
-export function useDeleteRelatedLink(
-  options?: UseMutationOptions<void, unknown, DeleteLinkVars>,
-) {
-  const queryClient = useQueryClient();
-  return useMutation<void, unknown, DeleteLinkVars>({
-    mutationKey: ["projects", "tickets", "related-links", "delete"],
-    mutationFn: ({ projectId, ticketId, linkId }) =>
-      apiClient.delete<void>(`/build/${projectId}/tickets/${ticketId}/related-links/${linkId}`),
-    onSuccess: (data, variables, onMutateResult, context) => {
-      queryClient.invalidateQueries({ queryKey: relatedLinksKey(variables.projectId, variables.ticketId) });
-      options?.onSuccess?.(data, variables, onMutateResult, context);
-    },
-    ...options,
-  });
 }

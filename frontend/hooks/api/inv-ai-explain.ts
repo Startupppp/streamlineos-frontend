@@ -45,15 +45,6 @@ export function useExplainInsight() {
   });
 }
 
-export function useInventoryDigest(narrate = false) {
-  return useQuery<InventoryDigest, Error>({
-    queryKey: queryKeys.inventory.aiDigest(narrate),
-    queryFn: () =>
-      apiClient.get<InventoryDigest>("/inventory/ai/digest", narrate ? { narrate: "true" } : {}),
-    staleTime: 2 * 60_000,
-  });
-}
-
 export interface ReorderEvidence {
   productVariantId: string;
   variantSku: string;

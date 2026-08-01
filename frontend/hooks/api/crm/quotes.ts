@@ -102,16 +102,6 @@ export function useUpdateQuoteStatus() {
   });
 }
 
-export function useSendQuote() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["quotes", "send"],
-    mutationFn: ({ id }: { id: number; dealId?: number }) =>
-      apiClient.post<Quote>(`/quotes/${id}/send`),
-    onSuccess: (_, vars) => invalidateQuoteCaches(qc, { id: vars.id, dealId: vars.dealId }),
-  });
-}
-
 export function useDeleteQuote() {
   const qc = useQueryClient();
   return useMutation({

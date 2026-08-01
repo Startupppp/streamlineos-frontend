@@ -28,15 +28,6 @@ export function useProjectRisks(projectId: number, filters?: ListFilters) {
   });
 }
 
-export function useRisk(projectId: number, id: number) {
-  return useQuery<Risk>({
-    queryKey: queryKeys.projects.risks.detail(projectId, id),
-    queryFn: () => apiClient.get<Risk>(`/build/${projectId}/risks/${id}`),
-    enabled: !!projectId && !!id,
-    staleTime: 60_000,
-  });
-}
-
 export function useCreateRisk(projectId: number) {
   const qc = useQueryClient();
   return useMutation({
@@ -85,15 +76,6 @@ export function useProjectDecisions(projectId: number, filters?: ListFilters) {
     ),
     queryFn: () => apiClient.get<Decision[]>(`/build/${projectId}/decisions`, params),
     enabled: !!projectId,
-    staleTime: 60_000,
-  });
-}
-
-export function useDecision(projectId: number, id: number) {
-  return useQuery<Decision>({
-    queryKey: queryKeys.projects.decisions.detail(projectId, id),
-    queryFn: () => apiClient.get<Decision>(`/build/${projectId}/decisions/${id}`),
-    enabled: !!projectId && !!id,
     staleTime: 60_000,
   });
 }

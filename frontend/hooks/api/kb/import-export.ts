@@ -88,18 +88,6 @@ export function useKbImportJobs() {
   });
 }
 
-export function useExportKbPage() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["kb", "pages", "export"],
-    mutationFn: ({ pageId, ...body }: ExportKbPageInput & { pageId: number }) =>
-      apiClient.post<ExportResult>(`/kb/pages/${pageId}/export`, body),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.kb.exportJobs() });
-    },
-  });
-}
-
 export function useKbExportJobs() {
   const canExport = useCan("kb:pages:export");
   return useQuery({

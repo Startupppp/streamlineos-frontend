@@ -252,30 +252,6 @@ export function useInterviews(
   });
 }
 
-/** Full paginated interviews payload. */
-export function useInterviewsPage(params?: InterviewsParams) {
-  const pageSize = params?.pageSize ?? params?.limit ?? 20;
-  const page =
-    params?.page ??
-    (params?.offset != null ? Math.floor(params.offset / pageSize) + 1 : 1);
-  const queryParams: Record<string, unknown> = { page, pageSize };
-  if (params?.candidateId) queryParams.candidateId = params.candidateId;
-  if (params?.upcoming != null) queryParams.upcoming = params.upcoming ? "true" : "false";
-  if (params?.relevant != null) queryParams.relevant = params.relevant ? "true" : "false";
-
-  return useQuery({
-    queryKey: [...queryKeys.hr.interviews(queryParams), "page"] as const,
-    queryFn: async (): Promise<RecruitmentListResponse<Interview>> => {
-      const res = await apiClient.get<Interview[] | RecruitmentListResponse<Interview>>(
-        "/hr/recruitment/interviews",
-        queryParams,
-      );
-      return normalizeRecruitmentList(res, pageSize);
-    },
-    staleTime: 2 * 60_000,
-  });
-}
-
 export function useCreateInterview() {
   const qc = useQueryClient();
   return useMutation({
@@ -296,19 +272,6 @@ export function useUpdateInterview() {
     mutationKey: ["hr", "recruitment", "interviews", "update"],
     mutationFn: ({ id, ...data }: UpdateInterviewInput & { id: number }) =>
       apiClient.patch<{ success: boolean }>(`/hr/recruitment/interviews/${id}`, data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.interviews() });
-      qc.invalidateQueries({ queryKey: INTERVIEW_STATS_KEY });
-    },
-  });
-}
-
-export function useDeleteInterview() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "recruitment", "interviews", "delete"],
-    mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/recruitment/interviews/${id}`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.interviews() });
       qc.invalidateQueries({ queryKey: INTERVIEW_STATS_KEY });
@@ -354,16 +317,6 @@ export function useDeleteScorecardTemplate() {
   });
 }
 
-export function useInterviewScorecard(interviewId: number) {
-  return useQuery({
-    queryKey: queryKeys.hr.interviewScorecard(interviewId),
-    queryFn: () =>
-      apiClient.get<InterviewScorecard | null>(`/hr/recruitment/interviews/${interviewId}/scorecard`),
-    staleTime: 2 * 60_000,
-    enabled: !!interviewId,
-  });
-}
-
 export function useSubmitScorecard(interviewId: number) {
   const qc = useQueryClient();
   return useMutation({
@@ -383,16 +336,6 @@ export function useSubmitScorecard(interviewId: number) {
       qc.invalidateQueries({ queryKey: queryKeys.hr.interviewScorecard(interviewId) });
       qc.invalidateQueries({ queryKey: queryKeys.hr.interviewScorecardSummary(interviewId) });
     },
-  });
-}
-
-export function useInterviewScorecardSummary(interviewId: number) {
-  return useQuery({
-    queryKey: queryKeys.hr.interviewScorecardSummary(interviewId),
-    queryFn: () =>
-      apiClient.get<ScorecardSummary>(`/hr/recruitment/interviews/${interviewId}/scorecard/summary`),
-    staleTime: 2 * 60_000,
-    enabled: !!interviewId,
   });
 }
 
@@ -425,32 +368,6 @@ export function useUpsertInterviewSla() {
     mutationFn: (data: { stage: string; maxHours: number; warningHours: number }) =>
       apiClient.put<InterviewSla>("/hr/recruitment/interviews/slas", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: INTERVIEW_SLAS_KEY }),
-  });
-}
-
-export function useCandidateSla(candidateId: number) {
-  return useQuery({
-    queryKey: queryKeys.hr.candidateSla(candidateId),
-    queryFn: () =>
-      apiClient.get<CandidateSlaRecord[]>(`/hr/recruitment/candidates/${candidateId}/sla`),
-    staleTime: 2 * 60_000,
-    enabled: !!candidateId,
-  });
-}
-
-export function useResetCandidateSla() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "recruitment", "candidates", "reset-sla"],
-    mutationFn: ({ candidateId, stage }: { candidateId: number; stage: string }) =>
-      apiClient.patch<CandidateSlaRecord>(
-        `/hr/recruitment/candidates/${candidateId}/sla`,
-        { stage }
-      ),
-    onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.candidateSla(vars.candidateId) });
-      qc.invalidateQueries({ queryKey: queryKeys.hr.atsKanban() });
-    },
   });
 }
 
@@ -541,19 +458,6 @@ export function useInterviewerPerformance(days = 90) {
         `/hr/recruitment/interviewer-performance?days=${days}`
       ),
     staleTime: 5 * 60 * 1000,
-  });
-}
-
-export function useCreateBookingLink() {
-  const qc = useQueryClient();
-  return useMutation<BookingLinkResponse, Error, CreateBookingLinkInput>({
-    mutationKey: ["hr", "recruitment", "booking-links", "create"],
-    mutationFn: (data) =>
-      apiClient.post<BookingLinkResponse>("/hr/recruitment/interviews/self-schedule", data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.interviews() });
-      qc.invalidateQueries({ queryKey: queryKeys.hr.bookingLinks() });
-    },
   });
 }
 

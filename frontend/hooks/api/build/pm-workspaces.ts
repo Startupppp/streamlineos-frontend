@@ -39,16 +39,6 @@ export function usePmWorkspaces(params?: ListPmWorkspacesParams) {
   });
 }
 
-export function usePmWorkspace(pmWorkspaceId: string) {
-  const canView = useCan("build:workspaces:view");
-  return useQuery<PmWorkspace>({
-    queryKey: queryKeys.projects.pmWorkspaces.detail(pmWorkspaceId),
-    queryFn: () => apiClient.get<PmWorkspace>(`${BASE}/${pmWorkspaceId}`),
-    enabled: canView && !!pmWorkspaceId,
-    staleTime: 60_000,
-  });
-}
-
 export function useCreatePmWorkspace() {
   const qc = useQueryClient();
   return useMutation({

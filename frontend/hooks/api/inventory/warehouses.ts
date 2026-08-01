@@ -146,19 +146,6 @@ export function useCreateWarehouse() {
   });
 }
 
-export function useUpdateWarehouse() {
-  const qc = useQueryClient();
-  return useMutation<Warehouse, Error, UpdateWarehouseInput>({
-    mutationKey: ["inventory", "warehouses", "update"],
-    mutationFn: ({ warehouseId, ...data }) =>
-      apiClient.patch<Warehouse>(`/inventory/warehouses/${warehouseId}`, data),
-    onSuccess: (_, vars) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.warehouses() });
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.warehouse(vars.warehouseId) });
-    },
-  });
-}
-
 export function useCreateLocation() {
   const qc = useQueryClient();
   return useMutation<WarehouseLocation, Error, CreateLocationInput>({

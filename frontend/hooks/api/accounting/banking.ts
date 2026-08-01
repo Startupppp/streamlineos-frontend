@@ -225,32 +225,6 @@ export function useCreateBankAccount() {
   });
 }
 
-export function useUpdateBankAccount(id: number) {
-  const queryClient = useQueryClient();
-  return useMutation<BankAccount, Error, Partial<CreateBankAccountInput>>({
-    mutationKey: ["banking", "updateAccount", id],
-    mutationFn: (data) =>
-      apiClient.patch<BankAccount>(`/finance/bank-accounts/${id}`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: bankingKeys.account(id) });
-      queryClient.invalidateQueries({ queryKey: bankingKeys.accounts() });
-      toast.success("Bank account updated");
-    },
-    onError: (err) => {
-      toast.error(getErrorMessage(err));
-    },
-  });
-}
-
-export function useBankImports(params: Record<string, unknown> = {}) {
-  return useQuery<ListResponse<BankImport>, Error>({
-    queryKey: bankingKeys.imports(params),
-    queryFn: () =>
-      apiClient.get<ListResponse<BankImport>>("/finance/bank-imports", toQuery(params)),
-    staleTime: 30_000,
-  });
-}
-
 export interface CreateBankImportInput {
   bankAccountId: number;
   fileName: string;

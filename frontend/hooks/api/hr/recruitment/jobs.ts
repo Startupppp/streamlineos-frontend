@@ -189,14 +189,6 @@ export function useDuplicateJobPosting() {
   });
 }
 
-export function useTriggerPortalSync() {
-  return useMutation({
-    mutationKey: ["hr", "recruitment", "portals", "sync"],
-    mutationFn: (platform: JobBoardPlatform) =>
-      apiClient.post<SyncResult>(`/hr/recruitment/portals/${platform}/sync`, {}),
-  });
-}
-
 export function usePublishJobToBoards() {
   const qc = useQueryClient();
   return useMutation({

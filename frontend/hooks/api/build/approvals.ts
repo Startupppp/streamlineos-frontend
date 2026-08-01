@@ -42,15 +42,6 @@ export function useProjectApprovals(projectId: number, filters?: ApprovalFilters
   });
 }
 
-export function useApproval(projectId: number, id: number) {
-  return useQuery<Approval>({
-    queryKey: queryKeys.projects.approvals.detail(projectId, id),
-    queryFn: () => apiClient.get<Approval>(`/build/${projectId}/approvals/${id}`),
-    enabled: !!projectId && !!id,
-    staleTime: 60_000,
-  });
-}
-
 export function useCreateApproval(projectId: number) {
   const qc = useQueryClient();
   return useMutation({

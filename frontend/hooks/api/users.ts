@@ -621,28 +621,6 @@ export const useUserAuditLog = (
   });
 };
 
-export const useOrgAuditLog = (
-  params?: { page?: number; limit?: number; actorUserId?: string; action?: string; from?: string; to?: string },
-  options?: Omit<UseQueryOptions<AuditResponse, Error>, "queryKey" | "queryFn">
-) => {
-  const canView = useCan("hr:employees:manage");
-  return useQuery<AuditResponse, Error>({
-    queryKey: queryKeys.users.orgAuditLog(params as Record<string, unknown> | undefined),
-    queryFn: () =>
-      apiClient.get<AuditResponse>("/users/audit", {
-        ...(params?.page ? { page: String(params.page) } : {}),
-        ...(params?.limit ? { limit: String(params.limit) } : {}),
-        ...(params?.actorUserId ? { actorUserId: params.actorUserId } : {}),
-        ...(params?.action ? { action: params.action } : {}),
-        ...(params?.from ? { from: params.from } : {}),
-        ...(params?.to ? { to: params.to } : {}),
-      }),
-    staleTime: 30_000,
-    ...options,
-    enabled: canView && (options?.enabled ?? true),
-  });
-};
-
 export const useExportUsers = () => {
   return useMutation<void, Error, void>({
     mutationKey: ["export", "users"],

@@ -22,20 +22,6 @@ export function usePricebookEntries(pricebookId: string) {
   });
 }
 
-export function useResolvePrice(productId: number, quantity: number, pricebookId?: string) {
-  return useQuery({
-    queryKey: [...queryKeys.crmPricebooks.all, "resolve-price", productId, quantity, pricebookId],
-    queryFn: () =>
-      apiClient.get<ResolvedPrice>("/crm/pricebooks/resolve-price", {
-        productId,
-        quantity,
-        ...(pricebookId ? { pricebookId } : {}),
-      }),
-    enabled: productId > 0,
-    staleTime: 30_000,
-  });
-}
-
 export interface CreatePricebookInput {
   name: string;
   description?: string;

@@ -58,16 +58,6 @@ export function useCreateAutomation(surveyId: number) {
   });
 }
 
-export function usePatchAutomation(surveyId: number) {
-  const invalidate = useInvalidateAutomations(surveyId);
-  return useMutation({
-    mutationKey: ["surveys", "automations", "patch", surveyId] as const,
-    mutationFn: ({ automationId, input }: { automationId: string; input: PatchAutomationInput }) =>
-      apiClient.patch<AutomationRule>(`/surveys/${surveyId}/automations/${automationId}`, input),
-    onSuccess: invalidate,
-  });
-}
-
 export function useDeleteAutomation(surveyId: number) {
   const invalidate = useInvalidateAutomations(surveyId);
   return useMutation({

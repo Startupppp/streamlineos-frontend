@@ -192,19 +192,6 @@ export function useLinkDuplicateCandidate() {
   });
 }
 
-export function useUnlinkDuplicateCandidate() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "recruitment", "candidates", "unlink-duplicate"],
-    mutationFn: (candidateId: number) =>
-      apiClient.post<{ success: boolean }>(`/hr/recruitment/candidates/${candidateId}/unlink-duplicate`, {}),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.candidates() });
-      void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "candidateDuplicates"] });
-    },
-  });
-}
-
 export function useBulkShortlistCandidates() {
   const qc = useQueryClient();
   return useMutation({
@@ -396,14 +383,6 @@ export function useBulkRejectCandidates() {
       void qc.invalidateQueries({ queryKey: queryKeys.hr.candidates() });
       void qc.invalidateQueries({ queryKey: ATS_KANBAN_KEY });
     },
-  });
-}
-
-export function useSourceEffectiveness() {
-  return useQuery({
-    queryKey: [...queryKeys.hr.all, "sourceEffectiveness"] as const,
-    queryFn: () => apiClient.get<SourceEffectivenessRow[]>("/reports/source-effectiveness"),
-    staleTime: 2 * 60_000,
   });
 }
 

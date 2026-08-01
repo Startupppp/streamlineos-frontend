@@ -76,7 +76,3 @@ export function useReopenPeriod() {
 export function useLockPeriod() {
   return usePeriodAction("lock", "Period locked");
 }
-
-export function useUnlockPeriod() {
-  return usePeriodAction("unlock", "Period unlocked");
-}

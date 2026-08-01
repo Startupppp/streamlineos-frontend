@@ -215,34 +215,6 @@ export function TableCellHeaderElement({ element, children, ...props }: PlateEle
   );
 }
 
-export function ImageElement({ element, children, ...props }: PlateElementProps) {
-  const url = element['url'] as string | undefined;
-  return (
-    <PlateElement {...props} element={element} className="my-3">
-      {url ? (
-        <Image
-          src={url}
-          alt=""
-          unoptimized
-          width={800}
-          height={600}
-          style={{ width: '100%', height: 'auto' }}
-          className="rounded-md border border-border"
-          contentEditable={false}
-        />
-      ) : (
-        <div
-          className="border-2 border-dashed border-border rounded-md p-8 text-center text-muted-foreground text-sm"
-          contentEditable={false}
-        >
-          No image URL
-        </div>
-      )}
-      {children}
-    </PlateElement>
-  );
-}
-
 export function LinkElement({ element, children, ...props }: PlateElementProps) {
   return (
     <PlateElement {...props} element={element}>

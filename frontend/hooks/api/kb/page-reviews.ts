@@ -58,30 +58,6 @@ export function useKbPageReviews(params?: KbPageReviewsParams) {
   });
 }
 
-export function useKbPageReviewsDue() {
-  const canViewReviews = useCan("kb:reviews:view");
-  return useQuery({
-    queryKey: queryKeys.kb.pageReviewsDue(),
-    queryFn: () => apiClient.get<KbPageReview[]>("/kb/page-reviews/due"),
-    staleTime: 60_000,
-    enabled: canViewReviews,
-  });
-}
-
-export function useCreatePageReview() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["kb", "pageReviews", "create"],
-    mutationFn: ({ pageId, ...body }: CreatePageReviewInput & { pageId: number }) =>
-      apiClient.post<KbPageReview>(`/kb/pages/${pageId}/reviews`, body),
-    onSuccess: (_, variables) => {
-      qc.invalidateQueries({ queryKey: queryKeys.kb.pageReviews() });
-      qc.invalidateQueries({ queryKey: queryKeys.kb.pageReviewsDue() });
-      qc.invalidateQueries({ queryKey: queryKeys.kb.page(variables.pageId) });
-    },
-  });
-}
-
 export function useApprovePageReview() {
   const qc = useQueryClient();
   return useMutation({

@@ -93,12 +93,6 @@ export const SLA_CONFIG: Record<SlaCandidateStatus, { dot: string; label: string
   },
 };
 
-export const SLA_EMOJI: Record<SlaCandidateStatus, string> = {
-  ON_TRACK: "🟢",
-  AT_RISK: "🟡",
-  BREACHED: "🔴",
-};
-
 export function formatDate(val: Date | string | null): string {
   if (!val) return "—";
   return new Date(val).toLocaleDateString("en-IN", {

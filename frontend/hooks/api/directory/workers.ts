@@ -44,16 +44,6 @@ export function useWorkers(params: UseWorkersParams = {}) {
   });
 }
 
-export function useWorker(workerId: string) {
-  const canView = useCan("workforce:workers:view");
-  return useQuery({
-    queryKey: queryKeys.directory.worker(workerId),
-    queryFn: () => apiClient.get<Worker>(`/directory/workers/${workerId}`),
-    staleTime: 60_000,
-    enabled: canView && !!workerId,
-  });
-}
-
 export function useCreateWorker() {
   const qc = useQueryClient();
   return useMutation({
@@ -92,26 +82,6 @@ export function useCreateEngagement() {
       });
       qc.invalidateQueries({
         queryKey: queryKeys.directory.worker(variables.workerId),
-      });
-    },
-  });
-}
-
-export function useUpdateEngagement() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["directory", "engagements", "update"],
-    mutationFn: ({
-      workerEngagementId,
-      ...input
-    }: UpdateEngagementInput & { workerEngagementId: string; workerId: string }) =>
-      apiClient.patch<WorkerEngagement>(
-        `/directory/engagements/${workerEngagementId}`,
-        input,
-      ),
-    onSuccess: (_, variables) => {
-      qc.invalidateQueries({
-        queryKey: queryKeys.directory.engagements(variables.workerId),
       });
     },
   });

@@ -33,33 +33,6 @@ export interface KbConversationListPage {
 
 const HISTORY_PAGE_SIZE = 30;
 
-export function useKbChatHistory(enabled: boolean) {
-  const canViewPages = useCan("kb:pages:view");
-  return useInfiniteQuery({
-    queryKey: queryKeys.kb.chatHistory(),
-    queryFn: ({ pageParam }) => {
-      const params: Record<string, unknown> = { limit: HISTORY_PAGE_SIZE };
-      if (pageParam) params.cursor = pageParam;
-      return apiClient.get<KbChatHistoryPage>("/kb/ask/history", params);
-    },
-    initialPageParam: undefined as number | undefined,
-    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
-    enabled: canViewPages && enabled,
-    staleTime: 30_000,
-  });
-}
-
-export function useClearKbChatHistory() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["kb", "chatHistory", "clear"],
-    mutationFn: () => apiClient.delete<{ success: boolean }>("/kb/ask/history"),
-    onSuccess: () => {
-      qc.removeQueries({ queryKey: queryKeys.kb.chatHistory() });
-    },
-  });
-}
-
 export function useKbConversations(enabled: boolean) {
   const canViewPages = useCan("kb:pages:view");
   return useInfiniteQuery({
@@ -73,18 +46,6 @@ export function useKbConversations(enabled: boolean) {
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: canViewPages && enabled,
     staleTime: 30_000,
-  });
-}
-
-export function useCreateKbConversation() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["kb", "chatConversations", "create"],
-    mutationFn: (input: { title?: string }) =>
-      apiClient.post<KbConversation>("/kb/ask/conversations", input),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.kb.chatConversations() });
-    },
   });
 }
 

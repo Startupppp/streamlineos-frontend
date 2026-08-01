@@ -84,14 +84,6 @@ export function useDealStats() {
   });
 }
 
-export function useDealForecast() {
-  return useQuery({
-    queryKey: queryKeys.deals.forecast(),
-    queryFn: () => apiClient.get<DealForecast>("/deals/forecast"),
-    staleTime: 5 * 60_000,
-  });
-}
-
 export function useDealDetail(id: number) {
   return useQuery({
     queryKey: queryKeys.deals.detail(id),
@@ -337,18 +329,6 @@ export function useAddDealCompetitor(dealId: number) {
   });
 }
 
-export function useUpdateDealCompetitor(dealId: number) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["deals", "competitors", "update", dealId] as const,
-    mutationFn: ({ id, ...data }: UpdateDealCompetitorInput & { id: string }) =>
-      apiClient.patch<DealCompetitor>(`/deals/${dealId}/competitors/${id}`, data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.deals.competitors(dealId) });
-    },
-  });
-}
-
 export function useDeleteDealCompetitor(dealId: number) {
   const qc = useQueryClient();
   return useMutation({
@@ -399,31 +379,6 @@ export function useCreateStakeholder(dealId: number) {
       apiClient.post<DealStakeholder>(`/deals/${dealId}/stakeholders`, input),
     onMutate: async () => {
       await qc.cancelQueries({ queryKey: queryKeys.deals.stakeholders(dealId) });
-    },
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.deals.stakeholders(dealId) });
-    },
-  });
-}
-
-export function useUpdateStakeholder(dealId: number) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["deals", "stakeholders", "update", dealId] as const,
-    mutationFn: ({ id, ...data }: UpdateStakeholderInput & { id: string }) =>
-      apiClient.patch<DealStakeholder>(`/deals/${dealId}/stakeholders/${id}`, data),
-    onMutate: async ({ id, ...data }) => {
-      await qc.cancelQueries({ queryKey: queryKeys.deals.stakeholders(dealId) });
-      const snapshot = qc.getQueryData<DealStakeholder[]>(queryKeys.deals.stakeholders(dealId));
-      qc.setQueryData<DealStakeholder[]>(queryKeys.deals.stakeholders(dealId), (old) =>
-        old ? old.map((s) => (s.id === id ? { ...s, ...data } : s)) : old,
-      );
-      return { snapshot };
-    },
-    onError: (_, _vars, context) => {
-      if (context?.snapshot) {
-        qc.setQueryData(queryKeys.deals.stakeholders(dealId), context.snapshot);
-      }
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: queryKeys.deals.stakeholders(dealId) });

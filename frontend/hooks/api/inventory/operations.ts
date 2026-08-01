@@ -259,17 +259,6 @@ export function useCustomerReturns(filters?: CustomerReturnFilters) {
   });
 }
 
-export function useCustomerReturn(returnId: number) {
-  const canView = useCan("inventory:customer-returns:manage");
-  return useQuery<CustomerReturnSummary, Error>({
-    queryKey: queryKeys.inventory.customerReturn(returnId),
-    queryFn: () =>
-      apiClient.get<CustomerReturnSummary>(`/inventory/customer-returns/${returnId}`),
-    staleTime: 2 * 60_000,
-    enabled: canView && returnId > 0,
-  });
-}
-
 export function useCreateCustomerReturn() {
   const qc = useQueryClient();
   return useMutation<CustomerReturnSummary, Error, CreateCustomerReturnInput>({

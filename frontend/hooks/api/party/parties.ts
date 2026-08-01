@@ -93,16 +93,6 @@ export function useDeleteParty() {
   });
 }
 
-export function usePartyContacts(partyId: string) {
-  const canView = useCan("party:contacts:view");
-  return useQuery({
-    queryKey: queryKeys.party.contacts(partyId),
-    queryFn: () => apiClient.get<PartyContact[]>(`/party/parties/${partyId}/contacts`),
-    staleTime: 60_000,
-    enabled: canView && !!partyId,
-  });
-}
-
 export function useCreateContact() {
   const qc = useQueryClient();
   return useMutation({

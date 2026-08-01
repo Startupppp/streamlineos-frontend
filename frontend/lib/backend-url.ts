@@ -22,8 +22,3 @@ export const BACKEND_URL: string = requireAbsoluteUrl(
   internalUrl && internalUrl.length > 0 ? internalUrl : publicUrl,
   internalUrl && internalUrl.length > 0 ? "API_INTERNAL_URL" : "NEXT_PUBLIC_API_URL",
 );
-
-export const PUBLIC_API_URL: string = requireAbsoluteUrl(
-  publicUrl,
-  "NEXT_PUBLIC_API_URL",
-);

@@ -61,16 +61,3 @@ export function useRemoveKbPageRecordLink() {
     },
   });
 }
-
-export function useKbLinkedPages(targetType: string, targetId: string) {
-  const canViewPages = useCan("kb:pages:view");
-  return useQuery({
-    queryKey: queryKeys.kb.recordLinksByRecord(targetType, targetId),
-    queryFn: () =>
-      apiClient.get<KbLinkedPage[]>(
-        `/kb/record-links/by-record?targetType=${encodeURIComponent(targetType)}&targetId=${encodeURIComponent(targetId)}`,
-      ),
-    staleTime: 30_000,
-    enabled: canViewPages && Boolean(targetType && targetId),
-  });
-}

@@ -139,18 +139,6 @@ export function useUpdatePipeline() {
   });
 }
 
-export function useDeletePipeline() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["crmMetadata", "pipelines", "delete"] as const,
-    mutationFn: (id: string) =>
-      apiClient.delete<{ success: boolean }>(`/crm/pipelines/${id}`),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.crmMetadata.all });
-    },
-  });
-}
-
 export function useCreateStage() {
   const qc = useQueryClient();
   return useMutation({
@@ -341,18 +329,6 @@ export function useUpdateBlueprint() {
       ...data
     }: { id: string } & Partial<Omit<CrmBlueprint, "id" | "createdAt" | "updatedAt">>) =>
       apiClient.patch<CrmBlueprint>(`/crm/blueprints/${id}`, data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.crmMetadata.blueprints() });
-    },
-  });
-}
-
-export function useDeleteBlueprint() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["crmMetadata", "blueprints", "delete"] as const,
-    mutationFn: (id: string) =>
-      apiClient.delete<{ success: boolean }>(`/crm/blueprints/${id}`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmMetadata.blueprints() });
     },

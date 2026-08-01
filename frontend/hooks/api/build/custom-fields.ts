@@ -45,29 +45,6 @@ export function useCreateProjectCustomField(projectId: number) {
   });
 }
 
-export function useUpdateProjectCustomField(projectId: number) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["projects", projectId, "custom-fields", "update"],
-    mutationFn: ({
-      fieldId,
-      ...data
-    }: {
-      fieldId: number;
-      name?: string;
-      type?: CustomFieldType;
-      options?: string[] | null;
-      required?: boolean;
-    }) =>
-      apiClient.patch<ProjectCustomField>(
-        `/build/${projectId}/custom-fields/${fieldId}`,
-        data,
-      ),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: customFieldKeys(projectId) }),
-  });
-}
-
 export function useDeleteProjectCustomField(projectId: number) {
   const qc = useQueryClient();
   return useMutation({

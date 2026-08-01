@@ -241,30 +241,6 @@ interface CreateExportJobInput {
   filters?: Record<string, unknown>;
 }
 
-export function useExportJobs(params?: { page?: number }) {
-  const canView = useCan("inventory:export");
-  return useQuery<ExportJobListResponse, Error>({
-    queryKey: queryKeys.inventory.exportJobs(params),
-    queryFn: () =>
-      apiClient.get<ExportJobListResponse>("/inventory/export/jobs", {
-        ...(params?.page !== undefined ? { page: String(params.page) } : {}),
-      }),
-    staleTime: 30_000,
-    enabled: canView,
-  });
-}
-
-export function useExportJob(id: number, refetchInterval?: number | false) {
-  const canView = useCan("inventory:export");
-  return useQuery<ExportJob, Error>({
-    queryKey: queryKeys.inventory.exportJob(id),
-    queryFn: () => apiClient.get<ExportJob>(`/inventory/export/jobs/${id}`),
-    enabled: canView && id > 0,
-    staleTime: 15_000,
-    ...(refetchInterval !== undefined ? { refetchInterval } : {}),
-  });
-}
-
 export function useCreateExportJob() {
   const qc = useQueryClient();
   return useMutation<ExportJob, Error, CreateExportJobInput>({

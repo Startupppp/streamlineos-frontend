@@ -38,17 +38,6 @@ export function usePeople(params: UsePeopleParams = {}) {
   });
 }
 
-export function usePerson(organizationPersonId: string) {
-  const canView = useCan("directory:people:view");
-  return useQuery({
-    queryKey: queryKeys.directory.person(organizationPersonId),
-    queryFn: () =>
-      apiClient.get<OrganizationPerson>(`/directory/people/${organizationPersonId}`),
-    staleTime: 60_000,
-    enabled: canView && !!organizationPersonId,
-  });
-}
-
 export function useCreatePerson() {
   const qc = useQueryClient();
   return useMutation({

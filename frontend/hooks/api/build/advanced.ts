@@ -47,23 +47,6 @@ type CreateEpicInput = {
   points?: number;
 };
 
-export function useCreateEpic(options?: Parameters<typeof useMutation>[0]) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationKey: ["projects", "epics", "create"],
-    mutationFn: (variables: CreateEpicInput) => {
-      const { projectId, ...data } = variables;
-      return apiClient.post<Epic>(`/build/${projectId}/epics`, data);
-    },
-    onSuccess: (_: unknown, variables: CreateEpicInput) => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.epics(variables.projectId),
-      });
-    },
-    ...options,
-  });
-}
-
 export function useCycles(
   projectId: number,
   options?: Omit<UseQueryOptions<Cycle[]>, "queryKey" | "queryFn" | "enabled">
@@ -93,24 +76,6 @@ export function useCreateCycle(options?: Parameters<typeof useMutation>[0]) {
   });
 }
 
-export function useUpdateCycle(options?: Parameters<typeof useMutation>[0]) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationKey: ["projects", "cycles", "update"],
-    mutationFn: ({ id, projectId, ...data }: UpdateCycleInput & { projectId: number }) =>
-      apiClient.patch<Cycle>(`/build/${projectId}/cycles/${id}`, data),
-    onSuccess: (_: unknown, variables: UpdateCycleInput & { projectId: number }) => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.cycles(variables.projectId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.detail(variables.projectId),
-      });
-    },
-    ...options,
-  });
-}
-
 export function useModules(
   projectId: number,
   options?: Omit<UseQueryOptions<Module[]>, "queryKey" | "queryFn" | "enabled">
@@ -134,24 +99,6 @@ export function useCreateModule(options?: Parameters<typeof useMutation>[0]) {
     onSuccess: (_: unknown, variables: CreateModuleInput) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.modules(variables.projectId),
-      });
-    },
-    ...options,
-  });
-}
-
-export function useUpdateModule(options?: Parameters<typeof useMutation>[0]) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationKey: ["projects", "modules", "update"],
-    mutationFn: ({ id, projectId, ...data }: UpdateModuleInput & { projectId: number }) =>
-      apiClient.patch<Module>(`/build/${projectId}/modules/${id}`, data),
-    onSuccess: (_: unknown, variables: UpdateModuleInput & { projectId: number }) => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.modules(variables.projectId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.detail(variables.projectId),
       });
     },
     ...options,

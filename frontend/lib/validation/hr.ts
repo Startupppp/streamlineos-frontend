@@ -1,10 +1,6 @@
 import { z } from "zod";
 import { isValidPhoneNumber } from "react-phone-number-input";
 
-export function normalizeSpaces(value: string): string {
-  return value.trim().replace(/\s+/g, " ");
-}
-
 function hasLetterOrDigit(value: string): boolean {
   return /[\p{L}\p{N}]/u.test(value);
 }

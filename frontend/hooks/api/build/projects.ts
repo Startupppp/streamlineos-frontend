@@ -419,28 +419,6 @@ export function useUpdateProjectMemberRole(
   });
 }
 
-export function useRemoveProjectMember(
-  options?: Omit<
-    UseMutationOptions<{ success: boolean }, Error, RemoveMemberInput>,
-    "mutationFn"
-  >,
-) {
-  const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, RemoveMemberInput>({
-    mutationKey: ["projects", "members", "remove"],
-    mutationFn: ({ projectId, userId }) =>
-      apiClient.delete<{ success: boolean }>(`/build/${projectId}/members`, {
-        data: { userId },
-      }),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.members(variables.projectId),
-      });
-    },
-    ...options,
-  });
-}
-
 export function useProjectLabels(
   projectId?: number,
   options?: Omit<UseQueryOptions<TicketLabel[]>, "queryKey" | "queryFn">,

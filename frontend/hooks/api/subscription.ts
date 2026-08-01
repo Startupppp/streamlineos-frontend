@@ -154,16 +154,6 @@ export function useBillingPlans() {
   });
 }
 
-export function useBillingSummary() {
-  const canViewBilling = useCan("settings:view");
-  return useQuery<BillingSummary, Error>({
-    queryKey: queryKeys.billing.summary(),
-    queryFn: () => apiClient.get<BillingSummary>("/billing/summary"),
-    staleTime: 5 * 60_000,
-    enabled: canViewBilling,
-  });
-}
-
 export function useValidateCoupon(code: string, plan: SubscriptionPlan | null) {
   return useQuery<CouponValidationResult, Error>({
     queryKey: queryKeys.billing.coupon(code, plan),

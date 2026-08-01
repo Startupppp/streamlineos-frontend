@@ -61,16 +61,6 @@ export function useCreateLogicRule(surveyId: number) {
   });
 }
 
-export function usePatchLogicRule(surveyId: number) {
-  const invalidate = useInvalidateBuilder(surveyId);
-  return useMutation({
-    mutationKey: ["surveys", "logic", "patch", surveyId] as const,
-    mutationFn: ({ ruleId, input }: { ruleId: number; input: PatchLogicRuleInput }) =>
-      apiClient.patch(`/surveys/${surveyId}/logic/${ruleId}`, input),
-    onSuccess: invalidate,
-  });
-}
-
 export function useDeleteLogicRule(surveyId: number) {
   const invalidate = useInvalidateBuilder(surveyId);
   return useMutation({

@@ -37,21 +37,6 @@ interface RatePreviewQuery {
   ticketId?: number;
 }
 
-export function useRatePreview(query: RatePreviewQuery, enabled = true) {
-  const canView = useCan("timesheets:billing:view");
-  const params: Record<string, unknown> = {
-    projectId: query.projectId,
-    userId: query.userId,
-    ticketId: query.ticketId,
-  };
-  return useQuery({
-    queryKey: queryKeys.timesheets.ratePreview(params),
-    queryFn: () => apiClient.get<RatePreview>("/timesheets/billing/rate-preview", params),
-    staleTime: 60_000,
-    enabled: enabled && canView,
-  });
-}
-
 export function useBillingExport() {
   return useMutation({
     mutationKey: ["timesheets", "billing", "export"],

@@ -95,20 +95,6 @@ export interface ListCollectionActivitiesParams {
   pageSize?: number;
 }
 
-export function useCollectionActivities(
-  params: ListCollectionActivitiesParams = {},
-) {
-  return useQuery<ListResponse<CollectionActivity>, Error>({
-    queryKey: arCollectionsKeys.collections.activities(params),
-    queryFn: () =>
-      apiClient.get<ListResponse<CollectionActivity>>(
-        "/accounting/collections/activities",
-        toQuery(params),
-      ),
-    staleTime: 30_000,
-  });
-}
-
 export function useCreateReminderPolicy() {
   const queryClient = useQueryClient();
   return useMutation<ReminderPolicy, Error, CreateReminderPolicyInput>({

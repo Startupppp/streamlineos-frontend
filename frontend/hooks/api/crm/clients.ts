@@ -36,26 +36,6 @@ export function useClientAccount(id: number) {
   });
 }
 
-export function useLogClientActivity() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["clients", "activities", "create"] as const,
-    mutationFn: (input: LogClientActivityInput) =>
-      apiClient.post<ClientActivity>(
-        `/clients/${input.clientAccountId}/activities`,
-        input
-      ),
-    onSuccess: (_, vars) => {
-      qc.invalidateQueries({
-        queryKey: queryKeys.clients.activities(vars.clientAccountId),
-      });
-      qc.invalidateQueries({
-        queryKey: queryKeys.clients.detail(vars.clientAccountId),
-      });
-    },
-  });
-}
-
 export function useClientTimeline(clientId: number) {
   return useQuery({
     queryKey: queryKeys.clients.timeline(clientId),
@@ -85,35 +65,6 @@ export function useClientOpportunities(clientId?: number) {
   });
 }
 
-export function useCreateClientOpportunity() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["clientOpportunities", "create"] as const,
-    mutationFn: (input: CreateClientOpportunityInput) =>
-      apiClient.post<ClientOpportunity>("/clients/opportunities", input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.clientOpportunities.all }),
-  });
-}
-
-export function useUpdateClientOpportunity() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["clientOpportunities", "update"] as const,
-    mutationFn: ({ id, ...data }: Partial<CreateClientOpportunityInput> & { id: number }) =>
-      apiClient.patch<ClientOpportunity>(`/clients/opportunities/${id}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.clientOpportunities.all }),
-  });
-}
-
-export function useDeleteClientOpportunity() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["clientOpportunities", "delete"] as const,
-    mutationFn: (id: number) => apiClient.delete(`/clients/opportunities/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.clientOpportunities.all }),
-  });
-}
-
 export function useOnboardingTemplates() {
   return useQuery({
     queryKey: queryKeys.clientOnboarding.templates(),
@@ -131,18 +82,6 @@ export function useClientOnboardingItems(clientId: number) {
   });
 }
 
-export function useCreateOnboardingItem() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["clientOnboarding", "items", "create"] as const,
-    mutationFn: (input: {
-      clientId: number; title: string; description?: string;
-      assignedTo?: string; dueDate?: string; templateId?: number;
-    }) => apiClient.post<OnboardingItem>("/clients/onboarding/items", input),
-    onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: queryKeys.clientOnboarding.items(vars.clientId) }),
-  });
-}
-
 export function useToggleOnboardingItem() {
   const qc = useQueryClient();
   return useMutation({
@@ -151,16 +90,6 @@ export function useToggleOnboardingItem() {
       apiClient.patch<OnboardingItem>(`/clients/onboarding/items/${id}`, {
         completedAt: completed ? new Date().toISOString() : null,
       }),
-    onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: queryKeys.clientOnboarding.items(vars.clientId) }),
-  });
-}
-
-export function useDeleteOnboardingItem() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["clientOnboarding", "items", "delete"] as const,
-    mutationFn: ({ id }: { id: number; clientId: number }) =>
-      apiClient.delete(`/clients/onboarding/items/${id}`),
     onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: queryKeys.clientOnboarding.items(vars.clientId) }),
   });
 }

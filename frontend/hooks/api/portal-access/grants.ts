@@ -25,34 +25,6 @@ export function usePortalMemberships(params?: { page?: number; limit?: number; s
   });
 }
 
-export function useCreatePortalMembership() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["portalAccess", "memberships", "create"],
-    mutationFn: (data: CreateMembershipInput) =>
-      apiClient.post<PortalMembership>("/portal-access/memberships", data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.portalAccess.memberships() });
-    },
-  });
-}
-
-export function useSetMembershipStatus(portalMembershipId: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["portalAccess", "memberships", portalMembershipId, "status"],
-    mutationFn: (data: UpdateMembershipStatusInput) =>
-      apiClient.patch<PortalMembership>(
-        `/portal-access/memberships/${portalMembershipId}/status`,
-        data,
-      ),
-    onSuccess: (updated) => {
-      qc.setQueryData(queryKeys.portalAccess.membership(portalMembershipId), updated);
-      qc.invalidateQueries({ queryKey: queryKeys.portalAccess.memberships() });
-    },
-  });
-}
-
 export function useProjectClientGrants(params?: { page?: number; limit?: number; projectId?: number }) {
   const canView = useCan("build:portal:view");
   return useQuery<ProjectClientGrantsPage>({

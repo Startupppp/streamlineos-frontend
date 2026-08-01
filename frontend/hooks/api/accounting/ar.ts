@@ -77,15 +77,6 @@ export function useCreditNotes(params: ListCreditNotesParams = {}) {
   });
 }
 
-export function useCreditNote(id: number) {
-  return useQuery<CreditNote, Error>({
-    queryKey: arKeys.creditNotes.detail(id),
-    queryFn: () => apiClient.get<CreditNote>(`/accounting/credit-notes/${id}`),
-    enabled: Number.isInteger(id) && id > 0,
-    staleTime: 60_000,
-  });
-}
-
 export interface ListRecurringTemplatesParams {
   isActive?: boolean;
   page?: number;
@@ -100,16 +91,6 @@ export function useRecurringTemplates(params: ListRecurringTemplatesParams = {})
         "/accounting/recurring-invoices",
         toQuery(params),
       ),
-    staleTime: 60_000,
-  });
-}
-
-export function useRecurringTemplate(id: number) {
-  return useQuery<RecurringInvoiceTemplate, Error>({
-    queryKey: arKeys.recurringTemplates.detail(id),
-    queryFn: () =>
-      apiClient.get<RecurringInvoiceTemplate>(`/accounting/recurring-invoices/${id}`),
-    enabled: Number.isInteger(id) && id > 0,
     staleTime: 60_000,
   });
 }

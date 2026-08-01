@@ -147,16 +147,6 @@ export function useRespondToNegotiation(candidateId: number) {
   });
 }
 
-export function useGenerateOfferLetter() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "recruitment", "offers", "generate-letter"],
-    mutationFn: (data: { candidateId: number; jobPostingId: number; salary: string; startDate: string }) =>
-      apiClient.post<{ documentId: number; title: string }>("/hr/recruitment/offer-letter", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.candidates() }),
-  });
-}
-
 export function useCandidateOffers(candidateId: number) {
   return useQuery({
     queryKey: [...queryKeys.hr.all, "candidateOffers", candidateId] as const,

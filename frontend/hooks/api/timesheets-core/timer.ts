@@ -59,10 +59,6 @@ export function useResumeTimer() {
   return useTimerAction("resume");
 }
 
-export function useStopTimer() {
-  return useTimerAction("stop");
-}
-
 export function useDiscardTimer() {
   const qc = useQueryClient();
   return useMutation({

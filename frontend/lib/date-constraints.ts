@@ -126,13 +126,6 @@ export function planningEndPickerProps(options?: {
   };
 }
 
-export function futureDatePickerProps(options?: {
-  existingValue?: string | null;
-  toYearOffset?: number;
-}): PlanningPickerBounds {
-  return planningStartPickerProps(options);
-}
-
 export function resolveDatePickerYearBounds(options: {
   fromDate?: Date;
   toDate?: Date;
@@ -152,17 +145,6 @@ export function resolveDatePickerYearBounds(options: {
     fromYear,
     toYear: Math.max(toYear, fromYear),
   };
-}
-
-export function combineDisabledDays(
-  ...matchers: Array<((date: Date) => boolean) | undefined>
-): ((date: Date) => boolean) | undefined {
-  const active = matchers.filter(
-    (matcher): matcher is (date: Date) => boolean => typeof matcher === "function",
-  );
-  if (active.length === 0) return undefined;
-  if (active.length === 1) return active[0];
-  return (date: Date) => active.some((matcher) => matcher(date));
 }
 
 type DateOrderKeys = {
@@ -213,8 +195,4 @@ export function refineNotBeforeToday(
       path: [path],
     });
   }
-}
-
-export function toDateOnlyString(date: Date): string {
-  return formatDateOnly(date);
 }

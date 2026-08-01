@@ -12,6 +12,7 @@ export const ORG_MODULE_KEYS = [
   "surveys",
   "payroll",
   "sign",
+  "timesheets",
 ] as const;
 
 export type OrgModuleKey = (typeof ORG_MODULE_KEYS)[number];

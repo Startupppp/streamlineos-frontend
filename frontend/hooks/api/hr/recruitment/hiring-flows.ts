@@ -57,15 +57,6 @@ export function useDeleteHiringFlow() {
   });
 }
 
-export function useHiringFlowRounds(flowId: number) {
-  return useQuery({
-    queryKey: queryKeys.hr.hiringFlowRounds(flowId),
-    queryFn: () => apiClient.get<HiringFlowRound[]>(`/hr/recruitment/hiring-flows/${flowId}/rounds`),
-    staleTime: 2 * 60_000,
-    enabled: flowId > 0,
-  });
-}
-
 export function useCreateHiringFlowRound() {
   const qc = useQueryClient();
   return useMutation({

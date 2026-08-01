@@ -181,16 +181,6 @@ export function useFeedbackPosts(filters: FeedbackPostFilters = {}) {
   });
 }
 
-export function useCreateFeedbackPost() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["projects", "feedback", "create"],
-    mutationFn: (input: CreateFeedbackPostInput) =>
-      apiClient.post<FeedbackPost>("/build/feedback", input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.roadmap.all }),
-  });
-}
-
 export function useUpdateFeedbackPost() {
   const qc = useQueryClient();
   return useMutation({

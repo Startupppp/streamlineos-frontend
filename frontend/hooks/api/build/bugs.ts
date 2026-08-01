@@ -28,15 +28,6 @@ export function useBugs(projectId?: number, filters?: BugFilters) {
   });
 }
 
-export function useBug(projectId?: number, bugId?: number) {
-  return useQuery<Bug>({
-    queryKey: queryKeys.projects.bugs.detail(projectId, bugId),
-    queryFn: () => apiClient.get<Bug>(`/build/${projectId}/bugs/${bugId}`),
-    enabled: !!projectId && !!bugId,
-    staleTime: 60_000,
-  });
-}
-
 export function useCreateBug() {
   const qc = useQueryClient();
   return useMutation({

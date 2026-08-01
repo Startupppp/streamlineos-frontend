@@ -80,16 +80,6 @@ export function useCreatePaymentProvider() {
   });
 }
 
-export function useDisablePaymentProvider() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["disable", "payment", "provider"],
-    mutationFn: (providerKey: string) =>
-      apiClient.post<PaymentProvider>(`/payments/providers/${providerKey}/disable`, {}),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.payments.providers() }),
-  });
-}
-
 export type SaveCredentialsPayload = {
   environment: PaymentEnvironment;
   keyId?: string;
@@ -193,16 +183,6 @@ export function useGenerateWebhook(providerKey: string) {
     mutationKey: ["generate", "webhook"],
     mutationFn: (environment: PaymentEnvironment) =>
       apiClient.post<PaymentWebhookEndpoint>(`/payments/providers/${providerKey}/webhooks/generate`, { environment }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.payments.readiness(providerKey) }),
-  });
-}
-
-export function useVerifyWebhook(providerKey: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["verify", "webhook"],
-    mutationFn: (payload: { environment: PaymentEnvironment; rawBody?: string; signature?: string }) =>
-      apiClient.post<PaymentWebhookEndpoint>(`/payments/providers/${providerKey}/webhooks/verify`, payload),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.payments.readiness(providerKey) }),
   });
 }

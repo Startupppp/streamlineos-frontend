@@ -161,24 +161,6 @@ export interface ExportRowsResponse {
   mapping: PayrollMapping | null;
 }
 
-export const CANONICAL_COLUMN_KEYS = [
-  "employeeName",
-  "employeeEmail",
-  "employeeId",
-  "periodStart",
-  "periodEnd",
-  "regularHours",
-  "overtimeHours",
-  "holidayHours",
-  "weekendHours",
-  "breakHours",
-  "leaveDays",
-  "billableHours",
-  "nonBillableHours",
-  "totalPayableHours",
-  "entryCount",
-] as const;
-
 export const DEFAULT_PAYROLL_MAPPING: PayrollMapping = {
   provider: "GENERIC",
   columns: [
