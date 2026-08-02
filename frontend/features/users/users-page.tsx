@@ -31,6 +31,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ErrorState } from "@/components/shared/error-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
@@ -69,6 +70,32 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { getUserDisplayName, getUserInitials } from "@/features/build/shared/resolve-user-name";
 import { useCan } from "@/hooks/api/access";
 import { USER_STRUCTURAL_ROLES } from "@/features/users/user-invite-roles";
+
+type BulkAction = "suspend" | "archive";
+
+function assertNever(value: never): never {
+  throw new Error(`Unhandled bulk action: ${String(value)}`);
+}
+
+function getBulkActionCopy(action: BulkAction, count: number) {
+  const subject = `${count} user${count === 1 ? "" : "s"}`;
+  switch (action) {
+    case "suspend":
+      return {
+        title: `Suspend ${subject}?`,
+        description: `${subject} will lose access immediately. Their data and membership are retained and they can be reactivated at any time. Organization owners and module owners in the selection will be skipped.`,
+        confirmLabel: "Suspend",
+      };
+    case "archive":
+      return {
+        title: `Archive ${subject}?`,
+        description: `${subject} will be archived and lose access. Their data and membership are retained and they can be restored at any time. Organization owners and module owners in the selection will be skipped.`,
+        confirmLabel: "Archive",
+      };
+    default:
+      return assertNever(action);
+  }
+}
 
 export function UsersPage() {
   const router = useRouter();
@@ -171,6 +198,7 @@ export function UsersPage() {
   const { mutate: bulkSuspend, isPending: isSuspending } = useBulkSuspend();
   const { mutate: bulkArchive, isPending: isArchiving } = useBulkArchive();
   const { mutate: bulkRestore, isPending: isRestoring } = useBulkRestore();
+  const [pendingBulkAction, setPendingBulkAction] = useState<BulkAction | null>(null);
   const canCreate = useCan("hr:employees:create");
   const canManage = useCan("hr:employees:manage");
   const canExport = useCan("hr:export:manage");
@@ -199,6 +227,24 @@ export function UsersPage() {
   function handleRowClick(user: User) {
     setSelectedUserId(user.id);
     setSheetOpen(true);
+  }
+
+  function handleRequestBulkSuspend() {
+    setPendingBulkAction("suspend");
+  }
+
+  function handleRequestBulkArchive() {
+    setPendingBulkAction("archive");
+  }
+
+  function handleBulkDialogOpenChange(open: boolean) {
+    if (!open) setPendingBulkAction(null);
+  }
+
+  function handleConfirmBulkAction() {
+    if (pendingBulkAction === "suspend") handleBulkSuspend();
+    else if (pendingBulkAction === "archive") handleBulkArchive();
+    setPendingBulkAction(null);
   }
 
   function handleBulkSuspend() {
@@ -566,7 +612,7 @@ export function UsersPage() {
                     variant="outline"
                     size="sm"
                     className="h-7 text-xs"
-                    onClick={handleBulkSuspend}
+                    onClick={handleRequestBulkSuspend}
                     isPending={isSuspending}
                     disabled={bulkIsPending}
                   >
@@ -579,7 +625,7 @@ export function UsersPage() {
                     variant="outline"
                     size="sm"
                     className="h-7 text-xs"
-                    onClick={handleBulkArchive}
+                    onClick={handleRequestBulkArchive}
                     isPending={isArchiving}
                     disabled={bulkIsPending}
                   >
@@ -704,6 +750,21 @@ export function UsersPage() {
         selectedIds={selectedIds}
         onSuccess={handleAssignSuccess}
       />
+      {pendingBulkAction !== null && (
+        <ConfirmDialog
+          open
+          onOpenChange={handleBulkDialogOpenChange}
+          title={getBulkActionCopy(pendingBulkAction, selectedIds.size).title}
+          description={
+            getBulkActionCopy(pendingBulkAction, selectedIds.size).description
+          }
+          confirmLabel={
+            getBulkActionCopy(pendingBulkAction, selectedIds.size).confirmLabel
+          }
+          isPending={pendingBulkAction === "suspend" ? isSuspending : isArchiving}
+          onConfirm={handleConfirmBulkAction}
+        />
+      )}
     </>
   );
 }
