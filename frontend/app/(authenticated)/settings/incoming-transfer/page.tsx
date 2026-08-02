@@ -15,7 +15,7 @@ export default function IncomingTransferPage() {
   return (
     <PageWrapper
       title="Incoming Ownership Transfer"
-      subtitle="Accept or decline an organization ownership transfer directed to you"
+      subtitle="Accept or decline a pending ownership transfer directed to you"
     >
       {isLoading ? (
         <Card>
@@ -33,7 +33,7 @@ export default function IncomingTransferPage() {
             <EmptyState
               illustration={<EmptyTransferIllustration />}
               title="No pending ownership transfer"
-              description="If an organization owner nominates you, the transfer request will appear here."
+              description="If an organization or module owner nominates you, the transfer request will appear here."
               className="flex-1 border-0 bg-transparent rounded-none"
             />
           </CardContent>

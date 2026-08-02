@@ -21,6 +21,9 @@ export const MODULE_LABELS: Record<string, string> = {
   dm: "Digital Marketing",
   chat: "Chat",
   payroll: "Payroll",
+  sign: "SignOS",
+  surveys: "Surveys",
+  timesheets: "Timesheets",
 };
 
 export const SCOPABLE_MODULES = new Set([
