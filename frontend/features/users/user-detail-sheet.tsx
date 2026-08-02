@@ -276,7 +276,7 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
                       <UserModuleAccessSection userId={user.id} />
 
                       <Separator />
-                      <UserAccessLinksSection />
+                      <UserAccessLinksSection userId={user.id} />
                     </div>
                   </TabsContent>
 

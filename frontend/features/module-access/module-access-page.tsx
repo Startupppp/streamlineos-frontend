@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,12 +12,21 @@ import { ModuleMembersTab } from "@/features/module-access/components/module-mem
 import { OwnershipSection } from "@/features/module-access/components/ownership-section";
 import { AuditLogDrawer } from "@/features/module-access/components/audit-log-drawer";
 
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 interface ModuleAccessPageProps {
   moduleKey: string;
   title: string;
 }
 
 export function ModuleAccessPage({ moduleKey, title }: ModuleAccessPageProps) {
+  const searchParams = useSearchParams();
+  const rawUserId = searchParams.get("userId");
+  const focusUserId =
+    rawUserId !== null && UUID_RE.test(rawUserId) ? rawUserId : undefined;
+  const defaultTab = focusUserId ? "members" : "roles";
+
   const myPermissionsQuery = useModuleMyPermissions(moduleKey);
   const myPerms = myPermissionsQuery.data;
 
@@ -52,7 +62,7 @@ export function ModuleAccessPage({ moduleKey, title }: ModuleAccessPageProps) {
         </Button>
       }
     >
-      <Tabs defaultValue="roles" className="flex flex-col flex-1 min-h-0 gap-0">
+      <Tabs defaultValue={defaultTab} className="flex flex-col flex-1 min-h-0 gap-0">
         <TabsList className="mb-4 self-start">
           <TabsTrigger value="roles">Roles</TabsTrigger>
           <TabsTrigger value="members">Members</TabsTrigger>
@@ -64,7 +74,11 @@ export function ModuleAccessPage({ moduleKey, title }: ModuleAccessPageProps) {
         </TabsContent>
 
         <TabsContent value="members" className="flex flex-col flex-1 min-h-0 mt-0">
-          <ModuleMembersTab moduleKey={moduleKey} canManage={canManage} />
+          <ModuleMembersTab
+            moduleKey={moduleKey}
+            canManage={canManage}
+            focusUserId={focusUserId}
+          />
         </TabsContent>
 
         <TabsContent value="ownership" className="mt-0">

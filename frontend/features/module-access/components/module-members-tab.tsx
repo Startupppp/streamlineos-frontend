@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { UserPlus, X, Pencil, Loader2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -114,9 +114,10 @@ function MemberRow({ member, canManage, onEdit, onRemove, isRemoving }: MemberRo
 interface ModuleMembersTabProps {
   moduleKey: string;
   canManage: boolean;
+  focusUserId?: string;
 }
 
-export function ModuleMembersTab({ moduleKey, canManage }: ModuleMembersTabProps) {
+export function ModuleMembersTab({ moduleKey, canManage, focusUserId }: ModuleMembersTabProps) {
   const [page, setPage] = useState(1);
   const [addOpen, setAddOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<ModuleMember | null>(null);
@@ -129,6 +130,21 @@ export function ModuleMembersTab({ moduleKey, canManage }: ModuleMembersTabProps
   const pagination = membersQuery.data?.pagination;
   const allGroups = (groupsQuery.data ?? []).map((g) => ({ id: g.id, name: g.name }));
   const existingMemberIds = new Set(members.map((m) => m.userId));
+
+  const triggeredRef = useRef(false);
+
+  useEffect(() => {
+    if (!focusUserId) return;
+    if (!membersQuery.isSuccess) return;
+    if (triggeredRef.current) return;
+    triggeredRef.current = true;
+    const found = membersQuery.data.data.find((m) => m.userId === focusUserId) ?? null;
+    if (found !== null) {
+      setEditTarget(found);
+    } else {
+      setAddOpen(true);
+    }
+  }, [focusUserId, membersQuery.isSuccess, membersQuery.data]);
 
   const handleOpenAdd = useCallback(() => setAddOpen(true), []);
   const handleEditMember = useCallback(
@@ -217,6 +233,7 @@ export function ModuleMembersTab({ moduleKey, canManage }: ModuleMembersTabProps
         moduleKey={moduleKey}
         existingMemberIds={existingMemberIds}
         allGroups={allGroups}
+        defaultUserId={focusUserId}
       />
 
       <EditGroupsDialog

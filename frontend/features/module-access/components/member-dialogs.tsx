@@ -42,6 +42,7 @@ interface AddMemberDialogProps {
   moduleKey: string;
   existingMemberIds: Set<string>;
   allGroups: ModuleMemberGroup[];
+  defaultUserId?: string;
 }
 
 export function AddMemberDialog({
@@ -50,8 +51,9 @@ export function AddMemberDialog({
   moduleKey,
   existingMemberIds,
   allGroups,
+  defaultUserId,
 }: AddMemberDialogProps) {
-  const [selectedUserId, setSelectedUserId] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState(defaultUserId ?? "");
   const [selectedGroupIds, setSelectedGroupIds] = useState<Set<number>>(new Set());
   const candidatesQuery = useModuleMemberCandidates(moduleKey);
   const addMember = useAddModuleMember(moduleKey);

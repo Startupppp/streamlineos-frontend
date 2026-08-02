@@ -24,6 +24,11 @@ interface ModuleLinkEntry {
   label: string;
 }
 
+interface ModuleAccessBadgeProps {
+  entry: ModuleLinkEntry;
+  focusUserId?: string;
+}
+
 function RbacRolesBlock() {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
@@ -44,11 +49,14 @@ function RbacRolesBlock() {
   );
 }
 
-function ModuleAccessBadge({ entry }: { entry: ModuleLinkEntry }) {
+function ModuleAccessBadge({ entry, focusUserId }: ModuleAccessBadgeProps) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
+  const href = focusUserId
+    ? `/${entry.key}/access?userId=${encodeURIComponent(focusUserId)}`
+    : `/${entry.key}/access`;
   return (
     <Link
-      href={`/${entry.key}/access`}
+      href={href}
       className="inline-flex items-center gap-1 rounded border border-border/60 bg-card px-2 py-1 text-[11px] text-foreground hover:bg-muted/40 transition-colors"
       {...hoverHandlers}
     >
@@ -58,7 +66,11 @@ function ModuleAccessBadge({ entry }: { entry: ModuleLinkEntry }) {
   );
 }
 
-export function UserAccessLinksSection() {
+interface UserAccessLinksSectionProps {
+  userId?: string;
+}
+
+export function UserAccessLinksSection({ userId }: UserAccessLinksSectionProps) {
   const canManageRbac = useCan("settings:rbac:manage");
   const canViewHr = useCan("hr:access:view");
   const canViewCrm = useCan("crm:access:view");
@@ -116,7 +128,7 @@ export function UserAccessLinksSection() {
           </p>
           <div className="flex flex-wrap gap-1.5">
             {visibleModules.map((entry) => (
-              <ModuleAccessBadge key={entry.key} entry={entry} />
+              <ModuleAccessBadge key={entry.key} entry={entry} focusUserId={userId} />
             ))}
           </div>
         </div>
