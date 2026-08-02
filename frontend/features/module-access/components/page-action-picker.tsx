@@ -72,9 +72,14 @@ function ResourceRow({ group, draft, onDraftChange, readOnly }: ResourceRowProps
       if (checked && viewPerm && (next[viewPerm.name] ?? "none") === "none") {
         next[viewPerm.name] = "all";
       }
+      if (!checked && viewPerm && permName === viewPerm.name) {
+        for (const p of permissions) {
+          next[p.name] = "none";
+        }
+      }
       onDraftChange(next);
     },
-    [draft, viewPerm, onDraftChange],
+    [draft, viewPerm, permissions, onDraftChange],
   );
 
   const handleScopeChange = useCallback(

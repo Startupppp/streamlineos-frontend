@@ -206,7 +206,13 @@ export function UsersPage() {
       { userIds: Array.from(selectedIds) },
       {
         onSuccess: (r) => {
-          toast.success(`${r.succeeded} user(s) suspended`);
+          if (r.failed > 0 && r.succeeded === 0) 
+            toast.error(`Failed to suspend ${r.failed} user(s)`);
+          else if (r.failed > 0) 
+            toast.warning(`${r.succeeded} user(s) suspended; ${r.failed} could not be updated`);
+          else 
+            toast.success(`${r.succeeded} user(s) suspended`);
+          
           setSelectedIds(new Set());
         },
         onError: (e) => toast.error(getErrorMessage(e)),
@@ -219,7 +225,13 @@ export function UsersPage() {
       { userIds: Array.from(selectedIds) },
       {
         onSuccess: (r) => {
-          toast.success(`${r.succeeded} user(s) archived`);
+          if (r.failed > 0 && r.succeeded === 0) {
+            toast.error(`Failed to archive ${r.failed} user(s)`);
+          } else if (r.failed > 0) {
+            toast.warning(`${r.succeeded} user(s) archived; ${r.failed} could not be updated`);
+          } else {
+            toast.success(`${r.succeeded} user(s) archived`);
+          }
           setSelectedIds(new Set());
         },
         onError: (e) => toast.error(getErrorMessage(e)),
@@ -232,7 +244,13 @@ export function UsersPage() {
       { userIds: Array.from(selectedIds) },
       {
         onSuccess: (r) => {
-          toast.success(`${r.succeeded} user(s) restored`);
+          if (r.failed > 0 && r.succeeded === 0) {
+            toast.error(`Failed to restore ${r.failed} user(s)`);
+          } else if (r.failed > 0) {
+            toast.warning(`${r.succeeded} user(s) restored; ${r.failed} could not be updated`);
+          } else {
+            toast.success(`${r.succeeded} user(s) restored`);
+          }
           setSelectedIds(new Set());
         },
         onError: (e) => toast.error(getErrorMessage(e)),

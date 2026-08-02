@@ -37,7 +37,7 @@ function OrgSetupBrandColumnInner({
       >
         {!isWelcome ? (
           <p className="text-xs font-medium text-brand-deep">
-            Workspace preview
+            Organization preview
           </p>
         ) : null}
         <AnimatePresence mode="wait" initial={false}>
@@ -115,7 +115,7 @@ function OrgSetupBrandColumnInner({
               ? "Answer a few questions. The shell shapes around your team — modules, defaults, and roles."
               : snapshot.goals.length > 0
                 ? "Sidebar and dashboard mirror the goals you pick."
-                : "Watch your workspace take shape as you answer. Nothing here is permanent."}
+                : "Watch your organization take shape as you answer. Nothing here is permanent."}
           </motion.p>
         </AnimatePresence>
       </motion.div>

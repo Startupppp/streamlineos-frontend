@@ -104,7 +104,7 @@ export function UserInvitationsPanel() {
   const [cancelId, setCancelId] = useState<string | null>(null);
   const canViewInvitations = useCan("hr:employees:manage");
   const canInvite = useCan("hr:employees:create");
-  const canCancelInvitation = useCan("hr:employees:delete");
+  const canCancelInvitation = useCan("hr:employees:create");
 
   const q = searchParams.get("q") ?? "";
   const status = (searchParams.get("status") ?? "all") as StatusFilter;

@@ -182,16 +182,20 @@ export function StepGeneration({ data }: StepGenerationProps) {
         }
       }
 
-      // Setup itself succeeded, so surface these instead of completing silently
+      if (inviteFailures.length > 0) {
+        if (generationFailure) {
+          toast.warning(`Starter content was not generated: ${generationFailure}`);
+        }
+        const count = inviteFailures.length;
+        const detail = inviteFailures.join(" · ");
+        handleError(
+          `Your organization was created, but ${count} invitation${count > 1 ? "s" : ""} could not be sent: ${detail}. Fix the addresses and try again.`,
+        );
+        return;
+      }
       if (generationFailure) {
         toast.warning(`Organization created, but starter content was not generated: ${generationFailure}`);
       }
-      if (inviteFailures.length > 0) {
-        toast.error(
-          `Organization created, but ${inviteFailures.length} invitation batch(es) failed: ${inviteFailures.join(" · ")}`,
-        );
-      }
-
       await handleSuccess(res?.autoLoginToken ?? null, res.orgId);
     } catch (err) {
       handleError(getErrorMessage(err));
