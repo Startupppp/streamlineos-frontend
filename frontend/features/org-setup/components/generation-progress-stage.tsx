@@ -1,10 +1,13 @@
 "use client";
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { Check } from "lucide-react";
+import { Check, RefreshCw } from "lucide-react";
 import { BRAND_NAME } from "@/lib/branding";
+import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { cn } from "@/lib/utils";
 import { PREVIEW_EASE } from "../lib/preview-motion";
+import type { SetupError } from "./generation-failure-stage";
 import { GenerationFailureStage } from "./generation-failure-stage";
 
 const RING_SIZE = 112;
@@ -17,9 +20,16 @@ type GenerationProgressStageProps = {
   completedSteps: number;
   progress: number;
   companyName?: string;
-  error: string | null;
+  setupError: SetupError | null;
+  generationPending: { failureMessage: string } | null;
+  isRetryingGeneration: boolean;
   showWelcome: boolean;
   onRetry: () => void;
+  onRetryGeneration: () => void;
+  onContinueWithoutGeneration: () => void;
+  onOpenOrganization?: () => void;
+  onGoToInvitations?: () => void;
+  isNavigating: boolean;
 };
 
 export function GenerationProgressStage({
@@ -27,9 +37,16 @@ export function GenerationProgressStage({
   completedSteps,
   progress,
   companyName,
-  error,
+  setupError,
+  generationPending,
+  isRetryingGeneration,
   showWelcome,
   onRetry,
+  onRetryGeneration,
+  onContinueWithoutGeneration,
+  onOpenOrganization,
+  onGoToInvitations,
+  isNavigating,
 }: GenerationProgressStageProps) {
   const reduceMotion = useReducedMotion();
   const total = steps.length;
@@ -41,12 +58,15 @@ export function GenerationProgressStage({
     : (steps[activeIndex] ?? "Finishing up…");
   const dashOffset = RING_CIRCUMFERENCE * (1 - progress / 100);
 
-  if (error) {
+  if (setupError) {
     return (
       <GenerationFailureStage
         workspaceLabel={workspaceLabel}
-        message={error}
+        setupError={setupError}
         onRetry={onRetry}
+        onOpenOrganization={onOpenOrganization}
+        onGoToInvitations={onGoToInvitations}
+        isNavigating={isNavigating}
       />
     );
   }
@@ -237,6 +257,43 @@ export function GenerationProgressStage({
             );
           })}
         </ul>
+
+        {generationPending !== null && !showWelcome && (
+          <motion.div
+            initial={reduceMotion ? false : { opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25, ease: PREVIEW_EASE }}
+            className="mt-2 rounded-xl border border-amber-200/60 bg-amber-50 px-3.5 py-3 dark:border-amber-500/30 dark:bg-amber-500/10"
+          >
+            <p className="text-[12px] font-semibold text-amber-800 dark:text-amber-300">
+              Starter content wasn&apos;t generated
+            </p>
+            <p className="mt-0.5 break-words text-[12px] text-amber-700 dark:text-amber-400">
+              {generationPending.failureMessage}
+            </p>
+            <div className="mt-2.5 flex gap-2">
+              <LoadingButton
+                size="sm"
+                variant="outline"
+                onClick={onRetryGeneration}
+                isPending={isRetryingGeneration}
+                className="h-7 gap-1.5 border-amber-300/60 bg-amber-50 text-amber-800 hover:bg-amber-100 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-300 dark:hover:bg-amber-500/20"
+              >
+                <RefreshCw className="h-3 w-3" aria-hidden />
+                Retry
+              </LoadingButton>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={onContinueWithoutGeneration}
+                disabled={isRetryingGeneration}
+                className="h-7 text-amber-700 hover:bg-amber-100 dark:text-amber-300 dark:hover:bg-amber-500/20"
+              >
+                Continue to dashboard
+              </Button>
+            </div>
+          </motion.div>
+        )}
 
       </div>
     </div>

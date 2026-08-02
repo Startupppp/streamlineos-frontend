@@ -151,7 +151,7 @@ export function buildWidgets(
 
 export function emptyPreviewCopy(snapshot: WorkspacePreviewSnapshot): string {
   if (snapshot.goals.length === 0) {
-    return "Pick goals to preview your workspace";
+    return "Pick goals to preview your organization";
   }
-  return "Your workspace preview updates as you go";
+  return "Your organization preview updates as you go";
 }
