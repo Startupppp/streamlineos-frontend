@@ -286,13 +286,25 @@ export function UserInvitationsPanel() {
       header: "Status",
       cell: (inv) => {
         const s = getStatus(inv);
+        const showDeliveryFailed = inv.deliveryFailed && (s === "pending" || s === "expired");
         return (
-          <Badge
-            variant="outline"
-            className={`h-4 text-[9px] px-1.5 py-0 capitalize ${STATUS_CLASSES[s]}`}
-          >
-            {s}
-          </Badge>
+          <div className="flex items-center gap-1">
+            <Badge
+              variant="outline"
+              className={`h-4 text-[9px] px-1.5 py-0 capitalize ${STATUS_CLASSES[s]}`}
+            >
+              {s}
+            </Badge>
+            {showDeliveryFailed ? (
+              <Badge
+                variant="outline"
+                className="h-4 text-[9px] px-1.5 py-0 bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30"
+                title="The invitation email could not be delivered. Resend to try again."
+              >
+                Email failed
+              </Badge>
+            ) : null}
+          </div>
         );
       },
     },

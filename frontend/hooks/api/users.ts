@@ -358,6 +358,7 @@ export interface Invitation {
   createdAt: string;
   status: "PENDING" | "ACCEPTED" | "DECLINED" | "EXPIRED" | "REVOKED";
   revokedAt: string | null;
+  deliveryFailed: boolean;
 }
 
 interface InvitationsResponse {
