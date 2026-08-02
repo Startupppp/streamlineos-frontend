@@ -216,9 +216,14 @@ export async function proxy(req: NextRequest) {
 
     const isOrgOwner = isOrgOwnerToken(token);
     const hasOrg = Boolean(token.orgId);
-    const orgSetupDone = Boolean(req.cookies.get("org-setup-done")?.value);
-    const onboardingDone = Boolean(req.cookies.get("onboarding-done")?.value);
-    // No workspace ALWAYS forces /org-setup; the durable skip/done cookie only suppresses the nag for an owner who has an org but hasn't finished the wizard. Entry and exit share `forceOrgSetup`, so they can never disagree (no /org-setup ⇄ /dashboard loop).
+    const orgSetupCookieName = token.orgId ? `org-setup-done--${token.orgId}` : null;
+    const orgSetupDone = orgSetupCookieName
+      ? Boolean(req.cookies.get(orgSetupCookieName)?.value)
+      : false;
+    const onboardingCookieName = token.id ? `onboarding-done--${token.id}` : null;
+    const onboardingDone = onboardingCookieName
+      ? Boolean(req.cookies.get(onboardingCookieName)?.value)
+      : false;
     const ownerSetupPending = isOrgOwner && !token.orgOnboardingCompletedAt;
     const forceOrgSetup = !hasOrg || (ownerSetupPending && !orgSetupDone);
 

@@ -13,6 +13,7 @@ import {
   clearBackendTokenCache,
   setAutoSignOutSuppressed,
 } from "@/lib/api-client";
+import { clearGateCookies } from "@/lib/onboarding-gate";
 import { queryKeys } from "@/lib/query-keys";
 
 async function attemptCredentialsSignIn(magicToken: string): Promise<boolean> {
@@ -89,6 +90,7 @@ export function useSignOut() {
       return signOut({ redirect: false });
     },
     onSuccess: () => {
+      clearGateCookies();
       router.push("/signin");
       router.refresh();
     },
@@ -129,6 +131,7 @@ export function useSwitchOrg() {
       }>("/organization/switch", { orgId }),
     onMutate: () => {
       setAutoSignOutSuppressed(true);
+      clearGateCookies();
     },
     onSuccess: async (data) => {
       clearBackendTokenCache();

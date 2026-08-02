@@ -18,6 +18,20 @@ export default async function DashboardLayout({
 
   const nonce = (await headers()).get("x-nonce") ?? undefined;
   const cookieStore = await cookies();
+
+  const isOrgOwner = session.user.isOrgOwner === true;
+  const hasOrg = Boolean(session.orgId);
+  const ownerSetupPending = isOrgOwner && !session.orgOnboardingCompletedAt;
+  const orgSetupCookieName = session.orgId
+    ? `org-setup-done--${session.orgId}`
+    : null;
+  const orgSetupDone = orgSetupCookieName
+    ? Boolean(cookieStore.get(orgSetupCookieName)?.value)
+    : false;
+  const forceOrgSetup = !hasOrg || (ownerSetupPending && !orgSetupDone);
+
+  if (forceOrgSetup) redirect("/org-setup");
+
   const isAdminLike = session.user.isOrgOwner;
   const hasDashboardAccess =
     isAdminLike || session.user.hasDashboardAccess !== false;

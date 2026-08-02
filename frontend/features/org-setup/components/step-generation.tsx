@@ -35,7 +35,7 @@ function groupInviteesByRole(invitees: Invitee[]): { role: string; emails: strin
 }
 
 export function StepGeneration({ data }: StepGenerationProps) {
-  const { update } = useSession();
+  const { data: session, update } = useSession();
   const [completedSteps, setCompletedSteps] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [showWelcome, setShowWelcome] = useState(false);
@@ -84,11 +84,11 @@ export function StepGeneration({ data }: StepGenerationProps) {
   const goToWorkspace = useCallback(() => {
     if (isContinuing) return;
     setIsContinuing(true);
-    clearAll();
+    clearAll(session?.user?.id ?? "");
     window.location.replace("/dashboard");
-  }, [isContinuing]);
+  }, [isContinuing, session?.user?.id]);
 
-  async function handleSuccess(autoLoginToken: string | null) {
+  async function handleSuccess(autoLoginToken: string | null, orgId: string) {
     if (apiDoneRef.current) return;
     apiDoneRef.current = true;
     if (intervalRef.current) {
@@ -97,7 +97,8 @@ export function StepGeneration({ data }: StepGenerationProps) {
     }
     setCompletedSteps(total);
     clearBackendTokenCache();
-    clearAll();
+    const userId = session?.user?.id ?? "";
+    clearAll(userId);
     sessionStorage.setItem(SETUP_DONE_KEY, "1");
     try {
       sessionStorage.setItem(WELCOME_POP_KEY, "1");
@@ -110,7 +111,7 @@ export function StepGeneration({ data }: StepGenerationProps) {
     if (autoLoginToken) {
       await signInWithMagicToken(autoLoginToken);
     }
-    await completeOnboardingGate("org-setup-done", update);
+    await completeOnboardingGate("org-setup-done", orgId, update);
 
     await new Promise<void>((resolve) => setTimeout(resolve, 700));
     setShowWelcome(true);
@@ -191,7 +192,7 @@ export function StepGeneration({ data }: StepGenerationProps) {
         );
       }
 
-      await handleSuccess(res?.autoLoginToken ?? null);
+      await handleSuccess(res?.autoLoginToken ?? null, res.orgId);
     } catch (err) {
       handleError(getErrorMessage(err));
     }
