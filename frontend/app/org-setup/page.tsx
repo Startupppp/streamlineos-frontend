@@ -4,7 +4,9 @@ export const dynamic = "force-dynamic";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useSession } from "next-auth/react";
+import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { clearBackendTokenCache } from "@/lib/api-client";
 import { completeOnboardingGate } from "@/lib/onboarding-gate";
 import { signInWithMagicToken } from "@/hooks/common/auth-hooks";
@@ -126,8 +128,9 @@ export default function OrgSetupPage() {
       await completeOnboardingGate("org-setup-done", res.orgId, update);
       clearAll(userId);
       window.location.replace("/dashboard");
-    } catch {
+    } catch (err) {
       setIsSkipping(false);
+      toast.error(getErrorMessage(err));
     }
   }, [skipOrgSetup, update, userId]);
 
@@ -173,7 +176,7 @@ export default function OrgSetupPage() {
 
   useEffect(() => {
     if (exitedRef.current) return;
-    if (!session?.orgId && !session?.orgOnboardingCompletedAt) return;
+    if (!session?.orgId || !session?.orgOnboardingCompletedAt) return;
     exitedRef.current = true;
     const orgId = session?.orgId ?? "";
     clearAll(userId);
