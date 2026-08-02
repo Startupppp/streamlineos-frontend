@@ -120,7 +120,7 @@ export const useUsers = (
   params?: UserListParams,
   options?: Omit<UseQueryOptions<UsersResponse, Error>, "queryKey" | "queryFn">
 ) => {
-  const canView = useCan("hr:employees:view");
+  const canView = useCan("settings:view");
   return useQuery<UsersResponse, Error>({
     queryKey: queryKeys.users.list(params as Record<string, unknown> | undefined),
     queryFn: () =>
@@ -196,7 +196,7 @@ export const useUserPreferences = (
 export const useUserStats = (
   options?: Omit<UseQueryOptions<UserStats, Error>, "queryKey" | "queryFn">
 ) => {
-  const canView = useCan("hr:employees:view");
+  const canView = useCan("settings:view");
   return useQuery<UserStats, Error>({
     queryKey: queryKeys.users.stats(),
     queryFn: () => apiClient.get<UserStats>("/users/stats"),
@@ -419,7 +419,7 @@ export const useInvitations = (
   params?: { page?: number; limit?: number; includeAccepted?: boolean },
   options?: Omit<UseQueryOptions<InvitationsResponse, Error>, "queryKey" | "queryFn">
 ) => {
-  const canView = useCan("hr:employees:manage");
+  const canView = useCan("settings:organization:manage");
   return useQuery<InvitationsResponse, Error>({
     queryKey: queryKeys.users.invitations(params as Record<string, unknown> | undefined),
     queryFn: () =>

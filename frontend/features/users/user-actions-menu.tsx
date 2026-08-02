@@ -51,8 +51,8 @@ export function UserActionsMenu({ user, onView }: UserActionsMenuProps) {
   const { mutate: sendSigninLink, isPending: isSendingSigninLink } =
     useSendSigninLink();
   const { mutate: removeMember, isPending: isRemoving } = useRemoveOrgMember();
-  const canManage = useCan("hr:employees:manage");
-  const canDelete = useCan("hr:employees:delete");
+  const canManage = useCan("settings:organization:manage");
+  const canDelete = useCan("settings:organization:manage");
   const canRemoveFromOrg = useCan("settings:manage");
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(
     null,

@@ -13,7 +13,7 @@ const userModuleAccessKey = (userId: string) =>
   ["streamlineos", "access", "user-module-access", userId] as const;
 
 export function useUserModuleAccess(userId: string, enabled = true) {
-  const canViewEmployees = useCan("hr:employees:view");
+  const canViewEmployees = useCan("settings:view");
   return useQuery<UserModuleAccess[]>({
     queryKey: userModuleAccessKey(userId),
     queryFn: () =>

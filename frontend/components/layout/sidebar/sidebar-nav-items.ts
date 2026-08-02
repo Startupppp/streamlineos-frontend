@@ -2265,20 +2265,20 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     label: "Membership",
-    requiredPermission: "hr:employees:view",
+    requiredPermission: "settings:view",
     routes: [
       {
         label: "Members",
         icon: UserCog,
         href: "/users",
         exact: true,
-        requiredPermission: "hr:employees:view",
+        requiredPermission: "settings:view",
       },
       {
         label: "Invitations",
         icon: MailOpen,
         href: "/users/invitations",
-        requiredPermission: "hr:employees:view",
+        requiredPermission: "settings:view",
       },
     ],
   },

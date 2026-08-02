@@ -102,9 +102,9 @@ export function UserInvitationsPanel() {
     setOpen: openInvite,
   } = useQueryParamOpen("create");
   const [cancelId, setCancelId] = useState<string | null>(null);
-  const canViewInvitations = useCan("hr:employees:manage");
-  const canInvite = useCan("hr:employees:create");
-  const canCancelInvitation = useCan("hr:employees:create");
+  const canViewInvitations = useCan("settings:organization:manage");
+  const canInvite = useCan("settings:organization:manage");
+  const canCancelInvitation = useCan("settings:organization:manage");
 
   const q = searchParams.get("q") ?? "";
   const status = (searchParams.get("status") ?? "all") as StatusFilter;

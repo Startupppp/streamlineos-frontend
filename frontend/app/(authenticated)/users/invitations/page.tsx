@@ -5,7 +5,7 @@ import { requirePermission } from "@/lib/rbac/require-permission";
 export const metadata = { title: "Invitations" };
 
 export default async function InvitationsPage() {
-  await requirePermission("hr:employees:manage");
+  await requirePermission("settings:organization:manage");
   return (
     <Suspense>
       <UserInvitationsPanel />
