@@ -23,6 +23,7 @@ import { UserPreferencesTab } from "./user-preferences-tab";
 import { UserLoginHistoryTab } from "./user-login-history-tab";
 import { UserMembershipSection } from "./user-membership-section";
 import { UserModuleAccessSection } from "./user-module-access-section";
+import { UserAccessLinksSection } from "./user-access-links-section";
 import { UserAuditTab } from "./user-audit-tab";
 import {
   Mail,
@@ -273,6 +274,9 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
 
                       <Separator />
                       <UserModuleAccessSection userId={user.id} />
+
+                      <Separator />
+                      <UserAccessLinksSection />
                     </div>
                   </TabsContent>
 
