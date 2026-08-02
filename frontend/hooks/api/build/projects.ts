@@ -380,7 +380,6 @@ export function useAddProjectMember(
   });
 }
 
-type RemoveMemberInput = { projectId: number; userId: string };
 
 type UpdateMemberRoleInput = {
   projectId: number;

@@ -18,7 +18,6 @@ import type {
   WinLossAnalysis,
   DealCompetitor,
   CreateDealCompetitorInput,
-  UpdateDealCompetitorInput,
   DealHealth,
   ForecastSnapshot,
   ForecastSnapshotCompare,
@@ -26,7 +25,6 @@ import type {
   PatchNextStepInput,
   DealStakeholder,
   CreateStakeholderInput,
-  UpdateStakeholderInput,
   OverrideForecastInput,
 } from "@/types/crm";
 

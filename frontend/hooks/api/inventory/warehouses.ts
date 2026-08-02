@@ -76,9 +76,6 @@ interface CreateWarehouseInput {
   isActive?: boolean;
 }
 
-interface UpdateWarehouseInput extends Partial<CreateWarehouseInput> {
-  warehouseId: number;
-}
 
 interface CreateLocationInput {
   warehouseId: number;

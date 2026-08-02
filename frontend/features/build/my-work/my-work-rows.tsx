@@ -1,11 +1,9 @@
 ﻿"use client";
 
-import { memo, useCallback, type ComponentType } from "react";
+import { memo, type ComponentType } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { EmptyState } from "@/components/ui/empty-state";
-import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
-import { ErrorState } from "@/components/shared/error-state";
+
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertCircle,
@@ -14,9 +12,9 @@ import {
   ChevronRight,
   Clock,
 } from "lucide-react";
-import { useAllWork } from "@/hooks/api/build/all-work";
+
 import type { MyWorkItem } from "@/types/projects/my-work";
-import type { AllWorkTicket } from "@/types/projects/tasks";
+
 import { cn } from "@/lib/utils";
 import { PriorityBadge } from "@/features/build/shared/priority-badge";
 import { StatusBadge } from "@/features/build/shared/status-badge";
@@ -165,71 +163,6 @@ export function AllWorkListSkeleton() {
           <Skeleton key={i} className="h-10 w-full rounded-md" />
         ))}
       </div>
-    </PmPanel>
-  );
-}
-
-function AllWorkList({
-  items,
-  isLoading,
-  isError,
-  onRetry,
-  emptyTitle,
-  emptyDescription,
-}: {
-  items: AllWorkTicket[] | undefined;
-  isLoading: boolean;
-  isError: boolean;
-  onRetry: () => void;
-  emptyTitle: string;
-  emptyDescription: string;
-}) {
-  const shouldReduceMotion = useReducedMotion();
-
-  if (isLoading) {
-    return <AllWorkListSkeleton />;
-  }
-
-  if (isError) {
-    return (
-      <ErrorState
-        className="min-h-[14rem]"
-        title="Failed to load tickets"
-        description="Could not fetch tickets. Please try again."
-        onRetry={onRetry}
-      />
-    );
-  }
-
-  if (!items || items.length === 0) {
-    return (
-      <EmptyState
-        illustrationPreset="projects"
-        title={emptyTitle}
-        description={emptyDescription}
-        className={CONTENT_FILL_PANEL}
-      />
-    );
-  }
-
-  return (
-    <PmPanel>
-      <motion.div
-        initial="hidden"
-        animate="show"
-        variants={{
-          hidden: {},
-          show: {
-            transition: shouldReduceMotion
-              ? { duration: 0 }
-              : { staggerChildren: 0.03, delayChildren: 0.04 },
-          },
-        }}
-      >
-        {items.map((item) => (
-          <WorkItemRow key={item.id} item={item} />
-        ))}
-      </motion.div>
     </PmPanel>
   );
 }

@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseMutationOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 
@@ -37,8 +37,3 @@ export function useAddRelatedLink(
   });
 }
 
-interface DeleteLinkVars {
-  projectId: number;
-  ticketId: number;
-  linkId: number;
-}

@@ -16,7 +16,7 @@ import {
   Zap,
   RefreshCw,
 } from "lucide-react";
-import type { FilterState } from "./workload-types";
+
 import {
   type WorkloadFilterMenuProps,
   type WorkloadFilterCategory,

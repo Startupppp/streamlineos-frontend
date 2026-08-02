@@ -9,7 +9,6 @@ import type {
   UpdateInterviewInput,
 } from "@/types/hr";
 import {
-  normalizeRecruitmentList,
   unwrapRecruitmentItems,
   type RecruitmentListResponse,
 } from "./list-response";
@@ -44,14 +43,6 @@ export interface InterviewScorecard {
   updatedAt: string | null;
 }
 
-interface ScorecardSummary {
-  interviewId: number;
-  totalScorecards: number;
-  submittedCount: number;
-  scorecards: InterviewScorecard[];
-  aggregatedRatings: Record<string, { total: number; count: number; average: number }>;
-  recommendationCounts: Record<string, number>;
-}
 
 export interface ScheduleInterviewInput {
   candidateId: number;

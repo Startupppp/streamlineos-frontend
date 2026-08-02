@@ -8,7 +8,6 @@ import type {
   CreateEngagementInput,
   CreateWorkerInput,
   TerminateEngagementInput,
-  UpdateEngagementInput,
   Worker,
   WorkerEngagement,
   WorkersPage,

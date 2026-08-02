@@ -1,8 +1,7 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
 
 export function useGenerateWorkspace() {
   return useMutation<{ success: boolean }, Error, { industry: string; enabledModules?: string[] }>({

@@ -152,10 +152,6 @@ export interface RecurringInvoice {
   overdue: boolean;
 }
 
-interface RunRecurringResult {
-  generated: number;
-  invoiceIds: number[];
-}
 
 interface RecordPaymentInput {
   invoiceId: number;

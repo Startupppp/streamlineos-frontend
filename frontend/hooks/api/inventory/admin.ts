@@ -229,12 +229,6 @@ export interface ExportJob {
   updatedAt: string;
 }
 
-interface ExportJobListResponse {
-  items: ExportJob[];
-  total: number;
-  page: number;
-  totalPages: number;
-}
 
 interface CreateExportJobInput {
   exportType: ExportType;

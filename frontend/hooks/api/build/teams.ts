@@ -8,7 +8,6 @@ import type {
   CreateTeamInput,
   ProjectTeamDetail,
   TeamListResponse,
-  TeamMembersResponse,
   UpdateTeamInput,
 } from "@/types/projects";
 import { useCan } from "@/hooks/api/access";

@@ -1,7 +1,7 @@
 import { addDays } from "date-fns";
 import type { RefinementCtx } from "zod";
 import { z } from "zod";
-import { formatDateOnly, getTodayString } from "@/lib/date-utils";
+import { getTodayString } from "@/lib/date-utils";
 
 export type DateBoundMode = "after" | "onOrAfter";
 

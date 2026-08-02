@@ -5,12 +5,9 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type {
-  PortalMembership,
   ProjectClientGrant,
   PortalMembershipsPage,
   ProjectClientGrantsPage,
-  CreateMembershipInput,
-  UpdateMembershipStatusInput,
   CreateGrantInput,
   UpdateGrantInput,
 } from "@/types/portal-access/grants";

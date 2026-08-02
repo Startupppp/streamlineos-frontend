@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import type { SignAuditEvent, SignCertificate, SignEnvelope, SignEnvelopeFull } from "@/types/sign";
+import type { SignAuditEvent, SignEnvelope, SignEnvelopeFull } from "@/types/sign";
 
 export interface CreateSignEnvelopeInput {
   title: string;

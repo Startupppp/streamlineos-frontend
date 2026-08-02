@@ -6,7 +6,6 @@ import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type {
   Program,
-  ProgramDetail,
   CreateProgramInput,
   UpdateProgramInput,
 } from "@/types/projects";

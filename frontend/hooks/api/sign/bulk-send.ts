@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import type { SignBulkSendJob, SignBulkSendRow } from "@/types/sign";
+import type { SignBulkSendJob } from "@/types/sign";
 
 export interface CreateBulkSendJobInput {
   templateId: number;

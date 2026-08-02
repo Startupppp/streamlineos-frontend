@@ -60,15 +60,6 @@ interface FeedbackPostFilters {
   search?: string;
 }
 
-interface CreateFeedbackPostInput {
-  title: string;
-  description?: string;
-  status?: FeedbackStatus;
-  category?: string;
-  submittedByName?: string;
-  submittedByEmail?: string;
-  linkedRoadmapItemId?: number;
-}
 
 interface UpdateFeedbackPostInput {
   title?: string;

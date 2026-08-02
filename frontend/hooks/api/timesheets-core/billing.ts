@@ -10,7 +10,6 @@ import type {
   BillingExportInput,
   BillingUninvoiced,
   InvoiceDraftInput,
-  RatePreview,
 } from "@/features/timesheets/types";
 
 interface UninvoicedQuery {
@@ -31,11 +30,6 @@ export function useBillingUninvoiced(query: UninvoicedQuery = {}, enabled = true
   });
 }
 
-interface RatePreviewQuery {
-  projectId?: number;
-  userId?: string;
-  ticketId?: number;
-}
 
 export function useBillingExport() {
   return useMutation({

@@ -18,17 +18,6 @@ import { ProductReorderCardFields } from "@/features/inventory/components/produc
 import {
   productSchema,
   type ProductFormValues,
-  NAME_MAX,
-  SKU_MIN,
-  SKU_MAX,
-  DESCRIPTION_MAX,
-  SKU_PATTERN,
-  DECIMAL_PATTERN,
-  CONTAINS_ALPHANUMERIC,
-  productNameSchema,
-  productSkuSchema,
-  productSkuOptionalSchema,
-  productDescriptionSchema,
 } from "@/features/inventory/lib/new-product-schema";
 
 export type { ProductFormValues };

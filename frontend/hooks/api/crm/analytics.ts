@@ -4,9 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type {
-  SalesDashboard,
   SupportDashboard,
-  CustomerExecutiveDashboard,
 } from "@/types/crm";
 
 interface SalesDashboardFilters {
@@ -83,31 +81,8 @@ export interface LostAnalysisResult {
   reasons: { reason: string; count: number; totalValue: number; pct: number }[];
 }
 
-interface CohortRow {
-  cohortMonth: string;
-  created: number;
-  converted: number;
-  conversionRate: number;
-  avgDaysToConvert: number | null;
-}
 
-interface RepMonthStat {
-  month: string;
-  dealsWon: number;
-  revenue: number;
-}
 
-interface RepComparisonData {
-  repId: number;
-  name: string;
-  initials: string;
-  dealsWon: number;
-  totalDeals: number;
-  revenue: number;
-  winRate: number;
-  avgDealSize: number;
-  monthly: RepMonthStat[];
-}
 
 export function useSupportDashboard() {
   return useQuery({

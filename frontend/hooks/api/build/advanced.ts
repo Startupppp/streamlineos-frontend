@@ -13,9 +13,7 @@ import type {
   IntakeRequest,
   ProjectAnalytics,
   CreateCycleInput,
-  UpdateCycleInput,
   CreateModuleInput,
-  UpdateModuleInput,
   CreateViewInput,
   UpdateViewInput,
   CreateWorkspaceViewInput,
@@ -38,14 +36,6 @@ export function useEpics(
   });
 }
 
-type CreateEpicInput = {
-  projectId: number;
-  title: string;
-  description?: string;
-  priority?: string;
-  assigneeId?: string;
-  points?: number;
-};
 
 export function useCycles(
   projectId: number,

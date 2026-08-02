@@ -17,12 +17,6 @@ import {
 
 export type JobBoardPlatform = "LINKEDIN" | "NAUKRI" | "INDEED";
 
-interface SyncResult {
-  platform: string;
-  status: "SYNC_INITIATED" | string;
-  lastSyncedAt: string;
-  message: string;
-}
 
 interface PublishResult {
   platform: string;

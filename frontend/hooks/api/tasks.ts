@@ -170,13 +170,4 @@ export function useTaskAnalytics(days = 30) {
 }
 
 
-interface TaskSequenceStep {
-  id: number;
-  sequenceId: number;
-  title: string;
-  type: string;
-  notes: string | null;
-  offsetDays: number;
-  order: number;
-}
 

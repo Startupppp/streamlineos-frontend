@@ -9,8 +9,6 @@ import type {
   TestRun,
   TestRunDetail,
   Bug,
-  CreateTestSuiteInput,
-  UpdateTestSuiteInput,
   CreateTestCaseInput,
   UpdateTestCaseInput,
   CreateTestRunInput,

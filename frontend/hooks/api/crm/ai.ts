@@ -126,48 +126,10 @@ interface MeetingFollowUpResult {
   generatedAt: string;
 }
 
-interface StaleDeal {
-  dealId: number;
-  dealName: string;
-  stage: string;
-  value: number;
-  daysSinceActivity: number;
-  assignedToId: string | null;
-  evidence: string[];
-}
 
-interface StalePipelineDigest {
-  summary: string;
-  criticalCount: number;
-  groupedByStage: Record<string, string[]>;
-  topRisk: string;
-}
 
-interface StalePipelineResult {
-  staleDeals: StaleDeal[];
-  digest: StalePipelineDigest | null;
-  inactiveDays: number;
-  generatedAt: string;
-  queued?: boolean;
-  jobId?: number;
-}
 
-interface DataQualityIssue {
-  entityType: "lead" | "deal";
-  entityId: number;
-  entityName: string;
-  issueKind: "missing_field" | "likely_duplicate" | "incomplete_stage" | "stale_data";
-  field: string | null;
-  severity: "low" | "medium" | "high";
-  suggestedFix: string;
-}
 
-interface DataQualityCopilotResult {
-  issues: DataQualityIssue[];
-  summary: string;
-  priorityAction: string;
-  totalIssues: number;
-}
 
 export function useLeadSummary() {
   return useMutation({

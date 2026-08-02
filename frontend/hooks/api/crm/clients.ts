@@ -5,14 +5,11 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type {
   ClientAccountWithActivities,
-  ClientActivity,
   ClientAccountFilters,
   PaginatedClientAccounts,
-  LogClientActivityInput,
   ClientTimelineEvent,
   SimpleClient,
   ClientOpportunity,
-  CreateClientOpportunityInput,
   OnboardingTemplate,
   OnboardingItem,
 } from "@/types/crm";
