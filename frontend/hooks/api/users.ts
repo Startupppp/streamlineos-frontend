@@ -348,7 +348,7 @@ export const useBulkInviteUsers = () => {
   });
 };
 
-interface Invitation {
+export interface Invitation {
   id: string;
   email: string;
   role: string;
