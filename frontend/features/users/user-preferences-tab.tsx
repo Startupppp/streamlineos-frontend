@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUserPreferences, useUpdateUserPreferences } from "@/hooks/api/users";
+import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 
@@ -60,6 +61,7 @@ const TIME_FORMATS = [
 ];
 
 export function UserPreferencesTab({ userId }: UserPreferencesTabProps) {
+  const canManage = useCan("settings:organization:manage");
   const { data: preferences, isLoading } = useUserPreferences(userId);
   const { mutate: updatePreferences, isPending } = useUpdateUserPreferences();
 
@@ -85,6 +87,7 @@ export function UserPreferencesTab({ userId }: UserPreferencesTabProps) {
   }, [preferences, form]);
 
   function onSubmit(values: PreferencesFormValues) {
+    if (!canManage) return;
     updatePreferences(
       { userId, data: values },
       {
@@ -117,7 +120,11 @@ export function UserPreferencesTab({ userId }: UserPreferencesTabProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Language</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value}
+                  disabled={!canManage}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue />
@@ -143,7 +150,7 @@ export function UserPreferencesTab({ userId }: UserPreferencesTabProps) {
               <FormItem>
                 <FormLabel>Timezone</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="UTC" />
+                  <Input {...field} placeholder="UTC" disabled={!canManage} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -156,7 +163,11 @@ export function UserPreferencesTab({ userId }: UserPreferencesTabProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Date Format</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value}
+                  disabled={!canManage}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue />
@@ -181,7 +192,11 @@ export function UserPreferencesTab({ userId }: UserPreferencesTabProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Time Format</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value}
+                  disabled={!canManage}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue />
@@ -201,11 +216,13 @@ export function UserPreferencesTab({ userId }: UserPreferencesTabProps) {
           />
         </div>
 
-        <div className="flex justify-end pt-2">
-          <LoadingButton type="submit" size="sm" isPending={isPending} loadingText="Saving…">
-            Save preferences
-          </LoadingButton>
-        </div>
+        {canManage && (
+          <div className="flex justify-end pt-2">
+            <LoadingButton type="submit" size="sm" isPending={isPending} loadingText="Saving…">
+              Save preferences
+            </LoadingButton>
+          </div>
+        )}
       </form>
     </Form>
   );

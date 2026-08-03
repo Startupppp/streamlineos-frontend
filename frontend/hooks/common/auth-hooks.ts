@@ -14,7 +14,9 @@ import {
   setAutoSignOutSuppressed,
 } from "@/lib/api-client";
 import { clearGateCookies } from "@/lib/onboarding-gate";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { queryKeys } from "@/lib/query-keys";
+import { toast } from "sonner";
 
 async function attemptCredentialsSignIn(magicToken: string): Promise<boolean> {
   try {
@@ -139,6 +141,9 @@ export function useSwitchOrg() {
       queryClient.clear();
       router.replace("/dashboard");
       router.refresh();
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
     },
     onSettled: () => {
       window.setTimeout(() => setAutoSignOutSuppressed(false), 4000);

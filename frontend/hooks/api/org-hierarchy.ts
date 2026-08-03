@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   OrgBusinessUnit,
   OrgBranch,
@@ -98,7 +99,11 @@ export function useDeleteBusinessUnit() {
 
 // ─── Org Branches ────────────────────────────────────────────────────────────
 
-export function useOrgBranches(query?: ListQuery) {
+export function useOrgBranches(
+  query?: ListQuery,
+  options?: Omit<UseQueryOptions<PaginatedResponse<OrgBranch>, Error>, "queryKey" | "queryFn">,
+) {
+  const canView = useCan("settings:view");
   return useQuery({
     queryKey: queryKeys.hierarchy.orgBranches(query),
     queryFn: () =>
@@ -109,6 +114,8 @@ export function useOrgBranches(query?: ListQuery) {
         ...(query?.status ? { status: query.status } : {}),
       }),
     staleTime: 60_000,
+    ...options,
+    enabled: canView && (options?.enabled ?? true),
   });
 }
 
@@ -144,7 +151,11 @@ export function useDeleteOrgBranch() {
 
 // ─── Departments ─────────────────────────────────────────────────────────────
 
-export function useOrgDepartments(query?: ListQuery) {
+export function useOrgDepartments(
+  query?: ListQuery,
+  options?: Omit<UseQueryOptions<PaginatedResponse<OrgDepartment>, Error>, "queryKey" | "queryFn">,
+) {
+  const canView = useCan("settings:view");
   return useQuery({
     queryKey: queryKeys.hierarchy.departments(query),
     queryFn: () =>
@@ -155,6 +166,8 @@ export function useOrgDepartments(query?: ListQuery) {
         ...(query?.status ? { status: query.status } : {}),
       }),
     staleTime: 60_000,
+    ...options,
+    enabled: canView && (options?.enabled ?? true),
   });
 }
 

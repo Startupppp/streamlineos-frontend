@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api-client";
+import { apiClient, setAutoSignOutSuppressed } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { OrgSettings, OrgMember } from "@/types/organization";
 import { useCan } from "@/hooks/api/access";
@@ -20,11 +20,14 @@ interface MembersResponse {
 export const useOrgSettings = (
   options?: Omit<UseQueryOptions<OrgSettings, Error>, "queryKey" | "queryFn">,
 ) => {
+  const canViewSettings = useCan("settings:view");
+  const { enabled: callerEnabled, ...restOptions } = options ?? {};
   return useQuery<OrgSettings, Error>({
     queryKey: queryKeys.organization.settings(),
     queryFn: () => apiClient.get<OrgSettings>("/organization/settings"),
     staleTime: 30 * 60_000,
-    ...options,
+    ...restOptions,
+    enabled: canViewSettings && (callerEnabled ?? true),
   });
 };
 
@@ -43,7 +46,7 @@ export const useOrgMembers = (
   return useQuery<MembersResponse, Error>({
     queryKey: [
       ...queryKeys.organization.members(),
-      { page, limit: safeLimit, search },
+      { page, limit: safeLimit, search, includeInactive: false },
     ] as const,
     queryFn: () =>
       apiClient.get<MembersResponse>("/organization/members", {
@@ -68,12 +71,16 @@ export const useOrgMembersByIds = (
   const canViewMembers = useCan("settings:view");
   const { enabled: callerEnabled, ...restOptions } = options ?? {};
   return useQuery<MembersResponse, Error>({
-    queryKey: [...queryKeys.organization.members(), { userIds: ids }] as const,
+    queryKey: [
+      ...queryKeys.organization.members(),
+      { userIds: ids, includeInactive: true },
+    ] as const,
     queryFn: () =>
       apiClient.get<MembersResponse>("/organization/members", {
         page: "1",
         limit: String(Math.min(Math.max(ids.length, 1), 100)),
         userIds: ids.join(","),
+        includeInactive: "true",
       }),
     staleTime: 5 * 60_000,
     ...restOptions,
@@ -87,9 +94,11 @@ export const useRemoveOrgMember = () => {
     mutationKey: ["organization", "remove-member"],
     mutationFn: (userId) => apiClient.delete<void>(`/organization/members/${userId}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: queryKeys.organization.members(),
       });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.stats() });
     },
   });
 };
@@ -198,7 +207,6 @@ export const useCreateOrganization = () => {
 };
 
 export const useLeaveOrg = () => {
-  const queryClient = useQueryClient();
   return useMutation<{ success: boolean; nextOrgId?: string }, Error, void>({
     mutationKey: ["organization", "leave"],
     mutationFn: () =>
@@ -206,24 +214,25 @@ export const useLeaveOrg = () => {
         "/organization/leave",
         {},
       ),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: queryKeys.organization.all,
-      });
+    onMutate: () => {
+      setAutoSignOutSuppressed(true);
+    },
+    onSettled: () => {
+      window.setTimeout(() => setAutoSignOutSuppressed(false), 4000);
     },
   });
 };
 
 export const useDeleteOrg = () => {
-  const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, { confirmation: string }>({
     mutationKey: ["organization", "delete"],
     mutationFn: (data) =>
       apiClient.delete<{ success: boolean }>("/organization", { data }),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: queryKeys.organization.all,
-      });
+    onMutate: () => {
+      setAutoSignOutSuppressed(true);
+    },
+    onSettled: () => {
+      window.setTimeout(() => setAutoSignOutSuppressed(false), 4000);
     },
   });
 };

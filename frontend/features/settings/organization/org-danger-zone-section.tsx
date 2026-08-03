@@ -37,10 +37,7 @@ import {
 import { clearBackendTokenCache } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { OrgSettings } from "@/types/organization";
-import {
-  OrgSettingsCard,
-  OrgSettingsActionRow,
-} from "./org-settings-chrome";
+import { OrgSettingsCard, OrgSettingsActionRow } from "./org-settings-chrome";
 
 interface Props {
   org: OrgSettings;
@@ -53,8 +50,8 @@ export function OrgDangerZoneSection({ org }: Props) {
   const canManage = useCan("settings:manage");
   const { update } = useSession();
   const { data: access } = useAccess();
-  const isOwner =
-    access?.isOrgOwner === true;
+  const isOwner = access?.isOrgOwner === true;
+  const isKnownNonOwner = access?.isOrgOwner === false;
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -150,12 +147,14 @@ export function OrgDangerZoneSection({ org }: Props) {
       return;
     }
     if (selectedMembershipId === undefined) {
-      toast.error("Member ID unavailable — a backend update is required to complete the transfer");
+      toast.error(
+        "Member ID unavailable — a backend update is required to complete the transfer",
+      );
       return;
     }
     const recipientName =
-      (membersData?.data ?? []).find((m) => m.userId === selectedUserId)?.name ??
-      "the selected member";
+      (membersData?.data ?? []).find((m) => m.userId === selectedUserId)
+        ?.name ?? "the selected member";
     initiateTransfer.mutate(
       { toMembershipId: selectedMembershipId },
       {
@@ -204,16 +203,16 @@ export function OrgDangerZoneSection({ org }: Props) {
         toast.success("You have left the organization");
         setLeaveOpen(false);
         clearBackendTokenCache();
+        await update(
+          data.nextOrgId ? { orgId: data.nextOrgId } : { orgId: null },
+        );
+        queryClient.clear();
         if (data.nextOrgId) {
-          await update({ orgId: data.nextOrgId });
-          queryClient.clear();
           router.replace("/dashboard");
-          router.refresh();
         } else {
-          queryClient.clear();
           router.replace("/org-setup");
-          router.refresh();
         }
+        router.refresh();
       },
       onError: (err) => toast.error(getErrorMessage(err)),
     });
@@ -225,10 +224,11 @@ export function OrgDangerZoneSection({ org }: Props) {
     deleteMutation.mutate(
       { confirmation: deleteConfirmation },
       {
-        onSuccess: () => {
+        onSuccess: async () => {
           toast.success("Organization deleted");
           setDeleteOpen(false);
           clearBackendTokenCache();
+          await update({ orgId: null });
           queryClient.clear();
           router.replace("/org-setup");
           router.refresh();
@@ -238,11 +238,16 @@ export function OrgDangerZoneSection({ org }: Props) {
     );
   }
 
-  if (!canManage) return null;
-
   const deleteMatchValue = org.name ?? org.slug ?? "";
   const deleteEnabled = deleteConfirmation === deleteMatchValue;
-  const memberIdUnavailable = !!selectedUserId && selectedMembershipId === undefined;
+  const memberIdUnavailable =
+    !!selectedUserId && selectedMembershipId === undefined;
+  const showOwnerManageActions = canManage && isOwner;
+  const showLeave = isKnownNonOwner;
+  const showOwnerCannotLeave = isOwner && !canManage;
+
+  if (!showOwnerManageActions && !showLeave && !showOwnerCannotLeave)
+    return null;
 
   return (
     <>
@@ -254,122 +259,142 @@ export function OrgDangerZoneSection({ org }: Props) {
         titleClassName="text-destructive"
         contentClassName="space-y-0 pt-0"
       >
-          {isOwner && (
-            <OrgSettingsActionRow
-              title="Transfer Ownership"
-              description={
-                pendingTransfer
-                  ? "Awaiting acceptance — the selected member must confirm the transfer"
-                  : "Send a transfer request to hand over organization ownership"
-              }
+        {showOwnerManageActions && (
+          <OrgSettingsActionRow
+            title="Transfer Ownership"
+            description={
+              pendingTransfer
+                ? "Awaiting acceptance — the selected member must confirm the transfer"
+                : "Send a transfer request to hand over organization ownership"
+            }
+          >
+            {pendingTransfer ? (
+              <>
+                <Badge
+                  variant="outline"
+                  className="text-xs gap-1 text-amber-700 border-amber-300 bg-amber-50 dark:text-amber-400 dark:border-amber-700/50 dark:bg-amber-500/10"
+                >
+                  <Clock className="h-3 w-3" />
+                  Transfer pending
+                </Badge>
+                <LoadingButton
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-xs text-destructive hover:bg-destructive/10"
+                  isPending={cancelTransfer.isPending}
+                  onClick={handleCancelPendingTransfer}
+                >
+                  Cancel
+                </LoadingButton>
+              </>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                className={DESTRUCTIVE_OUTLINE_BTN}
+                onClick={handleOpenTransfer}
+                disabled={pendingTransfersQuery.isLoading}
+              >
+                Transfer
+              </Button>
+            )}
+          </OrgSettingsActionRow>
+        )}
+
+        {showLeave && (
+          <OrgSettingsActionRow
+            title="Leave Organization"
+            description="Remove yourself from this organization. This cannot be undone."
+            showBorder={false}
+          >
+            <Button
+              variant="outline"
+              size="sm"
+              className={DESTRUCTIVE_OUTLINE_BTN}
+              onClick={handleOpenLeave}
             >
-              {pendingTransfer ? (
-                <>
-                  <Badge
-                    variant="outline"
-                    className="text-xs gap-1 text-amber-700 border-amber-300 bg-amber-50 dark:text-amber-400 dark:border-amber-700/50 dark:bg-amber-500/10"
-                  >
-                    <Clock className="h-3 w-3" />
-                    Transfer pending
-                  </Badge>
-                  <LoadingButton
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 text-xs text-destructive hover:bg-destructive/10"
-                    isPending={cancelTransfer.isPending}
-                    onClick={handleCancelPendingTransfer}
-                  >
-                    Cancel
-                  </LoadingButton>
-                </>
-              ) : (
+              Leave
+            </Button>
+          </OrgSettingsActionRow>
+        )}
+
+        {showOwnerCannotLeave && (
+          <OrgSettingsActionRow
+            title="Leave Organization"
+            description="Owners cannot leave. Transfer ownership to another member or delete the organization."
+            showBorder={false}
+          >
+            <Button
+              variant="outline"
+              size="sm"
+              className={DESTRUCTIVE_OUTLINE_BTN}
+              disabled
+            >
+              Leave
+            </Button>
+          </OrgSettingsActionRow>
+        )}
+
+        {showOwnerManageActions && (
+          <>
+            {org.status === "ARCHIVED" ? (
+              <OrgSettingsActionRow
+                title="Restore Organization"
+                description="Restore access for all members"
+              >
                 <Button
                   variant="outline"
                   size="sm"
                   className={DESTRUCTIVE_OUTLINE_BTN}
-                  onClick={handleOpenTransfer}
-                  disabled={pendingTransfersQuery.isLoading}
+                  onClick={handleOpenRestore}
                 >
-                  Transfer
+                  Restore
                 </Button>
-              )}
-            </OrgSettingsActionRow>
-          )}
+              </OrgSettingsActionRow>
+            ) : (
+              <OrgSettingsActionRow
+                title="Archive Organization"
+                description="Members will lose access until the org is restored"
+              >
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={DESTRUCTIVE_OUTLINE_BTN}
+                  onClick={handleOpenArchive}
+                >
+                  Archive
+                </Button>
+              </OrgSettingsActionRow>
+            )}
 
-          {!isOwner && (
             <OrgSettingsActionRow
-              title="Leave Organization"
-              description="Remove yourself from this organization. This cannot be undone."
+              title="Delete Organization"
+              description="Permanently delete this organization and all its data. This cannot be undone."
+              showBorder={false}
+              destructive
             >
               <Button
                 variant="outline"
                 size="sm"
                 className={DESTRUCTIVE_OUTLINE_BTN}
-                onClick={handleOpenLeave}
+                onClick={handleOpenDelete}
               >
-                Leave
+                Delete
               </Button>
             </OrgSettingsActionRow>
-          )}
-
-          {isOwner && (
-            <>
-              {org.status === "ARCHIVED" ? (
-                <OrgSettingsActionRow
-                  title="Restore Organization"
-                  description="Restore access for all members"
-                >
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={DESTRUCTIVE_OUTLINE_BTN}
-                    onClick={handleOpenRestore}
-                  >
-                    Restore
-                  </Button>
-                </OrgSettingsActionRow>
-              ) : (
-                <OrgSettingsActionRow
-                  title="Archive Organization"
-                  description="Members will lose access until the org is restored"
-                >
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={DESTRUCTIVE_OUTLINE_BTN}
-                    onClick={handleOpenArchive}
-                  >
-                    Archive
-                  </Button>
-                </OrgSettingsActionRow>
-              )}
-
-              <OrgSettingsActionRow
-                title="Delete Organization"
-                description="Permanently delete this organization and all its data. This cannot be undone."
-                showBorder={false}
-                destructive
-              >
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={DESTRUCTIVE_OUTLINE_BTN}
-                  onClick={handleOpenDelete}
-                >
-                  Delete
-                </Button>
-              </OrgSettingsActionRow>
-            </>
-          )}
+          </>
+        )}
       </OrgSettingsCard>
 
-      {isOwner && (
+      {showOwnerManageActions && (
         <Dialog open={transferOpen} onOpenChange={handleTransferOpenChange}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Transfer Ownership</DialogTitle>
               <DialogDescription>
-                This sends a transfer request the recipient must accept before ownership changes. You remain the owner until the request is accepted.
+                This sends a transfer request the recipient must accept before
+                ownership changes. You remain the owner until the request is
+                accepted.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-3 py-2">
@@ -380,7 +405,8 @@ export function OrgDangerZoneSection({ org }: Props) {
               />
               {memberIdUnavailable && (
                 <p className="text-xs text-destructive">
-                  Transfer cannot be initiated — member identifier not exposed by the current API. A backend update is required.
+                  Transfer cannot be initiated — member identifier not exposed
+                  by the current API. A backend update is required.
                 </p>
               )}
             </div>
@@ -402,7 +428,7 @@ export function OrgDangerZoneSection({ org }: Props) {
         </Dialog>
       )}
 
-      {!isOwner && (
+      {showLeave && (
         <ConfirmDialog
           open={leaveOpen}
           onOpenChange={handleLeaveOpenChange}
@@ -415,7 +441,7 @@ export function OrgDangerZoneSection({ org }: Props) {
         />
       )}
 
-      {isOwner && (
+      {showOwnerManageActions && (
         <>
           <ConfirmDialog
             open={archiveOpen}
@@ -439,14 +465,23 @@ export function OrgDangerZoneSection({ org }: Props) {
           <Dialog open={deleteOpen} onOpenChange={handleDeleteOpenChange}>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle className="text-destructive">Delete Organization</DialogTitle>
+                <DialogTitle className="text-destructive">
+                  Delete Organization
+                </DialogTitle>
                 <DialogDescription>
-                  This will permanently delete <strong>{org.name ?? org.slug}</strong> and all its data including members, projects, and settings. This action cannot be undone.
+                  This will permanently delete{" "}
+                  <strong>{org.name ?? org.slug}</strong> and all its data
+                  including members, projects, and settings. This action cannot
+                  be undone.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-2 py-2">
                 <Label className="text-sm">
-                  Type <span className="font-mono font-semibold">{deleteMatchValue}</span> to confirm
+                  Type{" "}
+                  <span className="font-mono font-semibold">
+                    {deleteMatchValue}
+                  </span>{" "}
+                  to confirm
                 </Label>
                 <Input
                   value={deleteConfirmation}

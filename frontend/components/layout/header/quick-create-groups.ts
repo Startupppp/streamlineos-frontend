@@ -154,7 +154,7 @@ export const QUICK_CREATE_GROUPS: CreateGroup[] = [
         label: "Invite user",
         href: "/users/invitations?create=1",
         icon: UserPlus,
-        permission: "hr:employees:create",
+        permission: "settings:organization:manage",
       },
     ],
   },

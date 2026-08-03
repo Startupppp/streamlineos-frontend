@@ -180,7 +180,10 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
                             <Badge variant="secondary" className="text-[10px] h-5 px-1.5">
                               {formatRoleLabel(user.role)}
                             </Badge>
-                            <UserStatusBadge isActive={user.isActive} />
+                            <UserStatusBadge
+                              isActive={user.userStatus ? user.userStatus === "active" : user.isActive}
+                              isDeleted={user.userStatus === "archived"}
+                            />
                           </div>
                         </div>
                       </div>
@@ -283,7 +286,14 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
                       <UserMembershipSection userId={user.id} />
 
                       <Separator />
-                      <UserModuleAccessSection userId={user.id} />
+                      <UserModuleAccessSection
+                        userId={user.id}
+                        isMemberActive={
+                          user.userStatus
+                            ? user.userStatus === "active"
+                            : user.isActive
+                        }
+                      />
 
                       <Separator />
                       <UserAccessLinksSection userId={user.id} />

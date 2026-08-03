@@ -8,7 +8,7 @@ export const SETTINGS_PERMISSIONS: Permission[] = [
   { name: "settings:manage", resource: "settings", action: "manage", description: "Manage settings" },
   { name: "settings:mfa", resource: "settings", action: "mfa", description: "Manage MFA settings for the organization" },
   { name: "settings:onboarding:manage", resource: "settings:onboarding", action: "manage", description: "Manage onboarding settings" },
-  { name: "settings:organization:manage", resource: "settings:organization", action: "manage", description: "Manage organization onboarding and setup" },
+  { name: "settings:organization:manage", resource: "settings:organization", action: "manage", description: "Manage members, invitations, and organization structure" },
   { name: "settings:view", resource: "settings", action: "view", description: "View settings" },
   { name: "settings:webhooks:manage", resource: "settings:webhooks", action: "manage", description: "Manage webhooks" },
 ];

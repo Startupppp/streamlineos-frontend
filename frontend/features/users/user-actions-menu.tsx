@@ -52,16 +52,18 @@ export function UserActionsMenu({ user, onView }: UserActionsMenuProps) {
     useSendSigninLink();
   const { mutate: removeMember, isPending: isRemoving } = useRemoveOrgMember();
   const canManage = useCan("settings:organization:manage");
-  const canDelete = useCan("settings:organization:manage");
-  const canRemoveFromOrg = useCan("settings:manage");
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(
     null,
   );
 
-  const canSuspendUser = canManage && !user.isOwner;
-  const canArchiveUser = canManage && !user.isOwner;
-  const canRemoveUser = canRemoveFromOrg && !user.isOwner;
-  const canDeleteUser = canDelete && !user.isOwner;
+  const isArchived = user.userStatus === "archived";
+  const isActiveUser = user.userStatus ? user.userStatus === "active" : user.isActive;
+  const canSuspendUser = canManage && !user.isOwner && isActiveUser;
+  const canArchiveUser = canManage && !user.isOwner && !isArchived;
+  const canActivateUser = canManage && !isActiveUser;
+  const canRemoveUser = canManage && !user.isOwner;
+  const canDeleteUser = canManage && !user.isOwner;
+  const canSendSigninLink = canManage && isActiveUser;
 
   const displayName = user.name ?? user.email;
 
@@ -69,7 +71,8 @@ export function UserActionsMenu({ user, onView }: UserActionsMenuProps) {
     updateStatus(
       { userId: user.id, status: "active" },
       {
-        onSuccess: () => toast.success("User activated"),
+        onSuccess: () =>
+          toast.success(isArchived ? "User restored" : "User activated"),
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
@@ -171,7 +174,7 @@ export function UserActionsMenu({ user, onView }: UserActionsMenuProps) {
       case "delete":
         return {
           title: "Delete user?",
-          description: `${displayName}'s account will be permanently deleted. This cannot be undone.`,
+          description: `${displayName}'s account will be permanently deleted if they only belong to this organization. If they belong to other organizations, remove them from this organization instead.`,
           confirmLabel: "Delete",
           destructive: true,
           isPending: isDeleting,
@@ -213,13 +216,13 @@ export function UserActionsMenu({ user, onView }: UserActionsMenuProps) {
         <DropdownMenuContent align="end" className="w-48">
           <DropdownMenuItem onClick={onView}>View details</DropdownMenuItem>
           {canManage && <DropdownMenuSeparator />}
-          {canManage && !user.isActive && (
+          {canActivateUser && (
             <DropdownMenuItem onClick={handleActivate}>
               <ShieldCheck className="h-3.5 w-3.5 mr-2 text-green-600" />
-              Activate
+              {isArchived ? "Restore" : "Activate"}
             </DropdownMenuItem>
           )}
-          {canSuspendUser && user.isActive && (
+          {canSuspendUser && (
             <DropdownMenuItem onClick={handleOpenSuspendConfirm}>
               <ShieldOff className="h-3.5 w-3.5 mr-2 text-yellow-600" />
               Suspend
@@ -231,7 +234,7 @@ export function UserActionsMenu({ user, onView }: UserActionsMenuProps) {
               Archive
             </DropdownMenuItem>
           )}
-          {canManage && (
+          {canSendSigninLink && (
             <DropdownMenuItem onClick={handleSendSigninLink}>
               <KeyRound className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
               Send sign-in link
@@ -257,7 +260,7 @@ export function UserActionsMenu({ user, onView }: UserActionsMenuProps) {
               Delete user
             </DropdownMenuItem>
           )}
-          {user.isOwner && (canManage || canDelete || canRemoveFromOrg) && (
+          {user.isOwner && canManage && (
             <>
               <DropdownMenuSeparator />
               <DropdownMenuItem disabled>

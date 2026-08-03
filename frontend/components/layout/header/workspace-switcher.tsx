@@ -1,52 +1,58 @@
-"use client"
+"use client";
 
-import { useCallback, useState } from "react"
-import { Check, ChevronsUpDown, Plus, Building2 } from "lucide-react"
-import { useSession } from "next-auth/react"
+import { useCallback, useState } from "react";
+import { Check, ChevronsUpDown, Plus, Building2 } from "lucide-react";
+import { useSession } from "next-auth/react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
+import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import {
-  Drawer,
-  DrawerContent,
-  DrawerTitle,
-} from "@/components/ui/drawer"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-import { cn } from "@/lib/utils"
-import { TruncatedText } from "@/components/ui/truncated-text"
-import { useGetOrganizations, useSwitchOrg } from "@/hooks/common/auth-hooks"
-import { useAccess } from "@/hooks/api/access"
-import { CreateWorkspaceDialog } from "@/components/layout/header/create-workspace-dialog"
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
+import { useGetOrganizations, useSwitchOrg } from "@/hooks/common/auth-hooks";
+import { useAccess } from "@/hooks/api/access";
+import { CreateWorkspaceDialog } from "@/components/layout/header/create-workspace-dialog";
+import {
+  LeaveOrganizationDialog,
+  LeaveOrganizationMenuItem,
+} from "@/features/settings/organization/leave-organization-control";
 
 interface WorkspaceSwitcherProps {
-  variant?: "header" | "sidebar"
-  iconOnly?: boolean
-  className?: string
-  open?: boolean
-  onOpenChange?: (open: boolean) => void
-  triggerOnly?: boolean
-  onRequestOpen?: () => void
-  drawerOnly?: boolean
+  variant?: "header" | "sidebar";
+  iconOnly?: boolean;
+  className?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  triggerOnly?: boolean;
+  onRequestOpen?: () => void;
+  drawerOnly?: boolean;
 }
 
 interface WorkspaceOrg {
-  id: string
-  name: string
+  id: string;
+  name: string;
 }
 
 interface WorkspaceSwitcherPanelProps {
-  activeOrg: WorkspaceOrg | undefined
-  otherOrgs: WorkspaceOrg[]
-  isPending: boolean
-  isOrgOwner: boolean
-  onSwitch: (orgId: string) => void
-  onCreateWorkspace: () => void
-  onClose?: () => void
-  layout: "dropdown" | "drawer"
+  activeOrg: WorkspaceOrg | undefined;
+  otherOrgs: WorkspaceOrg[];
+  isPending: boolean;
+  isOrgOwner: boolean;
+  canLeave: boolean;
+  onSwitch: (orgId: string) => void;
+  onCreateWorkspace: () => void;
+  onRequestLeave: () => void;
+  onClose?: () => void;
+  layout: "dropdown" | "drawer";
 }
 
 function WorkspaceSwitcherPanel({
@@ -54,23 +60,30 @@ function WorkspaceSwitcherPanel({
   otherOrgs,
   isPending,
   isOrgOwner,
+  canLeave,
   onSwitch,
   onCreateWorkspace,
+  onRequestLeave,
   onClose,
   layout,
 }: WorkspaceSwitcherPanelProps) {
   const handleSwitch = useCallback(
     (orgId: string) => {
-      onSwitch(orgId)
-      onClose?.()
+      onSwitch(orgId);
+      onClose?.();
     },
     [onSwitch, onClose],
-  )
+  );
 
   const handleCreate = useCallback(() => {
-    onCreateWorkspace()
-    onClose?.()
-  }, [onCreateWorkspace, onClose])
+    onCreateWorkspace();
+    onClose?.();
+  }, [onCreateWorkspace, onClose]);
+
+  const handleLeave = useCallback(() => {
+    onClose?.();
+    onRequestLeave();
+  }, [onClose, onRequestLeave]);
 
   if (layout === "dropdown") {
     return (
@@ -80,9 +93,15 @@ function WorkspaceSwitcherPanel({
             Organizations
           </p>
         </div>
-        <DropdownMenuItem className="gap-2 text-foreground data-[disabled]:opacity-100" disabled>
+        <DropdownMenuItem
+          className="gap-2 text-foreground data-[disabled]:opacity-100"
+          disabled
+        >
           <Check className="h-3.5 w-3.5 text-primary shrink-0" />
-          <TruncatedText text={activeOrg?.name ?? ""} className="font-medium text-sm text-foreground" />
+          <TruncatedText
+            text={activeOrg?.name ?? ""}
+            className="font-medium text-sm text-foreground"
+          />
         </DropdownMenuItem>
         {otherOrgs.length > 0 && (
           <>
@@ -95,7 +114,10 @@ function WorkspaceSwitcherPanel({
                 disabled={isPending}
               >
                 <span className="h-3.5 w-3.5 shrink-0" />
-                <TruncatedText text={org.name} className="text-sm text-foreground" />
+                <TruncatedText
+                  text={org.name}
+                  className="text-sm text-foreground"
+                />
               </DropdownMenuItem>
             ))}
           </>
@@ -112,8 +134,17 @@ function WorkspaceSwitcherPanel({
             </DropdownMenuItem>
           </>
         )}
+        {canLeave && (
+          <>
+            <DropdownMenuSeparator />
+            <LeaveOrganizationMenuItem
+              layout="dropdown"
+              onRequestLeave={handleLeave}
+            />
+          </>
+        )}
       </>
-    )
+    );
   }
 
   return (
@@ -125,7 +156,10 @@ function WorkspaceSwitcherPanel({
       </div>
       <div className="flex items-center gap-2 rounded-md px-2 py-2 text-sm text-foreground">
         <Check className="h-3.5 w-3.5 text-blue-600 shrink-0" />
-        <TruncatedText text={activeOrg?.name ?? ""} className="font-medium text-foreground" />
+        <TruncatedText
+          text={activeOrg?.name ?? ""}
+          className="font-medium text-foreground"
+        />
       </div>
       {otherOrgs.map((org) => (
         <button
@@ -149,8 +183,14 @@ function WorkspaceSwitcherPanel({
           <span>Create organization</span>
         </button>
       )}
+      {canLeave && (
+        <LeaveOrganizationMenuItem
+          layout="drawer"
+          onRequestLeave={handleLeave}
+        />
+      )}
     </div>
-  )
+  );
 }
 
 export function WorkspaceSwitcher({
@@ -163,66 +203,82 @@ export function WorkspaceSwitcher({
   onRequestOpen,
   drawerOnly = false,
 }: WorkspaceSwitcherProps) {
-  const { data: session } = useSession()
-  const { data: access } = useAccess()
-  const { data: organizations } = useGetOrganizations()
-  const switchOrg = useSwitchOrg()
-  const [createOpen, setCreateOpen] = useState(false)
-  const [internalOpen, setInternalOpen] = useState(false)
+  const { data: session } = useSession();
+  const { data: access } = useAccess();
+  const { data: organizations } = useGetOrganizations();
+  const switchOrg = useSwitchOrg();
+  const [createOpen, setCreateOpen] = useState(false);
+  const [leaveOpen, setLeaveOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
 
-  const isControlled = controlledOpen !== undefined
-  const open = isControlled ? controlledOpen : internalOpen
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
 
-  const activeOrgId = session?.orgId as string | null | undefined
-  const activeOrg = organizations?.find((o) => o.id === activeOrgId) ?? organizations?.[0]
-  const otherOrgs = organizations?.filter((o) => o.id !== activeOrg?.id) ?? []
-  const isOrgOwner = access?.isOrgOwner === true
+  const activeOrgId = session?.orgId as string | null | undefined;
+  const activeOrg =
+    organizations?.find((o) => o.id === activeOrgId) ?? organizations?.[0];
+  const otherOrgs = organizations?.filter((o) => o.id !== activeOrg?.id) ?? [];
+  const isOrgOwner = access?.isOrgOwner === true;
+  const canLeave = access?.isOrgOwner === false;
 
   const handleOpenChange = useCallback(
     (next: boolean) => {
       if (isControlled) {
-        controlledOnOpenChange?.(next)
+        controlledOnOpenChange?.(next);
       } else {
-        setInternalOpen(next)
+        setInternalOpen(next);
       }
     },
     [isControlled, controlledOnOpenChange],
-  )
+  );
 
-  const handleClose = useCallback(() => handleOpenChange(false), [handleOpenChange])
+  const handleClose = useCallback(
+    () => handleOpenChange(false),
+    [handleOpenChange],
+  );
 
   const handleSwitch = useCallback(
     (orgId: string) => {
-      switchOrg.mutate(orgId)
+      switchOrg.mutate(orgId);
     },
     [switchOrg],
-  )
+  );
 
   const handleCreateWorkspace = useCallback(() => {
-    setCreateOpen(true)
-  }, [])
+    setCreateOpen(true);
+  }, []);
+
+  const handleRequestLeave = useCallback(() => {
+    setLeaveOpen(true);
+  }, []);
+
+  const handleLeaveOpenChange = useCallback((open: boolean) => {
+    setLeaveOpen(open);
+  }, []);
 
   const handleTriggerClick = useCallback(() => {
     if (triggerOnly) {
-      onRequestOpen?.()
-      return
+      onRequestOpen?.();
+      return;
     }
-    handleOpenChange(true)
-  }, [triggerOnly, onRequestOpen, handleOpenChange])
+    handleOpenChange(true);
+  }, [triggerOnly, onRequestOpen, handleOpenChange]);
 
-  const isSidebar = variant === "sidebar"
-  const isLabelHidden = isSidebar && iconOnly
-  const workspaceName = activeOrg?.name ?? "Organization"
+  const isSidebar = variant === "sidebar";
+  const isLabelHidden = isSidebar && iconOnly;
+  const workspaceName = activeOrg?.name ?? "Organization";
 
   const panelProps = {
+    canLeave,
     activeOrg,
     otherOrgs,
-    isPending: switchOrg.isPending,
     isOrgOwner,
-    onSwitch: handleSwitch,
-    onCreateWorkspace: handleCreateWorkspace,
     onClose: handleClose,
-  }
+    onSwitch: handleSwitch,
+    isPending: switchOrg.isPending,
+    onRequestLeave: handleRequestLeave,
+    onCreateWorkspace: handleCreateWorkspace,
+  };
 
   const triggerButton = (
     <button
@@ -249,16 +305,25 @@ export function WorkspaceSwitcher({
       />
       {!isLabelHidden && (
         <>
-          <TruncatedText text={workspaceName} className="flex-1 text-sm font-medium text-sidebar-foreground" />
+          <TruncatedText
+            text={workspaceName}
+            className="flex-1 text-sm font-medium text-sidebar-foreground"
+          />
           <ChevronsUpDown className="h-3 w-3 shrink-0 text-sidebar-foreground/50" />
         </>
       )}
     </button>
-  )
+  );
 
   const createDialog = (
     <CreateWorkspaceDialog open={createOpen} onOpenChange={setCreateOpen} />
-  )
+  );
+  const leaveDialog = (
+    <LeaveOrganizationDialog
+      open={leaveOpen}
+      onOpenChange={handleLeaveOpenChange}
+    />
+  );
 
   if (drawerOnly) {
     return (
@@ -270,8 +335,9 @@ export function WorkspaceSwitcher({
           </DrawerContent>
         </Drawer>
         {createDialog}
+        {leaveDialog}
       </>
-    )
+    );
   }
 
   if (triggerOnly) {
@@ -280,7 +346,11 @@ export function WorkspaceSwitcher({
         {isLabelHidden ? (
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>{triggerButton}</TooltipTrigger>
-            <TooltipContent side="right" sideOffset={10} className="text-xs font-medium">
+            <TooltipContent
+              side="right"
+              sideOffset={10}
+              className="text-xs font-medium"
+            >
               {workspaceName}
             </TooltipContent>
           </Tooltip>
@@ -288,8 +358,9 @@ export function WorkspaceSwitcher({
           triggerButton
         )}
         {createDialog}
+        {leaveDialog}
       </>
-    )
+    );
   }
 
   return (
@@ -300,7 +371,11 @@ export function WorkspaceSwitcher({
             <TooltipTrigger asChild>
               <DropdownMenuTrigger asChild>{triggerButton}</DropdownMenuTrigger>
             </TooltipTrigger>
-            <TooltipContent side="right" sideOffset={10} className="text-xs font-medium">
+            <TooltipContent
+              side="right"
+              sideOffset={10}
+              className="text-xs font-medium"
+            >
               {workspaceName}
             </TooltipContent>
           </Tooltip>
@@ -312,6 +387,7 @@ export function WorkspaceSwitcher({
         </DropdownMenuContent>
       </DropdownMenu>
       {createDialog}
+      {leaveDialog}
     </>
-  )
+  );
 }

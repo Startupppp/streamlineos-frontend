@@ -2278,7 +2278,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Invitations",
         icon: MailOpen,
         href: "/users/invitations",
-        requiredPermission: "settings:view",
+        requiredPermission: "settings:organization:manage",
       },
     ],
   },

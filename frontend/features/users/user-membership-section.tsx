@@ -12,7 +12,9 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUserMembership, useUpdateUserMembership } from "@/hooks/api/users";
 import { useOrgBranches, useOrgDepartments } from "@/hooks/api/org-hierarchy";
-import { useOrgMembers } from "@/hooks/api/organization";
+import { useOrgMembersByIds } from "@/hooks/api/organization";
+import { MemberPicker } from "@/components/members/member-picker";
+import { useCan } from "@/hooks/api/access";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Building2, GitBranch, Network, Pencil } from "lucide-react";
@@ -22,7 +24,6 @@ import { LoadingButton } from "@/components/ui/loading-button";
 
 const NO_BRANCH = "none";
 const NO_DEPARTMENT = "none";
-const NO_MANAGER = "none";
 
 interface UserMembershipSectionProps {
   userId: string;
@@ -36,25 +37,31 @@ interface MembershipRow {
 
 export function UserMembershipSection({ userId }: UserMembershipSectionProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const canManage = useCan("settings:organization:manage");
   const { data: membership, isLoading } = useUserMembership(userId);
   const { mutate: updateMembership, isPending } = useUpdateUserMembership();
   const { data: branchesData } = useOrgBranches();
   const { data: departmentsData } = useOrgDepartments();
-  const { data: membersData } = useOrgMembers();
+  const managerIds = membership?.managerUserId ? [membership.managerUserId] : [];
+  const { data: managerData } = useOrgMembersByIds(managerIds);
 
   const [draft, setDraft] = useState<{
     branchId: string;
     departmentId: string;
-    managerUserId: string;
-  }>({ branchId: NO_BRANCH, departmentId: NO_DEPARTMENT, managerUserId: NO_MANAGER });
+    managerUserId: string | null;
+  }>({ branchId: NO_BRANCH, departmentId: NO_DEPARTMENT, managerUserId: null });
 
   function handleEdit() {
     setDraft({
       branchId: membership?.branchId ? String(membership.branchId) : NO_BRANCH,
       departmentId: membership?.departmentId ? String(membership.departmentId) : NO_DEPARTMENT,
-      managerUserId: membership?.managerUserId ?? NO_MANAGER,
+      managerUserId: membership?.managerUserId ?? null,
     });
     setIsEditing(true);
+  }
+
+  function handleCancelEdit() {
+    setIsEditing(false);
   }
 
   function handleSave() {
@@ -65,7 +72,7 @@ export function UserMembershipSection({ userId }: UserMembershipSectionProps) {
           branchId: draft.branchId !== NO_BRANCH ? draft.branchId : null,
           departmentId:
             draft.departmentId !== NO_DEPARTMENT ? draft.departmentId : null,
-          managerUserId: draft.managerUserId !== NO_MANAGER ? draft.managerUserId : null,
+          managerUserId: draft.managerUserId,
         },
       },
       {
@@ -90,7 +97,10 @@ export function UserMembershipSection({ userId }: UserMembershipSectionProps) {
 
   const branches = branchesData?.data ?? [];
   const departments = departmentsData?.data ?? [];
-  const managerOptions = membersData?.data ?? [];
+  const managerMember = managerData?.data?.[0];
+  const managerDisplayName = managerMember
+    ? (managerMember.name ?? managerMember.email)
+    : null;
 
   function handleBranchChange(v: string) {
     setDraft((p) => ({ ...p, branchId: v }));
@@ -98,8 +108,8 @@ export function UserMembershipSection({ userId }: UserMembershipSectionProps) {
   function handleDepartmentChange(v: string) {
     setDraft((p) => ({ ...p, departmentId: v }));
   }
-  function handleManagerChange(v: string) {
-    setDraft((p) => ({ ...p, managerUserId: v }));
+  function handleManagerChange(userIdValue: string | null) {
+    setDraft((p) => ({ ...p, managerUserId: userIdValue }));
   }
 
   const rows: MembershipRow[] = [
@@ -121,12 +131,12 @@ export function UserMembershipSection({ userId }: UserMembershipSectionProps) {
       label: "Manager",
       icon: <Network className="h-3.5 w-3.5 text-muted-foreground" />,
       value: membership?.managerUserId
-        ? (managerOptions.find((m) => m.userId === membership.managerUserId)?.name ?? membership.managerUserId)
+        ? (managerDisplayName ?? "…")
         : null,
     },
   ];
 
-  if (isEditing) {
+  if (isEditing && canManage) {
     return (
       <div className="space-y-3">
         <div className="space-y-2">
@@ -160,24 +170,23 @@ export function UserMembershipSection({ userId }: UserMembershipSectionProps) {
           </div>
           <div className="flex items-center gap-2 text-xs">
             <Network className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-            <Select value={draft.managerUserId} onValueChange={handleManagerChange}>
-              <SelectTrigger className="flex-1">
-                <SelectValue placeholder="Select manager" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={NO_MANAGER}>None</SelectItem>
-                {managerOptions.filter((m) => m.userId !== userId).map((m) => (
-                  <SelectItem key={m.userId} value={m.userId}>{m.name ?? m.email}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="min-w-0 flex-1">
+              <MemberPicker
+                value={draft.managerUserId ?? undefined}
+                onChange={handleManagerChange}
+                allowUnassigned
+                excludeUserId={userId}
+                placeholder="Select manager"
+                disabled={isPending}
+              />
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <LoadingButton size="sm" className="h-7 text-xs" onClick={handleSave} isPending={isPending}>
             Save
           </LoadingButton>
-          <AnimatedIconButton icon={XIcon} iconSize={14} iconClassName="mr-1" size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setIsEditing(false)} disabled={isPending}>
+          <AnimatedIconButton icon={XIcon} iconSize={14} iconClassName="mr-1" size="sm" variant="ghost" className="h-7 text-xs" onClick={handleCancelEdit} disabled={isPending}>
             Cancel
           </AnimatedIconButton>
         </div>
@@ -189,10 +198,12 @@ export function UserMembershipSection({ userId }: UserMembershipSectionProps) {
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Organization</p>
-        <Button variant="ghost" size="sm" className="h-6 text-[11px]" onClick={handleEdit}>
-          <Pencil className="h-3 w-3 mr-1" />
-          Edit
-        </Button>
+        {canManage && (
+          <Button variant="ghost" size="sm" className="h-6 text-[11px]" onClick={handleEdit}>
+            <Pencil className="h-3 w-3 mr-1" />
+            Edit
+          </Button>
+        )}
       </div>
       {rows.map((row) => (
         <div key={row.label} className="flex items-center gap-2.5 text-xs">

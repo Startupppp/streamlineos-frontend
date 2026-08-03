@@ -55,19 +55,29 @@ function ModuleToggleRow({ module, disabled, onToggle }: ModuleToggleRowProps) {
   );
 }
 
-export function UserModuleAccessSection({ userId }: { userId: string }) {
+interface UserModuleAccessSectionProps {
+  userId: string;
+  isMemberActive: boolean;
+}
+
+export function UserModuleAccessSection({
+  userId,
+  isMemberActive,
+}: UserModuleAccessSectionProps) {
   const canManage = useCan("settings:organization:manage");
   const { data: modules, isLoading } = useUserModuleAccess(userId);
   const setAccess = useSetUserModuleAccess(userId);
+  const togglesDisabled = !canManage || !isMemberActive || setAccess.isPending;
 
   const handleToggle = useCallback(
     (moduleKey: string, enabled: boolean) => {
+      if (!isMemberActive) return;
       setAccess.mutate(
         { moduleKey, enabled },
         { onError: (error) => toast.error(getErrorMessage(error)) },
       );
     },
-    [setAccess],
+    [isMemberActive, setAccess],
   );
 
   return (
@@ -76,7 +86,9 @@ export function UserModuleAccessSection({ userId }: { userId: string }) {
         Module access
       </p>
       <p className="text-[11px] text-muted-foreground">
-        Turn a module off to hide it from this person and block its access.
+        {isMemberActive
+          ? "Turn a module off to hide it from this person and block its access."
+          : "Module access can only be changed for active members."}
       </p>
       {isLoading ? (
         <div className="space-y-2 pt-1">
@@ -90,7 +102,7 @@ export function UserModuleAccessSection({ userId }: { userId: string }) {
             <ModuleToggleRow
               key={module.moduleKey}
               module={module}
-              disabled={!canManage || setAccess.isPending}
+              disabled={togglesDisabled}
               onToggle={handleToggle}
             />
           ))}

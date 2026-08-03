@@ -109,7 +109,6 @@ export function UserInvitationsPanel() {
   const q = searchParams.get("q") ?? "";
   const status = (searchParams.get("status") ?? "all") as StatusFilter;
   const page = Number(searchParams.get("page") ?? "1");
-  const includeAccepted = status === "all" || status === "accepted" || status === "revoked";
 
   const [localSearch, setLocalSearch] = useState(q);
   const debouncedLocalSearch = useDebouncedValue(localSearch, 300);
@@ -118,7 +117,9 @@ export function UserInvitationsPanel() {
     {
       page,
       limit: 20,
-      includeAccepted,
+      q: q || undefined,
+      status: status === "all" ? undefined : status,
+      includeAccepted: status === "all" ? true : undefined,
     },
     { enabled: canViewInvitations },
   );
@@ -126,16 +127,7 @@ export function UserInvitationsPanel() {
   const { mutate: cancel, isPending: isCancelling } = useCancelInvitation();
   const { mutate: changeRole, isPending: isChangingRole } = useChangeInvitationRole();
 
-  const allRows = data?.data ?? [];
-  const filtered = allRows.filter((inv) => {
-    if (
-      localSearch &&
-      !inv.email.toLowerCase().includes(localSearch.toLowerCase())
-    )
-      return false;
-    if (status !== "all" && getStatus(inv) !== status) return false;
-    return true;
-  });
+  const rows = data?.data ?? [];
 
   const updateParams = useCallback(
     (updates: Record<string, string | null>) => {
@@ -168,9 +160,10 @@ export function UserInvitationsPanel() {
   );
 
   const handleResend = useCallback(
-    (id: string) =>
+    (id: string, kind: "resend" | "reinvite" = "resend") =>
       resend(id, {
-        onSuccess: () => toast.success("Invitation resent"),
+        onSuccess: () =>
+          toast.success(kind === "reinvite" ? "Invitation re-sent" : "Invitation resent"),
         onError: (e) => {
           const message = getErrorMessage(e);
           toast.error(
@@ -238,7 +231,7 @@ export function UserInvitationsPanel() {
   );
 
   const pagination = data?.pagination;
-  const hasFilters = !!localSearch || status !== "all";
+  const hasFilters = !!q || status !== "all";
 
   const columns: DataTableColumn<Invitation>[] = [
     {
@@ -311,14 +304,15 @@ export function UserInvitationsPanel() {
     {
       key: "actions",
       header: "",
-      headerClassName: "w-[72px]",
-      className: "w-[72px]",
+      headerClassName: "w-[110px]",
+      className: "w-[110px]",
       cell: (inv) => {
         const s = getStatus(inv);
         const isActionable = s === "pending" || s === "expired";
         const canResend = isActionable && canInvite;
+        const canReinvite = s === "revoked" && canInvite;
         const canCancel = isActionable && canCancelInvitation;
-        if (!canResend && !canCancel) return null;
+        if (!canResend && !canReinvite && !canCancel) return null;
         return (
           <div className="flex items-center gap-0.5">
             {canResend && (
@@ -326,12 +320,26 @@ export function UserInvitationsPanel() {
                 variant="ghost"
                 size="icon"
                 className="h-7 w-7"
-                onClick={() => handleResend(inv.id)}
+                onClick={() => handleResend(inv.id, "resend")}
                 isPending={isResending}
                 disabled={isCancelling}
                 aria-label="Resend invitation"
               >
                 <RefreshCw className="h-4 w-4" />
+              </LoadingButton>
+            )}
+            {canReinvite && (
+              <LoadingButton
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-xs"
+                onClick={() => handleResend(inv.id, "reinvite")}
+                isPending={isResending}
+                disabled={isCancelling}
+                aria-label="Re-invite"
+              >
+                <RefreshCw className="h-3.5 w-3.5 mr-1" />
+                Re-invite
               </LoadingButton>
             )}
             {canCancel && (
@@ -425,7 +433,7 @@ export function UserInvitationsPanel() {
           ) : (
             <DataTable
               className="flex-1 min-h-0"
-              data={filtered}
+              data={rows}
               columns={columns}
               getRowKey={(inv) => inv.id}
               isLoading={isLoading}

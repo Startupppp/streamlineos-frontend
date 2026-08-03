@@ -1,7 +1,7 @@
 "use client";
 
 import { memo } from "react";
-import { Users, UserCheck, UserX, Mail } from "lucide-react";
+import { Archive, Users, UserCheck, UserX, Mail } from "lucide-react";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { useUserStats } from "@/hooks/api/users";
 
@@ -9,7 +9,7 @@ export const UserStatsCards = memo(function UserStatsCards() {
   const { data, isLoading } = useUserStats();
 
   return (
-    <StatCardGrid cols={4}>
+    <StatCardGrid cols={5}>
       <StatCard
         label="Total Users"
         value={data?.total ?? 0}
@@ -29,6 +29,13 @@ export const UserStatsCards = memo(function UserStatsCards() {
         value={data?.suspended ?? 0}
         icon={UserX}
         tone="amber"
+        isLoading={isLoading}
+      />
+      <StatCard
+        label="Archived"
+        value={data?.archived ?? 0}
+        icon={Archive}
+        tone="default"
         isLoading={isLoading}
       />
       <StatCard

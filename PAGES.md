@@ -20,6 +20,9 @@ Full text of any pre-2026-08-03 entry is in git history.
 ## Changelog
 
 **2026-08-03**
+- Leave/role spine residual gaps: `useLeaveOrg`/`useDeleteOrg` suppress auto-signout (same as switch) and no longer invalidate before session `update()` · `updateMemberRole` busts membership status cache · Leave CTA hidden until `access.isOrgOwner === false`. `organization.ts` · `org-membership.service.ts` · `workspace-switcher.tsx` · `leave-organization-control.tsx` · `org-danger-zone-section.tsx` · tsc frontend + backend typecheck.
+- Leave/session spine gaps: MEMBER Leave CTA in WorkspaceSwitcher · `lastGoodSessionData` clears on intentional null-org · `leaveOrg` deletes `orgUnitMembers` + bumps perms · membership status cache moved to Redis with explicit bust · `useOrgSettings` gated on `settings:view`. `workspace-switcher.tsx` · `leave-organization-control.tsx` · `auth.ts` · `org-membership.service.ts` · `membership-state.service.ts` · `organization.ts` · tsc frontend + backend typecheck.
+- Leave-org spine: `leaveOrg` busts membership cache + revokes org agent tokens, picks ACTIVE-only `nextOrgId`, Leave CTA no longer gated on `settings:manage`, INVITED denied in `MembershipStateService.resolve`, `fetchProfile` ACTIVE-only. `org-membership.service.ts` · `membership-state.service.ts` · `org-profile.service.ts` · `org-danger-zone-section.tsx` · tsc backend+frontend.
 - Session slimmed to identity — permissions/MFA moved to `/me/access`; the NextAuth session no longer carries a second, staler RBAC copy.
 - `hasDashboardAccess` removed end-to-end — every member reaches Home; what they see is RBAC + module enablement, not a per-user flag.
 - MFA enforcement moved from `proxy.ts` to the backend — it was a JWT claim read only by the client redirect, so "require 2FA" was bypassable.
@@ -147,7 +150,7 @@ Full text of any pre-2026-08-03 entry is in git history.
 - [x] `/mail` — Unified Gmail+Outlook inbox via Composio live proxy; **zero mail tables**
 - [x] `/ai` · `/ai/executive-brief` · `/ask` — AI assistant surfaces
 - [x] `/notifications` · `/notifications/preferences` · `/notifications/broadcasts` · `/notifications/events` · `/notifications/policy` · `/notifications/providers` · `/notifications/templates`
-- [x] `/users` · `/users/invitations` — Membership; status filtering lives on `/users` (suspended/archived pages removed 2026-07-30)
+- [x] `/users` · `/users/invitations` — Membership; status filtering lives on `/users` (suspended/archived pages removed 2026-07-30); invitations list filters (`status`/`q`) server-side; select-all-matching CTA removed (no bulk-by-filter API); membership/prefs gated on `settings:organization:manage`; manager via searchable `MemberPicker`; 2026-08-03 adversarial recheck: sidebar/quick-create invitations gated `settings:organization:manage`; invite email search prefix `ILIKE`; **org-scoped lifecycle SoT** = `organization_members.status` (`ACTIVE`/`SUSPENDED`/`LEFT`=archived) — suspend/archive/restore no longer flip global `users.isActive`/`userStatus`; delete soft-deletes global only on sole membership (else remove-from-org); org member suspend/remove gates aligned to `settings:organization:manage`; stats include `archived`; migration `0391`; 2026-08-03 spine closeout: CSV export uses membership-derived `status`; `GET /organization/members` defaults to ACTIVE (`includeInactive` for id resolve); manager must be ACTIVE; module-access toggles/mutations gated to ACTIVE; status mutations invalidate org members cache; session revoke on org suspend remains global (`user_sessions` has no `org_id`)
 - [x] `/directory` · `/directory/workers` · `/parties`
 
 ### Build (delivery + product management)

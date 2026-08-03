@@ -82,6 +82,8 @@ interface User {
   departmentId: string | null;
   branchId: string | null;
   isActive: boolean;
+  userStatus?: string | null;
+  archivedAt?: string | null;
   reportingTo: string | null;
   team: string | null;
   bio: string | null;
@@ -111,6 +113,7 @@ interface UserStats {
   total: number;
   active: number;
   suspended: number;
+  archived: number;
   pendingInvitations: number;
   newThisMonth: number;
 }
@@ -144,12 +147,13 @@ export const useUser = (
   userId: string,
   options?: Omit<UseQueryOptions<User, Error>, "queryKey" | "queryFn">
 ) => {
+  const canView = useCan("settings:view");
   return useQuery<User, Error>({
     queryKey: queryKeys.users.detail(userId),
     queryFn: () => apiClient.get<User>(`/users/${userId}`),
-    enabled: !!userId,
-    ...options,
     staleTime: 30_000,
+    ...options,
+    enabled: !!userId && canView && (options?.enabled ?? true),
   });
 };
 
@@ -185,12 +189,13 @@ export const useUserPreferences = (
   userId: string,
   options?: Omit<UseQueryOptions<UserPreferences, Error>, "queryKey" | "queryFn">
 ) => {
+  const canView = useCan("settings:view");
   return useQuery<UserPreferences, Error>({
     queryKey: queryKeys.users.preferences(userId),
     queryFn: () => apiClient.get<UserPreferences>(`/users/${userId}/preferences`),
-    enabled: !!userId,
-    ...options,
     staleTime: 30_000,
+    ...options,
+    enabled: !!userId && canView && (options?.enabled ?? true),
   });
 };
 
@@ -233,6 +238,7 @@ export const useUpdateUserStatus = () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.detail(userId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.stats() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.organization.members() });
     },
   });
 };
@@ -245,6 +251,7 @@ export const useDeleteUser = () => {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.stats() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.organization.members() });
     },
   });
 };
@@ -326,6 +333,8 @@ export const useInviteUser = () => {
       apiClient.post<{ success: boolean; invitationId: string; resent: boolean }>("/users/invite", data),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.invitations() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.stats() });
     },
   });
 };
@@ -345,6 +354,8 @@ export const useBulkInviteUsers = () => {
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.invitations() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.stats() });
     },
   });
 };
@@ -417,7 +428,13 @@ interface BulkActionResult {
 }
 
 export const useInvitations = (
-  params?: { page?: number; limit?: number; includeAccepted?: boolean },
+  params?: {
+    page?: number;
+    limit?: number;
+    includeAccepted?: boolean;
+    status?: "pending" | "accepted" | "expired" | "revoked";
+    q?: string;
+  },
   options?: Omit<UseQueryOptions<InvitationsResponse, Error>, "queryKey" | "queryFn">
 ) => {
   const canView = useCan("settings:organization:manage");
@@ -428,6 +445,8 @@ export const useInvitations = (
         ...(params?.page ? { page: String(params.page) } : {}),
         ...(params?.limit ? { limit: String(params.limit) } : {}),
         ...(params?.includeAccepted ? { includeAccepted: "true" } : {}),
+        ...(params?.status ? { status: params.status } : {}),
+        ...(params?.q ? { q: params.q } : {}),
       }),
     staleTime: 30_000,
     ...options,
@@ -443,6 +462,7 @@ export const useResendInvite = () => {
       apiClient.post<{ success: boolean }>(`/users/invitations/${invitationId}/resend`, {}),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.invitations() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.stats() });
     },
   });
 };
@@ -499,12 +519,13 @@ export const useUserMembership = (
   userId: string,
   options?: Omit<UseQueryOptions<UserMembership, Error>, "queryKey" | "queryFn">
 ) => {
+  const canView = useCan("settings:view");
   return useQuery<UserMembership, Error>({
     queryKey: queryKeys.users.membership(userId),
     queryFn: () => apiClient.get<UserMembership>(`/users/${userId}/membership`),
-    enabled: !!userId,
-    ...options,
     staleTime: 30_000,
+    ...options,
+    enabled: !!userId && canView && (options?.enabled ?? true),
   });
 };
 
@@ -521,6 +542,7 @@ export const useUpdateUserMembership = () => {
     onSuccess: (_, { userId }) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.membership(userId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.detail(userId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
     },
   });
 };
@@ -533,6 +555,7 @@ export const useBulkSuspend = () => {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.stats() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.organization.members() });
     },
   });
 };
@@ -545,6 +568,7 @@ export const useBulkArchive = () => {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.stats() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.organization.members() });
     },
   });
 };
@@ -557,6 +581,7 @@ export const useBulkRestore = () => {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.stats() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.organization.members() });
     },
   });
 };

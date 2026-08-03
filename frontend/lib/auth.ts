@@ -134,13 +134,18 @@ async function fetchSessionDataWithCache(userId: string, orgId: string | null): 
     if (cached) return cached;
   }
   const data = await fetchSessionData(userId);
-  if (data?.orgId) {
+  if (!data) {
+    return lastGoodSessionData.get(userId) ?? null;
+  }
+  if (data.orgId) {
     setSessionDataInStore(`${userId}:${data.orgId}`, data);
     if (orgId !== null) setSessionDataInStore(storeKey, data);
     lastGoodSessionData.set(userId, data);
     return data;
   }
-  return lastGoodSessionData.get(userId) ?? data;
+  lastGoodSessionData.delete(userId);
+  invalidateSessionDataInStore(userId);
+  return data;
 }
 
 const fetchSessionDataCached = cache(fetchSessionDataWithCache);
@@ -347,6 +352,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           invalidateSessionDataInStore(userId);
           const fresh = await fetchSessionData(userId);
           if (fresh) {
+            if (fresh.orgId) {
+              lastGoodSessionData.set(userId, fresh);
+            } else {
+              lastGoodSessionData.delete(userId);
+            }
             token.name = resolveSessionDisplayName(fresh);
             token.orgId = fresh.orgId;
             token.isOrgOwner = fresh.isOrgOwner;
