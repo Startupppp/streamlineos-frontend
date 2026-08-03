@@ -225,7 +225,7 @@ export function EditGroupsDialog({
   }, []);
 
   const handleSave = useCallback(() => {
-    if (!member) return;
+    if (!member || selectedGroupIds.size === 0) return;
     updateMember.mutate(
       { userId: member.userId, groupIds: Array.from(selectedGroupIds) },
       {
@@ -274,6 +274,13 @@ export function EditGroupsDialog({
           )}
         </div>
 
+        {allGroups.length > 0 && selectedGroupIds.size === 0 && (
+          <p className="text-[11px] leading-relaxed text-muted-foreground">
+            A member keeps module access through their groups. To take access
+            away entirely, close this and use Remove.
+          </p>
+        )}
+
         <DialogFooter>
           <Button
             type="button"
@@ -287,6 +294,7 @@ export function EditGroupsDialog({
             isPending={updateMember.isPending}
             loadingText="Saving…"
             onClick={handleSave}
+            disabled={selectedGroupIds.size === 0}
           >
             Save
           </LoadingButton>

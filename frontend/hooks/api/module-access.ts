@@ -387,6 +387,9 @@ export function useAddModuleMember(moduleKey: string) {
       void queryClient.invalidateQueries({
         queryKey: queryKeys.moduleAccess.roleGroups(moduleKey),
       });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.moduleAccess.memberCandidates(moduleKey),
+      });
     },
   });
 }
@@ -403,6 +406,12 @@ export function useUpdateModuleMember(moduleKey: string) {
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: [...queryKeys.moduleAccess.all, moduleKey, "members"],
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.moduleAccess.roleGroups(moduleKey),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.moduleAccess.memberCandidates(moduleKey),
       });
     },
   });
@@ -422,6 +431,9 @@ export function useRemoveModuleMember(moduleKey: string) {
       });
       void queryClient.invalidateQueries({
         queryKey: queryKeys.moduleAccess.roleGroups(moduleKey),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.moduleAccess.memberCandidates(moduleKey),
       });
     },
   });
