@@ -197,8 +197,8 @@ Run each via `psql "$DATABASE_URL" -f docs/schema-migration/<file>` in the liste
 
 | # | Script | Purpose | Needed on fresh DB? |
 |---|---|---|---|
-| 3 | `rename-projects-to-build-data.sql` | Rewrites `role_permission_grants` `projects:*`→`build:*`, `org_modules.module_key` `projects`→`build`, `organizations.enabled_modules` `PROJECTS`→`BUILD`, `user_module_access`, `module_setup_checklists` | No (0 orgs, 0 grants) |
-| 4 | `backfill-org-modules-from-enabled-modules.sql` | Inserts `org_modules` rows from `organizations.enabled_modules` for any org that lacks them | No (0 orgs) |
+| 3 | ~~`rename-projects-to-build-data.sql`~~ | **DELETED 2026-08-03.** Rename already complete (all 4 targets = 0 across both orgs) and the script referenced the dropped `organizations.enabled_modules` column, so it would have aborted its own transaction | Never — script removed |
+| 4 | ~~`backfill-org-modules-from-enabled-modules.sql`~~ | **DELETED 2026-08-03.** Read from `organizations.enabled_modules`, which no longer exists; `org_modules` is now the only module vocabulary | Never — script removed |
 | 5 | `grant-directory-keys.sql` | Copies `directory:*`/`workforce:*` grants to roles holding `hr:employees:*` grants | No (0 roles with data) |
 | 6 | `fix-support-agent-routing-cross-tenant.sql` | Tenant-isolation fix for support agent routing uniqueness | No (0 orgs) |
 | 7 | `drop-dead-tables.sql` | Drops 7 dead tables: `service_accounts`, `allowance_types`, `course_enrollments`, `courses`, `course_categories`, `training_attendance`, `training_programs`. Also deletes `hr:learning:%` grants. **NOT** `payroll_statutory_rule_sets` (has 8 seeded rows — see below). | **YES** — these tables exist in the current DB |

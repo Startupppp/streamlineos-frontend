@@ -87,36 +87,20 @@ For reference, what these applied:
 Journal is now consistent at **70 entries = 70 files** (not 54 as originally written — 16
 additional migrations 0334–0349 were added this session).
 
-## Step 3 — Build module rename data-migration
+## Steps 3 & 4 — RETIRED 2026-08-03 (scripts deleted)
 
-```bash
-psql "$DATABASE_URL" -f docs/schema-migration/rename-projects-to-build-data.sql
-```
+`rename-projects-to-build-data.sql` and `backfill-org-modules-from-enabled-modules.sql`
+were deleted. Both read `organizations.enabled_modules`, a column that no longer exists,
+so neither could run — the rename ran inside a single transaction and would have aborted
+at that statement.
 
-Rewrites `role_permission_grants` `projects:%`→`build:%`, `org_modules.module_key`
-`projects`→`build`, `organizations.enabled_modules` `PROJECTS`→`BUILD`,
-`user_module_access` / onboarding module keys, then bumps the permissions version.
-**Run BEFORE Step 4** so the module vocabulary is already normalized when the backfill reads it.
-Until this runs, existing users' grants still say `projects:*` and won't match the deployed
-`build:*` keys.
+Verified against the live DB before deletion: `org_modules.module_key='projects'` = 0,
+`role_permission_grants LIKE 'projects:%'` = 0, `user_module_access` = 0,
+`module_setup_checklists` = 0, across both orgs. The rename is complete and the
+`enabled_modules` vocabulary is retired, so the backfill has no source to read.
 
-## Step 4 — org_modules backfill (prerequisite for the #46 fail-closed flip)
-
-```bash
-psql "$DATABASE_URL" -f docs/schema-migration/backfill-org-modules-from-enabled-modules.sql
-```
-
-Inserts the lowercase `org_modules` row for every value in `organizations.enabled_modules`
-(`ON CONFLICT DO NOTHING`). Then verify **zero** orgs are missing rows:
-
-```sql
-SELECT o.id
-FROM   organizations o
-WHERE  EXISTS (SELECT 1 FROM unnest(o.enabled_modules) m
-               WHERE lower(m) NOT IN (SELECT module_key FROM org_modules WHERE org_id = o.id));
-```
-
-Only once this returns no rows is it safe to flip `@RequireModule` to deny-on-absent (task #46).
+Consequence for task #46: the `@RequireModule` fail-closed flip is **no longer blocked**
+on Step 4 — `org_modules` is now the only module vocabulary.
 
 ## Step 5 — directory/workforce grant backfill
 
