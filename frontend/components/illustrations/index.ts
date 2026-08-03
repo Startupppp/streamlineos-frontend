@@ -53,6 +53,7 @@ export {
   InvitationIllustration,
   AutomationsIllustration,
   EmptyChartIllustration,
+  EmptyCampaignsIllustration,
   EmptyGoalsIllustration,
 } from "./illustration-image";
 export { StateIllustration, type StateIllustrationPreset } from "./state-illustration";

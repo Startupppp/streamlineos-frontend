@@ -2,9 +2,9 @@
 
 import { useRef } from "react";
 import { toast } from "sonner";
-import { FileText, Loader2 } from "lucide-react";
+import { FileText } from "lucide-react";
 import { Trash2Icon, CloudUploadIcon } from "@animateicons/react/lucide";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useDeleteSignDocument, useUploadSignDocument } from "@/hooks/api/sign/documents";
@@ -84,16 +84,16 @@ export function DocumentPanel({ envelopeId, documents, editable }: DocumentPanel
       {editable && (
         <>
           <input ref={fileInputRef} type="file" accept="application/pdf" className="hidden" onChange={handleFileChange} />
-          {upload.isPending ? (
-            <Button variant="outline" size="sm" className="w-full" disabled>
-              <Loader2 className="size-4 animate-spin" />
-              Upload PDF
-            </Button>
-          ) : (
-            <AnimatedIconButton variant="outline" size="sm" icon={CloudUploadIcon} iconClassName="mr-1.5" className="w-full" onClick={() => fileInputRef.current?.click()}>
-              Upload PDF
-            </AnimatedIconButton>
-          )}
+          <LoadingButton
+            variant="outline"
+            size="sm"
+            className="w-full"
+            isPending={upload.isPending}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            {!upload.isPending && <CloudUploadIcon size={14} className="mr-1.5" />}
+            Upload PDF
+          </LoadingButton>
         </>
       )}
     </div>

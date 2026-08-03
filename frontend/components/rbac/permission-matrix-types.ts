@@ -1,4 +1,3 @@
-import { PERMISSIONS } from "@/lib/rbac/permissions";
 import type { Permission } from "@/lib/rbac/permissions";
 import type { DataScope } from "@/types/access";
 
@@ -9,7 +8,7 @@ export type ScopeMap = Partial<Record<string, EditableScope>>;
 export const MODULE_LABELS: Record<string, string> = {
   hr: "Human Resources",
   crm: "CRM & Sales",
-  projects: "Projects",
+  build: "Build",
   settings: "Settings",
   reports: "Reports",
   accounting: "Accounting",
@@ -22,12 +21,15 @@ export const MODULE_LABELS: Record<string, string> = {
   dm: "Digital Marketing",
   chat: "Chat",
   payroll: "Payroll",
+  sign: "SignOS",
+  surveys: "Surveys",
+  timesheets: "Timesheets",
 };
 
 export const SCOPABLE_MODULES = new Set([
   "hr",
   "crm",
-  "projects",
+  "build",
   "inventory",
   "support",
   "kb",
@@ -106,9 +108,9 @@ export function toEditableScope(scope: DataScope): EditableScope {
   return isEditableScope(scope) ? scope : "all";
 }
 
-export function buildCatalog(): CatalogModule[] {
+export function buildCatalog(permissions: readonly Permission[]): CatalogModule[] {
   const modules = new Map<string, Map<string, Permission[]>>();
-  for (const perm of PERMISSIONS) {
+  for (const perm of permissions) {
     const key = moduleOf(perm.name);
     let resources = modules.get(key);
     if (!resources) {
@@ -141,7 +143,6 @@ export function buildCatalog(): CatalogModule[] {
   return result;
 }
 
-export const CATALOG = buildCatalog();
 
 export function scopeMapsEqual(a: ScopeMap, b: ScopeMap): boolean {
   const aKeys = Object.keys(a);

@@ -102,9 +102,7 @@ export function LetterEmailEditor({
           </div>
         </CardHeader>
         <CardContent className="p-3 space-y-2">
-          <div className="min-w-0">
-          <SearchInput placeholder="Search tokens..." value={search} onValueChange={handleSearchChange} />
-        </div>
+        <SearchInput placeholder="Search tokens..." value={search} onValueChange={handleSearchChange} />
           <div className="max-h-32 overflow-y-auto space-y-1.5">
             {Object.entries(grouped).map(([group, vars]) => (
               <div key={group}>

@@ -89,26 +89,6 @@ export function useCollectionsSummary() {
   });
 }
 
-export interface ListCollectionActivitiesParams {
-  clientId?: number;
-  page?: number;
-  pageSize?: number;
-}
-
-export function useCollectionActivities(
-  params: ListCollectionActivitiesParams = {},
-) {
-  return useQuery<ListResponse<CollectionActivity>, Error>({
-    queryKey: arCollectionsKeys.collections.activities(params),
-    queryFn: () =>
-      apiClient.get<ListResponse<CollectionActivity>>(
-        "/accounting/collections/activities",
-        toQuery(params),
-      ),
-    staleTime: 30_000,
-  });
-}
-
 export function useCreateReminderPolicy() {
   const queryClient = useQueryClient();
   return useMutation<ReminderPolicy, Error, CreateReminderPolicyInput>({
@@ -218,7 +198,7 @@ export function useUpdateInvoiceCollection() {
       }
       return { snapshots };
     },
-    onError: (_err, _vars, context) => {
+    onError: (_, _vars, context) => {
       if (!context) return;
       for (const [key, data] of context.snapshots) {
         queryClient.setQueryData(key as readonly unknown[], data);

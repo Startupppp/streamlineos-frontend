@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { memo, useMemo } from "react";
 import Link from "next/link";
@@ -30,7 +30,7 @@ export function useQuickActions(): QuickAction[] {
   return useMemo(() => {
     const actions: QuickAction[] = [];
     if (access.projectsEnabled && access.canViewTickets) {
-      actions.push({ label: "Projects", icon: Briefcase, href: "/projects/all" });
+      actions.push({ label: "Projects", icon: Briefcase, href: "/build/all" });
     }
     if (access.hrEnabled && access.canCreateEmployees) {
       actions.push({ label: "Add Employee", icon: UserPlus, href: "/hr/onboarding" });
@@ -48,7 +48,7 @@ export function useQuickActions(): QuickAction[] {
       actions.push({ label: "Org Chart", icon: Network, href: "/hr/org-chart" });
     }
     if (access.projectsEnabled) {
-      actions.push({ label: "My Tasks", icon: CheckSquare, href: "/projects/my-work" });
+      actions.push({ label: "My Tasks", icon: CheckSquare, href: "/build/my-work" });
     }
     if (access.hrEnabled && !access.canViewAttendance) {
       actions.push({ label: "Check In", icon: Clock, href: "/hr/attendance" });

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { format, parseISO, addHours, differenceInMinutes, endOfDay, startOfDay } from "date-fns";
@@ -23,7 +23,7 @@ import type { CalendarListItem } from "@/hooks/api/calendar";
 import { useCalendarConnections } from "./use-calendar-connections";
 import { toast } from "sonner";
 import { EventFormFields } from "./event-form-fields";
-import type { TicketSearchResult } from "@/hooks/api/projects";
+import type { TicketSearchResult } from "@/hooks/api/build";
 import { TicketPickerDialog } from "./ticket-picker-dialog";
 import { Input } from "@/components/ui/input";
 import { getErrorMessage } from "@/lib/get-error-message";

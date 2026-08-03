@@ -102,49 +102,48 @@ export interface ExpensePageData {
   isAdmin: boolean;
 }
 
-export interface CategorySpending {
-  categoryId: number;
-  categoryName: string;
-  budgetLimit: number;
-  budgetPeriod: string;
-  totalSpent: number;
-  pendingAmount: number;
-  approvedAmount: number;
-  paidAmount: number;
-  expenseCount: number;
+export type ExpenseStatus = "PENDING" | "APPROVED" | "REJECTED" | "PAID";
+
+export interface Expense {
+  id: number;
+  orgId: string;
+  userId: string;
+  categoryId: number | null;
+  category: string;
+  amount: string;
+  currency: string | null;
+  description: string | null;
+  receiptUrl: string | null;
+  receiptFileName: string | null;
+  merchant: string | null;
+  paymentMethod: string | null;
+  projectId: number | null;
+  status: ExpenseStatus | null;
+  approverId: string | null;
+  approvedAt: Date | string | null;
+  rejectionReason: string | null;
+  paidAt: Date | string | null;
+  transactionRef: string | null;
+  expenseDate: string;
+  createdAt: Date | string | null;
+  updatedAt: Date | string | null;
 }
 
-export interface ReportData {
-  summary: ExpenseStats;
-  byCategory: {
-    category: string;
-    count: number;
-    amount: number;
-    percentage: number;
-  }[];
-  byEmployee: {
-    userId: string;
-    userName: string;
-    count: number;
-    amount: number;
-  }[];
-  byMonth: {
-    month: string;
-    count: number;
-    amount: number;
-  }[];
-  byStatus: {
-    status: string;
-    count: number;
-    amount: number;
-  }[];
-  topExpenses: {
-    id: number;
-    category: string;
-    amount: number;
-    description: string;
-    userName: string;
-    expenseDate: string;
-    status: string;
-  }[];
+export interface CreateExpenseInput {
+  category: string;
+  categoryId?: number;
+  amount: number;
+  description?: string;
+  receiptUrl?: string;
+  receiptFileName?: string;
+  merchant?: string;
+  paymentMethod?: string;
+  projectId?: number;
+  expenseDate: Date | string;
+}
+
+export interface UpdateExpenseStatusInput {
+  expenseId: number;
+  status: "APPROVED" | "REJECTED" | "PAID";
+  rejectionReason?: string;
 }

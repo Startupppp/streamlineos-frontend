@@ -103,6 +103,7 @@ export const useSupportTicket = (
 export const useCreateSupportTicket = () => {
   const queryClient = useQueryClient();
   return useMutation<SupportTicket, Error, CreateTicketInput>({
+    mutationKey: ["create", "support", "ticket"],
     mutationFn: (data) => apiClient.post<SupportTicket>("/support", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.support.all });
@@ -113,6 +114,7 @@ export const useCreateSupportTicket = () => {
 export const useUpdateSupportTicket = () => {
   const queryClient = useQueryClient();
   return useMutation<UpdateTicketResult, Error, UpdateTicketInput>({
+    mutationKey: ["update", "support", "ticket"],
     mutationFn: ({ id, ...data }) =>
       apiClient.patch<UpdateTicketResult>(`/support/${id}`, data),
     onSuccess: (_, vars) => {
@@ -125,9 +127,10 @@ export const useUpdateSupportTicket = () => {
 export const useAddSupportMessage = () => {
   const queryClient = useQueryClient();
   return useMutation<SupportMessage, Error, AddMessageInput>({
+    mutationKey: ["add", "support", "message"],
     mutationFn: ({ ticketId, ...data }) =>
       apiClient.post<SupportMessage>(`/support/${ticketId}/messages`, data),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.support.detail(variables.ticketId),
       });

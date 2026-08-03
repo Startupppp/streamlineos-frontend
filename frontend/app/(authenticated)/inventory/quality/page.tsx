@@ -152,7 +152,7 @@ function QualityHubInner() {
 
 export default function QualityHubPage() {
   return (
-    <Suspense>
+    <Suspense fallback={null}>
       <QualityHubInner />
     </Suspense>
   );

@@ -20,7 +20,7 @@ import { useDeals, useUpdateDealStage, useDeleteDeal, useCrmPipelines } from "@/
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import type { Deal, DealStage } from "@/types/crm";
-import { useHrEmployees, unwrapEmployees } from "@/hooks/api/hr";
+import { useHrEmployees } from "@/hooks/api/hr";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { DealSidePanel } from "@/features/crm/deals/deal-side-panel";
@@ -75,7 +75,7 @@ export default function DealsPage() {
 
   const { data: dealPipelines = [] } = useCrmPipelines("deal");
   const defaultPipeline = dealPipelines[0];
-  const dealStages = defaultPipeline?.stages ?? [];
+  const dealStages = useMemo(() => defaultPipeline?.stages ?? [], [defaultPipeline]);
 
   const kanbanStages = useMemo(
     () => dealStages.filter((s) => !s.isTerminal),
@@ -313,9 +313,7 @@ export default function DealsPage() {
 
   const filterBar = (
     <div className={FILTER_TOOLBAR_ROW}>
-      <div className="w-[200px] max-w-[min(200px,70vw)]">
-        <SearchInput value={searchInput} onValueChange={handleSearchChange} placeholder="Search deals..." aria-label="Search deals" />
-      </div>
+      <SearchInput value={searchInput} onValueChange={handleSearchChange} placeholder="Search deals..." aria-label="Search deals" />
       <Select value={stageFromUrl ?? "all"} onValueChange={handleStageFilterChange}>
         <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[140px]")}>
           <SelectValue placeholder="All stages" />

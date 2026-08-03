@@ -18,5 +18,3 @@ export const calibrationEntrySchema = z.object({
     .trim()
     .max(2000, "Note must be at most 2000 characters"),
 });
-
-export type CalibrationEntryFormValues = z.infer<typeof calibrationEntrySchema>;

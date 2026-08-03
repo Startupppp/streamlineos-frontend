@@ -17,7 +17,6 @@ import type {
   ScenarioCompareResponse,
   CreateScenarioInput,
   UpdateScenarioInput,
-  UpdateBudgetInput,
   BudgetWorkflowInput,
 } from "@/types/accounting/planning";
 
@@ -99,17 +98,6 @@ export function useBudget(id: number) {
     queryFn: () => apiClient.get<BudgetDetail>(`/accounting/budgets/${id}`),
     staleTime: 30_000,
     enabled: id > 0,
-  });
-}
-
-export function useUpdateBudget(id: number) {
-  const queryClient = useQueryClient();
-  return useMutation<BudgetSummary, Error, UpdateBudgetInput>({
-    mutationKey: ["accounting", "planning", "budgets", id, "update"],
-    mutationFn: (data) => apiClient.patch<BudgetSummary>(`/accounting/budgets/${id}`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: planningKeys.all });
-    },
   });
 }
 

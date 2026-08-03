@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 export interface ShiftTemplate {
   id: number;
@@ -39,10 +40,12 @@ export interface ShiftSwap {
 }
 
 export function useHrShifts() {
+  const canView = useCan("hr:attendance:view");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "shifts"],
     queryFn: () => apiClient.get<ShiftTemplate[]>("/hr/shifts"),
     staleTime: 2 * 60_000,
+    enabled: canView,
   });
 }
 
@@ -76,38 +79,22 @@ export function useDeleteShift() {
 }
 
 export function useShiftAssignments() {
+  const canView = useCan("hr:attendance:view");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "shiftAssignments"],
     queryFn: () => apiClient.get<ShiftAssignment[]>("/hr/shifts/assignments"),
     staleTime: 2 * 60_000,
-  });
-}
-
-export function useAssignShift() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "shifts", "assign"],
-    mutationFn: (data: { userId: string; shiftId: number; effectiveFrom: string; effectiveTo?: string }) =>
-      apiClient.post<ShiftAssignment>("/hr/shifts/assignments", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "shiftAssignments"] }),
+    enabled: canView,
   });
 }
 
 export function useShiftSwaps() {
+  const canView = useCan("hr:attendance:view");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "shiftSwaps"],
     queryFn: () => apiClient.get<ShiftSwap[]>("/hr/shifts/swaps"),
     staleTime: 30_000,
-  });
-}
-
-export function useCreateSwapRequest() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "shifts", "swap"],
-    mutationFn: (data: { targetUserId: string; requestDate: string; targetDate: string; reason?: string }) =>
-      apiClient.post<ShiftSwap>("/hr/shifts/swaps", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "shiftSwaps"] }),
+    enabled: canView,
   });
 }
 

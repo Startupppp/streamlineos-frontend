@@ -38,7 +38,7 @@ import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { ExpenseFilters } from "@/types/hr/expenses";
-import { useHrEmployees, unwrapEmployees } from "@/hooks/api/hr";
+import { useHrEmployees } from "@/hooks/api/hr";
 import type { Employee, PaginatedEmployees } from "@/types/hr";
 import { usePdfRenderer, type PdfData } from "./pdf-renderer";
 import { downloadCSV, downloadXLSX, type XlsxData } from "./xlsx-renderer";
@@ -75,7 +75,7 @@ async function exportExpenses(params: {
 
 async function emailExpenseReport(
   filters: ExpenseFilters,
-  emailTarget: "CEO" | "HR" | "BOTH",
+  emailTarget: "ADMINS" | "APPROVERS" | "BOTH",
 ): Promise<{ success: boolean; error?: string }> {
   try {
     await apiClient.post("/hr/expenses/email-report", { filters, emailTarget });
@@ -148,7 +148,7 @@ export function ExpenseExportDialog({
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [exportComplete, setExportComplete] = useState(false);
 
-  const [emailTarget, setEmailTarget] = useState<"CEO" | "HR" | "BOTH">("BOTH");
+  const [emailTarget, setEmailTarget] = useState<"ADMINS" | "APPROVERS" | "BOTH">("BOTH");
 
   const [dateFrom, setDateFrom] = useState(filters.startDate || "");
   const [dateTo, setDateTo] = useState(filters.endDate || "");
@@ -211,7 +211,7 @@ export function ExpenseExportDialog({
     setIsSendingEmail(true);
     try {
       const result = await emailExpenseReport(exportFilters, emailTarget);
-      const targetLabel = emailTarget === "BOTH" ? "CEO & HR" : emailTarget;
+      const targetLabel = emailTarget === "BOTH" ? "Admins & Approvers" : emailTarget;
       if (result.success) {
         toast.success(`Expense report emailed to ${targetLabel} successfully!`);
       } else {
@@ -325,10 +325,11 @@ export function ExpenseExportDialog({
               </Label>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground block">
+                  <Label htmlFor="expense-date-from" className="text-xs text-muted-foreground block">
                     From
                   </Label>
                   <DatePicker
+                    id="expense-date-from"
                     value={dateFrom}
                     onChange={setDateFrom}
                     placeholder="From date"
@@ -345,10 +346,11 @@ export function ExpenseExportDialog({
                   )}
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground block">
+                  <Label htmlFor="expense-date-to" className="text-xs text-muted-foreground block">
                     To
                   </Label>
                   <DatePicker
+                    id="expense-date-to"
                     value={dateTo}
                     onChange={setDateTo}
                     placeholder="To date"
@@ -380,11 +382,11 @@ export function ExpenseExportDialog({
 
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <Label className="text-xs text-muted-foreground mb-1 block">
+                <Label id="expense-export-status-label" className="text-xs text-muted-foreground mb-1 block">
                   Status
                 </Label>
                 <Select value={exportStatus} onValueChange={setExportStatus}>
-                  <SelectTrigger>
+                  <SelectTrigger aria-labelledby="expense-export-status-label">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -397,14 +399,14 @@ export function ExpenseExportDialog({
                 </Select>
               </div>
               <div>
-                <Label className="text-xs text-muted-foreground mb-1 block">
+                <Label id="expense-export-category-label" className="text-xs text-muted-foreground mb-1 block">
                   Category
                 </Label>
                 <Select
                   value={exportCategory}
                   onValueChange={setExportCategory}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger aria-labelledby="expense-export-category-label">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -418,11 +420,11 @@ export function ExpenseExportDialog({
                 </Select>
               </div>
               <div>
-                <Label className="text-xs text-muted-foreground mb-1 block">
+                <Label id="expense-export-payment-label" className="text-xs text-muted-foreground mb-1 block">
                   Payment
                 </Label>
                 <Select value={exportPayment} onValueChange={setExportPayment}>
-                  <SelectTrigger>
+                  <SelectTrigger aria-labelledby="expense-export-payment-label">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -439,11 +441,11 @@ export function ExpenseExportDialog({
 
             {employees.length > 0 && (
               <div>
-                <Label className="text-xs text-muted-foreground mb-1 block">
+                <Label id="expense-export-user-label" className="text-xs text-muted-foreground mb-1 block">
                   Spent By
                 </Label>
                 <Select value={exportUserId} onValueChange={setExportUserId}>
-                  <SelectTrigger>
+                  <SelectTrigger aria-labelledby="expense-export-user-label">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -463,11 +465,12 @@ export function ExpenseExportDialog({
             )}
 
             <div className="space-y-3">
-              <Label className="text-sm font-medium">Export Format</Label>
+              <Label id="expense-export-format-label" className="text-sm font-medium">Export Format</Label>
               <RadioGroup
                 value={format}
                 onValueChange={(v: string) => setFormat(v as ExportFormat)}
                 className="grid gap-3"
+                aria-labelledby="expense-export-format-label"
               >
                 {FORMAT_OPTIONS.map((option) => (
                   <label
@@ -498,7 +501,7 @@ export function ExpenseExportDialog({
             <div className="space-y-4 pt-2">
               <div className="flex items-center justify-between rounded-lg border p-4 bg-muted/30">
                 <div className="space-y-0.5">
-                  <Label className="text-sm font-medium">Include Header</Label>
+                  <Label id="expense-include-header-label" className="text-sm font-medium">Include Header</Label>
                   <p className="text-xs text-muted-foreground">
                     Add title, date, and filter information
                   </p>
@@ -506,11 +509,12 @@ export function ExpenseExportDialog({
                 <Switch
                   checked={includeHeader}
                   onCheckedChange={setIncludeHeader}
+                  aria-labelledby="expense-include-header-label"
                 />
               </div>
               <div className="flex items-center justify-between rounded-lg border p-4 bg-muted/30">
                 <div className="space-y-0.5">
-                  <Label className="text-sm font-medium">Include Totals</Label>
+                  <Label id="expense-include-totals-label" className="text-sm font-medium">Include Totals</Label>
                   <p className="text-xs text-muted-foreground">
                     Add summary totals at the end
                   </p>
@@ -518,6 +522,7 @@ export function ExpenseExportDialog({
                 <Switch
                   checked={includeTotals}
                   onCheckedChange={setIncludeTotals}
+                  aria-labelledby="expense-include-totals-label"
                 />
               </div>
             </div>
@@ -589,7 +594,7 @@ export function ExpenseExportDialog({
               <Select
                 value={emailTarget}
                 onValueChange={(v) =>
-                  setEmailTarget(v as "CEO" | "HR" | "BOTH")
+                  setEmailTarget(v as "ADMINS" | "APPROVERS" | "BOTH")
                 }
               >
                 <SelectTrigger className="w-[130px] shrink-0">
@@ -597,9 +602,9 @@ export function ExpenseExportDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="CEO">CEO Only</SelectItem>
-                  <SelectItem value="HR">HR Only</SelectItem>
-                  <SelectItem value="BOTH">CEO & HR</SelectItem>
+                  <SelectItem value="ADMINS">Admins Only</SelectItem>
+                  <SelectItem value="APPROVERS">Approvers Only</SelectItem>
+                  <SelectItem value="BOTH">Admins &amp; Approvers</SelectItem>
                 </SelectContent>
               </Select>
 

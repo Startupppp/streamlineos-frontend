@@ -5,15 +5,6 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { SignDocument } from "@/types/sign";
 
-export function useSignDocuments(envelopeId: number | undefined) {
-  return useQuery({
-    queryKey: queryKeys.signDocuments.list(envelopeId ?? 0),
-    queryFn: () => apiClient.get<SignDocument[]>(`/sign/envelopes/${envelopeId}/documents`),
-    enabled: envelopeId !== undefined,
-    staleTime: 30_000,
-  });
-}
-
 export function useSignDocumentPreview(documentId: number | undefined) {
   return useQuery({
     queryKey: queryKeys.signDocuments.preview(documentId ?? 0),

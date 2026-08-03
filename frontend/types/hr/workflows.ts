@@ -161,6 +161,8 @@ export interface HrWorkflowDelegation {
   reason: string | null;
   active: boolean;
   createdAt: string;
+  delegateName: string | null;
+  delegateEmail: string | null;
 }
 
 export interface PaginatedResult<T> {

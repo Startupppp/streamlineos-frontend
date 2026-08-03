@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { CheckCircle2, PartyPopper } from "lucide-react";
 import Link from "next/link";
@@ -15,7 +14,7 @@ import { OnboardingProgressRing } from "@/components/hr/onboarding-progress-ring
 import { OnboardingTaskCard } from "@/components/hr/onboarding-task-card";
 
 import {
-  useUserOnboarding,
+  useMyOnboarding,
   useCompleteOnboardingTask,
 } from "@/hooks/api/hr/onboarding";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -42,10 +41,7 @@ function AllDoneBanner() {
 
 
 export default function MyOnboardingTasksPage() {
-  const { data: session } = useSession();
-  const userId = session?.user?.id ?? "";
-
-  const { data: tasks, isLoading } = useUserOnboarding(userId);
+  const { data: tasks, isLoading } = useMyOnboarding();
   const completeTask = useCompleteOnboardingTask();
 
   const [togglingIds, setTogglingIds] = useState<Set<number>>(new Set());

@@ -40,6 +40,7 @@ export interface OrgSettings {
 }
 
 export interface OrgMember {
+  membershipId?: number;
   userId: string;
   role: string;
   joinedAt: Date;
@@ -47,14 +48,6 @@ export interface OrgMember {
   email: string;
   image: string | null;
   totpEnabled?: boolean;
-}
-
-export interface Invitation {
-  id: string;
-  email: string;
-  role: string;
-  expiresAt: Date;
-  createdAt: Date;
 }
 
 export interface Branch {
@@ -94,20 +87,8 @@ export interface Role {
   name: string;
   slug: string;
   isSystem: boolean;
+  version: number;
   createdAt: Date;
   updatedAt: Date;
 }
 
-export interface Permission {
-  id: number;
-  name: string;
-  description: string | null;
-  module: string | null;
-}
-
-export interface RolePermission {
-  role: string;
-  permissionId: number;
-  orgId: string;
-  permission: Permission | null;
-}

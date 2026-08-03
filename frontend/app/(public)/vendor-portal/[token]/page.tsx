@@ -4,7 +4,8 @@ import { use, useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import { apiClient, getApiError } from "@/lib/api-client";
+import { apiClient } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Building2 } from "lucide-react";
 
 type Props = { params: Promise<{ token: string }> };
@@ -40,7 +41,7 @@ export default function VendorPortalPage({ params }: Props) {
       const result = await apiClient.get<VendorPortalData>(`/public/vendor-portal/${token}`);
       setData(result);
     } catch (e) {
-      setError(getApiError(e) || "Portal link not found.");
+      setError(getErrorMessage(e) || "Portal link not found.");
     } finally {
       setLoading(false);
     }

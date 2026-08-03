@@ -128,7 +128,7 @@ export function ReportPivot({
           const amounts = Object.values(row.components ?? {}).filter(Boolean);
           return (
             <div className="space-y-1">
-              <p className="text-sm font-medium truncate">{row.name || row.employeeId}</p>
+              <p className="text-sm font-medium truncate">{row.name || "Unknown"}</p>
               <p className="text-[11px] text-muted-foreground truncate">
                 {row.department || "—"} · {row.workerType || "—"}
               </p>

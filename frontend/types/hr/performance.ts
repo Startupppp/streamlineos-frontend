@@ -162,12 +162,3 @@ export interface CreateGoalInput {
   parentGoalId?: number;
 }
 
-export interface UpdateGoalInput {
-  goalId: number;
-  title?: string;
-  description?: string;
-  targetValue?: number;
-  currentValue?: number;
-  status?: string;
-  progress?: number;
-}

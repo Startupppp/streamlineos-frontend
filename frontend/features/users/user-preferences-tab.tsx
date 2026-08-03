@@ -23,7 +23,7 @@ import { Input } from "@/components/ui/input";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUserPreferences, useUpdateUserPreferences } from "@/hooks/api/users";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 
 const preferencesSchema = z.object({
@@ -89,7 +89,7 @@ export function UserPreferencesTab({ userId }: UserPreferencesTabProps) {
       { userId, data: values },
       {
         onSuccess: () => toast.success("Preferences updated"),
-        onError: (e) => toast.error(getApiError(e)),
+        onError: (e) => toast.error(getErrorMessage(e)),
       }
     );
   }

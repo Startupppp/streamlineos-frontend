@@ -54,11 +54,3 @@ export interface SupportTicket {
   updatedAt: Date;
 }
 
-export interface SupportStats {
-  open: number;
-  in_progress: number;
-  waiting: number;
-  resolved: number;
-  closed: number;
-  sla_breached: number;
-}

@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { RequireModule } from "@/components/auth/require-module";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import {
   useParticipants,
@@ -57,7 +57,7 @@ export default function SurveyParticipantsPage() {
       toast.success("Invitations sent");
       setSelected(new Set());
     } catch (error) {
-      toast.error(getApiError(error));
+      toast.error(getErrorMessage(error));
     }
   }
 
@@ -68,7 +68,7 @@ export default function SurveyParticipantsPage() {
       toast.success("Reminders sent");
       setSelected(new Set());
     } catch (error) {
-      toast.error(getApiError(error));
+      toast.error(getErrorMessage(error));
     }
   }
 
@@ -76,7 +76,7 @@ export default function SurveyParticipantsPage() {
 
   return (
     <DashboardGate permission="surveys:participants:view">
-      <RequireModule module="SURVEYS">
+      <RequireModule module="surveys">
         <PageWrapper
           title="Participants"
           backHref={`/surveys/${surveyId}`}

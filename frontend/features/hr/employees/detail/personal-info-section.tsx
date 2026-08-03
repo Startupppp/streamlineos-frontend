@@ -18,7 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { User } from "lucide-react";
-import type { EmployeeFormValues } from "@/app/(authenticated)/hr/employees/[employeeId]/edit-employee-form";
+import type { EmployeeFormValues } from "@/features/hr/employees/detail/edit-employee-form";
 
 export function PersonalInfoSection() {
   const { control, watch } = useFormContext<EmployeeFormValues>();

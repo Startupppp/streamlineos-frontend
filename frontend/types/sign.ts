@@ -162,16 +162,6 @@ export interface SignTemplate {
   updatedAt: string;
 }
 
-export interface SignBulkSendRow {
-  id: number;
-  jobId: number;
-  rowNumber: number;
-  rawDataJson: Record<string, unknown>;
-  status: "pending" | "success" | "failed";
-  envelopeId: number | null;
-  errorMessage: string | null;
-}
-
 export interface SignBulkSendJob {
   id: number;
   orgId: string;
@@ -195,16 +185,6 @@ export interface SignAuditEvent {
   eventMessage: string | null;
   ipAddress: string | null;
   createdAt: string;
-}
-
-export interface SignCertificate {
-  id: number;
-  envelopeId: number;
-  certificateNumber: string;
-  finalPdfHash: string;
-  watermarked: boolean;
-  generatedAt: string;
-  certificateJson: Record<string, unknown>;
 }
 
 export interface SignWatermarkPolicy {

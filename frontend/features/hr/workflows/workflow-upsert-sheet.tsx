@@ -76,7 +76,7 @@ export function WorkflowUpsertSheet({ open, onOpenChange, editDefinition }: Prop
     },
   });
 
-  const { fields, append, remove, move } = useFieldArray({ control: form.control, name: "steps" });
+  const { fields, append, remove } = useFieldArray({ control: form.control, name: "steps" });
 
   useEffect(() => {
     if (editDefinition) {

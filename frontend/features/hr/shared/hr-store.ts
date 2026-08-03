@@ -118,5 +118,3 @@ export const hrStore = {
     emit();
   },
 };
-
-export type HrStore = typeof hrStore;

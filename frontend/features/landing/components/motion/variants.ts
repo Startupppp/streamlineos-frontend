@@ -7,11 +7,6 @@ export const VIEWPORT_DEFAULT = {
   margin: "-8% 0px" as const,
 };
 
-export const VIEWPORT_TIGHT = {
-  once: true,
-  margin: "-5% 0px" as const,
-};
-
 export const transitionBase: Transition = {
   duration: 0.55,
   ease: EASE_OUT,

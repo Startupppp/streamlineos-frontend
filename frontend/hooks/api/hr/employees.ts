@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   Department,
   Employee,
@@ -19,7 +20,6 @@ import type {
   HrEmployment,
   HrTimelineResponse,
   HrSensitiveData,
-  HrEffectiveDatedChange,
 } from "@/types/hr/core";
 
 export function useHrDepartments() {
@@ -46,6 +46,7 @@ export function useLegacyHrDepartments() {
 export function useCreateDepartment() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "departments", "create"],
     mutationFn: (data: CreateDepartmentInput) =>
       apiClient.post<Department>("/hr/departments", data),
     onSuccess: () =>
@@ -106,6 +107,7 @@ export function unwrapEmployees(
 }
 
 export function useHrEmployees(params?: HrEmployeesParams, options?: { enabled?: boolean }) {
+  const canRead = useCan("hr:employees:read");
   const limit = params?.limit ?? 20;
   return useQuery({
     queryKey: queryKeys.hr.employees(params),
@@ -117,7 +119,7 @@ export function useHrEmployees(params?: HrEmployeesParams, options?: { enabled?:
       return normalizeEmployeesResponse(res, limit);
     },
     staleTime: 2 * 60_000,
-    enabled: options?.enabled ?? true,
+    enabled: canRead && (options?.enabled ?? true),
   });
 }
 
@@ -125,9 +127,16 @@ export function useHrEmployees(params?: HrEmployeesParams, options?: { enabled?:
  * Convenience for employee pickers (selects, assign dialogs).
  * Fetches a large page and always returns a flat Employee[].
  */
-export function useHrEmployeeOptions(params?: Omit<HrEmployeesParams, "page">) {
-  const merged = { limit: 100, isActive: "true" as const, ...params, page: 1 };
-  const query = useHrEmployees({ ...merged, limit: Math.min(merged.limit, 100) });
+export function useHrEmployeeOptions(
+  params?: Omit<HrEmployeesParams, "page"> & { enabled?: boolean },
+) {
+  const canRead = useCan("hr:employees:read");
+  const { enabled, ...rest } = params ?? {};
+  const merged = { limit: 100, isActive: "true" as const, ...rest, page: 1 };
+  const query = useHrEmployees(
+    { ...merged, limit: Math.min(merged.limit, 100) },
+    { enabled: canRead && (enabled ?? true) },
+  );
   return {
     ...query,
     employees: unwrapEmployees(query.data),
@@ -137,18 +146,24 @@ export function useHrEmployeeOptions(params?: Omit<HrEmployeesParams, "page">) {
 export function useUpdateProfile() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "employees", "update"],
     mutationFn: ({ userId, ...data }: UpdateProfileInput) =>
       apiClient.patch<{ success: boolean }>(`/hr/employees/${userId}`, data),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.employees() }),
+    onSuccess: (_, { userId }) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.employees() });
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.employee(userId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.employeeStats(userId) });
+    },
   });
 }
 
 export function useHrOrgChart() {
+  const canView = useCan("hr:employees:view");
   return useQuery({
     queryKey: queryKeys.hr.orgChart(),
     queryFn: () => apiClient.get<OrgChartNode[]>("/hr/org-chart"),
     staleTime: 2 * 60_000,
+    enabled: canView,
   });
 }
 
@@ -224,25 +239,6 @@ export function useEmployeeAvailability(userIds?: string[]) {
 }
 
 
-export interface SkillsMatrixEmployee {
-  userId: string;
-  name: string | null;
-  image: string | null;
-  skills: Record<string, number>;
-}
-
-export interface SkillsMatrixResponse {
-  employees: SkillsMatrixEmployee[];
-  skills: string[];
-}
-
-export function useSkillsMatrix() {
-  return useQuery({
-    queryKey: [...queryKeys.hr.all, "skillsMatrix"] as const,
-    queryFn: () => apiClient.get<SkillsMatrixResponse>("/hr/employees/skills-matrix"),
-    staleTime: 5 * 60_000,
-  });
-}
 
 export interface ExpertResult {
   userId: string;
@@ -268,6 +264,25 @@ export function useFindExpert(params: FindExpertParams) {
     queryFn: () => apiClient.get<ExpertResult[]>("/hr/employees/find-expert", params as unknown as Record<string, string>),
     enabled: params.skill.trim().length > 0,
     staleTime: 2 * 60_000,
+  });
+}
+
+export interface SkillsMatrixData {
+  employees: {
+    userId: string;
+    name: string | null;
+    image: string | null;
+    skills: Record<string, number>;
+  }[];
+  skills: string[];
+}
+
+export function useSkillsMatrix(options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: [...queryKeys.hr.all, "skillsMatrix"] as const,
+    queryFn: () => apiClient.get<SkillsMatrixData>("/hr/employees/skills-matrix"),
+    staleTime: 60_000,
+    enabled: options?.enabled ?? true,
   });
 }
 
@@ -352,31 +367,3 @@ export function useUpdateSensitive(employmentId: number) {
   });
 }
 
-export function useEffectiveChanges(params?: { employmentId?: number; page?: number; limit?: number }) {
-  return useQuery({
-    queryKey: queryKeys.hr.effectiveChanges(params as Record<string, unknown>),
-    queryFn: () => apiClient.get<{ data: HrEffectiveDatedChange[]; pagination: { page: number; limit: number; total: number; totalPages: number } }>("/hr/effective-changes", params as Record<string, unknown>),
-    enabled: !!params?.employmentId,
-    staleTime: 30_000,
-  });
-}
-
-export function useCreateEffectiveChange() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "effectiveChange", "create"],
-    mutationFn: (data: { employmentId: number; changeType: string; newValue: Record<string, unknown>; effectiveFrom: string; effectiveTo?: string }) =>
-      apiClient.post<HrEffectiveDatedChange>("/hr/effective-changes", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.effectiveChanges() }),
-  });
-}
-
-export function useApproveEffectiveChange() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "effectiveChange", "approve"],
-    mutationFn: (changeId: number) =>
-      apiClient.patch<{ success: boolean }>(`/hr/effective-changes/${changeId}/approve`, {}),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.effectiveChanges() }),
-  });
-}

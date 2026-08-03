@@ -27,7 +27,6 @@ import {
   builderReducer,
   initialBuilderState,
   serializeToGraph,
-  type BuilderNode,
 } from "./builder-types";
 import { TriggerCard, ConditionRowCard, ActionNodeCard, WaitCard } from "./node-cards";
 import { BranchNodeCard, ExitNodeCard } from "./branch-exit-cards";
@@ -88,7 +87,6 @@ export function AutomationBuilder({ automationId }: AutomationBuilderProps) {
     }
   }, [isNew, rulesData, automationId]);
 
-  const handleBack = useCallback(() => router.push("/crm/settings/automations"), [router]);
   const handleToggleTestPanel = useCallback(() => setTestPanelOpen((v) => !v), []);
   const handleToggleHistory = useCallback(() => setHistoryOpen((v) => !v), []);
 

@@ -42,6 +42,8 @@ export interface JournalEntry {
   createdAt: Date;
   updatedAt: Date;
   lines?: JournalLine[];
+  createdByName?: string | null;
+  createdByEmail?: string | null;
 }
 
 export interface TrialBalanceRow {
@@ -170,8 +172,6 @@ export interface BalanceSheetReport {
   retainedEarnings: string;
   balanced: boolean;
 }
-
-export type AgingBucket = "current" | "d1_30" | "d31_60" | "d61_90" | "d91_plus";
 
 export interface AgedReceivablesRow {
   clientId: number;

@@ -6,7 +6,6 @@ export default function PayrollRunsLoading() {
   return (
     <PageWrapper
       title="Payroll Runs"
-      backHref="/payroll"
       actions={<Skeleton className="h-9 w-24 rounded-md" />}
     >
       <DataTableSkeleton rows={12} columns={6} />

@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState, useCallback } from "react";
-import { useProjects, useProject } from "@/hooks/api/projects/projects";
+import { useProjects, useProject } from "@/hooks/api/build/projects";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { Combobox } from "@/components/ui/combobox";
 
@@ -24,7 +24,7 @@ export function ProjectCombobox({
   const debouncedSearch = useDebouncedValue(search, 300);
 
   const { data, isFetching } = useProjects({ limit: 100 });
-  const projects = data?.data ?? [];
+  const projects = useMemo(() => data?.data ?? [], [data]);
 
   const numericLookup =
     /^\d+$/.test(debouncedSearch.trim()) ? Number(debouncedSearch.trim()) : 0;

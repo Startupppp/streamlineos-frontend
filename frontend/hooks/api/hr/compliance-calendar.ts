@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 
 export interface ComplianceCalendarEvent {
   date: string;
@@ -19,7 +20,7 @@ export interface ComplianceCalendarResponse {
 
 export function useComplianceCalendar(year: number, month: number) {
   return useQuery<ComplianceCalendarResponse>({
-    queryKey: ["hr", "compliance", "calendar", year, month],
+    queryKey: queryKeys.hr.complianceCalendar(year, month),
     queryFn: () =>
       apiClient.get<ComplianceCalendarResponse>("/hr/compliance/calendar", {
         year: String(year),

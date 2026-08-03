@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 
 export interface EffectiveRuleItem {
   policyType: string;
@@ -47,7 +48,7 @@ export interface VersionsResponse {
 
 export function useEffectiveRules(params: { employeeId: string; date: string } | null) {
   return useQuery({
-    queryKey: ["hr", "settings-hub", "effective-rules", params],
+    queryKey: queryKeys.hr.settingsHubRules(params),
     queryFn: () => {
       const qs = new URLSearchParams({
         employeeId: params!.employeeId,
@@ -62,7 +63,7 @@ export function useEffectiveRules(params: { employeeId: string; date: string } |
 
 export function useEntityVersions(entity: VersionEntity, id: number | null) {
   return useQuery({
-    queryKey: ["hr", "settings-hub", "versions", entity, id],
+    queryKey: queryKeys.hr.settingsHubVersions(entity, id),
     queryFn: () => {
       const qs = new URLSearchParams({ entity, id: String(id) });
       return apiClient.get<VersionsResponse>(`/hr/settings-hub/versions?${qs}`);

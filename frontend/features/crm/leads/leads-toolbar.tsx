@@ -64,9 +64,7 @@ export function LeadsToolbar({
 
   return (
     <div className={FILTER_TOOLBAR_ROW}>
-      <div className="w-[180px] max-w-[min(180px,70vw)]">
-          <SearchInput placeholder="Search leads..." value={inputValue} onValueChange={handleSearchChange} />
-        </div>
+        <SearchInput placeholder="Search leads..." value={inputValue} onValueChange={handleSearchChange} />
 
       <div className="flex h-9 items-center rounded-md border border-input bg-card">
         <Button variant={view === "table" ? "default" : "ghost"} size="sm"

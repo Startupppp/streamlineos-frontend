@@ -5,14 +5,16 @@ import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
-import type { CreateRateInput, RatesResponse, TimesheetRate } from "@/features/timesheets-core/types";
+import { useCan } from "@/hooks/api/access";
+import type { CreateRateInput, RatesResponse, TimesheetRate } from "@/features/timesheets/types";
 
 export function useRates(enabled = true) {
+  const canView = useCan("timesheets:rates:view");
   return useQuery({
     queryKey: queryKeys.timesheets.rates(),
     queryFn: () => apiClient.get<RatesResponse>("/timesheets/rates"),
     staleTime: 2 * 60_000,
-    enabled,
+    enabled: enabled && canView,
   });
 }
 

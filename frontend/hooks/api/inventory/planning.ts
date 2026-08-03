@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 type StockoutRisk = "HIGH" | "MEDIUM" | "LOW";
 
@@ -136,6 +137,7 @@ interface ForecastParams {
 }
 
 export function useReplenishmentRules(params?: ReplenishmentRuleParams) {
+  const canView = useCan("inventory:replenishment:manage");
   return useQuery<ReplenishmentRuleListResponse, Error>({
     queryKey: queryKeys.inventory.replenishmentRules(params),
     queryFn: () =>
@@ -145,6 +147,7 @@ export function useReplenishmentRules(params?: ReplenishmentRuleParams) {
         ...(params?.page ? { page: String(params.page) } : {}),
       }),
     staleTime: 2 * 60_000,
+    enabled: canView,
   });
 }
 
@@ -208,6 +211,7 @@ interface ReplenishmentSuggestionsParams {
 }
 
 export function useReplenishmentSuggestions(params?: ReplenishmentSuggestionsParams) {
+  const canView = useCan("inventory:reports:read");
   return useQuery<ReplenishmentSuggestionsResponse, Error>({
     queryKey: queryKeys.inventory.replenishmentSuggestions(params),
     queryFn: async () => {
@@ -218,6 +222,7 @@ export function useReplenishmentSuggestions(params?: ReplenishmentSuggestionsPar
       return { items: raw.items.map(mapSuggestion), total: raw.total, page: raw.page, totalPages: raw.totalPages };
     },
     staleTime: 5 * 60_000,
+    enabled: canView,
   });
 }
 
@@ -234,6 +239,7 @@ export function useGeneratePO() {
 }
 
 export function useForecasting(params?: ForecastParams) {
+  const canView = useCan("inventory:reports:read");
   return useQuery<ForecastListResponse, Error>({
     queryKey: queryKeys.inventory.forecasting(params),
     queryFn: () =>
@@ -243,5 +249,6 @@ export function useForecasting(params?: ForecastParams) {
       }),
     staleTime: 5 * 60_000,
     placeholderData: keepPreviousData,
+    enabled: canView,
   });
 }

@@ -3,16 +3,18 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type { PayslipPublication, PublishResult } from "@/types/payroll";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 export function useRunPublications(runId: number) {
+  const canView = useCan("payroll:payslips:view");
   return useQuery<PayslipPublication[]>({
     queryKey: queryKeys.payroll.runPublications(runId),
     queryFn: () =>
       apiClient.get<PayslipPublication[]>(`/payroll/runs/${runId}/payslips`),
     staleTime: 30_000,
-    enabled: runId > 0,
+    enabled: canView && runId > 0,
   });
 }
 
@@ -24,7 +26,7 @@ export function usePublishPayslips() {
       apiClient.post<PublishResult>(`/payroll/runs/${runId}/payslips/publish`, {
         userIds,
       }),
-    onSuccess: (_data, { runId }) => {
+    onSuccess: (_, { runId }) => {
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.runPublications(runId) });
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
       void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "runs"] });

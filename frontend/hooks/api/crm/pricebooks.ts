@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import type { Pricebook, PricebookEntry, QuoteSettings, QuoteTemplate, ResolvedPrice } from "@/types/crm/pricebooks";
+import type { Pricebook, PricebookEntry, QuoteSettings, QuoteTemplate } from "@/types/crm/pricebooks";
 
 export function usePricebooks() {
   return useQuery({
@@ -19,20 +19,6 @@ export function usePricebookEntries(pricebookId: string) {
     queryFn: () => apiClient.get<PricebookEntry[]>(`/crm/pricebooks/${pricebookId}/entries`),
     enabled: !!pricebookId,
     staleTime: 2 * 60_000,
-  });
-}
-
-export function useResolvePrice(productId: number, quantity: number, pricebookId?: string) {
-  return useQuery({
-    queryKey: [...queryKeys.crmPricebooks.all, "resolve-price", productId, quantity, pricebookId],
-    queryFn: () =>
-      apiClient.get<ResolvedPrice>("/crm/pricebooks/resolve-price", {
-        productId,
-        quantity,
-        ...(pricebookId ? { pricebookId } : {}),
-      }),
-    enabled: productId > 0,
-    staleTime: 30_000,
   });
 }
 
@@ -91,7 +77,7 @@ export function useUpsertPricebookEntry() {
       ...data
     }: { pricebookId: string; productId: number; unitPriceCents: number; minQuantity: number }) =>
       apiClient.post<PricebookEntry>(`/crm/pricebooks/${pricebookId}/entries`, data),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.crmPricebooks.entries(vars.pricebookId) });
     },
   });
@@ -105,7 +91,7 @@ export function useDeletePricebookEntry() {
       apiClient.delete<{ success: boolean }>(
         `/crm/pricebooks/${pricebookId}/entries/${entryId}`,
       ),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.crmPricebooks.entries(vars.pricebookId) });
     },
   });

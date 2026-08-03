@@ -12,7 +12,11 @@ import {
 } from "@/features/knowledge-base/lib/kb-icons";
 import { Button } from "@/components/ui/button";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import {
+  ResponsivePopover,
+  ResponsivePopoverTrigger,
+  ResponsivePopoverContent,
+} from "@/components/ui/responsive-popover";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { useSetKbPageVisibility } from "@/hooks/api/kb/pages";
@@ -27,7 +31,7 @@ const VISIBILITY_OPTIONS: Array<{
   description: string;
 }> = [
   { value: "private", icon: KbLockIcon, label: "Private", description: "Only you can access" },
-  { value: "org", icon: KbBuilding2Icon, label: "Team", description: "Everyone in the workspace" },
+  { value: "org", icon: KbBuilding2Icon, label: "Team", description: "Everyone in the organization" },
   { value: "public", icon: KbGlobeIcon, label: "Public", description: "Anyone with the link" },
 ];
 
@@ -66,20 +70,20 @@ export default function PageSharePopover({ page }: PageSharePopoverProps) {
   const publicUrl = `${origin}/wiki/${page.publicToken ?? ""}`;
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <ResponsivePopover open={open} onOpenChange={setOpen}>
       <Tooltip delayDuration={0}>
         <TooltipTrigger asChild>
-          <PopoverTrigger asChild>
+          <ResponsivePopoverTrigger asChild>
             <Button variant="ghost" size="icon" className="w-8" aria-label="Share page">
               <KbShare2Icon className="h-4 w-4" />
             </Button>
-          </PopoverTrigger>
+          </ResponsivePopoverTrigger>
         </TooltipTrigger>
         <TooltipContent side="bottom" sideOffset={8} className="text-xs font-medium">
           Share
         </TooltipContent>
       </Tooltip>
-      <PopoverContent align="end" className="w-72 max-w-[85vw] p-0">
+      <ResponsivePopoverContent align="end" title="Share" className="w-72 max-w-[85vw] p-0">
         <div className="px-4 pt-3 pb-1">
           <p className="text-xs font-semibold text-foreground">Share</p>
         </div>
@@ -124,7 +128,7 @@ export default function PageSharePopover({ page }: PageSharePopoverProps) {
             </div>
           </>
         )}
-      </PopoverContent>
-    </Popover>
+      </ResponsivePopoverContent>
+    </ResponsivePopover>
   );
 }

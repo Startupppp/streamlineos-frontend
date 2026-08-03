@@ -102,7 +102,6 @@ async function extractExcel(
 }
 
 function applyMapping(
-  headers: string[],
   rows: string[][],
   fieldMappings: Record<number, string>,
 ): { contacts: ParsedContact[]; errors: string[] } {
@@ -230,7 +229,6 @@ export function ContactsCsvImportDialog({
 
   const handleConfirmMapping = useCallback(() => {
     const { contacts, errors } = applyMapping(
-      rawHeaders,
       rawRows,
       fieldMappings,
     );

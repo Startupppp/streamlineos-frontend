@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 interface GrnLine {
   id: number;
@@ -50,6 +51,7 @@ interface PaginatedResponse<T> {
 }
 
 export function useGoodsReceipts(filters?: GrnFilters) {
+  const canView = useCan("inventory:purchase-orders:read");
   return useQuery<PaginatedResponse<GrnSummary>, Error>({
     queryKey: queryKeys.inventory.goodsReceipts(filters),
     queryFn: () =>
@@ -62,15 +64,17 @@ export function useGoodsReceipts(filters?: GrnFilters) {
         ...(filters?.pageSize !== undefined ? { pageSize: String(filters.pageSize) } : {}),
       }),
     staleTime: 2 * 60_000,
+    enabled: canView,
   });
 }
 
 export function useGoodsReceipt(grnId: number) {
+  const canView = useCan("inventory:purchase-orders:read");
   return useQuery<GrnDetail, Error>({
     queryKey: queryKeys.inventory.goodsReceipt(grnId),
     queryFn: () => apiClient.get<GrnDetail>(`/inventory/goods-receipts/${grnId}`),
-    enabled: grnId > 0,
     staleTime: 2 * 60_000,
+    enabled: canView && grnId > 0,
   });
 }
 
@@ -89,10 +93,10 @@ export function useReverseGrn() {
         { reason },
         { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
-    onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.goodsReceipts() });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.goodsReceipt(variables.grnId) });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
+    onSuccess: (_, variables) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.goodsReceipts() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.goodsReceipt(variables.grnId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
     },
   });
 }
@@ -136,6 +140,7 @@ type VendorReturnFilters = {
 };
 
 export function useVendorReturns(filters?: VendorReturnFilters) {
+  const canView = useCan("inventory:vendor-returns:manage");
   return useQuery<PaginatedResponse<VendorReturnSummary>, Error>({
     queryKey: queryKeys.inventory.vendorReturns(filters),
     queryFn: () =>
@@ -145,15 +150,7 @@ export function useVendorReturns(filters?: VendorReturnFilters) {
         ...(filters?.pageSize !== undefined ? { pageSize: String(filters.pageSize) } : {}),
       }),
     staleTime: 2 * 60_000,
-  });
-}
-
-export function useVendorReturn(returnId: number) {
-  return useQuery<VendorReturnSummary, Error>({
-    queryKey: queryKeys.inventory.vendorReturn(returnId),
-    queryFn: () => apiClient.get<VendorReturnSummary>(`/inventory/vendor-returns/${returnId}`),
-    enabled: returnId > 0,
-    staleTime: 2 * 60_000,
+    enabled: canView,
   });
 }
 
@@ -164,7 +161,7 @@ export function useCreateVendorReturn() {
     mutationFn: (data) =>
       apiClient.post<VendorReturnSummary>("/inventory/vendor-returns", data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.vendorReturns() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.vendorReturns() });
     },
   });
 }
@@ -184,10 +181,10 @@ export function usePostVendorReturn() {
         { ...(reason !== undefined ? { reason } : {}) },
         { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
-    onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.vendorReturns() });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.vendorReturn(variables.returnId) });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
+    onSuccess: (_, variables) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.vendorReturns() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.vendorReturn(variables.returnId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
     },
   });
 }
@@ -202,9 +199,9 @@ export function useCancelVendorReturn() {
     mutationKey: ["inventory", "vendorReturns", "cancel"],
     mutationFn: ({ returnId }) =>
       apiClient.post<void>(`/inventory/vendor-returns/${returnId}/cancel`, {}),
-    onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.vendorReturns() });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.vendorReturn(variables.returnId) });
+    onSuccess: (_, variables) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.vendorReturns() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.vendorReturn(variables.returnId) });
     },
   });
 }
@@ -248,6 +245,7 @@ type CustomerReturnFilters = {
 };
 
 export function useCustomerReturns(filters?: CustomerReturnFilters) {
+  const canView = useCan("inventory:customer-returns:manage");
   return useQuery<PaginatedResponse<CustomerReturnSummary>, Error>({
     queryKey: queryKeys.inventory.customerReturns(filters),
     queryFn: () =>
@@ -257,16 +255,7 @@ export function useCustomerReturns(filters?: CustomerReturnFilters) {
         ...(filters?.pageSize !== undefined ? { pageSize: String(filters.pageSize) } : {}),
       }),
     staleTime: 2 * 60_000,
-  });
-}
-
-export function useCustomerReturn(returnId: number) {
-  return useQuery<CustomerReturnSummary, Error>({
-    queryKey: queryKeys.inventory.customerReturn(returnId),
-    queryFn: () =>
-      apiClient.get<CustomerReturnSummary>(`/inventory/customer-returns/${returnId}`),
-    enabled: returnId > 0,
-    staleTime: 2 * 60_000,
+    enabled: canView,
   });
 }
 
@@ -277,7 +266,7 @@ export function useCreateCustomerReturn() {
     mutationFn: (data) =>
       apiClient.post<CustomerReturnSummary>("/inventory/customer-returns", data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.customerReturns() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.customerReturns() });
     },
   });
 }
@@ -297,10 +286,10 @@ export function usePostCustomerReturn() {
         { ...(reason !== undefined ? { reason } : {}) },
         { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
-    onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.customerReturns() });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.customerReturn(variables.returnId) });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
+    onSuccess: (_, variables) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.customerReturns() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.customerReturn(variables.returnId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
     },
   });
 }
@@ -315,9 +304,9 @@ export function useCancelCustomerReturn() {
     mutationKey: ["inventory", "customerReturns", "cancel"],
     mutationFn: ({ returnId }) =>
       apiClient.post<void>(`/inventory/customer-returns/${returnId}/cancel`, {}),
-    onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.customerReturns() });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.customerReturn(variables.returnId) });
+    onSuccess: (_, variables) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.customerReturns() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.customerReturn(variables.returnId) });
     },
   });
 }

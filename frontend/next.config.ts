@@ -121,6 +121,11 @@ const nextConfig: NextConfig = {
       destination: "/signin",
       permanent: true,
     },
+    {
+      source: "/build/:projectId/workload",
+      destination: "/build/:projectId?view=workload",
+      permanent: false,
+    },
   ],
   images: {
     remotePatterns: [
@@ -159,7 +164,7 @@ const nextConfig: NextConfig = {
         { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
         {
           key: "Permissions-Policy",
-          value: "camera=(), microphone=(), geolocation=(self)",
+          value: "camera=(self), microphone=(self), geolocation=(self)",
         },
         ...(shouldSendStrictTransportSecurity()
           ? [

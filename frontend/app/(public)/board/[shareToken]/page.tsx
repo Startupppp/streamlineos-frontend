@@ -1,5 +1,5 @@
-import type { Metadata } from "next";
-import { PublicBoardView } from "@/features/projects/whiteboard/public-board-view";
+﻿import type { Metadata } from "next";
+import { PublicBoardView } from "@/features/build/whiteboard/public-board-view";
 
 export const metadata: Metadata = {
   title: "Shared board",

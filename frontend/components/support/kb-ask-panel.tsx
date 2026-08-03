@@ -13,7 +13,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { AiCitationChips, type Citation } from "@/components/ai/ai-citation-chips";
 import { AiUsageChip } from "@/components/ai/ai-usage-chip";
 import { useKbAsk, useKbAiAnswerFeedback } from "@/hooks/api/kb/ask";
-import { usePublicAskKb, type KbAnswer } from "@/hooks/api/support/kb-rag";
+import { usePublicAskSupportKb, type KbAnswer } from "@/hooks/api/support/kb-rag";
 import type { KbAskResponse, KbAskCitation } from "@/types/kb";
 
 type KbAskPanelProps =
@@ -209,7 +209,7 @@ function AuthedAskPanel({ className, articleId }: { className?: string; articleI
 function PublicAskPanel({ className, orgId }: { className?: string; orgId: string }) {
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState<KbAnswer | null>(null);
-  const publicAsk = usePublicAskKb();
+  const publicAsk = usePublicAskSupportKb();
 
   function handleQuestionChange(event: ChangeEvent<HTMLInputElement>) {
     setQuestion(event.target.value);

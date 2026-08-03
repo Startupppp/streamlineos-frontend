@@ -72,7 +72,7 @@ describe("ProductSwitcherMenu", () => {
   it("marks Home as selected without rendering a removal control", () => {
     render(<ProductSwitcherMenu />);
 
-    fireEvent.mouseEnter(screen.getByRole("button", { name: "Switch product" }));
+    fireEvent.mouseEnter(screen.getByRole("button", { name: "Switch module" }));
 
     expect(screen.getByLabelText("Selected product")).toBeInTheDocument();
     expect(screen.getAllByRole("button")).toHaveLength(1);

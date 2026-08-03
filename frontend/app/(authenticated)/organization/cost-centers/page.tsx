@@ -12,7 +12,7 @@ import {
   useUpdateOrgCostCenter,
   useDeleteOrgCostCenter,
 } from "@/hooks/api/org-hierarchy";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -66,7 +66,7 @@ type FormValues = z.infer<typeof formSchema>;
 function CostCenterForm({
   defaultValues,
   onSubmit,
-  isPending: _isPending,
+  isPending: _,
 }: {
   defaultValues?: FormValues;
   onSubmit: (v: FormValues) => void;
@@ -166,7 +166,7 @@ export default function OrgCostCentersPage() {
             toast.success("Cost center created");
             setShowCreate(false);
           },
-          onError: (err) => toast.error(getApiError(err)),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -183,7 +183,7 @@ export default function OrgCostCentersPage() {
             toast.success("Cost center updated");
             setEditing(null);
           },
-          onError: (err) => toast.error(getApiError(err)),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -199,7 +199,7 @@ export default function OrgCostCentersPage() {
             toast.success("Cost center archived");
             setShowArchived(true);
           },
-          onError: (err) => toast.error(getApiError(err)),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -215,7 +215,7 @@ export default function OrgCostCentersPage() {
             toast.success("Cost center restored");
             setShowArchived(false);
           },
-          onError: (err) => toast.error(getApiError(err)),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -229,7 +229,7 @@ export default function OrgCostCentersPage() {
         toast.success("Cost center deleted");
         setDeleting(null);
       },
-      onError: (err) => toast.error(getApiError(err)),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }, [deleting, remove]);
 
@@ -351,7 +351,7 @@ export default function OrgCostCentersPage() {
   );
 
   return (
-    <RequireModule module="HR">
+    <RequireModule module="hr">
     <PageWrapper
       title="Cost Centers"
       subtitle="Cost centers for expense tracking."
@@ -379,9 +379,7 @@ export default function OrgCostCentersPage() {
         </div>
       }
       filters={
-        <div className="min-w-0 w-full flex-1 md:min-w-[160px] md:max-w-xs">
-          <SearchInput placeholder="Search cost centers…" value={search} onValueChange={handleSearchInputChange} />
-        </div>
+        <SearchInput placeholder="Search cost centers…" value={search} onValueChange={handleSearchInputChange} />
       }
     >
       <DataTable

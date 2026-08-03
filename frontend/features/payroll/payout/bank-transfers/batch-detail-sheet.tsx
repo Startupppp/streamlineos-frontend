@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useMemo, useCallback, useRef } from "react";
 import { toast } from "sonner";
@@ -17,7 +17,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import {
   getUserDisplayName,
   type NamedUser,
-} from "@/features/projects/shared/resolve-user-name";
+} from "@/features/build/shared/resolve-user-name";
 import type { PayoutBatchItem, BankBatchStatus, BankItemStatus } from "@/types/payroll";
 
 const ITEM_STATUS_STYLES: Record<BankItemStatus, string> = {

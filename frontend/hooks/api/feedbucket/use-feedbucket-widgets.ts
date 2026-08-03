@@ -42,18 +42,6 @@ export function useUpdateFeedbucketWidget() {
   });
 }
 
-export function useDeleteFeedbucketWidget() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["feedbucket", "widgets", "delete"],
-    mutationFn: (widgetId: number) =>
-      apiClient.delete<{ success: boolean }>(`/feedbucket/widgets/${widgetId}`),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.feedbucket.widgets() });
-    },
-  });
-}
-
 export function useRotateFeedbucketWidgetKey() {
   const qc = useQueryClient();
   return useMutation({

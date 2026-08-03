@@ -13,7 +13,6 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { LoadingButton } from "@/components/ui/loading-button";
 import {
   Select,
   SelectContent,
@@ -383,7 +382,7 @@ export default function AccountingInvoicesPage() {
           <StatCardGrid cols={4}>
             <StatCard
               label="Total Outstanding"
-              value={stats ? stats.totalOutstanding.toLocaleString(undefined, { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 0 }) : "—"}
+              value={stats ? stats.totalOutstanding.toLocaleString(undefined, { style: "currency", currency: "INR", minimumFractionDigits: 0, maximumFractionDigits: 0 }) : "—"}
               tone="blue"
               isLoading={statsQuery.isLoading}
             />

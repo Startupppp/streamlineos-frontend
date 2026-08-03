@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -94,7 +94,7 @@ const SECTION_CONFIG: SectionConfig[] = [
     key: "projects",
     title: "Projects",
     icon: FolderOpen,
-    href: (item) => `/projects/${item.id}`,
+    href: (item) => `/build/${item.id}`,
     getLabel: (item) => String(item["name"] ?? item.id),
     statTone: "blue",
   },

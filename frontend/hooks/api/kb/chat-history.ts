@@ -3,6 +3,7 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type { KbAskCitation } from "@/types/kb";
 
 export interface KbChatHistoryMessage {
@@ -32,33 +33,8 @@ export interface KbConversationListPage {
 
 const HISTORY_PAGE_SIZE = 30;
 
-export function useKbChatHistory(enabled: boolean) {
-  return useInfiniteQuery({
-    queryKey: queryKeys.kb.chatHistory(),
-    queryFn: ({ pageParam }) => {
-      const params: Record<string, unknown> = { limit: HISTORY_PAGE_SIZE };
-      if (pageParam) params.cursor = pageParam;
-      return apiClient.get<KbChatHistoryPage>("/kb/ask/history", params);
-    },
-    initialPageParam: undefined as number | undefined,
-    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
-    enabled,
-    staleTime: 30_000,
-  });
-}
-
-export function useClearKbChatHistory() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["kb", "chatHistory", "clear"],
-    mutationFn: () => apiClient.delete<{ success: boolean }>("/kb/ask/history"),
-    onSuccess: () => {
-      qc.removeQueries({ queryKey: queryKeys.kb.chatHistory() });
-    },
-  });
-}
-
 export function useKbConversations(enabled: boolean) {
+  const canViewPages = useCan("kb:pages:view");
   return useInfiniteQuery({
     queryKey: queryKeys.kb.chatConversations(),
     queryFn: ({ pageParam }) => {
@@ -68,20 +44,8 @@ export function useKbConversations(enabled: boolean) {
     },
     initialPageParam: undefined as number | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
-    enabled,
+    enabled: canViewPages && enabled,
     staleTime: 30_000,
-  });
-}
-
-export function useCreateKbConversation() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["kb", "chatConversations", "create"],
-    mutationFn: (input: { title?: string }) =>
-      apiClient.post<KbConversation>("/kb/ask/conversations", input),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.kb.chatConversations() });
-    },
   });
 }
 
@@ -110,6 +74,7 @@ export function useDeleteKbConversation() {
 }
 
 export function useKbConversationMessages(conversationId: number | null, enabled: boolean) {
+  const canViewPages = useCan("kb:pages:view");
   return useInfiniteQuery({
     queryKey: queryKeys.kb.chatConversationMessages(conversationId ?? 0),
     queryFn: ({ pageParam }) => {
@@ -122,7 +87,7 @@ export function useKbConversationMessages(conversationId: number | null, enabled
     },
     initialPageParam: undefined as number | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
-    enabled: enabled && conversationId !== null,
+    enabled: canViewPages && enabled && conversationId !== null,
     staleTime: 30_000,
   });
 }

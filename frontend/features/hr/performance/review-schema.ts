@@ -24,5 +24,3 @@ export const reviewFormSchema = z
       message: "Period end must be after period start",
     });
   });
-
-export type ReviewFormValues = z.infer<typeof reviewFormSchema>;

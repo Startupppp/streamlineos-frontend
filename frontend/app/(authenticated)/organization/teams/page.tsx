@@ -13,7 +13,7 @@ import {
   useUpdateOrgTeam,
   useDeleteOrgTeam,
 } from "@/hooks/api/org-hierarchy";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -81,7 +81,7 @@ function TeamForm({
   defaultValues,
   departments,
   onSubmit,
-  isPending: _isPending,
+  isPending: _,
 }: {
   defaultValues?: Partial<FormValues>;
   departments: { id: string; name: string }[];
@@ -246,7 +246,7 @@ export default function OrgTeamsPage() {
             toast.success("Team created");
             setShowCreate(false);
           },
-          onError: (err) => toast.error(getApiError(err)),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -271,7 +271,7 @@ export default function OrgTeamsPage() {
             toast.success("Team updated");
             setEditing(null);
           },
-          onError: (err) => toast.error(getApiError(err)),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -287,7 +287,7 @@ export default function OrgTeamsPage() {
             toast.success("Team archived");
             setShowArchived(true);
           },
-          onError: (err) => toast.error(getApiError(err)),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -303,7 +303,7 @@ export default function OrgTeamsPage() {
             toast.success("Team restored");
             setShowArchived(false);
           },
-          onError: (err) => toast.error(getApiError(err)),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -317,7 +317,7 @@ export default function OrgTeamsPage() {
         toast.success("Team deleted");
         setDeleting(null);
       },
-      onError: (err) => toast.error(getApiError(err)),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }, [deleting, remove]);
 
@@ -448,7 +448,7 @@ export default function OrgTeamsPage() {
   );
 
   return (
-    <RequireModule module="HR">
+    <RequireModule module="hr">
     <PageWrapper
       title="Teams"
       subtitle="Teams within departments."
@@ -476,9 +476,7 @@ export default function OrgTeamsPage() {
         </div>
       }
       filters={
-        <div className="min-w-0 w-full flex-1 sm:w-auto sm:min-w-[160px] sm:max-w-xs sm:flex-none">
-          <SearchInput placeholder="Search teams…" value={search} onValueChange={handleSearchInputChange} />
-        </div>
+        <SearchInput placeholder="Search teams…" value={search} onValueChange={handleSearchInputChange} />
       }
     >
       <DataTable

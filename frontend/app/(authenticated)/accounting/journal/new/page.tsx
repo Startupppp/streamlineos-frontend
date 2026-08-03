@@ -87,7 +87,7 @@ interface LineRowContext {
   onRemove: (index: number) => void;
 }
 
-function buildLineColumns(ctx: LineRowContext[]): DataTableColumn<LineRowContext>[] {
+function buildLineColumns(_: LineRowContext[]): DataTableColumn<LineRowContext>[] {
   return [
     {
       key: "account",
@@ -348,7 +348,7 @@ export default function NewJournalEntryPage() {
 
   const accountOptions = accountsQuery.data?.items ?? [];
 
-  const lineRows: LineRowContext[] = fields.map((field, index) => ({
+  const lineRows: LineRowContext[] = fields.map((_field, index) => ({
     index,
     accountOptions,
     canRemove: fields.length > 2,

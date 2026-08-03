@@ -98,9 +98,4 @@ export function useHr(): HrContextValue {
   return ctx;
 }
 
-/** Optional: read store outside provider (e.g. non-React helpers). Prefer useHr in components. */
-export function useHrStore(): HrUiState {
-  return useHrStoreSnapshot();
-}
-
 export { HrContext };

@@ -9,11 +9,7 @@ import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { EmptyOrdersIllustration } from "@/components/illustrations";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -24,16 +20,15 @@ import {
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
-import { ErrorState, AppDialog } from "@/components/shared";
+import { ErrorState } from "@/components/shared";
 import { ShipmentDetailSheet } from "@/features/inventory/components/shipping/shipment-detail-sheet";
+import { ShipmentCreateDialog } from "@/features/inventory/components/shipping/shipment-create-dialog";
 import {
   SHIPMENT_STATUS_BADGE,
   SHIPMENT_STATUS_LABEL,
   type ShipmentStatus,
 } from "@/features/inventory/lib";
-import { LoadingButton } from "@/components/ui/loading-button";
-import { useShipments, useCreateShipment, type Shipment } from "@/hooks/api/inventory/shipping";
-import { toast } from "sonner";
+import { useShipments, type Shipment } from "@/hooks/api/inventory/shipping";
 
 const PAGE_LIMIT = 20;
 
@@ -48,8 +43,6 @@ function ShipmentsPageInner() {
   const [detailOpen, setDetailOpen] = useState<boolean>(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [createOpen, setCreateOpen] = useState<boolean>(false);
-  const [newSoId, setNewSoId] = useState<string>("");
-  const [newNotes, setNewNotes] = useState<string>("");
 
   const statusParam = searchParams.get("status") ?? "";
   const page = Math.max(1, Number(searchParams.get("page") ?? "1"));
@@ -87,39 +80,7 @@ function ShipmentsPageInner() {
   }
 
   function handleNewShipment(): void {
-    setNewSoId("");
-    setNewNotes("");
     setCreateOpen(true);
-  }
-
-  function handleCreateClose(): void {
-    setCreateOpen(false);
-    setNewSoId("");
-    setNewNotes("");
-  }
-
-  function handleSoIdChange(e: React.ChangeEvent<HTMLInputElement>): void {
-    setNewSoId(e.target.value);
-  }
-
-  function handleNotesChange(e: React.ChangeEvent<HTMLTextAreaElement>): void {
-    setNewNotes(e.target.value);
-  }
-
-  const createMutation = useCreateShipment();
-
-  async function handleCreateSubmit(): Promise<void> {
-    const soId = newSoId ? Number(newSoId) : undefined;
-    try {
-      await createMutation.mutateAsync({
-        soId,
-        notes: newNotes.trim() || undefined,
-      });
-      toast.success("Shipment created");
-      handleCreateClose();
-    } catch (error) {
-      toast.error(getErrorMessage(error));
-    }
   }
 
   const statusFilter = (statusParam in SHIPMENT_STATUS_BADGE ? statusParam as ShipmentStatus : undefined);
@@ -269,53 +230,7 @@ function ShipmentsPageInner() {
         shipmentId={selectedId}
       />
 
-      <AppDialog
-        open={createOpen}
-        onOpenChange={handleCreateClose}
-        title="New Shipment"
-        description="Create a draft shipment. You can assign a carrier and packages after creation."
-        footer={
-          <div className="grid grid-cols-2 gap-2 w-full">
-            <Button variant="outline" size="sm" onClick={handleCreateClose}>
-              Cancel
-            </Button>
-            <LoadingButton
-              size="sm"
-              onClick={handleCreateSubmit}
-              isPending={createMutation.isPending}
-              loadingText="Creating…"
-            >
-              Create
-            </LoadingButton>
-          </div>
-        }
-      >
-        <div className="space-y-3">
-          <div className="space-y-1.5">
-            <Label htmlFor="new-ship-so" className="text-xs">Sales Order ID (optional)</Label>
-            <Input
-              id="new-ship-so"
-              type="number"
-              min="1"
-              placeholder="Leave blank for direct shipment"
-              value={newSoId}
-              onChange={handleSoIdChange}
-              className="text-sm"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="new-ship-notes" className="text-xs">Notes (optional)</Label>
-            <Textarea
-              id="new-ship-notes"
-              placeholder="Any shipping instructions"
-              value={newNotes}
-              onChange={handleNotesChange}
-              rows={3}
-              className="resize-none text-sm"
-            />
-          </div>
-        </div>
-      </AppDialog>
+      <ShipmentCreateDialog open={createOpen} onOpenChange={setCreateOpen} />
     </>
   );
 }

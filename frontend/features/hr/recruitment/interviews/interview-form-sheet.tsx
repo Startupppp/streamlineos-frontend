@@ -4,11 +4,10 @@ import { useState, useMemo, useCallback } from "react";
 import { useScheduleInterview, useCandidates, useJobPostings } from "@/hooks/api/hr";
 import { useInterviewerAvailability } from "@/hooks/api/hr/recruitment";
 import { InterviewerAvailabilityGrid } from "@/components/hr/recruitment/interviewer-availability-grid";
-import { useCalendarOrgMembers, type CalendarOrgMember } from "@/hooks/api/calendar";
+import { useCalendarOrgMembers } from "@/hooks/api/calendar";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -16,19 +15,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
 import {
   Sheet,
   SheetContent,
@@ -40,20 +26,12 @@ import {
   SheetBody,
 } from "@/components/ui/sheet";
 import { toast } from "sonner";
-import {
-  Check,
-  ChevronsUpDown,
-  Plus,
-  X,
-  User,
-  Briefcase,
-  Calendar,
-  Clock,
-  Video,
-  Bell,
-} from "lucide-react";
+import { Plus, User, Briefcase, Calendar, Clock, Video } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { cn } from "@/lib/utils";
+import { FieldGroup } from "./field-group";
+import { CandidateSelect } from "./candidate-select";
+import { InterviewerSelect } from "./interviewer-select";
+import { InterviewNotificationsSection } from "./interview-notifications-section";
 
 const INTERVIEW_FORMATS = [
   { value: "VIDEO", label: "Video Call" },
@@ -66,119 +44,6 @@ type InterviewFormat = (typeof INTERVIEW_FORMATS)[number]["value"];
 interface InterviewFormSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-}
-
-interface FieldGroupProps {
-  icon: React.ElementType;
-  label: string;
-  colorClass: string;
-  children: React.ReactNode;
-}
-
-function FieldGroup({
-  icon: Icon,
-  label,
-  colorClass,
-  children,
-}: FieldGroupProps) {
-  return (
-    <div className="space-y-2">
-      <div className="flex items-center gap-2">
-        <div
-          className={cn(
-            "h-7 w-7 rounded-lg flex items-center justify-center shrink-0",
-            colorClass,
-          )}
-        >
-          <Icon className="h-3.5 w-3.5" />
-        </div>
-        <span className="text-sm font-semibold text-foreground">{label}</span>
-      </div>
-      {children}
-    </div>
-  );
-}
-
-interface CandidateCommandItemProps {
-  id: number;
-  firstName: string;
-  lastName: string;
-  email: string | null;
-  activeCandidateId: string;
-  onSelect: (idStr: string) => void;
-}
-
-function CandidateCommandItem({ id, firstName, lastName, email, activeCandidateId, onSelect }: CandidateCommandItemProps) {
-  const label = `${firstName} ${lastName}`.trim();
-  const idStr = String(id);
-  function handleSelect() { onSelect(idStr); }
-  return (
-    <CommandItem
-      value={`${label} ${email ?? ""}`}
-      onSelect={handleSelect}
-    >
-      <Check
-        className={cn(
-          "mr-2 h-4 w-4",
-          activeCandidateId === idStr ? "opacity-100" : "opacity-0",
-        )}
-      />
-      <span className="truncate">{label}</span>
-    </CommandItem>
-  );
-}
-
-interface InterviewerChipProps {
-  member: CalendarOrgMember;
-  onRemove: (id: string) => void;
-}
-
-function InterviewerChip({ member: m, onRemove }: InterviewerChipProps) {
-  function handleClick() { onRemove(m.id); }
-  return (
-    <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-primary/10 text-foreground border-primary/20">
-      {m.name ?? m.email}
-      <button
-        type="button"
-        onClick={handleClick}
-        className="hover:text-destructive transition-colors duration-200 ml-0.5 rounded"
-        aria-label={`Remove ${m.name ?? m.email}`}
-      >
-        <X className="h-2.5 w-2.5" />
-      </button>
-    </span>
-  );
-}
-
-interface InterviewerCommandItemProps {
-  member: CalendarOrgMember;
-  isSelected: boolean;
-  onToggle: (id: string) => void;
-}
-
-function InterviewerCommandItem({ member: m, isSelected, onToggle }: InterviewerCommandItemProps) {
-  const label = m.name ?? m.email;
-  function handleSelect() { onToggle(m.id); }
-  return (
-    <CommandItem
-      key={m.id}
-      value={`${label} ${m.email}`}
-      onSelect={handleSelect}
-    >
-      <Check
-        className={cn(
-          "mr-2 h-4 w-4",
-          isSelected ? "opacity-100" : "opacity-0",
-        )}
-      />
-      <div className="flex flex-col">
-        <span className="text-sm">{label}</span>
-        <span className="text-xs text-muted-foreground">
-          {m.role}
-        </span>
-      </div>
-    </CommandItem>
-  );
 }
 
 export function InterviewFormSheet({
@@ -201,11 +66,6 @@ export function InterviewFormSheet({
   const [interviewerIds, setInterviewerIds] = useState<string[]>([]);
   const [notifyEmail, setNotifyEmail] = useState(true);
   const [notifyWhatsApp, setNotifyWhatsApp] = useState(false);
-
-  const selectedCandidate = useMemo(
-    () => allCandidates?.find((c) => String(c.id) === candidateId),
-    [allCandidates, candidateId],
-  );
 
   const selectedInterviewers = useMemo(
     () => orgMembers?.filter((m) => interviewerIds.includes(m.id)) ?? [],
@@ -346,10 +206,7 @@ export function InterviewFormSheet({
   }
 
   return (
-    <Sheet
-      open={open}
-      onOpenChange={handleSheetOpenChange}
-    >
+    <Sheet open={open} onOpenChange={handleSheetOpenChange}>
       <SheetTrigger asChild>
         <Button size="sm" className="gap-1.5">
           <Plus className="h-3.5 w-3.5" />
@@ -373,51 +230,13 @@ export function InterviewFormSheet({
             label="Candidate"
             colorClass="bg-blue-100 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400"
           >
-            <Popover
+            <CandidateSelect
+              candidates={allCandidates}
+              candidateId={candidateId}
               open={candidatePickerOpen}
               onOpenChange={setCandidatePickerOpen}
-            >
-              <PopoverTrigger asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={candidatePickerOpen}
-                  className="w-full justify-between font-normal"
-                >
-                  <span className="truncate text-sm">
-                    {selectedCandidate
-                      ? `${selectedCandidate.firstName} ${selectedCandidate.lastName}`
-                      : "Select candidate"}
-                  </span>
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent
-                className="w-[var(--radix-popover-trigger-width)] p-0"
-                align="start"
-              >
-                <Command>
-                  <CommandInput placeholder="Search candidates..." />
-                  <CommandList>
-                    <CommandEmpty>No candidate found.</CommandEmpty>
-                    <CommandGroup>
-                      {allCandidates?.map((c) => (
-                        <CandidateCommandItem
-                          key={c.id}
-                          id={c.id}
-                          firstName={c.firstName ?? ""}
-                          lastName={c.lastName ?? ""}
-                          email={c.email ?? null}
-                          activeCandidateId={candidateId}
-                          onSelect={handleSelectCandidate}
-                        />
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
+              onSelect={handleSelectCandidate}
+            />
           </FieldGroup>
 
           <div className="border-t border-border/60" />
@@ -524,96 +343,24 @@ export function InterviewFormSheet({
             label="Interviewers"
             colorClass="bg-muted text-muted-foreground dark:bg-slate-800/60 dark:text-slate-400"
           >
-            <div className="space-y-2">
-              {selectedInterviewers.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
-                  {selectedInterviewers.map((m) => (
-                    <InterviewerChip key={m.id} member={m} onRemove={toggleInterviewer} />
-                  ))}
-                </div>
-              )}
-              <Popover
-                open={interviewerPickerOpen}
-                onOpenChange={setInterviewerPickerOpen}
-              >
-                <PopoverTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full justify-start font-normal text-muted-foreground gap-1.5"
-                    size="sm"
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                    Add interviewer
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent
-                  className="w-[var(--radix-popover-trigger-width)] p-0"
-                  align="start"
-                >
-                  <Command>
-                    <CommandInput placeholder="Search members..." />
-                    <CommandList>
-                      <CommandEmpty>No members found.</CommandEmpty>
-                      <CommandGroup>
-                        {orgMembers?.map((m) => (
-                          <InterviewerCommandItem
-                            key={m.id}
-                            member={m}
-                            isSelected={interviewerIds.includes(m.id)}
-                            onToggle={toggleInterviewer}
-                          />
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-            </div>
+            <InterviewerSelect
+              orgMembers={orgMembers}
+              selectedInterviewers={selectedInterviewers}
+              interviewerIds={interviewerIds}
+              open={interviewerPickerOpen}
+              onOpenChange={setInterviewerPickerOpen}
+              onToggle={toggleInterviewer}
+            />
           </FieldGroup>
 
           <div className="border-t border-border/60" />
 
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-7 rounded-lg bg-amber-100 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 flex items-center justify-center shrink-0">
-                <Bell className="h-3.5 w-3.5" />
-              </div>
-              <span className="text-sm font-semibold text-foreground">
-                Notifications
-              </span>
-            </div>
-            <div className="rounded-2xl border border-border bg-muted/30 shadow-sm overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-border/60">
-                <div>
-                  <p className="text-sm font-medium text-foreground">Email</p>
-                  <p className="text-[11px] text-muted-foreground">
-                    Notify via email
-                  </p>
-                </div>
-                <Switch
-                  checked={notifyEmail}
-                  onCheckedChange={setNotifyEmail}
-                  aria-label="Send email notifications"
-                />
-              </div>
-              <div className="flex items-center justify-between px-4 py-3">
-                <div>
-                  <p className="text-sm font-medium text-foreground">
-                    WhatsApp
-                  </p>
-                  <p className="text-[11px] text-muted-foreground">
-                    Requires Twilio configuration
-                  </p>
-                </div>
-                <Switch
-                  checked={notifyWhatsApp}
-                  onCheckedChange={setNotifyWhatsApp}
-                  aria-label="Send WhatsApp notifications"
-                />
-              </div>
-            </div>
-          </div>
+          <InterviewNotificationsSection
+            notifyEmail={notifyEmail}
+            notifyWhatsApp={notifyWhatsApp}
+            onEmailChange={setNotifyEmail}
+            onWhatsAppChange={setNotifyWhatsApp}
+          />
         </SheetBody>
 
         <SheetFooter className="shrink-0 flex-row gap-2 border-t border-border bg-muted/30 px-6 py-4">

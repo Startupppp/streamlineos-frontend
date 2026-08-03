@@ -13,7 +13,7 @@ export function HrIntegrationsSettings() {
       title="Integrations"
       subtitle="Webhooks, connected apps, and external provider settings for the HR module."
     >
-      <RequireModule module="HR">
+      <RequireModule module="hr">
         <div className="space-y-8">
           <WebhooksSection />
           <ConnectedAppsSection />

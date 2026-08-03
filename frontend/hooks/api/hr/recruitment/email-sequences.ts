@@ -20,6 +20,7 @@ export function useEmailSequences() {
 export function useCreateEmailSequence() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "email-sequences", "create"],
     mutationFn: (data: CreateEmailSequenceInput) =>
       apiClient.post<EmailSequence>("/hr/recruitment/email-sequences", data),
     onSuccess: () => {
@@ -31,6 +32,7 @@ export function useCreateEmailSequence() {
 export function useUpdateEmailSequence(id: number) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "email-sequences", "update", id],
     mutationFn: (data: UpdateEmailSequenceInput) =>
       apiClient.patch<EmailSequence>(`/hr/recruitment/email-sequences/${id}`, data),
     onSuccess: () => {
@@ -43,6 +45,7 @@ export function useUpdateEmailSequence(id: number) {
 export function useDeleteEmailSequence() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "email-sequences", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/recruitment/email-sequences/${id}`),
     onSuccess: () => {

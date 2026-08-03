@@ -105,6 +105,7 @@ export const useInvoiceStats = (
 export const useCreateInvoice = () => {
   const queryClient = useQueryClient();
   return useMutation<Invoice, Error, CreateInvoiceInput>({
+    mutationKey: ["create", "invoice"],
     mutationFn: (data) => apiClient.post<Invoice>("/invoices", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.invoice.all });
@@ -115,6 +116,7 @@ export const useCreateInvoice = () => {
 export const useUpdateInvoice = () => {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, UpdateInvoiceInput>({
+    mutationKey: ["update", "invoice"],
     mutationFn: ({ id, ...data }) =>
       apiClient.patch<{ success: boolean }>(`/invoices/${id}`, data),
     onSuccess: (_, vars) => {
@@ -128,53 +130,11 @@ export const useUpdateInvoice = () => {
 export const useDeleteInvoice = () => {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, number>({
+    mutationKey: ["delete", "invoice"],
     mutationFn: (id) =>
       apiClient.delete<{ success: boolean }>(`/invoices/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.invoice.all });
-    },
-  });
-};
-
-export interface RecurringInvoice {
-  id: number;
-  invoiceNumber: string;
-  clientId: number | null;
-  clientName: string | null;
-  total: string;
-  currency: string;
-  status: InvoiceStatus;
-  recurringInterval: string | null;
-  nextRecurringDate: string | null;
-  overdue: boolean;
-}
-
-interface RunRecurringResult {
-  generated: number;
-  invoiceIds: number[];
-}
-
-export const useRecurringInvoices = (
-  options?: Omit<
-    UseQueryOptions<RecurringInvoice[], Error>,
-    "queryKey" | "queryFn"
-  >
-) => {
-  return useQuery<RecurringInvoice[], Error>({
-    queryKey: queryKeys.recurringInvoices.list(),
-    queryFn: () => apiClient.get<RecurringInvoice[]>("/invoices/recurring"),
-    staleTime: 2 * 60_000,
-    ...options,
-  });
-};
-
-export const useRunRecurringInvoices = () => {
-  const queryClient = useQueryClient();
-  return useMutation<RunRecurringResult, Error, void>({
-    mutationFn: () => apiClient.post<RunRecurringResult>("/invoices/recurring/run"),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.invoice.all });
-      queryClient.invalidateQueries({ queryKey: queryKeys.recurringInvoices.all });
     },
   });
 };
@@ -191,9 +151,10 @@ interface RecordPaymentInput {
 export const useRecordPayment = () => {
   const queryClient = useQueryClient();
   return useMutation<Payment, Error, RecordPaymentInput>({
+    mutationKey: ["record", "payment"],
     mutationFn: ({ invoiceId, ...data }) =>
       apiClient.post<Payment>(`/invoices/${invoiceId}/payments`, data),
-    onSuccess: (_result, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.invoice.all });
       queryClient.invalidateQueries({
         queryKey: [...queryKeys.invoice.detail(variables.invoiceId), "payments"],

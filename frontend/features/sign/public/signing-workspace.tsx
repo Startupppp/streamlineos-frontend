@@ -39,7 +39,7 @@ export function SigningWorkspace({
 
   const document = session.documents?.[0];
   const { data: preview } = useSignPublicDocumentPreview(token, document?.id);
-  const fields = session.fields ?? [];
+  const fields = useMemo(() => session.fields ?? [], [session.fields]);
 
   const requiredFields = useMemo(() => fields.filter((f) => f.required), [fields]);
   const completedRequiredCount = requiredFields.filter((f) => f.completedAt).length;

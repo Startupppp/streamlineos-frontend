@@ -215,12 +215,12 @@ export function PendingSuggestionCard({
           <ReplyImprovementSection
             ticketId={ticketId}
             currentContent={draftContent}
-            onApply={onInsertReply ?? ((_v) => undefined)}
+            onApply={onInsertReply ?? ((_) => undefined)}
           />
           <TranslateDraftSection
             ticketId={ticketId}
             currentContent={draftContent}
-            onApply={onInsertReply ?? ((_v) => undefined)}
+            onApply={onInsertReply ?? ((_) => undefined)}
           />
         </div>
       )}

@@ -218,10 +218,7 @@ export function useApplyVendorCredit(creditId: number) {
         body,
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["streamlineos", "accounting", "ap"],
-        exact: false,
-      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.accounting.apAll });
       queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
     },
   });

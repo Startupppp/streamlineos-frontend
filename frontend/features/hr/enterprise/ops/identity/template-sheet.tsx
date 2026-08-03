@@ -50,16 +50,10 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-const systemEntrySchema = z.object({
-  systemName: z
-    .string()
-    .min(1, "System name is required")
-    .max(200, "System name must be 200 characters or fewer")
-    .refine((v) => v.trim().length > 0, "System name cannot be only whitespace"),
-  action: z.enum(["grant", "revoke", "review"]),
-});
-
-type SystemEntry = z.infer<typeof systemEntrySchema>;
+type SystemEntry = {
+  systemName: string;
+  action: "grant" | "revoke" | "review";
+};
 
 interface Props {
   open: boolean;

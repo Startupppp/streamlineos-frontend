@@ -28,6 +28,7 @@ export interface Project {
   key: string;
   clientId: string | null;
   managerId: string | null;
+  managedProductId: number | null;
   startDate: string | Date | null;
   endDate: string | Date | null;
   status: ProjectStatusValue | null;
@@ -90,6 +91,7 @@ export interface ProjectListItem {
   status: ProjectStatusValue | null;
   priority: ProjectPriority | null;
   health: ProjectHealth;
+  managedProductId: number | null;
   startDate: string | Date | null;
   endDate: string | Date | null;
   manager: {
@@ -105,6 +107,7 @@ export interface ProjectListItem {
     lastName: string | null;
     image: string | null;
   }[];
+  teams: string[];
 }
 
 export interface Cycle {
@@ -262,15 +265,6 @@ export interface CreateCycleInput {
   endDate: string;
 }
 
-export interface UpdateCycleInput {
-  id: number;
-  name?: string;
-  description?: string;
-  status?: CycleStatus;
-  startDate?: string;
-  endDate?: string;
-}
-
 export interface CreateModuleInput {
   projectId: number;
   name: string;
@@ -279,16 +273,6 @@ export interface CreateModuleInput {
   leadId?: string;
   startDate?: string;
   endDate?: string;
-}
-
-export interface UpdateModuleInput {
-  id: number;
-  name?: string;
-  description?: string;
-  status?: ModuleStatus;
-  leadId?: string | null;
-  startDate?: string | null;
-  endDate?: string | null;
 }
 
 export interface CreateViewInput {

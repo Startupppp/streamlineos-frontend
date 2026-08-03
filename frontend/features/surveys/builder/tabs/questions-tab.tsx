@@ -7,7 +7,7 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import type { SurveyForm } from "@/hooks/api/surveys/forms";
 import {
   useSurveyBuilder,
@@ -54,7 +54,7 @@ export function QuestionsTab({ survey }: { survey: SurveyForm }) {
     try {
       await createSection.mutateAsync({ title: `Section ${sections.length + 1}`, sortOrder: sections.length });
     } catch (error) {
-      toast.error(getApiError(error));
+      toast.error(getErrorMessage(error));
     }
   }
 
@@ -62,7 +62,7 @@ export function QuestionsTab({ survey }: { survey: SurveyForm }) {
     try {
       await patchSection.mutateAsync({ sectionId, input: { title } });
     } catch (error) {
-      toast.error(getApiError(error));
+      toast.error(getErrorMessage(error));
     }
   }
 
@@ -70,7 +70,7 @@ export function QuestionsTab({ survey }: { survey: SurveyForm }) {
     try {
       await deleteSection.mutateAsync(sectionId);
     } catch (error) {
-      toast.error(getApiError(error));
+      toast.error(getErrorMessage(error));
     }
   }
 
@@ -88,7 +88,7 @@ export function QuestionsTab({ survey }: { survey: SurveyForm }) {
         ],
       });
     } catch (error) {
-      toast.error(getApiError(error));
+      toast.error(getErrorMessage(error));
     }
   }
 
@@ -109,7 +109,7 @@ export function QuestionsTab({ survey }: { survey: SurveyForm }) {
         ],
       });
     } catch (error) {
-      toast.error(getApiError(error));
+      toast.error(getErrorMessage(error));
     }
   }
 
@@ -129,7 +129,7 @@ export function QuestionsTab({ survey }: { survey: SurveyForm }) {
     try {
       await duplicateQuestion.mutateAsync(questionId);
     } catch (error) {
-      toast.error(getApiError(error));
+      toast.error(getErrorMessage(error));
     }
   }
 
@@ -137,7 +137,7 @@ export function QuestionsTab({ survey }: { survey: SurveyForm }) {
     try {
       await deleteQuestion.mutateAsync(questionId);
     } catch (error) {
-      toast.error(getApiError(error));
+      toast.error(getErrorMessage(error));
     }
   }
 

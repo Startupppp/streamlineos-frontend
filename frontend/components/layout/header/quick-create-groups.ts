@@ -1,4 +1,4 @@
-import type { LucideIcon } from "lucide-react"
+﻿import type { LucideIcon } from "lucide-react"
 import {
   Building2,
   CalendarDays,
@@ -68,17 +68,17 @@ export const QUICK_CREATE_GROUPS: CreateGroup[] = [
       {
         id: "new-project",
         label: "New project",
-        href: "/projects/all?create=1",
+        href: "/build/all?create=1",
         icon: FolderPlus,
-        permission: "projects:create",
-        module: "PROJECTS",
+        permission: "build:create",
+        module: "BUILD",
       },
       {
         id: "new-issue",
         label: "New issue",
         icon: ListPlus,
-        permission: "projects:tickets:create",
-        module: "PROJECTS",
+        permission: "build:tickets:create",
+        module: "BUILD",
         action: "create-issue",
       },
       {
@@ -165,7 +165,7 @@ export const QUICK_CREATE_GROUPS: CreateGroup[] = [
       {
         id: "kb-page",
         label: "Knowledge page",
-        href: "/knowledge?create=1",
+        href: "/knowledge/wiki?create=1",
         icon: FileText,
         permission: "kb:pages:create",
         module: "KB",

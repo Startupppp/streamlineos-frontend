@@ -8,14 +8,16 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import type {
   TimesheetSettings,
   UpdateTimesheetSettingsInput,
-} from "@/features/timesheets-core/types";
+} from "@/features/timesheets/types";
+import { useCan } from "../access";
 
 export function useTimesheetSettings(enabled = true) {
+  const canView = useCan("timesheets:settings:view");
   return useQuery({
     queryKey: queryKeys.timesheets.settings(),
     queryFn: () => apiClient.get<TimesheetSettings>("/timesheets/settings"),
     staleTime: 5 * 60_000,
-    enabled,
+    enabled: enabled && canView,
   });
 }
 

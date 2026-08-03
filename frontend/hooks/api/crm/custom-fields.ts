@@ -66,7 +66,7 @@ export function useUpdateCustomField() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["settings", "customFields", "update"],
-    mutationFn: ({ id, entityType: _entityType, ...data }: UpdateCustomFieldInput) =>
+    mutationFn: ({ id, ...data }: UpdateCustomFieldInput) =>
       apiClient.patch<{ field: CustomFieldDefinition }>(`/settings/custom-fields/${id}`, data),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.settings.customFields(vars.entityType) });

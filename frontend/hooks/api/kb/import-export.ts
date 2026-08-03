@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 export type KbImportItem = {
   title: string;
@@ -39,16 +40,6 @@ export type KbImportJob = {
   updatedAt: string;
 };
 
-export type ExportKbPageInput = {
-  format: "markdown" | "html";
-};
-
-export type ExportResult = {
-  jobId: number;
-  format: "markdown" | "html";
-  content: string;
-};
-
 export type KbExportJob = {
   id: number;
   orgId: string;
@@ -78,29 +69,21 @@ export function useImportKbPages() {
 }
 
 export function useKbImportJobs() {
+  const canImport = useCan("kb:pages:import");
   return useQuery({
     queryKey: queryKeys.kb.importJobs(),
     queryFn: () => apiClient.get<KbImportJob[]>("/kb/import-jobs"),
+    enabled: canImport,
     staleTime: 30_000,
   });
 }
 
-export function useExportKbPage() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["kb", "pages", "export"],
-    mutationFn: ({ pageId, ...body }: ExportKbPageInput & { pageId: number }) =>
-      apiClient.post<ExportResult>(`/kb/pages/${pageId}/export`, body),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.kb.exportJobs() });
-    },
-  });
-}
-
 export function useKbExportJobs() {
+  const canExport = useCan("kb:pages:export");
   return useQuery({
     queryKey: queryKeys.kb.exportJobs(),
     queryFn: () => apiClient.get<KbExportJob[]>("/kb/export-jobs"),
+    enabled: canExport,
     staleTime: 30_000,
   });
 }

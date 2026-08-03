@@ -14,10 +14,11 @@ import { useUserMembership, useUpdateUserMembership } from "@/hooks/api/users";
 import { useOrgBranches, useOrgDepartments } from "@/hooks/api/org-hierarchy";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { toast } from "sonner";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Building2, GitBranch, Network, Pencil } from "lucide-react";
-import { CheckIcon, XIcon } from "@animateicons/react/lucide";
+import { XIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { LoadingButton } from "@/components/ui/loading-button";
 
 const NO_BRANCH = "none";
 const NO_DEPARTMENT = "none";
@@ -61,8 +62,9 @@ export function UserMembershipSection({ userId }: UserMembershipSectionProps) {
       {
         userId,
         data: {
-          branchId: draft.branchId !== NO_BRANCH ? Number(draft.branchId) : null,
-          departmentId: draft.departmentId !== NO_DEPARTMENT ? Number(draft.departmentId) : null,
+          branchId: draft.branchId !== NO_BRANCH ? draft.branchId : null,
+          departmentId:
+            draft.departmentId !== NO_DEPARTMENT ? draft.departmentId : null,
           managerUserId: draft.managerUserId !== NO_MANAGER ? draft.managerUserId : null,
         },
       },
@@ -71,7 +73,7 @@ export function UserMembershipSection({ userId }: UserMembershipSectionProps) {
           toast.success("Membership updated");
           setIsEditing(false);
         },
-        onError: (e) => toast.error(getApiError(e)),
+        onError: (e) => toast.error(getErrorMessage(e)),
       }
     );
   }
@@ -172,9 +174,9 @@ export function UserMembershipSection({ userId }: UserMembershipSectionProps) {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <AnimatedIconButton icon={CheckIcon} iconSize={14} iconClassName="mr-1" size="sm" className="h-7 text-xs" onClick={handleSave} disabled={isPending}>
+          <LoadingButton size="sm" className="h-7 text-xs" onClick={handleSave} isPending={isPending}>
             Save
-          </AnimatedIconButton>
+          </LoadingButton>
           <AnimatedIconButton icon={XIcon} iconSize={14} iconClassName="mr-1" size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setIsEditing(false)} disabled={isPending}>
             Cancel
           </AnimatedIconButton>

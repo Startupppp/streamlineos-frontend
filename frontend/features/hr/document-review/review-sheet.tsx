@@ -1,19 +1,16 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
 import { toast } from "sonner";
-import { CheckCircle2, RefreshCw, FileText } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { ExternalLinkIcon, UploadIcon, XIcon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { UploadIcon } from "@animateicons/react/lucide";
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
@@ -24,45 +21,13 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
-import { cn } from "@/lib/utils";
 
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useUploadFile } from "@/hooks/api/use-upload-file";
-import { useHrDocumentTypes } from "@/hooks/api/hr/document-types";
-
-interface OnboardingDoc {
-  id: number;
-  documentTypeId: number;
-  documentTypeName: string;
-  isMandatory: boolean;
-  fileUrl: string;
-  fileName: string;
-  fileSize: number | null;
-  mimeType: string | null;
-  version: number | null;
-  status: "PENDING" | "SUBMITTED" | "APPROVED" | "REJECTED" | "RE_UPLOAD_REQUESTED";
-  reviewedAt: string | null;
-  reviewerName: string | null;
-  remarks: string | null;
-  createdAt: string | null;
-}
-
-interface ReviewSheetProps {
-  userId: string | null;
-  userName: string | null;
-  canReview: boolean;
-  onClose: () => void;
-}
+import { DocCard, type OnboardingDoc } from "./doc-card";
+import { UploadDocSheet } from "./upload-doc-sheet";
 
 const DOCS_PAGE_SIZE = 20;
 
@@ -85,23 +50,6 @@ function useEmployeeOnboardingDocs(userId: string | null, page: number) {
   });
 }
 
-function useUploadOnboardingDoc() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (data: {
-      documentTypeId: number;
-      fileUrl: string;
-      fileName: string;
-      fileSize?: number;
-      mimeType?: string;
-      targetUserId: string;
-    }) => apiClient.post("/hr/onboarding-docs", data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.onboardingDocsAll });
-    },
-  });
-}
-
 function useReviewDocument() {
   const qc = useQueryClient();
   return useMutation({
@@ -121,171 +69,17 @@ function useReviewDocument() {
   });
 }
 
-function getDocStatusBadgeClass(status: OnboardingDoc["status"]): string {
-  switch (status) {
-    case "APPROVED":
-      return "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-700";
-    case "SUBMITTED":
-      return "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-700";
-    case "REJECTED":
-      return "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-700";
-    case "RE_UPLOAD_REQUESTED":
-      return "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-700";
-    default:
-      return "bg-muted text-muted-foreground border-border";
-  }
-}
-
-function getDocStatusAccentClass(status: OnboardingDoc["status"]): string {
-  switch (status) {
-    case "APPROVED":
-      return "border-l-emerald-500";
-    case "SUBMITTED":
-      return "border-l-blue-500";
-    case "REJECTED":
-      return "border-l-rose-500";
-    case "RE_UPLOAD_REQUESTED":
-      return "border-l-amber-500";
-    default:
-      return "border-l-slate-300";
-  }
-}
-
-function docStatusLabel(status: OnboardingDoc["status"]): string {
-  switch (status) {
-    case "PENDING":
-      return "Pending";
-    case "SUBMITTED":
-      return "Submitted";
-    case "APPROVED":
-      return "Approved";
-    case "REJECTED":
-      return "Rejected";
-    case "RE_UPLOAD_REQUESTED":
-      return "Re-upload Requested";
-  }
-}
-
-function formatBytes(bytes: number | null): string {
-  if (!bytes) return "—";
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-interface DocCardProps {
-  doc: OnboardingDoc;
+interface ReviewSheetProps {
+  userId: string | null;
+  userName: string | null;
   canReview: boolean;
-  onApprove: (doc: OnboardingDoc) => void;
-  onRequestReupload: (doc: OnboardingDoc) => void;
-}
-
-function DocFileLink({ href, fileName, ariaLabel }: { href: string; fileName: string; ariaLabel: string }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="inline-flex items-center gap-0.5 text-primary hover:text-primary/80 hover:underline transition-colors duration-200"
-      aria-label={ariaLabel}
-      {...hoverHandlers}
-    >
-      {fileName}
-      <ExternalLinkIcon ref={iconRef} size={12} className="ml-0.5" />
-    </a>
-  );
-}
-
-function DocCard({ doc, canReview, onApprove, onRequestReupload }: DocCardProps) {
-  const handleApproveClick = useCallback(() => onApprove(doc), [doc, onApprove]);
-  const handleReuploadClick = useCallback(() => onRequestReupload(doc), [doc, onRequestReupload]);
-
-  return (
-    <div
-      className={cn(
-        "rounded-xl border-l-4 border border-border bg-card shadow-sm overflow-hidden",
-        getDocStatusAccentClass(doc.status),
-      )}
-    >
-      <div className="p-3 space-y-2">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <p className="text-sm font-semibold text-foreground">{doc.documentTypeName}</p>
-              {doc.isMandatory && (
-                <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-700 shrink-0">
-                  Required
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-3 mt-1 flex-wrap text-[11px] text-muted-foreground">
-              <DocFileLink href={doc.fileUrl} fileName={doc.fileName} ariaLabel={`Download ${doc.fileName}`} />
-              {doc.fileSize != null && <span>{formatBytes(doc.fileSize)}</span>}
-              {doc.version != null && <span>v{doc.version}</span>}
-            </div>
-          </div>
-          <span
-            className={cn(
-              "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0",
-              getDocStatusBadgeClass(doc.status),
-            )}
-          >
-            {docStatusLabel(doc.status)}
-          </span>
-        </div>
-
-        {doc.reviewedAt && (
-          <p className="text-[11px] text-muted-foreground">
-            Reviewed {format(new Date(doc.reviewedAt), "MMM d, yyyy")}
-            {doc.reviewerName ? ` by ${doc.reviewerName}` : ""}
-          </p>
-        )}
-        {doc.remarks && (
-          <p className="text-[11px] text-muted-foreground italic border-l-2 border-muted pl-2">
-            {doc.remarks}
-          </p>
-        )}
-
-        {doc.status === "SUBMITTED" && canReview && (
-          <>
-            <Separator />
-            <div className="flex items-center gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                className="gap-1.5 text-xs flex-1 border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-500/30 dark:text-emerald-300 dark:hover:bg-emerald-950/40 transition-colors duration-200"
-                onClick={handleApproveClick}
-                aria-label={`Approve ${doc.documentTypeName}`}
-              >
-                <CheckCircle2 className="h-3.5 w-3.5" />
-                Approve
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="gap-1.5 text-xs flex-1 transition-colors duration-200"
-                onClick={handleReuploadClick}
-                aria-label={`Request re-upload for ${doc.documentTypeName}`}
-              >
-                <RefreshCw className="h-3.5 w-3.5" />
-                Request Re-upload
-              </Button>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  );
+  onClose: () => void;
 }
 
 export function ReviewSheet({ userId, userName, canReview, onClose }: ReviewSheetProps) {
   const reviewMutation = useReviewDocument();
-  const uploadDocMutation = useUploadOnboardingDoc();
-  const uploadFileMutation = useUploadFile();
   const [docsPage, setDocsPage] = useState(1);
   const { data: docsData, isLoading: docsLoading } = useEmployeeOnboardingDocs(userId, docsPage);
-  const { data: documentTypes } = useHrDocumentTypes();
 
   const employeeDocs = docsData?.data;
   const docsTotalPages = docsData?.pagination.totalPages ?? 1;
@@ -293,12 +87,7 @@ export function ReviewSheet({ userId, userName, canReview, onClose }: ReviewShee
   const [reuploadDoc, setReuploadDoc] = useState<OnboardingDoc | null>(null);
   const [reuploadRemarks, setReuploadRemarks] = useState("");
   const [approveDoc, setApproveDoc] = useState<OnboardingDoc | null>(null);
-
   const [uploadSheetOpen, setUploadSheetOpen] = useState(false);
-  const [uploadDocTypeId, setUploadDocTypeId] = useState("");
-  const [uploadFile, setUploadFile] = useState<File | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSheetOpenChange = useCallback(
     (open: boolean) => {
@@ -338,76 +127,7 @@ export function ReviewSheet({ userId, userName, canReview, onClose }: ReviewShee
     if (!open) setApproveDoc(null);
   }, []);
 
-  const handleOpenUploadSheet = useCallback(() => {
-    setUploadDocTypeId("");
-    setUploadFile(null);
-    setUploadSheetOpen(true);
-  }, []);
-
-  const handleCloseUploadSheet = useCallback((open: boolean) => {
-    if (!open) {
-      setUploadDocTypeId("");
-      setUploadFile(null);
-      setUploadSheetOpen(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    }
-  }, []);
-
-  const handleCancelUpload = useCallback(() => handleCloseUploadSheet(false), [handleCloseUploadSheet]);
-
-  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] ?? null;
-    if (file && file.size > 10 * 1024 * 1024) {
-      toast.error("File exceeds 10 MB limit");
-      return;
-    }
-    setUploadFile(file);
-  }, []);
-
-  const handleClearFile = useCallback(() => {
-    setUploadFile(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  }, []);
-
-  const handleChooseFile = useCallback(() => {
-    fileInputRef.current?.click();
-  }, []);
-
-  const handleUploadSubmit = useCallback(async () => {
-    if (!userId) return;
-    if (!uploadDocTypeId) {
-      toast.error("Please select a document type");
-      return;
-    }
-    if (!uploadFile) {
-      toast.error("Please select a file");
-      return;
-    }
-    setIsUploading(true);
-    try {
-      const uploaded = await uploadFileMutation.mutateAsync({
-        file: uploadFile,
-        folder: "onboarding-docs",
-      });
-      await uploadDocMutation.mutateAsync({
-        documentTypeId: Number(uploadDocTypeId),
-        fileUrl: uploaded.url,
-        fileName: uploadFile.name,
-        fileSize: uploaded.size,
-        mimeType: uploaded.mimeType,
-        targetUserId: userId,
-      });
-      toast.success("Document uploaded on behalf of employee");
-      setUploadSheetOpen(false);
-      setUploadDocTypeId("");
-      setUploadFile(null);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    } catch (e) {
-      toast.error(getErrorMessage(e));
-    } finally {
-      setIsUploading(false);
-    }
-  }, [userId, uploadDocTypeId, uploadFile, uploadFileMutation, uploadDocMutation]);
+  const handleOpenUploadSheet = useCallback(() => setUploadSheetOpen(true), []);
 
   const handleOpenReupload = useCallback((doc: OnboardingDoc) => {
     setReuploadDoc(doc);
@@ -607,104 +327,12 @@ export function ReviewSheet({ userId, userName, canReview, onClose }: ReviewShee
         </SheetContent>
       </Sheet>
 
-      <Sheet open={uploadSheetOpen} onOpenChange={handleCloseUploadSheet}>
-        <SheetContent side="right" className="flex flex-col p-0 gap-0">
-          <SheetHeader className="shrink-0 px-5 pt-4 pb-3 border-b">
-            <SheetTitle className="text-base font-semibold">Upload Document</SheetTitle>
-            <SheetDescription className="text-xs">
-              Upload an onboarding document on behalf of{" "}
-              <strong>{userName ?? "this employee"}</strong>.
-            </SheetDescription>
-          </SheetHeader>
-
-          <div className="flex-1 px-5 py-4 space-y-4">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
-                Document Type <span className="text-destructive">*</span>
-              </Label>
-              <Select value={uploadDocTypeId} onValueChange={setUploadDocTypeId}>
-                <SelectTrigger className="">
-                  <SelectValue placeholder="Select document type" />
-                </SelectTrigger>
-                <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-                  {(documentTypes ?? [])
-                    .filter((dt) => dt.isActive !== false)
-                    .map((dt) => (
-                      <SelectItem key={dt.id} value={String(dt.id)}>
-                        {dt.name}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
-                File <span className="text-destructive">*</span>
-              </Label>
-              {uploadFile ? (
-                <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2">
-                  <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <span className="text-xs truncate text-foreground flex-1 min-w-0">
-                    {uploadFile.name}
-                  </span>
-                  <AnimatedIconButton
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-5 w-5 shrink-0 hover:text-destructive transition-colors duration-200"
-                    onClick={handleClearFile}
-                    aria-label="Remove file"
-                    icon={XIcon}
-                    iconSize={12}
-                  />
-                </div>
-              ) : (
-                <AnimatedIconButton
-                  type="button"
-                  variant="outline"
-                  className="h-9 w-full gap-1.5 text-xs border-dashed"
-                  onClick={handleChooseFile}
-                  disabled={isUploading}
-                  icon={UploadIcon}
-                  iconSize={14}
-                  iconClassName="mr-1.5"
-                >
-                  Choose File
-                </AnimatedIconButton>
-              )}
-              <input
-                ref={fileInputRef}
-                type="file"
-                className="hidden"
-                accept="application/pdf,image/*,.doc,.docx"
-                onChange={handleFileChange}
-              />
-              <p className="text-[11px] text-muted-foreground">
-                Accepted: PDF, images, Word documents. Max 10 MB.
-              </p>
-            </div>
-          </div>
-
-          <div className="shrink-0 px-5 py-3 border-t flex gap-2">
-            <Button
-              variant="outline"
-              className="flex-1"
-              onClick={handleCancelUpload}
-              disabled={isUploading}
-            >
-              Cancel
-            </Button>
-            <Button
-              className="flex-1"
-              onClick={handleUploadSubmit}
-              disabled={isUploading || !uploadDocTypeId || !uploadFile}
-            >
-              {isUploading ? "Uploading..." : "Upload"}
-            </Button>
-          </div>
-        </SheetContent>
-      </Sheet>
+      <UploadDocSheet
+        open={uploadSheetOpen}
+        userId={userId}
+        userName={userName}
+        onOpenChange={setUploadSheetOpen}
+      />
     </>
   );
 }

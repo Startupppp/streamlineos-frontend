@@ -421,13 +421,13 @@ export function AiAssistantPanel({ entityType, entityId, entityName, onOpenEmail
           >
             <div className="px-4 pb-4">
               <Tabs defaultValue="email">
-                <TabsList className="w-full mb-3">
-                  <TabsTrigger value="email" className="flex-1 text-[10px]">Email Draft</TabsTrigger>
-                  <TabsTrigger value="notes" className="flex-1 text-[10px]">Notes</TabsTrigger>
-                  <TabsTrigger value="objection" className="flex-1 text-[10px]">Objection</TabsTrigger>
-                  <TabsTrigger value="followup" className="flex-1 text-[10px]">Follow-up</TabsTrigger>
+                <TabsList className="mb-3">
+                  <TabsTrigger value="email" className="text-[10px]">Email Draft</TabsTrigger>
+                  <TabsTrigger value="notes" className="text-[10px]">Notes</TabsTrigger>
+                  <TabsTrigger value="objection" className="text-[10px]">Objection</TabsTrigger>
+                  <TabsTrigger value="followup" className="text-[10px]">Follow-up</TabsTrigger>
                   {entityType === "lead" && (
-                    <TabsTrigger value="actions" className="flex-1 text-[10px]">Next Actions</TabsTrigger>
+                    <TabsTrigger value="actions" className="text-[10px]">Next Actions</TabsTrigger>
                   )}
                 </TabsList>
                 <TabsContent value="email">

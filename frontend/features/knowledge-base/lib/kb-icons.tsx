@@ -61,7 +61,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-export type KbIconProps = {
+type KbIconProps = {
   className?: string;
   size?: number;
 };
@@ -119,7 +119,7 @@ function createAnimatedIcon(Icon: AnimateIconSource): KbIconComponent {
 function createLucideIcon(Icon: LucideIcon): KbIconComponent {
   return forwardRef<IconHandle, KbIconProps>(function KbLucideIcon(
     { className, size },
-    _ref,
+    _,
   ) {
     return <Icon className={className} size={size ?? classNameToIconSize(className)} />;
   });
@@ -138,14 +138,11 @@ export const KbUploadIcon = createAnimatedIcon(UploadIcon);
 export const KbClipboardIcon = createAnimatedIcon(ClipboardIcon);
 export const KbChevronDownIcon = createAnimatedIcon(ChevronDownIcon);
 export const KbChevronRightIcon = createAnimatedIcon(ChevronRightIcon);
-export const KbEllipsisIcon = createAnimatedIcon(EllipsisIcon);
 export const KbMoreHorizontalIcon = createAnimatedIcon(EllipsisIcon);
-export const KbLoaderCircleIcon = createAnimatedIcon(LoaderCircleIcon);
 export const KbLoader2Icon = createAnimatedIcon(LoaderCircleIcon);
 export const KbCheckIcon = createAnimatedIcon(CheckIcon);
 export const KbCopyIcon = createAnimatedIcon(CopyIcon);
 export const KbGlobeIcon = createAnimatedIcon(GlobeIcon);
-export const KbShareIcon = createAnimatedIcon(ShareIcon);
 export const KbShare2Icon = createAnimatedIcon(ShareIcon);
 export const KbExternalLinkIcon = createAnimatedIcon(ExternalLinkIcon);
 export const KbShieldCheckIcon = createAnimatedIcon(ShieldCheckIcon);
@@ -158,23 +155,16 @@ export const KbThumbsUpIcon = createAnimatedIcon(ThumbsUpIcon);
 export const KbMoveRightIcon = createAnimatedIcon(MoveRightIcon);
 export const KbArrowRightIcon = createAnimatedIcon(MoveRightIcon);
 export const KbXIcon = createAnimatedIcon(XIcon);
-export const KbCircleCheckIcon = createAnimatedIcon(CircleCheckIcon);
 export const KbCheckCircleIcon = createAnimatedIcon(CircleCheckIcon);
-export const KbShieldXIcon = createAnimatedIcon(ShieldXIcon);
 export const KbXCircleIcon = createAnimatedIcon(ShieldXIcon);
 export const KbBookOpenTextIcon = createAnimatedIcon(BookOpenTextIcon);
 export const KbFileTextIcon = createAnimatedIcon(BookOpenTextIcon);
-export const KbLayoutListIcon = createAnimatedIcon(LayoutListIcon);
 export const KbLayoutTemplateIcon = createAnimatedIcon(LayoutListIcon);
 export const KbMessageCircleIcon = createAnimatedIcon(MessageCircleIcon);
 export const KbMessageSquareIcon = createAnimatedIcon(MessageCircleIcon);
-export const KbChevronsLeftIcon = createAnimatedIcon(ChevronsLeftIcon);
-export const KbChevronsRightIcon = createAnimatedIcon(ChevronsRightIcon);
 export const KbPanelLeftCloseIcon = createAnimatedIcon(ChevronsLeftIcon);
 export const KbPanelLeftOpenIcon = createAnimatedIcon(ChevronsRightIcon);
-export const KbBookOpenCheckIcon = createAnimatedIcon(BookOpenCheckIcon);
 export const KbClipboardCheckIcon = createAnimatedIcon(BookOpenCheckIcon);
-export const KbUserPenIcon = createAnimatedIcon(UserPenIcon);
 export const KbPencilIcon = createAnimatedIcon(UserPenIcon);
 export const KbEdit2Icon = createAnimatedIcon(UserPenIcon);
 

@@ -93,7 +93,7 @@ export function useCompleteChecklistItem() {
     mutationKey: ["onboarding", "module-checklists", "complete-item"],
     mutationFn: ({ moduleKey, itemKey }: { moduleKey: string; itemKey: string }) =>
       apiClient.post(`/onboarding/module-checklists/${moduleKey}/items/${itemKey}/complete`, {}),
-    onSuccess: (_data, { moduleKey }) => invalidateChecklist(queryClient, moduleKey),
+    onSuccess: (_, { moduleKey }) => invalidateChecklist(queryClient, moduleKey),
   });
 }
 
@@ -103,7 +103,7 @@ export function useSkipChecklistItem() {
     mutationKey: ["onboarding", "module-checklists", "skip-item"],
     mutationFn: ({ moduleKey, itemKey, reason }: { moduleKey: string; itemKey: string; reason?: string }) =>
       apiClient.post(`/onboarding/module-checklists/${moduleKey}/items/${itemKey}/skip`, { reason }),
-    onSuccess: (_data, { moduleKey }) => invalidateChecklist(queryClient, moduleKey),
+    onSuccess: (_, { moduleKey }) => invalidateChecklist(queryClient, moduleKey),
   });
 }
 
@@ -113,7 +113,7 @@ export function useDismissModuleChecklist() {
     mutationKey: ["onboarding", "module-checklists", "dismiss"],
     mutationFn: (moduleKey: string) =>
       apiClient.post(`/onboarding/module-checklists/${moduleKey}/dismiss`, {}),
-    onSuccess: (_data, moduleKey) => invalidateChecklist(queryClient, moduleKey),
+    onSuccess: (_, moduleKey) => invalidateChecklist(queryClient, moduleKey),
   });
 }
 
@@ -123,7 +123,7 @@ export function useRestartModuleChecklist() {
     mutationKey: ["onboarding", "module-checklists", "restart"],
     mutationFn: (moduleKey: string) =>
       apiClient.post(`/onboarding/module-checklists/${moduleKey}/restart`, {}),
-    onSuccess: (_data, moduleKey) => invalidateChecklist(queryClient, moduleKey),
+    onSuccess: (_, moduleKey) => invalidateChecklist(queryClient, moduleKey),
   });
 }
 
@@ -158,18 +158,6 @@ export function useSaveTourProgress() {
     mutationKey: ["onboarding", "tours", "save-progress"],
     mutationFn: ({ tourKey, currentStep }: { tourKey: string; currentStep: number }) =>
       apiClient.post<GuidedTourProgress>(`/onboarding/tours/${tourKey}/progress`, { currentStep }),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.onboardingFlow.tours() });
-    },
-  });
-}
-
-export function useCompleteTour() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationKey: ["onboarding", "tours", "complete"],
-    mutationFn: (tourKey: string) =>
-      apiClient.post<GuidedTourProgress>(`/onboarding/tours/${tourKey}/complete`, {}),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.onboardingFlow.tours() });
     },

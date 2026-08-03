@@ -6,7 +6,7 @@ export { AiDraftCard } from "./ai-draft-card";
 export { AiQuotaEmptyState } from "./ai-quota-empty-state";
 export { AiPermissionDenied } from "./ai-permission-denied";
 export { AiActionsMenu } from "./ai-actions-menu";
-export type { AiAction, AiActionResult, AiResultSurface } from "./ai-actions-menu";
+export type { AiAction, AiActionResult } from "./ai-actions-menu";
 export { AiActionResultBody, AiActionResultFooter } from "./ai-action-result-body";
 export type { AiActionResultState } from "./ai-action-result-body";
 export { AiInlinePreview } from "./ai-inline-preview";

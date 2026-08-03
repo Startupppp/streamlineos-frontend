@@ -120,7 +120,7 @@ export function JournalEntryView({
             )}
             <div className="min-w-0">
               <p className="text-[11px] font-medium text-muted-foreground leading-none">Created by</p>
-              <TruncatedText text={entry.createdBy} className="mt-1 text-sm text-foreground" />
+              <TruncatedText text={entry.createdByName ?? entry.createdByEmail?.split("@")[0] ?? entry.createdBy} className="mt-1 text-sm text-foreground" />
             </div>
             <div className="min-w-0">
               <p className="text-[11px] font-medium text-muted-foreground leading-none">Created at</p>

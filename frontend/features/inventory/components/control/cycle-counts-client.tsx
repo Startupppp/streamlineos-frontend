@@ -32,7 +32,8 @@ import {
   useCreateCycleCount,
   type CycleCountListItem,
 } from "@/hooks/api/inventory/counts";
-import { useWarehouses, useLocations } from "@/hooks/api/inventory/warehouses";
+import { useLocations } from "@/hooks/api/inventory/warehouses";
+import { WarehouseSelect } from "@/components/inventory/warehouse-select";
 import { useCategories } from "@/hooks/api/inventory/products";
 import {
   CYCLE_COUNT_STATUS_BADGE,
@@ -78,7 +79,6 @@ function NewCycleCountSheet({
   const [locationId, setLocationId] = useState<string>("");
   const [categoryId, setCategoryId] = useState<string>("");
 
-  const { data: warehouses = [] } = useWarehouses();
   const { data: locations = [] } = useLocations(warehouseId ? Number(warehouseId) : 0);
   const { data: categories = [] } = useCategories();
   const createMutation = useCreateCycleCount();
@@ -124,17 +124,10 @@ function NewCycleCountSheet({
         <SheetBody className="space-y-4 px-6 py-4">
           <div className="space-y-1.5">
             <Label htmlFor="cc-warehouse" className="text-xs font-semibold text-foreground/80">Warehouse *</Label>
-            <Select value={warehouseId || "none"} onValueChange={handleWarehouseChange}>
-              <SelectTrigger id="cc-warehouse" className="text-sm">
-                <SelectValue placeholder="Select warehouse" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Select warehouse…</SelectItem>
-                {warehouses.map((w) => (
-                  <SelectItem key={w.id} value={String(w.id)}>{w.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <WarehouseSelect
+              value={warehouseId}
+              onChange={handleWarehouseChange}
+            />
           </div>
 
           <div className="space-y-1.5">

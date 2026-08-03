@@ -19,7 +19,6 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 interface SoQueuePageProps {
   status: SalesOrderStatus;
   title: string;
-  actionNoun: string;
   emptyTitle: string;
   emptyDescription: string;
 }
@@ -92,13 +91,12 @@ const columns: DataTableColumn<SalesOrderListItem>[] = [
   },
 ];
 
-export function SoQueuePage({ status, title, actionNoun, emptyTitle, emptyDescription }: SoQueuePageProps) {
+export function SoQueuePage({ status, title, emptyTitle, emptyDescription }: SoQueuePageProps) {
   const [search, setSearch] = useState("");
 
   const query = useSalesOrders({ status, limit: 50 });
 
   const allItems = query.data?.items ?? [];
-  const total = query.data?.total ?? 0;
 
   const items = search.trim()
     ? allItems.filter(
@@ -118,7 +116,7 @@ export function SoQueuePage({ status, title, actionNoun, emptyTitle, emptyDescri
 
   const filterBar = (
     <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-      <SearchInput className="min-w-0 flex-1 lg:max-w-xs" value={search} onValueChange={handleSearchChange} placeholder="Search SO # or customer…" />
+      <SearchInput className="min-w-0 flex-1" value={search} onValueChange={handleSearchChange} placeholder="Search SO # or customer…" />
     </div>
   );
 

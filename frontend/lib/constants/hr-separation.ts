@@ -18,8 +18,6 @@ export const TERMINATION_REASONS = [
 
 export const TERMINATION_REASON_OTHER = "Other" as const;
 
-export type TerminationReason = (typeof TERMINATION_REASONS)[number];
-
 
 export const RESIGNATION_REASONS = [
   "Career growth opportunities",
@@ -37,12 +35,10 @@ export const RESIGNATION_REASONS = [
 
 export const RESIGNATION_REASON_OTHER = "Other" as const;
 
-export type ResignationReason = (typeof RESIGNATION_REASONS)[number];
-
 
 export const TERMINATION_STATUSES = [
   "DRAFT",
-  "PENDING_CEO",
+  "PENDING_FINAL",
   "APPROVED",
   "REJECTED",
   "SENT",
@@ -53,7 +49,7 @@ export type TerminationStatusValue = (typeof TERMINATION_STATUSES)[number];
 
 export const TERMINATION_STATUS_LABELS: Record<TerminationStatusValue, string> = {
   DRAFT: "Draft",
-  PENDING_CEO: "Pending CEO",
+  PENDING_FINAL: "Pending FINAL",
   APPROVED: "Approved",
   REJECTED: "Rejected",
   SENT: "Email Sent",

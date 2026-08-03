@@ -13,6 +13,7 @@ export function useMfaStatus() {
 
 export function useMfaSetup() {
   return useMutation({
+    mutationKey: ["mfa", "setup"],
     mutationFn: () =>
       apiClient.post<{
         qrDataUrl: string;
@@ -26,10 +27,12 @@ export function useMfaSetup() {
 export function useMfaVerify() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["mfa", "verify"],
     mutationFn: (data: { token: string } | { backupCode: string }) =>
       apiClient.post<{ enabled: boolean }>("/auth/mfa/verify", data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.mfa.all });
+      qc.invalidateQueries({ queryKey: queryKeys.access.me() });
     },
   });
 }
@@ -37,35 +40,13 @@ export function useMfaVerify() {
 export function useMfaDisable() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["mfa", "disable"],
     mutationFn: (token: string) =>
       apiClient.post<{ disabled: boolean }>("/auth/mfa/disable", { token }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.mfa.all });
+      qc.invalidateQueries({ queryKey: queryKeys.access.me() });
     },
   });
 }
 
-export function useResetMfa() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (data: { userId: string }) =>
-      apiClient.post<{ reset: boolean }>("/auth/mfa/reset", data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.organization.members() });
-    },
-  });
-}
-
-export function useResendInvitation() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (data: { invitationId: string }) =>
-      apiClient.post<{ success: boolean }>(
-        "/organization/invitations/resend",
-        data,
-      ),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.organization.invitations() });
-    },
-  });
-}

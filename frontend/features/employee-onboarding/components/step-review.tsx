@@ -31,7 +31,7 @@ import { NavButtons } from "./nav-buttons";
 import { StepBody } from "./step-body";
 
 const ROLE_LABELS: Record<string, string> = {
-  CEO: "CEO",
+  FINAL: "FINAL",
   ADMIN: "Admin",
   HR: "Human Resources",
   ENGINEERING: "Engineering",
@@ -139,7 +139,7 @@ export function StepReview({ completedSteps, draft, onBack }: StepReviewProps) {
       await saveBank({ countryCode, ...bankFormValues });
       await submitOnboarding();
       clearBackendTokenCache();
-      await completeOnboardingGate("onboarding-done", update);
+      await completeOnboardingGate("onboarding-done", session?.user?.id ?? "", update);
       setShowCelebration(true);
     } catch (err) {
       toast.error(getErrorMessage(err));

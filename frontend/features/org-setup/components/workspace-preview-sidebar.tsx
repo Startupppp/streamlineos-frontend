@@ -14,9 +14,10 @@ import {
   previewTransition,
   sidebarItemVariants,
 } from "../lib/preview-motion";
+import type { OrgModuleKey } from "../lib/wizard-data-schema";
 
 type WorkspacePreviewSidebarProps = {
-  modules: readonly string[];
+  modules: readonly OrgModuleKey[];
   companyLabel: string;
   companyInitial: string;
   compact: boolean;

@@ -35,18 +35,7 @@ export function OrgSetupShell({
   const reduceMotion = useReducedMotion();
   const currentStepId = sequence[currentIndex] ?? "welcome";
   const isWelcome = currentStepId === "welcome";
-  const previewSnapshot = useMemo(
-    () => toPreviewSnapshot(data),
-    [
-      data.companyName,
-      data.industry,
-      data.teamSize,
-      data.goals,
-      data.modules,
-      data.installedApps,
-      data.invitees.length,
-    ],
-  );
+  const previewSnapshot = useMemo(() => toPreviewSnapshot(data), [data]);
 
   return (
     <WizardSplitShell

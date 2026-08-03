@@ -22,7 +22,7 @@ const channels = [
   {
     icon: MessageSquare,
     label: "Existing customer support",
-    description: "Open a ticket from inside your workspace for the fastest response.",
+    description: "Open a ticket from inside your organization for the fastest response.",
     value: "Help Â· in-app",
     href: "/signin",
   },

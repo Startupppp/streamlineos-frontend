@@ -1,7 +1,6 @@
 import * as z from "zod";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import {
-  ALL_COUNTRIES,
   EMERGENCY_RELATIONSHIPS,
   INDIA_COUNTRY_NAME,
   INDIAN_PINCODE_REGEX,
@@ -156,4 +155,4 @@ export const personalInfoSchema = z
 
 export type PersonalInfoFormValues = z.infer<typeof personalInfoSchema>;
 
-export { ALL_COUNTRIES, MIN_AGE_YEARS, MAX_AGE_YEARS };
+export { MIN_AGE_YEARS, MAX_AGE_YEARS };

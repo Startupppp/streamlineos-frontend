@@ -61,7 +61,7 @@ import {
   type AssignmentMode,
 } from "@/hooks/api/support/macros";
 import { useOrgMembers } from "@/hooks/api/organization";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { ruleSchema, type RuleForm } from "@/features/support/settings/routing-rule-form.schema";
 
@@ -348,7 +348,7 @@ function RuleSheet({ rule, members, onClose }: RuleSheetProps) {
               toast.success("Rule updated");
               onClose();
             },
-            onError: (error) => toast.error(getApiError(error)),
+            onError: (error) => toast.error(getErrorMessage(error)),
           },
         );
       } else {
@@ -368,7 +368,7 @@ function RuleSheet({ rule, members, onClose }: RuleSheetProps) {
               toast.success("Rule created");
               onClose();
             },
-            onError: (error) => toast.error(getApiError(error)),
+            onError: (error) => toast.error(getErrorMessage(error)),
           },
         );
       }
@@ -725,7 +725,7 @@ export default function SupportRoutingPage() {
     (rule: SupportRoutingRule) => {
       updateRule.mutate(
         { id: rule.id, isEnabled: !rule.isEnabled },
-        { onError: (error) => toast.error(getApiError(error)) },
+        { onError: (error) => toast.error(getErrorMessage(error)) },
       );
     },
     [updateRule],
@@ -742,7 +742,7 @@ export default function SupportRoutingPage() {
         if (rule.sortOrder !== i) {
           updateRule.mutate(
             { id: rule.id, sortOrder: i },
-            { onError: (error) => toast.error(getApiError(error)) },
+            { onError: (error) => toast.error(getErrorMessage(error)) },
           );
         }
       });
@@ -757,7 +757,7 @@ export default function SupportRoutingPage() {
         toast.success("Rule deleted");
         setDeleteTarget(null);
       },
-      onError: (error) => toast.error(getApiError(error)),
+      onError: (error) => toast.error(getErrorMessage(error)),
     });
   }, [deleteTarget, deleteRule]);
 

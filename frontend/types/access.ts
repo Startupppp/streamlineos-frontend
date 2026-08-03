@@ -4,11 +4,16 @@ export type Tier = "free" | "starter" | "pro" | "enterprise";
 
 export type RolePrincipalType = "user" | "department";
 
+export interface MfaState {
+  enforced: boolean;
+  satisfied: boolean;
+}
+
 export interface AccessResponse {
   permissions: string[];
   isOrgOwner: boolean;
-  isPlatformAdmin: boolean;
   modules: Record<string, boolean>;
+  mfa?: MfaState;
   enabledModules?: string[];
   dataScopes?: Record<string, string>;
   version?: number;
@@ -34,6 +39,7 @@ export interface RoleMember {
 
 export interface SetRolePermissionsInput {
   roleId: number;
+  version: number;
   items: RolePermissionGrant[];
 }
 

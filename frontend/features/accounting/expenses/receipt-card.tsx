@@ -1,10 +1,10 @@
-"use client";
+﻿"use client";
 
 import { useState, useCallback } from "react";
 import { AlertTriangle, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FinanceStatusBadge, Money } from "@/features/accounting/shared";
-import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
+import { getUserDisplayName } from "@/features/build/shared/resolve-user-name";
 import type { FinReceiptInboxItem } from "@/types/accounting/expenses";
 import { ReceiptEditSheet } from "./receipt-edit-sheet";
 import { TruncatedText } from "@/components/ui/truncated-text";

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { memo, useState, useCallback } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
@@ -9,8 +9,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useTicketSearch } from "@/hooks/api/projects";
-import type { TicketSearchResult } from "@/hooks/api/projects";
+import { useTicketSearch } from "@/hooks/api/build";
+import type { TicketSearchResult } from "@/hooks/api/build";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface TicketPickerDialogProps {

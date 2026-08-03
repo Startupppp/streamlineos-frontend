@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { HelpCenterClient } from "./help-center-client";
+import { HelpCenterClient } from "@/features/kb/components/help-center-client";
 import { BRAND_NAME } from "@/lib/branding";
 
 export const dynamic = "force-dynamic";

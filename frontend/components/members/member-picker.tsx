@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useMemo, useCallback, type ReactNode } from "react";
 import { Check, User } from "lucide-react";
@@ -21,15 +21,15 @@ import {
   FIELD_SEARCH_POPOVER_CONTENT_CLASS,
 } from "@/components/ui/field-control";
 import { useOrgMembers, useOrgMembersByIds } from "@/hooks/api/organization";
-import { useProjectMembers } from "@/hooks/api/projects/projects";
-import { useProjectWorkspaceMembers } from "@/hooks/api/projects/workspace-members";
+import { useProjectMembers } from "@/hooks/api/build/projects";
+import { useProjectWorkspaceMembers } from "@/hooks/api/build/workspace-members";
 import { useCan } from "@/hooks/api/access";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import {
   getUserDisplayName,
   getUserInitials,
   type NamedUser,
-} from "@/features/projects/shared/resolve-user-name";
+} from "@/features/build/shared/resolve-user-name";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface MemberOption extends NamedUser {
@@ -44,6 +44,7 @@ interface MemberPickerBaseProps {
   disabled?: boolean;
   className?: string;
   excludeUserId?: string;
+  excludeUserIds?: string[];
   trigger?: ReactNode;
   contentAlign?: "start" | "center" | "end";
   contentClassName?: string;
@@ -75,7 +76,7 @@ function useMemberOptions(
   selectedIds: string[],
 ): { options: MemberOption[]; selectedMembers: MemberOption[] } {
   const canViewOrgMembers = useCan("settings:view");
-  const canViewProjectWorkspaceMembers = useCan("projects:members:view");
+  const canViewProjectWorkspaceMembers = useCan("build:members:view");
   const useOrgDirectory = projectId === undefined && canViewOrgMembers;
   const useWorkspaceDirectory =
     projectId === undefined && !canViewOrgMembers && canViewProjectWorkspaceMembers;
@@ -184,9 +185,12 @@ function filterMembers(
   search: string,
   serverFiltered: boolean,
   excludeUserId?: string,
+  excludeUserIds?: string[],
 ) {
-  const eligible = excludeUserId
-    ? members.filter((m) => m.id !== excludeUserId)
+  const excludeSet = new Set<string>(excludeUserIds ?? []);
+  if (excludeUserId) excludeSet.add(excludeUserId);
+  const eligible = excludeSet.size > 0
+    ? members.filter((m) => !excludeSet.has(m.id))
     : members;
   if (serverFiltered || !search.trim()) return eligible;
   const q = search.toLowerCase();
@@ -199,7 +203,7 @@ function filterMembers(
 
 const TRIGGER_CLASS = cn(
   FIELD_CONTROL_CLASS,
-  "w-full justify-start gap-2 px-3 font-medium",
+  "w-full justify-start gap-2 px-3 text-left font-medium",
 );
 
 function MemberAvatar({ member, className }: { member: MemberOption; className?: string }) {
@@ -218,6 +222,7 @@ export function MemberPicker(props: MemberPickerProps) {
     disabled,
     className,
     excludeUserId,
+    excludeUserIds,
     trigger,
     contentAlign = "start",
     contentClassName,
@@ -237,8 +242,8 @@ export function MemberPicker(props: MemberPickerProps) {
   );
   const serverFiltered = projectId === undefined;
   const filtered = useMemo(
-    () => filterMembers(members, search, serverFiltered, excludeUserId),
-    [members, search, serverFiltered, excludeUserId],
+    () => filterMembers(members, search, serverFiltered, excludeUserId, excludeUserIds),
+    [members, search, serverFiltered, excludeUserId, excludeUserIds],
   );
 
   const handleSearchChange = useCallback((v: string) => {

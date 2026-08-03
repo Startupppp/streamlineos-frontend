@@ -19,7 +19,6 @@ import { Trash2Icon } from "@animateicons/react/lucide";
 import {
   useHelpdeskTickets,
   useHelpdeskRoutingRules,
-  useUpsertHelpdeskRouting,
   useDeleteHelpdeskRouting,
   HELPDESK_CATEGORIES,
   HELPDESK_CATEGORY_LABELS,
@@ -85,7 +84,6 @@ export function QueueTab() {
 
   const { data, isLoading } = useHelpdeskTickets(params);
   const { data: routingRules } = useHelpdeskRoutingRules();
-  const upsertRouting = useUpsertHelpdeskRouting();
   const deleteRouting = useDeleteHelpdeskRouting();
 
   const totalPages = Math.max(1, data?.totalPages ?? 1);

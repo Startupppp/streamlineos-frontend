@@ -1,5 +1,5 @@
-import { Clock, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Clock } from "lucide-react";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { SurveyIllustration } from "@/components/illustrations";
 
 interface WelcomeScreenProps {
@@ -45,9 +45,9 @@ export function WelcomeScreen({
         </span>
       </div>
 
-      <Button onClick={onStart} disabled={isStarting} className="h-11 w-full font-medium">
-        {isStarting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Start survey"}
-      </Button>
+      <LoadingButton onClick={onStart} isPending={isStarting} className="h-11 w-full font-medium">
+        Start survey
+      </LoadingButton>
 
       <p className="text-[11px] leading-relaxed text-muted-foreground">
         Your responses are used only for this survey&apos;s purpose.

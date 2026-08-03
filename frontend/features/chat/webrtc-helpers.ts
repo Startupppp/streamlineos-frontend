@@ -1,4 +1,22 @@
+import { getErrorMessage } from "@/lib/get-error-message";
+
 export const MAX_QUEUED_CANDIDATES = 64;
+
+export function getMicErrorMessage(err: unknown): string {
+  if (err instanceof DOMException) {
+    switch (err.name) {
+      case "NotAllowedError":
+      case "SecurityError":
+        return "Microphone access was blocked. Allow microphone permission for this site, then rejoin the huddle.";
+      case "NotFoundError":
+      case "OverconstrainedError":
+        return "No microphone was found. Connect a mic and rejoin.";
+      case "NotReadableError":
+        return "Your microphone is in use by another app. Close it and rejoin.";
+    }
+  }
+  return getErrorMessage(err);
+}
 
 export interface IncomingSignalData {
   fromUserId: string;

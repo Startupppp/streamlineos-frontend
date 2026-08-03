@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 export type KbReviewType = "approval" | "freshness";
 export type KbReviewStatus = "pending" | "approved" | "rejected";
@@ -26,13 +27,6 @@ export type KbPageReview = {
   updatedAt: string;
 };
 
-export type CreatePageReviewInput = {
-  type: KbReviewType;
-  reviewerId?: string;
-  dueAt?: string;
-  note?: string;
-};
-
 export type ApproveReviewInput = {
   note?: string;
 };
@@ -47,33 +41,13 @@ export type KbPageReviewsParams = {
 };
 
 export function useKbPageReviews(params?: KbPageReviewsParams) {
+  const canViewReviews = useCan("kb:reviews:view");
   const queryParams: Record<string, unknown> = { ...params };
   return useQuery({
     queryKey: queryKeys.kb.pageReviews(queryParams),
     queryFn: () => apiClient.get<KbPageReview[]>("/kb/page-reviews", queryParams),
     staleTime: 30_000,
-  });
-}
-
-export function useKbPageReviewsDue() {
-  return useQuery({
-    queryKey: queryKeys.kb.pageReviewsDue(),
-    queryFn: () => apiClient.get<KbPageReview[]>("/kb/page-reviews/due"),
-    staleTime: 60_000,
-  });
-}
-
-export function useCreatePageReview() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["kb", "pageReviews", "create"],
-    mutationFn: ({ pageId, ...body }: CreatePageReviewInput & { pageId: number }) =>
-      apiClient.post<KbPageReview>(`/kb/pages/${pageId}/reviews`, body),
-    onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: queryKeys.kb.pageReviews() });
-      qc.invalidateQueries({ queryKey: queryKeys.kb.pageReviewsDue() });
-      qc.invalidateQueries({ queryKey: queryKeys.kb.page(variables.pageId) });
-    },
+    enabled: canViewReviews,
   });
 }
 

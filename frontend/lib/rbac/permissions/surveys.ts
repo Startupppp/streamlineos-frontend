@@ -62,12 +62,6 @@ export const SURVEYS_PERMISSIONS: Permission[] = [
     description: "View survey analytics and reports",
   },
   {
-    name: "surveys:templates:manage",
-    resource: "surveys:templates",
-    action: "manage",
-    description: "Manage the survey template library",
-  },
-  {
     name: "surveys:live:host",
     resource: "surveys:live",
     action: "host",
@@ -85,10 +79,9 @@ export const SURVEYS_PERMISSIONS: Permission[] = [
     action: "manage",
     description: "Manage survey automations and lead routing rules",
   },
-  {
-    name: "surveys:settings:manage",
-    resource: "surveys:settings",
-    action: "manage",
-    description: "Manage survey branding, anonymity, and collector settings",
-  },
+  { name: "surveys:create", resource: "surveys", action: "create", description: "Create surveys" },
+  { name: "surveys:delete", resource: "surveys", action: "delete", description: "Delete or archive surveys" },
+  { name: "surveys:publish", resource: "surveys", action: "publish", description: "Publish, pause, and close surveys" },
+  { name: "surveys:update", resource: "surveys", action: "update", description: "Edit survey builder content" },
+  { name: "surveys:view", resource: "surveys", action: "view", description: "View surveys, assessments, live sessions, and lead qualification forms" },
 ];

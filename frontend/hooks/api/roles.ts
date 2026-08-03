@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type { Role } from "@/types/organization";
 import type {
   AssignRoleMemberInput,
@@ -16,11 +17,13 @@ import type {
 export const useRoles = (
   options?: Omit<UseQueryOptions<Role[], Error>, "queryKey" | "queryFn">
 ) => {
+  const canManage = useCan("settings:rbac:manage");
   return useQuery<Role[], Error>({
     queryKey: queryKeys.roles.list(),
     queryFn: () => apiClient.get<Role[]>("/roles"),
     staleTime: 30 * 60_000,
     ...options,
+    enabled: canManage && (options?.enabled ?? true),
   });
 };
 
@@ -63,6 +66,21 @@ export const useDeleteRole = () => {
       apiClient.delete<{ success: boolean }>(`/roles/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.roles.all });
+    },
+  });
+};
+
+export const useUpdateRole = (roleId: number) => {
+  const queryClient = useQueryClient();
+  return useMutation<{ success: boolean }, Error, { name: string }>({
+    mutationKey: ["roles", "update", roleId],
+    mutationFn: ({ name }) =>
+      apiClient.patch<{ success: boolean }>(`/roles/${roleId}`, { name }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.roles.all });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.roles.detail(roleId),
+      });
     },
   });
 };
@@ -122,20 +140,21 @@ export const useRolePermissionGrants = (
 
 export const useSetRolePermissions = () => {
   const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, SetRolePermissionsInput>({
+  return useMutation<{ success: true; version: number }, Error, SetRolePermissionsInput>({
     mutationKey: ["roles", "set-permissions"],
-    mutationFn: ({ roleId, items }) =>
-      apiClient.put<{ success: boolean }>(`/roles/${roleId}/permissions`, { items }),
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({
+    mutationFn: ({ roleId, version, items }) =>
+      apiClient.put<{ success: true; version: number }>(`/roles/${roleId}/permissions`, { version, items }),
+    onSuccess: (data, variables) => {
+      queryClient.setQueryData<import("@/types/organization").Role>(
+        queryKeys.roles.detail(variables.roleId),
+        (old) => (old ? { ...old, version: data.version } : old),
+      );
+      void queryClient.invalidateQueries({
         queryKey: queryKeys.roles.permissions(variables.roleId),
       });
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.roles.detail(variables.roleId),
-      });
-      queryClient.invalidateQueries({ queryKey: queryKeys.roles.list() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.access.me() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.roles.permissionsMatrix() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.roles.list() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.access.me() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.roles.permissionsMatrix() });
     },
   });
 };
@@ -162,7 +181,7 @@ export const useAssignRoleMember = () => {
     mutationKey: ["roles", "assign-member"],
     mutationFn: ({ roleId, ...body }) =>
       apiClient.post<{ success: boolean }>(`/roles/${roleId}/members`, body),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.roles.members(variables.roleId),
       });
@@ -178,7 +197,7 @@ export const useUnassignRoleMember = () => {
     mutationKey: ["roles", "unassign-member"],
     mutationFn: ({ roleId, ...body }) =>
       apiClient.delete<{ success: boolean }>(`/roles/${roleId}/members`, body),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.roles.members(variables.roleId),
       });
@@ -198,11 +217,13 @@ export interface RolePermissionsMatrixEntry {
 export function useRolePermissionsMatrix(
   options?: Omit<UseQueryOptions<RolePermissionsMatrixEntry[], Error>, "queryKey" | "queryFn">
 ) {
+  const canManage = useCan("settings:rbac:manage");
   return useQuery<RolePermissionsMatrixEntry[], Error>({
     queryKey: queryKeys.roles.permissionsMatrix(),
     queryFn: () => apiClient.get<RolePermissionsMatrixEntry[]>("/roles/permissions/matrix"),
     staleTime: 5 * 60_000,
     ...options,
+    enabled: canManage && (options?.enabled ?? true),
   });
 }
 
@@ -218,11 +239,13 @@ interface RolesAnalytics {
 export function useRolesAnalytics(
   options?: Omit<UseQueryOptions<RolesAnalytics, Error>, "queryKey" | "queryFn">
 ) {
+  const canManage = useCan("settings:rbac:manage");
   return useQuery<RolesAnalytics, Error>({
     queryKey: queryKeys.roles.analytics(),
     queryFn: () => apiClient.get<RolesAnalytics>("/roles/analytics"),
     staleTime: 2 * 60_000,
     ...options,
+    enabled: canManage && (options?.enabled ?? true),
   });
 }
 

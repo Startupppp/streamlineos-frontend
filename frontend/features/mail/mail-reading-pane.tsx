@@ -25,21 +25,18 @@ import {
 import type {
   MailMessageSummary,
   MailMessageDetail,
-  MailAccount,
 } from "@/types/mail";
 
 export type { MailReplyParams };
 
 export interface MailReadingPaneProps {
   selectedMessage: MailMessageSummary;
-  accounts: MailAccount[];
   onBack?: () => void;
   onReply: (params: MailReplyParams) => void;
 }
 
 export function MailReadingPane({
   selectedMessage,
-  accounts: _accounts,
   onBack,
   onReply,
 }: MailReadingPaneProps) {

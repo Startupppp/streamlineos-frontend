@@ -40,7 +40,7 @@ import {
   NAME_MAX,
   SKU_MAX,
   DESCRIPTION_MAX,
-} from "@/features/inventory/components/new-product-form";
+} from "@/features/inventory/lib/new-product-schema";
 
 interface ProductForEdit {
   name: string;

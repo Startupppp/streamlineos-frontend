@@ -38,15 +38,6 @@ export const NextActionSchema = z.object({
 });
 export type NextActionResult = z.infer<typeof NextActionSchema>;
 
-export const ChurnRiskSchema = z.object({
-  churnRiskScore: z.number().min(0).max(100),
-  riskLevel: z.enum(["low", "medium", "high", "critical"]),
-  reasoning: z.string(),
-  riskFactors: z.array(z.string()),
-  retentionActions: z.array(z.string()),
-});
-export type ChurnRiskResult = z.infer<typeof ChurnRiskSchema>;
-
 export const LeadEnrichmentSchema = z.object({
   companyInsight: z.string(),
   estimatedCompanySize: z.string(),
@@ -82,14 +73,6 @@ export const ReviewDraftSchema = z.object({
 });
 export type ReviewDraftResult = z.infer<typeof ReviewDraftSchema>;
 
-export const HelpdeskReplySchema = z.object({
-  suggestedReply: z.string().describe("Professional reply text, max 100 words"),
-  category: z.string().describe("Inferred category: Leave / Payroll / IT / Benefits / Policy / Other"),
-  estimatedResolutionTime: z.string().describe("e.g. 24 hours, 2-3 business days"),
-  followUpActions: z.array(z.string()),
-});
-export type HelpdeskReplyResult = z.infer<typeof HelpdeskReplySchema>;
-
 export const AttritionRiskSchema = z.object({
   attritionRiskScore: z.number().min(0).max(100),
   riskLevel: z.enum(["low", "medium", "high", "critical"]),
@@ -98,22 +81,6 @@ export const AttritionRiskSchema = z.object({
   retentionActions: z.array(z.string()),
 });
 export type AttritionRiskResult = z.infer<typeof AttritionRiskSchema>;
-
-export const PolicyQaSchema = z.object({
-  answer: z.string(),
-  confidence: z.enum(["high", "medium", "low", "not_found"]),
-  citations: z.array(z.object({
-    policyType: z.string(),
-    policyId: z.number(),
-    snippet: z.string(),
-  })),
-  shouldEscalate: z.boolean(),
-  escalationReason: z.string().optional(),
-  advisory: z.boolean().optional(),
-  disclaimer: z.string().optional(),
-  suggestTicket: z.boolean().optional(),
-});
-export type PolicyQaResult = z.infer<typeof PolicyQaSchema>;
 
 export const InterviewKitRoundSchema = z.object({
   round: z.string(),
@@ -136,14 +103,6 @@ export const InterviewKitSchema = z.object({
   disclaimer: z.string().optional(),
 });
 export type InterviewKitResult = z.infer<typeof InterviewKitSchema>;
-
-export const LetterDraftSchema = z.object({
-  subject: z.string(),
-  body: z.string(),
-  disclaimer: z.string(),
-  advisory: z.boolean().optional(),
-});
-export type LetterDraftResult = z.infer<typeof LetterDraftSchema>;
 
 export const InterviewNotesSummarySchema = z.object({
   overallRecommendation: z.string(),

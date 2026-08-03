@@ -128,7 +128,7 @@ export function HrQuickAction({
   icon: LucideIcon | ComponentType<{ className?: string }>;
   label: string;
   description?: string;
-  tone?: "blue" | "emerald" | "amber" | "rose" | "violet" | "sky";
+  tone?: "blue" | "emerald" | "amber" | "rose" | "sky";
 }) {
   const tones = {
     blue: "from-blue-500/15 to-blue-500/5 text-blue-600 dark:text-blue-300 group-hover:border-blue-500/30",
@@ -137,8 +137,6 @@ export function HrQuickAction({
     amber:
       "from-amber-500/15 to-amber-500/5 text-amber-600 dark:text-amber-300 group-hover:border-amber-500/30",
     rose: "from-rose-500/15 to-rose-500/5 text-rose-600 dark:text-rose-300 group-hover:border-rose-500/30",
-    violet:
-      "from-blue-500/15 to-blue-500/5 text-blue-600 dark:text-blue-300 group-hover:border-blue-500/30",
     sky: "from-sky-500/15 to-sky-500/5 text-sky-600 dark:text-sky-300 group-hover:border-sky-500/30",
   };
 
@@ -305,7 +303,7 @@ export function HrIconWell({
   size = "md",
 }: {
   children: ReactNode;
-  tone?: "blue" | "emerald" | "amber" | "rose" | "violet" | "slate" | "sky";
+  tone?: "blue" | "emerald" | "amber" | "rose" | "slate" | "sky";
   className?: string;
   size?: "sm" | "md" | "lg";
 }) {
@@ -314,7 +312,6 @@ export function HrIconWell({
     emerald: "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300",
     amber: "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300",
     rose: "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-300",
-    violet: "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300",
     slate: "bg-muted text-muted-foreground",
     sky: "bg-sky-50 text-sky-600 dark:bg-sky-500/10 dark:text-sky-300",
   };
@@ -359,38 +356,3 @@ export function HrPageContent({
   );
 }
 
-/** Empty / error recovery card */
-export function HrEmptyPanel({
-  icon: Icon,
-  title,
-  description,
-  action,
-  className,
-}: {
-  icon?: LucideIcon;
-  title: string;
-  description?: string;
-  action?: ReactNode;
-  className?: string;
-}) {
-  return (
-    <div
-      className={cn(
-        "flex flex-col items-center justify-center text-center rounded-2xl border border-dashed border-border/80",
-        "bg-muted/20 px-6 py-12",
-        className,
-      )}
-    >
-      {Icon && (
-        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-muted">
-          <Icon className="h-5 w-5 text-muted-foreground" />
-        </div>
-      )}
-      <p className="text-sm font-semibold text-foreground">{title}</p>
-      {description && (
-        <p className="mt-1 max-w-sm text-xs text-muted-foreground leading-relaxed">{description}</p>
-      )}
-      {action && <div className="mt-4">{action}</div>}
-    </div>
-  );
-}

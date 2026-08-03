@@ -12,7 +12,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
 import type { QuoteListItem, QuoteStatus } from "@/types/crm/quotes";
 
 interface QuoteRowActionsProps {

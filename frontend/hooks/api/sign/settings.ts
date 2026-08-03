@@ -71,17 +71,3 @@ export function useDeleteWatermarkPolicy() {
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.signAdmin.watermarkPolicies() }),
   });
 }
-
-export function useRunSignReminderSweep() {
-  return useMutation({
-    mutationKey: ["signAdmin", "run-reminder-sweep"],
-    mutationFn: () => apiClient.post<{ remindedCount: number }>("/sign/admin/run-reminder-sweep"),
-  });
-}
-
-export function useRunSignExpirationSweep() {
-  return useMutation({
-    mutationKey: ["signAdmin", "run-expiration-sweep"],
-    mutationFn: () => apiClient.post<{ expiredCount: number }>("/sign/admin/run-expiration-sweep"),
-  });
-}

@@ -1,7 +1,6 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 export default function HrAnalyticsLoading() {
   return (

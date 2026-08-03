@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo } from "react";
 import { Users, UserCheck, Briefcase, ListChecks } from "lucide-react";
@@ -47,7 +47,7 @@ export function useDashboardStatCards(
         label: "Active Projects",
         value: stats.activeProjects ?? 0,
         icon: Briefcase,
-        href: "/projects/all",
+        href: "/build/all",
       });
     }
     if (access.projectsEnabled) {
@@ -56,7 +56,7 @@ export function useDashboardStatCards(
         label: "My Open Tasks",
         value: openIssueCount,
         icon: ListChecks,
-        href: "/projects/my-work",
+        href: "/build/my-work",
       });
     }
 

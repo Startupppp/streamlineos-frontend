@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 
 export type EntitlementTier = "FREE" | "PAID" | "ENTERPRISE";
 export type EntitlementPlan = "FREE" | "STARTER" | "PROFESSIONAL" | "ENTERPRISE";
@@ -39,11 +40,9 @@ export interface Entitlements {
   limits: Record<LimitKey, EntitlementLimit>;
 }
 
-const ENTITLEMENTS_QUERY_KEY = ["billing", "entitlements"] as const;
-
 export function useEntitlements() {
   return useQuery<Entitlements, Error>({
-    queryKey: ENTITLEMENTS_QUERY_KEY,
+    queryKey: queryKeys.billing.entitlements(),
     queryFn: () => apiClient.get<Entitlements>("/billing/entitlements"),
     staleTime: 900_000,
     retry: false,

@@ -40,10 +40,10 @@ export interface ListEventsParams {
 const BASE = "/hr/enterprise/ops/event-stream";
 
 const streamKeys = {
-  all: ["hr-event-stream"] as const,
-  list: (p: ListEventsParams) => ["hr-event-stream", "list", p] as const,
-  dictionary: ["hr-event-stream", "dictionary"] as const,
-  metrics: ["hr-event-stream", "metrics"] as const,
+  all: ["streamlineos", "hr-event-stream"] as const,
+  list: (p: ListEventsParams) => ["streamlineos", "hr-event-stream", "list", p] as const,
+  dictionary: ["streamlineos", "hr-event-stream", "dictionary"] as const,
+  metrics: ["streamlineos", "hr-event-stream", "metrics"] as const,
 };
 
 export function useHrEvents(params: ListEventsParams = {}) {

@@ -40,10 +40,10 @@ interface PaginatedResult<T> {
 const BASE = "/hr/enterprise/ops/emergency";
 
 const emergencyKeys = {
-  all: ["hr-emergency"] as const,
-  list: (p: Record<string, unknown>) => ["hr-emergency", "list", p] as const,
-  detail: (id: string) => ["hr-emergency", "detail", id] as const,
-  status: (id: string) => ["hr-emergency", "status", id] as const,
+  all: ["streamlineos", "hr-emergency"] as const,
+  list: (p: Record<string, unknown>) => ["streamlineos", "hr-emergency", "list", p] as const,
+  detail: (id: string) => ["streamlineos", "hr-emergency", "detail", id] as const,
+  status: (id: string) => ["streamlineos", "hr-emergency", "status", id] as const,
 };
 
 export function useEmergencyEvents(params: { page?: number; status?: EmergencyEventStatus } = {}) {
@@ -101,19 +101,6 @@ export function useUpdateEmergencyEvent(eventId: string) {
       void qc.invalidateQueries({ queryKey: emergencyKeys.detail(eventId) });
       void qc.invalidateQueries({ queryKey: emergencyKeys.all });
       toast.success("Emergency event updated");
-    },
-    onError: (e) => toast.error(getErrorMessage(e)),
-  });
-}
-
-export function useDeleteEmergencyEvent() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr-emergency", "delete"],
-    mutationFn: (eventId: string) => apiClient.delete(`${BASE}/events/${eventId}`),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: emergencyKeys.all });
-      toast.success("Emergency event deleted");
     },
     onError: (e) => toast.error(getErrorMessage(e)),
   });

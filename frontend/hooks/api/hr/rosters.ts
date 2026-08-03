@@ -51,16 +51,6 @@ export function useRosterEntries(rosterId: number) {
   });
 }
 
-export function useUpsertRosterEntry(rosterId: number) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "rosters", "entry", rosterId],
-    mutationFn: (data: { userId: string; shiftId?: number; date: string; isDayOff?: boolean; notes?: string }) =>
-      apiClient.post<RosterEntry>(`/hr/rosters/${rosterId}/entries`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "rosterEntries", rosterId] }),
-  });
-}
-
 export function usePublishRoster() {
   const qc = useQueryClient();
   return useMutation({

@@ -7,7 +7,7 @@ import { WELCOME_POP_KEY, WELCOME_POP_NAME_KEY } from "@/lib/welcome-pop";
 
 export function WelcomeToast() {
   useEffect(() => {
-    let name = "your workspace";
+    let name = "your organization";
     try {
       if (sessionStorage.getItem(WELCOME_POP_KEY) !== "1") return;
       sessionStorage.removeItem(WELCOME_POP_KEY);
@@ -20,7 +20,7 @@ export function WelcomeToast() {
 
     toast.success(`Welcome to ${name}!`, {
       description:
-        "Your workspace is live. Explore the dashboard or pick up Getting Started tips on the right.",
+        "Your organization is live. Explore the dashboard or pick up Getting Started tips on the right.",
       duration: 6000,
       icon: <PartyPopper className="h-4 w-4 text-blue-600" />,
     });

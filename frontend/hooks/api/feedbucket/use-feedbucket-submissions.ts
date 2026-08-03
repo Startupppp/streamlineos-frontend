@@ -54,18 +54,6 @@ export function useUpdateFeedbucketSubmission() {
   });
 }
 
-export function useDeleteFeedbucketSubmission() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["feedbucket", "submissions", "delete"],
-    mutationFn: (submissionId: number) =>
-      apiClient.delete<{ success: boolean }>(`/feedbucket/submissions/${submissionId}`),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.feedbucket.all });
-    },
-  });
-}
-
 export function useConvertFeedbucketToTicket() {
   const qc = useQueryClient();
   return useMutation({

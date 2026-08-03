@@ -4,7 +4,6 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { RefreshCw, Info } from "lucide-react";
 import { AppSheet } from "@/components/shared";
-import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -193,11 +192,11 @@ export function ChannelPublicationsPanel({
           )}
 
           <Tabs value={activeTab} onValueChange={handleTabChange}>
-            <TabsList className="w-full">
-              <TabsTrigger value="all" className="flex-1">
+            <TabsList>
+              <TabsTrigger value="all">
                 All
               </TabsTrigger>
-              <TabsTrigger value="failed" className="flex-1">
+              <TabsTrigger value="failed">
                 Failed
               </TabsTrigger>
             </TabsList>

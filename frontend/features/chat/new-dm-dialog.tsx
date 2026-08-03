@@ -144,7 +144,7 @@ export function NewDMDialog({
         </DialogHeader>
         <div className="px-4 pb-3">
           <div className="min-w-0 bg-muted/30 border-border/30">
-          <SearchInput placeholder="Search by name or email..." value={search} onValueChange={handleSearchChange} autoFocus />
+          <SearchInput fill placeholder="Search by name or email..." value={search} onValueChange={handleSearchChange} autoFocus />
         </div>
         </div>
         <ScrollArea className="h-[340px] border-t border-border/30">

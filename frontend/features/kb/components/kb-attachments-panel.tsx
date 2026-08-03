@@ -4,7 +4,6 @@ import { useRef, useState, type ChangeEvent } from "react";
 import {
   FileText,
   ImageIcon,
-  Loader2,
   Paperclip,
   RefreshCw,
   Sparkles,
@@ -20,7 +19,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { DownloadIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,13 +28,13 @@ import { ErrorState } from "@/components/shared/error-state";
 import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyUploadIllustration } from "@/components/illustrations";
 import {
-  useKbAttachments,
-  useUploadKbAttachment,
-  useDeleteKbAttachment,
-  useKbAttachmentDownloadUrl,
+  useSupportKbAttachments,
+  useUploadSupportKbAttachment,
+  useDeleteSupportKbAttachment,
+  useSupportKbAttachmentDownloadUrl,
   type KbAttachment,
 } from "@/hooks/api/support/kb-attachments";
-import { useKbIndexStatus, useReindexKbArticle } from "@/hooks/api/support/kb-rag";
+import { useSupportKbIndexStatus, useReindexSupportKbArticle } from "@/hooks/api/support/kb-rag";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatFileSize } from "@/lib/format-utils";
 import { toast } from "sonner";
@@ -106,12 +105,12 @@ function AttachmentRowItem({
 }
 
 export function KbAttachmentsPanel({ article }: { article: KbArticleDetail }) {
-  const attachmentsQuery = useKbAttachments(article.id);
-  const uploadAttachment = useUploadKbAttachment(article.id);
-  const deleteAttachment = useDeleteKbAttachment(article.id);
-  const downloadUrl = useKbAttachmentDownloadUrl(article.id);
-  const indexStatus = useKbIndexStatus(article.id);
-  const reindex = useReindexKbArticle();
+  const attachmentsQuery = useSupportKbAttachments(article.id);
+  const uploadAttachment = useUploadSupportKbAttachment(article.id);
+  const deleteAttachment = useDeleteSupportKbAttachment(article.id);
+  const downloadUrl = useSupportKbAttachmentDownloadUrl(article.id);
+  const indexStatus = useSupportKbIndexStatus(article.id);
+  const reindex = useReindexSupportKbArticle();
   const inputRef = useRef<HTMLInputElement>(null);
   const [pendingDelete, setPendingDelete] = useState<KbAttachment | null>(null);
   const attachments = attachmentsQuery.data ?? [];
@@ -187,20 +186,17 @@ export function KbAttachmentsPanel({ article }: { article: KbArticleDetail }) {
           className="hidden"
           aria-hidden="true"
         />
-        <Button
+        <LoadingButton
           size="sm"
           variant="outline"
           className="w-full"
           onClick={handlePickFile}
-          disabled={uploadAttachment.isPending}
+          isPending={uploadAttachment.isPending}
+          loadingText="Uploading…"
         >
-          {uploadAttachment.isPending ? (
-            <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
-          ) : (
-            <Upload className="h-3.5 w-3.5 mr-1" />
-          )}
-          {uploadAttachment.isPending ? "Uploading…" : "Upload file"}
-        </Button>
+          {!uploadAttachment.isPending && <Upload className="h-3.5 w-3.5 mr-1" />}
+          Upload file
+        </LoadingButton>
         <p className="text-[11px] text-muted-foreground">
           PDF, images, Word or Excel · up to 10MB.
         </p>
@@ -250,20 +246,17 @@ export function KbAttachmentsPanel({ article }: { article: KbArticleDetail }) {
               </p>
             </div>
           </div>
-          <Button
+          <LoadingButton
             size="sm"
             variant="outline"
             className="w-full"
             onClick={handleReindex}
-            disabled={reindex.isPending}
+            isPending={reindex.isPending}
+            loadingText="Indexing…"
           >
-            {reindex.isPending ? (
-              <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
-            ) : (
-              <RefreshCw className="h-3.5 w-3.5 mr-1" />
-            )}
-            {reindex.isPending ? "Indexing…" : "Rebuild AI index"}
-          </Button>
+            {!reindex.isPending && <RefreshCw className="h-3.5 w-3.5 mr-1" />}
+            Rebuild AI index
+          </LoadingButton>
         </div>
       </CardContent>
 

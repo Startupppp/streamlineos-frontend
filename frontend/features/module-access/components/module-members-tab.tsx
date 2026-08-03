@@ -1,0 +1,276 @@
+"use client";
+
+import { useState, useCallback, useEffect, useRef } from "react";
+import { UserPlus, X, Pencil, Loader2 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { TablePagination } from "@/components/ui/table-pagination";
+import { toast } from "sonner";
+import {
+  useModuleMembers,
+  useModuleMyPermissions,
+  useModuleRoleGroups,
+  type ModuleMember,
+} from "@/hooks/api/module-access";
+import {
+  AddMemberDialog,
+  EditGroupsDialog,
+  ConfirmRemoveDialog,
+} from "@/features/module-access/components/member-dialogs";
+
+const PAGE_SIZE = 20;
+
+function getUserInitials(name: string): string {
+  return name
+    .split(" ")
+    .slice(0, 2)
+    .map((p) => p[0] ?? "")
+    .join("")
+    .toUpperCase();
+}
+
+function resolveDisplayName(member: { displayName: string; email: string }): string {
+  return member.displayName || member.email || "Unknown user";
+}
+
+function MemberRowSkeleton() {
+  return (
+    <div className="flex items-center gap-3 px-4 py-3 border-b border-border/60">
+      <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+      <div className="flex-1 space-y-1.5">
+        <Skeleton className="h-3.5 w-32" />
+        <Skeleton className="h-3 w-44" />
+      </div>
+      <Skeleton className="h-5 w-16 rounded-full" />
+    </div>
+  );
+}
+
+interface MemberRowProps {
+  member: ModuleMember;
+  canManage: boolean;
+  onEdit: (member: ModuleMember) => void;
+  onRemove: (member: ModuleMember) => void;
+  isRemoving: boolean;
+}
+
+function MemberRow({ member, canManage, onEdit, onRemove, isRemoving }: MemberRowProps) {
+  const displayName = resolveDisplayName(member);
+  const handleEdit = useCallback(() => onEdit(member), [member, onEdit]);
+  const handleRemove = useCallback(() => onRemove(member), [member, onRemove]);
+
+  return (
+    <div className="flex items-center gap-3 px-4 py-3 border-b border-border/60 last:border-0">
+      <Avatar className="h-8 w-8 shrink-0">
+        <AvatarImage src={member.avatarUrl ?? undefined} />
+        <AvatarFallback className="text-[10px]">
+          {getUserInitials(displayName)}
+        </AvatarFallback>
+      </Avatar>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium truncate">{displayName}</p>
+        <p className="text-xs text-muted-foreground truncate">{member.email}</p>
+      </div>
+      <div className="flex items-center gap-1.5 flex-wrap justify-end shrink-0 max-w-[40%]">
+        {member.groups.map((g) => (
+          <Badge key={g.id} variant="secondary" className="text-[10px] px-1.5 py-0">
+            {g.name}
+          </Badge>
+        ))}
+        {member.groups.length === 0 && (
+          <span className="text-[11px] text-muted-foreground">No groups</span>
+        )}
+      </div>
+      {canManage && (
+        <div className="flex items-center gap-0.5 shrink-0">
+          <button
+            type="button"
+            onClick={handleEdit}
+            className="inline-flex h-7 w-7 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            aria-label={`Edit groups for ${displayName}`}
+          >
+            <Pencil className="h-3 w-3" />
+          </button>
+          <button
+            type="button"
+            onClick={handleRemove}
+            disabled={isRemoving}
+            className="inline-flex h-7 w-7 items-center justify-center rounded text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+            aria-label={`Remove ${displayName}`}
+          >
+            {isRemoving ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <X className="h-3.5 w-3.5" />
+            )}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface ModuleMembersTabProps {
+  moduleKey: string;
+  canManage: boolean;
+  focusUserId?: string;
+}
+
+export function ModuleMembersTab({ moduleKey, canManage, focusUserId }: ModuleMembersTabProps) {
+  const [page, setPage] = useState(1);
+  const [addOpen, setAddOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<ModuleMember | null>(null);
+  const [removeTarget, setRemoveTarget] = useState<ModuleMember | null>(null);
+
+  const membersQuery = useModuleMembers(moduleKey, page, PAGE_SIZE);
+  const groupsQuery = useModuleRoleGroups(moduleKey);
+
+  const members = membersQuery.data?.data ?? [];
+  const pagination = membersQuery.data?.pagination;
+  const allGroups = (groupsQuery.data ?? []).map((g) => ({ id: g.id, name: g.name }));
+
+  const focusLookup = useModuleMembers(moduleKey, 1, 1, {
+    enabled: focusUserId !== undefined,
+    userId: focusUserId,
+  });
+  const myPermissionsQuery = useModuleMyPermissions(moduleKey);
+
+  const triggeredRef = useRef(false);
+
+  useEffect(() => {
+    if (focusUserId === undefined) return;
+    if (!focusLookup.isSuccess || !myPermissionsQuery.isSuccess) return;
+    if (triggeredRef.current) return;
+    triggeredRef.current = true;
+
+    const found = focusLookup.data.data[0] ?? null;
+    if (!canManage) {
+      toast.info(
+        found === null
+          ? "This person is not a member of this module, and you do not have permission to add them."
+          : `${resolveDisplayName(found)} is a member of this module. You do not have permission to change their groups.`,
+      );
+      return;
+    }
+    if (found !== null) {
+      setEditTarget(found);
+    } else {
+      setAddOpen(true);
+    }
+  }, [
+    focusUserId,
+    focusLookup.isSuccess,
+    focusLookup.data,
+    myPermissionsQuery.isSuccess,
+    canManage,
+  ]);
+
+  const handleOpenAdd = useCallback(() => setAddOpen(true), []);
+  const handleEditMember = useCallback(
+    (member: ModuleMember) => setEditTarget(member),
+    [],
+  );
+  const handleRemoveMember = useCallback(
+    (member: ModuleMember) => setRemoveTarget(member),
+    [],
+  );
+  const handleEditClose = useCallback((open: boolean) => {
+    if (!open) setEditTarget(null);
+  }, []);
+  const handleRemoveClose = useCallback((open: boolean) => {
+    if (!open) setRemoveTarget(null);
+  }, []);
+  const handlePageChange = useCallback((p: number) => setPage(p), []);
+
+  return (
+    <div className="flex flex-col gap-4 flex-1 min-h-0">
+      {canManage && (
+        <div className="flex justify-end">
+          <Button size="sm" onClick={handleOpenAdd}>
+            <UserPlus className="h-4 w-4 mr-1.5" />
+            Add member
+          </Button>
+        </div>
+      )}
+
+      <div className="flex flex-col flex-1 min-h-0 rounded-xl border border-border bg-card overflow-hidden">
+        {membersQuery.isLoading ? (
+          <div className="divide-y divide-border/60">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <MemberRowSkeleton key={i} />
+            ))}
+          </div>
+        ) : membersQuery.isError ? (
+          <EmptyState
+            illustrationPreset="team"
+            title="Failed to load members"
+            description="Check your connection and try again."
+            action={{
+              label: "Retry",
+              onClick: () => void membersQuery.refetch(),
+            }}
+          />
+        ) : members.length === 0 ? (
+          <EmptyState
+            illustrationPreset="team"
+            title="No members yet"
+            description="Add members to grant them access to this module."
+            action={
+              canManage ? { label: "Add member", onClick: handleOpenAdd } : undefined
+            }
+          />
+        ) : (
+          <>
+            <div className="flex-1 overflow-y-auto">
+              {members.map((member) => (
+                <MemberRow
+                  key={member.userId}
+                  member={member}
+                  canManage={canManage}
+                  onEdit={handleEditMember}
+                  onRemove={handleRemoveMember}
+                  isRemoving={false}
+                />
+              ))}
+            </div>
+            {pagination && pagination.total > PAGE_SIZE && (
+              <TablePagination
+                page={page}
+                pageSize={PAGE_SIZE}
+                total={pagination.total}
+                onPageChange={handlePageChange}
+                disabled={membersQuery.isFetching}
+              />
+            )}
+          </>
+        )}
+      </div>
+
+      <AddMemberDialog
+        open={addOpen}
+        onOpenChange={setAddOpen}
+        moduleKey={moduleKey}
+        allGroups={allGroups}
+        defaultUserId={focusUserId}
+      />
+
+      <EditGroupsDialog
+        open={!!editTarget}
+        onOpenChange={handleEditClose}
+        moduleKey={moduleKey}
+        member={editTarget}
+        allGroups={allGroups}
+      />
+
+      <ConfirmRemoveDialog
+        open={!!removeTarget}
+        onOpenChange={handleRemoveClose}
+        moduleKey={moduleKey}
+        member={removeTarget}
+      />
+    </div>
+  );
+}

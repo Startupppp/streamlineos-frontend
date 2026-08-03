@@ -6,7 +6,6 @@ import { queryKeys } from "@/lib/query-keys";
 import type {
   HrTemplate,
   HrTemplateKind,
-  HrTemplateRender,
   HrTemplateStatus,
   RenderResponse,
   TemplateListResponse,
@@ -48,15 +47,6 @@ export function useHrTemplateVariables() {
   });
 }
 
-export function useHrTemplateRenders(templateId: number) {
-  return useQuery({
-    queryKey: queryKeys.hr.hrTemplateRenders(templateId),
-    queryFn: () => apiClient.get<HrTemplateRender[]>(`/hr/templates/${templateId}/renders`),
-    staleTime: 30_000,
-    enabled: !!templateId,
-  });
-}
-
 interface CreateTemplateInput {
   kind: HrTemplateKind;
   name: string;
@@ -91,7 +81,7 @@ export function useUpdateHrTemplate() {
     mutationKey: ["hr", "templates", "update"],
     mutationFn: ({ id, ...data }: UpdateTemplateInput) =>
       apiClient.patch<HrTemplate>(`/hr/templates/${id}`, data),
-    onSuccess: (_data, { id }) => {
+    onSuccess: (_, { id }) => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.hrTemplates() });
       qc.invalidateQueries({ queryKey: queryKeys.hr.hrTemplate(id) });
     },
@@ -104,20 +94,10 @@ export function useTransitionHrTemplate() {
     mutationKey: ["hr", "templates", "transition"],
     mutationFn: ({ id, to }: { id: number; to: HrTemplateStatus }) =>
       apiClient.post<HrTemplate>(`/hr/templates/${id}/transition`, { to }),
-    onSuccess: (_data, { id }) => {
+    onSuccess: (_, { id }) => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.hrTemplates() });
       qc.invalidateQueries({ queryKey: queryKeys.hr.hrTemplate(id) });
     },
-  });
-}
-
-export function useCreateHrTemplateVersion() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "templates", "version"],
-    mutationFn: (templateId: number) =>
-      apiClient.post<HrTemplate>(`/hr/templates/${templateId}/versions`, {}),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.hrTemplates() }),
   });
 }
 
@@ -133,7 +113,7 @@ export function useRenderHrTemplate() {
     mutationKey: ["hr", "templates", "render"],
     mutationFn: ({ templateId, ...body }: RenderInput & { templateId: number }) =>
       apiClient.post<RenderResponse>(`/hr/templates/${templateId}/render`, body),
-    onSuccess: (_data, { templateId }) => {
+    onSuccess: (_, { templateId }) => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.hrTemplateRenders(templateId) });
     },
   });

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useCallback } from "react";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -79,7 +79,6 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
   const [aiFollowUpOpen, setAiFollowUpOpen] = useState(false);
 
   const handleOpenAiPrep = useCallback(() => setAiPrepOpen(true), []);
-  const handleCloseAiPrep = useCallback(() => setAiPrepOpen(false), []);
   const handleCloseAiFollowUp = useCallback(() => setAiFollowUpOpen(false), []);
   const handleSwitchToFollowUp = useCallback(() => {
     setAiPrepOpen(false);
@@ -245,7 +244,7 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                         {event.linkedTicket ? (
                           <div className="flex items-center gap-2 rounded-lg border bg-muted/30 px-3 py-2 group">
                             <Link
-                              href={`/projects/${event.linkedTicket.projectId}?ticket=${event.linkedTicket.id}`}
+                              href={`/build/${event.linkedTicket.projectId}?ticket=${event.linkedTicket.id}`}
                               className="flex items-center gap-2 flex-1 min-w-0 hover:opacity-80 transition-opacity"
                               onClick={onClose}
                             >
@@ -499,7 +498,6 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                 <MeetingPrepPanel
                   eventId={String(event.id)}
                   eventTitle={event.title ?? ""}
-                  onClose={handleCloseAiPrep}
                 />
                 <div className="pt-2 border-t">
                   <Button
@@ -526,7 +524,6 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
             {event && (
               <MeetingFollowUpPanel
                 eventId={String(event.id)}
-                eventTitle={event.title ?? ""}
                 onClose={handleCloseAiFollowUp}
               />
             )}

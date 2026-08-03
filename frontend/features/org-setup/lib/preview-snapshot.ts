@@ -1,11 +1,11 @@
-import type { WizardData } from "./wizard-data-schema";
+import type { OrgModuleKey, WizardData } from "./wizard-data-schema";
 
 export type WorkspacePreviewSnapshot = {
   companyName: string;
   industry: string;
   teamSize: string;
   goals: readonly string[];
-  modules: readonly string[];
+  modules: readonly OrgModuleKey[];
   installedApps: readonly string[];
   inviteesCount: number;
 };

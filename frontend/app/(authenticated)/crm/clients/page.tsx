@@ -7,7 +7,6 @@ import { useReducedMotion, motion } from "framer-motion";
 import { ExternalLink } from "lucide-react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SearchInput } from "@/components/ui/search-input";
 import {
@@ -266,9 +265,7 @@ export default function ClientsPage() {
       subtitle={isLoading ? undefined : `${totalCount} accounts`}
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
-          <div className="w-[240px] max-w-[min(240px,70vw)]">
-            <SearchInput placeholder="Search clients..." value={rawSearch} onValueChange={handleSearchChange} />
-          </div>
+          <SearchInput placeholder="Search clients..." value={rawSearch} onValueChange={handleSearchChange} />
           <Select value={statusParam ?? "all"} onValueChange={handleStatusChange}>
             <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[160px] min-w-0")}>
               <SelectValue placeholder="All statuses" />

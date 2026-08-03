@@ -31,8 +31,6 @@ const WIZARD_STEPS = [
   { key: "opening_balances", label: "Opening Balances" },
 ] as const;
 
-type WizardStepKey = (typeof WIZARD_STEPS)[number]["key"];
-
 const slideVariants = {
   initial: { opacity: 0, x: 24 },
   animate: { opacity: 1, x: 0 },

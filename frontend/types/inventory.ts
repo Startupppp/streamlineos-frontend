@@ -118,10 +118,6 @@ export interface CreateProductVariantInput {
   attributeValues?: Record<string, string>;
 }
 
-export interface UpdateProductVariantInput extends Partial<CreateProductVariantInput> {
-  isActive?: boolean;
-}
-
 export interface InventoryVendor {
   id: number;
   orgId: string;

@@ -53,9 +53,3 @@ export interface TeamListResponse {
   pageSize: number;
 }
 
-export interface TeamMembersResponse {
-  data: ProjectTeamMember[];
-  total: number;
-  page: number;
-  pageSize: number;
-}

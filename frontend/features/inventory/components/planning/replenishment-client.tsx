@@ -27,7 +27,7 @@ import { SupplierDelayBriefing } from "./supplier-delay-briefing";
 
 function formatDate(dateStr: string | null): string {
   if (!dateStr) return "—";
-  return new Date(dateStr).toLocaleDateString("en-US", {
+  return new Date(dateStr).toLocaleDateString("en-IN", {
     month: "short",
     day: "numeric",
     year: "numeric",

@@ -12,19 +12,10 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { useCustomerLedger } from "@/hooks/api/accounting";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { CustomerLedgerLine } from "@/types/accounting";
+import { formatCurrency } from "@/features/accounting/lib/format-currency";
 
 interface CustomerLedgerDetailPageProps {
   params: Promise<{ clientId: string }>;
-}
-
-function formatCurrency(value: string): string {
-  const n = Number(value);
-  if (!Number.isFinite(n)) return value;
-  return n.toLocaleString(undefined, {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 2,
-  });
 }
 
 function formatDate(value: string): string {

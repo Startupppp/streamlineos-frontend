@@ -6,14 +6,14 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AvatarCropDialog } from "@/components/ui/avatar-crop-dialog";
 import { Camera, Loader2 } from "lucide-react";
 import { Trash2Icon, CheckIcon, XIcon } from "@animateicons/react/lucide";
-import { useUpdateProfile } from "@/hooks/api/hr";
-import { apiClient, getApiError } from "@/lib/api-client";
+import { useUpdateMyProfile } from "@/hooks/api/auth";
+import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { resolveImageUrl } from "@/lib/utils";
@@ -41,7 +41,7 @@ export function SettingsProfile() {
     defaultValues: { name: "" },
   });
 
-  const updateProfile = useUpdateProfile();
+  const updateProfile = useUpdateMyProfile();
 
   const isPhotoBusy = uploading;
   const isSavingName = updateProfile.isPending && !uploading;
@@ -91,7 +91,7 @@ export function SettingsProfile() {
 
       await new Promise<void>((resolve, reject) => {
         updateProfile.mutate(
-          { userId: session.user.id, image: imageValue },
+          { image: imageValue },
           {
             onSuccess: async () => {
               await updateSession({});
@@ -110,7 +110,7 @@ export function SettingsProfile() {
       setCropDialogOpen(false);
       setCropImageSrc(null);
     } catch (err) {
-      toast.error(getApiError(err) || "Failed to upload photo");
+      toast.error(getErrorMessage(err) || "Failed to upload photo");
       setPreviewUrl(null);
     } finally {
       setUploading(false);
@@ -123,7 +123,7 @@ export function SettingsProfile() {
     try {
       await new Promise<void>((resolve, reject) => {
         updateProfile.mutate(
-          { userId: session.user.id, image: "" },
+          { image: "" },
           {
             onSuccess: async () => { await updateSession({}); setPreviewUrl(null); resolve(); },
             onError: (err) => reject(err),
@@ -142,7 +142,7 @@ export function SettingsProfile() {
     if (!session?.user?.id) return;
     const nextName = values.name.trim();
     updateProfile.mutate(
-      { userId: session.user.id, name: nextName },
+      { name: nextName },
       {
         onSuccess: async () => {
           await updateSession({ name: nextName });
@@ -224,19 +224,17 @@ export function SettingsProfile() {
           <TruncatedText text={name || "—"} className="text-[13px] font-semibold text-foreground" />
           <TruncatedText text={email ?? ""} className="text-xs text-muted-foreground" />
           <div className="flex items-center gap-2 mt-2">
-            <Button
+            <LoadingButton
               variant="outline"
               size="sm"
               className="h-7 text-xs"
-              disabled={isPhotoBusy}
+              isPending={isPhotoBusy}
+              loadingText="Uploading…"
               onClick={handleOpenFileInput}
             >
-              {isPhotoBusy ? (
-                <><Loader2 className="h-3 w-3 mr-1 animate-spin" />Uploading…</>
-              ) : (
-                <><Camera className="h-3 w-3 mr-1" />Change photo</>
-              )}
-            </Button>
+              <Camera className="h-3 w-3 mr-1" />
+              Change photo
+            </LoadingButton>
             {session?.user?.image && (
               <AnimatedIconButton
                 icon={Trash2Icon}
@@ -273,21 +271,16 @@ export function SettingsProfile() {
                   aria-describedby={nameError ? "display-name-error" : undefined}
                   className="flex-1"
                 />
-                {isSavingName ? (
-                  <Button size="icon" className="h-9 w-9 shrink-0" disabled aria-label="Saving">
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  </Button>
-                ) : (
-                  <AnimatedIconButton
-                    icon={CheckIcon}
-                    iconSize={14}
-                    size="icon"
-                    className="h-9 w-9 shrink-0"
-                    onClick={handleSaveName}
-                    disabled={!watchedName.trim()}
-                    aria-label="Save name"
-                  />
-                )}
+                <LoadingButton
+                  size="icon"
+                  className="h-9 w-9 shrink-0"
+                  onClick={handleSaveName}
+                  disabled={!watchedName.trim()}
+                  isPending={isSavingName}
+                  aria-label="Save name"
+                >
+                  {!isSavingName && <CheckIcon size={14} />}
+                </LoadingButton>
                 <AnimatedIconButton
                   icon={XIcon}
                   iconSize={14}

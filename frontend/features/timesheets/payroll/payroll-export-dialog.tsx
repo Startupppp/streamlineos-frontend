@@ -96,26 +96,30 @@ export function PayrollExportDialog({
     [form],
   );
 
-  const handleSubmit = form.handleSubmit(async (values) => {
-    const body = {
-      start,
-      end,
-      format: values.format,
-      includeExported: values.includeExported,
-      note: values.note || undefined,
-      userIds: selectedUserIds.size > 0 ? [...selectedUserIds] : undefined,
-    };
+  const onValidSubmit = useCallback(
+    async (values: ExportFormValues) => {
+      const body = {
+        start,
+        end,
+        format: values.format,
+        includeExported: values.includeExported,
+        note: values.note || undefined,
+        userIds: selectedUserIds.size > 0 ? [...selectedUserIds] : undefined,
+      };
+      createExport.mutate(body, {
+        onSuccess: (result) => {
+          const { headers, matrix } = applyMapping(result.rows, mapping);
+          const filename = `payroll-export_${start}_${end}.${values.format.toLowerCase()}`;
+          void downloadPayrollFile(values.format, filename, headers, matrix);
+          toast.success(`Exported ${result.export.entryCount} entries · ${result.export.totalHours.toFixed(1)} h`);
+          handleClose();
+        },
+      });
+    },
+    [start, end, selectedUserIds, createExport, mapping, handleClose],
+  );
 
-    createExport.mutate(body, {
-      onSuccess: (result) => {
-        const { headers, matrix } = applyMapping(result.rows, mapping);
-        const filename = `payroll-export_${start}_${end}.${values.format.toLowerCase()}`;
-        void downloadPayrollFile(values.format, filename, headers, matrix);
-        toast.success(`Exported ${result.export.entryCount} entries · ${result.export.totalHours.toFixed(1)} h`);
-        handleClose();
-      },
-    });
-  });
+  const handleSubmit = form.handleSubmit(onValidSubmit);
 
   const preview = applyMapping(
     targetRows.slice(0, previewRowCount).map((row) => summaryRowToExportRow(row, start, end)),

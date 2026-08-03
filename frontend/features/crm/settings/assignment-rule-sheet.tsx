@@ -20,7 +20,6 @@ import { Slider } from "@/components/ui/slider";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Plus, Trash2 } from "lucide-react";
 import { MemberPicker } from "@/components/shared";
-import { CrmOptionSelect } from "@/features/crm/shared/metadata/crm-option-select";
 import { useTerritories } from "@/hooks/api/crm-settings";
 import type {
   AssignmentRule,

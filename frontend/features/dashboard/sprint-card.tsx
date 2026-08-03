@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { memo } from "react";
 import Link from "next/link";
@@ -40,7 +40,7 @@ export const SprintCard = memo(function SprintCard({ summary, isLoading }: Sprin
           Active Sprint
         </CardTitle>
         {summary?.projectId && (
-          <Link href={`/projects/${summary.projectId}`}>
+          <Link href={`/build/${summary.projectId}`}>
             <Button variant="ghost" size="sm" className="hover:bg-primary/10 hover:text-primary" aria-label="View sprint project">
               <ArrowUpRight className="h-4 w-4" />
             </Button>

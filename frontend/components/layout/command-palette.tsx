@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
@@ -101,7 +101,7 @@ const COMMAND_GROUP_CLASS =
   "[&_[cmdk-group-heading]]:text-muted-foreground";
 
 function extractProjectId(pathname: string): number | null {
-  const match = /\/projects\/(\d+)/.exec(pathname);
+  const match = /\/build\/(\d+)/.exec(pathname);
   if (!match) return null;
   const parsed = parseInt(match[1] ?? "", 10);
   return Number.isNaN(parsed) ? null : parsed;
@@ -130,7 +130,7 @@ export function CommandPalette() {
   const pathname = usePathname();
   const { data: access } = useAccess();
   const role =
-    access?.isOrgOwner === true || access?.isPlatformAdmin === true
+    access?.isOrgOwner === true
       ? "OWNER"
       : "MEMBER";
   const { permissions } = usePermissions();
@@ -400,7 +400,7 @@ export function CommandPalette() {
                     key={item.segment}
                     value={`project ${item.label}`}
                     onSelect={() =>
-                      handleSelect(`/projects/${projectId}${item.segment}`)
+                      handleSelect(`/build/${projectId}${item.segment}`)
                     }
                     className={COMMAND_ITEM_CLASS}
                   >
@@ -421,7 +421,7 @@ export function CommandPalette() {
             <CommandGroup heading="Navigation" className={COMMAND_GROUP_CLASS}>
               <CommandItem
                 value="all projects overview"
-                onSelect={() => handleSelect("/projects")}
+                onSelect={() => handleSelect("/build")}
                 className={COMMAND_ITEM_CLASS}
               >
                 <ItemIcon icon={LayoutDashboard} />
@@ -431,7 +431,7 @@ export function CommandPalette() {
               </CommandItem>
               <CommandItem
                 value="my work tickets assigned"
-                onSelect={() => handleSelect("/projects/my-work")}
+                onSelect={() => handleSelect("/build/my-work")}
                 className={COMMAND_ITEM_CLASS}
               >
                 <ItemIcon icon={Star} />

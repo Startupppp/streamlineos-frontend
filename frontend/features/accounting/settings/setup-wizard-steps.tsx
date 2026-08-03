@@ -221,7 +221,6 @@ export function StepChartOfAccounts({ onComplete, onSkip }: StepProps) {
   const templatesQuery = useCoaTemplates();
   const applyTemplate = useApplyTemplate();
   const templates = templatesQuery.data?.items ?? [];
-  const selected = templates.find((t: CoaTemplate) => t.key === selectedKey);
 
   function handleSelectChange(value: string): void {
     setSelectedKey(value);

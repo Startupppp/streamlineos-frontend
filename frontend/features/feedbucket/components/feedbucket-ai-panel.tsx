@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -352,7 +352,7 @@ export function FeedbucketAiPanel({
             </Badge>
             {projectId && (
               <Link
-                href={`/projects/${projectId}/tickets/${ticketId}`}
+                href={`/build/${projectId}/tickets/${ticketId}`}
                 className="flex items-center gap-1 text-sm text-primary hover:underline"
               >
                 View ticket
@@ -374,7 +374,7 @@ export function FeedbucketAiPanel({
         </Badge>
         {projectId && (
           <Link
-            href={`/projects/${projectId}/tickets/${ticketId}`}
+            href={`/build/${projectId}/tickets/${ticketId}`}
             className="flex items-center gap-1 text-sm text-primary hover:text-primary/80 hover:underline"
           >
             View ticket

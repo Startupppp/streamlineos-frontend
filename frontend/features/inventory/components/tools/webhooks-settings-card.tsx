@@ -3,34 +3,10 @@
 import { memo, useState } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetFooter,
-  SheetBody,
-} from "@/components/ui/sheet";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -48,70 +24,13 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import {
   useWebhooks,
-  useCreateWebhook,
-  useUpdateWebhook,
   useDeleteWebhook,
   useWebhookEvents,
   useRetryWebhookEvent,
-  ALL_WEBHOOK_EVENTS,
-  WEBHOOK_EVENT_LABELS,
   type Webhook,
-  type WebhookEvent,
 } from "@/hooks/api/inventory/webhooks";
-
-const WEBHOOK_EVENT_VALUES = [
-  "inventory.product.created",
-  "inventory.stock.changed",
-  "inventory.stock.low",
-  "inventory.po.created",
-  "inventory.po.received",
-  "inventory.so.reserved",
-  "inventory.so.shipped",
-  "inventory.transfer.completed",
-  "inventory.adjustment.posted",
-] as const;
-
-const webhookSchema = z.object({
-  url: z.string().url("Must be a valid HTTPS URL"),
-  events: z
-    .array(z.enum(WEBHOOK_EVENT_VALUES))
-    .min(1, "Select at least one event"),
-  isActive: z.boolean(),
-});
-type WebhookFormValues = z.infer<typeof webhookSchema>;
-
-const EventCheckbox = memo(function EventCheckbox({
-  evt,
-  label,
-  mono,
-  checked,
-  onToggle,
-}: {
-  evt: string;
-  label: string;
-  mono: string;
-  checked: boolean;
-  onToggle: (evt: string, checked: boolean) => void;
-}) {
-  function handleCheckedChange(v: boolean): void {
-    onToggle(evt, v);
-  }
-  return (
-    <div className="flex items-center gap-2">
-      <Checkbox
-        id={evt}
-        checked={checked}
-        onCheckedChange={handleCheckedChange}
-      />
-      <Label htmlFor={evt} className="text-xs font-normal cursor-pointer">
-        {label}
-        <span className="ml-1 text-[10px] text-muted-foreground font-mono">
-          {mono}
-        </span>
-      </Label>
-    </div>
-  );
-});
+import { WebhookCreateSheet } from "./webhook-create-sheet";
+import { WebhookDeliveryLog } from "./webhook-delivery-log";
 
 const WebhookActionCell = memo(function WebhookActionCell({
   webhook,
@@ -135,48 +54,13 @@ const WebhookActionCell = memo(function WebhookActionCell({
   if (!canManage) return null;
   return (
     <div className="flex items-center gap-1">
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-6 text-xs px-2"
-        onClick={handleEdit}
-      >
+      <Button variant="ghost" size="sm" className="h-6 text-xs px-2" onClick={handleEdit}>
         Edit
       </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-6 text-xs px-2 text-destructive"
-        onClick={handleDelete}
-      >
+      <Button variant="ghost" size="sm" className="h-6 text-xs px-2 text-destructive" onClick={handleDelete}>
         Del
       </Button>
     </div>
-  );
-});
-
-const RetryEventButton = memo(function RetryEventButton({
-  eventId,
-  isPending,
-  onRetry,
-}: {
-  eventId: number;
-  isPending: boolean;
-  onRetry: (id: number) => void;
-}) {
-  function handleClick(): void {
-    onRetry(eventId);
-  }
-  return (
-    <Button
-      variant="ghost"
-      size="sm"
-      className="h-6 text-xs px-2"
-      disabled={isPending}
-      onClick={handleClick}
-    >
-      Retry
-    </Button>
   );
 });
 
@@ -185,31 +69,20 @@ export function WebhooksSettingsCard() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingWebhook, setEditingWebhook] = useState<Webhook | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
-  const [selectedWebhookId, setSelectedWebhookId] = useState<number | null>(
-    null,
-  );
+  const [selectedWebhookId, setSelectedWebhookId] = useState<number | null>(null);
 
   const { data: webhooks, isLoading } = useWebhooks();
-  const createMut = useCreateWebhook();
-  const updateMut = useUpdateWebhook();
   const deleteMut = useDeleteWebhook();
   const retryMut = useRetryWebhookEvent();
   const eventsQuery = useWebhookEvents(selectedWebhookId ?? 0, { limit: 10 });
 
-  const form = useForm<WebhookFormValues>({
-    resolver: zodResolver(webhookSchema),
-    defaultValues: { url: "", events: [], isActive: true },
-  });
-
   function handleOpenCreate(): void {
     setEditingWebhook(null);
-    form.reset({ url: "", events: [], isActive: true });
     setSheetOpen(true);
   }
 
   function handleOpenEdit(wh: Webhook): void {
     setEditingWebhook(wh);
-    form.reset({ url: wh.url, events: wh.events, isActive: wh.isActive });
     setSheetOpen(true);
   }
 
@@ -255,45 +128,9 @@ export function WebhooksSettingsCard() {
     );
   }
 
-  function handleEventToggle(evt: string, checked: boolean): void {
-    const current = form.getValues("events");
-    const isValidEvent = (
-      v: string,
-    ): v is WebhookFormValues["events"][number] =>
-      (WEBHOOK_EVENT_VALUES as readonly string[]).includes(v);
-    const next = checked
-      ? isValidEvent(evt)
-        ? [...current, evt]
-        : current
-      : current.filter((e) => e !== evt);
-    form.setValue("events", next, { shouldValidate: true });
+  function handleDeleteDialogOpenChange(open: boolean): void {
+    if (!open) setDeleteId(null);
   }
-
-  async function onSubmit(values: WebhookFormValues): Promise<void> {
-    try {
-      if (editingWebhook) {
-        await updateMut.mutateAsync({
-          webhookId: editingWebhook.id,
-          url: values.url,
-          events: values.events,
-          isActive: values.isActive,
-        });
-        toast.success("Webhook updated");
-      } else {
-        await createMut.mutateAsync({
-          url: values.url,
-          events: values.events,
-          isActive: values.isActive,
-        });
-        toast.success("Webhook created");
-      }
-      setSheetOpen(false);
-    } catch (e) {
-      toast.error(getErrorMessage(e));
-    }
-  }
-
-  const isPending = createMut.isPending || updateMut.isPending;
 
   const columns: DataTableColumn<Webhook>[] = [
     {
@@ -354,60 +191,6 @@ export function WebhooksSettingsCard() {
     },
   ];
 
-  const eventColumns: DataTableColumn<WebhookEvent>[] = [
-    {
-      key: "eventType",
-      header: "Event",
-      cell: (ev) => WEBHOOK_EVENT_LABELS[ev.eventType] ?? ev.eventType,
-    },
-    {
-      key: "status",
-      header: "Status",
-      headerClassName: "w-[90px]",
-      cell: (ev) => (
-        <Badge
-          variant="outline"
-          className={
-            ev.status === "DELIVERED"
-              ? "h-4 text-[9px] px-1.5 py-0 border border-emerald-200 text-emerald-700 bg-emerald-50 dark:border-emerald-500/30 dark:text-emerald-300 dark:bg-emerald-500/10"
-              : ev.status === "FAILED"
-                ? "h-4 text-[9px] px-1.5 py-0 border border-red-200 text-red-700 bg-red-50 dark:border-red-500/30 dark:text-red-300 dark:bg-red-500/10"
-                : "h-4 text-[9px] px-1.5 py-0 border"
-          }
-        >
-          {ev.status}
-        </Badge>
-      ),
-    },
-    {
-      key: "attempts",
-      header: "Tries",
-      headerClassName: "w-[50px] text-right",
-      className: "text-right tabular-nums",
-      cell: (ev) => ev.attempts,
-    },
-    {
-      key: "createdAt",
-      header: "Date",
-      headerClassName: "w-[110px]",
-      className: "text-muted-foreground",
-      cell: (ev) => format(new Date(ev.createdAt), "dd MMM HH:mm"),
-    },
-    {
-      key: "retry",
-      header: "",
-      headerClassName: "w-[70px]",
-      cell: (ev) =>
-        ev.status === "FAILED" && canManage ? (
-          <RetryEventButton
-            eventId={ev.id}
-            isPending={retryMut.isPending}
-            onRetry={handleRetryEvent}
-          />
-        ) : null,
-    },
-  ];
-
   return (
     <>
       <Card>
@@ -422,8 +205,8 @@ export function WebhooksSettingsCard() {
         <CardContent className="p-0">
           {isLoading ? (
             <div className="px-4 pb-4 space-y-2">
-              <Skeleton className="h-4 w-full" />{" "}
-              <Skeleton className="h-4 w-full" />{" "}
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
             </div>
           ) : (
             <DataTable
@@ -433,151 +216,41 @@ export function WebhooksSettingsCard() {
               onRowClick={handleRowClick}
               emptyState={
                 <div className="px-4 py-6 text-center text-xs text-muted-foreground">
-                  No webhooks yet. Add one to receive inventory event
-                  notifications.
+                  No webhooks yet. Add one to receive inventory event notifications.
                 </div>
               }
               minWidth="560px"
             />
           )}
           {selectedWebhookId !== null && (
-            <div className="border-t px-4 py-3">
-              <p className="text-xs font-semibold mb-2 text-muted-foreground">
-                Recent Events (Webhook #{selectedWebhookId})
-              </p>
-              <DataTable
-                data={eventsQuery.data?.items ?? []}
-                columns={eventColumns}
-                getRowKey={(ev) => ev.id}
-                isLoading={eventsQuery.isLoading}
-                emptyState={
-                  <div className="py-4 text-center text-xs text-muted-foreground">
-                    No events yet.
-                  </div>
-                }
-                minWidth="480px"
-              />
-            </div>
+            <WebhookDeliveryLog
+              webhookId={selectedWebhookId}
+              events={eventsQuery.data?.items ?? []}
+              isLoading={eventsQuery.isLoading}
+              canManage={canManage}
+              isRetrying={retryMut.isPending}
+              onRetry={handleRetryEvent}
+            />
           )}
         </CardContent>
       </Card>
 
-      <Sheet open={sheetOpen} onOpenChange={handleSheetOpenChange}>
-        <SheetContent
-          side="right"
-          className="w-full sm:max-w-[480px] p-0 flex flex-col overflow-hidden"
-        >
-          <SheetHeader className="bg-muted/40 p-6 pb-4 pr-12 border-b text-left">
-            <SheetTitle>
-              {editingWebhook ? "Edit Webhook" : "Add Webhook"}
-            </SheetTitle>
-            <SheetDescription>
-              {editingWebhook
-                ? "Update the webhook endpoint and events."
-                : "Configure a new webhook endpoint."}
-            </SheetDescription>
-          </SheetHeader>
-          <Form {...form}>
-            <form
-              className="flex flex-col flex-1 overflow-hidden"
-              onSubmit={form.handleSubmit(onSubmit)}
-            >
-              <SheetBody className="px-6 py-4 space-y-4">
-                <FormField
-                  control={form.control}
-                  name="url"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Endpoint URL <span className="text-destructive">*</span></FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="https://your-server.com/webhook"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="events"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Events <span className="text-destructive">*</span></FormLabel>
-                      <div className="space-y-2">
-                        {ALL_WEBHOOK_EVENTS.map((evt) => (
-                          <EventCheckbox
-                            key={evt}
-                            evt={evt}
-                            label={WEBHOOK_EVENT_LABELS[evt]}
-                            mono={evt}
-                            checked={field.value.includes(evt)}
-                            onToggle={handleEventToggle}
-                          />
-                        ))}
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="isActive"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center justify-between rounded-md border p-3">
-                      <FormLabel className="cursor-pointer">Active</FormLabel>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </SheetBody>
-              <SheetFooter className="border-t px-6 py-4 gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => handleSheetOpenChange(false)}
-                >
-                  Cancel
-                </Button>
-                <LoadingButton
-                  type="submit"
-                  className="flex-1"
-                  isPending={isPending}
-                  loadingText="Saving…"
-                >
-                  {editingWebhook ? "Update" : "Create"}
-                </LoadingButton>
-              </SheetFooter>
-            </form>
-          </Form>
-        </SheetContent>
-      </Sheet>
+      <WebhookCreateSheet
+        open={sheetOpen}
+        editingWebhook={editingWebhook}
+        onOpenChange={handleSheetOpenChange}
+      />
 
-      <AlertDialog
-        open={deleteId !== null}
-        onOpenChange={(o) => {
-          if (!o) setDeleteId(null);
-        }}
-      >
+      <AlertDialog open={deleteId !== null} onOpenChange={handleDeleteDialogOpenChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Webhook?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently remove the webhook endpoint. Events in
-              flight may still fire.
+              This will permanently remove the webhook endpoint. Events in flight may still fire.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleDeleteCancel}>
-              Cancel
-            </AlertDialogCancel>
+            <AlertDialogCancel onClick={handleDeleteCancel}>Cancel</AlertDialogCancel>
             <AlertDialogAction asChild>
               <LoadingButton
                 variant="destructive"

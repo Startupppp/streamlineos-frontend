@@ -39,15 +39,6 @@ export function useHrAutomations(params?: { search?: string; triggerEvent?: stri
   });
 }
 
-export function useHrAutomation(id: number) {
-  return useQuery({
-    queryKey: hrAutomationKeys.detail(id),
-    queryFn: () => apiClient.get<HrAutomationRule>(`/hr/automations/${id}`),
-    enabled: Number.isFinite(id) && id > 0,
-    staleTime: 30_000,
-  });
-}
-
 export function useHrAutomationEvents() {
   return useQuery({
     queryKey: hrAutomationKeys.events(),
@@ -56,14 +47,24 @@ export function useHrAutomationEvents() {
   });
 }
 
-export function useHrAutomationRuns(ruleId?: number) {
+export interface PaginatedHrAutomationRuns {
+  data: HrAutomationRun[];
+  pagination: { page: number; limit: number; total: number; totalPages: number };
+}
+
+export function useHrAutomationRuns(ruleId?: number, params?: { page?: number; limit?: number }) {
   return useQuery({
-    queryKey: hrAutomationKeys.runs(ruleId),
+    queryKey: [...hrAutomationKeys.runs(ruleId), params] as const,
     queryFn: () => {
       const path = ruleId ? `/hr/automations/${ruleId}/runs` : "/hr/automations/runs";
-      return apiClient.get<HrAutomationRun[]>(path);
+      const search = new URLSearchParams();
+      if (params?.page) search.set("page", String(params.page));
+      if (params?.limit) search.set("limit", String(params.limit));
+      const qs = search.toString();
+      return apiClient.get<PaginatedHrAutomationRuns>(`${path}${qs ? `?${qs}` : ""}`);
     },
     staleTime: 15_000,
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -83,7 +84,7 @@ export function useUpdateHrAutomation() {
     mutationKey: [...BASE, "update"],
     mutationFn: ({ id, ...input }: UpdateHrAutomationInput & { id: number }) =>
       apiClient.patch<HrAutomationRule>(`/hr/automations/${id}`, input),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: hrAutomationKeys.all });
       qc.invalidateQueries({ queryKey: hrAutomationKeys.detail(vars.id) });
     },
@@ -106,7 +107,7 @@ export function useToggleHrAutomation() {
       );
       return { previous };
     },
-    onError: (_err, _vars, ctx) => {
+    onError: (_, _vars, ctx) => {
       for (const [key, data] of ctx?.previous ?? []) {
         qc.setQueryData(key, data);
       }
@@ -131,7 +132,7 @@ export function useTestHrAutomation() {
     mutationKey: [...BASE, "test"],
     mutationFn: ({ id, payload }: { id: number; payload: Record<string, unknown> }) =>
       apiClient.post<HrTestResult>(`/hr/automations/${id}/test`, { payload }),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: hrAutomationKeys.runs(vars.id) });
     },
   });

@@ -18,7 +18,7 @@ export interface ModuleCatalogEntry {
 const MODULE_TO_PRODUCT: Record<string, ProductKey> = {
   hr: "hrms",
   crm: "crm",
-  projects: "projects",
+  build: "build",
   timesheets: "timesheets",
   inventory: "inventory",
   accounting: "finance",

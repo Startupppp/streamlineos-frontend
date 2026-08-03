@@ -3,7 +3,6 @@
 import { useState, useCallback } from "react";
 import { Sparkles, CalendarDays, ClipboardList, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -24,7 +23,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 interface MeetingPrepPanelProps {
   eventId: string;
   eventTitle: string;
-  onClose?: () => void;
 }
 
 function PrepSkeleton() {
@@ -38,7 +36,7 @@ function PrepSkeleton() {
   );
 }
 
-export function MeetingPrepPanel({ eventId, eventTitle, onClose: _onClose }: MeetingPrepPanelProps) {
+export function MeetingPrepPanel({ eventId, eventTitle }: MeetingPrepPanelProps) {
   const canUse = useCan("calendar:ai:use");
   const { data: connections = [] } = useCalendarConnections();
   const hasConnectedCalendar = connections.some((c) => c.status === "active");

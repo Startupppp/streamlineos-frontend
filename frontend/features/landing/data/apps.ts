@@ -48,7 +48,7 @@ export const LANDING_APPS: LandingApp[] = [
   { id: "quotes", name: "Quotes", icon: FileText, category: "revenue" },
   { id: "billing", name: "Billing", icon: Receipt, category: "revenue" },
   { id: "customer-success", name: "Customer Success", icon: HeartHandshake, category: "revenue" },
-  { id: "projects", name: "Projects", icon: LayoutGrid, category: "delivery" },
+  { id: "build", name: "Build", icon: LayoutGrid, category: "delivery" },
   { id: "timesheets", name: "Timesheets", icon: ClipboardList, category: "delivery" },
   { id: "accounting", name: "Accounting", icon: Wallet, category: "delivery" },
   { id: "support", name: "Helpdesk", icon: Headphones, category: "delivery" },

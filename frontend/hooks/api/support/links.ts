@@ -29,6 +29,7 @@ export function useSupportTicketLinks(ticketId: number) {
 export function useAddTicketLink() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["add", "ticket", "link"],
     mutationFn: ({
       ticketId,
       linkedTicketId,
@@ -39,7 +40,7 @@ export function useAddTicketLink() {
       relation: TicketLinkRelation;
     }) =>
       apiClient.post<SupportTicketLink>(`/support/${ticketId}/links`, { linkedTicketId, relation }),
-    onSuccess: (_data, vars) =>
+    onSuccess: (_, vars) =>
       qc.invalidateQueries({ queryKey: queryKeys.support.detail(vars.ticketId) }),
   });
 }
@@ -47,11 +48,12 @@ export function useAddTicketLink() {
 export function useMergeTicket() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["merge", "ticket"],
     mutationFn: ({ ticketId, intoTicketId }: { ticketId: number; intoTicketId: number }) =>
       apiClient.post<{ success: boolean; mergedIntoTicketId: number }>(`/support/${ticketId}/merge`, {
         intoTicketId,
       }),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.support.detail(vars.ticketId) });
       qc.invalidateQueries({ queryKey: queryKeys.support.all });
     },

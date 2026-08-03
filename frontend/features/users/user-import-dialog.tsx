@@ -20,6 +20,7 @@ import { Upload, FileText, CheckCircle, XCircle, AlertTriangle, Users, UserCheck
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { useMutation } from "@tanstack/react-query";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { formatRoleLabel } from "./user-invite-roles";
 
 interface ImportRow {
   email: string;
@@ -62,7 +63,7 @@ const PREVIEW_COLUMNS: DataTableColumn<IndexedImportRow>[] = [
   {
     key: "role",
     header: "Role",
-    cell: (row) => <span>{row.role ?? "MEMBER"}</span>,
+    cell: (row) => <span>{formatRoleLabel(row.role ?? "MEMBER")}</span>,
     className: "px-2 py-1",
   },
 ];

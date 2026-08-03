@@ -4,7 +4,9 @@ export const dynamic = "force-dynamic";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useSession } from "next-auth/react";
+import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { clearBackendTokenCache } from "@/lib/api-client";
 import { completeOnboardingGate } from "@/lib/onboarding-gate";
 import { signInWithMagicToken } from "@/hooks/common/auth-hooks";
@@ -49,6 +51,8 @@ export default function OrgSetupPage() {
   const { data: serverSession } = useOrgSetupSessionQuery();
   const { mutateAsync: skipOrgSetup } = useSkipOrgSetupMutation();
 
+  const userId = session?.user?.id ?? "";
+
   const [step, setStep] = useState(1);
   const [mounted, setMounted] = useState(false);
   const [isSkipping, setIsSkipping] = useState(false);
@@ -57,8 +61,9 @@ export default function OrgSetupPage() {
   const [saveState, setSaveState] = useState<"idle" | "saved">("idle");
   const exitedRef = useRef(false);
   const hydratedFromServerRef = useRef(false);
+  const mountedOnceRef = useRef(false);
 
-  const sequence = useMemo(() => getStepSequence(data.goals), [data.goals]);
+  const sequence = useMemo(() => getStepSequence(), []);
   const totalSteps = sequence.length;
   const currentStepId: StepId = sequence[step - 1] ?? "welcome";
 
@@ -75,12 +80,12 @@ export default function OrgSetupPage() {
     (updates: Partial<WizardData>) => {
       setData((prev) => {
         const next = { ...prev, ...updates };
-        saveDraft(next);
+        saveDraft(next, userId);
         return next;
       });
       markDraftSaved();
     },
-    [markDraftSaved],
+    [markDraftSaved, userId],
   );
 
   const goNext = useCallback(() => {
@@ -104,12 +109,12 @@ export default function OrgSetupPage() {
       setData((prev) => {
         const newGoals = toggleGoalSelection(prev.goals, id);
         const next = syncAppsFromGoals({ ...prev, goals: newGoals });
-        saveDraft(next);
+        saveDraft(next, userId);
         return next;
       });
       markDraftSaved();
     },
-    [markDraftSaved],
+    [markDraftSaved, userId],
   );
 
   const handleSkipToDashboard = useCallback(async () => {
@@ -120,37 +125,40 @@ export default function OrgSetupPage() {
       if (res?.autoLoginToken) {
         await signInWithMagicToken(res.autoLoginToken);
       }
-      await completeOnboardingGate("org-setup-done", update);
-      clearAll();
+      await completeOnboardingGate("org-setup-done", res.orgId, update);
+      clearAll(userId);
       window.location.replace("/dashboard");
-    } catch {
+    } catch (err) {
       setIsSkipping(false);
+      toast.error(getErrorMessage(err));
     }
-  }, [skipOrgSetup, update]);
+  }, [skipOrgSetup, update, userId]);
 
   useEffect(() => {
-    const savedDraft = syncAppsFromGoals(loadDraft());
-    const savedSequence = getStepSequence(savedDraft.goals);
-    const restoredStep = clampStep(loadStep(), savedSequence.length);
+    if (!userId || mountedOnceRef.current) return;
+    mountedOnceRef.current = true;
+    const savedDraft = syncAppsFromGoals(loadDraft(userId));
+    const savedSequence = getStepSequence();
+    const restoredStep = clampStep(loadStep(userId), savedSequence.length);
     setData(savedDraft);
-    saveDraft(savedDraft);
+    saveDraft(savedDraft, userId);
     setStep(restoredStep);
-    saveStep(restoredStep);
+    saveStep(restoredStep, userId);
     setMounted(true);
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     if (!mounted || hydratedFromServerRef.current || !serverSession) return;
     hydratedFromServerRef.current = true;
 
-    const localDraft = loadDraft();
+    const localDraft = loadDraft(userId);
     if (hasDraftProgress(localDraft)) return;
     if (serverSession.status !== "in_progress" || !serverSession.data) return;
 
     const merged = syncAppsFromGoals(parseWizardDraft(serverSession.data));
     if (!hasDraftProgress(merged)) return;
 
-    const mergedSequence = getStepSequence(merged.goals);
+    const mergedSequence = getStepSequence();
     const stepFromServer = resolveStepIndex(
       serverSession.currentStep,
       mergedSequence,
@@ -158,28 +166,28 @@ export default function OrgSetupPage() {
     const restoredStep =
       stepFromServer >= 1
         ? clampStep(stepFromServer, mergedSequence.length)
-        : clampStep(loadStep(), mergedSequence.length);
+        : clampStep(loadStep(userId), mergedSequence.length);
 
     setData(merged);
-    saveDraft(merged);
+    saveDraft(merged, userId);
     setStep(restoredStep);
-    saveStep(restoredStep);
-  }, [mounted, serverSession]);
+    saveStep(restoredStep, userId);
+  }, [mounted, serverSession, userId]);
 
   useEffect(() => {
     if (exitedRef.current) return;
-    if (session?.orgId || session?.orgOnboardingCompletedAt) {
-      exitedRef.current = true;
-      clearAll();
-      void completeOnboardingGate("org-setup-done", update);
-      window.location.replace("/dashboard");
-    }
-  }, [session?.orgId, session?.orgOnboardingCompletedAt, update]);
+    if (!session?.orgId || !session?.orgOnboardingCompletedAt) return;
+    exitedRef.current = true;
+    const orgId = session?.orgId ?? "";
+    clearAll(userId);
+    void completeOnboardingGate("org-setup-done", orgId, update);
+    window.location.replace("/dashboard");
+  }, [session?.orgId, session?.orgOnboardingCompletedAt, update, userId]);
 
   useEffect(() => {
     if (!mounted) return;
-    saveStep(step);
-  }, [step, mounted]);
+    saveStep(step, userId);
+  }, [step, mounted, userId]);
 
   useEffect(() => {
     if (saveState !== "saved") return;

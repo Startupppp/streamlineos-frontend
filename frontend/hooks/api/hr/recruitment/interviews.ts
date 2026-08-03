@@ -9,7 +9,6 @@ import type {
   UpdateInterviewInput,
 } from "@/types/hr";
 import {
-  normalizeRecruitmentList,
   unwrapRecruitmentItems,
   type RecruitmentListResponse,
 } from "./list-response";
@@ -44,14 +43,6 @@ export interface InterviewScorecard {
   updatedAt: string | null;
 }
 
-interface ScorecardSummary {
-  interviewId: number;
-  totalScorecards: number;
-  submittedCount: number;
-  scorecards: InterviewScorecard[];
-  aggregatedRatings: Record<string, { total: number; count: number; average: number }>;
-  recommendationCounts: Record<string, number>;
-}
 
 export interface ScheduleInterviewInput {
   candidateId: number;
@@ -171,24 +162,6 @@ export interface InterviewerAvailabilityResponse {
   availability: InterviewerAvailability[];
 }
 
-export interface CreateBookingLinkInput {
-  candidateId: number;
-  jobPostingId?: number;
-  interviewerIds: string[];
-  durationMinutes?: number;
-  interviewType?: "VIDEO" | "PHONE" | "IN_PERSON";
-  availableSlots: { start: string; end: string }[];
-  expiresInDays?: number;
-  notes?: string;
-}
-
-export interface BookingLinkResponse {
-  id: number;
-  token: string;
-  bookingUrl: string;
-  expiresAt: string;
-}
-
 const INTERVIEW_SLAS_KEY = queryKeys.hr.interviewSlas();
 const SLA_REPORT_KEY = queryKeys.hr.slaReport();
 const INTERVIEW_STATS_KEY = [...queryKeys.hr.all, "interviewStats"] as const;
@@ -200,8 +173,9 @@ export interface InterviewStats {
   failed: number;
 }
 
-export function useInterviewStats() {
+export function useInterviewStats(options?: { enabled?: boolean }) {
   return useQuery({
+    enabled: options?.enabled ?? true,
     queryKey: INTERVIEW_STATS_KEY,
     queryFn: () => apiClient.get<InterviewStats>("/hr/recruitment/interviews/stats"),
     staleTime: 2 * 60_000,
@@ -224,7 +198,10 @@ export type InterviewsParams = {
  * Backend returns `{ items, total, page, pageSize, totalPages }`.
  * Hook normalizes to Interview[] so list/calendar UIs keep working.
  */
-export function useInterviews(params?: InterviewsParams) {
+export function useInterviews(
+  params?: InterviewsParams,
+  options?: { enabled?: boolean },
+) {
   const pageSize = params?.pageSize ?? params?.limit ?? 100;
   const page =
     params?.page ??
@@ -235,6 +212,7 @@ export function useInterviews(params?: InterviewsParams) {
   if (params?.relevant != null) queryParams.relevant = params.relevant ? "true" : "false";
 
   return useQuery({
+    enabled: options?.enabled ?? true,
     queryKey: queryKeys.hr.interviews(queryParams),
     queryFn: async (): Promise<Interview[]> => {
       const res = await apiClient.get<Interview[] | RecruitmentListResponse<Interview>>(
@@ -247,33 +225,10 @@ export function useInterviews(params?: InterviewsParams) {
   });
 }
 
-/** Full paginated interviews payload. */
-export function useInterviewsPage(params?: InterviewsParams) {
-  const pageSize = params?.pageSize ?? params?.limit ?? 20;
-  const page =
-    params?.page ??
-    (params?.offset != null ? Math.floor(params.offset / pageSize) + 1 : 1);
-  const queryParams: Record<string, unknown> = { page, pageSize };
-  if (params?.candidateId) queryParams.candidateId = params.candidateId;
-  if (params?.upcoming != null) queryParams.upcoming = params.upcoming ? "true" : "false";
-  if (params?.relevant != null) queryParams.relevant = params.relevant ? "true" : "false";
-
-  return useQuery({
-    queryKey: [...queryKeys.hr.interviews(queryParams), "page"] as const,
-    queryFn: async (): Promise<RecruitmentListResponse<Interview>> => {
-      const res = await apiClient.get<Interview[] | RecruitmentListResponse<Interview>>(
-        "/hr/recruitment/interviews",
-        queryParams,
-      );
-      return normalizeRecruitmentList(res, pageSize);
-    },
-    staleTime: 2 * 60_000,
-  });
-}
-
 export function useCreateInterview() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "interviews", "create"],
     mutationFn: (data: CreateInterviewInput) =>
       apiClient.post<Interview>("/hr/recruitment/interviews", data),
     onSuccess: () => {
@@ -287,20 +242,9 @@ export function useCreateInterview() {
 export function useUpdateInterview() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "interviews", "update"],
     mutationFn: ({ id, ...data }: UpdateInterviewInput & { id: number }) =>
       apiClient.patch<{ success: boolean }>(`/hr/recruitment/interviews/${id}`, data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.interviews() });
-      qc.invalidateQueries({ queryKey: INTERVIEW_STATS_KEY });
-    },
-  });
-}
-
-export function useDeleteInterview() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/recruitment/interviews/${id}`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.interviews() });
       qc.invalidateQueries({ queryKey: INTERVIEW_STATS_KEY });
@@ -319,6 +263,7 @@ export function useScorecardTemplates() {
 export function useCreateScorecardTemplate() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "scorecard-templates", "create"],
     mutationFn: (data: { name: string; criteria: ScorecardCriterion[]; isBlindMode?: boolean }) =>
       apiClient.post<ScorecardTemplate>("/hr/recruitment/scorecard-templates", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.scorecardTemplates() }),
@@ -328,6 +273,7 @@ export function useCreateScorecardTemplate() {
 export function useUpdateScorecardTemplate() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "scorecard-templates", "update"],
     mutationFn: ({ id, ...data }: { id: number; name?: string; criteria?: ScorecardCriterion[] }) =>
       apiClient.patch<{ success: boolean }>(`/hr/recruitment/scorecard-templates/${id}`, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.scorecardTemplates() }),
@@ -337,25 +283,17 @@ export function useUpdateScorecardTemplate() {
 export function useDeleteScorecardTemplate() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "scorecard-templates", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/recruitment/scorecard-templates/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.scorecardTemplates() }),
   });
 }
 
-export function useInterviewScorecard(interviewId: number) {
-  return useQuery({
-    queryKey: queryKeys.hr.interviewScorecard(interviewId),
-    queryFn: () =>
-      apiClient.get<InterviewScorecard | null>(`/hr/recruitment/interviews/${interviewId}/scorecard`),
-    staleTime: 2 * 60_000,
-    enabled: !!interviewId,
-  });
-}
-
 export function useSubmitScorecard(interviewId: number) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "interviews", "submit-scorecard", interviewId],
     mutationFn: (data: {
       ratings: Record<string, number>;
       recommendation: "HIRE" | "NO_HIRE" | "MAYBE";
@@ -374,19 +312,10 @@ export function useSubmitScorecard(interviewId: number) {
   });
 }
 
-export function useInterviewScorecardSummary(interviewId: number) {
-  return useQuery({
-    queryKey: queryKeys.hr.interviewScorecardSummary(interviewId),
-    queryFn: () =>
-      apiClient.get<ScorecardSummary>(`/hr/recruitment/interviews/${interviewId}/scorecard/summary`),
-    staleTime: 2 * 60_000,
-    enabled: !!interviewId,
-  });
-}
-
 export function useScheduleInterview() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "interviews", "schedule"],
     mutationFn: (data: ScheduleInterviewInput) =>
       apiClient.post<Interview>("/hr/recruitment/interviews/schedule", data),
     onSuccess: () => {
@@ -408,34 +337,10 @@ export function useInterviewSlas() {
 export function useUpsertInterviewSla() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "interview-slas", "upsert"],
     mutationFn: (data: { stage: string; maxHours: number; warningHours: number }) =>
       apiClient.put<InterviewSla>("/hr/recruitment/interviews/slas", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: INTERVIEW_SLAS_KEY }),
-  });
-}
-
-export function useCandidateSla(candidateId: number) {
-  return useQuery({
-    queryKey: queryKeys.hr.candidateSla(candidateId),
-    queryFn: () =>
-      apiClient.get<CandidateSlaRecord[]>(`/hr/recruitment/candidates/${candidateId}/sla`),
-    staleTime: 2 * 60_000,
-    enabled: !!candidateId,
-  });
-}
-
-export function useResetCandidateSla() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ candidateId, stage }: { candidateId: number; stage: string }) =>
-      apiClient.patch<CandidateSlaRecord>(
-        `/hr/recruitment/candidates/${candidateId}/sla`,
-        { stage }
-      ),
-    onSuccess: (_data, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.candidateSla(vars.candidateId) });
-      qc.invalidateQueries({ queryKey: queryKeys.hr.atsKanban() });
-    },
   });
 }
 
@@ -450,6 +355,7 @@ export function useHrSlaReport() {
 export function useBulkRescheduleInterviews() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "interviews", "bulk-reschedule"],
     mutationFn: async ({ ids, scheduledAt }: { ids: number[]; scheduledAt: string }) => {
       await Promise.all(
         ids.map((id) =>
@@ -487,6 +393,7 @@ export function useInterviewQuestions(filters?: {
 export function useCreateInterviewQuestion() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "interview-questions", "create"],
     mutationFn: (data: CreateQuestionInput) =>
       apiClient.post<InterviewQuestion>("/hr/interview-questions", data),
     onSuccess: () =>
@@ -497,6 +404,7 @@ export function useCreateInterviewQuestion() {
 export function useUpdateInterviewQuestion(questionId: number) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "interview-questions", "update", questionId],
     mutationFn: (data: Partial<CreateQuestionInput> & { isActive?: boolean }) =>
       apiClient.patch<{ success: boolean }>(`/hr/interview-questions/${questionId}`, data),
     onSuccess: () =>
@@ -507,6 +415,7 @@ export function useUpdateInterviewQuestion(questionId: number) {
 export function useDeleteInterviewQuestion(questionId: number) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "interview-questions", "delete", questionId],
     mutationFn: () =>
       apiClient.delete<{ success: boolean }>(`/hr/interview-questions/${questionId}`),
     onSuccess: () =>
@@ -522,18 +431,6 @@ export function useInterviewerPerformance(days = 90) {
         `/hr/recruitment/interviewer-performance?days=${days}`
       ),
     staleTime: 5 * 60 * 1000,
-  });
-}
-
-export function useCreateBookingLink() {
-  const qc = useQueryClient();
-  return useMutation<BookingLinkResponse, Error, CreateBookingLinkInput>({
-    mutationFn: (data) =>
-      apiClient.post<BookingLinkResponse>("/hr/recruitment/interviews/self-schedule", data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.interviews() });
-      qc.invalidateQueries({ queryKey: queryKeys.hr.bookingLinks() });
-    },
   });
 }
 
@@ -567,6 +464,7 @@ export function useHrBookingLinks() {
 export function useRevokeBookingLink() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "booking-links", "revoke"],
     mutationFn: (id: number) =>
       apiClient.patch<{ success: boolean }>(`/hr/recruitment/booking-links/${id}`, {}),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.bookingLinks() }),

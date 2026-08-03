@@ -55,8 +55,7 @@ export function EmployeesFilters({
         value={search}
         onValueChange={onSearchChange}
         placeholder="Search name, email, or ID…"
-        aria-label="Search employees"
-        className="w-full min-w-0 md:w-56 md:max-w-56 md:shrink-0"
+        aria-label="Search employees" className="min-w-0 md:shrink-0"
       />
 
       <Select
@@ -112,7 +111,7 @@ export function EmployeesFilters({
           </SelectTrigger>
           <SelectContent align="start">
             <SelectItem value="all">All roles</SelectItem>
-            <SelectItem value="CEO">CEO</SelectItem>
+            <SelectItem value="FINAL">FINAL</SelectItem>
             <SelectItem value="HR">HR</SelectItem>
             <SelectItem value="SALES">Sales</SelectItem>
             <SelectItem value="CUSTOMER_SUPPORT">Customer Support</SelectItem>

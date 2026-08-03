@@ -311,9 +311,7 @@ export default function QuotesPage() {
         contentClassName="flex flex-col"
         filters={
           <div className={FILTER_TOOLBAR_ROW}>
-            <div className="min-w-0 flex-1 lg:max-w-[240px]">
-              <SearchInput placeholder="Search quotes..." value={search} onValueChange={handleSearchChange} />
-            </div>
+            <SearchInput placeholder="Search quotes..." value={search} onValueChange={handleSearchChange} />
             <Select value={statusFilter} onValueChange={handleStatusChange}>
               <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[140px]")}>
                 <SelectValue />

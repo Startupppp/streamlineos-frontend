@@ -1,5 +1,4 @@
 
-import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from "./avatar";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./tooltip";

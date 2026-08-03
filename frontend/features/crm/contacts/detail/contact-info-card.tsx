@@ -21,20 +21,12 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
+import { getInitials } from "@/lib/format-utils";
 import type { Contact } from "@/types/crm";
 import { AiAssistantPanel } from "@/features/crm/shared/ai-assistant-panel";
 import { CrmOptionBadge } from "@/features/crm/shared/metadata";
 import { useCrmOptions, resolveOption } from "@/hooks/api/crm/metadata";
 
-function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .map((w) => w[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-}
 
 interface InfoRowProps {
   icon: React.ComponentType<{ className?: string }>;

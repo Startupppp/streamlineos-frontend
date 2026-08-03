@@ -10,7 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "sonner";
-import { apiClient, getApiError } from "@/lib/api-client";
+import { apiClient } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 type Props = { params: Promise<{ orgSlug: string; jobId: string }> };
 
@@ -105,7 +106,7 @@ export default function ApplyPage({ params }: Props) {
       setTrackingToken(data.trackingToken);
       setSubmitted(true);
     } catch (e) {
-      const message = getApiError(e) || "Unable to submit application. Try again.";
+      const message = getErrorMessage(e) || "Unable to submit application. Try again.";
       toast.error(message);
     } finally {
       setSubmitting(false);

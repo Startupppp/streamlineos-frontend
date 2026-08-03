@@ -1,4 +1,4 @@
-import {
+﻿import {
   LayoutDashboard,
   Inbox,
   CheckSquare,
@@ -12,23 +12,24 @@ import {
   getMobileModuleOverflowTabs,
   getOverflowTabsByGroup,
   getAllMobileModuleTabs,
+  getMobileModuleContentPaddingClassName,
   isMobileNavRouteActive,
   shouldShowMobileModuleBottomNav,
   MAX_MOBILE_MODULE_TABS,
-  MOBILE_PRIMARY_TABS_WHEN_OVERFLOW,
+  MOBILE_MODULE_CONTENT_PADDING_CLASS,
 } from "./mobile-module-nav-items";
 
 const projectsNav: NavGroup[] = [
   {
     label: "Projects",
     routes: [
-      { label: "Home", icon: LayoutDashboard, href: "/projects/command-center" },
-      { label: "Inbox", icon: Inbox, href: "/projects/inbox" },
-      { label: "My issues", icon: CheckSquare, href: "/projects/my-work" },
-      { label: "Drafts", icon: Inbox, href: "/projects/drafts" },
-      { label: "All issues", icon: Briefcase, href: "/projects/all-work" },
-      { label: "Projects", icon: Briefcase, href: "/projects", exact: true },
-      { label: "Teams", icon: Users, href: "/projects/teams" },
+      { label: "Home", icon: LayoutDashboard, href: "/build/command-center" },
+      { label: "Inbox", icon: Inbox, href: "/build/inbox" },
+      { label: "My issues", icon: CheckSquare, href: "/build/my-work" },
+      { label: "Drafts", icon: Inbox, href: "/build/drafts" },
+      { label: "All issues", icon: Briefcase, href: "/build/all-work" },
+      { label: "Projects", icon: Briefcase, href: "/build", exact: true },
+      { label: "Teams", icon: Users, href: "/build/teams" },
     ],
   },
 ];
@@ -185,13 +186,13 @@ describe("mobile module nav items", () => {
         {
           label: "Projects",
           routes: [
-            { label: "Projects", icon: Briefcase, href: "/projects", exact: true },
-            { label: "Inbox", icon: Inbox, href: "/projects/inbox" },
+            { label: "Projects", icon: Briefcase, href: "/build", exact: true },
+            { label: "Inbox", icon: Inbox, href: "/build/inbox" },
           ],
         },
       ]);
-      expect(isMobileNavRouteActive("/projects", tabs[0]!, tabs)).toBe(true);
-      expect(isMobileNavRouteActive("/projects/inbox", tabs[0]!, tabs)).toBe(false);
+      expect(isMobileNavRouteActive("/build", tabs[0]!, tabs)).toBe(true);
+      expect(isMobileNavRouteActive("/build/inbox", tabs[0]!, tabs)).toBe(false);
     });
 
     it("prefers the longest matching prefix among tabs", () => {
@@ -205,6 +206,20 @@ describe("mobile module nav items", () => {
         },
       ]);
       expect(isMobileNavRouteActive("/timesheets/team", tabs[1]!, tabs)).toBe(true);
+    });
+  });
+
+  describe("getMobileModuleContentPaddingClassName", () => {
+    it("reserves the bottom nav height plus breathing room on mobile when the bar is shown", () => {
+      expect(getMobileModuleContentPaddingClassName(true)).toBe(
+        MOBILE_MODULE_CONTENT_PADDING_CLASS,
+      );
+      expect(MOBILE_MODULE_CONTENT_PADDING_CLASS).toContain("4.5rem");
+      expect(MOBILE_MODULE_CONTENT_PADDING_CLASS).toContain("md:pb-0");
+    });
+
+    it("skips padding when the module bottom nav is hidden", () => {
+      expect(getMobileModuleContentPaddingClassName(false)).toBeUndefined();
     });
   });
 

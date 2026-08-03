@@ -208,7 +208,7 @@ export function CaseDetailSheet({ caseId, open, onOpenChange }: Props) {
             onValueChange={(v) => setActiveTab(v as "details" | "notes" | "documents")}
             className="flex flex-1 min-h-0 flex-col"
           >
-            <TabsList className="mx-5 mt-3 w-fit shrink-0">
+            <TabsList className="mx-5 mt-3">
               <TabsTrigger value="details">Details</TabsTrigger>
               <TabsTrigger value="notes">
                 <StickyNote className="h-3 w-3" />

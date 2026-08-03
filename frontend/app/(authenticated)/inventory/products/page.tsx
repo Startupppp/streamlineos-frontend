@@ -58,6 +58,7 @@ import {
   useDeleteProduct,
 } from "@/hooks/api/inventory";
 import { useCan } from "@/hooks/api/access";
+import { MobileFilterDrawer } from "@/features/payroll/shared/mobile-filter-drawer";
 import type { InventoryProduct, TrackingMethod } from "@/types/inventory";
 
 const PAGE_LIMIT = 20;
@@ -283,7 +284,7 @@ function ProductsPageInner() {
     if (trimmed !== current) {
       updateParams({ search: trimmed });
     }
-  }, [debouncedSearch]);
+  }, [debouncedSearch, updateParams, searchParams]);
 
   function handleSearchChange(value: string): void {
     setSearch(value);
@@ -452,13 +453,11 @@ function ProductsPageInner() {
 
   const filtersRow = isFirstLoad ? undefined : (
     <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-      <div className="w-full max-w-md min-w-[200px]">
-        <SearchInput
-          value={search}
-          onValueChange={handleSearchChange}
-          placeholder="Search products by name, SKU, or barcode..."
-        />
-      </div>
+      <SearchInput
+        value={search}
+        onValueChange={handleSearchChange}
+        placeholder="Search products by name, SKU, or barcode..."
+      />
       <div className="hidden min-w-0 flex-row flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide sm:flex [&>*]:shrink-0">
         <Select value={statusParam || "all"} onValueChange={handleStatusChange}>
           <SelectTrigger
@@ -481,7 +480,7 @@ function ProductsPageInner() {
           >
             <SelectValue placeholder="All categories" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
             <SelectItem value="all">All categories</SelectItem>
             {categories.map((cat) => (
               <SelectItem key={cat.id} value={String(cat.id)}>
@@ -507,6 +506,44 @@ function ProductsPageInner() {
           </SelectContent>
         </Select>
       </div>
+      <MobileFilterDrawer
+        ariaLabel="Filter products"
+        groups={[
+          {
+            label: "Status",
+            value: statusParam || "all",
+            options: [
+              { value: "all", label: "All statuses" },
+              { value: "ACTIVE", label: "Active" },
+              { value: "INACTIVE", label: "Inactive" },
+            ],
+            onChange: handleStatusChange,
+          },
+          {
+            label: "Category",
+            value: categoryIdParam || "all",
+            options: [
+              { value: "all", label: "All categories" },
+              ...categories.map((cat) => ({
+                value: String(cat.id),
+                label: cat.name,
+              })),
+            ],
+            onChange: handleCategoryChange,
+          },
+          {
+            label: "Type",
+            value: productTypeParam || "all",
+            options: [
+              { value: "all", label: "All types" },
+              { value: "STOCKABLE", label: "Stockable" },
+              { value: "CONSUMABLE", label: "Consumable" },
+              { value: "SERVICE", label: "Service" },
+            ],
+            onChange: handleProductTypeChange,
+          },
+        ]}
+      />
     </div>
   );
 

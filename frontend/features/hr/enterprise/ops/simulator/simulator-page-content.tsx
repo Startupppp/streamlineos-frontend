@@ -32,7 +32,7 @@ export function SimulatorPageContent() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-4 shrink-0">
+        <TabsList className="mb-4">
           <TabsTrigger value="policy">Policy</TabsTrigger>
           <TabsTrigger value="leave">Leave Balance</TabsTrigger>
           <TabsTrigger value="approval">Approval Routing</TabsTrigger>

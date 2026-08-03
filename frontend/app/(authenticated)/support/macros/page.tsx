@@ -55,7 +55,7 @@ import {
 } from "@/hooks/api/support/macros";
 import { useSupportTags } from "@/hooks/api/support/tags";
 import type { SupportTicketStatus } from "@/types/support";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 
 const VISIBILITY_LABELS: Record<MacroVisibility, string> = {
@@ -165,7 +165,7 @@ function MacroDialog({
             toast.success("Canned response updated");
             onClose();
           },
-          onError: (error) => toast.error(getApiError(error)),
+          onError: (error) => toast.error(getErrorMessage(error)),
         },
       );
     } else {
@@ -174,7 +174,7 @@ function MacroDialog({
           toast.success("Canned response created");
           onClose();
         },
-        onError: (error) => toast.error(getApiError(error)),
+        onError: (error) => toast.error(getErrorMessage(error)),
       });
     }
   }
@@ -434,7 +434,7 @@ export default function SupportMacrosPage() {
         toast.success("Canned response deleted");
         setDeleteTarget(null);
       },
-      onError: (error) => toast.error(getApiError(error)),
+      onError: (error) => toast.error(getErrorMessage(error)),
     });
   }
 
@@ -485,9 +485,7 @@ export default function SupportMacrosPage() {
       }
     >
       <div className="flex flex-1 min-h-0 flex-col gap-4">
-        <div className="min-w-0 max-w-sm">
-          <SearchInput placeholder="Search responses…" value={search} onValueChange={handleSearchChange} />
-        </div>
+        <SearchInput placeholder="Search responses…" value={search} onValueChange={handleSearchChange} />
 
         {isLoading ? (
           <LoadingState variant="cards" rows={9} />

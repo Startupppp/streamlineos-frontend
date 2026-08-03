@@ -381,18 +381,15 @@ export function ChannelInfoPanel({
                 >
                   Cancel
                 </Button>
-                <Button
+                <LoadingButton
                   size="sm"
                   onClick={handleSaveEdit}
-                  disabled={updateChannel.isPending || !editName.trim()}
+                  disabled={!editName.trim()}
+                  isPending={updateChannel.isPending}
                   className="flex-1 h-8 text-[12px]"
                 >
-                  {updateChannel.isPending ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                  ) : (
-                    "Save"
-                  )}
-                </Button>
+                  Save
+                </LoadingButton>
               </div>
             </div>
           ) : (

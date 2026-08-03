@@ -28,7 +28,7 @@ import {
 import { useBusinessHoursList } from "@/hooks/api/support/business-hours";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import {
   policySchema, DEFAULT_FORM_VALUES, policyToFormValues, buildCreatePayload, buildUpdatePayload,
@@ -78,7 +78,7 @@ export default function SupportSlaPage() {
   const onCreateSubmit = useCallback((data: PolicyForm) => {
     createPolicy.mutate(buildCreatePayload(data), {
       onSuccess: () => { toast.success("SLA policy created"); setCreateOpen(false); createForm.reset(DEFAULT_FORM_VALUES); },
-      onError: (err) => toast.error(getApiError(err)),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }, [createPolicy, createForm]);
 
@@ -88,7 +88,7 @@ export default function SupportSlaPage() {
       { id: editingId, ...buildUpdatePayload(data) },
       {
         onSuccess: () => { toast.success("Policy updated"); setEditingId(null); },
-        onError: (err) => toast.error(getApiError(err)),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }, [editingId, updatePolicy]);
@@ -105,7 +105,7 @@ export default function SupportSlaPage() {
     if (deleteTargetId === null) return;
     deletePolicy.mutate(deleteTargetId, {
       onSuccess: () => { toast.success("Policy deleted"); setDeleteTargetId(null); },
-      onError: (err) => { toast.error(getApiError(err)); setDeleteTargetId(null); },
+      onError: (err) => { toast.error(getErrorMessage(err)); setDeleteTargetId(null); },
     });
   }, [deletePolicy, deleteTargetId]);
 
@@ -117,15 +117,14 @@ export default function SupportSlaPage() {
   const count = policies?.length ?? 0;
   const enabledCount = policies?.filter((p) => p.isEnabled).length ?? 0;
 
-  function makeEditHandler(policy: SlaPolicy) {
-    return function handleEdit() { handleStartEdit(policy); };
-  }
-
-  function makeDeleteHandler(id: number) {
-    return function handleDelete() { handleDeleteRequest(id); };
-  }
-
-  const columns = useMemo<DataTableColumn<SlaPolicy>[]>(() => [
+  const columns = useMemo<DataTableColumn<SlaPolicy>[]>(() => {
+    function makeEditHandler(policy: SlaPolicy) {
+      return function handleEdit() { handleStartEdit(policy); };
+    }
+    function makeDeleteHandler(id: number) {
+      return function handleDelete() { handleDeleteRequest(id); };
+    }
+    return [
     {
       key: "name",
       header: "Name",
@@ -204,7 +203,8 @@ export default function SupportSlaPage() {
         </div>
       ),
     },
-  ], [businessHoursNameById, handleStartEdit, handleDeleteRequest]);
+    ];
+  }, [businessHoursNameById, handleStartEdit, handleDeleteRequest]);
 
   return (
     <>

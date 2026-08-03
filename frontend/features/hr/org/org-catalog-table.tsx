@@ -241,8 +241,7 @@ export function OrgCatalogTable<T extends CatalogItem>({
   return (
     <>
       <div className="flex items-center gap-2 mb-3">
-        <SearchInput
-          className="max-w-xs flex-1"
+        <SearchInput className="flex-1"
           value={search}
           onValueChange={handleSearch}
           placeholder={`Search ${title.toLowerCase()}s...`}

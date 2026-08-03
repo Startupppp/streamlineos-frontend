@@ -82,7 +82,7 @@ const lineItemColumns: DataTableColumn<LineItem>[] = [
   },
 ];
 
-function getLineItemKey(_row: LineItem, i: number) {
+function getLineItemKey(_: LineItem, i: number) {
   return i;
 }
 

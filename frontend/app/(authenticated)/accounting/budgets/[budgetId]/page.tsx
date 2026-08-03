@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useMemo, useCallback, type ChangeEvent, type ReactNode } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -36,7 +36,7 @@ import { useOrgMembers } from "@/hooks/api/organization";
 import {
   getUserDisplayName,
   type NamedUser,
-} from "@/features/projects/shared/resolve-user-name";
+} from "@/features/build/shared/resolve-user-name";
 import type { BudgetStatus, BvaAccountPeriodRow } from "@/types/accounting/planning";
 
 function toBudgetStatus(value: string): BudgetStatus | undefined {

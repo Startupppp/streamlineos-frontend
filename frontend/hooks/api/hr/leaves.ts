@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   RequestLeaveInput,
   AddHolidayInput,
@@ -59,6 +60,7 @@ interface LeaveApprovalsResult {
 export function useRequestLeave() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "leaves", "request"],
     mutationFn: (data: RequestLeaveInput) =>
       apiClient.post<{ success: boolean }>("/hr/leaves", data),
     onSuccess: () => {
@@ -71,6 +73,7 @@ export function useRequestLeave() {
 export function useApproveLeaveDedicated() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "leaves", "approve"],
     mutationFn: ({ leaveId, comment }: { leaveId: number; comment?: string }) =>
       apiClient.put<{ success: boolean }>(`/hr/leaves/${leaveId}/approve`, {
         comment,
@@ -87,6 +90,7 @@ export function useApproveLeaveDedicated() {
 export function useRejectLeaveDedicated() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "leaves", "reject"],
     mutationFn: ({
       leaveId,
       reason,
@@ -111,6 +115,7 @@ export function useRejectLeaveDedicated() {
 export function useCancelLeave() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "leaves", "cancel"],
     mutationFn: (leaveId: number) =>
       apiClient.patch<{ success: boolean }>(`/hr/leaves/${leaveId}/cancel`, {}),
     onSuccess: () => {
@@ -123,6 +128,7 @@ export function useCancelLeave() {
 export function useRevertLeave() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "leaves", "revert"],
     mutationFn: (leaveId: number) =>
       apiClient.patch<{ success: boolean }>(`/hr/leaves/${leaveId}`, {
         status: "PENDING",
@@ -216,11 +222,12 @@ export function useHrLeaveContext() {
 }
 
 export function useHrLeaveApprovals(options?: { enabled?: boolean }) {
+  const canLeaves = useCan("hr:leaves:view");
   return useQuery({
     queryKey: queryKeys.hr.leavesTeam(),
     queryFn: () => apiClient.get<LeaveApprovalsResult>("/hr/leaves/team"),
     staleTime: 2 * 60_000,
-    enabled: options?.enabled ?? true,
+    enabled: canLeaves && (options?.enabled ?? true),
   });
 }
 
@@ -274,13 +281,14 @@ export function useHrHolidaysForCalendar(params: {
 export function useAddLegacyHoliday() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "holidays", "create"],
     mutationFn: (data: AddHolidayInput) =>
       apiClient.post<{ success: boolean }>("/hr/holidays", data),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "holidaysYear"] });
       void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "holidaysCalendar"] });
       void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "monthlyAttendance"] });
-      void qc.invalidateQueries({ queryKey: ["hr", "holidays"] });
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.holidays() });
     },
   });
 }
@@ -288,13 +296,14 @@ export function useAddLegacyHoliday() {
 export function useDeleteLegacyHoliday() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "holidays", "delete"],
     mutationFn: ({ holidayId }: DeleteHolidayInput) =>
       apiClient.delete<{ success: boolean }>(`/hr/holidays/${holidayId}`),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "holidaysYear"] });
       void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "holidaysCalendar"] });
       void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "monthlyAttendance"] });
-      void qc.invalidateQueries({ queryKey: ["hr", "holidays"] });
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.holidays() });
     },
   });
 }
@@ -302,13 +311,14 @@ export function useDeleteLegacyHoliday() {
 export function useUpdateLegacyHoliday() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "holidays", "update"],
     mutationFn: ({ holidayId, ...data }: UpdateHolidayInput) =>
       apiClient.patch<{ success: boolean }>(`/hr/holidays/${holidayId}`, data),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "holidaysYear"] });
       void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "holidaysCalendar"] });
       void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "monthlyAttendance"] });
-      void qc.invalidateQueries({ queryKey: ["hr", "holidays"] });
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.holidays() });
     },
   });
 }
@@ -342,7 +352,7 @@ export interface LeavePolicyResponse {
 
 export function useLeavePolicy() {
   return useQuery({
-    queryKey: ["hr", "leave-policy"],
+    queryKey: queryKeys.hr.leavePolicy(),
     queryFn: () => apiClient.get<LeavePolicyResponse>("/hr/leave-policy"),
     staleTime: 10 * 60 * 1000,
   });

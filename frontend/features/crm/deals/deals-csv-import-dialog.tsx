@@ -41,7 +41,6 @@ function getFileExtension(name: string): string {
 }
 
 function applyMapping(
-  headers: string[],
   rows: string[][],
   fieldMappings: Record<number, string>,
 ): { deals: ParsedDeal[]; errors: string[] } {
@@ -180,7 +179,7 @@ export function DealsCsvImportDialog({ onSuccess }: { onSuccess?: () => void }) 
   );
 
   const handleConfirmMapping = useCallback(() => {
-    const { deals, errors } = applyMapping(rawHeaders, rawRows, fieldMappings);
+    const { deals, errors } = applyMapping(rawRows, fieldMappings);
     setParsed(deals);
     setParseErrors(errors);
     setStep("preview");

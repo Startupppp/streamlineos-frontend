@@ -24,8 +24,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import {
-  useCreateKbCategory,
-  useUpdateKbCategory,
+  useCreateSupportKbCategory,
+  useUpdateSupportKbCategory,
   type KbCategory,
 } from "@/hooks/api/support/kb";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -38,8 +38,8 @@ export interface KbCategoryDialogProps {
 
 export function KbCategoryDialog({ category, onClose }: KbCategoryDialogProps) {
   const isEdit = !!category;
-  const create = useCreateKbCategory();
-  const update = useUpdateKbCategory();
+  const create = useCreateSupportKbCategory();
+  const update = useUpdateSupportKbCategory();
   const isPending = create.isPending || update.isPending;
 
   const form = useForm<KbCategoryFormValues>({

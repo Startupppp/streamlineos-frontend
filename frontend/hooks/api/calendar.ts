@@ -208,7 +208,7 @@ export function useRsvpCalendarEvent() {
     mutationKey: ["calendar", "events", "rsvp"],
     mutationFn: ({ eventId, status }: { eventId: number; status: RsvpStatus }) =>
       apiClient.post<EventAttendee>(`/calendar/events/${eventId}/rsvp`, { status }),
-    onSuccess: (_data, { eventId }) => {
+    onSuccess: (_, { eventId }) => {
       void qc.invalidateQueries({ queryKey: queryKeys.calendar.attendees(eventId) });
       void qc.invalidateQueries({ queryKey: queryKeys.calendar.all });
     },

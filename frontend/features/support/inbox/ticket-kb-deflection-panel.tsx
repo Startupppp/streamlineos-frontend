@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Loader2, ChevronDown, BookOpen, ExternalLink, FilePlus } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ChevronDown, BookOpen, ExternalLink, FilePlus } from "lucide-react";
+import { LoadingButton } from "@/components/ui/loading-button";
 import {
   Select,
   SelectContent,
@@ -117,21 +117,18 @@ export function KbDeflectionPanel({ ticketId, ticketTitle }: KbDeflectionPanelPr
                 ))}
               </SelectContent>
             </Select>
-            <Button
+            <LoadingButton
               type="button"
               variant="outline"
               size="sm"
               className="h-7 text-xs shrink-0 whitespace-nowrap"
-              disabled={!selectedSpaceId || createPending || !spaces?.length}
+              disabled={!selectedSpaceId || !spaces?.length}
+              isPending={createPending}
               onClick={handleCreate}
             >
-              {createPending ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
-              ) : (
-                <FilePlus className="h-3.5 w-3.5 mr-1" />
-              )}
+              {!createPending && <FilePlus className="h-3.5 w-3.5 mr-1" />}
               Create KB article
-            </Button>
+            </LoadingButton>
           </div>
         </div>
       )}

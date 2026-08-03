@@ -1,27 +1,13 @@
-import { cn } from "@/lib/utils";
+import { SemanticBadge } from "@/components/ui/semantic-badge";
+import type { BadgeTone } from "@/components/ui/semantic-badge";
 import type { FnfStatus } from "@/types/payroll";
 
-const STATUS_CONFIG: Record<FnfStatus, { label: string; className: string }> = {
-  PENDING: {
-    label: "Pending",
-    className: "bg-muted text-muted-foreground border-border",
-  },
-  HR_REVIEW: {
-    label: "HR Review",
-    className: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  },
-  FINANCE_REVIEW: {
-    label: "Finance Review",
-    className: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  },
-  APPROVED: {
-    label: "Approved",
-    className: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  },
-  PAID: {
-    label: "Paid",
-    className: "bg-green-50 text-green-700 border-green-200 dark:bg-green-500/10 dark:text-green-300 dark:border-green-500/30",
-  },
+const STATUS_CONFIG: Record<FnfStatus, { label: string; tone: BadgeTone }> = {
+  PENDING: { label: "Pending", tone: "neutral" },
+  HR_REVIEW: { label: "HR Review", tone: "info" },
+  FINANCE_REVIEW: { label: "Finance Review", tone: "info" },
+  APPROVED: { label: "Approved", tone: "success" },
+  PAID: { label: "Paid", tone: "green" },
 };
 
 interface FnfStatusBadgeProps {
@@ -30,14 +16,5 @@ interface FnfStatusBadgeProps {
 
 export function FnfStatusBadge({ status }: FnfStatusBadgeProps) {
   const config = STATUS_CONFIG[status];
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border",
-        config.className,
-      )}
-    >
-      {config.label}
-    </span>
-  );
+  return <SemanticBadge tone={config.tone} label={config.label} size="xs" />;
 }

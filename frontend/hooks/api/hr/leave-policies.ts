@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 
 export interface LeavePolicy {
   id: number;
@@ -37,7 +38,7 @@ interface CreateLeavePolicyInput {
 
 export function useLeavePolicies() {
   return useQuery<LeavePolicy[]>({
-    queryKey: ["hr", "leave-policies"],
+    queryKey: queryKeys.hr.leavePolicies(),
     queryFn: () => apiClient.get<LeavePolicy[]>("/hr/leave-policies"),
     staleTime: 60_000,
   });
@@ -49,7 +50,7 @@ export function useCreateLeavePolicy() {
     mutationKey: ["hr", "leave-policies", "create"],
     mutationFn: (data: CreateLeavePolicyInput) =>
       apiClient.post<LeavePolicy>("/hr/leave-policies", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["hr", "leave-policies"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.leavePolicies() }),
   });
 }
 
@@ -59,7 +60,7 @@ export function useUpdateLeavePolicy() {
     mutationKey: ["hr", "leave-policies", "update"],
     mutationFn: ({ id, ...data }: Partial<CreateLeavePolicyInput> & { id: number }) =>
       apiClient.patch<LeavePolicy>(`/hr/leave-policies/${id}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["hr", "leave-policies"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.leavePolicies() }),
   });
 }
 
@@ -69,6 +70,6 @@ export function useDeleteLeavePolicy() {
     mutationKey: ["hr", "leave-policies", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<void>(`/hr/leave-policies/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["hr", "leave-policies"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.leavePolicies() }),
   });
 }

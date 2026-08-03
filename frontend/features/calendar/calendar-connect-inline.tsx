@@ -1,8 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -88,36 +87,30 @@ export function CalendarConnectInline() {
         Meet or Teams link.
       </p>
       <div className="flex flex-wrap gap-2">
-        <Button
+        <LoadingButton
           type="button"
           variant="outline"
           size="sm"
           className="gap-1.5 text-xs"
           onClick={handleConnectGoogle}
-          disabled={pending !== null}
+          disabled={pending !== null && pending !== "googlecalendar"}
+          isPending={pending === "googlecalendar"}
         >
-          {pending === "googlecalendar" ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <GoogleGlyph />
-          )}
+          {pending !== "googlecalendar" && <GoogleGlyph />}
           Connect Google
-        </Button>
-        <Button
+        </LoadingButton>
+        <LoadingButton
           type="button"
           variant="outline"
           size="sm"
           className="gap-1.5 text-xs"
           onClick={handleConnectOutlook}
-          disabled={pending !== null}
+          disabled={pending !== null && pending !== "outlook"}
+          isPending={pending === "outlook"}
         >
-          {pending === "outlook" ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <OutlookGlyph />
-          )}
+          {pending !== "outlook" && <OutlookGlyph />}
           Connect Outlook
-        </Button>
+        </LoadingButton>
       </div>
     </div>
   );

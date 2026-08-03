@@ -23,7 +23,7 @@ export function PayrollPageSkeleton() {
       }
     >
       <div className="space-y-4">
-        <StatCardGridSkeleton cols={4} />
+        <StatCardGridSkeleton cols={5} />
         <Card>
           <CardContent className="p-0">
             <div className="border-b px-3 py-2 flex gap-2">

@@ -19,7 +19,7 @@ export interface UserSession {
 export const useSessions = () =>
   useQuery<UserSession[]>({
     queryKey: queryKeys.sessions.list(),
-    queryFn: () => apiClient.get<UserSession[]>("/hr/sessions"),
+    queryFn: () => apiClient.get<UserSession[]>("/sessions"),
     staleTime: 30 * 1000,
   });
 
@@ -27,7 +27,7 @@ export const useRevokeSession = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["sessions", "revoke"],
-    mutationFn: (sessionId: string) => apiClient.delete(`/hr/sessions/${sessionId}`),
+    mutationFn: (sessionId: string) => apiClient.delete(`/sessions/${sessionId}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.sessions.all }),
   });
 };
@@ -36,7 +36,7 @@ export const useRevokeAllSessions = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["sessions", "revoke-all"],
-    mutationFn: () => apiClient.delete("/hr/sessions"),
+    mutationFn: () => apiClient.delete("/sessions"),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.sessions.all }),
   });
 };

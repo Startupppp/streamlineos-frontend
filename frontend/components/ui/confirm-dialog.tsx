@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 import {
   AlertDialog,
@@ -10,11 +11,10 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-interface ConfirmDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+interface ConfirmDialogBaseProps {
   title: string;
   description: string;
   confirmLabel?: string;
@@ -24,9 +24,18 @@ interface ConfirmDialogProps {
   onConfirm: () => void;
 }
 
+/**
+ * Controlled when the caller owns the open state; uncontrolled when it supplies
+ * a `trigger`. The union stops a caller from passing both and ending up with a
+ * dialog whose open state has two owners.
+ */
+type ConfirmDialogProps = ConfirmDialogBaseProps &
+  (
+    | { trigger: ReactNode; open?: never; onOpenChange?: never }
+    | { trigger?: never; open: boolean; onOpenChange: (open: boolean) => void }
+  );
+
 export function ConfirmDialog({
-  open,
-  onOpenChange,
   title,
   description,
   confirmLabel = "Confirm",
@@ -34,9 +43,15 @@ export function ConfirmDialog({
   destructive = false,
   isPending = false,
   onConfirm,
+  trigger,
+  open,
+  onOpenChange,
 }: ConfirmDialogProps) {
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
+    <AlertDialog
+      {...(trigger ? {} : { open, onOpenChange })}
+    >
+      {trigger ? <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger> : null}
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>

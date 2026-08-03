@@ -7,7 +7,7 @@ export default function NotificationsLoading() {
   return (
     <PageWrapper
       title="Notifications"
-      subtitle="Stay up to date with everything happening in your workspace"
+      subtitle="Stay up to date with everything happening in your organization"
       actions={<Skeleton className="h-9 w-32 rounded-md" />}
       filters={
         <div className={FILTER_TOOLBAR_ROW}>

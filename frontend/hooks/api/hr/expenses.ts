@@ -32,12 +32,16 @@ interface ExpensePageFilters {
   maxAmount?: number;
 }
 
-export function useExpensePageData(filters: ExpensePageFilters = {}) {
+export function useExpensePageData(
+  filters: ExpensePageFilters = {},
+  options?: { enabled?: boolean },
+) {
   const params: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(filters)) {
     if (v !== undefined && v !== "" && v !== null) params[k] = v;
   }
   return useQuery({
+    enabled: options?.enabled ?? true,
     queryKey: [...queryKeys.hr.expenses(), "pageData", params] as const,
     queryFn: () =>
       apiClient.get<{
@@ -64,6 +68,7 @@ export function useExpensePageData(filters: ExpensePageFilters = {}) {
 export function useCreateExpense() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "expenses", "create"],
     mutationFn: (data: CreateExpenseInput) =>
       apiClient.post<Expense>("/hr/expenses", data),
     onSuccess: () =>
@@ -74,6 +79,7 @@ export function useCreateExpense() {
 export function useUpdateExpenseStatus() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "expenses", "update-status"],
     mutationFn: ({ expenseId, ...data }: UpdateExpenseStatusInput) =>
       apiClient.patch<{ success: boolean }>(`/hr/expenses/${expenseId}`, data),
     onSuccess: () =>
@@ -84,6 +90,7 @@ export function useUpdateExpenseStatus() {
 export function useUpdateExpense() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "expenses", "update"],
     mutationFn: ({
       expenseId,
       ...data
@@ -104,13 +111,4 @@ export function useUpdateExpense() {
   });
 }
 
-export function useDeleteExpense() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (expenseId: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/expenses/${expenseId}`),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.expenses() }),
-  });
-}
 

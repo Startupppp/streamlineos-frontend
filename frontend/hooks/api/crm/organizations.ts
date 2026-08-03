@@ -12,9 +12,7 @@ import type {
   OrgRollup,
   OrgTimelineEvent,
   RelatedLead,
-  CrmPersonProfile,
   MergeOrgsInput,
-  DuplicateOrgPair,
 } from "@/types/crm";
 
 export function useCrmOrganizations(filters?: CrmOrganizationFilters) {
@@ -71,7 +69,7 @@ export function useUpdateCrmOrganization() {
     mutationKey: ["crmOrganizations", "update"] as const,
     mutationFn: ({ id, ...input }: Partial<CreateCrmOrganizationInput> & { id: number; parentId?: number | null; notes?: string | null; healthScore?: number | null }) =>
       apiClient.patch<CrmOrganization>(`/crm/organizations/${id}`, input),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.crmOrganizations.all });
       qc.invalidateQueries({ queryKey: queryKeys.crmOrganizations.detail(variables.id) });
     },
@@ -131,24 +129,6 @@ export function useCrmPeopleSlugs() {
     queryKey: queryKeys.crm.peopleSlugs(),
     queryFn: () => apiClient.get<Record<string, string>>("/crm/people-slugs"),
     staleTime: 2 * 60_000,
-  });
-}
-
-export function useCrmPerson(slug: string) {
-  return useQuery({
-    queryKey: queryKeys.crm.person(slug),
-    queryFn: () => apiClient.get<CrmPersonProfile | null>(`/crm/people/${slug}`),
-    staleTime: 2 * 60_000,
-    enabled: !!slug,
-  });
-}
-
-export function useCrmOrgDuplicates(params?: { page?: number; limit?: number }) {
-  return useQuery({
-    queryKey: queryKeys.crmOrganizations.duplicates(params as Record<string, unknown>),
-    queryFn: () =>
-      apiClient.get<DuplicateOrgPair[]>("/crm/organizations/duplicates", params as Record<string, unknown>),
-    staleTime: 5 * 60_000,
   });
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useSyncExternalStore, useRef } from "react";
+import { useCallback, useEffect, useSyncExternalStore, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { apiClient } from "@/lib/api-client";
@@ -52,7 +52,7 @@ export function useHrCalendarEventsMapped(
   rangeStart: Date,
   rangeEnd: Date,
 ): { hrCalEvents: BigCalEvent[]; hrEnabled: boolean } {
-  const forbiddenRef = useRef(false);
+  const [forbidden, setForbidden] = useState(false);
 
   const from = format(rangeStart, "yyyy-MM-dd");
   const to = format(rangeEnd, "yyyy-MM-dd");
@@ -63,15 +63,17 @@ export function useHrCalendarEventsMapped(
       apiClient.get<HrCalendarEvent[]>("/hr/calendar", { from, to }),
     staleTime: 5 * 60_000,
     retry: false,
-    enabled: !forbiddenRef.current,
+    enabled: !forbidden,
   });
 
-  if (isError) {
-    const status = (error as { status?: number } | null)?.status;
-    if (status === 403) {
-      forbiddenRef.current = true;
+  useEffect(() => {
+    if (isError) {
+      const status = (error as { status?: number } | null)?.status;
+      if (status === 403) {
+        setForbidden(true);
+      }
     }
-  }
+  }, [isError, error]);
 
   const hrCalEvents: BigCalEvent[] = (data ?? []).map((ev) => ({
     id: `hr-${ev.id}`,
@@ -86,5 +88,5 @@ export function useHrCalendarEventsMapped(
     },
   }));
 
-  return { hrCalEvents, hrEnabled: !forbiddenRef.current };
+  return { hrCalEvents, hrEnabled: !forbidden };
 }

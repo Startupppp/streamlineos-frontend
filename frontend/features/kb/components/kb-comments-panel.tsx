@@ -2,9 +2,9 @@
 
 import { useState, type ChangeEvent } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { Loader2, MessagesSquare, Send } from "lucide-react";
+import { MessagesSquare, Send } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Trash2Icon } from "@animateicons/react/lucide";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,9 +14,9 @@ import { ErrorState } from "@/components/shared/error-state";
 import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyTicketIllustration } from "@/components/illustrations";
 import {
-  useKbComments,
-  useAddKbComment,
-  useDeleteKbComment,
+  useSupportKbComments,
+  useAddSupportKbComment,
+  useDeleteSupportKbComment,
 } from "@/hooks/api/support/kb-comments";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { resolveImageUrl } from "@/lib/utils";
@@ -84,9 +84,9 @@ function CommentItem({ comment, isPendingDelete, onDelete }: CommentItemProps) {
 }
 
 export function KbCommentsPanel({ article }: { article: KbArticleDetail }) {
-  const commentsQuery = useKbComments(article.id);
-  const addComment = useAddKbComment(article.id);
-  const deleteComment = useDeleteKbComment(article.id);
+  const commentsQuery = useSupportKbComments(article.id);
+  const addComment = useAddSupportKbComment(article.id);
+  const deleteComment = useDeleteSupportKbComment(article.id);
   const [draft, setDraft] = useState("");
   const comments = commentsQuery.data ?? [];
 
@@ -137,18 +137,15 @@ export function KbCommentsPanel({ article }: { article: KbArticleDetail }) {
             className="text-sm resize-none"
           />
           <div className="flex justify-end">
-            <Button
+            <LoadingButton
               size="sm"
               onClick={handleAdd}
-              disabled={addComment.isPending || !draft.trim()}
+              disabled={!draft.trim()}
+              isPending={addComment.isPending}
             >
-              {addComment.isPending ? (
-                <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
-              ) : (
-                <Send className="h-3.5 w-3.5 mr-1" />
-              )}
+              {!addComment.isPending && <Send className="h-3.5 w-3.5 mr-1" />}
               Comment
-            </Button>
+            </LoadingButton>
           </div>
         </div>
 

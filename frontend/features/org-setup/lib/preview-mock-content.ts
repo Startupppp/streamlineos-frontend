@@ -11,40 +11,41 @@ import {
 } from "lucide-react";
 import { GOALS, MODULE_CATALOG } from "./constants";
 import type { WorkspacePreviewSnapshot } from "./preview-snapshot";
+import { ORG_MODULE_KEYS, type OrgModuleKey } from "./wizard-data-schema";
 
 export type ModuleIcon = ComponentType<{ className?: string }>;
 
 export const MODULE_ICON: Record<string, ModuleIcon> = {
-  CRM: Contact2,
-  HR: Users,
-  INVENTORY: Package,
-  FINANCE: Receipt,
-  PROJECTS: Briefcase,
-  HELPDESK: Headphones,
-  KNOWLEDGE: BookOpen,
-  CHAT: MessageSquare,
+  crm: Contact2,
+  hr: Users,
+  inventory: Package,
+  accounting: Receipt,
+  build: Briefcase,
+  support: Headphones,
+  kb: BookOpen,
+  chat: MessageSquare,
 };
 
 const MODULE_OUTCOMES: Record<string, readonly string[]> = {
-  CRM: ["Lead inbox + pipeline", "Deal stages ready", "Follow-ups tracked"],
-  HR: ["Leave & attendance", "Team directory", "Onboarding checklist"],
-  PROJECTS: ["Task boards", "Sprint tracking", "Delivery updates"],
-  FINANCE: ["Invoices & payments", "Bank reconcile", "Tax-ready reports"],
-  INVENTORY: ["Stock levels", "Warehouses", "Purchase orders"],
-  HELPDESK: ["Ticket queue", "SLA timers", "Customer replies"],
-  KNOWLEDGE: ["Team wiki", "SOPs & FAQs", "Searchable docs"],
-  CHAT: ["Channels", "DMs & mentions", "Quick huddles"],
+  crm: ["Lead inbox + pipeline", "Deal stages ready", "Follow-ups tracked"],
+  hr: ["Leave & attendance", "Team directory", "Onboarding checklist"],
+  build: ["Task boards", "Sprint tracking", "Delivery updates"],
+  accounting: ["Invoices & payments", "Bank reconcile", "Tax-ready reports"],
+  inventory: ["Stock levels", "Warehouses", "Purchase orders"],
+  support: ["Ticket queue", "SLA timers", "Customer replies"],
+  kb: ["Team wiki", "SOPs & FAQs", "Searchable docs"],
+  chat: ["Channels", "DMs & mentions", "Quick huddles"],
 };
 
 const STAT_PRESETS: Record<string, { label: string; value: string }> = {
-  CRM: { label: "Pipeline", value: "Ready" },
-  HR: { label: "People", value: "Ready" },
-  PROJECTS: { label: "Delivery", value: "Ready" },
-  FINANCE: { label: "Billing", value: "Ready" },
-  INVENTORY: { label: "Stock", value: "Ready" },
-  HELPDESK: { label: "Support", value: "Ready" },
-  KNOWLEDGE: { label: "Docs", value: "Ready" },
-  CHAT: { label: "Chat", value: "Ready" },
+  crm: { label: "Pipeline", value: "Ready" },
+  hr: { label: "People", value: "Ready" },
+  build: { label: "Delivery", value: "Ready" },
+  accounting: { label: "Billing", value: "Ready" },
+  inventory: { label: "Stock", value: "Ready" },
+  support: { label: "Support", value: "Ready" },
+  kb: { label: "Docs", value: "Ready" },
+  chat: { label: "Chat", value: "Ready" },
 };
 
 export type MockStat = { id: string; label: string; value: string };
@@ -56,13 +57,16 @@ export type MockWidget = {
 };
 export type MockGoalChip = { id: string; label: string };
 
+function isOrgModuleKey(value: string): value is OrgModuleKey {
+  return (ORG_MODULE_KEYS as readonly string[]).includes(value);
+}
+
 export function resolvePreviewModules(
   snapshot: WorkspacePreviewSnapshot,
-): string[] {
+): OrgModuleKey[] {
   if (snapshot.goals.length === 0) return [];
-  const source =
-    snapshot.modules.length > 0 ? snapshot.modules : snapshot.installedApps;
-  return [...source];
+  if (snapshot.modules.length > 0) return [...snapshot.modules];
+  return snapshot.installedApps.filter(isOrgModuleKey);
 }
 
 export function buildGoalChips(goals: readonly string[]): MockGoalChip[] {
@@ -73,7 +77,7 @@ export function buildGoalChips(goals: readonly string[]): MockGoalChip[] {
 }
 
 export function buildStats(
-  modules: readonly string[],
+  modules: readonly OrgModuleKey[],
   teamSize: string,
   goalsCount: number,
 ): MockStat[] {
@@ -86,7 +90,7 @@ export function buildStats(
       id: key,
       label: preset?.label ?? catalog?.label ?? key,
       value:
-        key === "HR" && teamSize
+        key === "hr" && teamSize
           ? teamSize.replace("+", "")
           : (preset?.value ?? "On"),
     };
@@ -115,7 +119,7 @@ export function buildStats(
 }
 
 export function buildWidgets(
-  modules: readonly string[],
+  modules: readonly OrgModuleKey[],
   goals: readonly string[],
   compact: boolean,
 ): MockWidget[] {
@@ -147,7 +151,7 @@ export function buildWidgets(
 
 export function emptyPreviewCopy(snapshot: WorkspacePreviewSnapshot): string {
   if (snapshot.goals.length === 0) {
-    return "Pick goals to preview your workspace";
+    return "Pick goals to preview your organization";
   }
-  return "Your workspace preview updates as you go";
+  return "Your organization preview updates as you go";
 }

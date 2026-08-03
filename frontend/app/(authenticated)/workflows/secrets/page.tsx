@@ -48,7 +48,7 @@ import {
 import {
   createSecretSchema,
   type CreateSecretValues,
-} from "./create-secret-schema";
+} from "@/features/workflows/create-secret-schema";
 
 interface SecretCardProps {
   secret: WorkflowSecret;

@@ -1,7 +1,7 @@
-"use client";
+import { requirePermission } from "@/lib/rbac/require-permission";
+import { SettingsView } from "@/features/timesheets/settings";
 
-import { SettingsView } from "@/features/timesheets-core/settings";
-
-export default function TimesheetSettingsPage() {
+export default async function TimesheetSettingsPage() {
+  await requirePermission("timesheets:settings:view");
   return <SettingsView />;
 }

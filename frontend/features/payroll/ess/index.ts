@@ -1,5 +1,4 @@
 export { EssSectionNav } from "./components/ess-section-nav";
-export { EssStatusBadge } from "./components/ess-status-badge";
 export { EssPayslipsSection } from "./components/ess-payslips-section";
 export { EssSalarySection } from "./components/ess-salary-section";
 export { EssReimbursementsSection } from "./components/ess-reimbursements-section";

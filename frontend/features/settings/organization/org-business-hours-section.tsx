@@ -1,17 +1,20 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Clock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Pencil, Clock } from "lucide-react";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
 import { useUpdateOrgSettings } from "@/hooks/api/organization";
 import type { OrgSettings } from "@/types/organization";
 import { getErrorMessage } from "@/lib/get-error-message";
+import {
+  OrgSettingsCard,
+  OrgSettingsEditButton,
+  OrgSettingsFormActions,
+} from "./org-settings-chrome";
 
 type DayKey = "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday";
 
@@ -93,80 +96,71 @@ export function OrgBusinessHoursSection({ org, canEdit }: OrgBusinessHoursSectio
 
   const display = mergeHours(org.businessHours);
   const activeDays = DAYS.filter((d) => display[d.key].enabled);
+  const closedDays = DAYS.filter((d) => !display[d.key].enabled);
 
   return (
-    <Card className="rounded-lg border border-border">
-      <CardHeader className="pb-2 flex flex-row items-start justify-between">
-        <div>
-          <CardTitle className="text-sm font-semibold flex items-center gap-2">
-            <Clock className="h-4 w-4 text-blue-600" />
-            Business Hours
-          </CardTitle>
-          <CardDescription>Define working days and hours for your organization.</CardDescription>
-        </div>
-        {canEdit && !isEditing && (
-          <Button variant="outline" size="sm" onClick={handleEdit} className="gap-1.5 h-8 text-xs">
-            <Pencil className="h-3 w-3" /> Edit
-          </Button>
-        )}
-      </CardHeader>
-      <CardContent className="pb-5">
-        {!isEditing ? (
-          <div className="space-y-2">
-            {activeDays.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No working days configured.</p>
-            ) : (
-              activeDays.map((d) => (
-                <div key={d.key} className="flex items-center gap-4 text-sm">
-                  <span className="w-24 font-medium">{d.label}</span>
-                  <span className="text-muted-foreground font-mono text-xs">{display[d.key].open} – {display[d.key].close}</span>
+    <OrgSettingsCard
+      title="Business Hours"
+      description="Define working days and hours for your organization."
+      icon={<Clock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
+      action={canEdit && !isEditing ? <OrgSettingsEditButton onClick={handleEdit} /> : undefined}
+    >
+      {!isEditing ? (
+        <div className="space-y-1.5">
+          {activeDays.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No working days configured.</p>
+          ) : (
+            <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 lg:grid-cols-3">
+              {activeDays.map((d) => (
+                <div key={d.key} className="flex items-baseline gap-2 text-sm min-w-0">
+                  <span className="w-20 shrink-0 font-medium">{d.label}</span>
+                  <span className="text-muted-foreground font-mono text-xs tabular-nums">
+                    {display[d.key].open} – {display[d.key].close}
+                  </span>
                 </div>
-              ))
-            )}
-            {DAYS.filter((d) => !display[d.key].enabled).length > 0 && (
-              <p className="text-xs text-muted-foreground mt-2">
-                Closed: {DAYS.filter((d) => !display[d.key].enabled).map((d) => d.short).join(", ")}
-              </p>
-            )}
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {DAYS.map((d) => {
-              const h = hours[d.key];
-              return (
-                <div key={d.key} className="flex items-center gap-3">
-                  <div className="flex items-center gap-2 w-28 shrink-0">
-                    <Checkbox
-                      id={`bh-${d.key}`}
-                      checked={h.enabled}
-                      onCheckedChange={(checked) => handleToggle(d.key, !!checked)}
-                    />
-                    <Label htmlFor={`bh-${d.key}`} className="text-sm font-medium cursor-pointer">{d.short}</Label>
-                  </div>
-                  {h.enabled ? (
-                    <div className="flex items-center gap-2">
-                      <Input type="time" value={h.open} onChange={(e) => handleTimeChange(d.key, "open", e.target.value)} className="w-28 font-mono" />
-                      <span className="text-muted-foreground text-xs">to</span>
-                      <Input type="time" value={h.close} onChange={(e) => handleTimeChange(d.key, "close", e.target.value)} className="w-28 font-mono" />
-                    </div>
-                  ) : (
-                    <span className="text-xs text-muted-foreground">Closed</span>
-                  )}
-                </div>
-              );
-            })}
-            <div className="flex gap-2 pt-3">
-              <LoadingButton size="sm" isPending={isPending} onClick={handleSave} className="gap-1.5" loadingText="Saving…">
-                Save hours
-              </LoadingButton>
-              <Button type="button" variant="ghost" size="sm" onClick={handleCancel} disabled={isPending}>
-                Cancel
-              </Button>
+              ))}
             </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+          )}
+          {closedDays.length > 0 && (
+            <p className="text-xs text-muted-foreground pt-1">
+              Closed: {closedDays.map((d) => d.short).join(", ")}
+            </p>
+          )}
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {DAYS.map((d) => {
+            const h = hours[d.key];
+            return (
+              <div key={d.key} className="flex flex-wrap items-center gap-2 sm:gap-3">
+                <div className="flex items-center gap-2 w-20 shrink-0">
+                  <Checkbox
+                    id={`bh-${d.key}`}
+                    checked={h.enabled}
+                    onCheckedChange={(checked) => handleToggle(d.key, !!checked)}
+                    className="bg-card border-border"
+                  />
+                  <Label htmlFor={`bh-${d.key}`} className="text-sm font-medium cursor-pointer">{d.short}</Label>
+                </div>
+                {h.enabled ? (
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Input type="time" value={h.open} onChange={(e) => handleTimeChange(d.key, "open", e.target.value)} className="h-8 w-[7.5rem] font-mono text-xs" />
+                    <span className="text-muted-foreground text-xs">to</span>
+                    <Input type="time" value={h.close} onChange={(e) => handleTimeChange(d.key, "close", e.target.value)} className="h-8 w-[7.5rem] font-mono text-xs" />
+                  </div>
+                ) : (
+                  <span className="text-xs text-muted-foreground">Closed</span>
+                )}
+              </div>
+            );
+          })}
+          <OrgSettingsFormActions onCancel={handleCancel} isPending={isPending} className="pt-2">
+            <LoadingButton size="sm" isPending={isPending} onClick={handleSave} className="h-8 gap-1.5" loadingText="Saving…">
+              Save hours
+            </LoadingButton>
+          </OrgSettingsFormActions>
+        </div>
+      )}
+    </OrgSettingsCard>
   );
 }
-

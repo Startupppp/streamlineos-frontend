@@ -237,25 +237,43 @@ function ProductGrid({
   onClose,
   shouldReduceMotion,
 }: ProductGridProps) {
-  const visibleProducts = useMemo(
-    () =>
-      PRODUCT_DEFINITIONS.filter((product) => {
-        const groups = getNavGroupsForProduct(
-          product.key,
-          effectiveRole,
-          permissions,
-          enabledModules,
-        );
-        const hasAccess = groups.some((group) => group.routes.length > 0);
-        return hasAccess || canManageModules;
-      }),
-    [effectiveRole, permissions, enabledModules, canManageModules],
-  );
+  const visibleProducts = useMemo(() => {
+    const products = PRODUCT_DEFINITIONS.filter((product) => {
+      if (product.key === "administration") return false;
+      const groups = getNavGroupsForProduct(
+        product.key,
+        effectiveRole,
+        permissions,
+        enabledModules,
+      );
+      const hasAccess = groups.some((group) => group.routes.length > 0);
+      return hasAccess || canManageModules;
+    });
+
+    return products.sort((a, b) => {
+      const aLockedKey = PRODUCT_TO_LOCKED_MODULE[a.key];
+      const bLockedKey = PRODUCT_TO_LOCKED_MODULE[b.key];
+      const aEnabled =
+        isModuleEnabled(a.key, enabledModules) &&
+        !(aLockedKey !== undefined && lockedModules.includes(aLockedKey));
+      const bEnabled =
+        isModuleEnabled(b.key, enabledModules) &&
+        !(bLockedKey !== undefined && lockedModules.includes(bLockedKey));
+      if (aEnabled === bEnabled) return 0;
+      return aEnabled ? -1 : 1;
+    });
+  }, [
+    effectiveRole,
+    permissions,
+    enabledModules,
+    lockedModules,
+    canManageModules,
+  ]);
 
   return (
     <>
       <p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mb-1.5 px-1">
-        Products
+        Modules
       </p>
       <div className="grid grid-cols-2 gap-1">
         {visibleProducts.map((product, index) => {
@@ -323,7 +341,7 @@ export function ProductSwitcherMenu({
   const { permissions } = usePermissions();
   const { data: access } = useAccess();
   const effectiveRole =
-    access?.isOrgOwner === true || access?.isPlatformAdmin === true
+    access?.isOrgOwner === true
       ? "OWNER"
       : "MEMBER";
 
@@ -408,12 +426,12 @@ export function ProductSwitcherMenu({
       };
 
   const isSidebarVariant = variant === "sidebar";
-  const activeLabel = activeDefinition?.label ?? "Products";
+  const activeLabel = activeDefinition?.label ?? "Modules";
 
   const triggerButton = (
     <button
       type="button"
-      aria-label="Switch product"
+      aria-label="Switch module"
       onClick={triggerOnly ? handleTriggerClick : undefined}
       onMouseEnter={enableHoverOpen ? handleHoverEnter : undefined}
       onMouseLeave={enableHoverOpen ? handleHoverLeave : undefined}
@@ -455,7 +473,7 @@ export function ProductSwitcherMenu({
 
   const drawerContent = (
     <DrawerContent className="flex h-[min(96dvh,40rem)] max-h-[96dvh] w-full flex-col gap-0 overflow-hidden rounded-t-xl border-t bg-sidebar p-4 pb-[env(safe-area-inset-bottom)] shadow-2xl">
-      <DrawerTitle className="sr-only">Products</DrawerTitle>
+      <DrawerTitle className="sr-only">Modules</DrawerTitle>
       <AnimatePresence>
         {open && (
           <ProductGrid

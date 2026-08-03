@@ -1,14 +1,16 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useOvertimeRequests, useApproveOvertime, useRejectOvertime } from "@/hooks/api/hr/overtime";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { useOrgMembersByIds } from "@/hooks/api/organization";
+import { getUserDisplayName, type NamedUser } from "@/features/build/shared/resolve-user-name";
 
 interface Props {
   canManage: boolean;
@@ -29,19 +31,33 @@ export function OvertimeList({ canManage }: Props) {
   const approve = useApproveOvertime();
   const reject = useRejectOvertime();
 
-  function handleApprove(id: number) {
+  const userIds = useMemo(
+    () => [...new Set((requests ?? []).map((r) => r.userId))],
+    [requests],
+  );
+  const { data: membersData } = useOrgMembersByIds(userIds);
+
+  const memberById = useMemo(() => {
+    const map = new Map<string, NamedUser>();
+    for (const member of membersData?.data ?? []) {
+      map.set(member.userId, { name: member.name, email: member.email });
+    }
+    return map;
+  }, [membersData]);
+
+  const handleApprove = useCallback((id: number) => {
     approve.mutate(id, {
       onSuccess: () => toast.success("Overtime approved"),
       onError: (err) => toast.error(getErrorMessage(err)),
     });
-  }
+  }, [approve]);
 
-  function handleReject(id: number) {
+  const handleReject = useCallback((id: number) => {
     reject.mutate(id, {
       onSuccess: () => toast.success("Overtime rejected"),
       onError: (err) => toast.error(getErrorMessage(err)),
     });
-  }
+  }, [reject]);
 
   type OvertimeRequest = NonNullable<typeof requests>[number];
 
@@ -50,7 +66,7 @@ export function OvertimeList({ canManage }: Props) {
       {
         key: "userId",
         header: "Employee",
-        cell: (req) => <span className="text-sm">{req.userId}</span>,
+        cell: (req) => <span className="text-sm">{getUserDisplayName(memberById.get(req.userId))}</span>,
       },
       {
         key: "date",
@@ -123,7 +139,7 @@ export function OvertimeList({ canManage }: Props) {
     }
 
     return cols;
-  }, [canManage, approve.isPending, reject.isPending]);
+  }, [canManage, approve.isPending, reject.isPending, memberById, handleApprove, handleReject]);
 
   return (
     <DataTable

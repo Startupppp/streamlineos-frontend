@@ -152,52 +152,52 @@ interface SubmitKbFeedbackInput {
   visitorId?: string;
 }
 
-export function useKbCategories(options?: { enabled?: boolean }) {
+export function useSupportKbCategories(options?: { enabled?: boolean }) {
   return useQuery({
-    queryKey: queryKeys.kb.categories(),
+    queryKey: queryKeys.supportKb.categories(),
     queryFn: () => apiClient.get<KbCategory[]>("/support/kb/categories"),
     staleTime: 60_000,
     enabled: options?.enabled ?? true,
   });
 }
 
-export function useCreateKbCategory() {
+export function useCreateSupportKbCategory() {
   const qc = useQueryClient();
   return useMutation({
-    mutationKey: ["kb", "categories", "create"],
+    mutationKey: ["supportKb", "categories", "create"],
     mutationFn: (input: CreateKbCategoryInput) =>
       apiClient.post<KbCategory>("/support/kb/categories", input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.kb.categories() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportKb.categories() }),
   });
 }
 
-export function useUpdateKbCategory() {
+export function useUpdateSupportKbCategory() {
   const qc = useQueryClient();
   return useMutation({
-    mutationKey: ["kb", "categories", "update"],
+    mutationKey: ["supportKb", "categories", "update"],
     mutationFn: ({ id, ...input }: UpdateKbCategoryInput & { id: number }) =>
       apiClient.patch<KbCategory>(`/support/kb/categories/${id}`, input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.kb.categories() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportKb.categories() }),
   });
 }
 
-export function useDeleteKbCategory() {
+export function useDeleteSupportKbCategory() {
   const qc = useQueryClient();
   return useMutation({
-    mutationKey: ["kb", "categories", "delete"],
+    mutationKey: ["supportKb", "categories", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/support/kb/categories/${id}`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.kb.categories() });
-      qc.invalidateQueries({ queryKey: [...queryKeys.kb.all, "articles"] });
+      qc.invalidateQueries({ queryKey: queryKeys.supportKb.categories() });
+      qc.invalidateQueries({ queryKey: [...queryKeys.supportKb.all, "articles"] });
     },
   });
 }
 
-export function useKbArticles(params?: KbArticlesParams, options?: { enabled?: boolean }) {
+export function useSupportKbArticles(params?: KbArticlesParams, options?: { enabled?: boolean }) {
   const queryParams: Record<string, unknown> = { ...params };
   return useQuery({
-    queryKey: queryKeys.kb.articles(queryParams),
+    queryKey: queryKeys.supportKb.articles(queryParams),
     queryFn: () => apiClient.get<KbArticleListItem[]>("/support/kb/articles", queryParams),
     staleTime: 30_000,
     enabled: options?.enabled ?? true,
@@ -205,60 +205,60 @@ export function useKbArticles(params?: KbArticlesParams, options?: { enabled?: b
   });
 }
 
-export function useKbArticle(id: number) {
+export function useSupportKbArticle(id: number) {
   return useQuery({
-    queryKey: queryKeys.kb.article(id),
+    queryKey: queryKeys.supportKb.article(id),
     queryFn: () => apiClient.get<KbArticleDetail>(`/support/kb/articles/${id}`),
     enabled: Number.isFinite(id) && id > 0,
     staleTime: 15_000,
   });
 }
 
-export function useKbArticleFeedback(id: number) {
+export function useSupportKbArticleFeedback(id: number) {
   return useQuery({
-    queryKey: [...queryKeys.kb.article(id), "feedback"] as const,
+    queryKey: [...queryKeys.supportKb.article(id), "feedback"] as const,
     queryFn: () => apiClient.get<KbArticleFeedbackItem[]>(`/support/kb/articles/${id}/feedback`),
     enabled: Number.isFinite(id) && id > 0,
     staleTime: 30_000,
   });
 }
 
-export function useCreateKbArticle() {
+export function useCreateSupportKbArticle() {
   const qc = useQueryClient();
   return useMutation({
-    mutationKey: ["kb", "articles", "create"],
+    mutationKey: ["supportKb", "articles", "create"],
     mutationFn: (input: CreateKbArticleInput) =>
       apiClient.post<KbArticleListItem>("/support/kb/articles", input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.kb.all, "articles"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.supportKb.all, "articles"] }),
   });
 }
 
-export function useUpdateKbArticle() {
+export function useUpdateSupportKbArticle() {
   const qc = useQueryClient();
   return useMutation({
-    mutationKey: ["kb", "articles", "update"],
+    mutationKey: ["supportKb", "articles", "update"],
     mutationFn: ({ id, ...input }: UpdateKbArticleInput & { id: number }) =>
       apiClient.patch<KbArticleListItem>(`/support/kb/articles/${id}`, input),
-    onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: [...queryKeys.kb.all, "articles"] });
-      qc.invalidateQueries({ queryKey: queryKeys.kb.article(variables.id) });
+    onSuccess: (_, variables) => {
+      qc.invalidateQueries({ queryKey: [...queryKeys.supportKb.all, "articles"] });
+      qc.invalidateQueries({ queryKey: queryKeys.supportKb.article(variables.id) });
     },
   });
 }
 
-export function useDeleteKbArticle() {
+export function useDeleteSupportKbArticle() {
   const qc = useQueryClient();
   return useMutation({
-    mutationKey: ["kb", "articles", "delete"],
+    mutationKey: ["supportKb", "articles", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/support/kb/articles/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.kb.all, "articles"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.supportKb.all, "articles"] }),
   });
 }
 
-export function usePublicKb(orgId: string, params?: PublicKbParams) {
+export function usePublicSupportKb(orgId: string, params?: PublicKbParams) {
   return useQuery({
-    queryKey: queryKeys.kb.publicArticles({ orgId, ...params }),
+    queryKey: queryKeys.supportKb.publicArticles({ orgId, ...params }),
     queryFn: () =>
       apiClient.get<PublicKbResponse>("/public/kb", { org: orgId, ...params }),
     enabled: Boolean(orgId),
@@ -267,9 +267,9 @@ export function usePublicKb(orgId: string, params?: PublicKbParams) {
   });
 }
 
-export function usePublicKbArticle(orgId: string, slug: string) {
+export function usePublicSupportKbArticle(orgId: string, slug: string) {
   return useQuery({
-    queryKey: queryKeys.kb.publicArticle(orgId, slug),
+    queryKey: queryKeys.supportKb.publicArticle(orgId, slug),
     queryFn: () =>
       apiClient.get<PublicKbArticle>(`/public/kb/${slug}`, { org: orgId }),
     enabled: Boolean(orgId) && Boolean(slug),
@@ -277,17 +277,17 @@ export function usePublicKbArticle(orgId: string, slug: string) {
   });
 }
 
-export function useSubmitKbFeedback() {
+export function useSubmitSupportKbFeedback() {
   const qc = useQueryClient();
   return useMutation({
-    mutationKey: ["kb", "feedback", "submit"],
+    mutationKey: ["supportKb", "feedback", "submit"],
     mutationFn: ({ orgId, slug, ...body }: SubmitKbFeedbackInput) =>
       apiClient.post<{ success: boolean }>(
         `/public/kb/${slug}/feedback?org=${encodeURIComponent(orgId)}`,
         body,
       ),
-    onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: queryKeys.kb.publicArticle(variables.orgId, variables.slug) });
+    onSuccess: (_, variables) => {
+      qc.invalidateQueries({ queryKey: queryKeys.supportKb.publicArticle(variables.orgId, variables.slug) });
     },
   });
 }

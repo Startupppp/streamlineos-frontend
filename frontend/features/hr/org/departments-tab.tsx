@@ -83,13 +83,11 @@ export function DepartmentsTab({ canManage }: Props) {
   return (
     <>
       <div className="flex items-center gap-2 mb-3">
-        <div className="min-w-0 flex-1 max-w-xs">
-          <SearchInput
-            value={search}
-            onValueChange={handleSearch}
-            placeholder="Search departments..."
-          />
-        </div>
+        <SearchInput
+          value={search}
+          onValueChange={handleSearch}
+          placeholder="Search departments..."
+        />
         {canManage && (
           <AnimatedIconButton
             size="sm"

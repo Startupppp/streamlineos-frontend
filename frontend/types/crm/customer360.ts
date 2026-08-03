@@ -7,8 +7,6 @@ export const CONTACT_ROLE_DEFAULTS = [
   "user",
 ] as const;
 
-export type ContactRoleKey = (typeof CONTACT_ROLE_DEFAULTS)[number];
-
 export interface ContactRole {
   id: string;
   orgId: string;

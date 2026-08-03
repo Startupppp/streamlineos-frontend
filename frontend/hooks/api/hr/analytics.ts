@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 export interface HrAnalyticsData {
   headcount: {
@@ -24,10 +25,12 @@ export interface HrAnalyticsData {
 }
 
 export function useHrAnalytics() {
+  const canAnalytics = useCan("hr:analytics:read");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "analytics"] as const,
     queryFn: () => apiClient.get<HrAnalyticsData>("/hr/analytics"),
     staleTime: 60_000,
+    enabled: canAnalytics,
   });
 }
 
@@ -40,6 +43,7 @@ export interface HrAttendanceAnalytics {
 }
 
 export function useHrAttendanceAnalytics(year: number, month: number) {
+  const canAnalytics = useCan("hr:analytics:read");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "analyticsAttendance", year, month] as const,
     queryFn: () =>
@@ -48,6 +52,7 @@ export function useHrAttendanceAnalytics(year: number, month: number) {
         month: String(month),
       }),
     staleTime: 60_000,
+    enabled: canAnalytics,
   });
 }
 
@@ -59,11 +64,13 @@ export interface HrAttritionAnalytics {
 }
 
 export function useHrAttritionAnalytics() {
+  const canAnalytics = useCan("hr:analytics:read");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "analyticsAttrition"] as const,
     queryFn: () =>
       apiClient.get<HrAttritionAnalytics>("/hr/analytics/attrition"),
     staleTime: 5 * 60_000,
+    enabled: canAnalytics,
   });
 }
 
@@ -79,6 +86,7 @@ export interface HrCommandCenterData {
 }
 
 export function useHrCommandCenter(departmentId?: number) {
+  const canAnalytics = useCan("hr:analytics:read");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "commandCenter", departmentId] as const,
     queryFn: () =>
@@ -87,6 +95,7 @@ export function useHrCommandCenter(departmentId?: number) {
         departmentId ? { departmentId: String(departmentId) } : undefined,
       ),
     staleTime: 5 * 60_000,
+    enabled: canAnalytics,
   });
 }
 
@@ -97,6 +106,7 @@ export interface HrAttritionPlusData {
 }
 
 export function useHrAttritionPlus(departmentId?: number) {
+  const canAnalytics = useCan("hr:analytics:read");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "attritionPlus", departmentId] as const,
     queryFn: () =>
@@ -105,6 +115,7 @@ export function useHrAttritionPlus(departmentId?: number) {
         departmentId ? { departmentId: String(departmentId) } : undefined,
       ),
     staleTime: 5 * 60_000,
+    enabled: canAnalytics,
   });
 }
 
@@ -154,6 +165,7 @@ function normalizeLeaveTrends(raw: RawLeaveTrendsResponse): HrLeaveTrendsData {
 }
 
 export function useHrLeaveTrends(departmentId?: number) {
+  const canAnalytics = useCan("hr:analytics:read");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "leaveTrends", departmentId] as const,
     queryFn: async () => {
@@ -164,6 +176,7 @@ export function useHrLeaveTrends(departmentId?: number) {
       return normalizeLeaveTrends(raw);
     },
     staleTime: 5 * 60_000,
+    enabled: canAnalytics,
   });
 }
 
@@ -172,11 +185,12 @@ export interface HrPayrollCostData {
 }
 
 export function useHrPayrollCost(options?: { enabled?: boolean }) {
+  const canAnalytics = useCan("hr:analytics:read");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "payrollCost"] as const,
     queryFn: () => apiClient.get<HrPayrollCostData>("/hr/analytics-plus/payroll-cost"),
     staleTime: 10 * 60_000,
-    enabled: options?.enabled ?? true,
+    enabled: canAnalytics && (options?.enabled ?? true),
   });
 }
 
@@ -185,10 +199,12 @@ export interface HrEngagementData {
 }
 
 export function useHrEngagement() {
+  const canAnalytics = useCan("hr:analytics:read");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "engagement"] as const,
     queryFn: () => apiClient.get<HrEngagementData>("/hr/analytics-plus/engagement"),
     staleTime: 5 * 60_000,
+    enabled: canAnalytics,
   });
 }
 
@@ -197,6 +213,7 @@ export interface HrPerformanceDistData {
 }
 
 export function useHrPerformanceDist(cycleId?: number) {
+  const canAnalytics = useCan("hr:analytics:read");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "performanceDist", cycleId] as const,
     queryFn: () =>
@@ -205,6 +222,7 @@ export function useHrPerformanceDist(cycleId?: number) {
         cycleId ? { cycleId: String(cycleId) } : undefined,
       ),
     staleTime: 10 * 60_000,
+    enabled: canAnalytics,
   });
 }
 
@@ -213,6 +231,7 @@ export interface HrComplianceGapsData {
 }
 
 export function useHrComplianceGaps(departmentId?: number) {
+  const canAnalytics = useCan("hr:analytics:read");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "complianceGaps", departmentId] as const,
     queryFn: () =>
@@ -221,6 +240,7 @@ export function useHrComplianceGaps(departmentId?: number) {
         departmentId ? { departmentId: String(departmentId) } : undefined,
       ),
     staleTime: 5 * 60_000,
+    enabled: canAnalytics,
   });
 }
 
@@ -232,6 +252,7 @@ export interface HrDrilldownData {
 }
 
 export function useHrDrilldown(metric: string, page: number, departmentId?: number) {
+  const canAnalytics = useCan("hr:analytics:read");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "drilldown", metric, page, departmentId] as const,
     queryFn: () =>
@@ -242,6 +263,6 @@ export function useHrDrilldown(metric: string, page: number, departmentId?: numb
         ...(departmentId ? { departmentId: String(departmentId) } : {}),
       }),
     staleTime: 60_000,
-    enabled: !!metric,
+    enabled: canAnalytics && !!metric,
   });
 }

@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { Undo2, Redo2 } from 'lucide-react';
 import { useEditorRef } from 'platejs/react';
 import { ToolbarButton } from './toolbar-button';

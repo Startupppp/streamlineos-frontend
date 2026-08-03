@@ -3,9 +3,17 @@ import { parseWizardDraft, type WizardData } from "./wizard-data-schema";
 
 const STEP_KEY = "org-setup-step";
 
-export function loadDraft(): WizardData {
+function draftKey(scopeId: string): string {
+  return `${DRAFT_KEY}--${scopeId}`;
+}
+
+function stepKey(scopeId: string): string {
+  return `${STEP_KEY}--${scopeId}`;
+}
+
+export function loadDraft(scopeId: string): WizardData {
   try {
-    const raw = localStorage.getItem(DRAFT_KEY);
+    const raw = localStorage.getItem(draftKey(scopeId));
     if (!raw) return { ...DEFAULT_DATA };
     return parseWizardDraft(JSON.parse(raw));
   } catch {
@@ -13,9 +21,9 @@ export function loadDraft(): WizardData {
   }
 }
 
-export function saveDraft(data: WizardData): void {
+export function saveDraft(data: WizardData, scopeId: string): void {
   try {
-    localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
+    localStorage.setItem(draftKey(scopeId), JSON.stringify(data));
   } catch {}
 }
 
@@ -38,9 +46,9 @@ export function clampStep(step: number, totalSteps: number): number {
   return Math.min(Math.max(Math.trunc(step), 1), totalSteps);
 }
 
-export function loadStep(): number {
+export function loadStep(scopeId: string): number {
   try {
-    const raw = localStorage.getItem(STEP_KEY);
+    const raw = localStorage.getItem(stepKey(scopeId));
     const n = raw ? parseInt(raw, 10) : 1;
     return Number.isFinite(n) && n >= 1 ? n : 1;
   } catch {
@@ -48,14 +56,16 @@ export function loadStep(): number {
   }
 }
 
-export function saveStep(step: number): void {
+export function saveStep(step: number, scopeId: string): void {
   try {
-    localStorage.setItem(STEP_KEY, String(step));
+    localStorage.setItem(stepKey(scopeId), String(step));
   } catch {}
 }
 
-export function clearAll(): void {
+export function clearAll(scopeId: string): void {
   try {
+    localStorage.removeItem(draftKey(scopeId));
+    localStorage.removeItem(stepKey(scopeId));
     localStorage.removeItem(DRAFT_KEY);
     localStorage.removeItem(STEP_KEY);
   } catch {}

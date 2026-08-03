@@ -1,24 +1,37 @@
 "use client";
 
+import { useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useShiftAssignments } from "@/hooks/api/hr/shifts";
+import { useOrgMembersByIds } from "@/hooks/api/organization";
+import { getUserDisplayName, type NamedUser } from "@/features/build/shared/resolve-user-name";
 
-interface Props {
-  canManage: boolean;
-}
-
-export function ShiftAssignmentsTab({ canManage: _canManage }: Props) {
+export function ShiftAssignmentsTab() {
   const { data: assignments, isLoading } = useShiftAssignments();
+
+  const userIds = useMemo(
+    () => [...new Set((assignments ?? []).map((a) => a.userId))],
+    [assignments],
+  );
+  const { data: membersData } = useOrgMembersByIds(userIds);
+
+  const memberById = useMemo(() => {
+    const map = new Map<string, NamedUser>();
+    for (const member of membersData?.data ?? []) {
+      map.set(member.userId, { name: member.name, email: member.email });
+    }
+    return map;
+  }, [membersData]);
 
   type Assignment = NonNullable<typeof assignments>[number];
 
   const columns: DataTableColumn<Assignment>[] = [
     {
       key: "userId",
-      header: "Employee ID",
-      cell: (a) => <span className="text-sm font-medium">{a.userId}</span>,
+      header: "Employee",
+      cell: (a) => <span className="text-sm font-medium">{getUserDisplayName(memberById.get(a.userId))}</span>,
     },
     {
       key: "shiftId",

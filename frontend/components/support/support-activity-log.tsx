@@ -22,7 +22,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyActivityIllustration } from "@/components/illustrations";
 import { resolveImageUrl } from "@/lib/utils";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { getInitials } from "@/lib/format-utils";
 import {
   useSupportActivity,
@@ -67,7 +67,7 @@ export function SupportActivityLog({ supportTicketId }: SupportActivityLogProps)
       <ErrorState
         compact
         title="Couldn't load activity"
-        description={getApiError(activityQuery.error)}
+        description={getErrorMessage(activityQuery.error)}
         onRetry={() => activityQuery.refetch()}
       />
     );

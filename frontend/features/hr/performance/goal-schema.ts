@@ -72,6 +72,4 @@ export function buildGoalSchema(options?: {
     });
 }
 
-export const goalSchema = buildGoalSchema();
-
 export type GoalFormValues = z.infer<ReturnType<typeof buildGoalSchema>>;

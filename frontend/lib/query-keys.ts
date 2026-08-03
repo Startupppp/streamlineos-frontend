@@ -36,11 +36,11 @@ export const queryKeys = {
     holidaysCalendar: (params: { year: number; month: number }) =>
       [...base, "hr", "holidaysCalendar", params] as const,
     monthlyAttendance: (params: {
-      userId: string;
+      userId?: string;
       year: number;
       month: number;
     }) => [...base, "hr", "monthlyAttendance", params] as const,
-    attendanceHeatmap: (params: { userId: string; year: number }) =>
+    attendanceHeatmap: (params: { year: number }) =>
       [...base, "hr", "attendanceHeatmap", params] as const,
     employeeStats: (userId: string) =>
       [...base, "hr", "employeeStats", userId] as const,
@@ -205,6 +205,52 @@ export const queryKeys = {
       [...base, "hr", "global", "contracts", params] as const,
     contract: (id: number) =>
       [...base, "hr", "global", "contract", id] as const,
+    announcements: () => [...base, "hr", "announcements"] as const,
+    announcementsAll: () => [...base, "hr", "announcements", "all"] as const,
+    compOff: () => [...base, "hr", "comp-off"] as const,
+    complianceCalendar: (year: number, month: number) =>
+      [...base, "hr", "compliance", "calendar", year, month] as const,
+    travelAll: [...base, "hr", "travel"] as const,
+    travelMine: () => [...base, "hr", "travel", "mine"] as const,
+    travelApprovals: () => [...base, "hr", "travel", "approvals"] as const,
+    leavePolicies: () => [...base, "hr", "leave-policies"] as const,
+    leavePolicy: () => [...base, "hr", "leave-policy"] as const,
+    requisitions: (status?: string) =>
+      [...base, "hr", "requisitions", status] as const,
+    salaryStructureTemplates: () =>
+      [...base, "hr", "salary-structure-templates"] as const,
+    settingsHubRules: (params: Record<string, unknown> | null) =>
+      [...base, "hr", "settings-hub", "effective-rules", params] as const,
+    settingsHubVersionsAll: [...base, "hr", "settings-hub", "versions"] as const,
+    settingsHubVersions: (entity: string, id: number | null) =>
+      [...base, "hr", "settings-hub", "versions", entity, id] as const,
+    holidays: () => [...base, "hr", "holidays"] as const,
+    importJobs: (entity?: string) =>
+      [...base, "hr", "import", "jobs", entity ?? "all"] as const,
+    importJob: (jobId: string) =>
+      [...base, "hr", "import", "jobs", jobId] as const,
+    hrCalendar: (from: string, to: string, types?: string) =>
+      [...base, "hr", "calendar", from, to, types] as const,
+    benefitsAll: [...base, "hr", "benefits"] as const,
+    benefitPlans: (params?: Record<string, unknown>) =>
+      [...base, "hr", "benefits", "plans", params] as const,
+    benefitPlan: (id: number) => [...base, "hr", "benefits", "plans", id] as const,
+    benefitWindows: [...base, "hr", "benefits", "windows"] as const,
+    benefitMy: [...base, "hr", "benefits", "my"] as const,
+    benefitDependents: [...base, "hr", "benefits", "dependents"] as const,
+    benefitClaims: (params?: Record<string, unknown>) =>
+      [...base, "hr", "benefits", "claims", params] as const,
+    benefitAvailable: () =>
+      [...base, "hr", "benefits", "plans", "available"] as const,
+    travelVisitLogs: (travelRequestId: number) =>
+      [...base, "hr", "travel-visits", travelRequestId] as const,
+    internshipCertificate: (contractId: number) =>
+      [...base, "hr", "global", "contracts", contractId, "certificate"] as const,
+    hrPoliciesAll: [...base, "hr", "policies"] as const,
+    hrPoliciesList: (params?: Record<string, unknown>) =>
+      [...base, "hr", "policies", "list", params] as const,
+    hrPolicyDetail: (id: number) =>
+      [...base, "hr", "policies", "detail", id] as const,
   },
 
   leads: {
@@ -287,19 +333,33 @@ export const queryKeys = {
       [...base, "projects", "list", filters] as const,
     detail: (id: number) => [...base, "projects", "detail", id] as const,
     sprints: (projectId?: number) =>
-      [...base, "projects", "sprints", projectId] as const,
+      projectId === undefined
+        ? ([...base, "projects", "sprints"] as const)
+        : ([...base, "projects", "sprints", projectId] as const),
     sprint: (id: number) =>
       [...base, "projects", "sprints", "detail", id] as const,
     tickets: (params?: Record<string, unknown>) =>
       [...base, "projects", "tickets", params] as const,
     ticket: (id: number) =>
       [...base, "projects", "tickets", "detail", id] as const,
+    ticketRelations: (ticketId: number) =>
+      [...base, "projects", "tickets", "detail", ticketId, "relations"] as const,
+    subtasks: (ticketId: number) =>
+      [...base, "projects", "subtasks", { ticketId }] as const,
+    ticketSearch: (q: string) =>
+      [...base, "projects", "search", "tickets", q] as const,
     members: (projectId?: number) =>
-      [...base, "projects", "members", projectId] as const,
+      projectId === undefined
+        ? ([...base, "projects", "members"] as const)
+        : ([...base, "projects", "members", projectId] as const),
     labels: (projectId?: number) =>
-      [...base, "projects", "labels", projectId] as const,
+      projectId === undefined
+        ? ([...base, "projects", "labels"] as const)
+        : ([...base, "projects", "labels", projectId] as const),
     timeEntries: (params?: Record<string, unknown>) =>
-      [...base, "projects", "timeEntries", params] as const,
+      params === undefined
+        ? ([...base, "projects", "timeEntries"] as const)
+        : ([...base, "projects", "timeEntries", params] as const),
     epics: (projectId: number) =>
       [...base, "projects", "epics", projectId] as const,
     cycles: (projectId: number) =>
@@ -327,19 +387,25 @@ export const queryKeys = {
       case: (projectId?: number, id?: number) =>
         [...base, "projects", projectId, "qa", "cases", id] as const,
       runs: (projectId?: number, status?: string) =>
-        [...base, "projects", projectId, "qa", "runs", status] as const,
+        status === undefined
+          ? ([...base, "projects", projectId, "qa", "runs"] as const)
+          : ([...base, "projects", projectId, "qa", "runs", status] as const),
       run: (projectId?: number, runId?: number) =>
         [...base, "projects", projectId, "qa", "runs", runId] as const,
     },
     bugs: {
       list: (projectId?: number, params?: Record<string, unknown>) =>
-        [...base, "projects", projectId, "bugs", params] as const,
+        params === undefined
+          ? ([...base, "projects", projectId, "bugs"] as const)
+          : ([...base, "projects", projectId, "bugs", params] as const),
       detail: (projectId?: number, bugId?: number) =>
         [...base, "projects", projectId, "bugs", bugId] as const,
     },
     changeRequests: {
       list: (projectId: number, params?: Record<string, unknown>) =>
-        [...base, "projects", projectId, "change-requests", params] as const,
+        params === undefined
+          ? ([...base, "projects", projectId, "change-requests"] as const)
+          : ([...base, "projects", projectId, "change-requests", params] as const),
       detail: (projectId: number, crId: number) =>
         [...base, "projects", projectId, "change-requests", crId] as const,
     },
@@ -355,19 +421,25 @@ export const queryKeys = {
     approvals: {
       inbox: () => [...base, "projects", "approvals", "inbox"] as const,
       list: (projectId: number, params?: Record<string, unknown>) =>
-        [...base, "projects", projectId, "approvals", params] as const,
+        params === undefined
+          ? ([...base, "projects", projectId, "approvals"] as const)
+          : ([...base, "projects", projectId, "approvals", params] as const),
       detail: (projectId: number, id: number) =>
         [...base, "projects", projectId, "approvals", id] as const,
     },
     risks: {
       list: (projectId: number, params?: Record<string, unknown>) =>
-        [...base, "projects", projectId, "risks", params] as const,
+        params === undefined
+          ? ([...base, "projects", projectId, "risks"] as const)
+          : ([...base, "projects", projectId, "risks", params] as const),
       detail: (projectId: number, id: number) =>
         [...base, "projects", projectId, "risks", id] as const,
     },
     decisions: {
       list: (projectId: number, params?: Record<string, unknown>) =>
-        [...base, "projects", projectId, "decisions", params] as const,
+        params === undefined
+          ? ([...base, "projects", projectId, "decisions"] as const)
+          : ([...base, "projects", projectId, "decisions", params] as const),
       detail: (projectId: number, id: number) =>
         [...base, "projects", projectId, "decisions", id] as const,
     },
@@ -390,13 +462,17 @@ export const queryKeys = {
     },
     incidents: {
       list: (projectId?: number, params?: Record<string, unknown>) =>
-        [...base, "projects", projectId, "incidents", params] as const,
+        params === undefined
+          ? ([...base, "projects", projectId, "incidents"] as const)
+          : ([...base, "projects", projectId, "incidents", params] as const),
       detail: (projectId?: number, id?: number) =>
         [...base, "projects", projectId, "incidents", id] as const,
     },
     forms: {
       list: (projectId: number, params?: Record<string, unknown>) =>
-        [...base, "projects", projectId, "forms", params] as const,
+        params === undefined
+          ? ([...base, "projects", projectId, "forms"] as const)
+          : ([...base, "projects", projectId, "forms", params] as const),
       detail: (projectId: number, formId: number) =>
         [...base, "projects", projectId, "forms", formId] as const,
       submissions: (projectId: number, formId: number) =>
@@ -415,17 +491,58 @@ export const queryKeys = {
       detail: (id: number) =>
         [...base, "projects", "portfolios", "detail", id] as const,
     },
+    programs: {
+      list: (params?: Record<string, unknown>) =>
+        [...base, "projects", "programs", "list", params] as const,
+      detail: (id: number) =>
+        [...base, "projects", "programs", "detail", id] as const,
+    },
+    managedProducts: {
+      list: (params?: Record<string, unknown>) =>
+        [...base, "projects", "managed-products", "list", params] as const,
+      detail: (id: number) =>
+        [...base, "projects", "managed-products", "detail", id] as const,
+    },
+    pmWorkspaces: {
+      list: (params?: Record<string, unknown>) =>
+        [...base, "projects", "pm-workspaces", "list", params] as const,
+      detail: (id: string) =>
+        [...base, "projects", "pm-workspaces", "detail", id] as const,
+      members: (id: string, params?: Record<string, unknown>) =>
+        [...base, "projects", "pm-workspaces", "members", id, params] as const,
+    },
     workflow: {
       transitions: (projectId: number) =>
         [...base, "projects", projectId, "workflow", "transitions"] as const,
     },
     allWork: (filters?: Record<string, unknown>) =>
       [...base, "projects", "all-work", filters] as const,
+    allWorkInfinite: (filters: Record<string, unknown>) =>
+      [...base, "projects", "all-work", filters, "infinite"] as const,
+    webhooks: (projectId: number) =>
+      [...base, "projects", projectId, "webhooks"] as const,
+    webhookDeliveries: (projectId: number, webhookId: number) =>
+      [...base, "projects", projectId, "webhooks", webhookId, "deliveries"] as const,
     workspaceViews: () => [...base, "projects", "workspace-views"] as const,
     agentTokens: () => [...base, "projects", "agent-tokens"] as const,
     commentDrafts: {
       mine: () => [...base, "projects", "comment-drafts", "mine"] as const,
     },
+    commentPermalinkWithComment: (
+      projectId: number,
+      ticketId: number,
+      commentId: string,
+    ) =>
+      [
+        ...base,
+        "projects",
+        "comment-permalink",
+        projectId,
+        ticketId,
+        commentId,
+      ] as const,
+    commentPermalinkTicket: (projectId: number, ticketId: number) =>
+      [...base, "projects", "comment-permalink", projectId, ticketId] as const,
   },
 
   chat: {
@@ -479,8 +596,7 @@ export const queryKeys = {
       [...base, "dashboard", "recentProjects", orgId] as const,
     teamAvailability: (orgId: string) =>
       [...base, "dashboard", "teamAvailability", orgId] as const,
-    myIssues: (userId: string) =>
-      [...base, "dashboard", "myIssues", userId] as const,
+    myIssues: () => [...base, "dashboard", "myIssues"] as const,
     activeSprintSummary: (orgId: string) =>
       [...base, "dashboard", "activeSprintSummary", orgId] as const,
     recentActivity: (orgId: string) =>
@@ -544,7 +660,6 @@ export const queryKeys = {
   organization: {
     all: [...base, "organization"] as const,
     members: () => [...base, "organization", "members"] as const,
-    invitations: () => [...base, "organization", "invitations"] as const,
     settings: () => [...base, "organization", "settings"] as const,
   },
 
@@ -608,6 +723,7 @@ export const queryKeys = {
   roles: {
     all: [...base, "roles"] as const,
     list: () => [...base, "roles", "list"] as const,
+    permissionCatalog: () => [...base, "roles", "permission-catalog"] as const,
     detail: (id: number) => [...base, "roles", "detail", id] as const,
     permissions: (roleId: number) =>
       [...base, "roles", "permissions", roleId] as const,
@@ -789,6 +905,7 @@ export const queryKeys = {
       [...base, "accounting", "cashFlow", params] as const,
     coaTemplates: () => [...base, "accounting", "coaTemplates"] as const,
     setupProgress: () => [...base, "accounting", "setupProgress"] as const,
+    apAll: [...base, "accounting", "ap"] as const,
   },
 
   recurringInvoices: {
@@ -811,9 +928,13 @@ export const queryKeys = {
     velocity: (projectId: number) =>
       [...base, "projectReports", "velocity", projectId] as const,
     burnup: (projectId: number, sprintId?: number) =>
-      [...base, "projectReports", "burnup", projectId, sprintId] as const,
+      sprintId === undefined
+        ? ([...base, "projectReports", "burnup", projectId] as const)
+        : ([...base, "projectReports", "burnup", projectId, sprintId] as const),
     cfd: (projectId: number, params?: Record<string, unknown>) =>
-      [...base, "projectReports", "cfd", projectId, params] as const,
+      params === undefined
+        ? ([...base, "projectReports", "cfd", projectId] as const)
+        : ([...base, "projectReports", "cfd", projectId, params] as const),
     criticalPath: (projectId: number) =>
       [...base, "projectReports", "criticalPath", projectId] as const,
     cycleTime: (projectId: number) =>
@@ -869,11 +990,29 @@ export const queryKeys = {
       [...base, "playbook", "list", params] as const,
   },
 
+  supportKb: {
+    all: [...base, "supportKb"] as const,
+    categories: () => [...base, "supportKb", "categories"] as const,
+    articles: (params?: Record<string, unknown>) =>
+      params === undefined
+        ? ([...base, "supportKb", "articles"] as const)
+        : ([...base, "supportKb", "articles", params] as const),
+    article: (articleId: number) =>
+      [...base, "supportKb", "article", articleId] as const,
+    publicArticles: (params?: Record<string, unknown>) =>
+      params === undefined
+        ? ([...base, "supportKb", "publicArticles"] as const)
+        : ([...base, "supportKb", "publicArticles", params] as const),
+    publicArticle: (orgId: string, slug: string) =>
+      [...base, "supportKb", "publicArticle", orgId, slug] as const,
+  },
+
   kb: {
     all: [...base, "kb"] as const,
     kbPages: () => [...base, "kb", "pages"] as const,
     pagesTree: () => [...base, "kb", "pages", "tree"] as const,
-    pagesTreeByProject: (projectId: number) => [...base, "kb", "pages", "tree", "project", projectId] as const,
+    pagesTreeByProject: (projectId: number) =>
+      [...base, "kb", "pages", "tree", "project", projectId] as const,
     pagesRecent: () => [...base, "kb", "pages", "recent"] as const,
     pagesFavorites: () => [...base, "kb", "pages", "favorites"] as const,
     pagesTrash: () => [...base, "kb", "pages", "trash"] as const,
@@ -890,28 +1029,10 @@ export const queryKeys = {
     pageTemplates: () => [...base, "kb", "page-templates"] as const,
     spaces: () => [...base, "kb", "spaces"] as const,
     space: (spaceId: number) => [...base, "kb", "space", spaceId] as const,
-    spaceCategories: (spaceId: number) =>
-      [...base, "kb", "spaceCategories", spaceId] as const,
-    spaceMembers: (spaceId: number) =>
-      [...base, "kb", "spaceMembers", spaceId] as const,
-    categories: () => [...base, "kb", "categories"] as const,
-    articles: (params?: Record<string, unknown>) =>
-      params === undefined
-        ? ([...base, "kb", "articles"] as const)
-        : ([...base, "kb", "articles", params] as const),
-    article: (articleId: number) =>
-      [...base, "kb", "article", articleId] as const,
-    publicArticles: (params?: Record<string, unknown>) =>
-      params === undefined
-        ? ([...base, "kb", "publicArticles"] as const)
-        : ([...base, "kb", "publicArticles", params] as const),
-    publicArticle: (orgId: string, slug: string) =>
-      [...base, "kb", "publicArticle", orgId, slug] as const,
     search: (params?: Record<string, unknown>) =>
       params === undefined
         ? ([...base, "kb", "search"] as const)
         : ([...base, "kb", "search", params] as const),
-    ask: () => [...base, "kb", "ask"] as const,
     chatHistory: () => [...base, "kb", "chatHistory"] as const,
     chatConversations: () => [...base, "kb", "chatConversations"] as const,
     chatConversationMessages: (conversationId: number) =>
@@ -924,18 +1045,6 @@ export const queryKeys = {
       range === undefined
         ? ([...base, "kb", "noResults"] as const)
         : ([...base, "kb", "noResults", range] as const),
-    verificationQueue: () => [...base, "kb", "verificationQueue"] as const,
-    versions: (articleId: number) =>
-      [...base, "kb", "versions", articleId] as const,
-    tags: () => [...base, "kb", "tags"] as const,
-    articleTags: (articleId: number) =>
-      [...base, "kb", "articleTags", articleId] as const,
-    translations: (articleId: number) =>
-      [...base, "kb", "translations", articleId] as const,
-    translation: (articleId: number, locale: string) =>
-      [...base, "kb", "translation", articleId, locale] as const,
-    comments: (articleId: number) =>
-      [...base, "kb", "comments", articleId] as const,
     pageReviews: (params?: Record<string, unknown>) =>
       params === undefined
         ? ([...base, "kb", "pageReviews"] as const)
@@ -967,6 +1076,7 @@ export const queryKeys = {
     researchBrief: (id: number) =>
       [...base, "kb", "research-brief", id] as const,
     settings: () => [...base, "kb", "settings"] as const,
+    sources: () => [...base, "kb", "sources"] as const,
   },
 
   roadmap: {
@@ -1307,9 +1417,9 @@ export const queryKeys = {
     dashboard: () => [...base, "inventory", "dashboard"] as const,
     stockSummary: (params?: object) =>
       [...base, "inventory", "stockSummary", params] as const,
-    reorderReport: (params?: Record<string, unknown>) =>
+    reorderReport: (params?: object) =>
       [...base, "inventory", "reorderReport", params] as const,
-    movementsReport: (params?: Record<string, unknown>) =>
+    movementsReport: (params?: object) =>
       [...base, "inventory", "movementsReport", params] as const,
     lots: (params?: Record<string, unknown>) =>
       [...base, "inventory", "lots", params] as const,
@@ -1349,6 +1459,14 @@ export const queryKeys = {
       [...base, "inventory", "forecasting", params] as const,
     valuationReport: (params?: Record<string, unknown>) =>
       [...base, "inventory", "valuationReport", params] as const,
+    valuationLayers: (variantId: number, page?: number) =>
+      [...base, "inventory", "valuationLayers", variantId, page] as const,
+    costingProducts: (params?: Record<string, unknown>) =>
+      [...base, "inventory", "costingProducts", params] as const,
+    slowMovingReport: (params?: object) =>
+      [...base, "inventory", "slowMovingReport", params] as const,
+    expiryReport: (params?: object) =>
+      [...base, "inventory", "expiryReport", params] as const,
     qualityInspections: (params?: Record<string, unknown>) =>
       [...base, "inventory", "qualityInspections", params] as const,
     qualityInspection: (id: number) =>
@@ -1466,6 +1584,7 @@ export const queryKeys = {
   timesheets: {
     all: [...base, "timesheets"] as const,
     payroll: {
+      all: [...base, "timesheets", "payroll"] as const,
       summary: (params: Record<string, unknown>) =>
         [...base, "timesheets", "payroll", "summary", params] as const,
       exports: (page: number, pageSize: number) =>
@@ -1497,6 +1616,8 @@ export const queryKeys = {
       [...base, "timesheets", "billing", "rate-preview", params] as const,
     reportsOverview: (params?: Record<string, unknown>) =>
       [...base, "timesheets", "reports", "overview", params] as const,
+    teamWeekSummary: (params: Record<string, unknown>) =>
+      [...base, "timesheets", "team", "week-summary", params] as const,
     report: (tab: string, params?: Record<string, unknown>) =>
       [...base, "timesheets", "reports", tab, params] as const,
     exceptions: (params?: Record<string, unknown>) =>
@@ -1561,8 +1682,12 @@ export const queryKeys = {
     taxWindows: () => [...base, "payroll", "tax-windows"] as const,
     taxDeclarations: (params?: Record<string, unknown>) =>
       [...base, "payroll", "tax-declarations", params] as const,
-    fnf: (params?: Record<string, unknown>) =>
-      [...base, "payroll", "fnf", params] as const,
+    fnfAll: [...base, "payroll", "fnf"] as const,
+    fnfList: () => [...base, "payroll", "fnf", "list"] as const,
+    fnfSettlement: (settlementId: number) =>
+      [...base, "payroll", "fnf", settlementId] as const,
+    fnfStatement: (settlementId: number) =>
+      [...base, "payroll", "fnf", settlementId, "statement"] as const,
     loanAdjustments: () => [...base, "payroll", "loan-adjustments"] as const,
     commandCenterAll: [...base, "payroll", "command-center"] as const,
     commandCenter: (month: string) =>
@@ -1589,6 +1714,39 @@ export const queryKeys = {
       [...base, "payroll", "run-inputs", runId] as const,
     runInputs: (runId: number, params?: Record<string, unknown>) =>
       [...base, "payroll", "run-inputs", runId, "list", params] as const,
+    calendarAll: [...base, "payroll", "calendar"] as const,
+    taxDeclarationsAll: [...base, "payroll", "tax-declarations"] as const,
+    entitiesAll: [...base, "payroll", "entities"] as const,
+    entityCountryPacks: () =>
+      [...base, "payroll", "entities", "country-packs"] as const,
+    entityContext: (entityId: number) =>
+      [...base, "payroll", "entities", entityId, "context"] as const,
+    filingsAll: [...base, "payroll", "filings"] as const,
+    filingCapabilities: () =>
+      [...base, "payroll", "filings", "capabilities"] as const,
+    loansAdmin: () => [...base, "payroll", "loans-admin"] as const,
+    bonuses: () => [...base, "payroll", "bonuses"] as const,
+    incentivesAll: [...base, "payroll", "incentives"] as const,
+    incentives: (params?: Record<string, unknown>) =>
+      [...base, "payroll", "incentives", "list", params] as const,
+    essAll: [...base, "payroll", "ess"] as const,
+    essOverview: () => [...base, "payroll", "ess", "overview"] as const,
+    essPayslips: () => [...base, "payroll", "ess", "payslips"] as const,
+    essSalaryStructure: () =>
+      [...base, "payroll", "ess", "salary-structure"] as const,
+    essReimbursements: () =>
+      [...base, "payroll", "ess", "reimbursements"] as const,
+    essLoans: () => [...base, "payroll", "ess", "loans"] as const,
+    essTaxDeclaration: () =>
+      [...base, "payroll", "ess", "tax-declaration"] as const,
+    essBank: () => [...base, "payroll", "ess", "bank"] as const,
+    essFnf: () => [...base, "payroll", "ess", "fnf"] as const,
+    essTotalRewards: () =>
+      [...base, "payroll", "ess", "total-rewards"] as const,
+    managerInbox: () => [...base, "payroll", "manager", "inbox"] as const,
+    teamRewards: () => [...base, "payroll", "manager", "team-rewards"] as const,
+    orgPayCompression: () =>
+      [...base, "payroll", "analytics", "pay-compression"] as const,
   },
 
   hrPayrollInputs: {
@@ -1640,6 +1798,8 @@ export const queryKeys = {
       [...base, "crmMetadata", "validationRules", params] as const,
     blueprints: (params?: Record<string, unknown>) =>
       [...base, "crmMetadata", "blueprints", params] as const,
+    blueprintTransitions: (blueprintId: string | null) =>
+      [...base, "crmMetadata", "blueprints", blueprintId, "transitions"] as const,
   },
 
   crmCampaigns: {
@@ -1724,18 +1884,21 @@ export const queryKeys = {
     aiCredits: () => [...base, "billing", "ai-credits"] as const,
     aiCreditTransactions: (params: Record<string, unknown>) =>
       [...base, "billing", "ai-credits", "transactions", params] as const,
+    aiCreditsUsage: (days: number) =>
+      [...base, "billing", "ai-credits", "usage", { days }] as const,
     entitlements: () => [...base, "billing", "entitlements"] as const,
+    subscription: () => [...base, "billing", "subscription"] as const,
+    summary: () => [...base, "billing", "summary"] as const,
+    plans: () => [...base, "billing", "plans"] as const,
+    coupon: (code: string, plan: string | null) =>
+      [...base, "billing", "coupon", code, plan] as const,
+    profile: () => [...base, "billing", "profile"] as const,
+    seats: () => [...base, "billing", "seats"] as const,
   },
 
   crmDataQuality: {
     all: [...base, "crm", "data-quality"] as const,
     report: () => [...base, "crm", "data-quality", "report"] as const,
-  },
-
-  workspaceSearch: {
-    all: [...base, "workspace-search"] as const,
-    search: (q: string, types?: string[]) =>
-      [...base, "workspace-search", "search", q, types] as const,
   },
 
   aiSummaries: {
@@ -1762,5 +1925,100 @@ export const queryKeys = {
       [...base, "mail", "thread", accountId, threadId] as const,
     message: (accountId: number, messageId: string) =>
       [...base, "mail", "message", accountId, messageId] as const,
+  },
+
+  directory: {
+    all: [...base, "directory"] as const,
+    people: (params?: Record<string, unknown>) =>
+      [...base, "directory", "people", params] as const,
+    person: (organizationPersonId: string) =>
+      [...base, "directory", "people", organizationPersonId] as const,
+    workers: (params?: Record<string, unknown>) =>
+      [...base, "directory", "workers", params] as const,
+    worker: (workerId: string) =>
+      [...base, "directory", "workers", workerId] as const,
+    engagements: (workerId: string) =>
+      [...base, "directory", "workers", workerId, "engagements"] as const,
+  },
+
+  party: {
+    all: [...base, "party"] as const,
+    parties: (params?: Record<string, unknown>) =>
+      [...base, "party", "parties", params] as const,
+    party: (partyId: string) => [...base, "party", "parties", partyId] as const,
+    contacts: (partyId: string) =>
+      [...base, "party", "parties", partyId, "contacts"] as const,
+  },
+
+  portalAccess: {
+    all: [...base, "portalAccess"] as const,
+    memberships: (params?: Record<string, unknown>) =>
+      [...base, "portalAccess", "memberships", params] as const,
+    membership: (portalMembershipId: string) =>
+      [...base, "portalAccess", "memberships", portalMembershipId] as const,
+    grants: (params?: Record<string, unknown>) =>
+      [...base, "portalAccess", "grants", params] as const,
+    grant: (projectClientGrantId: string) =>
+      [...base, "portalAccess", "grants", projectClientGrantId] as const,
+  },
+
+  moduleAccess: {
+    all: [...base, "moduleAccess"] as const,
+    catalog: (moduleKey: string) =>
+      [...base, "moduleAccess", moduleKey, "catalog"] as const,
+    roles: (moduleKey: string) =>
+      [...base, "moduleAccess", moduleKey, "roles"] as const,
+    roleGroups: (moduleKey: string) =>
+      [...base, "moduleAccess", moduleKey, "groups"] as const,
+    groupMembers: (moduleKey: string, groupId: number) =>
+      [...base, "moduleAccess", moduleKey, "groups", groupId, "members"] as const,
+    memberCandidates: (moduleKey: string) =>
+      [...base, "moduleAccess", moduleKey, "member-candidates"] as const,
+    ownership: (moduleKey: string) =>
+      [...base, "moduleAccess", moduleKey, "ownership"] as const,
+    members: (
+      moduleKey: string,
+      params: { page: number; pageSize: number; userId?: string },
+    ) => [...base, "moduleAccess", moduleKey, "members", params] as const,
+    auditLog: (moduleKey: string, params: { page: number; pageSize: number }) =>
+      [...base, "moduleAccess", moduleKey, "audit-log", params] as const,
+    myPermissions: (moduleKey: string) =>
+      [...base, "moduleAccess", moduleKey, "me", "permissions"] as const,
+  },
+
+  portal: {
+    all: [...base, "portal"] as const,
+    projects: () => [...base, "portal", "projects"] as const,
+    projectOverview: (projectId: number) =>
+      [...base, "portal", "projects", projectId, "overview"] as const,
+  },
+
+  hrSimulations: {
+    all: [...base, "hr-simulations"] as const,
+    history: (params: Record<string, unknown>) =>
+      [...base, "hr-simulations", "history", params] as const,
+    compare: (params: Record<string, unknown> | null) =>
+      [...base, "hr-simulations", "compare", params] as const,
+  },
+
+  hrSafety: {
+    all: [...base, "hr-safety"] as const,
+    incidents: (params: Record<string, unknown>) =>
+      [...base, "hr-safety", "incidents", params] as const,
+    incident: (id: number) => [...base, "hr-safety", "incident", id] as const,
+    wellnessAll: [...base, "hr-safety", "wellness"] as const,
+    wellnessPulse: [...base, "hr-safety", "wellness", "pulse"] as const,
+    myCheckins: (fromDate?: string, toDate?: string) =>
+      [...base, "hr-safety", "wellness", "my", fromDate, toDate] as const,
+    wellnessTrend: (fromDate?: string, toDate?: string) =>
+      [...base, "hr-safety", "wellness", "trend", fromDate, toDate] as const,
+    burnout: [...base, "hr-safety", "wellness", "burnout"] as const,
+  },
+
+  ownership: {
+    all: [...base, "ownership"] as const,
+    orgTransfers: () => [...base, "ownership", "org", "transfers"] as const,
+    incomingTransfers: () =>
+      [...base, "ownership", "transfers", "incoming"] as const,
   },
 } as const;

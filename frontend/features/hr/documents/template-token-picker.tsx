@@ -98,9 +98,7 @@ export function TemplateTokenPicker({
         </div>
       </CardHeader>
       <CardContent className="p-4 space-y-3">
-        <div className="min-w-0">
-          <SearchInput placeholder="Search tokens..." value={search} onValueChange={handleSearchChange} />
-        </div>
+        <SearchInput placeholder="Search tokens..." value={search} onValueChange={handleSearchChange} />
 
         <div className="flex flex-wrap gap-1.5">
           {filteredTokens.length > 0 ? (

@@ -1,4 +1,5 @@
 import type { CandidateStatus, SlaCandidateStatus } from "@/types/hr";
+export { getInitials } from "@/lib/format-utils";
 
 export interface ColumnConfig {
   id: CandidateStatus;
@@ -91,21 +92,6 @@ export const SLA_CONFIG: Record<SlaCandidateStatus, { dot: string; label: string
     title: "SLA: Breached",
   },
 };
-
-export const SLA_EMOJI: Record<SlaCandidateStatus, string> = {
-  ON_TRACK: "🟢",
-  AT_RISK: "🟡",
-  BREACHED: "🔴",
-};
-
-export function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .map((n) => n[0] ?? "")
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-}
 
 export function formatDate(val: Date | string | null): string {
   if (!val) return "—";

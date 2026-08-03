@@ -13,7 +13,8 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { apiClient, getApiError } from "@/lib/api-client";
+import { apiClient } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 type Props = { params: Promise<{ token: string }> };
 
@@ -52,7 +53,7 @@ export default function OfferAcceptancePage({ params }: Props) {
       const data = await apiClient.get<Offer>(`/public/offer/${token}`);
       setOffer(data);
     } catch (e) {
-      setError(getApiError(e) || "Offer not found");
+      setError(getErrorMessage(e) || "Offer not found");
     } finally {
       setLoading(false);
     }
@@ -75,7 +76,7 @@ export default function OfferAcceptancePage({ params }: Props) {
       setDeclineOpen(false);
       setCounterOpen(false);
     } catch (e) {
-      toast.error(getApiError(e) || "Unable to respond to this offer. Try again.");
+      toast.error(getErrorMessage(e) || "Unable to respond to this offer. Try again.");
     } finally {
       setResponding(false);
     }

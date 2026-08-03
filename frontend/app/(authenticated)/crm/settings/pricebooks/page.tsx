@@ -317,9 +317,7 @@ export default function PricebooksPage() {
         }
         filters={
           <div className={FILTER_TOOLBAR_ROW}>
-            <div className="min-w-0 flex-1 lg:max-w-sm">
-              <SearchInput placeholder="Search pricebooks..." value={search} onValueChange={handleSearchChange} />
-            </div>
+            <SearchInput placeholder="Search pricebooks..." value={search} onValueChange={handleSearchChange} />
           </div>
         }
       >

@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseMutationOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   AttendanceStatusResult,
   AttendanceLog,
@@ -11,7 +12,6 @@ import type {
   GetMonthlyAttendanceInput,
   WorkLog,
   UpsertWorkLogInput,
-  UpdateWorkLogStatusInput,
   GetWorkLogsInput,
   TeamAttendanceStatusQuery,
   TeamAttendanceStatusResponse,
@@ -20,24 +20,14 @@ import type {
 export function useHrAttendanceStatus(
   options?: Omit<import("@tanstack/react-query").UseQueryOptions<AttendanceStatusResult, Error>, "queryKey" | "queryFn">
 ) {
+  const canAttendance = useCan("hr:attendance:view");
+  const { enabled: optEnabled, ...restOptions } = options ?? {};
   return useQuery({
     queryKey: queryKeys.hr.attendanceStatus(),
     queryFn: () => apiClient.get<AttendanceStatusResult>("/hr/attendance/status"),
     staleTime: 2 * 60_000,
-    ...options,
-  });
-}
-
-export function useHrAttendanceLogs(params?: {
-  userId?: string;
-  year?: number;
-  month?: number;
-}) {
-  return useQuery({
-    queryKey: queryKeys.hr.attendanceLogs(params),
-    queryFn: () =>
-      apiClient.get<AttendanceLog[]>("/hr/attendance/logs", params as Record<string, unknown>),
-    staleTime: 2 * 60_000,
+    ...restOptions,
+    enabled: canAttendance && (optEnabled ?? true),
   });
 }
 
@@ -150,6 +140,7 @@ export function useHrToggleBreak(
 ) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "attendance", "toggle-break"],
     mutationFn: () =>
       apiClient.post<{ success: boolean }>("/hr/attendance/break"),
     onMutate: async () => {
@@ -171,16 +162,22 @@ export function useHrToggleBreak(
 }
 
 export function useHrMonthlyAttendance(params: GetMonthlyAttendanceInput) {
+  const canAttendance = useCan("hr:attendance:view");
   return useQuery({
     queryKey: queryKeys.hr.monthlyAttendance(params),
     queryFn: () =>
-      apiClient.get<AttendanceLog[]>("/hr/attendance/monthly", params as unknown as Record<string, unknown>),
+      apiClient.get<AttendanceLog[]>("/hr/attendance/monthly", {
+        year: params.year,
+        month: params.month,
+        ...(params.userId ? { userId: params.userId } : {}),
+      }),
     staleTime: 2 * 60_000,
-    enabled: !!params.userId,
+    enabled: canAttendance,
   });
 }
 
-export function useAttendanceHeatmap(params: { userId: string; year: number }) {
+export function useAttendanceHeatmap(params: { year: number }) {
+  const canAttendance = useCan("hr:attendance:view");
   return useQuery({
     queryKey: queryKeys.hr.attendanceHeatmap(params),
     queryFn: () =>
@@ -189,13 +186,14 @@ export function useAttendanceHeatmap(params: { userId: string; year: number }) {
         userId: string;
         heatmap: { date: string; hours: number; sessions: number; intensity: number }[];
         summary: { totalDays: number; totalHours: string; avgHoursPerDay: string; longestStreak: number };
-      }>("/hr/attendance/heatmap", params as unknown as Record<string, unknown>),
+      }>("/hr/attendance/heatmap", { year: params.year }),
     staleTime: 2 * 60_000,
-    enabled: !!params.userId,
+    enabled: canAttendance,
   });
 }
 
 export function useGetWorkLogs(input: GetWorkLogsInput) {
+  const canAttendance = useCan("hr:attendance:view");
   const params: Record<string, unknown> = {
     year: input.year,
     quarter: input.quarter,
@@ -209,6 +207,7 @@ export function useGetWorkLogs(input: GetWorkLogsInput) {
     queryKey: queryKeys.hr.workLogs(params),
     queryFn: () => apiClient.get<WorkLog[]>("/hr/work-logs", params),
     staleTime: 2 * 60_000,
+    enabled: canAttendance,
   });
 }
 
@@ -217,6 +216,7 @@ export function useUpsertWorkLog(
 ) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "work-logs", "upsert"],
     mutationFn: (data: UpsertWorkLogInput) =>
       apiClient.post<WorkLog>("/hr/work-logs", data),
     onSuccess: (...args) => {
@@ -228,23 +228,8 @@ export function useUpsertWorkLog(
   });
 }
 
-export function useUpdateWorkLogStatus(
-  options?: Omit<UseMutationOptions<WorkLog, Error, UpdateWorkLogStatusInput>, "mutationFn">
-) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (data: UpdateWorkLogStatusInput) =>
-      apiClient.patch<WorkLog>("/hr/work-logs/status", data),
-    onSuccess: (...args) => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.workLogs() });
-      options?.onSuccess?.(...args);
-    },
-    onError: options?.onError,
-    ...options,
-  });
-}
-
 export function useHrTeamAttendanceStatus(params?: TeamAttendanceStatusQuery) {
+  const canAttendance = useCan("hr:attendance:view");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "team-attendance-status", params ?? {}] as const,
     queryFn: () =>
@@ -255,6 +240,7 @@ export function useHrTeamAttendanceStatus(params?: TeamAttendanceStatusQuery) {
     staleTime: 65_000,
     refetchInterval: 60_000,
     placeholderData: (prev) => prev,
+    enabled: canAttendance,
   });
 }
 
@@ -282,25 +268,6 @@ export interface CreateRegularizationInput {
   requestedCheckIn?: string;
   requestedCheckOut?: string;
   reason: string;
-}
-
-export function useHrRegularizations(params?: {
-  userId?: string;
-  status?: string;
-  startDate?: string;
-  endDate?: string;
-  page?: number;
-  limit?: number;
-}) {
-  return useQuery({
-    queryKey: [...queryKeys.hr.all, "regularizations", params] as const,
-    queryFn: () =>
-      apiClient.get<{ data: AttendanceRegularization[]; page: number; limit: number }>(
-        "/hr/attendance/regularizations",
-        params as Record<string, unknown>,
-      ),
-    staleTime: 30_000,
-  });
 }
 
 export function useCreateRegularization(

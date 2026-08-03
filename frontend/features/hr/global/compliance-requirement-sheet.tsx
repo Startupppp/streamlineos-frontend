@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useCallback } from "react";
+import { useEffect, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -37,8 +37,6 @@ import {
   useUpdateComplianceRequirement,
   type ComplianceRequirement,
 } from "@/hooks/api/hr/global";
-
-const UNSET = "__none__";
 
 const schema = z.object({
   name: z.string().min(1),

@@ -51,6 +51,7 @@ export function useApiTokens(params?: { page?: number; limit?: number }) {
 export function useCreateApiToken() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["create", "api", "token"],
     mutationFn: (input: CreateApiTokenInput) =>
       apiClient.post<CreateApiTokenResponse>("/api-tokens", input),
     onSuccess: () => {
@@ -62,6 +63,7 @@ export function useCreateApiToken() {
 export function useRevokeApiToken() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["revoke", "api", "token"],
     mutationFn: (tokenId: string) =>
       apiClient.patch<{ success: boolean }>(`/api-tokens/${tokenId}/revoke`),
     onSuccess: () => {
@@ -73,6 +75,7 @@ export function useRevokeApiToken() {
 export function useDeleteApiToken() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["delete", "api", "token"],
     mutationFn: (tokenId: string) =>
       apiClient.delete<void>(`/api-tokens/${tokenId}`),
     onSuccess: () => {

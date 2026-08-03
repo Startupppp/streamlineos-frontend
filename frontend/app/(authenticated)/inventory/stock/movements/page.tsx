@@ -28,6 +28,7 @@ import {
 } from "@/hooks/api/inventory/stock";
 import { useWarehouses } from "@/hooks/api/inventory/warehouses";
 import { useCan } from "@/hooks/api/access";
+import { MobileFilterDrawer } from "@/features/payroll/shared/mobile-filter-drawer";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
@@ -411,6 +412,58 @@ export default function MovementsPage() {
               </Button>
             )}
           </div>
+          <MobileFilterDrawer
+            ariaLabel="Filter movements"
+            groups={[
+              {
+                label: "Type",
+                value: txnTypeFilter,
+                options: [
+                  { value: "all", label: "All types" },
+                  ...ALL_TXN_TYPES.map((t) => ({
+                    value: t,
+                    label: TXN_TYPE_CONFIG[t].label,
+                  })),
+                ],
+                onChange: handleTypeChange,
+              },
+              {
+                label: "Direction",
+                value: dirFilter,
+                options: [
+                  { value: "all", label: "All directions" },
+                  { value: "in", label: "Inbound (+)" },
+                  { value: "out", label: "Outbound (−)" },
+                ],
+                onChange: handleDirChange,
+              },
+              {
+                label: "Warehouse",
+                value: warehouseParam,
+                options: [
+                  { value: "all", label: "All warehouses" },
+                  ...(warehouses ?? []).map((w) => ({
+                    value: String(w.id),
+                    label: w.name,
+                  })),
+                ],
+                onChange: handleWarehouseChange,
+              },
+              {
+                label: "Date range",
+                value: datePreset,
+                neutralValue: "30d",
+                options: [
+                  { value: "today", label: "Today" },
+                  { value: "7d", label: "Last 7 days" },
+                  { value: "30d", label: "Last 30 days" },
+                  { value: "90d", label: "Last 90 days" },
+                  { value: "all", label: "All time" },
+                ],
+                onChange: handleDatePresetChange,
+              },
+            ]}
+          />
         </div>
       }
     >

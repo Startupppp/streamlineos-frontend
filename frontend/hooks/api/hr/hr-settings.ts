@@ -21,6 +21,7 @@ import type {
 export function useCreateAsset() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "assets", "create"],
     mutationFn: (data: CreateAssetInput) =>
       apiClient.post<Asset>("/hr/assets", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.assets() }),
@@ -30,6 +31,7 @@ export function useCreateAsset() {
 export function useUpdateAsset() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "assets", "update"],
     mutationFn: ({ assetId, ...data }: UpdateAssetInput) =>
       apiClient.patch<{ success: boolean }>(`/hr/assets/${assetId}`, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.assets() }),
@@ -39,6 +41,7 @@ export function useUpdateAsset() {
 export function useAssignAsset() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "assets", "assign"],
     mutationFn: (data: AssignAssetInput) =>
       apiClient.patch<{ success: boolean }>("/hr/assets", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.assets() }),
@@ -48,6 +51,7 @@ export function useAssignAsset() {
 export function useCreateDocument() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "documents", "create"],
     mutationFn: (data: CreateDocumentInput) =>
       apiClient.post<Document>("/hr/documents", data),
     onSuccess: () =>
@@ -58,6 +62,7 @@ export function useCreateDocument() {
 export function useUpdateDocument() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "documents", "update"],
     mutationFn: ({ id, ...data }: { id: number; name?: string; description?: string | null; type?: string; category?: string | null; userId?: string | null; isPublic?: boolean; tags?: string[]; expiryDate?: string | null }) =>
       apiClient.patch<Document>(`/hr/documents/${id}`, data),
     onSuccess: () => {
@@ -70,6 +75,7 @@ export function useUpdateDocument() {
 export function useDeleteDocument() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "documents", "delete"],
     mutationFn: (documentId: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/documents/${documentId}`),
     onSuccess: () => {
@@ -96,6 +102,7 @@ export function useHrPerformanceReviews(userId?: string) {
 export function useCreateGoal() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "goals", "create"],
     mutationFn: (data: CreateGoalInput) =>
       apiClient.post<Goal>("/hr/performance/goals", data),
     onSuccess: () =>
@@ -126,6 +133,7 @@ export function useHrPendingWfhRequests(options?: { enabled?: boolean }) {
 export function useCreateWfhRequest() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "wfh", "create"],
     mutationFn: (data: CreateWfhRequestInput) =>
       apiClient.post<{ success: boolean }>("/hr/wfh", data),
     onSuccess: () => {
@@ -138,6 +146,7 @@ export function useCreateWfhRequest() {
 export function useProcessWfhRequest() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "wfh", "process"],
     mutationFn: ({ requestId, ...data }: ProcessWfhRequestInput) =>
       apiClient.patch<{ success: boolean }>(`/hr/wfh/${requestId}`, data),
     onSuccess: () => {

@@ -23,7 +23,7 @@ export const pillars: Pillar[] = [
     icon: Lock,
     title: "Role-based access",
     description:
-      "CEO, HR, Sales, Engineering — every role sees only what they need. Permissions follow people, projects, and pipelines.",
+      "Owners, admins and members — every role sees only what they need. Permissions follow people, projects, and pipelines.",
   },
   {
     icon: Globe,

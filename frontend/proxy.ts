@@ -1,6 +1,5 @@
-import { NextResponse, NextRequest } from "next/server";
+﻿import { NextResponse, NextRequest } from "next/server";
 import { getToken, type JWT } from "next-auth/jwt";
-import { PLATFORM_OWNER_ROLE, OWNER_HOME } from "@/lib/platform/role";
 import { ROLES } from "@/lib/constants/roles";
 import {
   hasSessionCookie,
@@ -72,7 +71,7 @@ function isLoopbackHostname(hostname: string): boolean {
 
 const PROTECTED_ROUTES = [
   "/dashboard",
-  "/projects",
+  "/build",
   "/hr",
   "/settings",
   "/onboarding",
@@ -126,9 +125,6 @@ function redirectTo(
   return NextResponse.redirect(url);
 }
 
-function isPlatformAdminToken(token: JWT): boolean {
-  return token.isPlatformAdmin === true || token.role === PLATFORM_OWNER_ROLE;
-}
 
 function isOrgOwnerToken(token: JWT): boolean {
   return token.isOrgOwner === true || token.role === ROLES.OWNER;
@@ -162,6 +158,11 @@ export async function proxy(req: NextRequest) {
 
   if (matchesRoute(pathname, "/signup"))
     return redirectTo(req, "/signin", req.nextUrl.search);
+
+  if (matchesRoute(pathname, "/projects")) {
+    const rest = pathname.slice("/projects".length);
+    return redirectTo(req, "/build" + rest, req.nextUrl.search);
+  }
 
   if (pathname.startsWith("/api/")) return NextResponse.next();
 
@@ -213,33 +214,28 @@ export async function proxy(req: NextRequest) {
       return redirectTo(req, "/dashboard");
     }
 
-    const isPlatformAdmin = isPlatformAdminToken(token);
     const isOrgOwner = isOrgOwnerToken(token);
     const hasOrg = Boolean(token.orgId);
-    const orgSetupDone = Boolean(req.cookies.get("org-setup-done")?.value);
-    const onboardingDone = Boolean(req.cookies.get("onboarding-done")?.value);
-    // No workspace ALWAYS forces /org-setup; the durable skip/done cookie only suppresses the nag for an owner who has an org but hasn't finished the wizard. Entry and exit share `forceOrgSetup`, so they can never disagree (no /org-setup ⇄ /dashboard loop).
+    const orgSetupCookieName = token.orgId ? `org-setup-done--${token.orgId}` : null;
+    const orgSetupDone = orgSetupCookieName
+      ? Boolean(req.cookies.get(orgSetupCookieName)?.value)
+      : false;
+    const onboardingCookieName = token.id ? `onboarding-done--${token.id}` : null;
+    const onboardingDone = onboardingCookieName
+      ? Boolean(req.cookies.get(onboardingCookieName)?.value)
+      : false;
     const ownerSetupPending = isOrgOwner && !token.orgOnboardingCompletedAt;
     const forceOrgSetup = !hasOrg || (ownerSetupPending && !orgSetupDone);
 
     if (matchesRoute(pathname, "/org-setup")) {
-      if (isPlatformAdmin) return redirectTo(req, OWNER_HOME);
       if (!forceOrgSetup) return redirectTo(req, "/dashboard");
     } else if (matchesRoute(pathname, "/onboarding")) {
       return redirectTo(req, "/employee-onboarding");
     } else if (matchesRoute(pathname, "/employee-onboarding")) {
-      if (isPlatformAdmin) return redirectTo(req, OWNER_HOME);
       if (!hasOrg) return redirectTo(req, "/org-setup");
       if (isOrgOwner) return redirectTo(req, "/dashboard");
       if (token.userOnboardingCompletedAt) return redirectTo(req, "/dashboard");
-    } else if (
-      isProtected &&
-      isPlatformAdmin &&
-      !hasOrg &&
-      !matchesRoute(pathname, OWNER_HOME)
-    ) {
-      return redirectTo(req, OWNER_HOME);
-    } else if (isProtected && !isPlatformAdmin) {
+    } else if (isProtected) {
       if (forceOrgSetup) return redirectTo(req, "/org-setup");
 
       if (
@@ -249,13 +245,6 @@ export async function proxy(req: NextRequest) {
         !onboardingDone
       )
         return redirectTo(req, "/employee-onboarding");
-
-      if (
-        token.mfaEnforced === true &&
-        token.totpEnabled !== true &&
-        !matchesRoute(pathname, "/settings")
-      )
-        return redirectTo(req, "/settings", "?tab=security&mfa=required");
     }
   }
 
@@ -265,6 +254,7 @@ export async function proxy(req: NextRequest) {
 
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set("x-nonce", nonce);
+  requestHeaders.set("x-pathname", pathname);
   const response = NextResponse.next({
     request: { headers: requestHeaders },
   });

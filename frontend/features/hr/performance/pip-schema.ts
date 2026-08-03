@@ -78,6 +78,3 @@ export function buildPipSchema(options?: { enforceFutureStart?: boolean }) {
     });
 }
 
-export const pipSchema = buildPipSchema();
-
-export type PipFormValues = z.infer<ReturnType<typeof buildPipSchema>>;

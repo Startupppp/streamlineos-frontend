@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { apiClient, getApiError } from "@/lib/api-client";
+import { apiClient } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Share2 } from "lucide-react";
 
 type Props = { params: Promise<{ orgId: string }> };
@@ -43,7 +44,7 @@ export default function ExternalReferrerRegisterPage({ params }: Props) {
       });
       router.replace(`/refer/link/${result.referralToken}`);
     } catch (e) {
-      setError(getApiError(e) || "Something went wrong. Please try again.");
+      setError(getErrorMessage(e) || "Something went wrong. Please try again.");
     } finally {
       setSubmitting(false);
     }

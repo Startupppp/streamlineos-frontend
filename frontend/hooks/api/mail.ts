@@ -223,7 +223,7 @@ export function useMailAction() {
 
       return { snapshots };
     },
-    onError: (_error, _variables, context) => {
+    onError: (_, _variables, context) => {
       if (!context) return;
       for (const { key, data } of context.snapshots) {
         qc.setQueryData(key, data);

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useRef } from "react";
 import { format } from "date-fns";
@@ -15,7 +15,6 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
 import {
   Select,
   SelectContent,
@@ -32,7 +31,7 @@ import {
   HELPDESK_CATEGORY_LABELS,
   type TicketStatus,
 } from "@/hooks/api/hr/helpdesk";
-import { getUserInitials } from "@/features/projects/shared/resolve-user-name";
+import { getUserInitials } from "@/features/build/shared/resolve-user-name";
 
 const STATUS_LABELS: Record<TicketStatus, string> = {
   TODO: "Open",

@@ -132,7 +132,7 @@ export function useCompleteTask() {
       );
       return { prev };
     },
-    onError: (_err, _vars, ctx) => {
+    onError: (_, _vars, ctx) => {
       if (ctx?.prev) {
         qc.setQueryData(queryKeys.tasks.myQueue(), ctx.prev);
       }
@@ -170,88 +170,4 @@ export function useTaskAnalytics(days = 30) {
 }
 
 
-interface TaskSequenceStep {
-  id: number;
-  sequenceId: number;
-  title: string;
-  type: string;
-  notes: string | null;
-  offsetDays: number;
-  order: number;
-}
 
-export interface TaskSequence {
-  id: number;
-  orgId: string;
-  name: string;
-  description: string | null;
-  createdBy: string | null;
-  createdAt: string | null;
-  steps: TaskSequenceStep[];
-}
-
-interface CreateTaskSequenceInput {
-  name: string;
-  description?: string;
-  steps: Array<{
-    title: string;
-    type?: string;
-    notes?: string;
-    offsetDays?: number;
-    order?: number;
-  }>;
-}
-
-interface ApplySequenceInput {
-  baseDate: string;
-  entityType?: TaskEntityType;
-  entityId?: number;
-  assigneeId?: string;
-}
-
-export function useTaskSequences() {
-  return useQuery({
-    queryKey: queryKeys.tasks.sequences(),
-    queryFn: () => apiClient.get<TaskSequence[]>("/tasks/sequences"),
-    staleTime: 60_000,
-  });
-}
-
-export function useCreateTaskSequence() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["tasks", "sequences", "create"],
-    mutationFn: (input: CreateTaskSequenceInput) =>
-      apiClient.post<TaskSequence>("/tasks/sequences", input),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.tasks.sequences() });
-    },
-  });
-}
-
-export function useDeleteTaskSequence() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["tasks", "sequences", "delete"],
-    mutationFn: (sequenceId: number) =>
-      apiClient.delete<{ success: boolean }>(`/tasks/sequences/${sequenceId}`),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.tasks.sequences() });
-    },
-  });
-}
-
-export function useApplyTaskSequence() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["tasks", "sequences", "apply"],
-    mutationFn: ({ sequenceId, input }: { sequenceId: number; input: ApplySequenceInput }) =>
-      apiClient.post<{ created: Task[]; count: number }>(
-        `/tasks/sequences/${sequenceId}/apply`,
-        input,
-      ),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.tasks.all });
-    },
-  });
-}

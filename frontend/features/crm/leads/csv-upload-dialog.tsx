@@ -144,7 +144,6 @@ async function extractExcel(
 }
 
 function applyMapping(
-  headers: string[],
   rows: string[][],
   fieldMappings: Record<number, string>,
 ): { leads: ParsedLead[]; errors: string[] } {
@@ -285,7 +284,7 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
   );
 
   const handleConfirmMapping = useCallback(() => {
-    const { leads, errors } = applyMapping(rawHeaders, rawRows, fieldMappings);
+    const { leads, errors } = applyMapping(rawRows, fieldMappings);
     setParsed(leads);
     setParseErrors(errors);
     setStep("preview");

@@ -1,45 +1,46 @@
-import type { ToggleKey, PayFrequency } from "@/types/payroll/setup";
+import { parseSetupDraft, type SetupDraft } from "./setup-draft-schema";
 
-export type SetupDraft = {
-  policyId?: number;
-  profile?: {
-    country: string;
-    state?: string;
-    legalEntityName?: string;
-    currency: string;
-    payFrequency: PayFrequency;
-    payDay: number;
-    startMonth: string;
-    employeeCount?: number;
-  };
-  templateKey?: string | null;
-  templateId?: number;
-  templateDefaultToggles?: Partial<Record<ToggleKey, boolean>>;
-  toggleOverrides?: Partial<Record<ToggleKey, boolean>>;
-};
+export type { SetupDraft };
 
 const DRAFT_KEY = "payroll-setup-draft";
 const STEP_KEY = "payroll-setup-step";
 
-export function loadDraft(): SetupDraft {
+function draftKey(orgId: string): string {
+  return `${DRAFT_KEY}:${orgId}`;
+}
+
+function stepKey(orgId: string): string {
+  return `${STEP_KEY}:${orgId}`;
+}
+
+function purgeLegacyKeys(): void {
   try {
-    const raw = localStorage.getItem(DRAFT_KEY);
+    localStorage.removeItem(DRAFT_KEY);
+    localStorage.removeItem(STEP_KEY);
+  } catch {}
+}
+
+export function loadDraft(orgId: string): SetupDraft {
+  try {
+    purgeLegacyKeys();
+    const raw = localStorage.getItem(draftKey(orgId));
     if (!raw) return {};
-    return JSON.parse(raw) as SetupDraft;
+    const parsed: unknown = JSON.parse(raw);
+    return parseSetupDraft(parsed);
   } catch {
     return {};
   }
 }
 
-export function saveDraft(data: SetupDraft): void {
+export function saveDraft(orgId: string, data: SetupDraft): void {
   try {
-    localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
+    localStorage.setItem(draftKey(orgId), JSON.stringify(data));
   } catch {}
 }
 
-export function loadStep(): number {
+export function loadStep(orgId: string): number {
   try {
-    const raw = localStorage.getItem(STEP_KEY);
+    const raw = localStorage.getItem(stepKey(orgId));
     const n = raw ? parseInt(raw, 10) : 1;
     return Number.isFinite(n) && n >= 1 ? n : 1;
   } catch {
@@ -47,15 +48,15 @@ export function loadStep(): number {
   }
 }
 
-export function saveStep(step: number): void {
+export function saveStep(orgId: string, step: number): void {
   try {
-    localStorage.setItem(STEP_KEY, String(step));
+    localStorage.setItem(stepKey(orgId), String(step));
   } catch {}
 }
 
-export function clearAll(): void {
+export function clearAll(orgId: string): void {
   try {
-    localStorage.removeItem(DRAFT_KEY);
-    localStorage.removeItem(STEP_KEY);
+    localStorage.removeItem(draftKey(orgId));
+    localStorage.removeItem(stepKey(orgId));
   } catch {}
 }

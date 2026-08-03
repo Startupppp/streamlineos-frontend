@@ -35,7 +35,7 @@ export const MailReadingToolbar = forwardRef<
     aiActions,
     canAi,
   },
-  _ref,
+  _,
 ) {
   const { iconRef: starRef, hoverHandlers: starHover } = useAnimatedIcon();
 

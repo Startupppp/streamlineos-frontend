@@ -14,8 +14,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 type LoginEntry = NonNullable<ReturnType<typeof useLoginHistory>["data"]>["data"][number];
 type SuccessFilter = "all" | "success" | "failure";
 
-const PAGE_SIZE_OPTIONS = [10, 20, 50] as const;
-type PageSize = (typeof PAGE_SIZE_OPTIONS)[number];
+type PageSize = 10 | 20 | 50;
 
 const COLUMNS: DataTableColumn<LoginEntry>[] = [
   {

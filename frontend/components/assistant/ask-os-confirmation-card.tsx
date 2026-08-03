@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { AiDraftCard } from "@/components/ai/ai-draft-card";
 import { useConfirmAction } from "@/hooks/api/ai-confirm-action";
 

@@ -5,6 +5,12 @@ import { BookOpen, Home, RotateCcw, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StateIllustration } from "@/components/illustrations/state-illustration";
 import { isApiError } from "@/lib/api-client";
+import {
+  KB_RECENT,
+  KB_SPACES,
+  KB_TRASH,
+  KNOWLEDGE_BASE,
+} from "@/features/knowledge-base/lib/knowledge-routes";
 
 interface KbPageNotFoundProps {
   error: unknown;
@@ -28,7 +34,7 @@ const VARIANTS = {
   "access-denied": {
     title: "You don't have access",
     description:
-      "You don't have permission to view this page. Contact the page owner or a workspace admin to request access.",
+      "You don't have permission to view this page. Contact the page owner or an organization admin to request access.",
   },
   error: {
     title: "Couldn't load this page",
@@ -63,14 +69,14 @@ export function KbPageNotFound({ error, onRetry }: KbPageNotFoundProps) {
           variant={variant === "error" ? "outline" : "default"}
           className="gap-2"
         >
-          <Link href="/knowledge">
+          <Link href={KNOWLEDGE_BASE}>
             <Home className="h-4 w-4" />
             Knowledge home
           </Link>
         </Button>
 
         <Button asChild variant="outline" className="gap-2">
-          <Link href="/knowledge/recent">
+          <Link href={KB_RECENT}>
             <BookOpen className="h-4 w-4" />
             Recent pages
           </Link>
@@ -78,7 +84,7 @@ export function KbPageNotFound({ error, onRetry }: KbPageNotFoundProps) {
 
         {variant === "not-found" && (
           <Button asChild variant="ghost" className="gap-2 text-muted-foreground">
-            <Link href="/knowledge/trash">
+            <Link href={KB_TRASH}>
               <Trash2 className="h-4 w-4" />
               Check trash
             </Link>
@@ -87,7 +93,7 @@ export function KbPageNotFound({ error, onRetry }: KbPageNotFoundProps) {
 
         {variant === "access-denied" && (
           <Button asChild variant="ghost" className="gap-2 text-muted-foreground">
-            <Link href="/knowledge/spaces">
+            <Link href={KB_SPACES}>
               <Search className="h-4 w-4" />
               Browse spaces
             </Link>

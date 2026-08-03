@@ -53,7 +53,7 @@ export function SettingsPageContent() {
   return (
     <PageWrapper
       title="Payroll Settings"
-      subtitle={`Policy #${data.policy.id} · ${data.policy.status}`}
+      subtitle={`Current payroll policy · ${data.policy.status}`}
     >
       <div className="flex flex-col gap-4">
         <PolicyProfileSection policy={data.policy} />

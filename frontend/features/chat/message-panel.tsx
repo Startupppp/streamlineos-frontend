@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -36,7 +36,7 @@ import {
   useUnsaveMessage,
 } from "@/hooks/api/chat";
 import { queryKeys } from "@/lib/query-keys";
-import { apiClient, getApiError } from "@/lib/api-client";
+import { apiClient } from "@/lib/api-client";
 import { useChatRealtime } from "@/hooks/api/chat-realtime";
 import {
   useStartHuddle,
@@ -47,7 +47,7 @@ import { useHuddleRealtime } from "./huddle-realtime";
 import { HuddlePanel } from "./huddle-panel";
 import { getInitials, getDateLabel, buildChatUserMap, resolveChatUserName } from "./chat-helpers";
 import type { Message, TicketEntityRef, MessageMetadata } from "./chat-types";
-import type { TicketSearchResult } from "@/hooks/api/projects";
+import type { TicketSearchResult } from "@/hooks/api/build";
 import { MessageList } from "./message-list";
 import { MessageInput } from "./message-input";
 import { useChatScroll } from "./use-chat-scroll";
@@ -471,7 +471,7 @@ export function MessagePanel({
               },
             ]);
           } catch (err) {
-            toast.error(`Failed: ${getApiError(err) || file.name}`);
+            toast.error(`Failed: ${getErrorMessage(err) || file.name}`);
             continue;
           }
         }
@@ -515,7 +515,7 @@ export function MessagePanel({
             },
           ]);
         } catch (err) {
-          toast.error(`Failed: ${getApiError(err) || file.name}`);
+          toast.error(`Failed: ${getErrorMessage(err) || file.name}`);
         }
       }
     } catch (error) {

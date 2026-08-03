@@ -1,9 +1,10 @@
 ﻿"use client";
 
 import { useState } from "react";
-import { AlertCircle, Calendar, Plus } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { FinanceStatusBadge } from "@/features/accounting/shared";
 import { PeriodChecklistPanel } from "@/features/accounting/core/period-checklist-panel";
@@ -87,10 +88,9 @@ export default function PeriodClosePage() {
       subtitle="Manage fiscal periods and close checklists."
       actions={
         canManage ? (
-          <Button size="sm" onClick={handleOpenGenerate}>
-            <Plus className="h-3.5 w-3.5 mr-1.5" />
+          <AnimatedIconButton icon={PlusIcon} iconSize={14} size="sm" onClick={handleOpenGenerate}>
             Generate periods
-          </Button>
+          </AnimatedIconButton>
         ) : undefined
       }
     >
@@ -105,21 +105,12 @@ export default function PeriodClosePage() {
               onRetry={handleRetry}
             />
           ) : periods.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/20 py-10 px-4 text-center">
-              <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-primary/10 text-primary mb-3">
-                <Calendar className="h-5 w-5" />
-              </div>
-              <h3 className="text-sm font-semibold text-foreground">No periods yet</h3>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Generate fiscal periods to get started.
-              </p>
-              {canManage && (
-                <Button size="sm" className="mt-3" onClick={handleOpenGenerate}>
-                  <Plus className="mr-1.5 h-3.5 w-3.5" />
-                  Generate periods
-                </Button>
-              )}
-            </div>
+            <EmptyState
+              compact
+              title="No periods yet"
+              description="Generate fiscal periods to get started."
+              action={canManage ? { label: "Generate periods", onClick: handleOpenGenerate } : undefined}
+            />
           ) : (
             periods.map((period: AccountingPeriod) => (
               <PeriodButton
@@ -142,15 +133,10 @@ export default function PeriodClosePage() {
               canReopen={canReopen}
             />
           ) : (
-            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/20 py-16 px-6 text-center h-full min-h-[300px]">
-              <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-muted text-muted-foreground mb-3">
-                <AlertCircle className="h-5 w-5" />
-              </div>
-              <h3 className="text-sm font-semibold text-foreground">No period selected</h3>
-              <p className="mt-1 text-sm text-muted-foreground max-w-xs">
-                Select a period from the list to view its close checklist.
-              </p>
-            </div>
+            <EmptyState
+              title="No period selected"
+              description="Select a period from the list to view its close checklist."
+            />
           )}
         </div>
       </div>

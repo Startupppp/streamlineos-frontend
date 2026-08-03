@@ -114,7 +114,7 @@ export default function ReceiptsPage() {
         <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "min-w-0 flex-1 max-w-xs text-xs")}>
           <SelectValue placeholder="All vendors" />
         </SelectTrigger>
-        <SelectContent className="max-h-72">
+        <SelectContent className="max-h-72 min-w-[var(--radix-select-trigger-width)]">
           <SelectItem value="all">All vendors</SelectItem>
           {vendors.map((v) => (
             <SelectItem key={v.id} value={String(v.id)}>{v.name}</SelectItem>

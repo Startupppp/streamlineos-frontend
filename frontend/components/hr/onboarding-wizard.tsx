@@ -42,7 +42,7 @@ const STEP_FIELDS: Record<number, FieldPath<FormValues>[]> = {
 
 const COMMON_DEPARTMENTS = ["HR", "Sales", "Customer Support", "Engineering", "Design", "Video Editing"];
 
-const KNOWN_ACRONYMS = new Set(["CEO", "CTO", "CFO", "COO", "CMO", "CIO", "CHRO", "VP", "SVP", "EVP", "AVP", "HR", "IT", "QA", "UI", "UX"]);
+const KNOWN_ACRONYMS = new Set(["FINAL", "CTO", "CFO", "COO", "CMO", "CIO", "CHRO", "VP", "SVP", "EVP", "AVP", "HR", "IT", "QA", "UI", "UX"]);
 
 function toTitleCase(str: string) {
   return str.trim().replace(/\s+/g, " ").split(" ").map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
@@ -65,7 +65,7 @@ export function OnboardingWizard() {
   const onboardEmployee = useOnboardEmployee();
 
   const assignableRoles = useMemo(
-    () => (orgRoles ?? []).filter((r) => r.slug !== "CEO"),
+    () => (orgRoles ?? []).filter((r) => r.slug !== "FINAL"),
     [orgRoles]
   );
 

@@ -1,0 +1,93 @@
+"use client";
+
+import { useState } from "react";
+import type { VariantProps } from "class-variance-authority";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { ConfirmWithReasonSheet } from "@/components/ui/confirm-with-reason-sheet";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+interface ApprovalActionsProps {
+  onApprove: () => void;
+  onReject: (reason: string) => void;
+  isApproving?: boolean;
+  isRejecting?: boolean;
+  requireReason?: boolean;
+  approveLabel?: string;
+  rejectLabel?: string;
+  rejectTitle?: string;
+  rejectDescription?: string;
+  disabled?: boolean;
+  size?: VariantProps<typeof buttonVariants>["size"];
+  className?: string;
+}
+
+export function ApprovalActions({
+  onApprove,
+  onReject,
+  isApproving = false,
+  isRejecting = false,
+  requireReason = true,
+  approveLabel = "Approve",
+  rejectLabel = "Reject",
+  rejectTitle = "Reject",
+  rejectDescription,
+  disabled = false,
+  size = "sm",
+  className,
+}: ApprovalActionsProps) {
+  const [rejectOpen, setRejectOpen] = useState(false);
+
+  function handleApprove() {
+    onApprove();
+  }
+
+  function handleOpenRejectSheet() {
+    setRejectOpen(true);
+  }
+
+  function handleConfirmReject(reason: string) {
+    onReject(reason);
+    setRejectOpen(false);
+  }
+
+  return (
+    <>
+      <div className={cn("flex items-center gap-1", className)}>
+        <LoadingButton
+          size={size}
+          variant="outline"
+          className="text-emerald-700 border-emerald-200 hover:bg-emerald-50 dark:text-emerald-300 dark:border-emerald-500/30 dark:hover:bg-emerald-500/10"
+          isPending={isApproving}
+          loadingText="Approving…"
+          disabled={disabled || isRejecting}
+          onClick={handleApprove}
+        >
+          {approveLabel}
+        </LoadingButton>
+        <LoadingButton
+          size={size}
+          variant="outline"
+          className="text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-500/30 dark:hover:bg-red-500/10"
+          isPending={isRejecting}
+          loadingText="Rejecting…"
+          disabled={disabled || isApproving}
+          onClick={handleOpenRejectSheet}
+        >
+          {rejectLabel}
+        </LoadingButton>
+      </div>
+      <ConfirmWithReasonSheet
+        open={rejectOpen}
+        onOpenChange={setRejectOpen}
+        title={rejectTitle}
+        description={rejectDescription}
+        reasonPlaceholder="Enter a reason…"
+        reasonRequired={requireReason}
+        confirmLabel={rejectLabel}
+        isPending={isRejecting}
+        onConfirm={handleConfirmReject}
+      />
+    </>
+  );
+}

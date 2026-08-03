@@ -39,7 +39,7 @@ export function TrialBanner() {
 
   return (
     <div
-      role="banner"
+      role="region"
       aria-label="Trial expiry notice"
       className="flex items-center justify-between gap-2 border-b border-amber-200 bg-amber-50 px-3 py-2 shrink-0 dark:border-amber-500/30 dark:bg-amber-500/10 sm:gap-3 sm:px-4"
     >

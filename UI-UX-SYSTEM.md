@@ -1,69 +1,29 @@
 # StreamlineOS — UI/UX System v1.0
 
-> **This is the canonical, enforceable design specification for StreamlineOS.**
-> Every authenticated page, every new component, every token decision defers to this file.
-> Auth pages (`/signin`, `/signup`) and the landing page are **IMMUTABLE reference surfaces** — the
-> rest of the application conforms to them, never the other way around.
-> When a rule here conflicts with CLAUDE.md, this file is more specific and wins on visual matters.
+> The canonical, enforceable design spec. Every authenticated page, component, and token decision defers to it.
+> Auth pages (`/signin`, `/signup`) and the landing page are **IMMUTABLE reference surfaces** — the app conforms to them.
+> On visual matters this file is more specific than CLAUDE.md and wins.
 
 ---
 
-## 1. Thesis
+## 1. Principles
 
-### What the research says best-in-class B2B SaaS UIs share
-
-After auditing the design languages of **Linear, Stripe, Vercel, Attio, Resend, Cal.com, PostHog,
-Supabase, Notion, HiBob, Rippling, Gusto, Deel, Personio, Lattice, HubSpot, Pipedrive, Close CRM,
-Asana, Monday.com, ClickUp, Height, Campsite, Missive, Plain, Front, Clerk, and Airtable**, five
-invariant traits separate the tier-1 products from the also-rans:
-
-**1. Density with restraint.** Power users spend 6–8 hours per day in these interfaces. Whitespace
-is not a virtue when the user needs to see 50 rows at once. Tier-1 products like Linear and Stripe
-pack information tightly — 32–40px table rows, 13px body text, `px-2 py-1` cell padding — while
-still breathing through deliberate section separation, not random gaps.
-
-**2. One accent, not a rainbow.** Linear uses one purple. Stripe uses one blue. Vercel uses black
-with zero brand color in the dashboard chrome. Resend uses a single green CTA on a dark canvas.
-The pattern is identical: neutral surfaces + neutral text + exactly one accent color reserved for
-primary actions and interactive focus states. Status colors (emerald/amber/red/blue) are semantic,
-never decorative. Brand gradient text is marketing, not dashboard chrome.
-
-**3. Consistent page anatomy.** Every screen in a great SaaS product shares the same skeleton: a
-compact header (page title + optional subtitle + right-aligned actions), a filter/toolbar strip
-below it, then the content body. Users navigate 30+ different feature pages; if each invents its
-own layout, cognitive load multiplies. PageWrapper is the backbone — every page uses it, none
-deviates.
-
-**4. Motion discipline.** Animation is not decoration. It is communication: it tells the user
-_where_ something came from, _what_ changed, and _that_ the system responded. Linear and Vercel
-both use 150–250 ms transitions on GPU-composited properties only (opacity, transform). No slow
-1-second fades. No spring bounces on table rows. No animation on every hover. Motion is used
-sparingly, purposefully, and always respects `prefers-reduced-motion`.
-
-**5. Predictable states.** Every page in a tier-1 product handles all five states: loading
-(skeleton matching the real layout), empty (contextual icon + message + one CTA), error (friendly
-message + retry), sparse (2–5 items), and dense (50–500 items). An application that handles only
-the happy path feels unfinished regardless of how polished the happy path looks.
+1. **Density with restraint.** Power users live here 6–8h/day. 32–40px rows, 13px body, `px-2 py-1` cells — breathing through deliberate section separation, not random gaps.
+2. **One accent, not a rainbow.** Neutral surfaces + neutral text + exactly one accent for primary actions and focus. Status colors are semantic, never decorative. Gradient text is marketing, not chrome.
+3. **Consistent page anatomy.** Compact header → filter strip → body, on every screen. `PageWrapper` is the backbone; none deviates.
+4. **Motion discipline.** Animation communicates where something came from and what changed. 150–250ms, GPU properties only, always respecting `prefers-reduced-motion`.
+5. **Predictable states.** Every page handles loading, empty, error, sparse (2–5), and dense (50–500). Happy-path-only feels unfinished.
 
 ---
 
 ## 2. Palette
 
-### Decision
-
-StreamlineOS uses a **slate-neutral base with a single blue accent family**, derived directly from
-the existing auth pages and global stylesheet. The auth pages and landing page are already correct
-and **must not be changed**. Every other page conforms to them.
-
-This is a "Vercel-meets-Stripe" palette: near-white canvas, ink-black primary CTAs (slate-900),
-blue-500 for interactive states and links, and full Tailwind semantic families for status.
-
-### CSS Custom Properties — paste-ready :root block
+Slate-neutral base + a single blue accent, derived from the auth pages. "Vercel-meets-Stripe": near-white canvas, ink-black CTAs, blue-500 for interactive states and links.
 
 ```css
 :root {
   /* ── Radius ── */
-  --radius: 0.625rem;              /* 10px — all components inherit via --radius-sm/md/lg/xl */
+  --radius: 0.625rem;              /* 10px — components inherit via --radius-sm/md/lg/xl */
 
   /* ── Surfaces ── */
   --background:            #f8fafc;   /* slate-50 page canvas */
@@ -78,33 +38,30 @@ blue-500 for interactive states and links, and full Tailwind semantic families f
   --input:                 #e2e8f0;
   --ring:                  #3b82f6;   /* blue-500 focus ring */
 
-  /* ── Primary CTA (ink-style — Linear/Stripe feel) ── */
+  /* ── Primary CTA (ink-style) ── */
   --primary:               #0b1220;   /* slate-900 */
   --primary-foreground:    #ffffff;
 
-  /* ── Accent (neutral hover wash — shadcn dropdown/menu/command item bg-accent) ── */
-  --accent:                #f1f5f9;   /* slate-100 — subtle neutral, NOT brand blue */
-  --accent-foreground:     #0f172a;   /* slate-900 — readable on neutral wash */
-  --secondary:             #f1f5f9;   /* slate-100 */
+  /* ── Accent (neutral hover wash — shadcn item bg-accent, NOT brand blue) ── */
+  --accent:                #f1f5f9;
+  --accent-foreground:     #0f172a;
+  --secondary:             #f1f5f9;
   --secondary-foreground:  #0b1220;
 
   /* ── Semantic status ── */
-  --destructive:           #dc2626;   /* red-600 */
+  --destructive:           #dc2626;
   --destructive-foreground: #ffffff;
 
-  /* ── Brand (gradient text, onboarding, marketing spots only) ── */
-  --brand-deep:            #1e40af;   /* blue-800 */
-  --brand-core:            #3b82f6;   /* blue-500 */
-  --brand-bright:          #60a5fa;   /* blue-400 */
-  --brand-cyan:            #06b6d4;   /* cyan-500 */
+  /* ── Brand (gradient text, onboarding, marketing only) ── */
+  --brand-deep:            #1e40af;
+  --brand-core:            #3b82f6;
+  --brand-bright:          #60a5fa;
+  --brand-cyan:            #06b6d4;
   --gradient-signature: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #06b6d4 100%);
 
-  /* ── Charts (blue family first, violet + pink for variety) ── */
-  --chart-1:               #1d4ed8;   /* blue-700 */
-  --chart-2:               #06b6d4;   /* cyan-500 */
-  --chart-3:               #60a5fa;   /* blue-400 */
-  --chart-4:               #8b5cf6;   /* violet-500 */
-  --chart-5:               #ec4899;   /* pink-500 */
+  /* ── Charts ── */
+  --chart-1: #1d4ed8;  --chart-2: #06b6d4;  --chart-3: #60a5fa;
+  --chart-4: #8b5cf6;  --chart-5: #ec4899;
 
   /* ── Sidebar (white panel) ── */
   --sidebar:               #ffffff;
@@ -118,503 +75,240 @@ blue-500 for interactive states and links, and full Tailwind semantic families f
 }
 
 .dark {
-  --background:            #07091a;
-  --foreground:            #f1f4fb;
-  --card:                  #101428;
-  --card-foreground:       #f1f4fb;
-  --popover:               #141a32;
-  --popover-foreground:    #f1f4fb;
-  --muted:                 #161e36;
-  --muted-foreground:      #94a0c0;
-  --border:                rgba(148, 178, 245, 0.12);
-  --input:                 rgba(148, 178, 245, 0.14);
-  --ring:                  #60a5fa;
+  --background: #07091a;  --foreground: #f1f4fb;
+  --card: #101428;        --card-foreground: #f1f4fb;
+  --popover: #141a32;     --popover-foreground: #f1f4fb;
+  --muted: #161e36;       --muted-foreground: #94a0c0;
+  --border: rgba(148, 178, 245, 0.12);
+  --input:  rgba(148, 178, 245, 0.14);
+  --ring:   #60a5fa;
 
-  --primary:               #f1f4fb;
-  --primary-foreground:    #07091a;
-  --secondary:             #1a2238;
-  --secondary-foreground:  #f1f4fb;
-  --accent:                #1a2238;   /* dark surface wash — neutral for dark-mode hover */
-  --accent-foreground:     #f1f4fb;
-  --destructive:           #ef4444;
-  --destructive-foreground: #f1f4fb;
+  --primary: #f1f4fb;     --primary-foreground: #07091a;
+  --secondary: #1a2238;   --secondary-foreground: #f1f4fb;
+  --accent: #1a2238;      --accent-foreground: #f1f4fb;
+  --destructive: #ef4444; --destructive-foreground: #f1f4fb;
 
-  --chart-1:               #3b82f6;
-  --chart-2:               #06b6d4;
-  --chart-3:               #60a5fa;
-  --chart-4:               #8b5cf6;
-  --chart-5:               #ec4899;
+  --chart-1: #3b82f6;  --chart-2: #06b6d4;  --chart-3: #60a5fa;
+  --chart-4: #8b5cf6;  --chart-5: #ec4899;
 
-  --sidebar:               #0b1024;
-  --sidebar-foreground:    #c4cbe0;
-  --sidebar-primary:       #3b82f6;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent:        color-mix(in srgb, var(--sidebar-primary) 14%, transparent);
+  --sidebar: #0b1024;              --sidebar-foreground: #c4cbe0;
+  --sidebar-primary: #3b82f6;      --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: color-mix(in srgb, var(--sidebar-primary) 14%, transparent);
   --sidebar-accent-foreground: #f4f7ff;
-  --sidebar-border:        rgba(148, 178, 245, 0.10);
-  --sidebar-ring:          #60a5fa;
+  --sidebar-border: rgba(148, 178, 245, 0.10);
+  --sidebar-ring: #60a5fa;
 }
 ```
 
-### Semantic status mapping (badges, toasts, icons)
+### Semantic status mapping
 
-| Semantic | Tailwind bg | Tailwind text | Tailwind border | Usage |
+| Semantic | bg | text | border | Usage |
 |---|---|---|---|---|
 | Success | `bg-emerald-50` | `text-emerald-700` | `border-emerald-200` | Completed, active, approved |
 | Warning | `bg-amber-50` | `text-amber-700` | `border-amber-200` | Pending, expiring, caution |
 | Destructive | `bg-red-50` | `text-red-700` | `border-red-200` | Error, rejected, overdue |
 | Info | `bg-blue-50` | `text-blue-700` | `border-blue-200` | Draft, in-progress, informational |
-| Neutral | `bg-slate-100` | `text-slate-700` | `border-slate-200` | Closed, archived, neutral |
+| Neutral | `bg-slate-100` | `text-slate-700` | `border-slate-200` | Closed, archived |
 
-**Rule:** Never use brand gradient colors (`--brand-core`, `.brand-text`, `.gradient-signature`) for
-status badges. Never repurpose status colors for brand decoration.
+Never use brand gradient colors for status badges; never repurpose status colors for decoration. Every light tint carries its `dark:` pairing (`dark:bg-X-500/10 dark:text-X-300 dark:border-X-500/30`).
 
-### Accent vs Brand — critical distinction
+### Accent vs brand — critical distinction
 
-`--accent` is a **neutral hover wash** (`slate-100` light / `#1a2238` dark). shadcn/ui primitives
-(DropdownMenuItem, SelectItem, CommandItem, ComboboxItem, CalendarDay, etc.) apply `bg-accent
-text-accent-foreground` on hover and focus. Setting `--accent` to a brand blue causes saturated
-blue backgrounds on every menu hover, making text and icons illegible.
+`--accent` is a **neutral hover wash**. shadcn primitives (DropdownMenuItem, SelectItem, CommandItem, CalendarDay…) apply `bg-accent text-accent-foreground` on hover/focus — setting it to a chromatic blue makes every menu hover illegible.
 
-- **Use `--accent` / `bg-accent`:** shadcn hover/focus states only. Never set it to a chromatic color.
-- **Use `--ring` / `ring-ring`:** focus rings on interactive elements. Currently `blue-500`.
-- **Use `--brand-core` / `blue-500` / `blue-600`:** links, active-state tints, icon highlights, info badges.
-- **Use `--primary` / `bg-primary`:** ink-black CTAs (buttons, "+" create buttons). Not brand blue.
-- **Sidebar active item:** uses `--sidebar-accent` (a 10% blue tint), separate from the global `--accent`.
+- **`bg-accent`** — shadcn hover/focus only. Never chromatic.
+- **`--ring`** — focus rings.
+- **`--brand-core` / `blue-600`** — links, active tints, icon highlights, info badges.
+- **`bg-primary`** — ink CTAs. Not brand blue.
+- **`--sidebar-accent`** — sidebar active item (10% blue tint), separate from global `--accent`.
+- **Theme accents:** the shell ships 18 accent palettes that tint neutral chrome. Interactive accent surfaces (unread bars/dots, selection tints, active filters, count badges) use `bg-primary`, `bg-primary/5..15`, `border-l-primary`, `--ring` — **never hardcoded `blue-*`**. Literal blue survives only for semantic info and chart seeds.
 
-### Border opacity rule
+### Border opacity
 
-`--border` is `#e2e8f0` (slate-200). Use `border-border` at **full opacity** for all structural
-borders: card edges, table outer borders, sheet/dialog header and footer separators, form field
-outlines. Reduced-opacity variants (`border-border/60`, `border-border/50`) are acceptable only for
-intentional hairline dividers inside dense list rows or decorative separator lines — never on the
-outer boundary of a card, table, or panel.
+`border-border` at **full opacity** for all structural borders (card edges, table borders, sheet/dialog separators, field outlines). `border-border/60` only for hairline dividers inside dense rows or decorative separators — never on the outer boundary of a card, table, or panel.
+
+### Per-module identity accent
+
+One unified chrome across all modules. Each module's accent is used ONLY for identity moments — activity-bar icon tint, active nav indicator, module hero tint, chart seed — never buttons, hovers, or body text:
+
+CRM/Sales `blue-600` · Build/PM `violet-600` · HR/People `emerald-600` · Inventory `amber-600` · Billing/Finance `cyan-700` · Support `rose-600` · Admin/Settings `slate-600`.
+
+> **HR exception:** the HRMS gradient hero, colored tone tiles, and tinted section chrome are DESIRED and preserved — do not flatten HR to ink in conformance passes.
 
 ---
 
 ## 3. Typography
 
-### Font stack
+Geist via `next/font`. Do not introduce another sans-serif. The `cv02`/`cv03`/`cv04`/`cv11` stylistic alternates are active globally in `globals.css` — do not remove them.
 
-Geist (already wired via `next/font`). Do not introduce Inter, Roboto, or any other sans-serif.
+| Role | Size | Weight | Class |
+|---|---|---|---|
+| Page title (default) | 18px | 600 | `text-lg font-semibold tracking-tight` |
+| Page title (display) | 24–28px | 800 | `text-2xl font-extrabold tracking-[-0.02em]` |
+| Section heading | 14px | 600 | `text-sm font-semibold` |
+| Section sub-heading | 13px | 500 | `text-[13px] font-medium` |
+| Body | 14px | 400 | `text-sm` |
+| Table cell / dense body | 11px | 400 | `text-[11px]` |
+| Label / input label | 13px | 500 | `text-[13px] font-medium` |
+| Caption / eyebrow | 11px | 500 | `text-[11px] font-medium tracking-wider` |
+| Table header | 10px | 700 | `text-[10px] uppercase tracking-wider font-bold` |
+| Mono / numbers | 11–13px | 400–500 | `font-mono text-[11px]` |
+| Badge / status | 10px | 500 | `text-[10px]` |
 
-```css
-body {
-  font-family: var(--font-sans);    /* Geist → system fallback */
-  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-```
-
-The `cv02`, `cv03`, `cv04`, `cv11` stylistic alternates are already active globally in `globals.css`
-— do not remove them. They give Geist its clean, Swiss-geometry feel.
-
-### Type scale
-
-| Role | Size | Weight | Line-height | Letter-spacing | Class |
-|---|---|---|---|---|---|
-| Page title (default) | 18px / `text-lg` | 600 | tight | −0.015em | `text-lg font-semibold tracking-tight` |
-| Page title (display variant) | 24–28px / `text-2xl` | 800 | tight | −0.02em | `text-2xl font-extrabold tracking-[-0.02em]` |
-| Section heading | 14px / `text-sm` | 600 | tight | 0 | `text-sm font-semibold` |
-| Section sub-heading | 13px / `text-[13px]` | 500 | snug | 0 | `text-[13px] font-medium` |
-| Body | 14px / `text-sm` | 400 | normal | 0 | `text-sm` |
-| Table cell / dense body | 11px / `text-[11px]` | 400 | normal | 0 | `text-[11px]` |
-| Label / input label | 13px / `text-[13px]` | 500 | none | 0 | `text-[13px] font-medium` |
-| Caption / eyebrow | 11px / `text-[11px]` | 500 | none | +0.05em | `text-[11px] font-medium tracking-wider` |
-| Table header | 10px / `text-[10px]` | 700 | none | +0.05em | `text-[10px] uppercase tracking-wider font-bold` |
-| Mono / code / numbers | 11–13px | 400–500 | normal | 0 | `font-mono text-[11px]` |
-| Badge / status | 10px / `text-[10px]` | 500 | none | 0 | `text-[10px]` |
-
-**Headings rule:** All `h1`–`h6` use `letter-spacing: -0.02em` and `font-weight: 600` by default
-(set globally in `globals.css`). Only use `font-extrabold` (800) for `variant="display"` page
-titles or landing/marketing headings.
-
-**Tabular numerals rule:** All table cells containing numeric data (amounts, counts, percentages,
-dates) must render with `font-mono` or `font-variant-numeric: tabular-nums`. This prevents column
-width jitter and enables value comparison by eye. Apply at the container level for data-dense
-views:
-
-```tsx
-<TableCell className="font-mono text-[11px] tabular-nums">
-  {formatCurrency(amount)}
-</TableCell>
-```
-
-Or apply globally to a data table container:
-```tsx
-<table className="font-feature-settings-['tnum']">
-```
-In Tailwind: use `tabular-nums` utility class (maps to `font-variant-numeric: tabular-nums`).
+- **Headings:** `h1`–`h6` default to `letter-spacing: -0.02em` and weight 600 globally. `font-extrabold` only for `variant="display"` titles and marketing headings.
+- **Tabular numerals:** every numeric table cell (amounts, counts, percentages, dates) renders `font-mono` or `tabular-nums`. Prevents column jitter and enables comparison by eye.
 
 ---
 
 ## 4. Spacing and Density
 
-### Grid
+**Base unit 4px.** All spacing is a multiple of 4 — never `p-[7px]`, `mt-[13px]`, `gap-[5px]`.
 
-**Base unit: 4px.** All spacing uses multiples of 4. Never use arbitrary values like `p-[7px]`,
-`mt-[13px]`, or `gap-[5px]`.
-
-### Page-level spacing
-
-| Zone | Value | Tailwind |
-|---|---|---|
-| Page horizontal padding | 16px (mobile) / 24px (desktop) | `px-4 sm:px-6` |
-| Page header top padding | 16px | `pt-4` |
-| Page header bottom padding | 8px | `pb-2` |
-| Filter bar vertical padding | 8px | `py-2` |
-| Content area top padding | 12px | `pt-3` |
-| Content area bottom padding | 24px | `pb-6` |
-
-### Card / panel padding
-
-| Context | Padding | Tailwind |
-|---|---|---|
-| Standard content card | 16px | `p-4` |
-| Compact list card | 12px | `p-3` |
-| Metric / stat card | 16–20px | `p-4 sm:p-5` |
-| Section header within card | 12px 16px | `px-4 py-3` |
-| Sheet inner padding | 16px horizontal / 16–24px vertical | `px-4 py-4` or `px-6 py-5` |
-
-### Table density (enforced scale)
-
-| Mode | Row height | Cell padding | Font size | When to use |
+| Page zone | Tailwind | | Card padding | Tailwind |
 |---|---|---|---|---|
-| Condensed (default) | 32px (`h-8`) | `px-2 py-1` | 11px (`text-[11px]`) | All data tables: CRM, HR, inventory, billing |
-| Regular | 40px (`h-10`) | `px-3 py-2` | 13px (`text-[13px]`) | Detail panels, settings tables, reference lists |
-| Relaxed | 48px (`h-12`) | `px-4 py-3` | 14px (`text-sm`) | Onboarding steps, empty-state sub-tables only |
+| Horizontal padding | `px-4 sm:px-6` | | Standard card | `p-4` |
+| Header top / bottom | `pt-4` / `pb-2` | | Compact list card | `p-3` |
+| Filter bar vertical | `py-2` | | Metric / stat card | `p-4 sm:p-5` |
+| Content top / bottom | `pt-3` / `pb-6` | | Section header in card | `px-4 py-3` |
 
-**Default is condensed.** Only upgrade to regular when the row contains multi-line content (e.g.,
-a description field that can wrap to 2 lines). Never use relaxed in a main data view.
+### Table density
+
+| Mode | Row height | Cell padding | Font | When |
+|---|---|---|---|---|
+| **Condensed (default)** | `h-8` (32px) | `px-2 py-1` | `text-[11px]` | All data tables |
+| Regular | `h-10` (40px) | `px-3 py-2` | `text-[13px]` | Detail panels, settings, reference lists |
+| Relaxed | `h-12` (48px) | `px-4 py-3` | `text-sm` | Onboarding steps only |
+
+Upgrade to regular only for multi-line row content. Never use relaxed in a main data view.
 
 ### Gap scale
 
-| Gap | Value | Tailwind | Used for |
-|---|---|---|---|
-| xs | 4px | `gap-1` | Icon + label, badge + icon |
-| sm | 8px | `gap-2` | Form field stack, button group |
-| md | 12px | `gap-3` | Filter bar items, header actions |
-| lg | 16px | `gap-4` | Card grid, section between elements |
-| xl | 24px | `gap-6` | Section separator |
-| 2xl | 32px | `gap-8` | Page sections (rare) |
+`gap-1` icon+label · `gap-2` field stack / button group · `gap-3` filter bar & header actions · `gap-4` card grid · `gap-6` section separator · `gap-8` page sections (rare).
 
-### Sheet inner padding rule
+### Calculated heights — never hardcode
 
-`SheetContent` **always receives `p-0`**. Inner sections own their own padding via their own
-wrapper divs. This eliminates the double-padding bug (SheetContent default padding + inner `p-4`
-= 32px of wasted edge space).
+No `h-60`, `min-h-[260px]`, or fixed skeleton block heights. Heights derive from available space:
+- Empty/error states fill the content area via a flex chain (`flex flex-col` ancestors + `flex-1 min-h-0` on the state), or `min-h-[calc(100vh-<real chrome>)]` when a flex chain is impractical.
+- Scroll areas: `flex-1 min-h-0 overflow-y-auto`, never fixed px.
+- Skeletons size themselves from the real components they mimic.
 
-```tsx
-// CORRECT
-<SheetContent className="p-0 flex flex-col gap-0 sm:max-w-md">
-  <div className="px-6 py-4 border-b">  {/* header section */}
-    <h3 className="text-sm font-semibold">Create Employee</h3>
-  </div>
-  <div className="flex-1 overflow-y-auto px-6 py-4">  {/* body */}
-    {/* form fields */}
-  </div>
-  <div className="px-6 py-4 border-t flex justify-end gap-2">  {/* footer */}
-    <Button variant="outline">Cancel</Button>
-    <Button type="submit">Save</Button>
-  </div>
-</SheetContent>
+### No overlapped spacing
 
-// WRONG — double padding
-<SheetContent className="sm:max-w-md">   {/* has default p-6 */}
-  <div className="p-4">                  {/* adds another 16px = 40px total */}
-    {/* content */}
-  </div>
-</SheetContent>
-```
+A container owns its padding once — children never re-add horizontal padding inside a padded parent, never combine `space-y-*` with child `mt-*`, and gaps come from ONE `gap-*` on the parent.
 
 ---
 
 ## 5. Page Anatomy
 
-### The canonical authenticated page
-
-Every authenticated page in StreamlineOS uses `PageWrapper`. No page invents its own header,
-title row, or filter bar. Deviation requires explicit approval and codification here.
-
-### PageWrapper contract
+Every authenticated page uses `PageWrapper` (`components/ui/page-wrapper.tsx`). No page invents its own header, title row, or filter bar.
 
 ```tsx
 interface PageWrapperProps {
-  title: string;                    // Required. The h1. Keep to 2–3 words.
-  subtitle?: React.ReactNode;       // Optional. Count ("48 employees") or description.
-  eyebrow?: string;                 // Optional. Uppercase module label ("HR / Onboarding").
-  badge?: React.ReactNode;          // Optional. Small count badge next to title.
-  actions?: React.ReactNode;        // Optional. Right-aligned CTA buttons.
-  filters?: React.ReactNode;        // Optional. If present, renders a full-width filter bar.
-  children: React.ReactNode;        // The page body.
-  variant?: "default" | "display";  // display = larger, bolder title for dashboards.
-  noInternalScroll?: boolean;       // For pages that manage their own overflow (Kanban, map).
+  title: string;                    // Required. The h1. 2–3 words.
+  subtitle?: React.ReactNode;       // Live count ("48 employees") or description.
+  eyebrow?: string;                 // Uppercase module label ("HR / Onboarding").
+  badge?: React.ReactNode;          // Meaningful status label — not a bare row count.
+  actions?: React.ReactNode;        // Right-aligned CTAs, max 3.
+  filters?: React.ReactNode;        // Renders the full-width filter bar.
+  children: React.ReactNode;
+  variant?: "default" | "display";  // display = module hero surfaces only.
+  noInternalScroll?: boolean;       // Pages managing their own overflow (Kanban, map).
+  filtersCollapseBreakpoint?: "sm" | "md";  // "md" for wide filter bars.
 }
 ```
 
-### Header row anatomy
-
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│  [eyebrow — 11px uppercase muted]                                   │
-│  [h1 title — 18px semibold]  [badge count]                          │
-│  [subtitle — 13px muted, max-w-2xl]              [actions — right]  │
-└─────────────────────────────────────────────────────────────────────┘
-┌─────────────────────────────────────────────────────────────────────┐
-│  [filter bar — bg-card/95 backdrop-blur border-b]                   │
-│  [search] [select filters] [date range?] [export?]   [right tools]  │
-└─────────────────────────────────────────────────────────────────────┘
-┌─────────────────────────────────────────────────────────────────────┐
-│  [page body — scrollable content area]                              │
-└─────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│ [eyebrow — 11px uppercase muted]                         │
+│ [h1 — 18px semibold]  [badge]                            │
+│ [subtitle — 13px muted, line-clamp-1]     [actions →]    │
+├──────────────────────────────────────────────────────────┤
+│ [filter bar]  [search] [selects] [date?]   [tools →]     │
+├──────────────────────────────────────────────────────────┤
+│ [page body — scrollable content area]                    │
+└──────────────────────────────────────────────────────────┘
 ```
 
-### Rules
+**Rules**
+- **One `<h1>` per page** — the `title` prop. Never another inside children.
+- **Subtitle as live count** on list pages ("48 employees") for instant orientation, always `line-clamp-1`.
+- **Max 3 actions**, exactly one primary. Never stacked vertically.
+- **Filter bar only when the page has filterable content.** With no filter bar, `PageWrapper` renders its own hairline divider — never add your own.
+- **No `backHref` on a page that has its own sidebar nav entry.** Detail pages: back button (`ChevronLeft` + "Back to X"); breadcrumbs only at ≥3 levels. Never rely on the browser Back button.
 
-- **One `<h1>` per page** — the `title` prop. Never add another `h1` inside children.
-- **Subtitle as live count:** when the page shows a list, set `subtitle` to a live count string
-  (`"48 employees"`, `"3 open deals"`). This gives users instant orientation without a separate
-  metric card.
-- **Actions are right-aligned, max 3 buttons.** Primary (one per page) + optional secondary +
-  optional tertiary. Never stack actions vertically in the header.
-- **Filter bar appears only when the page has filterable content.** A settings page does not need
-  a filter bar. An empty page where filters would never match anything should hide the filter bar.
-- **If there is no filter bar, `PageWrapper` renders a hairline divider** (`h-px bg-border`) below
-  the header to separate it from content. Both the divider and the filter bar are built into
-  `PageWrapper` — do not add your own.
+**Responsive**
 
-### Responsive behavior
-
-| Breakpoint | Title size | Actions | Filters |
+| Breakpoint | Title | Actions | Filters |
 |---|---|---|---|
-| Mobile (< 640px) | `text-base` semibold | Full-width grid row — children share width equally (`grid grid-flow-col auto-cols-fr`) | Collapsed behind an outline "Filters" button (SlidersHorizontal + label, h-8) that opens a Popover with filters stacked vertically (`flex flex-col gap-2`, popover `w-72 max-w-[85vw]`) |
-| Tablet (640–1280px) | `text-lg` semibold | Row, right-aligned (`flex items-center`) | Inline flex row, wraps if needed |
-| Desktop (> 1280px) | `text-lg` semibold | Row, right-aligned | Single row, no wrap |
-
-**Subtitle:** Always clamped to one line (`line-clamp-1`). Use a live count as the subtitle on list pages for instant orientation.
-
-**`filtersCollapseBreakpoint` prop (default `"sm"`):** Pass `"md"` for wide filter bars (e.g. 3+ selects + date range) that can fit on tablet but not mobile. Shifts the collapse threshold to `md` so the popover appears on `< 768px` and the inline bar on `≥ 768px`.
-
-### Detail page back-navigation rule
-
-- **Single parent:** Use a back button (`ChevronLeft` icon + "Back to X"). Example:
-  `/crm/deals/123` → button "Back to Deals".
-- **Multi-level hierarchy:** Use breadcrumbs only when there are ≥3 levels (e.g.,
-  `Projects / PROJ-1 / Board / Issue #42`). Do not add breadcrumbs for two-level navigation.
-- **Never rely on the browser Back button** as the primary back mechanism — provide an explicit
-  in-page back link so users who open pages via direct link are not stranded.
+| < 640px | `text-base` semibold | Full-width row (`grid grid-flow-col auto-cols-fr`); a lone action goes full width | Sole filter fills width; multi-filter collapses into a **Drawer** |
+| 640–1280px | `text-lg` semibold | Right-aligned row | Inline row |
+| > 1280px | `text-lg` semibold | Right-aligned row | Single row, no wrap |
 
 ---
 
-## 6. Filter and Toolbar Patterns
+## 6. Filters and Toolbars
 
-### Component selection rule
+| Situation | Component |
+|---|---|
+| 2–4 mutually exclusive views of the same data | `Tabs` / segmented chips |
+| 5+ status options or data-specific values | `Select` |
+| Multiple independent facets | Filter bar, one `Select` per facet |
+| Free-text search | `SearchInput` (`components/ui/search-input.tsx`), debounced ≥300ms — never a raw `Input` with a hand-placed icon |
+| Date filtering | `DateRangePicker` or two `date` inputs — never free text |
+| Bulk actions | Contextual toolbar, visible only when rows are selected |
 
-| Situation | Component | Reason |
-|---|---|---|
-| 2–4 mutually exclusive views of the **same data** (e.g., Active / Archived / All) | `Tabs` or `SegmentedControl` (inline chips) | Keeps all options visible, one click |
-| 5+ status options or data-specific values | `Select` (shadcn) | Saves horizontal space |
-| Multiple independent filter facets (status + assignee + date range) | Filter bar with one `Select` per facet | Each Select is a separate dimension |
-| Searching free text | `SearchInput` (`components/ui/search-input.tsx` — icon + clear button), debounced ≥300ms | Canonical search field; never a raw `Input` with a hand-placed icon |
-| Date filtering | `DateRangePicker` or two `date` inputs | Never a free-text date field |
-| Bulk action trigger | Contextual toolbar appearing only when rows are selected | Never visible with 0 rows selected |
+**Sentinel-default Selects:** every filter `Select`'s first option is an "all" sentinel with a descriptive label (`<SelectItem value="all">All statuses</SelectItem>`). When "all" is selected the query param is removed from the URL, not set to `"all"`.
 
-**The sentinel-default Select rule (already a repo rule):** Every `Select` used as a filter must
-have a "all" sentinel value as its first option with a descriptive label:
-```tsx
-<SelectItem value="all">All statuses</SelectItem>
-<SelectItem value="ACTIVE">Active</SelectItem>
-```
-When "all" is selected, the query param is removed from the URL (not set to "all").
-
-### Filter bar layout spec (updated 2026-07-16 — h-9 canon + single-row toolbars)
+### Toolbar layout — h-9 canon
 
 ```tsx
-<div className={FILTER_TOOLBAR_ROW}>              // from components/ui/content-fill-panel.tsx
-  <SearchInput className="w-[240px]" … />
-  <Select …><SelectTrigger className={cn("w-[140px]", FILTER_SELECT_TRIGGER)} />…</Select>
+<div className={FILTER_TOOLBAR_ROW}>            // components/ui/content-fill-panel.tsx
+  <SearchInput … />
+  <Select …><SelectTrigger className={FILTER_SELECT_TRIGGER} />…</Select>
   …more facets…
   <div className="ml-auto flex shrink-0 items-center gap-2">{/* export/secondary */}</div>
 </div>
 ```
 
-- All field controls (Input/SearchInput/SelectTrigger/DatePicker/combobox triggers) are the
-  default **h-9 / text-sm** from `FIELD_CONTROL_CLASS` (`components/ui/field-control.ts`), which
-  the root primitives already apply. **Never add local `h-8`, `h-10`, or `text-xs` overrides** on
-  field controls at page/sheet/dialog level — the root standard propagates. The only sanctioned
-  compact controls are established inline-cell/popover editors inside tables and cards.
-- Filter selects get `FILTER_SELECT_TRIGGER` (color chrome only: `border-input bg-card …`) — it
-  intentionally carries **no height class**.
-- `FILTER_TOOLBAR_ROW` is the only filter-row container: one horizontal row, `flex-nowrap`,
-  `overflow-x-auto scrollbar-hide`, children `shrink-0`. **Filter rows never wrap — on every
-  viewport (incl. mobile) they stay one horizontally scrollable line.** Never hide a scrollbar
-  with `overflow-hidden`.
-- No outer card/panel wrapper around a filter row (fields already carry `border-input bg-card`;
-  a wrapper creates nested cards).
-- When tabs and search/filters/actions share one line, use `PageTabsToolbar`
-  (`components/ui/page-tabs-toolbar.tsx`): tabs left, search/filters/actions right, built-in
-  mobile filter popover.
-- The filter bar sits inside `PageWrapper`'s `filters` prop and must not add its own outer
-  horizontal padding (`PAGE_CHROME_X` comes from the wrapper).
-- **Search is always the leftmost item.** Status filter is always second. More specific filters
-  (assignee, date, type) follow. Export/secondary actions at the far right via `ml-auto`.
-- Loading skeletons for filter bars mirror this: one non-wrapping row of `h-9` skeleton blocks.
+- All field controls (Input/SearchInput/SelectTrigger/DatePicker/combobox triggers) are the default **h-9 / text-sm** from `FIELD_CONTROL_CLASS` (`components/ui/field-control.ts`), already applied by the root primitives. **Never add local `h-8`, `h-10`, or `text-xs` overrides** at page/sheet/dialog level. The only sanctioned compact controls are established inline-cell/popover editors inside tables and cards.
+- `FILTER_SELECT_TRIGGER` carries color chrome only (`border-input bg-card`) and intentionally **no height class**.
+- `FILTER_TOOLBAR_ROW` is the only filter-row container: one row, `flex-nowrap`, `overflow-x-auto scrollbar-hide`, children `shrink-0`. **Filter rows never wrap** — on every viewport they stay one horizontally scrollable line. Never hide the overflow with `overflow-hidden`.
+- **No outer card/panel around a filter row** — fields already carry `border-input bg-card`; a wrapper creates nested cards. The row sits in `PageWrapper`'s `filters` prop with no border, no background, and no extra horizontal padding.
+- **Search is always leftmost**, status second, specific filters (assignee, date, type) after, export/secondary at `ml-auto`.
+- When tabs share the line with search/filters/actions, use `PageTabsToolbar` (`components/ui/page-tabs-toolbar.tsx`).
+- Filter-bar skeletons mirror this: one non-wrapping row of `h-9` blocks.
 
-### Filter UX rules
+### Filter UX
 
-- Filters always update the URL (via `router.replace` with `useSearchParams`) so pages are
-  shareable and browser-navigable.
-- Never reset page to 1 silently — always reset pagination when a filter changes.
-- Active filter count badge: if > 2 filters are active simultaneously, show a count badge on the
-  filter bar's trigger (relevant for mobile sheet-based filters).
+- Filters always update the URL (`router.replace` + `useSearchParams`) so pages are shareable.
+- Always reset pagination when a filter changes.
+- Show an active-filter count badge on the mobile trigger when >2 filters are active.
+- **Mobile overlays are Drawers.** Below `md`, any filter/display/menu panel that would open as a Popover or Sheet uses a Drawer — via `ResponsivePopover` (`components/ui/responsive-popover.tsx`). Never a raw `Popover`/`Sheet` for a mobile filter/menu collapse. Desktop/tablet unchanged; tiny 1–3 item menus and date pickers are exempt.
 
-### Lone filter / lone action + mobile overlays (2026-07-23)
+### Reference layout recipe
 
-- **Single filter fills width on mobile.** When the filter bar has ONE control (typically a
-  search), it fills the full available width on mobile — never collapse a sole search behind a
-  dropdown/Drawer trigger. `PageWrapper` already gives its first `filters` child `flex-1` on
-  mobile (`flex-none` on `sm+`), so put the search first and don't wrap it.
-- **Single primary action fills width on mobile.** When a page has ONE primary action, pass it
-  directly as `PageWrapper`'s `actions` — the wrapper makes a lone action full-width on mobile
-  (`[&>*]:w-full sm:[&>*]:w-auto`). Never wrap it in a grid/flex that defeats this.
-- **Multi-filter bars:** search stays first (fills width on mobile); the remaining filters
-  collapse on mobile into a **Drawer** via `ResponsivePopover`, not a Popover/Sheet.
-- **Mobile overlays are Drawers.** On mobile (`< md`) any filter/display/menu panel that would
-  open as a Popover or Sheet uses a Drawer instead — `ResponsivePopover`
-  (`components/ui/responsive-popover.tsx`) renders a Drawer `< md` and a Popover on desktop.
-  Never a raw `Popover`/`Sheet` for a mobile filter/menu collapse. Desktop/tablet are unchanged;
-  tiny 1–3 item menus and date pickers are exempt.
-
----
-
-## Reference layout recipe (virabha)
-
-> Binding recipe extracted from the virabha admin reference. Every owned page must conform to this layout.
-> **Read-only source:** `D:\projects\virabha\frontend`
-
-### Page layout structure
+> Structure extracted from the virabha admin reference (read-only source `D:\projects\virabha\frontend`). Sizing follows the **h-9 canon above**, which supersedes virabha's `h-8`/`text-xs`.
 
 ```tsx
-// PageWrapper props
-<PageWrapper
-  title="Page Title"
-  subtitle="Optional subtitle"
-  scrollBody={false}   // → noInternalScroll in StreamlineOS
-  className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
-  actions={...}
-  filters={...}   // filters row — separate from table, no border/bg
->
-  {/* stats row (shrink-0, mb-2) */}
-  {/* bulk action bar (conditional, shrink-0) */}
-  {/* table card (flex-1, min-h-0) */}
+<PageWrapper title="…" filters={…} actions={…}
+  noInternalScroll
+  className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+  {/* stats row (shrink-0, mb-2) → bulk bar (conditional) → table card (flex-1 min-h-0) */}
 </PageWrapper>
 ```
 
-### Filters row — exact classes
-
-Filters live in the `PageWrapper` `filters` prop. They render **above** the table card with NO border, NO background. The PageWrapper's filter container is simply:
-
-```
-shrink-0 — no border-b, no bg-card, no backdrop-blur
-```
-
-**Full-width filter row (single flex row):**
-```
-flex w-full min-w-0 flex-nowrap items-center gap-2 lg:gap-3
-```
-
-**Search input block:**
-```
-relative min-w-0 flex-1 lg:max-w-md
-Search icon: absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none
-Input: h-8 w-full min-w-0 pl-8 text-xs
-```
-
-**Desktop selects block (hidden on mobile):**
-```
-hidden min-w-0 flex-[2] flex-row flex-nowrap items-center gap-2 sm:flex lg:gap-3
-Each Select trigger: h-8 min-w-0 flex-1 text-xs
-```
-
-**Mobile compact filter button:**
-```
-flex shrink-0 items-center sm:hidden
-```
-Consumer is responsible for implementing the mobile compact button inside the `filters` content; PageWrapper does NOT wrap filters in a Popover.
-
-### Table card — exact classes
-
-Always wrap the table in a Card + CardContent with zero padding:
+Filters render **above** the table card with no border and no background (`shrink-0`); the search block is `min-w-0 flex-1 lg:max-w-md`; selects sit in a `hidden sm:flex min-w-0 flex-[2]` group. Table card:
 
 ```tsx
 <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
   <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
-    <DataTable fillContainer ... />
-    {/* pagination at bottom of CardContent, border-t, shrink-0 */}
+    <DataTable fillContainer … />
+    {/* pagination: border-t, shrink-0 */}
   </CardContent>
 </Card>
 ```
 
-For pages NOT using fill-height (settings, detail sub-tables):
-```tsx
-<Card className="overflow-hidden">
-  <CardContent className="p-0 overflow-x-auto">
-    <Table>...</Table>
-  </CardContent>
-</Card>
-```
-
-### Sheet anatomy — exact classes
-
-```tsx
-<Sheet open={open} onOpenChange={onOpenChange}>
-  <SheetContent className="flex w-full flex-col overflow-hidden sm:max-w-md">
-    {/* HEADER — always fixed, never scrolls */}
-    <SheetHeader className="shrink-0 border-b pb-4">
-      <SheetTitle>Title</SheetTitle>
-      <SheetDescription>Optional description</SheetDescription>
-    </SheetHeader>
-
-    {/* BODY — scrolls independently */}
-    <ScrollArea className="min-h-0 flex-1 -mx-2">
-      <div className="space-y-3 px-6 py-2">
-        {/* form fields */}
-      </div>
-    </ScrollArea>
-    {/* OR for non-form detail panes: */}
-    {/* <div className="min-h-0 flex-1 overflow-y-auto p-4"> */}
-
-    {/* FOOTER — always fixed, never scrolls */}
-    <SheetFooter className="shrink-0 gap-2 border-t">
-      {/* Two-button footer: equal widths */}
-      <div className="grid w-full grid-cols-2 gap-2">
-        <Button variant="outline" onClick={handleCancel}>Cancel</Button>
-        <Button type="submit">Save</Button>
-      </div>
-      {/* Single-button footer: just render the button */}
-    </SheetFooter>
-  </SheetContent>
-</Sheet>
-```
-
-**Rules:**
-- `SheetContent` always gets `overflow-hidden` — content itself manages overflow
-- Header: `shrink-0 border-b pb-4` — border at bottom, compressed padding
-- Body: `min-h-0 flex-1 overflow-y-auto` — the `min-h-0` is mandatory to prevent flex overflow
-- Footer: `shrink-0 border-t` — border at top, uses SheetFooter default padding (`p-4`)
-- Two-button footers: `grid grid-cols-2 gap-2` so buttons are equal width
-
-### Header spacing
-
-| Zone | virabha class | StreamlineOS equivalent |
-|---|---|---|
-| Page outer | `px-2 py-1 sm:px-3 sm:py-1.5` (on layout `<main>`) | `px-4 sm:px-6` (on PageWrapper header + content) |
-| Header+filters block | `py-2 sm:pb-3` | `pt-4 pb-2` (header) + `pb-2` (filters) |
-| Gap between filters and table | none — just `space-y-2`/`gap-3` | none — table card immediately follows filters |
-| Actions button height | `h-8` | `h-8` |
-| Actions button text | `text-xs` | `text-xs` |
-| Actions gap | `gap-2` | `gap-2` |
+Non-fill-height pages (settings, detail sub-tables) use `<Card className="overflow-hidden"><CardContent className="p-0 overflow-x-auto">`.
 
 ---
 
@@ -622,151 +316,60 @@ For pages NOT using fill-height (settings, detail sub-tables):
 
 ### Buttons
 
-**One `<Button>` per view with the default (primary) variant.** Do not stack two primary buttons
-side by side. The action hierarchy is:
+**One default-variant `<Button>` per view.** Never two primaries side by side.
 
-| Variant | Visual | When to use |
+| Variant | Visual | When |
 |---|---|---|
-| Default (primary) | `bg-primary text-primary-foreground` = slate-900 fill + white text | The single most important action per view (Create, Save, Submit) |
-| Outline | `border-border bg-background hover:bg-muted` | Secondary actions (Export, Edit, Cancel) |
-| Ghost | Transparent, `hover:bg-muted` | Tertiary, icon-only, destructive confirm cancel |
-| Destructive | `bg-destructive text-destructive-foreground` | Delete confirm only — inside AlertDialogAction |
+| Default | slate-900 fill + white text | The single most important action (Create, Save, Submit) |
+| Outline | `border-border bg-background hover:bg-muted` | Secondary (Export, Edit, Cancel) |
+| Ghost | transparent, `hover:bg-muted` | Tertiary, icon-only |
+| Destructive | `bg-destructive` | Delete confirm only, inside `AlertDialogAction` |
 
-- Height: `h-9` for standard, `h-8` for compact (filter bar), `h-7` for icon-only in table rows.
-- Font: `text-sm font-medium`.
-- All buttons respond to `whileTap={{ scale: 0.97 }}` via Framer Motion on interactive pages.
-- `disabled` state: always explicitly set when a mutation is pending. Never block UI with
-  pointer-events tricks.
+- Height `h-9` standard, `h-7` icon-only in table rows. Font `text-sm font-medium`.
+- Press feedback is built into `Button` — never re-add `active:scale` per call site.
+- **Every async button is `<LoadingButton isPending>`** (`components/ui/loading-button.tsx`) — never hand-roll `disabled` + spinner ternaries.
 
 ### Cards
-
-Standard authenticated dashboard card:
 
 ```tsx
 <div className="bg-card rounded-lg border border-border shadow-soft p-4">
 ```
 
-- `rounded-lg` = `--radius` = 10px. Never `rounded-3xl` (24px) in dashboard chrome. That radius
-  is for landing/marketing surfaces only.
-- `shadow-soft` (defined in globals.css): `0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.04)`.
-- `bg-card` = white in light mode. Do not use `bg-white` directly — always reference the token.
-- Hover variant for clickable cards: add `hover:shadow-medium transition-shadow cursor-pointer`.
+- `rounded-lg` = `--radius` = 10px. `rounded-2xl`/`rounded-3xl` are marketing surfaces only.
+- `shadow-soft` = `0 1px 3px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.04)`. No backdrop-blur or heavy shadows in the shell.
+- Always `bg-card`, never `bg-white`. Translucent fills stay ≥75% card opacity with ≥70% borders.
+- Clickable cards add `hover:shadow-medium transition-shadow cursor-pointer`.
 
-Metric / stat card — use `<StatCard>` from `components/ui/stat-card.tsx`. This is the ONE canonical stats component; never build bespoke number-over-label divs.
+### StatCard
+
+`<StatCard>` / `<StatCardGrid>` (`components/ui/stat-card.tsx`) is the ONE stats component. **Anti-pattern:** bespoke `text-xl font-bold` divs over a label, or a bespoke `grid grid-cols-*` wrapper.
 
 ```tsx
-import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-
 <StatCardGrid cols={4}>
   <StatCard label="Active Users" value={42} icon={Users} tone="emerald" />
   <StatCard label="Pending" value={7} icon={Clock} tone="amber" />
-  <StatCard label="Failed" value={2} icon={AlertCircle} tone="red" />
-  <StatCard label="Total" value={51} icon={BarChart2} tone="blue" />
 </StatCardGrid>
 ```
 
-**StatCard dimensions:** `rounded-lg border border-border bg-card px-3 py-2.5`, natural height ~56px.
-**Layout:** compact horizontal row — tinted icon square LEFT (`h-8 w-8 rounded-md`), label + value stacked RIGHT.
-**Label:** `text-[11px] font-medium text-muted-foreground` — no uppercase, no tracking.
-**Value:** `text-lg font-semibold tabular-nums leading-tight`.
-
-**`tone` prop:**
-
-| Tone | Background | Icon color | When to use |
-|---|---|---|---|
-| `default` | `bg-slate-100` | `text-slate-600` | Neutral counts, totals, no semantic signal |
-| `blue` | `bg-blue-50` | `text-blue-600` | Info, in-progress, primary metrics |
-| `emerald` | `bg-emerald-50` | `text-emerald-600` | Success, active, healthy, positive |
-| `amber` | `bg-amber-50` | `text-amber-600` | Warning, pending, moderate, caution |
-| `red` | `bg-red-50` | `text-red-600` | Error, failed, overdue, critical |
-| `violet` | `bg-violet-50` | `text-violet-600` | Privileged / RBAC contexts |
-
-**Optional props:**
-- `delta?: { value: string; direction: "up" | "down" }` — ↑/↓ trend in emerald/red below the value. Use for period-over-period changes.
-- `hint?` — 10px muted suffix text below the value (shown only when `delta` is absent). Use for static context ("of 100 seats").
-- `href?` — wraps the card in a `<Link>` with `hover:bg-muted/30` for navigable stat tiles.
-- `isLoading?` — shows a matching `<Skeleton>` in place of the value.
-
-**`StatCardGrid` wrapper:** `cols` = `2 | 3 | 4 | 5 | 6` (default 4; used by skeletons / empty fallback). Gap is `gap-3`. Layout is always **one horizontal row** of equal-width cards — `gridTemplateColumns: repeat(N, minmax(10rem, 1fr))` where `N` is the child count (fallback `cols`), plus `[&>*]:min-w-0 [&>*]:h-full`. Never multi-row responsive breakpoints (`grid-cols-1` / `sm:grid-cols-2` / `xl:grid-cols-*`). It is a **horizontal-scroll container at every breakpoint** (`overflow-x-auto scrollbar-hide touch-pan-x`, snap on mobile only via `md:snap-none`): the ROW scrolls when the cards don't fit, so the PAGE never scrolls horizontally. **Never `md:overflow-x-visible`** (it lets the row push page-level horizontal scroll on tablet). Never wrap to a second row. Callers MUST use `StatCardGrid` — never a bespoke `grid grid-cols-*` wrapper around stat cards (convert any such grid).
-
-**Delta vs hint:** use `delta` for percentage changes vs. prior period; use `hint` for static context. Never show both.
-
-**Anti-pattern:** bespoke divs with `text-xl font-bold tabular-nums` over a label. Always use `<StatCard>`.
+- **Card:** `rounded-lg border border-border bg-card px-3 py-2.5` (~56px tall) — tinted icon square left (`h-8 w-8 rounded-md`), label + value stacked right. Label `text-[11px] font-medium text-muted-foreground` (no uppercase); value `text-lg font-semibold tabular-nums leading-tight`.
+- **`tone`:** `default` slate (neutral) · `blue` (info/primary) · `emerald` (success) · `amber` (warning) · `red` (error) · `violet` (RBAC/privileged).
+- **Optional props:** `delta` (↑/↓ vs prior period), `hint` (static context, shown only without `delta` — never both), `href` (wraps in a Link), `isLoading` (Skeleton in place of the value).
+- **`StatCardGrid` is always ONE horizontal row** of equal-width cards: `gridTemplateColumns: repeat(N, minmax(10rem, 1fr))` from child count, `gap-3`, `[&>*]:min-w-0 [&>*]:h-full`. It is a **horizontal-scroll container at every breakpoint** (`overflow-x-auto scrollbar-hide touch-pan-x`, snap on mobile via `md:snap-none`) so the ROW scrolls and the PAGE never does. **Never `md:overflow-x-visible`**, never multi-row breakpoints, never wrap to a second row, never compress below ~10rem.
 
 ### Data tables
 
-The canonical dense table pattern (as established by CRM quotes and HR pages):
+Use `DataTable` (`components/ui/data-table.tsx`) for all page-level list/admin tables — never hand-roll a raw shadcn `<Table>`. Engine is `@tanstack/react-table` v8, wrapped so consumers never import TanStack types.
 
-```tsx
-<div className="border border-border rounded-md flex flex-col h-[calc(100dvh-OFFSET)]">
-  {/* Scrollable body */}
-  <div className="flex-1 min-h-0 overflow-auto">
-    <div className="min-w-max">
-      <table className="w-full caption-bottom text-[11px]">
-        <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
-          <TableRow className="border-b-2 border-border">
-            <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
-              Column Name
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <TableRow className="h-8 hover:bg-muted/30 transition-colors">
-            <TableCell className="px-2 py-1">content</TableCell>
-          </TableRow>
-        </TableBody>
-      </table>
-    </div>
-  </div>
-  {/* Sticky pagination footer */}
-  <div className="shrink-0 flex items-center justify-between px-4 py-2 border-t">
-    <span className="text-xs text-muted-foreground">Showing X–Y of Z</span>
-    {/* pagination controls */}
-  </div>
-</div>
-```
-
-**Table rules:**
-
-- **Header row:** `text-[10px] uppercase tracking-wider font-bold`. Background: `bg-muted/80
-  backdrop-blur-sm`. Always `sticky top-0 z-10`.
-- **Row height:** `h-8` (32px condensed). `hover:bg-muted/30 transition-colors`.
-- **Cell padding:** `px-2 py-1`.
-- **Row actions column:** Width `w-8`, contains a 7×7 ghost icon button with `h-7 w-7`.
-- **Numeric columns:** `font-mono tabular-nums` + right-aligned (`text-right`).
-- **Text columns:** left-aligned. Truncated when needed: `truncate block max-w-[Xpx]`.
-- **Link columns:** `text-blue-600 hover:underline transition-colors` — no other color for links.
-- **Status column:** `<Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 {STATUS_BADGE_CLASSES[status]}">`.
-- **Empty table body:** Render a single `<TableRow><TableCell colSpan={N} className="p-0">` containing the `<EmptyState>` component with `border-0 bg-transparent min-h-[40vh]`.
-- **Table height:** `h-[calc(100dvh-Xrem)]` where X accounts for header + filter bar + pagination. Minimum height: `min-h-[320px]`.
-- **Offset calculation guide:** `16rem` for pages with standard header + filter bar.
-
-### DataTable component
-
-The canonical generic data table lives at `components/ui/data-table.tsx`. Use it for all new list/admin tables. Never hand-roll a raw shadcn `<Table>` for page-level data display.
-
-**Engine:** `@tanstack/react-table` v8 (already installed). The component accepts a `DataTableColumn<T>[]` prop that maps internally to TanStack `ColumnDef<T>` — consumers never import TanStack types directly.
-
-**Component API:**
-
-| Prop | Type | Required | Description |
-|---|---|---|---|
-| `data` | `T[]` | ✓ | Row data (pre-filtered by the page) |
-| `columns` | `DataTableColumn<T>[]` | ✓ | Column definitions |
-| `getRowKey` | `(row: T) => string \| number` | ✓ | Unique key per row |
-| `isLoading` | `boolean` | — | Shows skeleton rows (5 rows, matching column count) |
-| `emptyState` | `ReactNode` | — | Rendered inside a colspan cell when `data` is empty |
-| `pagination` | `{ pageSize? }` or `{ mode: "server"; page; pageSize; total; onPageChange }` | — | Client-side slicing or server-controlled |
-| `selection` | `{ selected: Set<string\|number>; onChange }` | — | Adds a checkbox column; syncs with TanStack selection |
-| `footer` | `ReactNode` | — | Optional summary row above the pagination bar |
-| `onRowClick` | `(row: T) => void` | — | Makes rows clickable |
-| `rowClassName` | `(row: T) => string` | — | Additional classes per row (e.g. `opacity-60` for archived) |
-| `minWidth` | `string` | — | Minimum width of the inner scroll container (e.g. `"580px"`) |
-| `className` | `string` | — | Classes on the outer container |
-
-**Layout rule:** DataTable renders ONLY the table card (header/rows/skeleton/empty) and pagination footer. It never renders search inputs or filter controls internally. All filters/search belong in the page's `PageWrapper` `filters` prop (or a standalone `flex flex-wrap items-center gap-2` row above the table card). The `search` and `toolbar` props have been removed — passing them will cause a compile error.
-
-**Column definition:**
+| Prop | Type | Notes |
+|---|---|---|
+| `data` | `T[]` | required |
+| `columns` | `DataTableColumn<T>[]` | required |
+| `getRowKey` | `(row: T) => string \| number` | required |
+| `isLoading` | `boolean` | skeleton rows matching column count |
+| `emptyState` | `ReactNode` | rendered in a colspan cell |
+| `pagination` | `{ pageSize? }` \| `{ mode: "server"; page; pageSize; total; onPageChange }` | |
+| `selection` | `{ selected: Set<…>; onChange }` | adds the checkbox column |
+| `footer` / `onRowClick` / `rowClassName` / `minWidth` / `className` | | |
 
 ```tsx
 interface DataTableColumn<T> {
@@ -780,513 +383,202 @@ interface DataTableColumn<T> {
 }
 ```
 
-**Usage example (org hierarchy page pattern):**
+**Layout rule:** DataTable renders only the table card + pagination footer. It never renders search or filters internally — those live in `PageWrapper`'s `filters` prop. (`search`/`toolbar` props were removed; passing them is a compile error.)
 
-```tsx
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import type { OrgBranch } from "@/types/org-hierarchy";
-
-const columns: DataTableColumn<OrgBranch>[] = [
-  {
-    key: "name",
-    header: "Name",
-    cell: (b) => <span className="font-medium">{b.name}</span>,
-    sortable: true,
-    sortValue: (b) => b.name,
-  },
-  {
-    key: "code",
-    header: "Code",
-    cell: (b) => <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{b.code}</code>,
-  },
-  {
-    key: "status",
-    header: "Status",
-    cell: (b) => <StatusBadge status={b.status} />,
-  },
-  {
-    key: "actions",
-    header: "",
-    headerClassName: "w-28",
-    cell: (b) => <BranchActions branch={b} />,
-  },
-];
-
-<DataTable
-  data={filtered}
-  columns={columns}
-  getRowKey={(b) => b.id}
-  isLoading={isLoading}
-  emptyState={<EmptyState ... />}
-  rowClassName={(b) => cn(b.status === "ARCHIVED" && "opacity-60")}
-  minWidth="580px"
-/>
-```
-
-**Migrated tables (as of 2026-07):** `/billing/invoices`, `/organization/branches`, `/organization/departments`, `/organization/teams`, `/organization/locations`, `/organization/business-units`, `/organization/cost-centers`
-
-**Next migration candidates (hand-rolled tables that should migrate):**
-- `/billing/recurring` — recurring subscriptions list
-- `/billing/coupons` — coupon codes table
-- `/billing/addons` — add-ons table
-- `/billing/seats` — seat allocation table
-- `/inventory/products` (already uses `DataTablePagination` separately — migrate to DataTable)
-- `/crm/**` — all CRM list pages (leads, contacts, deals, quotes)
-- `/hr/**` — HR list pages (employees, payroll, leave, attendance) if hand-rolled
-- `/organization/audit` — audit log table
+**Table styling rules**
+- Header: `sticky top-0 z-10 bg-muted/80 backdrop-blur-sm`, cells `text-[10px] uppercase tracking-wider font-bold px-2 py-1.5`.
+- Rows: `h-8 hover:bg-muted/30 transition-colors`; cells `px-2 py-1 text-[11px]`.
+- Row actions column `w-8` with an `h-7 w-7` ghost icon button.
+- Numeric: `font-mono tabular-nums text-right`. Text: left, `truncate` when needed. Links: `text-blue-600 hover:underline` — no other link color.
+- Status: `<Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 …">`.
+- Empty body: one `<TableRow><TableCell colSpan={N} className="p-0">` wrapping `<EmptyState className="border-0 bg-transparent min-h-[40vh]">`.
+- Scroll body `flex-1 min-h-0 overflow-auto` with `min-w-max` inner div; sticky footer showing "Showing X–Y of Z".
+- **Pagination is the shared `TablePagination`** (`components/ui/table-pagination.tsx`) — never a per-feature prev/next footer.
 
 ### Sheets vs Dialogs
 
 | Use case | Component | Max width |
 |---|---|---|
-| Quick confirmation (delete? cancel?) | `AlertDialog` | auto (compact) |
-| Short single-purpose form (≤5 fields) | `Dialog` | `sm:max-w-md` |
-| Long form or multi-section form (6+ fields) | `Sheet` (side="right") | `sm:max-w-md` to `sm:max-w-lg` |
-| Detail view (read-heavy, entity overview) | `Sheet` (side="right") | `sm:max-w-lg` to `sm:max-w-xl` |
-| Full-context edit (complex entity with nested sections) | `Sheet` (side="right") | `sm:max-w-2xl` |
-| Mobile navigation | `Sheet` (side="left") | `w-[17rem]` |
+| Quick confirmation | `AlertDialog` | auto |
+| Short form (≤5 fields) | `Dialog` | `sm:max-w-md` |
+| Long / multi-section form (6+) | `Sheet` right | `sm:max-w-md`–`lg` |
+| Detail view | `Sheet` right | `sm:max-w-lg`–`xl` |
+| Full-context edit | `Sheet` right | `sm:max-w-2xl` |
+| Mobile navigation | `Sheet` left | `w-[17rem]` |
 
-**Sheet anatomy (3-zone layout):**
+**Three-zone anatomy — header and footer never scroll, only the body does:**
+
 ```tsx
-<SheetContent className="p-0 flex flex-col gap-0 sm:max-w-lg">
-  {/* Zone 1 — Header (sticky) */}
-  <div className="shrink-0 px-6 py-4 border-b flex items-center justify-between">
+<SheetContent className="p-0 flex flex-col gap-0 overflow-hidden sm:max-w-lg">
+  <div className="shrink-0 px-6 py-4 border-b">
     <SheetHeader>
       <SheetTitle className="text-base font-semibold">Sheet Title</SheetTitle>
-      <SheetDescription className="text-[13px] text-muted-foreground">
-        Optional description.
-      </SheetDescription>
+      <SheetDescription className="text-[13px] text-muted-foreground">Optional.</SheetDescription>
     </SheetHeader>
   </div>
-  {/* Zone 2 — Scrollable body */}
+
   <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-4">
     {/* form fields */}
   </div>
-  {/* Zone 3 — Footer (sticky) */}
-  <div className="shrink-0 px-6 py-4 border-t flex items-center justify-end gap-2">
-    <SheetClose asChild><Button variant="outline">Cancel</Button></SheetClose>
-    <Button type="submit">Save Changes</Button>
+
+  <div className="shrink-0 px-6 py-4 border-t">
+    <div className="grid grid-cols-2 gap-2">           {/* equal-width footer buttons */}
+      <SheetClose asChild><Button variant="outline">Cancel</Button></SheetClose>
+      <Button type="submit">Save Changes</Button>
+    </div>
   </div>
 </SheetContent>
 ```
 
+`SheetContent` **always** gets `p-0` — inner zones own their padding. `min-h-0` on the body is mandatory or the flex chain overflows. Three or more footer buttons use `grid-flow-col auto-cols-fr`; buttons never hug.
+
 ### Empty states
 
-Every empty state uses `<EmptyState>` (`components/ui/empty-state.tsx`). Rules:
+`<EmptyState>` (`components/ui/empty-state.tsx`), always filling available height (`flex-1 min-h-[40vh]`, or `min-h-[60vh]` full-page).
 
-- **Always fills the available height** of its container: `flex-1 h-full min-h-[40vh]` or
-  `min-h-[60vh]` for full-page empty states.
-- **Three elements, in order:** illustration/icon → title → description → one CTA.
-- **Illustration context (living rule, 2026-07-03):** full-page/main-region empty states use a
-  themed SVG component from `components/illustrations` (shared `Wrapper` + `_shared.tsx` tokens;
-  extend the set in the same style when nothing fits — unDraw compositions may be adapted but are
-  always committed as recolored inline components, never raw downloaded SVG files). Compact and
-  table-cell empty bodies keep a lucide-react icon at `h-8 w-8 text-muted-foreground/40`.
-- **Title:** short noun phrase — "No employees yet", "No deals found", "Nothing here".
-- **Description:** one sentence — what the user would need to do or why the state exists.
-- **CTA:** one `<Button>` linking to the create action. Never two CTAs.
-- **Filter-empty vs data-empty:** When filters are active, description = "No results match your
-  filters." and CTA = "Clear filters". When no data at all, CTA = the create action.
-
-```tsx
-<EmptyState
-  illustration={<EmptyPersonIllustration />}
-  title="No employees yet"
-  description="Add your first employee to get started with HR management."
-  action={{ label: "Add Employee", onClick: onCreateEmployee }}
-  className="flex-1 min-h-[50vh] border-0 bg-transparent"
-/>
-```
+- **Order:** illustration/icon → title → description → one CTA. Never two CTAs.
+- Full-page/main-region empties use a themed SVG from `components/illustrations` (shared `_shared.tsx` tokens; extend in the same style — unDraw may be adapted but always as recolored inline components, never raw downloaded SVGs). Compact/table-cell empties keep a lucide icon at `h-8 w-8 text-muted-foreground/40`.
+- **Title:** short noun phrase ("No employees yet"). **Description:** one sentence.
+- **Filter-empty vs data-empty:** with filters active → "No results match your filters." + "Clear filters"; with no data → the create action.
 
 ### Loading states
 
-**Rule: skeletons, never standalone spinners for data-loading.**
+**Skeletons, never standalone spinners.**
 
-- Use `<SkeletonTable rows={N} columns={M} />` from `components/shared` for table pages.
-- Use `<Skeleton>` (shadcn) for card/metric placeholders — each `Skeleton` must match the shape
-  of its real content (height, width, border-radius).
-- **Skeletons are a visual Xerox of the loaded page (2026-07-16):** same section structure, same
-  columns, same row density. Dense list/table pages render **~9–12 skeleton rows** (never 2–3
-  cards floating on a full page), the skeleton fills remaining height (`flex-1`), stat rows use
-  `StatCardGridSkeleton`, filter-bar skeletons are ONE non-wrapping row of **h-9** blocks
-  (mirroring `FILTER_TOOLBAR_ROW`), and header action placeholders are h-9 (button-sized).
-- `Loader2` spinning icon is only for button loading states (via `LoadingButton`) and inline
-  mutations, never as a page-level loading indicator.
-- Timing: if data resolves in < 200ms, suppress the skeleton (use `{ isPending && !data }` guard).
+- `<SkeletonTable rows={N} columns={M} />` for table pages; `<Skeleton>` shaped to the real content elsewhere.
+- **Skeletons are a visual Xerox of the loaded page:** same sections, columns, and row density. Dense lists render ~9–12 rows (never 2–3 cards floating on a full page), fill remaining height (`flex-1`), use `StatCardGridSkeleton` for stat rows, one non-wrapping row of `h-9` blocks for filters, and `h-9` header action placeholders.
+- `Loader2` is for button/inline mutation states only (via `LoadingButton`), never page level.
+- Suppress the skeleton when data resolves in <200ms (`isPending && !data`).
 
 ### Error states
 
-Use `<ErrorState>` (`components/shared`) with:
-- A friendly, non-technical title.
-- A `description` that can include the raw error if it is user-actionable (e.g., "Network error —
-  check your connection").
-- An `onRetry` callback wired to the query's `refetch`.
-- `className="flex-1"` so it fills available height.
+`<ErrorState>` (`components/shared`) with a friendly non-technical title, a `description` that may include a user-actionable error, an `onRetry` wired to `refetch`, and `className="flex-1"` to fill height. All user-facing text goes through `getErrorMessage` (CLAUDE.md §15).
 
-### Badges / status chips
+### Badges
 
-All status indicators use `<Badge variant="outline">` from shadcn with semantic Tailwind classes
-from the palette table in §2. The size scale:
+`<Badge variant="outline">` + semantic classes from §2.
 
-| Context | Height | Padding | Font size |
+| Context | Height | Padding | Font |
 |---|---|---|---|
 | Table row | `h-4` | `px-1.5 py-0` | `text-[9px]` |
 | Card chip | `h-5` | `px-2 py-0.5` | `text-[10px]` |
 | Page header / filter | `h-5` | `px-2 py-0.5` | `text-xs` |
 
-### Phone Input
+### Phone input
 
-Every phone/mobile/WhatsApp number field in the app uses `<PhoneInput>` from `@/components/ui/phone-input` (wraps `react-phone-number-input` with a searchable country-code selector); never use a bare `<Input type="tel">` for a phone field. Default `defaultCountry="IN"`. Emits an E.164 string via `onChange(value: string)`; spread `{...field}` for react-hook-form `<FormField>` render props, or use `value`/`onChange` with a named handler for uncontrolled state.
+Every phone/mobile/WhatsApp field uses `<PhoneInput>` (`components/ui/phone-input`, wraps `react-phone-number-input` with a searchable country selector) — never a bare `<Input type="tel">`. Default `defaultCountry="IN"`; emits E.164 via `onChange(value: string)`; spread `{...field}` for react-hook-form.
 
 ---
 
 ## 8. Icons
 
-### Primary rule (updated 2026-07-16): animated icons on ALL interactive/hoverable surfaces
+**Animated icons on ALL interactive/hoverable surfaces** — table row actions, dropdown/popover/sheet triggers, primary CTAs, clickable cards, nav items — from `@animateicons/react/lucide` (`XxxIcon`), hover-driven from the PARENT via `useAnimatedIcon()` (`hooks/common/use-animated-icon.ts` → `{ iconRef, hoverHandlers }`).
 
-Icons on interactive/hoverable surfaces — table row action buttons, dropdown/popover/sheet/dialog
-trigger buttons, primary CTAs, clickable cards, nav items — MUST be the animated components from
-`@animateicons/react/lucide` (`XxxIcon` naming), hover-driven from the PARENT surface via the
-shared `useAnimatedIcon()` hook (`hooks/common/use-animated-icon.ts` → `{ iconRef, hoverHandlers }`).
+**Canonical helpers — never hand-wire the hook when one fits:**
 
-**Canonical helpers — never hand-wire the hook when one of these fits:**
-
-1. `AnimatedIconButton` (`components/ui/animated-icon-button.tsx`) — THE way to put an animated
-   icon in any shadcn `Button` (icon-only or icon+label). One-element swap; wires the hook
-   internally; forwards all Button props (works under `DropdownMenuTrigger asChild`):
+1. **`AnimatedIconButton`** (`components/ui/animated-icon-button.tsx`) — THE way to put an animated icon in any shadcn `Button`. Wires the hook internally, forwards all Button props, works under `DropdownMenuTrigger asChild`. `iconSize` defaults to 14; pass 16 where the static icon was `h-4 w-4`.
    ```tsx
    <AnimatedIconButton icon={EllipsisIcon} variant="ghost" size="icon" className="w-7" aria-label="Actions" />
    <AnimatedIconButton icon={PlusIcon} iconClassName="mr-1.5" size="sm">New Item</AnimatedIconButton>
    ```
-   `iconSize` defaults to 14 (≈ `h-3.5 w-3.5`); pass 16 where the static icon was `h-4 w-4`.
-2. Plain `<button>` elements and `.map()`/DataTable-cell contexts (hooks can't run in cell
-   callbacks): extract a small named `forwardRef` sub-component in the same file that calls
-   `useAnimatedIcon()` — mirror `ConversationOptionsButton` in
-   `components/assistant/ask-os-conversation-list.tsx`.
+2. Plain `<button>` and `.map()`/DataTable-cell contexts (hooks can't run in cell callbacks): extract a small named `forwardRef` sub-component in the same file that calls `useAnimatedIcon()`.
 
-**Name mapping is NOT 1:1 with lucide** — e.g. `MoreHorizontal` → `EllipsisIcon`,
-`Plus` → `PlusIcon`, `Trash2` → `Trash2Icon`. Before importing, verify the export exists in
-`node_modules/@animateicons/react` (248 Lucide + 33 Huge; catalogs at `animateicons.in`).
-**Known gap: `PencilIcon` does not exist — keep `Pencil` static.**
+**Names are not 1:1 with lucide** (`MoreHorizontal` → `EllipsisIcon`). Verify the export exists in `node_modules/@animateicons/react` before importing. **`PencilIcon` does not exist — keep `Pencil` static.**
 
-### Static `lucide-react` — non-interactive contexts only
+**Static `lucide-react` — non-interactive only:** badges/status chips, empty states, informational rows, section titles, `Loader2`, decorative icons with no hover affordance (breadcrumb chevrons, field adornments, the `SearchInput` magnifier), and anything missing from the animated catalog.
 
-- Icons inside `Badge`/status chips, empty states, informational text rows, section titles.
-- `Loader2` (spinners — but button spinners come from `LoadingButton`, never hand-rolled).
-- Decorative/semantic icons that carry no hover affordance (`ChevronRight` breadcrumbs, form
-  field adornments, the `SearchInput` magnifier — built into the shared component).
-- Any icon missing from the animateicons catalog.
+**Banned:** `@phosphor-icons/react`, `react-icons`, any other icon library.
 
-```tsx
-import { Search, Loader2 } from "lucide-react";
-```
-
-### Banned icon libraries
-
-- `@phosphor-icons/react` — banned for all new code.
-- `react-icons` — banned.
-- Any other icon library not listed above.
-
-### Sizing scale
-
-| Context | Size | Tailwind |
-|---|---|---|
-| Sidebar nav item | 16×16px | `h-4 w-4` |
-| Table row action | 16×16px | `h-4 w-4` |
-| Filter bar icon | 16×16px | `h-4 w-4` |
-| Button icon (standard) | 14×14px | `h-3.5 w-3.5` |
-| Button icon (small) | 12×12px | `h-3 w-3` |
-| Empty state illustration | 32×32px | `h-8 w-8` |
-| Full-page empty state (animated) | 48×48px | `h-12 w-12` |
-| Card / stat icon | 20×20px | `h-5 w-5` |
+**Sizes:** sidebar nav / table row action / filter icon `h-4 w-4` · button icon `h-3.5 w-3.5` (small `h-3 w-3`) · card/stat icon `h-5 w-5` · empty-state icon `h-8 w-8` · full-page empty illustration `h-12 w-12`.
 
 ---
 
 ## 9. Motion
 
-### Principles
-
-1. **Animate only GPU-composited properties**: `opacity`, `transform` (translate, scale, rotate).
-   Never animate `width`, `height`, `padding`, `margin`, or `top/left` — they trigger layout.
-2. **Fast and purposeful**: 150–250ms for micro-interactions; 250–350ms for panel/page transitions.
-   Nothing slower than 400ms in application chrome.
-3. **Always respect `prefers-reduced-motion`**: Use Framer Motion's `useReducedMotion()` hook.
-   When reduced motion is requested: preserve opacity transitions only; disable all translate and
-   scale animations.
-4. **Animate the container, never text nodes**: Animating text directly causes anti-aliasing
-   artifacts. Wrap text in a `motion.div`.
-
-### Duration and easing reference
+1. **Animate only GPU-composited properties** — `opacity`, `transform`. Never `width`, `height`, `padding`, `margin`, `top/left`.
+2. **Fast and purposeful** — 150–250ms micro-interactions, 250–350ms panels/pages. Nothing over 400ms in app chrome.
+3. **Always respect `prefers-reduced-motion`** via `useReducedMotion()`: keep opacity, drop translate and scale.
+4. **Animate containers, never text nodes** (anti-aliasing artifacts).
 
 | Context | Duration | Easing | Notes |
 |---|---|---|---|
-| Button hover color | 150ms | CSS `transition-colors` | No Framer needed |
-| Button press scale | 100ms | `ease-out` | `whileTap={{ scale: 0.97 }}` |
-| Dropdown / popover open | 150ms | `ease-out` | Via shadcn `tailwindcss-animate` |
-| Sheet slide-in from right | 200ms | `ease-out` | `slide-in-from-right` |
+| Button hover color | 150ms | `transition-colors` | CSS only, no Framer |
+| Button press | 100ms | `ease-out` | `whileTap={{ scale: 0.97 }}` |
+| Dropdown / popover | 150ms | `ease-out` | `tailwindcss-animate` |
+| Sheet slide-in | 200ms | `ease-out` | matched to its side |
 | Dialog fade + scale | 150ms | `ease-out` | `fade-in-0 zoom-in-95` |
-| Page transition (fade-up) | 300ms | `ease` forwards | `.animate-fade-up` CSS class |
-| List stagger entrance | 80ms per item | `ease-out` | `delay: index * 0.08` |
-| Toast entrance | 200ms | `ease-out` | Sonner default |
-| Skeleton shimmer | 1.5s | linear infinite | CSS `animation: shimmer` |
-
-### Framer Motion variant patterns (standardized)
+| Page transition | 300ms | `ease` | `.animate-fade-up` |
+| List stagger | 80ms/item | `ease-out` | `delay: index * 0.08` |
+| Toast | 200ms | `ease-out` | Sonner default |
+| Skeleton shimmer | 1.5s | linear infinite | CSS |
 
 ```ts
-// Stagger container (list pages)
 export const staggerContainer = {
   hidden: {},
   visible: { transition: { staggerChildren: 0.06 } },
 };
 
-// Child fade-up item
 export const fadeUp = {
   hidden: { opacity: 0, y: 10 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.22, ease: "easeOut" } },
 };
 
-// Page-level entrance
 export const pageEnter = {
   initial: { opacity: 0, x: 16 },
   animate: { opacity: 1, x: 0 },
-  exit: { opacity: 0, x: -16 },
+  exit:    { opacity: 0, x: -16 },
   transition: { duration: 0.22, ease: "easeOut" },
 };
 ```
 
-### Reduced motion implementation
-
 ```tsx
-import { useReducedMotion, motion } from "framer-motion";
-
-function AnimatedList({ items }: { items: Item[] }) {
-  const shouldReduceMotion = useReducedMotion();
-
-  const itemVariants = shouldReduceMotion
-    ? { hidden: { opacity: 0 }, visible: { opacity: 1 } }
-    : fadeUp;
-
-  return (
-    <motion.ul variants={staggerContainer} initial="hidden" animate="visible">
-      {items.map((item) => (
-        <motion.li key={item.id} variants={itemVariants}>
-          {/* content */}
-        </motion.li>
-      ))}
-    </motion.ul>
-  );
-}
+const shouldReduceMotion = useReducedMotion();
+const itemVariants = shouldReduceMotion
+  ? { hidden: { opacity: 0 }, visible: { opacity: 1 } }
+  : fadeUp;
 ```
 
-### What never animates
-
-- Sidebar width transition: use CSS `transition-[width] duration-300 ease-in-out` only (already
-  correct in DashboardShell).
-- Table rows on data refresh: no entrance animation when rows re-render after a mutation. Rows are
-  not unmounted/remounted on update — only the page-level `AnimatePresence` wraps new pages.
-- Every hover state: hover color/background changes use CSS `transition-colors duration-150` only,
-  never Framer Motion (saves 10s of JS events per second on dense tables).
-- Status badge changes: instant, no animation.
+**Never animates:** sidebar width (CSS `transition-[width]` only) · table rows on data refresh · hover states (CSS `transition-colors` only — Framer would cost 10s of JS events/second on dense tables) · status badge changes.
 
 ---
 
-## 10. Anti-Patterns
+## 10. Anti-Patterns (code review must flag)
 
-Each pattern below is **banned**. Code review must flag any instance.
-
-### AP-1: Double padding in Sheets
-
-**Pattern:** `<SheetContent>` has no explicit `p-0`, so its default `p-6` padding applies. Inner
-content adds another `p-4` wrapper. Total: 40px of edge padding.
-
-**Rule:** `SheetContent` always receives `className="p-0 flex flex-col gap-0"`. Inner zones manage
-their own padding. (See §4 and §7 for the correct pattern.)
-
-**Detectable in review by:** `SheetContent` missing `p-0` in its className.
-
----
-
-### AP-2: Tabs with 5+ options
-
-**Pattern:** A status filter implemented as `<Tabs>` with 6 tab items: All / Draft / Sent /
-Accepted / Rejected / Expired. At 768px the tab strip overflows or wraps.
-
-**Rule:** Tabs are only used when there are ≤4 mutually exclusive views AND each option is a major
-content category (not a status filter value). For status filters: use `<Select>`. For 5+ values:
-always `<Select>`. (See §6.)
-
-**Detectable in review by:** `<TabsList>` containing ≥5 `<TabsTrigger>` children.
+| # | Banned pattern | Rule | Detect by |
+|---|---|---|---|
+| **AP-1** | `SheetContent` without `p-0` + an inner `p-4` wrapper (40px edge padding) | `SheetContent` always `p-0 flex flex-col gap-0`; inner zones own padding (§7) | `SheetContent` missing `p-0` |
+| **AP-2** | Status filter as `<Tabs>` with 5+ triggers (overflows at 768px) | Tabs only for ≤4 major content categories; status filters use `<Select>` (§6) | `<TabsList>` with ≥5 triggers |
+| **AP-3** | Gradient/`.brand-text` on titles, headers, labels, or nav inside the shell | Gradient text only on landing, `/signin`, `/signup`, onboarding hero. Shell text uses semantic tokens | `brand-text`/`brand-sweep`/`gradient-signature` under `app/(authenticated)/` or `features/` |
+| **AP-4** | `rounded-2xl`/`rounded-3xl` on shell cards, tables, inputs, sheets | `rounded-lg` cards/panels, `rounded-md` inputs/tables, `rounded-xl` bottom sheets + onboarding only | those classes under `app/(authenticated)/` |
+| **AP-5** | A ≥50-row list page with no search and no status filter | Every filterable list page has at minimum search + status `Select` (§6) | list-page `PageWrapper` with no `filters` prop |
+| **AP-6** | A page rendering its own `<div>` header instead of `PageWrapper` | Every authenticated page uses `PageWrapper`; `noInternalScroll` pages still embed it (§5) | `<h1>` in `app/(authenticated)/` outside `PageWrapper` |
+| **AP-7** | `{isLoading && <Loader2 className="animate-spin" />}` as the page loading state | Page loading shows `<SkeletonTable>`/`<Skeleton>` matching the real shape; `Loader2` is button-only (§7) | `animate-spin` as a direct child of a page's root return |
+| **AP-8** | `text-[#3b82f6]` or `style={{ backgroundColor: '#0b1220' }}` | All colors reference tokens; only semantic status families may be literal Tailwind colors. No hex/RGB in JSX (§2) | arbitrary bracket color values or `style` color props |
 
 ---
 
-### AP-3: Gradient text in application chrome
+## 11. Conformance Checklist (per page)
 
-**Pattern:** `.brand-text` or `background-clip: text` gradient applied to page titles, section
-headers, table column names, button labels, or sidebar nav items inside the authenticated shell.
+Spec details live in §2–§10; these are the items most often missed.
 
-**Rule:** Brand gradient text is restricted to: landing page, `/signin`, `/signup`, and onboarding
-wizard hero text. Inside the authenticated dashboard: all text uses foreground semantic tokens only.
-`text-foreground`, `text-muted-foreground`, `text-blue-600` (links only) — no `.brand-text`.
-
-**Detectable in review by:** `brand-text`, `brand-sweep`, or `gradient-signature` classes inside
-`app/(authenticated)/` or `features/` component files (except org-setup / onboarding).
-
----
-
-### AP-4: Oversized border radius
-
-**Pattern:** `rounded-3xl` (24px) or `rounded-2xl` (16px) on cards, tables, inputs, sheets, or
-dialogs inside the authenticated shell.
-
-**Rule:** `rounded-lg` (10px via `--radius`) for cards/panels, `rounded-md` (8px) for inputs and
-table containers, `rounded-xl` (14px) for bottom sheets and onboarding steps only.
-`rounded-2xl`/`rounded-3xl` are marketing-only surfaces.
-
-**Detectable in review by:** `rounded-2xl` or `rounded-3xl` class on any element inside
-`app/(authenticated)/`.
+- [ ] All three of loading / empty / error implemented — not just the happy path
+- [ ] Empty and error states **fill** available height (flex chain), no hardcoded heights anywhere
+- [ ] Skeleton mirrors the real layout (row count, columns, `h-9` filter blocks) — no page-level `animate-spin`
+- [ ] Every query gated by `useCan("<the endpoint's exact permission key>")` (CLAUDE.md §11)
+- [ ] Filters update the URL; pagination resets on filter change; server-side pagination via `TablePagination`
+- [ ] Field controls left at the `h-9` root standard — no local `h-8`/`text-xs` overrides
+- [ ] Mobile: sole filter and sole action fill width; multi-filter collapses into a **Drawer**, not a Popover/Sheet
+- [ ] No raw IDs rendered anywhere — names/titles only (CLAUDE.md §15)
+- [ ] Interactive icons animated via `AnimatedIconButton`/`useAnimatedIcon`; async buttons are `LoadingButton`
+- [ ] Colored tints carry their `dark:` pairing; no hardcoded `blue-*` on theme-accent surfaces
+- [ ] Numeric table cells `font-mono tabular-nums`
+- [ ] Tested at 375 / 768 / 1280; icon-only buttons have `aria-label`; everything keyboard-navigable
+- [ ] No `any`, no `@ts-ignore`, no casts to silence TS
+- [ ] Real data renders — if an API fails, fix the API/hook; demo org has seed rows for every page **and its detail routes**
 
 ---
 
-### AP-5: Missing filters on filterable list pages
-
-**Pattern:** A list page (employees, deals, invoices, assets) with ≥50 potential rows has no
-search input and no status filter. Users must scroll the full list.
-
-**Rule:** Every list page with searchable/filterable content must have at minimum: (a) a search
-input and (b) a status `<Select>`. Pages with multi-dimension data must add assignee, date range,
-or type filters. (See §6.)
-
-**Detectable in review by:** A `PageWrapper` component on a list page with no `filters` prop.
-
----
-
-### AP-6: Per-page ad-hoc header
-
-**Pattern:** A page renders its own `<div>` header with a title, not using `<PageWrapper>`. This
-breaks the grid alignment and creates inconsistent spacing.
-
-**Rule:** Every authenticated page uses `<PageWrapper>` from `@/components/ui/page-wrapper`. No
-page builds its own title/header/action row. The only exceptions are pages with `noInternalScroll`
-that wrap their entire layout in a custom flex container — and even those must embed `<PageWrapper>`
-or replicate its header JSX exactly.
-
-**Detectable in review by:** A page file in `app/(authenticated)/` that contains a `<h1>` not
-inside `<PageWrapper>`.
-
----
-
-### AP-7: Spinning loader as page loading state
-
-**Pattern:** `{isLoading && <Loader2 className="animate-spin mx-auto" />}` used as the page-level
-loading state.
-
-**Rule:** Page-level data loading shows `<SkeletonTable>` (for list pages) or `<Skeleton>`
-placeholders (for card/detail pages) that match the real layout shape. `Loader2` is for button
-pending states only.
-
-**Detectable in review by:** `<Loader2>` or `animate-spin` appearing as the direct child of a
-page's root return when `isLoading` is true, without a `<Button>` parent.
-
----
-
-### AP-8: Inline hex colors or arbitrary values
-
-**Pattern:** `className="text-[#3b82f6]"` or `style={{ backgroundColor: '#0b1220' }}` in component
-files.
-
-**Rule:** All colors reference design tokens (CSS variables via Tailwind utilities: `text-primary`,
-`text-accent`, `text-blue-600`). Only status badge Tailwind classes (emerald/amber/red/blue
-semantic families) are allowed as literal Tailwind color utilities without a CSS variable. No hex
-codes or RGB values in JSX.
-
-**Detectable in review by:** Arbitrary color values in square brackets in Tailwind classes
-(e.g., `text-[#...]`, `bg-[rgba(...)]`) or `style` attributes with color properties.
-
----
-
-## 11. Rollout Conformance Checklist
-
-For each page being built or audited, verify every item:
-
-### Header and navigation
-- [ ] Uses `<PageWrapper>` with `title`, `subtitle`, `actions`, `filters` props (no ad-hoc header)
-- [ ] Page title is ≤3 words (or a clear noun phrase)
-- [ ] `subtitle` shows a live count for list pages
-- [ ] At most 3 action buttons; exactly 1 uses `variant="default"` (primary)
-- [ ] Back-navigation link present on detail pages (`ChevronLeft` + label)
-- [ ] Eyebrow label set on pages nested ≥2 levels deep
-
-### Filters and toolbar
-- [ ] List page has at minimum a search input + status Select in `filters` prop
-- [ ] All filter controls are height `h-8`, font `text-xs`
-- [ ] Filters update URL via `router.replace` + `useSearchParams`
-- [ ] Pagination resets when any filter changes
-- [ ] Tabs not used for ≥5 options (use Select instead)
-- [ ] Active filter count badge shown on mobile when ≥3 filters active
-
-### Tables
-- [ ] Table container uses `border border-border rounded-md` with internal `flex flex-col`
-- [ ] Scrollable body uses `flex-1 min-h-0 overflow-auto`
-- [ ] Header is `sticky top-0 z-10 bg-muted/80 backdrop-blur-sm`
-- [ ] Header cells: `text-[10px] uppercase tracking-wider font-bold px-2 py-1.5`
-- [ ] Data rows: `h-8 hover:bg-muted/30 transition-colors`
-- [ ] Data cells: `px-2 py-1 text-[11px]`
-- [ ] Numeric cells: `font-mono tabular-nums`
-- [ ] Link cells: `text-blue-600 hover:underline`
-- [ ] Status cells: `<Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 ...">` with semantic colors
-- [ ] Empty table body renders `<EmptyState>` inside colspan cell with `border-0 bg-transparent min-h-[40vh]`
-- [ ] Row action button: `variant="ghost" size="icon" className="h-7 w-7"`
-- [ ] Sticky pagination footer with "Showing X–Y of Z" text
-
-### Cards and layout
-- [ ] Cards use `bg-card rounded-lg border border-border` (no `rounded-3xl`, no inline hex)
-- [ ] Card internal padding is `p-4` (standard) or `p-3` (compact)
-- [ ] No gradient text in dashboard chrome
-- [ ] All spacing uses 4px-grid values (no arbitrary px values)
-
-### Sheets and Dialogs
-- [ ] `SheetContent` always has `p-0 flex flex-col gap-0`
-- [ ] Sheet has 3 zones: header (px-6 py-4 border-b), scrollable body (flex-1 overflow-y-auto px-6 py-4), footer (px-6 py-4 border-t)
-- [ ] Dialog used for ≤5-field forms; Sheet used for ≥6-field forms
-- [ ] `AlertDialog` used for all destructive confirmations
-- [ ] No double-padding (SheetContent outer + inner div)
-
-### States
-- [ ] Loading: `<SkeletonTable>` or per-element `<Skeleton>` — no standalone `<Loader2>` spinner
-- [ ] Empty: `<EmptyState>` with icon + title + description + one CTA, filling available height
-- [ ] Error: `<ErrorState>` with friendly message + retry, filling available height
-- [ ] All three states are implemented (not just happy path)
-
-### Icons
-- [ ] lucide-react for table rows, filter icons, button icons, dense lists
-- [ ] `@animateicons/react` checked first for empty states and primary CTAs
-- [ ] No `@phosphor-icons/react` imports in new or modified files
-- [ ] Icon sizes follow sizing scale (h-4 w-4 for nav/table, h-3.5 w-3.5 for button icons)
-
-### Motion
-- [ ] List pages use `staggerContainer` + `fadeUp` variants from `lib/motion-variants`
-- [ ] `useReducedMotion()` checked; animations disabled/simplified when true
-- [ ] No animation on table rows during data refresh
-- [ ] No `animate-spin` at page level
-- [ ] No duration > 400ms in dashboard chrome
-
-### Type and tokens
-- [ ] No `any`, no `@ts-ignore`, no type casts to silence TS
-- [ ] No inline hex colors or arbitrary color values
-- [ ] All colors use Tailwind semantic utilities or CSS variable references
-- [ ] Numeric data in tables uses `font-mono tabular-nums`
-- [ ] Table headers use `text-[10px] uppercase tracking-wider font-bold`
-
-### Accessibility and responsiveness
-- [ ] Tested at 375px (mobile), 768px (tablet), 1280px (desktop)
-- [ ] `<SkipLink>` present in shell (already wired in DashboardShell)
-- [ ] All interactive elements keyboard-navigable; `aria-label` on icon-only buttons
-- [ ] Filter bar wraps gracefully at 375px
-- [ ] Table uses `min-w-max` on inner div for horizontal scroll without overflow clip
-
----
-
-## Appendix A — Shell Architecture Reference
+## Appendix — Shell Architecture
 
 ```
 h-dvh flex flex-col overflow-hidden
@@ -1298,74 +590,14 @@ h-dvh flex flex-col overflow-hidden
     │   ├── Primary nav (≤7 items)
     │   ├── Module nav sections
     │   └── User / settings footer
-    └── div [Content area — flex-1 min-w-0 flex flex-col overflow-hidden]
-        ├── GlobalHeader [h-10 shrink-0 border-b px-4]
+    └── div [Content — flex-1 min-w-0 flex flex-col overflow-hidden]
+        ├── GlobalHeader [h-10 shrink-0 border-b px-4]   (hidden below md)
         └── main [flex-1 min-w-0 flex flex-col overflow-hidden]
             └── div [flex-1 min-h-0 overflow-auto flex flex-col pb-16 md:pb-0]
                 └── [PageWrapper — fills remaining height]
                     ├── Header zone [shrink-0 px-4 sm:px-6 pt-4 pb-2]
-                    ├── Filter bar zone [shrink-0 border-b]
+                    ├── Filter zone [shrink-0]
                     └── Content zone [flex-1 min-h-0 overflow-y-auto]
+
+Mobile: [Sheet — left, w-[17rem]] for nav · [MobileModuleBottomNav — fixed bottom, z-40, pb-safe] · [MobileShellFab]
 ```
-
-Mobile:
-```
-└── [Sheet — left, w-[17rem]] for nav
-└── [MobileBottomNav — fixed bottom, z-40, pb-safe]
-```
-
----
-
-## Appendix B — Sources Consulted
-
-This document synthesizes patterns from the following sources (100+ data points):
-
-**Product design languages analyzed:** Linear (redesign blog + DesignMD), Stripe (dashboard
-patterns + DesignMD), Vercel (design guidelines + typography docs + DesignMD), Attio (design
-breakdown + SaaSUI), Resend (DesignMD), Cal.com (design system), PostHog, Supabase (dashboard
-design), Notion, HiBob, Rippling, Gusto, Deel, Personio, Lattice, HubSpot, Pipedrive, Close,
-Asana, Monday.com, ClickUp, Height, Campsite, Missive, Plain, Clerk, Airtable (via SaaSUI.design,
-SaaSFrame, NicelyDone, PageFlows, Refero, Mobbin pattern databases).
-
-**Reference articles:** Pencil & Paper (enterprise data table UX), Eleken (filter UX, tab UX,
-table UX, empty states), UXPin (filter patterns), DonUX (B2B listing page anatomy), NN/G
-(skeleton screens), LogRocket (sheets vs dialogs, Linear design), UX Collective (B2B dashboard
-design), UXPatterns.dev, Carbon Design System (data table usage), PatternFly (drawer patterns).
-
-**Typography:** Vercel Geist Typography docs, Lexington Themes Geist OpenType features guide,
-FontAlternatives (dense dashboard fonts), official Geist Google Fonts entry.
-
-**Technical:** shadcn/ui theming documentation, Framer Motion animation docs, Framer easing
-functions reference, Motion for React (prefers-reduced-motion), CSS `font-variant-numeric`
-specification, Tailwind CSS utility reference.
-
-**Codebase ground truth:** StreamlineOS `frontend/globals.css` (token definitions), `components/
-ui/page-wrapper.tsx` (PageWrapper contract), `components/layout/dashboard-shell.tsx` (shell
-architecture), `app/(auth)/signin/page.tsx` (immutable reference), `app/(authenticated)/crm/
-quotes/page.tsx` (table + filter pattern reference), `components/layout/project-sidebar.tsx`
-(secondary sidebar reference).
-
-## Calculated heights rule (added 2026-07-02)
-
-Never hardcode content-area heights (`h-60`, `min-h-[260px]`, fixed skeleton block heights). Heights must be CALCULATED from available space:
-- Empty/error states fill the available content area: flex chain (`flex flex-col` on ancestors, `flex-1 min-h-0` on the state container) — or viewport-derived `min-h-[calc(100vh-<chrome>px)]` when a flex chain is impractical, where `<chrome>` = header+tabs+padding actually above it.
-- Scroll areas: `flex-1 min-h-0 overflow-y-auto`, never fixed px.
-- Skeletons size themselves from the real components they mimic (same h-8 rows, same StatCard dimensions), not invented blocks.
-
-## Overlay + data rules (added 2026-07-02, wave 2)
-
-- **Big form → Sheet, small form → Dialog.** Multi-section or >5-field forms never live in a Dialog.
-- **Sheet/Dialog anatomy:** header (`px-6 py-4 border-b shrink-0`) and footer (`px-6 py-4 border-t shrink-0`) NEVER scroll; only the body scrolls (`flex-1 min-h-0 overflow-y-auto px-6 py-5`). Container: `p-0 flex flex-col gap-0`.
-- **Sheet footer buttons share equal widths:** `grid grid-cols-2 gap-2` (or `grid-flow-col auto-cols-fr` for 3+). No hugging buttons in sheet footers.
-- **No overlapped spacing:** a container owns its padding once — children never re-add horizontal padding inside a padded parent; no `space-y-*` combined with child `mt-*`; gaps come from ONE `gap-*` on the parent.
-- **Every page must render real data:** if an API fails, FIX the API/hook (report backend contract mismatches); demo org must have seed rows for every admin page and its detail (`[id]`) pages — check detail pages too, not just lists.
-
-## Blue replaces purple (living rule, added 2026-07-11)
-
-When replacing legacy violet/purple/indigo styling anywhere in the authenticated shell (gradient buttons, progress fills, active indicators, icon tints, chart seeds), the replacement accent is always the **blue family** (`blue-500`/`blue-600`) — never violet, and never a per-module accent substituted in its place. Emerald/amber/red remain semantic-status-only.
-
-## Per-module identity (added 2026-07-02)
-
-One unified chrome (ink primary, neutral hovers, blue links) across ALL modules. Each module gets an ACCENT used ONLY for identity moments — activity-bar icon tint, active nav indicator, module overview hero tint, chart palette seed — never for buttons/hovers/body text:
-- CRM/Sales: blue-600 · Projects/PM: violet-600 · HR/People: emerald-600 · Inventory: amber-600 · Billing/Finance: cyan-700 · Support: rose-600 · Admin/Settings: slate-600.
-DataTable + filters layout: follow the virabha reference recipe (separate filters block above a standalone table card — see "Reference layout recipe (virabha)").

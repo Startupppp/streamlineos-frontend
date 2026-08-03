@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { useHydrated } from "@/hooks/common/use-hydrated";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -43,13 +44,15 @@ export function SetupWizard() {
   const [draft, setDraft] = useState<SetupDraft>({});
   const [initialized, setInitialized] = useState(false);
   const hydrated = useHydrated();
+  const { data: session } = useSession();
+  const orgId = session?.orgId ?? null;
 
   const { data: current, isLoading: policyLoading } = usePayrollPolicyCurrent();
 
-  if (hydrated && !initialized) {
+  if (hydrated && orgId && !initialized) {
     setInitialized(true);
-    setDraft(loadDraft());
-    const saved = loadStep();
+    setDraft(loadDraft(orgId));
+    const saved = loadStep(orgId);
     if (saved >= 1 && saved <= TOTAL_STEPS) setStep(saved);
   }
 
@@ -63,11 +66,11 @@ export function SetupWizard() {
   function updateDraft(partial: Partial<SetupDraft>) {
     const next = { ...draft, ...partial };
     setDraft(next);
-    saveDraft(next);
+    if (orgId) saveDraft(orgId, next);
   }
 
   function handleClearAll() {
-    clearAll();
+    if (orgId) clearAll(orgId);
     setDraft({});
     setStep(1);
   }
@@ -76,14 +79,14 @@ export function SetupWizard() {
     const next = Math.min(step + 1, TOTAL_STEPS);
     setDirection(1);
     setStep(next);
-    saveStep(next);
+    if (orgId) saveStep(orgId, next);
   }
 
   function goBack() {
     const prev = Math.max(step - 1, 1);
     setDirection(-1);
     setStep(prev);
-    saveStep(prev);
+    if (orgId) saveStep(orgId, prev);
   }
 
   if (!initialized) return null;

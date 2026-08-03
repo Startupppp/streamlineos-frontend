@@ -64,15 +64,6 @@ export interface SurveyQuestion {
   order: number;
 }
 
-export interface GoalItem {
-  id: string;
-  title: string;
-  description?: string;
-  metricType: "numeric" | "percentage" | "boolean";
-  targetValue?: number;
-  required: boolean;
-}
-
 export interface HrTemplate {
   id: number;
   orgId: string;
@@ -90,18 +81,6 @@ export interface HrTemplate {
   deletedAt: string | null;
   createdAt: string;
   updatedAt: string;
-}
-
-export interface HrTemplateRender {
-  id: number;
-  orgId: string;
-  templateId: number;
-  templateVersion: number;
-  renderedForEmployeeId: number | null;
-  renderedBy: string;
-  contextSnapshot: Record<string, unknown>;
-  outputHtml: string;
-  createdAt: string;
 }
 
 export type HrTemplateListItem = Omit<HrTemplate, "content">;

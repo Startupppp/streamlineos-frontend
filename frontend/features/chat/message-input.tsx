@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback } from "react";
 import Image from "next/image";
@@ -25,7 +25,7 @@ import {
   getInitials,
 } from "./chat-helpers";
 import type { Message } from "./chat-types";
-import type { TicketSearchResult } from "@/hooks/api/projects";
+import type { TicketSearchResult } from "@/hooks/api/build";
 import { TicketMentionPicker } from "./ticket-mention-picker";
 import { EmojiGrid } from "./emoji-grid";
 import { getChatMobileComposerInsetClassName } from "./chat-mobile-chrome-layout";

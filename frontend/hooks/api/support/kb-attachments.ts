@@ -37,7 +37,7 @@ interface AttachmentDownloadResponse {
 
 const KB_ATTACHMENT_FOLDER = "kb-attachments";
 
-export function useKbAttachments(articleId: number) {
+export function useSupportKbAttachments(articleId: number) {
   return useQuery({
     queryKey: queryKeys.kbAttachments.list(articleId),
     queryFn: () =>
@@ -49,10 +49,10 @@ export function useKbAttachments(articleId: number) {
   });
 }
 
-export function useUploadKbAttachment(articleId: number) {
+export function useUploadSupportKbAttachment(articleId: number) {
   const qc = useQueryClient();
   return useMutation({
-    mutationKey: ["kbAttachments", "upload"],
+    mutationKey: ["supportKbAttachments", "upload"],
     mutationFn: async (file: File) => {
       const formData = new FormData();
       formData.append("file", file);
@@ -79,10 +79,10 @@ export function useUploadKbAttachment(articleId: number) {
   });
 }
 
-export function useDeleteKbAttachment(articleId: number) {
+export function useDeleteSupportKbAttachment(articleId: number) {
   const qc = useQueryClient();
   return useMutation({
-    mutationKey: ["kbAttachments", "delete"],
+    mutationKey: ["supportKbAttachments", "delete"],
     mutationFn: (attachmentId: number) =>
       apiClient.delete<{ success: boolean }>(
         `/support/kb/articles/${articleId}/attachments/${attachmentId}`,
@@ -92,9 +92,9 @@ export function useDeleteKbAttachment(articleId: number) {
   });
 }
 
-export function useKbAttachmentDownloadUrl(articleId: number) {
+export function useSupportKbAttachmentDownloadUrl(articleId: number) {
   return useMutation({
-    mutationKey: ["kbAttachments", "download-url"],
+    mutationKey: ["supportKbAttachments", "download-url"],
     mutationFn: (attachmentId: number) =>
       apiClient.get<AttachmentDownloadResponse>(
         `/support/kb/articles/${articleId}/attachments/${attachmentId}`,
@@ -102,7 +102,7 @@ export function useKbAttachmentDownloadUrl(articleId: number) {
   });
 }
 
-export function usePublicKbAttachments(orgId: string, slug: string) {
+export function usePublicSupportKbAttachments(orgId: string, slug: string) {
   return useQuery({
     queryKey: queryKeys.kbAttachments.publicList(orgId, slug),
     queryFn: () =>

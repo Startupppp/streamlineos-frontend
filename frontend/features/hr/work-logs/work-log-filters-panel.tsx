@@ -94,7 +94,6 @@ export function WorkLogFiltersPanel({
   return (
     <div className={FILTER_TOOLBAR_ROW}>
       <SearchInput
-        className="w-[220px] max-w-[min(220px,70vw)]"
         placeholder="Search by date or keyword..."
         value={searchTerm}
         onValueChange={handleSearchChange}

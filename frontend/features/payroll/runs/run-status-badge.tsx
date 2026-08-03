@@ -2,57 +2,22 @@
 
 import { Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SemanticBadge } from "@/components/ui/semantic-badge";
+import type { BadgeTone } from "@/components/ui/semantic-badge";
 import type { PayrollRunStatus } from "@/types/payroll/runs";
 
-const STATUS_CONFIG: Record<
-  PayrollRunStatus,
-  { label: string; className: string; icon?: boolean }
-> = {
-  PREPARING: {
-    label: "Preparing",
-    className: "bg-muted text-muted-foreground border border-border",
-  },
-  DRAFT: {
-    label: "Draft",
-    className: "bg-primary/10 text-foreground border border-primary/20",
-  },
-  PREVIEW_READY: {
-    label: "Preview Ready",
-    className: "bg-primary/10 text-foreground border border-primary/20",
-  },
-  EXCEPTIONS_FOUND: {
-    label: "Exceptions",
-    className: "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  },
-  PENDING_APPROVAL: {
-    label: "Pending Approval",
-    className: "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  },
-  APPROVED: {
-    label: "Approved",
-    className: "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  },
-  LOCKED: {
-    label: "Locked",
-    className: "bg-muted text-muted-foreground border border-border",
-    icon: true,
-  },
-  PAID: {
-    label: "Paid",
-    className: "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  },
-  PAYSLIPS_PUBLISHED: {
-    label: "Published",
-    className: "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  },
-  CLOSED: {
-    label: "Closed",
-    className: "bg-muted text-muted-foreground border border-border",
-  },
-  REOPENED: {
-    label: "Reopened",
-    className: "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  },
+const STATUS_CONFIG: Record<PayrollRunStatus, { label: string; tone: BadgeTone; icon?: boolean }> = {
+  PREPARING: { label: "Preparing", tone: "neutral" },
+  DRAFT: { label: "Draft", tone: "accent" },
+  PREVIEW_READY: { label: "Preview Ready", tone: "accent" },
+  EXCEPTIONS_FOUND: { label: "Exceptions", tone: "warning" },
+  PENDING_APPROVAL: { label: "Pending Approval", tone: "warning" },
+  APPROVED: { label: "Approved", tone: "success" },
+  LOCKED: { label: "Locked", tone: "neutral", icon: true },
+  PAID: { label: "Paid", tone: "success" },
+  PAYSLIPS_PUBLISHED: { label: "Published", tone: "success" },
+  CLOSED: { label: "Closed", tone: "neutral" },
+  REOPENED: { label: "Reopened", tone: "warning" },
 };
 
 interface RunStatusBadgeProps {
@@ -63,15 +28,12 @@ interface RunStatusBadgeProps {
 export function RunStatusBadge({ status, className }: RunStatusBadgeProps) {
   const config = STATUS_CONFIG[status];
   return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium",
-        config.className,
-        className,
-      )}
-    >
-      {config.icon && <Lock className="h-2.5 w-2.5" />}
-      {config.label}
-    </span>
+    <SemanticBadge
+      tone={config.tone}
+      label={config.label}
+      icon={config.icon ? <Lock className="h-2.5 w-2.5" /> : undefined}
+      size="xs"
+      className={cn(className)}
+    />
   );
 }

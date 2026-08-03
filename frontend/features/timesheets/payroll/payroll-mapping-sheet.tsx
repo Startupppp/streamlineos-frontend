@@ -12,7 +12,16 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerFooter,
+} from "@/components/ui/drawer";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
+import { useIsMobile } from "@/hooks/common/use-mobile";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -146,6 +155,7 @@ export function PayrollMappingSheet({
   onOpenChange,
   settings,
 }: PayrollMappingSheetProps) {
+  const isMobile = useIsMobile();
   const updateSettings = useUpdateTimesheetPayrollSettings();
 
   const form = useForm<MappingFormValues>({
@@ -195,6 +205,72 @@ export function PayrollMappingSheet({
     );
   });
 
+  const formBody = (
+    <div className="space-y-5 px-6 py-5">
+      <div className="space-y-1.5">
+        <Label className="text-xs font-medium">Provider</Label>
+        <Select value={form.watch("provider")} onValueChange={handleProviderChange}>
+          <SelectTrigger className="h-9" aria-label="Payroll provider">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+            <SelectItem value="GENERIC">Generic</SelectItem>
+            <SelectItem value="ZOHO_PAYROLL">Zoho Payroll</SelectItem>
+            <SelectItem value="RAZORPAYX">RazorpayX</SelectItem>
+            <SelectItem value="ADP">ADP</SelectItem>
+            <SelectItem value="GUSTO">Gusto</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
+        <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Columns</p>
+        <div className="space-y-1.5">
+          {fields.map((field, index) => (
+            <MappingColumnRow
+              key={field.id}
+              form={form}
+              index={index}
+              columnKey={field.key}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  const formFooter = (
+    <div className="border-t px-6 py-4 grid grid-cols-2 gap-2">
+      <Button type="button" variant="outline" onClick={handleClose}>
+        Cancel
+      </Button>
+      <LoadingButton type="submit" isPending={updateSettings.isPending} loadingText="Saving…">
+        Save Mapping
+      </LoadingButton>
+    </div>
+  );
+
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={onOpenChange} shouldScaleBackground={false}>
+        <DrawerContent className="max-h-[92dvh]">
+          <DrawerHeader className="border-b px-6 py-4 text-left gap-0.5">
+            <DrawerTitle>Column Mapping</DrawerTitle>
+            <p className="text-xs text-muted-foreground">Configure payroll export columns per provider.</p>
+          </DrawerHeader>
+          <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <ScrollArea className="flex-1 min-h-0">
+              {formBody}
+            </ScrollArea>
+            <DrawerFooter className="p-0">
+              {formFooter}
+            </DrawerFooter>
+          </form>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="p-0 flex flex-col gap-0 overflow-hidden sm:max-w-lg">
@@ -204,51 +280,15 @@ export function PayrollMappingSheet({
         </SheetHeader>
 
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
-          <SheetBody className="px-6 py-5 space-y-5">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium">Provider</Label>
-              <Select value={form.watch("provider")} onValueChange={handleProviderChange}>
-                <SelectTrigger className="h-9" aria-label="Payroll provider">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="GENERIC">Generic</SelectItem>
-                  <SelectItem value="ZOHO_PAYROLL">Zoho Payroll</SelectItem>
-                  <SelectItem value="RAZORPAYX">RazorpayX</SelectItem>
-                  <SelectItem value="ADP">ADP</SelectItem>
-                  <SelectItem value="GUSTO">Gusto</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Columns</p>
-              <div className="space-y-1.5">
-                {fields.map((field, index) => (
-                  <MappingColumnRow
-                    key={field.id}
-                    form={form}
-                    index={index}
-                    columnKey={field.key}
-                  />
-                ))}
-              </div>
-            </div>
+          <SheetBody>
+            {formBody}
           </SheetBody>
 
           <SheetFooter className="border-t px-6 py-4 grid grid-cols-2 gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-            >
+            <Button type="button" variant="outline" onClick={handleClose}>
               Cancel
             </Button>
-            <LoadingButton
-              type="submit"
-              isPending={updateSettings.isPending}
-              loadingText="Saving…"
-            >
+            <LoadingButton type="submit" isPending={updateSettings.isPending} loadingText="Saving…">
               Save Mapping
             </LoadingButton>
           </SheetFooter>

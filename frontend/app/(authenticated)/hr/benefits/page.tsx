@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
-import { Plus, FileText, Users, LayoutGrid, Shield } from "lucide-react";
+import { Plus, FileText, LayoutGrid, Shield } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -28,7 +28,6 @@ import {
   useEnroll,
   useWaive,
   useInsuranceClaims,
-  useSubmitClaim,
   type BenefitPlan,
   type InsuranceClaim,
 } from "@/hooks/api/hr";
@@ -216,7 +215,7 @@ function buildClaimColumns(
       key: "claimant",
       header: "Claimant",
       cell: (claim) => (
-        <span className="text-sm">{claim.user?.name ?? claim.user?.email ?? claim.userId}</span>
+        <span className="text-sm">{claim.user?.name ?? claim.user?.email ?? "Unknown user"}</span>
       ),
     },
     {
@@ -410,7 +409,7 @@ export default function BenefitsPage() {
       subtitle="Manage employee benefit plans, enrollments, and insurance claims"
  variant="display">
       <Tabs defaultValue="my-benefits" className="flex min-h-0 flex-1 flex-col gap-4">
-        <TabsList className="shrink-0">
+        <TabsList>
           <TabsTrigger value="my-benefits" className="gap-1.5">
             <Shield className="h-3.5 w-3.5" />
             My Benefits

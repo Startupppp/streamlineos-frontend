@@ -16,16 +16,6 @@ export interface HeadcountPlan {
   updatedAt: string;
 }
 
-export interface HiringPlanItem {
-  id: number;
-  planId: number;
-  roleTitle: string;
-  count: number;
-  targetQuarter: number | null;
-  status: string;
-  linkedRequisitionId: number | null;
-}
-
 export interface BudgetVsActual {
   planId: number;
   fiscalYear: number;

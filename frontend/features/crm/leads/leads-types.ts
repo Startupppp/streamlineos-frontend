@@ -1,7 +1,4 @@
 export type LeadStatus = "NEW" | "CONTACTED" | "INTERESTED" | "QUALIFIED" | "CONVERTED" | "LOST";
-export type LeadSource = "referral" | "campaign" | "cold_call" | "website" | "social_media" | "walk_in" | "other";
-export type LeadPriority = "HOT" | "WARM" | "COLD";
-export type LeadActivityType = "call" | "email" | "whatsapp" | "meeting" | "site_visit";
 
 export interface BoardLead {
   id: number;

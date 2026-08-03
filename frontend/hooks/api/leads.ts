@@ -127,12 +127,12 @@ export function useUpdateLead() {
       }
       return { previousList };
     },
-    onError: (_err, _vars, ctx) => {
+    onError: (_, _vars, ctx) => {
       if (ctx?.previousList) {
         qc.setQueryData(queryKeys.leads.list(), ctx.previousList);
       }
     },
-    onSettled: (_data, _err, vars) => {
+    onSettled: (_, _err, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.leads.all });
       qc.invalidateQueries({ queryKey: queryKeys.leads.detail(vars.id) });
     },
@@ -164,12 +164,12 @@ export function useUpdateLeadStatus() {
       }
       return { previousBoard };
     },
-    onError: (_err, _vars, ctx) => {
+    onError: (_, _vars, ctx) => {
       if (ctx?.previousBoard) {
         qc.setQueryData(queryKeys.leads.board(), ctx.previousBoard);
       }
     },
-    onSettled: (_data, _err, vars) => {
+    onSettled: (_, _err, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.leads.board() });
       qc.invalidateQueries({ queryKey: queryKeys.leads.detail(vars.leadId) });
       qc.invalidateQueries({ queryKey: queryKeys.leads.all });

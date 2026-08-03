@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState, type ChangeEvent } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { Package, AlertTriangle, AlertCircle } from "lucide-react";
@@ -104,7 +104,7 @@ function ReorderReportContent() {
   const debouncedSearch = useDebouncedValue(search, 300);
 
   const query = useReorderReport({ page: currentPage, limit: 50 });
-  const items = query.data?.items ?? [];
+  const items = useMemo(() => query.data?.items ?? [], [query.data]);
 
   useEffect(() => {
     const trimmed = debouncedSearch.trim() || null;
@@ -115,7 +115,7 @@ function ReorderReportContent() {
     else params.delete("q");
     params.delete("page");
     router.replace(`?${params.toString()}`, { scroll: false });
-  }, [debouncedSearch]);
+  }, [debouncedSearch, router, searchParams]);
 
   const filtered = useMemo(() => {
     const term = debouncedSearch.trim().toLowerCase();
@@ -187,7 +187,7 @@ function ReorderReportContent() {
       subtitle="Products below their reorder points"
       filters={
         <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0 lg:gap-3">
-          <SearchInput className="min-w-0 flex-1 lg:max-w-md" value={search} onValueChange={handleSearchChange} placeholder="Search products, SKU, category…" />
+          <SearchInput className="min-w-0 flex-1" value={search} onValueChange={handleSearchChange} placeholder="Search products, SKU, category…" />
           <AnimatedIconButton
             icon={DownloadIcon}
             iconSize={14}

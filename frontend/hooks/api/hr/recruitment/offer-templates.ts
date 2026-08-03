@@ -27,6 +27,7 @@ export function useOfferTemplates() {
 export function useCreateOfferTemplate() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "offer-templates", "create"],
     mutationFn: (data: { name: string; htmlContent: string; isDefault?: boolean }) =>
       apiClient.post<OfferLetterTemplate>("/hr/recruitment/offer-templates", data),
     onSuccess: () => {
@@ -38,6 +39,7 @@ export function useCreateOfferTemplate() {
 export function useUpdateOfferTemplate(id: number) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "offer-templates", "update", id],
     mutationFn: (data: { name?: string; htmlContent?: string; isDefault?: boolean }) =>
       apiClient.patch<OfferLetterTemplate>(`/hr/recruitment/offer-templates/${id}`, data),
     onSuccess: () => {
@@ -49,6 +51,7 @@ export function useUpdateOfferTemplate(id: number) {
 export function useDeleteOfferTemplate() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "offer-templates", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/recruitment/offer-templates/${id}`),
     onSuccess: () => {
@@ -59,6 +62,7 @@ export function useDeleteOfferTemplate() {
 
 export function useGenerateOfferPdf() {
   return useMutation({
+    mutationKey: ["hr", "recruitment", "offer-templates", "generate-pdf"],
     mutationFn: ({
       templateId,
       ...data

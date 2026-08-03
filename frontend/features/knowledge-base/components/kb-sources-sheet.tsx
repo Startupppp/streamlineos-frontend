@@ -10,6 +10,7 @@ import { StickyNote, Loader2 } from "lucide-react";
 import { AppSheet } from "@/components/shared/app-sheet";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -172,20 +173,16 @@ function SourceRow({
 
       <SourceStatusBadge source={source} />
 
-      <Button
+      <LoadingButton
         variant="ghost"
         size="icon"
         className="w-7 shrink-0 text-muted-foreground hover:text-destructive"
         onClick={onDelete}
-        disabled={isDeleting}
+        isPending={isDeleting}
         aria-label="Delete source"
       >
-        {isDeleting ? (
-          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-        ) : (
-          <Trash2Icon size={14} />
-        )}
-      </Button>
+        {!isDeleting && <Trash2Icon size={14} />}
+      </LoadingButton>
     </li>
   );
 }

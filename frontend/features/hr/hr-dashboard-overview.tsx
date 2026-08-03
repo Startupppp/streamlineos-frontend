@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import { useCan } from "@/hooks/api/access";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -23,11 +23,9 @@ import Link from "next/link";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
-const HR_ADMIN_ROLES = ["CEO", "HR", "ADMIN", "BRANCH_HR", "BRANCH_MANAGER"];
-
 function formatDateLabel(dateStr: string) {
   const d = new Date(dateStr);
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return d.toLocaleDateString("en-IN", { month: "short", day: "numeric" });
 }
 
 function LeaveCalendarWidget() {
@@ -289,10 +287,9 @@ const METRIC_CARDS = [
 }>;
 
 export function HrDashboardWidgets() {
-  const { data: session } = useSession();
-  const role = session?.user?.role;
+  const canView = useCan("hr:analytics:read");
 
-  if (!role || !HR_ADMIN_ROLES.includes(role)) return null;
+  if (!canView) return null;
 
   return (
     <div className="grid sm:grid-cols-2 gap-3">
@@ -303,11 +300,10 @@ export function HrDashboardWidgets() {
 }
 
 export function HrDashboardOverview() {
-  const { data: session } = useSession();
-  const role = session?.user?.role;
+  const canView = useCan("hr:analytics:read");
   const { data: metrics, isLoading, isError, refetch } = useHrDashboardMetrics();
 
-  if (!role || !HR_ADMIN_ROLES.includes(role)) return null;
+  if (!canView) return null;
 
   const activeRate = metrics?.totalEmployees
     ? Math.round((metrics.activeEmployees / metrics.totalEmployees) * 100)

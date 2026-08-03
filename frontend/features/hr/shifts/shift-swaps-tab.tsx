@@ -1,13 +1,15 @@
 "use client";
 
-import { useMemo, type ReactNode } from "react";
+import { useCallback, useMemo, type ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useShiftSwaps, useUpdateSwapStatus } from "@/hooks/api/hr/shifts";
+import { useOrgMembersByIds } from "@/hooks/api/organization";
+import { getUserDisplayName, type NamedUser } from "@/features/build/shared/resolve-user-name";
 
 interface Props {
   canManage: boolean;
@@ -23,19 +25,37 @@ export function ShiftSwapsTab({ canManage }: Props) {
   const { data: swaps, isLoading } = useShiftSwaps();
   const updateStatus = useUpdateSwapStatus();
 
-  function handleApprove(id: number) {
+  const userIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const swap of swaps ?? []) {
+      ids.add(swap.requesterId);
+      ids.add(swap.targetUserId);
+    }
+    return [...ids];
+  }, [swaps]);
+  const { data: membersData } = useOrgMembersByIds(userIds);
+
+  const memberById = useMemo(() => {
+    const map = new Map<string, NamedUser>();
+    for (const member of membersData?.data ?? []) {
+      map.set(member.userId, { name: member.name, email: member.email });
+    }
+    return map;
+  }, [membersData]);
+
+  const handleApprove = useCallback((id: number) => {
     updateStatus.mutate({ id, status: "APPROVED" }, {
       onSuccess: () => toast.success("Swap request approved"),
       onError: (err) => toast.error(getErrorMessage(err)),
     });
-  }
+  }, [updateStatus]);
 
-  function handleReject(id: number) {
+  const handleReject = useCallback((id: number) => {
     updateStatus.mutate({ id, status: "REJECTED" }, {
       onSuccess: () => toast.success("Swap request rejected"),
       onError: (err) => toast.error(getErrorMessage(err)),
     });
-  }
+  }, [updateStatus]);
 
   type Swap = NonNullable<typeof swaps>[number];
 
@@ -44,12 +64,12 @@ export function ShiftSwapsTab({ canManage }: Props) {
       {
         key: "requesterId",
         header: "Requester",
-        cell: (swap) => <span className="text-sm">{swap.requesterId}</span>,
+        cell: (swap) => <span className="text-sm">{getUserDisplayName(memberById.get(swap.requesterId))}</span>,
       },
       {
         key: "targetUserId",
         header: "Target Employee",
-        cell: (swap) => <span className="text-sm">{swap.targetUserId}</span>,
+        cell: (swap) => <span className="text-sm">{getUserDisplayName(memberById.get(swap.targetUserId))}</span>,
       },
       {
         key: "requestDate",
@@ -103,7 +123,7 @@ export function ShiftSwapsTab({ canManage }: Props) {
     }
 
     return cols;
-  }, [canManage, updateStatus.isPending]);
+  }, [canManage, updateStatus.isPending, memberById, handleApprove, handleReject]);
 
   return (
     <DataTable

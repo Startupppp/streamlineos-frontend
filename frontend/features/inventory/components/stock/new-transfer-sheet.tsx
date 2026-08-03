@@ -171,7 +171,7 @@ function TrackingPicker({
             value={field.value !== undefined ? String(field.value) : ""}
             onValueChange={(v) => field.onChange(v ? Number(v) : undefined)}
           >
-            <SelectTrigger className="h-8 text-xs px-2 flex-1">
+            <SelectTrigger className="flex-1 text-xs">
               <SelectValue placeholder="Lot (optional)" />
             </SelectTrigger>
             <SelectContent>
@@ -192,7 +192,7 @@ function TrackingPicker({
             value={field.value !== undefined ? String(field.value) : ""}
             onValueChange={(v) => field.onChange(v ? Number(v) : undefined)}
           >
-            <SelectTrigger className="h-8 text-xs px-2 flex-1">
+            <SelectTrigger className="flex-1 text-xs">
               <SelectValue placeholder="Serial (optional)" />
             </SelectTrigger>
             <SelectContent>

@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import Image from 'next/image';
 import { PlateElement, PlateLeaf, useReadOnly } from 'platejs/react';
 import type { PlateElementProps, PlateLeafProps } from 'platejs/react';
 import type { TElement } from 'platejs';
@@ -210,34 +209,6 @@ export function TableCellHeaderElement({ element, children, ...props }: PlateEle
       as="th"
       className="border border-border px-3 py-2 align-top bg-muted font-semibold text-left"
     >
-      {children}
-    </PlateElement>
-  );
-}
-
-export function ImageElement({ element, children, ...props }: PlateElementProps) {
-  const url = element['url'] as string | undefined;
-  return (
-    <PlateElement {...props} element={element} className="my-3">
-      {url ? (
-        <Image
-          src={url}
-          alt=""
-          unoptimized
-          width={800}
-          height={600}
-          style={{ width: '100%', height: 'auto' }}
-          className="rounded-md border border-border"
-          contentEditable={false}
-        />
-      ) : (
-        <div
-          className="border-2 border-dashed border-border rounded-md p-8 text-center text-muted-foreground text-sm"
-          contentEditable={false}
-        >
-          No image URL
-        </div>
-      )}
       {children}
     </PlateElement>
   );

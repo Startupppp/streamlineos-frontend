@@ -97,7 +97,7 @@ export function SignaturePadDialog({ token, assetType, open, onOpenChange, onAdo
           <DialogTitle>{assetType === "initials" ? "Add your initials" : "Adopt your signature"}</DialogTitle>
         </DialogHeader>
         <Tabs defaultValue="draw">
-          <TabsList className="w-full grid grid-cols-2">
+          <TabsList>
             <TabsTrigger value="draw">Draw</TabsTrigger>
             <TabsTrigger value="type">Type</TabsTrigger>
           </TabsList>

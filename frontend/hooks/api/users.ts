@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 interface UserListParams {
   page?: number;
@@ -11,8 +12,8 @@ interface UserListParams {
   search?: string;
   status?: "active" | "suspended" | "archived";
   role?: string;
-  departmentId?: number;
-  branchId?: number;
+  departmentId?: string;
+  branchId?: string;
   teamId?: string;
   managerUserId?: string;
   sortBy?: "name" | "joinedAt" | "status";
@@ -55,11 +56,6 @@ interface UserPreferences {
   timeFormat: string;
   numberFormat: string | null;
   weekStartDay: string | null;
-  accentColor: string | null;
-  density: string | null;
-  fontSize: string | null;
-  reducedMotion: boolean | null;
-  highContrast: boolean | null;
   notificationPreferences: Record<string, boolean>;
   dashboardPreferences: Record<string, unknown>;
   updatedAt: string;
@@ -80,12 +76,12 @@ interface User {
   lastName: string | null;
   image: string | null;
   role: string;
+  isOwner: boolean;
   designation: string | null;
   phone: string | null;
-  departmentId: number | null;
-  branchId: number | null;
+  departmentId: string | null;
+  branchId: string | null;
   isActive: boolean;
-  hasDashboardAccess: boolean;
   reportingTo: string | null;
   team: string | null;
   bio: string | null;
@@ -123,6 +119,7 @@ export const useUsers = (
   params?: UserListParams,
   options?: Omit<UseQueryOptions<UsersResponse, Error>, "queryKey" | "queryFn">
 ) => {
+  const canView = useCan("settings:view");
   return useQuery<UsersResponse, Error>({
     queryKey: queryKeys.users.list(params as Record<string, unknown> | undefined),
     queryFn: () =>
@@ -139,6 +136,7 @@ export const useUsers = (
       }),
     staleTime: 30_000,
     ...options,
+    enabled: canView && (options?.enabled ?? true),
   });
 };
 
@@ -151,6 +149,7 @@ export const useUser = (
     queryFn: () => apiClient.get<User>(`/users/${userId}`),
     enabled: !!userId,
     ...options,
+    staleTime: 30_000,
   });
 };
 
@@ -163,6 +162,7 @@ export const useUserSessions = (
     queryFn: () => apiClient.get<UserSession[]>(`/users/${userId}/sessions`),
     enabled: !!userId,
     ...options,
+    staleTime: 30_000,
   });
 };
 
@@ -175,6 +175,7 @@ export const useUserDevices = (
     queryFn: () => apiClient.get<UserDevice[]>(`/users/${userId}/devices`),
     enabled: !!userId,
     ...options,
+    staleTime: 30_000,
   });
 };
 
@@ -187,23 +188,27 @@ export const useUserPreferences = (
     queryFn: () => apiClient.get<UserPreferences>(`/users/${userId}/preferences`),
     enabled: !!userId,
     ...options,
+    staleTime: 30_000,
   });
 };
 
 export const useUserStats = (
   options?: Omit<UseQueryOptions<UserStats, Error>, "queryKey" | "queryFn">
 ) => {
+  const canView = useCan("settings:view");
   return useQuery<UserStats, Error>({
     queryKey: queryKeys.users.stats(),
     queryFn: () => apiClient.get<UserStats>("/users/stats"),
     staleTime: 60_000,
     ...options,
+    enabled: canView && (options?.enabled ?? true),
   });
 };
 
 export const useUpdateUser = () => {
   const queryClient = useQueryClient();
   return useMutation<User, Error, { userId: string; data: Partial<User> }>({
+    mutationKey: ["update", "user"],
     mutationFn: ({ userId, data }) => apiClient.patch<User>(`/users/${userId}`, data),
     onSuccess: (_, { userId }) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.detail(userId) });
@@ -219,6 +224,7 @@ export const useUpdateUserStatus = () => {
     Error,
     { userId: string; status: "active" | "suspended" | "archived"; reason?: string }
   >({
+    mutationKey: ["users", "update-status"],
     mutationFn: ({ userId, status, reason }) =>
       apiClient.patch<{ success: boolean }>(`/users/${userId}/status`, { status, reason }),
     onSuccess: (_, { userId }) => {
@@ -232,6 +238,7 @@ export const useUpdateUserStatus = () => {
 export const useDeleteUser = () => {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, string>({
+    mutationKey: ["delete", "user"],
     mutationFn: (userId) => apiClient.delete<{ success: boolean }>(`/users/${userId}`),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
@@ -247,6 +254,7 @@ export const useRevokeSession = () => {
     Error,
     { userId: string; sessionId: string }
   >({
+    mutationKey: ["users", "revoke-session"],
     mutationFn: ({ userId, sessionId }) =>
       apiClient.delete<{ success: boolean }>(`/users/${userId}/sessions/${sessionId}`),
     onSuccess: (_, { userId }) => {
@@ -258,6 +266,7 @@ export const useRevokeSession = () => {
 export const useRevokeAllSessions = () => {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, string>({
+    mutationKey: ["revoke", "all", "sessions"],
     mutationFn: (userId) =>
       apiClient.delete<{ success: boolean }>(`/users/${userId}/sessions`),
     onSuccess: (_, userId) => {
@@ -273,6 +282,7 @@ export const useRemoveDevice = () => {
     Error,
     { userId: string; deviceId: string }
   >({
+    mutationKey: ["users", "remove-device"],
     mutationFn: ({ userId, deviceId }) =>
       apiClient.delete<{ success: boolean }>(`/users/${userId}/devices/${deviceId}`),
     onSuccess: (_, { userId }) => {
@@ -288,6 +298,7 @@ export const useUpdateUserPreferences = () => {
     Error,
     { userId: string; data: Partial<UserPreferences> }
   >({
+    mutationKey: ["users", "update-preferences"],
     mutationFn: ({ userId, data }) =>
       apiClient.patch<UserPreferences>(`/users/${userId}/preferences`, data),
     onSuccess: (_, { userId }) => {
@@ -308,6 +319,7 @@ export const useInviteUser = () => {
     Error,
     InviteUserPayload
   >({
+    mutationKey: ["users", "invite"],
     mutationFn: (data) =>
       apiClient.post<{ success: boolean; invitationId: string; resent: boolean }>("/users/invite", data),
     onSuccess: () => {
@@ -323,6 +335,7 @@ export const useBulkInviteUsers = () => {
     Error,
     { emails: string[]; role: string }
   >({
+    mutationKey: ["users", "bulk-invite"],
     mutationFn: (data) =>
       apiClient.post<{ results: Array<{ email: string; success: boolean; invitationId?: string; error?: string }> }>(
         "/users/bulk-invite",
@@ -334,7 +347,7 @@ export const useBulkInviteUsers = () => {
   });
 };
 
-interface Invitation {
+export interface Invitation {
   id: string;
   email: string;
   role: string;
@@ -342,6 +355,9 @@ interface Invitation {
   expiresAt: string;
   acceptedAt: string | null;
   createdAt: string;
+  status: "PENDING" | "ACCEPTED" | "DECLINED" | "EXPIRED" | "REVOKED";
+  revokedAt: string | null;
+  deliveryFailed: boolean;
 }
 
 interface InvitationsResponse {
@@ -376,11 +392,20 @@ interface UserMembership {
   userId: string;
   orgId: string;
   businessUnitId: string | null;
-  branchId: number | null;
-  departmentId: number | null;
+  branchId: string | null;
+  departmentId: string | null;
   teamId: string | null;
   managerUserId: string | null;
   isPrimary: boolean;
+}
+
+/** Payload for PATCH /users/:id/membership. */
+export interface UpdateUserMembershipPayload {
+  businessUnitId?: string | null;
+  branchId?: string | null;
+  departmentId?: string | null;
+  teamId?: string | null;
+  managerUserId?: string | null;
 }
 
 interface BulkActionResult {
@@ -393,6 +418,7 @@ export const useInvitations = (
   params?: { page?: number; limit?: number; includeAccepted?: boolean },
   options?: Omit<UseQueryOptions<InvitationsResponse, Error>, "queryKey" | "queryFn">
 ) => {
+  const canView = useCan("settings:organization:manage");
   return useQuery<InvitationsResponse, Error>({
     queryKey: queryKeys.users.invitations(params as Record<string, unknown> | undefined),
     queryFn: () =>
@@ -403,14 +429,31 @@ export const useInvitations = (
       }),
     staleTime: 30_000,
     ...options,
+    enabled: canView && (options?.enabled ?? true),
   });
 };
 
 export const useResendInvite = () => {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, string>({
+    mutationKey: ["resend", "invite"],
     mutationFn: (invitationId) =>
       apiClient.post<{ success: boolean }>(`/users/invitations/${invitationId}/resend`, {}),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.invitations() });
+    },
+  });
+};
+
+export const useChangeInvitationRole = () => {
+  const queryClient = useQueryClient();
+  return useMutation<{ success: boolean }, Error, { invitationId: string; role: string }>({
+    mutationKey: ["change", "invitation-role"],
+    mutationFn: ({ invitationId, role }) =>
+      apiClient.patch<{ success: boolean }>(
+        `/users/invitations/${invitationId}/role`,
+        { role },
+      ),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.invitations() });
     },
@@ -420,6 +463,7 @@ export const useResendInvite = () => {
 export const useCancelInvitation = () => {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, string>({
+    mutationKey: ["cancel", "invitation"],
     mutationFn: (invitationId) =>
       apiClient.delete<{ success: boolean }>(`/users/invitations/${invitationId}`),
     onSuccess: () => {
@@ -444,6 +488,7 @@ export const useUserLoginHistory = (
       }),
     enabled: !!userId,
     ...options,
+    staleTime: 30_000,
   });
 };
 
@@ -456,6 +501,7 @@ export const useUserMembership = (
     queryFn: () => apiClient.get<UserMembership>(`/users/${userId}/membership`),
     enabled: !!userId,
     ...options,
+    staleTime: 30_000,
   });
 };
 
@@ -464,8 +510,9 @@ export const useUpdateUserMembership = () => {
   return useMutation<
     { success: boolean },
     Error,
-    { userId: string; data: Partial<UserMembership> }
+    { userId: string; data: UpdateUserMembershipPayload }
   >({
+    mutationKey: ["users", "update-membership"],
     mutationFn: ({ userId, data }) =>
       apiClient.patch<{ success: boolean }>(`/users/${userId}/membership`, data),
     onSuccess: (_, { userId }) => {
@@ -478,6 +525,7 @@ export const useUpdateUserMembership = () => {
 export const useBulkSuspend = () => {
   const queryClient = useQueryClient();
   return useMutation<BulkActionResult, Error, { userIds: string[]; reason?: string }>({
+    mutationKey: ["bulk", "suspend"],
     mutationFn: (data) => apiClient.post<BulkActionResult>("/users/bulk-suspend", data),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
@@ -489,6 +537,7 @@ export const useBulkSuspend = () => {
 export const useBulkArchive = () => {
   const queryClient = useQueryClient();
   return useMutation<BulkActionResult, Error, { userIds: string[]; reason?: string }>({
+    mutationKey: ["bulk", "archive"],
     mutationFn: (data) => apiClient.post<BulkActionResult>("/users/bulk-archive", data),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
@@ -500,6 +549,7 @@ export const useBulkArchive = () => {
 export const useBulkRestore = () => {
   const queryClient = useQueryClient();
   return useMutation<BulkActionResult, Error, { userIds: string[]; reason?: string }>({
+    mutationKey: ["bulk", "restore"],
     mutationFn: (data) => apiClient.post<BulkActionResult>("/users/bulk-restore", data),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
@@ -511,8 +561,8 @@ export const useBulkRestore = () => {
 interface BulkUpdatePayload {
   userIds: string[];
   role?: string;
-  departmentId?: number | null;
-  branchId?: number | null;
+  departmentId?: string | null;
+  branchId?: string | null;
   teamId?: string | null;
   managerUserId?: string | null;
 }
@@ -520,6 +570,7 @@ interface BulkUpdatePayload {
 export const useBulkUpdateUsers = () => {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean; updated: number }, Error, BulkUpdatePayload>({
+    mutationKey: ["bulk", "update", "users"],
     mutationFn: (data) => apiClient.post<{ success: boolean; updated: number }>("/users/bulk-update", data),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
@@ -529,6 +580,7 @@ export const useBulkUpdateUsers = () => {
 
 export const useSendSigninLink = () => {
   return useMutation<{ success: boolean; email: string }, Error, string>({
+    mutationKey: ["send", "signin", "link"],
     mutationFn: (userId) => apiClient.post<{ success: boolean; email: string }>(`/users/${userId}/send-signin-link`, {}),
   });
 };
@@ -567,31 +619,13 @@ export const useUserAuditLog = (
       }),
     enabled: !!userId,
     ...options,
-  });
-};
-
-export const useOrgAuditLog = (
-  params?: { page?: number; limit?: number; actorUserId?: string; action?: string; from?: string; to?: string },
-  options?: Omit<UseQueryOptions<AuditResponse, Error>, "queryKey" | "queryFn">
-) => {
-  return useQuery<AuditResponse, Error>({
-    queryKey: queryKeys.users.orgAuditLog(params as Record<string, unknown> | undefined),
-    queryFn: () =>
-      apiClient.get<AuditResponse>("/users/audit", {
-        ...(params?.page ? { page: String(params.page) } : {}),
-        ...(params?.limit ? { limit: String(params.limit) } : {}),
-        ...(params?.actorUserId ? { actorUserId: params.actorUserId } : {}),
-        ...(params?.action ? { action: params.action } : {}),
-        ...(params?.from ? { from: params.from } : {}),
-        ...(params?.to ? { to: params.to } : {}),
-      }),
     staleTime: 30_000,
-    ...options,
   });
 };
 
 export const useExportUsers = () => {
   return useMutation<void, Error, void>({
+    mutationKey: ["export", "users"],
     mutationFn: async () => {
       const csv = await apiClient.get<string>("/users/export");
       const blob = new Blob([csv], { type: "text/csv" });
@@ -613,7 +647,6 @@ export type {
   UserDevice,
   UserPreferences,
   UserStats,
-  Invitation,
   InvitationsResponse,
   LoginHistoryItem,
   LoginHistoryResponse,

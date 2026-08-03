@@ -20,6 +20,8 @@ export interface Workflow {
   createdAt: string;
   updatedAt: string;
   definitionJson?: Record<string, unknown> | null;
+  createdByName?: string | null;
+  createdByEmail?: string | null;
 }
 
 export interface WorkflowVersion {
@@ -44,21 +46,6 @@ export interface WorkflowExecution {
   completedAt: string | null;
   durationMs: number | null;
   triggeredBy: string | null;
-  createdAt: string;
-}
-
-export interface WorkflowExecutionStep {
-  id: string;
-  executionId: string;
-  nodeId: string;
-  nodeType: NodeType;
-  status: ExecutionStatus;
-  input: Record<string, unknown> | null;
-  output: Record<string, unknown> | null;
-  error: string | null;
-  startedAt: string | null;
-  completedAt: string | null;
-  durationMs: number | null;
   createdAt: string;
 }
 
@@ -161,12 +148,6 @@ interface ExecutionListParams extends Record<string, unknown> {
   status?: ExecutionStatus;
 }
 
-interface CreateScheduleInput {
-  cronExpression: string;
-  timezone?: string;
-  isEnabled?: boolean;
-}
-
 interface UpdateScheduleInput {
   cronExpression?: string;
   timezone?: string;
@@ -231,18 +212,6 @@ export function useWorkflowExecutions(workflowId: string, params?: ExecutionList
   });
 }
 
-export function useWorkflowExecution(workflowId: string, executionId: string) {
-  return useQuery({
-    queryKey: queryKeys.workflows.execution(workflowId, executionId),
-    queryFn: () =>
-      apiClient.get<WorkflowExecution>(
-        `/workflows/${workflowId}/executions/${executionId}`,
-      ),
-    enabled: workflowId.length > 0 && executionId.length > 0,
-    staleTime: 30_000,
-  });
-}
-
 export function usePendingApprovals() {
   return useQuery({
     queryKey: queryKeys.workflows.approvals(),
@@ -273,24 +242,6 @@ export function useAllSchedules() {
   return useQuery({
     queryKey: [...queryKeys.workflows.all, "all-schedules"],
     queryFn: () => apiClient.get<WorkflowSchedule[]>("/workflows/schedules"),
-    staleTime: 30_000,
-  });
-}
-
-export function useWorkflowSchedules(workflowId: string) {
-  return useQuery({
-    queryKey: queryKeys.workflows.schedules(workflowId),
-    queryFn: () => apiClient.get<WorkflowSchedule[]>(`/workflows/${workflowId}/schedules`),
-    enabled: workflowId.length > 0,
-    staleTime: 30_000,
-  });
-}
-
-export function useWorkflowSecrets(workflowId: string) {
-  return useQuery({
-    queryKey: queryKeys.workflows.secrets(workflowId),
-    queryFn: () => apiClient.get<WorkflowSecret[]>(`/workflows/${workflowId}/secrets`),
-    enabled: workflowId.length > 0,
     staleTime: 30_000,
   });
 }
@@ -351,7 +302,7 @@ export function useTriggerWorkflow() {
     mutationKey: ["workflows", "trigger"],
     mutationFn: ({ id, data }: { id: string; data?: Record<string, unknown> }) =>
       apiClient.post<WorkflowExecution>(`/workflows/${id}/trigger`, data),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.workflows.executions(variables.id) });
       qc.invalidateQueries({ queryKey: queryKeys.workflows.all });
     },
@@ -366,7 +317,7 @@ export function useCancelExecution() {
       apiClient.post<WorkflowExecution>(
         `/workflows/${workflowId}/executions/${executionId}/cancel`,
       ),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.workflows.executions(variables.workflowId) });
       qc.invalidateQueries({ queryKey: queryKeys.workflows.all });
     },
@@ -376,6 +327,7 @@ export function useCancelExecution() {
 export function useHandleApproval() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["handle", "approval"],
     mutationFn: ({ approvalId, ...input }: ApprovalActionInput & { approvalId: string }) =>
       apiClient.post<WorkflowApproval>(`/workflows/approvals/${approvalId}/action`, input),
     onSuccess: () => {
@@ -385,19 +337,10 @@ export function useHandleApproval() {
   });
 }
 
-export function useCreateSchedule() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ workflowId, ...input }: CreateScheduleInput & { workflowId: string }) =>
-      apiClient.post<WorkflowSchedule>(`/workflows/${workflowId}/schedules`, input),
-    onSuccess: (_data, variables) =>
-      qc.invalidateQueries({ queryKey: queryKeys.workflows.schedules(variables.workflowId) }),
-  });
-}
-
 export function useUpdateSchedule() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["update", "schedule"],
     mutationFn: ({
       workflowId,
       scheduleId,
@@ -407,7 +350,7 @@ export function useUpdateSchedule() {
         `/workflows/${workflowId}/schedules/${scheduleId}`,
         input,
       ),
-    onSuccess: (_data, variables) =>
+    onSuccess: (_, variables) =>
       qc.invalidateQueries({ queryKey: queryKeys.workflows.schedules(variables.workflowId) }),
   });
 }
@@ -415,6 +358,7 @@ export function useUpdateSchedule() {
 export function useDeleteSchedule() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["delete", "schedule"],
     mutationFn: ({
       workflowId,
       scheduleId,
@@ -422,33 +366,8 @@ export function useDeleteSchedule() {
       apiClient.delete<{ success: boolean }>(
         `/workflows/${workflowId}/schedules/${scheduleId}`,
       ),
-    onSuccess: (_data, variables) =>
+    onSuccess: (_, variables) =>
       qc.invalidateQueries({ queryKey: queryKeys.workflows.schedules(variables.workflowId) }),
-  });
-}
-
-export function useCreateSecret() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ workflowId, ...input }: CreateSecretInput & { workflowId: string }) =>
-      apiClient.post<WorkflowSecret>(`/workflows/${workflowId}/secrets`, input),
-    onSuccess: (_data, variables) =>
-      qc.invalidateQueries({ queryKey: queryKeys.workflows.secrets(variables.workflowId) }),
-  });
-}
-
-export function useDeleteSecret() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({
-      workflowId,
-      secretId,
-    }: { workflowId: string; secretId: string }) =>
-      apiClient.delete<{ success: boolean }>(
-        `/workflows/${workflowId}/secrets/${secretId}`,
-      ),
-    onSuccess: (_data, variables) =>
-      qc.invalidateQueries({ queryKey: queryKeys.workflows.secrets(variables.workflowId) }),
   });
 }
 
@@ -463,6 +382,7 @@ export function useGlobalSecrets() {
 export function useCreateGlobalSecret() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["create", "global", "secret"],
     mutationFn: (input: CreateSecretInput) =>
       apiClient.post<WorkflowSecret>("/workflows/secrets", input),
     onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.workflows.all, "global-secrets"] }),
@@ -472,6 +392,7 @@ export function useCreateGlobalSecret() {
 export function useDeleteGlobalSecret() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["delete", "global", "secret"],
     mutationFn: (secretId: string) =>
       apiClient.delete<{ success: boolean }>(`/workflows/secrets/${secretId}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.workflows.all, "global-secrets"] }),
@@ -489,24 +410,9 @@ export function useGlobalVariables() {
 export function useDeleteGlobalVariable() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["delete", "global", "variable"],
     mutationFn: (variableId: string) =>
       apiClient.delete<{ success: boolean }>(`/workflows/variables/${variableId}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.workflows.all, "global-variables"] }),
-  });
-}
-
-export function useDisableWorkflow() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => apiClient.post<Workflow>(`/workflows/${id}/disable`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.workflows.all }),
-  });
-}
-
-export function useArchiveWorkflow() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => apiClient.post<Workflow>(`/workflows/${id}/archive`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.workflows.all }),
   });
 }

@@ -34,8 +34,6 @@ export interface CreateAutomationInput {
   action: AutomationAction;
 }
 
-export type PatchAutomationInput = Partial<CreateAutomationInput>;
-
 export function useSurveyAutomations(surveyId: number) {
   return useQuery({
     queryKey: queryKeys.surveys.automations(surveyId),
@@ -54,16 +52,6 @@ export function useCreateAutomation(surveyId: number) {
   return useMutation({
     mutationKey: ["surveys", "automations", "create", surveyId] as const,
     mutationFn: (input: CreateAutomationInput) => apiClient.post<AutomationRule>(`/surveys/${surveyId}/automations`, input),
-    onSuccess: invalidate,
-  });
-}
-
-export function usePatchAutomation(surveyId: number) {
-  const invalidate = useInvalidateAutomations(surveyId);
-  return useMutation({
-    mutationKey: ["surveys", "automations", "patch", surveyId] as const,
-    mutationFn: ({ automationId, input }: { automationId: string; input: PatchAutomationInput }) =>
-      apiClient.patch<AutomationRule>(`/surveys/${surveyId}/automations/${automationId}`, input),
     onSuccess: invalidate,
   });
 }

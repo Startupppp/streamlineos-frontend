@@ -83,20 +83,6 @@ export interface TestRunDetail extends TestRun {
   results: TestRunResult[];
 }
 
-export interface CreateTestSuiteInput {
-  name: string;
-  description?: string;
-  parentId?: number;
-  position?: number;
-}
-
-export interface UpdateTestSuiteInput {
-  name?: string;
-  description?: string;
-  parentId?: number;
-  position?: number;
-}
-
 export interface CreateTestCaseInput {
   suiteId?: number;
   title: string;

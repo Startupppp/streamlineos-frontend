@@ -70,7 +70,7 @@ export function DataTablePagination({
         <div className="hidden sm:flex items-center gap-1">
           {getPageNumbers().map((p, i) =>
             p === "..." ? (
-              <span key={`ellipsis-${i}`} className="px-1 text-xs text-muted-foreground">...</span>
+              <span key={`ellipsis-${i}`} className="px-1 text-xs text-muted-foreground" aria-hidden>...</span>
             ) : (
               <Button
                 key={p}
@@ -78,6 +78,8 @@ export function DataTablePagination({
                 size="icon"
                 className={`h-7 w-7 text-xs ${p === page ? "bg-primary hover:bg-primary/80 text-primary-foreground" : ""}`}
                 onClick={() => onPageChange(p)}
+                aria-label={`Page ${p}`}
+                aria-current={p === page ? "page" : undefined}
               >
                 {p}
               </Button>

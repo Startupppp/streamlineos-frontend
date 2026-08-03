@@ -5,7 +5,7 @@ import { Trash2Icon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { useDevices, useTrustDevice, useRemoveDevice } from "@/hooks/api/auth";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -68,14 +68,14 @@ export default function DevicesPage() {
   function handleTrust(id: string) {
     trustDevice.mutate(id, {
       onSuccess: () => toast.success("Device trusted"),
-      onError: (err) => toast.error(getApiError(err)),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }
 
   function handleRemove(id: string) {
     removeDevice.mutate(id, {
       onSuccess: () => toast.success("Device removed"),
-      onError: (err) => toast.error(getApiError(err)),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }
 

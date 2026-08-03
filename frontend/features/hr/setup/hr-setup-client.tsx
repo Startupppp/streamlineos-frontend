@@ -22,9 +22,9 @@ import {
   HrPanel,
   HrHero,
   HrQuickAction,
-  HrEmptyPanel,
   HrSectionHeader,
 } from "@/features/hr/shared/hr-ui";
+import { EmptyState } from "@/components/ui/empty-state";
 import { HrChecklistItem } from "@/features/hr/setup/hr-checklist-item";
 import { HrSetupTourProvider, HrTakeTourButton } from "@/features/hr/setup/hr-setup-tour";
 import { ConfettiOverlay } from "@/components/celebration/confetti-overlay";
@@ -46,7 +46,7 @@ const COMPLETION_LINKS = [
   { href: "/hr/employees", icon: Users, label: "Employees", tone: "blue" as const },
   { href: "/hr/leaves", icon: CalendarOff, label: "Leave", tone: "amber" as const },
   { href: "/hr/attendance", icon: ClipboardList, label: "Attendance", tone: "emerald" as const },
-  { href: "/hr/recruitment", icon: Briefcase, label: "Recruitment", tone: "violet" as const },
+  { href: "/hr/recruitment", icon: Briefcase, label: "Recruitment", tone: "blue" as const },
   { href: "/payroll", icon: Wallet, label: "Payroll", tone: "sky" as const },
   { href: "/hr/settings", icon: Settings, label: "HR settings", tone: "rose" as const },
 ];
@@ -155,17 +155,18 @@ export function HrSetupClient() {
         {isLoading ? (
           <ChecklistSkeleton />
         ) : isError ? (
-          <HrEmptyPanel
+          <EmptyState
+            illustrationPreset="alert"
             title="Couldn't load your setup checklist"
             description="Check your connection and try again."
-            action={
-              <Button size="sm" onClick={() => void refetch()}>
-                Retry
-              </Button>
-            }
+            action={{ label: "Retry", onClick: () => void refetch() }}
           />
         ) : !checklist ? (
-          <HrEmptyPanel title="No setup checklist found" description="This organization may not have HR enabled yet." />
+          <EmptyState
+            illustrationPreset="default"
+            title="No setup checklist found"
+            description="This organization may not have HR enabled yet."
+          />
         ) : isComplete ? (
           <div className="space-y-5">
             <HrHero

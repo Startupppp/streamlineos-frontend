@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { ChevronDownIcon, ChevronUpIcon } from "@animateicons/react/lucide";
@@ -12,8 +12,10 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRosters, useRosterEntries, usePublishRoster } from "@/hooks/api/hr/rosters";
 import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { useOrgMembersByIds } from "@/hooks/api/organization";
+import { getUserDisplayName, type NamedUser } from "@/features/build/shared/resolve-user-name";
 
 interface Props {
   canManage: boolean;
@@ -33,6 +35,20 @@ function RosterCard({ roster, canManage }: RosterCardProps) {
   const [expanded, setExpanded] = useState(false);
   const { data: entries } = useRosterEntries(expanded ? roster.id : 0);
   const publishRoster = usePublishRoster();
+
+  const entryUserIds = useMemo(
+    () => [...new Set((entries ?? []).map((e) => e.userId))],
+    [entries],
+  );
+  const { data: membersData } = useOrgMembersByIds(entryUserIds);
+
+  const memberById = useMemo(() => {
+    const map = new Map<string, NamedUser>();
+    for (const member of membersData?.data ?? []) {
+      map.set(member.userId, { name: member.name, email: member.email });
+    }
+    return map;
+  }, [membersData]);
 
   function handleToggle() {
     setExpanded((v) => !v);
@@ -89,7 +105,7 @@ function RosterCard({ roster, canManage }: RosterCardProps) {
                 <div className="space-y-1">
                   {entries.map((entry) => (
                     <div key={entry.id} className="flex items-center justify-between text-xs py-1.5 border-b border-border/50 last:border-0">
-                      <span className="text-muted-foreground">{entry.userId} — {entry.date}</span>
+                      <span className="text-muted-foreground">{getUserDisplayName(memberById.get(entry.userId))} — {entry.date}</span>
                       <span className="font-medium">
                         {entry.isDayOff ? (
                           <Badge variant="secondary" className="text-[10px]">Day Off</Badge>

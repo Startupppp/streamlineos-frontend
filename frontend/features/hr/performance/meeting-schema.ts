@@ -45,5 +45,3 @@ export const meetingFormSchema = z
       });
     }
   });
-
-export type MeetingFormValues = z.infer<typeof meetingFormSchema>;

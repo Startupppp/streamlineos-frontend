@@ -33,7 +33,6 @@ export interface LeadTableViewProps {
   leads: Lead[];
   totalCount: number;
   page: number;
-  totalPages: number;
   pageSize: number;
   sortColumn: string;
   sortDirection: "asc" | "desc";
@@ -63,7 +62,6 @@ export interface LeadTableViewProps {
   isAdmin: boolean;
 }
 
-export const PRIORITIES = ["HOT", "WARM", "COLD"] as const;
 export const PAGE_SIZES = [25, 50, 100] as const;
 
 export const LOST_REASONS = [

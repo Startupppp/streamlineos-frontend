@@ -29,6 +29,7 @@ export function useSupportTicketExternalLinks(ticketId: number) {
 export function useAddExternalLink() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["add", "external", "link"],
     mutationFn: ({
       ticketId,
       entityType,
@@ -42,7 +43,7 @@ export function useAddExternalLink() {
         entityType,
         entityId,
       }),
-    onSuccess: (_data, vars) =>
+    onSuccess: (_, vars) =>
       qc.invalidateQueries({ queryKey: [...queryKeys.support.detail(vars.ticketId), "external-links"] }),
   });
 }
@@ -50,9 +51,10 @@ export function useAddExternalLink() {
 export function useRemoveExternalLink() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["remove", "external", "link"],
     mutationFn: ({ ticketId, linkId }: { ticketId: number; linkId: number }) =>
       apiClient.delete<{ success: boolean }>(`/support/${ticketId}/external-links/${linkId}`),
-    onSuccess: (_data, vars) =>
+    onSuccess: (_, vars) =>
       qc.invalidateQueries({ queryKey: [...queryKeys.support.detail(vars.ticketId), "external-links"] }),
   });
 }

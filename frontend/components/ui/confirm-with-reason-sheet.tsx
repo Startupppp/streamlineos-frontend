@@ -78,11 +78,12 @@ export function ConfirmWithReasonSheet({
         </SheetHeader>
 
         <SheetBody className="space-y-1.5 px-5 py-5">
-          <Label className="text-sm font-semibold text-foreground">
+          <Label htmlFor="confirm-with-reason-textarea" className="text-sm font-semibold text-foreground">
             {reasonLabel} {reasonRequired && <span className="text-destructive">*</span>}
             {!reasonRequired && <span className="text-muted-foreground font-normal">(optional)</span>}
           </Label>
           <Textarea
+            id="confirm-with-reason-textarea"
             placeholder={reasonPlaceholder}
             value={reason}
             onChange={(e) => {
@@ -93,9 +94,10 @@ export function ConfirmWithReasonSheet({
             rows={4}
             maxLength={1000}
             className="resize-none w-full"
-            aria-invalid={showError}
+            aria-invalid={showError || undefined}
+            aria-describedby={showError ? "confirm-with-reason-error" : undefined}
           />
-          {showError && <p className="text-xs text-destructive">{reasonErrorMessage}</p>}
+          {showError && <p id="confirm-with-reason-error" className="text-xs text-destructive">{reasonErrorMessage}</p>}
         </SheetBody>
 
         <SheetFooter className="shrink-0 flex-col gap-2 border-t border-border bg-muted/30 px-5 py-4">

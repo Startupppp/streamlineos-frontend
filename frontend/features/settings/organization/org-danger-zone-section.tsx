@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { toast } from "sonner";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Clock } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,24 +25,36 @@ import { useAccess, useCan } from "@/hooks/api/access";
 import {
   useArchiveOrg,
   useRestoreOrg,
-  useTransferOwnership,
   useLeaveOrg,
   useDeleteOrg,
+  useOrgMembers,
 } from "@/hooks/api/organization";
+import {
+  useInitiateOrgTransfer,
+  usePendingOrgTransfers,
+  useCancelOrgTransfer,
+} from "@/hooks/api/ownership";
 import { clearBackendTokenCache } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { OrgSettings } from "@/types/organization";
+import {
+  OrgSettingsCard,
+  OrgSettingsActionRow,
+} from "./org-settings-chrome";
 
 interface Props {
   org: OrgSettings;
 }
+
+const DESTRUCTIVE_OUTLINE_BTN =
+  "shrink-0 border-destructive/50 text-destructive hover:border-destructive hover:bg-destructive/10 hover:text-destructive";
 
 export function OrgDangerZoneSection({ org }: Props) {
   const canManage = useCan("settings:manage");
   const { update } = useSession();
   const { data: access } = useAccess();
   const isOwner =
-    access?.isOrgOwner === true || access?.isPlatformAdmin === true;
+    access?.isOrgOwner === true;
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -52,16 +64,39 @@ export function OrgDangerZoneSection({ org }: Props) {
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
-  const [newOwnerUserId, setNewOwnerUserId] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState("");
 
   const archiveMutation = useArchiveOrg();
   const restoreMutation = useRestoreOrg();
-  const transferMutation = useTransferOwnership();
+  const initiateTransfer = useInitiateOrgTransfer();
+  const cancelTransfer = useCancelOrgTransfer();
   const leaveMutation = useLeaveOrg();
   const deleteMutation = useDeleteOrg();
+  const pendingTransfersQuery = usePendingOrgTransfers();
+
+  const { data: membersData } = useOrgMembers(1, 100, undefined, {
+    enabled: transferOpen,
+    staleTime: 30_000,
+  });
+
+  const pendingTransfer = pendingTransfersQuery.data?.data[0] ?? null;
+
+  const membershipIdByUserId = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const m of membersData?.data ?? []) {
+      if (m.membershipId !== undefined) {
+        map.set(m.userId, m.membershipId);
+      }
+    }
+    return map;
+  }, [membersData]);
+
+  const selectedMembershipId = selectedUserId
+    ? membershipIdByUserId.get(selectedUserId)
+    : undefined;
 
   const handleOpenTransfer = useCallback(() => {
-    setNewOwnerUserId("");
+    setSelectedUserId("");
     setTransferOpen(true);
   }, []);
 
@@ -110,20 +145,37 @@ export function OrgDangerZoneSection({ org }: Props) {
   );
 
   function handleConfirmTransfer() {
-    if (!newOwnerUserId) {
+    if (!selectedUserId) {
       toast.error("Select a new owner first");
       return;
     }
-    transferMutation.mutate(
-      { newOwnerUserId },
+    if (selectedMembershipId === undefined) {
+      toast.error("Member ID unavailable — a backend update is required to complete the transfer");
+      return;
+    }
+    const recipientName =
+      (membersData?.data ?? []).find((m) => m.userId === selectedUserId)?.name ??
+      "the selected member";
+    initiateTransfer.mutate(
+      { toMembershipId: selectedMembershipId },
       {
         onSuccess: () => {
-          toast.success("Ownership transferred");
+          toast.success(
+            `Ownership transfer sent — ${recipientName} must accept it to take effect`,
+          );
           setTransferOpen(false);
         },
         onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
+  }
+
+  function handleCancelPendingTransfer() {
+    if (!pendingTransfer) return;
+    cancelTransfer.mutate(pendingTransfer.id, {
+      onSuccess: () => toast.success("Ownership transfer cancelled"),
+      onError: (err) => toast.error(getErrorMessage(err)),
+    });
   }
 
   function handleConfirmArchive() {
@@ -149,7 +201,7 @@ export function OrgDangerZoneSection({ org }: Props) {
   async function handleConfirmLeave() {
     leaveMutation.mutate(undefined, {
       onSuccess: async (data) => {
-        toast.success("You have left the workspace");
+        toast.success("You have left the organization");
         setLeaveOpen(false);
         clearBackendTokenCache();
         if (data.nextOrgId) {
@@ -174,7 +226,7 @@ export function OrgDangerZoneSection({ org }: Props) {
       { confirmation: deleteConfirmation },
       {
         onSuccess: () => {
-          toast.success("Workspace deleted");
+          toast.success("Organization deleted");
           setDeleteOpen(false);
           clearBackendTokenCache();
           queryClient.clear();
@@ -190,113 +242,126 @@ export function OrgDangerZoneSection({ org }: Props) {
 
   const deleteMatchValue = org.name ?? org.slug ?? "";
   const deleteEnabled = deleteConfirmation === deleteMatchValue;
+  const memberIdUnavailable = !!selectedUserId && selectedMembershipId === undefined;
 
   return (
     <>
-      <Card className="border-destructive/40">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold text-destructive flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4" />
-            Danger Zone
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-0">
+      <OrgSettingsCard
+        title="Danger Zone"
+        description="Irreversible and high-impact organization actions."
+        icon={<AlertTriangle className="h-3.5 w-3.5 shrink-0" />}
+        className="border-destructive/40"
+        titleClassName="text-destructive"
+        contentClassName="space-y-0 pt-0"
+      >
           {isOwner && (
-            <div className="flex items-center justify-between py-3 border-b">
-              <div>
-                <p className="text-sm font-medium">Transfer Ownership</p>
-                <p className="text-xs text-muted-foreground">
-                  Permanently transfer org ownership to another member
-                </p>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-destructive/50 text-destructive hover:bg-destructive/10 shrink-0"
-                onClick={handleOpenTransfer}
-              >
-                Transfer
-              </Button>
-            </div>
+            <OrgSettingsActionRow
+              title="Transfer Ownership"
+              description={
+                pendingTransfer
+                  ? "Awaiting acceptance — the selected member must confirm the transfer"
+                  : "Send a transfer request to hand over organization ownership"
+              }
+            >
+              {pendingTransfer ? (
+                <>
+                  <Badge
+                    variant="outline"
+                    className="text-xs gap-1 text-amber-700 border-amber-300 bg-amber-50 dark:text-amber-400 dark:border-amber-700/50 dark:bg-amber-500/10"
+                  >
+                    <Clock className="h-3 w-3" />
+                    Transfer pending
+                  </Badge>
+                  <LoadingButton
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs text-destructive hover:bg-destructive/10"
+                    isPending={cancelTransfer.isPending}
+                    onClick={handleCancelPendingTransfer}
+                  >
+                    Cancel
+                  </LoadingButton>
+                </>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={DESTRUCTIVE_OUTLINE_BTN}
+                  onClick={handleOpenTransfer}
+                  disabled={pendingTransfersQuery.isLoading}
+                >
+                  Transfer
+                </Button>
+              )}
+            </OrgSettingsActionRow>
           )}
 
           {!isOwner && (
-            <div className="flex items-center justify-between py-3 border-b">
-              <div>
-                <p className="text-sm font-medium">Leave Workspace</p>
-                <p className="text-xs text-muted-foreground">
-                  Remove yourself from this workspace. This cannot be undone.
-                </p>
-              </div>
+            <OrgSettingsActionRow
+              title="Leave Organization"
+              description="Remove yourself from this organization. This cannot be undone."
+            >
               <Button
                 variant="outline"
                 size="sm"
-                className="border-destructive/50 text-destructive hover:bg-destructive/10 shrink-0"
+                className={DESTRUCTIVE_OUTLINE_BTN}
                 onClick={handleOpenLeave}
               >
                 Leave
               </Button>
-            </div>
+            </OrgSettingsActionRow>
           )}
 
           {isOwner && (
             <>
               {org.status === "ARCHIVED" ? (
-                <div className="flex items-center justify-between py-3 border-b">
-                  <div>
-                    <p className="text-sm font-medium">Restore Organization</p>
-                    <p className="text-xs text-muted-foreground">
-                      Restore access for all members
-                    </p>
-                  </div>
+                <OrgSettingsActionRow
+                  title="Restore Organization"
+                  description="Restore access for all members"
+                >
                   <Button
                     variant="outline"
                     size="sm"
-                    className="border-destructive/50 text-destructive hover:bg-destructive/10 shrink-0"
+                    className={DESTRUCTIVE_OUTLINE_BTN}
                     onClick={handleOpenRestore}
                   >
                     Restore
                   </Button>
-                </div>
+                </OrgSettingsActionRow>
               ) : (
-                <div className="flex items-center justify-between py-3 border-b">
-                  <div>
-                    <p className="text-sm font-medium">Archive Organization</p>
-                    <p className="text-xs text-muted-foreground">
-                      Members will lose access until the org is restored
-                    </p>
-                  </div>
+                <OrgSettingsActionRow
+                  title="Archive Organization"
+                  description="Members will lose access until the org is restored"
+                >
                   <Button
                     variant="outline"
                     size="sm"
-                    className="border-destructive/50 text-destructive hover:bg-destructive/10 shrink-0"
+                    className={DESTRUCTIVE_OUTLINE_BTN}
                     onClick={handleOpenArchive}
                   >
                     Archive
                   </Button>
-                </div>
+                </OrgSettingsActionRow>
               )}
 
-              <div className="flex items-center justify-between py-3">
-                <div>
-                  <p className="text-sm font-medium">Delete Workspace</p>
-                  <p className="text-xs text-muted-foreground">
-                    Permanently delete this workspace and all its data. This cannot be undone.
-                  </p>
-                </div>
+              <OrgSettingsActionRow
+                title="Delete Organization"
+                description="Permanently delete this organization and all its data. This cannot be undone."
+                showBorder={false}
+                destructive
+              >
                 <Button
                   variant="outline"
                   size="sm"
-                  className="border-destructive/50 text-destructive hover:bg-destructive/10 shrink-0"
+                  className={DESTRUCTIVE_OUTLINE_BTN}
                   onClick={handleOpenDelete}
                 >
                   Delete
                 </Button>
-              </div>
+              </OrgSettingsActionRow>
             </>
           )}
-        </CardContent>
-      </Card>
+      </OrgSettingsCard>
 
       {isOwner && (
         <Dialog open={transferOpen} onOpenChange={handleTransferOpenChange}>
@@ -304,15 +369,20 @@ export function OrgDangerZoneSection({ org }: Props) {
             <DialogHeader>
               <DialogTitle>Transfer Ownership</DialogTitle>
               <DialogDescription>
-                This transfers all owner privileges to the selected member. You will become a regular admin.
+                This sends a transfer request the recipient must accept before ownership changes. You remain the owner until the request is accepted.
               </DialogDescription>
             </DialogHeader>
-            <div className="py-2">
+            <div className="space-y-3 py-2">
               <UserCombobox
-                value={newOwnerUserId}
-                onChange={setNewOwnerUserId}
+                value={selectedUserId}
+                onChange={setSelectedUserId}
                 placeholder="Select new owner…"
               />
+              {memberIdUnavailable && (
+                <p className="text-xs text-destructive">
+                  Transfer cannot be initiated — member identifier not exposed by the current API. A backend update is required.
+                </p>
+              )}
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={handleTransferClose}>
@@ -320,12 +390,12 @@ export function OrgDangerZoneSection({ org }: Props) {
               </Button>
               <LoadingButton
                 variant="destructive"
-                disabled={!newOwnerUserId}
-                isPending={transferMutation.isPending}
-                loadingText="Transferring…"
+                disabled={!selectedUserId || memberIdUnavailable}
+                isPending={initiateTransfer.isPending}
+                loadingText="Sending request…"
                 onClick={handleConfirmTransfer}
               >
-                Transfer Ownership
+                Send Transfer Request
               </LoadingButton>
             </DialogFooter>
           </DialogContent>
@@ -336,9 +406,9 @@ export function OrgDangerZoneSection({ org }: Props) {
         <ConfirmDialog
           open={leaveOpen}
           onOpenChange={handleLeaveOpenChange}
-          title="Leave Workspace"
-          description="Are you sure you want to leave this workspace? You will lose access immediately and need a new invitation to rejoin."
-          confirmLabel="Leave Workspace"
+          title="Leave Organization"
+          description="Are you sure you want to leave this organization? You will lose access immediately and need a new invitation to rejoin."
+          confirmLabel="Leave Organization"
           isPending={leaveMutation.isPending}
           onConfirm={handleConfirmLeave}
           destructive
@@ -369,7 +439,7 @@ export function OrgDangerZoneSection({ org }: Props) {
           <Dialog open={deleteOpen} onOpenChange={handleDeleteOpenChange}>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle className="text-destructive">Delete Workspace</DialogTitle>
+                <DialogTitle className="text-destructive">Delete Organization</DialogTitle>
                 <DialogDescription>
                   This will permanently delete <strong>{org.name ?? org.slug}</strong> and all its data including members, projects, and settings. This action cannot be undone.
                 </DialogDescription>
@@ -397,7 +467,7 @@ export function OrgDangerZoneSection({ org }: Props) {
                   loadingText="Deleting…"
                   onClick={handleConfirmDelete}
                 >
-                  Delete Workspace
+                  Delete Organization
                 </LoadingButton>
               </DialogFooter>
             </DialogContent>

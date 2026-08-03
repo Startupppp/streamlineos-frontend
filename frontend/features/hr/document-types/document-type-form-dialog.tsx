@@ -12,16 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { HrSheet } from "@/features/hr/hr-sheet";
 
-const ALL_ROLES = [
-  "CEO",
-  "HR",
-  "SALES",
-  "ENGINEERING",
-  "DESIGN",
-  "DIGITAL_MARKETING",
-  "VIDEO_EDITOR",
-  "CUSTOMER_SUPPORT",
-];
+const ALL_ROLES = ["OWNER", "ORG_ADMIN", "MEMBER"];
 
 const documentTypeFormSchema = z.object({
   name: z

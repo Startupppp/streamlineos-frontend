@@ -114,20 +114,6 @@ export function useCreateUnionMembership() {
   });
 }
 
-export function useUpdateUnionMembership() {
-  const qc = useQueryClient();
-  return useMutation<UnionMembership, Error, { membershipId: number; data: Partial<UnionMembership & { memberSince: string }> }>({
-    mutationKey: [...LABOR_KEY, "memberships", "update"],
-    mutationFn: ({ membershipId, data }) =>
-      apiClient.patch<UnionMembership>(`/hr/governance/labor/memberships/${membershipId}`, data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: [...LABOR_KEY, "memberships"] });
-      toast.success("Union membership updated");
-    },
-    onError: (err) => toast.error(getErrorMessage(err)),
-  });
-}
-
 export function useDeleteUnionMembership() {
   const qc = useQueryClient();
   return useMutation<void, Error, number>({
@@ -175,19 +161,6 @@ export function useCreateLaborCase() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [...LABOR_KEY, "cases"] });
       toast.success("Labor case created");
-    },
-    onError: (err) => toast.error(getErrorMessage(err)),
-  });
-}
-
-export function useUpdateLaborCase() {
-  const qc = useQueryClient();
-  return useMutation<LaborCase, Error, { caseId: number; data: Partial<LaborCase> }>({
-    mutationKey: [...LABOR_KEY, "cases", "update"],
-    mutationFn: ({ caseId, data }) => apiClient.patch<LaborCase>(`/hr/governance/labor/cases/${caseId}`, data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: [...LABOR_KEY, "cases"] });
-      toast.success("Labor case updated");
     },
     onError: (err) => toast.error(getErrorMessage(err)),
   });

@@ -13,7 +13,7 @@ import {
   useUpdateOrgBranch,
   useDeleteOrgBranch,
 } from "@/hooks/api/org-hierarchy";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -86,7 +86,7 @@ function BranchForm({
   defaultValues,
   businessUnits,
   onSubmit,
-  isPending: _isPending,
+  isPending: _,
 }: {
   defaultValues?: FormValues;
   businessUnits: { id: string; name: string }[];
@@ -309,7 +309,7 @@ export default function OrgBranchesPage() {
             toast.success("Branch created");
             setShowCreate(false);
           },
-          onError: (err) => toast.error(getApiError(err)),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -338,7 +338,7 @@ export default function OrgBranchesPage() {
             toast.success("Branch updated");
             setEditing(null);
           },
-          onError: (err) => toast.error(getApiError(err)),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -354,7 +354,7 @@ export default function OrgBranchesPage() {
             toast.success("Branch archived");
             setShowArchived(true);
           },
-          onError: (err) => toast.error(getApiError(err)),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -370,7 +370,7 @@ export default function OrgBranchesPage() {
             toast.success("Branch restored");
             setShowArchived(false);
           },
-          onError: (err) => toast.error(getApiError(err)),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -384,7 +384,7 @@ export default function OrgBranchesPage() {
         toast.success("Branch deleted");
         setDeleting(null);
       },
-      onError: (err) => toast.error(getApiError(err)),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }, [deleting, remove]);
 
@@ -505,7 +505,7 @@ export default function OrgBranchesPage() {
   ];
 
   return (
-    <RequireModule module="HR">
+    <RequireModule module="hr">
     <PageWrapper
       title="Branches"
       subtitle="Branches within your organization."
@@ -533,9 +533,7 @@ export default function OrgBranchesPage() {
         </div>
       }
       filters={
-        <div className="min-w-0 w-full flex-1 md:min-w-[160px] md:max-w-xs">
-          <SearchInput placeholder="Search branches…" value={search} onValueChange={handleSearchInputChange} />
-        </div>
+        <SearchInput placeholder="Search branches…" value={search} onValueChange={handleSearchInputChange} />
       }
     >
       <DataTable

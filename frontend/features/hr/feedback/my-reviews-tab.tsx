@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { Star } from "lucide-react";
@@ -23,6 +23,8 @@ import {
   useFeedbackCycles,
   type FeedbackCycleRequest,
 } from "@/hooks/api/hr";
+import { useOrgMembersByIds } from "@/hooks/api/organization";
+import { getUserDisplayName, type NamedUser } from "@/features/build/shared/resolve-user-name";
 
 const RELATIONSHIP_COLORS: Record<string, string> = {
   PEER: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
@@ -39,6 +41,20 @@ export function MyReviewsTab() {
   const { data: reviews = [], isLoading } = useMyPendingReviews();
   const submitFeedback = useSubmitFeedbackResponse();
   const { data: cycles = [] } = useFeedbackCycles();
+
+  const reviewUserIds = useMemo(
+    () => [...new Set(reviews.map((r) => r.subjectId))],
+    [reviews],
+  );
+  const { data: membersData } = useOrgMembersByIds(reviewUserIds);
+
+  const memberById = useMemo(() => {
+    const map = new Map<string, NamedUser>();
+    for (const member of membersData?.data ?? []) {
+      map.set(member.userId, { name: member.name, email: member.email });
+    }
+    return map;
+  }, [membersData]);
 
   const [reviewingRequest, setReviewingRequest] = useState<FeedbackCycleRequest | null>(null);
   const [answers, setAnswers] = useState<ReviewAnswers>({});
@@ -113,7 +129,7 @@ export function MyReviewsTab() {
           >
             <div className="space-y-2">
               <p className="font-medium text-foreground">
-                Review for <span className="text-primary">{req.subjectId}</span>
+                Review for <span className="text-primary">{getUserDisplayName(memberById.get(req.subjectId))}</span>
               </p>
               <div className="flex gap-2 flex-wrap">
                 <Badge className={`text-xs ${RELATIONSHIP_COLORS[req.relationship] ?? "bg-muted text-muted-foreground"}`}>
@@ -144,7 +160,7 @@ export function MyReviewsTab() {
           {reviewingRequest && (
             <div className="space-y-5 pt-2">
               <p className="text-sm text-muted-foreground">
-                For: <span className="font-medium text-foreground">{reviewingRequest.subjectId}</span>
+                For: <span className="font-medium text-foreground">{getUserDisplayName(memberById.get(reviewingRequest.subjectId))}</span>
               </p>
               {currentQuestions.map((q, idx) => (
                 <div key={q.id} className="space-y-2">

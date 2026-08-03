@@ -34,6 +34,7 @@ export function useReimbursements() {
 export function useCreateReimbursement() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "reimbursements", "create"],
     mutationFn: (data: { category: string; amount: number; description?: string; receiptUrl?: string }) =>
       apiClient.post<Reimbursement>("/hr/reimbursements", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: reimbursementKeys.list() }),
@@ -43,6 +44,7 @@ export function useCreateReimbursement() {
 export function useProcessReimbursement() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "reimbursements", "process"],
     mutationFn: ({ id, ...data }: { id: number; status: string; rejectionReason?: string }) =>
       apiClient.patch<{ success: boolean }>(`/hr/reimbursements/${id}`, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: reimbursementKeys.list() }),

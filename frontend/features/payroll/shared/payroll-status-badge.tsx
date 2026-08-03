@@ -1,29 +1,31 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { SemanticBadge } from "@/components/ui/semantic-badge";
+import type { BadgeTone } from "@/components/ui/semantic-badge";
 
 type PolicyStatus = "DRAFT" | "ACTIVE" | "SUPERSEDED" | "ARCHIVED";
 type ComponentStatus = "active" | "inactive";
 type RunStatus = "DRAFT" | "PROCESSING" | "COMPLETED" | "FAILED" | "CANCELLED";
 
-const policyStatusConfig: Record<PolicyStatus, { label: string; className: string }> = {
-  DRAFT: { label: "Draft", className: "bg-primary/10 text-foreground border border-primary/20" },
-  ACTIVE: { label: "Active", className: "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30" },
-  SUPERSEDED: { label: "Superseded", className: "bg-muted text-muted-foreground border border-border" },
-  ARCHIVED: { label: "Archived", className: "bg-muted text-muted-foreground border border-border" },
+const policyStatusConfig: Record<PolicyStatus, { label: string; tone: BadgeTone }> = {
+  DRAFT: { label: "Draft", tone: "accent" },
+  ACTIVE: { label: "Active", tone: "success" },
+  SUPERSEDED: { label: "Superseded", tone: "neutral" },
+  ARCHIVED: { label: "Archived", tone: "neutral" },
 };
 
-const componentStatusConfig: Record<ComponentStatus, { label: string; className: string }> = {
-  active: { label: "Active", className: "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30" },
-  inactive: { label: "Inactive", className: "bg-muted text-muted-foreground border border-border" },
+const componentStatusConfig: Record<ComponentStatus, { label: string; tone: BadgeTone }> = {
+  active: { label: "Active", tone: "success" },
+  inactive: { label: "Inactive", tone: "neutral" },
 };
 
-const runStatusConfig: Record<RunStatus, { label: string; className: string }> = {
-  DRAFT: { label: "Draft", className: "bg-primary/10 text-foreground border border-primary/20" },
-  PROCESSING: { label: "Processing", className: "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30" },
-  COMPLETED: { label: "Completed", className: "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30" },
-  FAILED: { label: "Failed", className: "bg-red-50 text-red-700 border border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30" },
-  CANCELLED: { label: "Cancelled", className: "bg-muted text-muted-foreground border border-border" },
+const runStatusConfig: Record<RunStatus, { label: string; tone: BadgeTone }> = {
+  DRAFT: { label: "Draft", tone: "accent" },
+  PROCESSING: { label: "Processing", tone: "warning" },
+  COMPLETED: { label: "Completed", tone: "success" },
+  FAILED: { label: "Failed", tone: "danger" },
+  CANCELLED: { label: "Cancelled", tone: "neutral" },
 };
 
 type PayrollStatusBadgeProps =
@@ -32,7 +34,7 @@ type PayrollStatusBadgeProps =
   | { variant: "run"; status: RunStatus; className?: string };
 
 export function PayrollStatusBadge(props: PayrollStatusBadgeProps) {
-  let config: { label: string; className: string };
+  let config: { label: string; tone: BadgeTone };
 
   if (props.variant === "policy") {
     config = policyStatusConfig[props.status];
@@ -43,14 +45,10 @@ export function PayrollStatusBadge(props: PayrollStatusBadgeProps) {
   }
 
   return (
-    <span
-      className={cn(
-        "inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium",
-        config.className,
-        props.className,
-      )}
-    >
-      {config.label}
-    </span>
+    <SemanticBadge
+      tone={config.tone}
+      label={config.label}
+      className={cn(props.className)}
+    />
   );
 }

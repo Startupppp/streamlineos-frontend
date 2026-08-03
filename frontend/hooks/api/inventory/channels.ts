@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type { SyncStatus } from "@/features/inventory/lib";
 
 export type ChannelType = "INTERNAL" | "SHOPIFY" | "WOOCOMMERCE" | "MARKETPLACE" | "B2B" | "THREE_PL";
@@ -81,14 +82,17 @@ interface UpdateThreePlInput {
 }
 
 export function useChannels() {
+  const canView = useCan("inventory:channels:manage");
   return useQuery<Channel[], Error>({
     queryKey: queryKeys.inventory.channels(),
     queryFn: () => apiClient.get<Channel[]>("/inventory/channels"),
     staleTime: 30_000,
+    enabled: canView,
   });
 }
 
 export function useChannelPublications(channelId: number, statusFilter?: PublicationStatus) {
+  const canView = useCan("inventory:channels:manage");
   return useQuery<Publication[], Error>({
     queryKey: statusFilter
       ? [...queryKeys.inventory.channelPublications(channelId), statusFilter]
@@ -98,7 +102,7 @@ export function useChannelPublications(channelId: number, statusFilter?: Publica
         `/inventory/channels/${channelId}/publications`,
         statusFilter ? { status: statusFilter } : undefined,
       ),
-    enabled: channelId > 0,
+    enabled: canView && channelId > 0,
     staleTime: 30_000,
   });
 }
@@ -120,7 +124,7 @@ export function useUpdateChannel() {
     mutationKey: ["inventory", "channel", "update"],
     mutationFn: ({ channelId, ...data }) =>
       apiClient.patch<Channel>(`/inventory/channels/${channelId}`, data),
-    onSuccess: (_res, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.channels() });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.channel(vars.channelId) });
     },
@@ -133,7 +137,7 @@ export function useSyncChannelStock() {
     mutationKey: ["inventory", "channel", "sync-stock"],
     mutationFn: (channelId) =>
       apiClient.post<unknown>(`/inventory/channels/${channelId}/sync-stock`, {}),
-    onSuccess: (_res, channelId) => {
+    onSuccess: (_, channelId) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.channels() });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.channelPublications(channelId) });
     },
@@ -146,17 +150,19 @@ export function useRetryChannelPublications() {
     mutationKey: ["inventory", "channel", "publications", "retry"],
     mutationFn: (channelId) =>
       apiClient.post<unknown>(`/inventory/channels/${channelId}/publications/retry`, {}),
-    onSuccess: (_res, channelId) => {
+    onSuccess: (_, channelId) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.channelPublications(channelId) });
     },
   });
 }
 
 export function useThreePlConnections() {
+  const canView = useCan("inventory:3pl:manage");
   return useQuery<ThreePlConnection[], Error>({
     queryKey: queryKeys.inventory.threePlConnections(),
     queryFn: () => apiClient.get<ThreePlConnection[]>("/inventory/3pl/connections"),
     staleTime: 30_000,
+    enabled: canView,
   });
 }
 

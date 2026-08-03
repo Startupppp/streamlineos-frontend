@@ -134,7 +134,7 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
     limit: PAGE_SIZE,
     search: debouncedSearch || undefined,
     status: statusFilter === "ALL" ? undefined : statusFilter,
-    departmentId: departmentFilter === "ALL" ? undefined : Number(departmentFilter),
+    departmentId: departmentFilter === "ALL" ? undefined : departmentFilter,
   });
   const { data: departmentsData } = useHrDepartments();
 

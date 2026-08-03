@@ -9,7 +9,7 @@ import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useGeofences, useDeleteGeofence, type Geofence } from "@/hooks/api/hr/geofencing";
 import { TruncatedText } from "@/components/ui/truncated-text";
 

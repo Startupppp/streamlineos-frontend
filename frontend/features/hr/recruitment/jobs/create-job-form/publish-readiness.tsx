@@ -2,7 +2,11 @@
 
 import { CheckCircle2, Circle, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  ResponsivePopover,
+  ResponsivePopoverContent,
+  ResponsivePopoverTrigger,
+} from "@/components/ui/responsive-popover";
 import { Button } from "@/components/ui/button";
 
 interface StepReadiness {
@@ -50,8 +54,8 @@ export function PublishReadiness({ steps, onStepClick }: PublishReadinessProps) 
   const allReady = readyCount === steps.length;
 
   return (
-    <Popover>
-      <PopoverTrigger asChild>
+    <ResponsivePopover>
+      <ResponsivePopoverTrigger asChild>
         <Button
           variant="ghost"
           size="sm"
@@ -63,8 +67,8 @@ export function PublishReadiness({ steps, onStepClick }: PublishReadinessProps) 
           {allReady ? <CheckCircle2 className="h-3.5 w-3.5" /> : <AlertCircle className="h-3.5 w-3.5" />}
           {readyCount}/{steps.length} ready to publish
         </Button>
-      </PopoverTrigger>
-      <PopoverContent align="end" className="w-64 p-2">
+      </ResponsivePopoverTrigger>
+      <ResponsivePopoverContent align="end" className="w-64 p-2" title="Publish readiness">
         <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-2 pb-1.5">
           Publish readiness
         </p>
@@ -73,7 +77,7 @@ export function PublishReadiness({ steps, onStepClick }: PublishReadinessProps) 
             <ReadinessStepButton key={step.title} step={step} idx={i} onStepClick={onStepClick} />
           ))}
         </div>
-      </PopoverContent>
-    </Popover>
+      </ResponsivePopoverContent>
+    </ResponsivePopover>
   );
 }

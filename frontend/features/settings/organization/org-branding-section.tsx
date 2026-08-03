@@ -5,10 +5,9 @@ import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Palette } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -17,7 +16,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Loader2, Pencil, Palette } from "lucide-react";
 import { UploadIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
@@ -26,6 +24,13 @@ import { useUploadFile } from "@/hooks/api/use-upload-file";
 import type { OrgSettings } from "@/types/organization";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { LoadingButton } from "@/components/ui/loading-button";
+import {
+  OrgSettingsCard,
+  OrgSettingsEditButton,
+  OrgSettingsFormActions,
+  SettingsField,
+  SettingsFieldGrid,
+} from "./org-settings-chrome";
 
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
 
@@ -44,6 +49,17 @@ interface OrgBrandingSectionProps {
   canEdit: boolean;
 }
 
+function ColorSwatch({ color }: { color: string | null | undefined }) {
+  if (!color) return null;
+  return (
+    <span
+      className="inline-block h-4 w-4 shrink-0 rounded-full border border-border"
+      style={{ backgroundColor: color }}
+      aria-hidden
+    />
+  );
+}
+
 function ColorField({
   label,
   value,
@@ -57,19 +73,19 @@ function ColorField({
 }) {
   return (
     <div className="space-y-1">
-      <Label className="text-sm font-medium">{label}</Label>
+      <Label className="text-xs font-medium">{label}</Label>
       <div className="flex items-center gap-2">
         <input
           type="color"
-          value={HEX_COLOR.test(value) ? value : "#2563eb"}
+          value={HEX_COLOR.test(value) ? value : "#0b1220"}
           onChange={(e) => onChange(e.target.value)}
-          className="h-8 w-8 rounded border cursor-pointer p-0.5"
+          className="h-8 w-8 rounded border border-border cursor-pointer p-0.5 bg-card"
         />
         <Input
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="#2563eb"
-          className="flex-1 font-mono"
+          placeholder="#0b1220"
+          className="h-8 flex-1 font-mono text-sm"
           maxLength={7}
         />
       </div>
@@ -81,9 +97,9 @@ function ColorField({
 function UploadButton({ uploading, onClick }: { uploading: boolean; onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
-    <Button type="button" variant="outline" size="sm" className="h-8 shrink-0 gap-1" disabled={uploading} onClick={onClick} {...hoverHandlers}>
-      {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UploadIcon ref={iconRef} size={14} />}
-    </Button>
+    <LoadingButton type="button" variant="outline" size="sm" className="h-8 shrink-0 gap-1 px-2" isPending={uploading} onClick={onClick} {...hoverHandlers}>
+      {!uploading && <UploadIcon ref={iconRef} size={14} />}
+    </LoadingButton>
   );
 }
 
@@ -101,7 +117,7 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
     defaultValues: {
       logo: org.logo ?? "",
       favicon: org.favicon ?? "",
-      primaryColor: org.primaryColor ?? "#2563eb",
+      primaryColor: org.primaryColor ?? "#0b1220",
       secondaryColor: org.secondaryColor ?? "",
       loginBgUrl: org.loginBgUrl ?? "",
     },
@@ -111,7 +127,7 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
     form.reset({
       logo: org.logo ?? "",
       favicon: org.favicon ?? "",
-      primaryColor: org.primaryColor ?? "#2563eb",
+      primaryColor: org.primaryColor ?? "#0b1220",
       secondaryColor: org.secondaryColor ?? "",
       loginBgUrl: org.loginBgUrl ?? "",
     });
@@ -180,167 +196,146 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
 
   const logoVal = form.watch("logo") ?? "";
   const faviconVal = form.watch("favicon") ?? "";
-  const primaryVal = form.watch("primaryColor") ?? "#2563eb";
+  const primaryVal = form.watch("primaryColor") ?? "#0b1220";
   const secondaryVal = form.watch("secondaryColor") ?? "";
 
   return (
-    <Card className="rounded-lg border border-border">
-      <CardHeader className="pb-2 flex flex-row items-start justify-between">
-        <div>
-          <CardTitle className="text-sm font-semibold flex items-center gap-2">
-            <Palette className="h-4 w-4 text-blue-600" />
-            Branding
-          </CardTitle>
-          <CardDescription>Logo, favicon, colors, and email branding defaults.</CardDescription>
-        </div>
-        {canEdit && !isEditing && (
-          <Button variant="outline" size="sm" onClick={handleEdit} className="gap-1.5 h-8 text-xs">
-            <Pencil className="h-3 w-3" /> Edit
-          </Button>
-        )}
-      </CardHeader>
-      <CardContent className="pb-5">
-        {!isEditing ? (
-          <div className="grid grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-foreground">Logo</p>
-              {org.logo ? (
-                <Image src={org.logo} alt="Org logo" width={200} height={40} className="h-10 w-auto rounded border object-contain" />
-              ) : (
-                <p className="text-xs text-muted-foreground">Not set</p>
-              )}
+    <OrgSettingsCard
+      title="Branding"
+      description="Logo, favicon, colors, and email branding defaults."
+      icon={<Palette className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
+      action={canEdit && !isEditing ? <OrgSettingsEditButton onClick={handleEdit} /> : undefined}
+    >
+      {!isEditing ? (
+        <SettingsFieldGrid cols={2}>
+          <SettingsField label="Logo">
+            {org.logo ? (
+              <Image src={org.logo} alt="Org logo" width={160} height={32} className="h-8 w-auto rounded border border-border object-contain" />
+            ) : (
+              <p className="text-sm text-muted-foreground">Not set</p>
+            )}
+          </SettingsField>
+          <SettingsField label="Favicon">
+            {org.favicon ? (
+              <Image src={org.favicon} alt="Favicon" width={24} height={24} className="h-6 w-6 rounded border border-border object-contain" />
+            ) : (
+              <p className="text-sm text-muted-foreground">Not set</p>
+            )}
+          </SettingsField>
+          <SettingsField label="Primary color">
+            <div className="flex items-center gap-2">
+              <ColorSwatch color={org.primaryColor} />
+              <p className="text-sm font-mono">{org.primaryColor || <span className="text-muted-foreground font-sans">Not set</span>}</p>
             </div>
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-foreground">Favicon</p>
-              {org.favicon ? (
-                <Image src={org.favicon} alt="Favicon" width={32} height={32} className="h-8 w-8 rounded border object-contain" />
-              ) : (
-                <p className="text-xs text-muted-foreground">Not set</p>
-              )}
+          </SettingsField>
+          <SettingsField label="Secondary color">
+            <div className="flex items-center gap-2">
+              <ColorSwatch color={org.secondaryColor} />
+              <p className="text-sm font-mono">{org.secondaryColor || <span className="text-muted-foreground font-sans">Not set</span>}</p>
             </div>
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-foreground">Primary color</p>
-              <div className="flex items-center gap-2">
-                {org.primaryColor && <div className="h-6 w-6 rounded-full border" style={{ backgroundColor: org.primaryColor }} />}
-                <p className="text-sm font-mono">{org.primaryColor || "Not set"}</p>
-              </div>
-            </div>
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-foreground">Secondary color</p>
-              <div className="flex items-center gap-2">
-                {org.secondaryColor && <div className="h-6 w-6 rounded-full border" style={{ backgroundColor: org.secondaryColor }} />}
-                <p className="text-sm font-mono">{org.secondaryColor || "Not set"}</p>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSave)} className="space-y-5">
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="logo"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Logo</FormLabel>
-                      <div className="flex gap-2">
-                        <FormControl>
-                          <Input {...field} placeholder="https://cdn.example.com/logo.png" className="flex-1" />
-                        </FormControl>
-                        <UploadButton uploading={logoUploading} onClick={handleClickLogoInput} />
-                        <input ref={logoInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/svg+xml" className="hidden" onChange={handleLogoUpload} />
-                      </div>
-                      {logoVal && <Image src={logoVal} alt="Logo preview" width={200} height={40} className="h-10 w-auto rounded border mt-1 object-contain" />}
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="favicon"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Favicon <span className="text-muted-foreground font-normal">(max 256 KB)</span></FormLabel>
-                      <div className="flex gap-2">
-                        <FormControl>
-                          <Input {...field} placeholder="https://cdn.example.com/favicon.ico" className="flex-1" />
-                        </FormControl>
-                        <UploadButton uploading={faviconUploading} onClick={handleClickFaviconInput} />
-                        <input ref={faviconInputRef} type="file" accept="image/x-icon,image/vnd.microsoft.icon,image/png,image/jpeg" className="hidden" onChange={handleFaviconUpload} />
-                      </div>
-                      {faviconVal && <Image src={faviconVal} alt="Favicon preview" width={32} height={32} className="h-8 w-8 rounded border mt-1 object-contain" />}
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="primaryColor"
-                  render={({ field }) => (
-                    <FormItem>
-                      <ColorField
-                        label="Primary color"
-                        value={field.value ?? "#2563eb"}
-                        onChange={(v) => field.onChange(v)}
-                        error={form.formState.errors.primaryColor?.message}
-                      />
-                      <FormMessage className="hidden" />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="secondaryColor"
-                  render={({ field }) => (
-                    <FormItem>
-                      <ColorField
-                        label="Secondary color"
-                        value={field.value ?? ""}
-                        onChange={(v) => field.onChange(v)}
-                        error={form.formState.errors.secondaryColor?.message}
-                      />
-                      <FormMessage className="hidden" />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
+          </SettingsField>
+        </SettingsFieldGrid>
+      ) : (
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSave)} className="space-y-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <FormField
                 control={form.control}
-                name="loginBgUrl"
+                name="logo"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Login page background URL</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="https://cdn.example.com/bg.jpg" />
-                    </FormControl>
+                  <FormItem className="gap-1.5">
+                    <FormLabel className="text-xs">Logo</FormLabel>
+                    <div className="flex gap-2">
+                      <FormControl>
+                        <Input {...field} placeholder="https://cdn.example.com/logo.png" className="h-8 flex-1" />
+                      </FormControl>
+                      <UploadButton uploading={logoUploading} onClick={handleClickLogoInput} />
+                      <input ref={logoInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/svg+xml" className="hidden" onChange={handleLogoUpload} />
+                    </div>
+                    {logoVal && <Image src={logoVal} alt="Logo preview" width={160} height={32} className="h-8 w-auto rounded border border-border mt-1 object-contain" />}
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
-              <EmailBrandingPreview
-                logo={logoVal}
-                primaryColor={HEX_COLOR.test(primaryVal) ? primaryVal : "#2563eb"}
-                secondaryColor={HEX_COLOR.test(secondaryVal) ? secondaryVal : undefined}
+              <FormField
+                control={form.control}
+                name="favicon"
+                render={({ field }) => (
+                  <FormItem className="gap-1.5">
+                    <FormLabel className="text-xs">Favicon <span className="text-muted-foreground font-normal">(max 256 KB)</span></FormLabel>
+                    <div className="flex gap-2">
+                      <FormControl>
+                        <Input {...field} placeholder="https://cdn.example.com/favicon.ico" className="h-8 flex-1" />
+                      </FormControl>
+                      <UploadButton uploading={faviconUploading} onClick={handleClickFaviconInput} />
+                      <input ref={faviconInputRef} type="file" accept="image/x-icon,image/vnd.microsoft.icon,image/png,image/jpeg" className="hidden" onChange={handleFaviconUpload} />
+                    </div>
+                    {faviconVal && <Image src={faviconVal} alt="Favicon preview" width={24} height={24} className="h-6 w-6 rounded border border-border mt-1 object-contain" />}
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
+              <FormField
+                control={form.control}
+                name="primaryColor"
+                render={({ field }) => (
+                  <FormItem className="gap-1.5">
+                    <ColorField
+                      label="Primary color"
+                      value={field.value ?? "#0b1220"}
+                      onChange={(v) => field.onChange(v)}
+                      error={form.formState.errors.primaryColor?.message}
+                    />
+                    <FormMessage className="hidden" />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="secondaryColor"
+                render={({ field }) => (
+                  <FormItem className="gap-1.5">
+                    <ColorField
+                      label="Secondary color"
+                      value={field.value ?? ""}
+                      onChange={(v) => field.onChange(v)}
+                      error={form.formState.errors.secondaryColor?.message}
+                    />
+                    <FormMessage className="hidden" />
+                  </FormItem>
+                )}
+              />
+            </div>
 
-              <div className="flex gap-2 pt-1">
-                <LoadingButton type="submit" isPending={isPending} size="sm" className="gap-1.5" loadingText="Saving…">
-                  Save branding
-                </LoadingButton>
-                <Button type="button" variant="ghost" size="sm" onClick={handleCancel} disabled={isPending}>
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          </Form>
-        )}
-      </CardContent>
-    </Card>
+            <FormField
+              control={form.control}
+              name="loginBgUrl"
+              render={({ field }) => (
+                <FormItem className="gap-1.5">
+                  <FormLabel className="text-xs">Login page background URL</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="https://cdn.example.com/bg.jpg" className="h-8" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <EmailBrandingPreview
+              logo={logoVal}
+              primaryColor={HEX_COLOR.test(primaryVal) ? primaryVal : "#0b1220"}
+              secondaryColor={HEX_COLOR.test(secondaryVal) ? secondaryVal : undefined}
+            />
+
+            <OrgSettingsFormActions onCancel={handleCancel} isPending={isPending}>
+              <LoadingButton type="submit" isPending={isPending} size="sm" className="h-8 gap-1.5" loadingText="Saving…">
+                Save branding
+              </LoadingButton>
+            </OrgSettingsFormActions>
+          </form>
+        </Form>
+      )}
+    </OrgSettingsCard>
   );
 }
 
@@ -354,29 +349,29 @@ function EmailBrandingPreview({
   secondaryColor?: string;
 }) {
   return (
-    <div className="rounded-xl border overflow-hidden">
-      <p className="text-[11px] font-medium text-muted-foreground px-3 py-2 bg-muted border-b">Email template preview</p>
-      <div className="p-4" style={{ backgroundColor: "var(--muted)" }}>
-        <div className="max-w-sm mx-auto bg-card rounded-lg overflow-hidden shadow-sm border border-border">
-          <div className="px-6 py-4" style={{ backgroundColor: primaryColor }}>
+    <div className="rounded-lg border border-border overflow-hidden">
+      <p className="text-[11px] font-medium text-muted-foreground px-3 py-1.5 bg-muted/50 border-b border-border">Email template preview</p>
+      <div className="p-3 bg-muted/30">
+        <div className="max-w-sm mx-auto bg-card rounded-md overflow-hidden shadow-sm border border-border">
+          <div className="px-4 py-3" style={{ backgroundColor: primaryColor }}>
             {logo ? (
-              <Image src={logo} alt="Logo" width={200} height={32} className="h-8 w-auto object-contain brightness-0 invert" />
+              <Image src={logo} alt="Logo" width={160} height={28} className="h-7 w-auto object-contain brightness-0 invert" />
             ) : (
-              <div className="h-8 w-24 rounded bg-white/30" />
+              <div className="h-7 w-20 rounded bg-white/30" />
             )}
           </div>
-          <div className="px-6 py-5 space-y-3">
-            <div className="h-5 w-3/4 rounded bg-muted" />
-            <div className="h-3 w-full rounded bg-muted/60" />
-            <div className="h-3 w-5/6 rounded bg-muted/60" />
+          <div className="px-4 py-4 space-y-2">
+            <div className="h-4 w-3/4 rounded bg-muted" />
+            <div className="h-2.5 w-full rounded bg-muted/60" />
+            <div className="h-2.5 w-5/6 rounded bg-muted/60" />
             <div
-              className="mt-4 inline-block px-4 py-2 rounded text-white text-xs font-medium"
+              className="mt-3 inline-block px-3 py-1.5 rounded text-white text-[11px] font-medium"
               style={{ backgroundColor: secondaryColor ?? primaryColor }}
             >
               Action button
             </div>
           </div>
-          <div className="px-6 py-3 border-t text-[10px] text-muted-foreground">
+          <div className="px-4 py-2 border-t border-border text-[10px] text-muted-foreground">
             © 2026 · StreamlineOS
           </div>
         </div>

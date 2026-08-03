@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -12,16 +12,16 @@ export interface Resignation {
   reasonCategory: string | null;
   lastWorkingDate: string | null;
   noticePeriodDays: number | null;
-  status: "SUBMITTED" | "PENDING_HR" | "HR_APPROVED" | "CEO_APPROVED" | "IN_PROGRESS" | "APPROVED" | "WITHDRAWN" | "COMPLETED" | "REJECTED" | null;
+  status: "SUBMITTED" | "PENDING_HR" | "HR_APPROVED" | "FINAL_APPROVED" | "IN_PROGRESS" | "APPROVED" | "WITHDRAWN" | "COMPLETED" | "REJECTED" | null;
   resignationLetterUrl: string | null;
   approvedBy: string | null;
   approvedAt: Date | string | null;
   hrReviewedBy: string | null;
   hrReviewedAt: Date | string | null;
   hrRemarks: string | null;
-  ceoReviewedBy: string | null;
-  ceoReviewedAt: Date | string | null;
-  ceoRemarks: string | null;
+  finalReviewedBy: string | null;
+  finalReviewedAt: Date | string | null;
+  finalRemarks: string | null;
   willingForExitInterview: boolean | null;
   companyFeedback: string | null;
   exitInterviewNotes: string | null;
@@ -30,7 +30,7 @@ export interface Resignation {
   createdAt: Date | string | null;
   user?: { id: string; name: string | null; image: string | null; email: string; designation: string | null; joiningDate?: string | null } | null;
   hrReviewer?: { id: string; name: string | null } | null;
-  ceoReviewer?: { id: string; name: string | null } | null;
+  finalReviewer?: { id: string; name: string | null } | null;
   checklists?: { id: number; item: string; status: string | null; completedAt: Date | string | null }[];
 }
 
@@ -50,23 +50,43 @@ export interface ResignationProgress {
   steps: ResignationProgressStep[];
 }
 
+export interface PaginatedResignations {
+  data: Resignation[];
+  pagination: { page: number; limit: number; total: number; totalPages: number };
+}
+
+interface ResignationListParams {
+  page?: number;
+  limit?: number;
+  status?: string;
+}
+
 const exitKeys = {
   all: [...queryKeys.hr.all, "exit"] as const,
   list: () => [...exitKeys.all, "list"] as const,
   progress: (id: number) => [...exitKeys.all, "progress", id] as const,
 };
 
-export function useResignations() {
+export function useResignations(params?: ResignationListParams) {
   return useQuery({
-    queryKey: exitKeys.list(),
-    queryFn: () => apiClient.get<Resignation[]>("/hr/exit"),
+    queryKey: [...exitKeys.list(), params] as const,
+    queryFn: () => {
+      const search = new URLSearchParams();
+      if (params?.page) search.set("page", String(params.page));
+      if (params?.limit) search.set("limit", String(params.limit));
+      if (params?.status) search.set("status", params.status);
+      const qs = search.toString();
+      return apiClient.get<PaginatedResignations>(`/hr/exit${qs ? `?${qs}` : ""}`);
+    },
     staleTime: 2 * 60_000,
+    placeholderData: keepPreviousData,
   });
 }
 
 export function useCreateResignation() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "exit", "create"],
     mutationFn: (data: {
       reason: string;
       reasonCategory?: string;
@@ -83,17 +103,19 @@ export function useCreateResignation() {
 export function useHrReviewResignation() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "exit", "hr-review"],
     mutationFn: ({ id, action, remarks }: { id: number; action: "approve" | "reject"; remarks?: string }) =>
       apiClient.patch<{ success: boolean }>(`/hr/exit/${id}/hr-review`, { decision: action, remarks }),
     onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.list() }),
   });
 }
 
-export function useCeoReviewResignation() {
+export function useFinalReviewResignation() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "exit", "final-review"],
     mutationFn: ({ id, action, remarks }: { id: number; action: "approve" | "reject"; remarks?: string }) =>
-      apiClient.patch<{ success: boolean }>(`/hr/exit/${id}/ceo-review`, { decision: action, remarks }),
+      apiClient.patch<{ success: boolean }>(`/hr/exit/${id}/final-review`, { decision: action, remarks }),
     onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.list() }),
   });
 }
@@ -101,6 +123,7 @@ export function useCeoReviewResignation() {
 export function useWithdrawResignation() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "exit", "withdraw"],
     mutationFn: ({ id }: { id: number }) =>
       apiClient.patch<{ success: boolean }>(`/hr/exit/${id}/withdraw`, {}),
     onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.list() }),
@@ -116,25 +139,3 @@ export function useResignationProgress(id: number, enabled: boolean) {
   });
 }
 
-export interface ExitChecklistItem {
-  id: number;
-  item: string;
-  status: string | null;
-  completedAt: Date | string | null;
-}
-
-const checklistKeys = {
-  detail: (resignationId: number) => [...queryKeys.hr.all, "exit", "checklist", resignationId] as const,
-};
-
-export function useExitChecklist(resignationId: number) {
-  return useQuery<ExitChecklistItem[]>({
-    queryKey: checklistKeys.detail(resignationId),
-    queryFn: async () => {
-      const data = await apiClient.get<{ checklists: ExitChecklistItem[] }>(`/hr/exit/${resignationId}`);
-      return data.checklists ?? [];
-    },
-    enabled: resignationId > 0,
-    staleTime: 30_000,
-  });
-}

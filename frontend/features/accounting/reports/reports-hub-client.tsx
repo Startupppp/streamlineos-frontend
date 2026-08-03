@@ -136,9 +136,7 @@ export function ReportsHubClient() {
       title="Reports"
       subtitle="Financial reports, statements, and analytics for your organisation."
       filters={
-        <div className="min-w-0 w-[220px]">
-          <SearchInput placeholder="Search reports…" value={search} onValueChange={handleSearchChange} />
-        </div>
+        <SearchInput placeholder="Search reports…" value={search} onValueChange={handleSearchChange} />
       }
     >
       <div className="flex flex-1 min-h-0 flex-col">

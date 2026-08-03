@@ -44,12 +44,6 @@ export const PAYROLL_PERMISSIONS: Permission[] = [
     description: "Update employee salaries",
   },
   {
-    name: "payroll:salaries:manage",
-    resource: "payroll:salaries",
-    action: "manage",
-    description: "Manage all salary configurations",
-  },
-  {
     name: "payroll:templates:view",
     resource: "payroll:templates",
     action: "view",

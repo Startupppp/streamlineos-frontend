@@ -231,7 +231,6 @@ export default function HrAutomationsPage() {
             placeholder="Search rules…"
             value={search}
             onValueChange={handleSearchChange}
-             className="sm:max-w-xs"
            />
           <Select value={triggerFilter} onValueChange={handleTriggerChange}>
             <SelectTrigger className="sm:w-52">

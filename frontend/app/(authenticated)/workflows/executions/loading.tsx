@@ -9,7 +9,7 @@ export default function ExecutionsLoading() {
       subtitle="Track real-time and historical workflow execution status."
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
-          {["All", "Running", "Completed", "Failed", "Pending", "Cancelled"].map((label, i) => (
+          {["All", "Running", "Completed", "Failed", "Pending", "Cancelled"].map((_, i) => (
             <Skeleton key={i} className="h-9 w-24 rounded-md" />
           ))}
         </div>

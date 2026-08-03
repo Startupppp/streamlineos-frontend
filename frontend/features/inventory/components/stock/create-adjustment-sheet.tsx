@@ -20,8 +20,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useCreateAdjustment, type AdjustmentReason } from "@/hooks/api/inventory/stock";
-import { useWarehouses, useLocations } from "@/hooks/api/inventory/warehouses";
-import { useProductVariants } from "@/hooks/api/inventory/products";
+import { WarehouseSelect } from "@/components/inventory/warehouse-select";
+import { LocationSelect } from "@/components/inventory/location-select";
+import { ProductVariantCombobox } from "@/components/inventory/product-variant-combobox";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 const schema = z.object({
@@ -49,8 +50,6 @@ interface CreateAdjustmentSheetProps {
 }
 
 export function CreateAdjustmentSheet({ open, onOpenChange }: CreateAdjustmentSheetProps) {
-  const { data: warehouses = [], isLoading: wLoading } = useWarehouses();
-  const { data: variants = [], isLoading: vLoading } = useProductVariants({ activeOnly: true });
   const createMutation = useCreateAdjustment();
 
   const form = useForm<FormValues>({
@@ -61,7 +60,6 @@ export function CreateAdjustmentSheet({ open, onOpenChange }: CreateAdjustmentSh
   const { control, handleSubmit, watch, reset, resetField } = form;
 
   const warehouseId = watch("warehouseId");
-  const { data: locations = [], isLoading: lLoading } = useLocations(warehouseId ?? 0);
 
   const handleClose = useCallback(() => {
     reset({ adjustmentType: "IN", reason: "RECOUNT" });
@@ -115,22 +113,13 @@ export function CreateAdjustmentSheet({ open, onOpenChange }: CreateAdjustmentSh
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Warehouse <span className="text-destructive">*</span></FormLabel>
-                  <Select
-                    value={field.value ? String(field.value) : ""}
-                    disabled={wLoading}
-                    onValueChange={(v) => { field.onChange(Number(v)); resetField("locationId"); }}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder={wLoading ? "Loading…" : "Select warehouse"} />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {warehouses.map((wh) => (
-                        <SelectItem key={wh.id} value={String(wh.id)}>{wh.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormControl>
+                    <WarehouseSelect
+                      value={String(field.value ?? "")}
+                      onChange={(v) => { field.onChange(Number(v)); resetField("locationId"); }}
+                      activeOnly
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -142,28 +131,13 @@ export function CreateAdjustmentSheet({ open, onOpenChange }: CreateAdjustmentSh
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Location <span className="text-destructive">*</span></FormLabel>
-                  <Select
-                    value={field.value ? String(field.value) : ""}
-                    disabled={!warehouseId || lLoading}
-                    onValueChange={(v) => field.onChange(Number(v))}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue
-                          placeholder={
-                            !warehouseId ? "Select warehouse first" : lLoading ? "Loading…" : "Select location"
-                          }
-                        />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {locations.map((loc) => (
-                        <SelectItem key={loc.id} value={String(loc.id)}>
-                          {loc.name} ({loc.code})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormControl>
+                    <LocationSelect
+                      warehouseId={warehouseId}
+                      value={String(field.value ?? "")}
+                      onChange={(v) => field.onChange(Number(v))}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -175,24 +149,13 @@ export function CreateAdjustmentSheet({ open, onOpenChange }: CreateAdjustmentSh
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Product Variant <span className="text-destructive">*</span></FormLabel>
-                  <Select
-                    value={field.value ? String(field.value) : ""}
-                    disabled={vLoading}
-                    onValueChange={(v) => field.onChange(Number(v))}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder={vLoading ? "Loading…" : "Select product variant"} />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="max-h-72">
-                      {variants.map((v) => (
-                        <SelectItem key={v.id} value={String(v.id)}>
-                          {v.productName} — {v.name} ({v.sku})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormControl>
+                    <ProductVariantCombobox
+                      value={String(field.value ?? "")}
+                      onChange={(v) => field.onChange(Number(v))}
+                      activeOnly
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

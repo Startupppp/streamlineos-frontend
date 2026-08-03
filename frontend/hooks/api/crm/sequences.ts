@@ -102,18 +102,6 @@ export function useDeleteCrmSequenceStep(sequenceId: string) {
   });
 }
 
-export function useReorderCrmSequenceSteps(sequenceId: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["crm", "sequences", "steps", "reorder", sequenceId],
-    mutationFn: (input: { order: string[] }) =>
-      apiClient.patch<{ success: boolean }>(`/crm/sequences/${sequenceId}/steps/reorder`, input),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.crmSequences.steps(sequenceId) });
-    },
-  });
-}
-
 export function useCrmSequenceEnrollments(sequenceId: string, page: number) {
   return useQuery({
     queryKey: queryKeys.crmSequences.enrollments(sequenceId, page),
@@ -121,18 +109,6 @@ export function useCrmSequenceEnrollments(sequenceId: string, page: number) {
       apiClient.get<EnrollmentsResponse>(`/crm/sequences/${sequenceId}/enrollments`, { page }),
     enabled: !!sequenceId,
     staleTime: 30_000,
-  });
-}
-
-export function useEnrollInSequence(sequenceId: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["crm", "sequences", "enroll", sequenceId],
-    mutationFn: (input: { entityType: string; entityId: string }) =>
-      apiClient.post<CrmSequenceEnrollment>(`/crm/sequences/${sequenceId}/enrollments`, input),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.crmSequences.enrollments(sequenceId, 1) });
-    },
   });
 }
 

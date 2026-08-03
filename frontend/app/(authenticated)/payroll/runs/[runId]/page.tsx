@@ -1,5 +1,5 @@
 import { requirePermission } from "@/lib/rbac/require-permission";
-import { RunDetailContent } from "./run-detail-content";
+import { RunDetailContent } from "@/features/payroll/runs/run-detail-content";
 
 interface PageProps {
   params: Promise<{ runId: string }>;

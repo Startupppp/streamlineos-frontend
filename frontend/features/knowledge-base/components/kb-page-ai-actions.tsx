@@ -2,7 +2,6 @@
 
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import { SparklesIcon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -23,6 +22,7 @@ import {
 import { AiDraftCard } from "@/components/ai/ai-draft-card";
 import { AiQuotaEmptyState } from "@/components/ai/ai-quota-empty-state";
 import { AiPermissionDenied } from "@/components/ai/ai-permission-denied";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -66,7 +66,6 @@ const ACTION_DESCRIPTIONS: Record<ActiveAction, string> = {
 };
 
 export function KbPageAiActions({ pageId, onApplyImprovement }: KbPageAiActionsProps) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState<ActiveAction>("summarize");
   const [panelState, setPanelState] = useState<PanelState>({ status: "idle" });
@@ -165,16 +164,18 @@ export function KbPageAiActions({ pageId, onApplyImprovement }: KbPageAiActionsP
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button
+          <AnimatedIconButton
             type="button"
-            variant="outline"
+            icon={SparklesIcon}
+            iconSize={14}
+            iconClassName="text-primary"
+            variant="ghost"
             size="sm"
-            className="h-9 gap-1.5 text-sm"
-            {...hoverHandlers}
+            className="h-8 gap-1.5 rounded-full px-2.5 text-xs"
+            aria-label="AI assist"
           >
-            <SparklesIcon ref={iconRef} className="h-3.5 w-3.5 text-primary" />
             AI
-          </Button>
+          </AnimatedIconButton>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuLabel className="text-[11px] font-medium text-muted-foreground">

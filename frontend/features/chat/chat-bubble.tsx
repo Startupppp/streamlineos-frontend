@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useCallback, useState } from "react";
 import Image from "next/image";
@@ -35,10 +35,10 @@ import { apiClient, isApiError } from "@/lib/api-client";
 import { ConvertToTaskDialog } from "./convert-to-task-dialog";
 import { AssignTicketDialog } from "./assign-ticket-dialog";
 import { SetDueDateDialog } from "./set-due-date-dialog";
-import { ticketPermalinkQueryOptions } from "@/hooks/api/projects/comment-permalink";
+import { ticketPermalinkQueryOptions } from "@/hooks/api/build/comment-permalink";
 import { InternalLinkPreview } from "./internal-link-preview";
-import { getStatusBadgeClass } from "@/features/projects/shared/status-badge";
-import { formatTicketKey } from "@/features/projects/shared/format-ticket-key";
+import { getStatusBadgeClass } from "@/features/build/shared/status-badge";
+import { formatTicketKey } from "@/features/build/shared/format-ticket-key";
 import { renderFormattedContent } from "./formatted-message-content";
 
 const ReplyButton = React.forwardRef<HTMLButtonElement, React.ButtonHTMLAttributes<HTMLButtonElement>>(
@@ -111,7 +111,7 @@ function TicketPill({ entity, channelId }: { entity: TicketEntityRef; channelId:
   const router = useRouter();
   const [currentStatus, setCurrentStatus] = useState(entity.status ?? "TODO");
   const [isChangingStatus, setIsChangingStatus] = useState(false);
-  const canUpdate = useCan("projects:tickets:update");
+  const canUpdate = useCan("build:tickets:update");
 
   const hasFullInfo = Boolean(entity.projectKey && entity.ticketNumber);
   const ticketKey = hasFullInfo
@@ -119,7 +119,7 @@ function TicketPill({ entity, channelId }: { entity: TicketEntityRef; channelId:
     : `Ticket #${entity.id}`;
 
   const handlePillClick = useCallback(() => {
-    router.push(`/projects/${entity.projectId}?ticket=${entity.id}`);
+    router.push(`/build/${entity.projectId}?ticket=${entity.id}`);
   }, [router, entity.projectId, entity.id]);
 
   const handleStatusChange = useCallback(
@@ -240,7 +240,7 @@ function CommentPill({ entity }: { entity: CommentEntityRef }) {
     ticketPermalinkQueryOptions(entity.projectId, entity.ticketId),
   );
 
-  const href = `/projects/${entity.projectId}?ticket=${entity.ticketId}&comment=${entity.id}`;
+  const href = `/build/${entity.projectId}?ticket=${entity.ticketId}&comment=${entity.id}`;
   const label = ticket
     ? `Comment on ${formatTicketKey(ticket.projectKey, ticket.ticketNumber)}`
     : "Comment";
@@ -320,8 +320,8 @@ export function ChatBubble({
   const [convertDialogOpen, setConvertDialogOpen] = useState(false);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [dueDateDialogOpen, setDueDateDialogOpen] = useState(false);
-  const canConvertToTask = useCan("projects:tickets:create");
-  const canAssignTicket = useCan("projects:tickets:assign");
+  const canConvertToTask = useCan("build:tickets:create");
+  const canAssignTicket = useCan("build:tickets:assign");
   const senderName = resolveUserName
     ? resolveUserName(message.senderId, message.sender)
     : (message.sender?.name ?? "Unknown");
@@ -330,7 +330,7 @@ export function ChatBubble({
       ? resolveUserName(message.replyTo.sender?.id ?? "", message.replyTo.sender)
       : (message.replyTo.sender?.name ?? "Unknown")
     : null;
-  const canSetDueDate = useCan("projects:tickets:update");
+  const canSetDueDate = useCan("build:tickets:update");
 
   const handleOpenConvertDialog = useCallback(() => setConvertDialogOpen(true), []);
   const handleOpenAssignDialog = useCallback(() => setAssignDialogOpen(true), []);

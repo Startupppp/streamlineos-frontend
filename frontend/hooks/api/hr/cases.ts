@@ -81,14 +81,14 @@ export interface ListCasesParams {
 }
 
 const caseKeys = {
-  all: ["hr-cases"] as const,
-  list: (params: ListCasesParams) => ["hr-cases", "list", params] as const,
-  detail: (id: number) => ["hr-cases", "detail", id] as const,
-  notes: (id: number) => ["hr-cases", "notes", id] as const,
-  documents: (id: number) => ["hr-cases", "documents", id] as const,
-  stats: ["hr-cases", "stats"] as const,
-  disciplinary: ["hr-disciplinary"] as const,
-  disciplinaryList: (params: Record<string, unknown>) => ["hr-disciplinary", "list", params] as const,
+  all: ["streamlineos", "hr", "cases"] as const,
+  list: (params: ListCasesParams) => ["streamlineos", "hr", "cases", "list", params] as const,
+  detail: (id: number) => ["streamlineos", "hr", "cases", "detail", id] as const,
+  notes: (id: number) => ["streamlineos", "hr", "cases", "notes", id] as const,
+  documents: (id: number) => ["streamlineos", "hr", "cases", "documents", id] as const,
+  stats: ["streamlineos", "hr", "cases", "stats"] as const,
+  disciplinary: ["streamlineos", "hr", "disciplinary"] as const,
+  disciplinaryList: (params: Record<string, unknown>) => ["streamlineos", "hr", "disciplinary", "list", params] as const,
 };
 
 export function useHrCases(params: ListCasesParams = {}) {
@@ -97,14 +97,6 @@ export function useHrCases(params: ListCasesParams = {}) {
     queryFn: () => apiClient.get<PaginatedResult<HrCase>>("/hr/cases", params as Record<string, unknown>),
     staleTime: 30_000,
     placeholderData: keepPreviousData,
-  });
-}
-
-export function useHrCaseStats() {
-  return useQuery({
-    queryKey: caseKeys.stats,
-    queryFn: () => apiClient.get<{ status: CaseStatus; total: number }[]>("/hr/cases/stats"),
-    staleTime: 60_000,
   });
 }
 
@@ -174,19 +166,6 @@ export function useUpdateCase(id: number) {
   });
 }
 
-export function useDeleteCase() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr-cases", "delete"],
-    mutationFn: (id: number) => apiClient.delete(`/hr/cases/${id}`),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: caseKeys.all });
-      toast.success("Case deleted");
-    },
-    onError: (e) => toast.error(getErrorMessage(e)),
-  });
-}
-
 export function useStartInvestigation(id: number) {
   const qc = useQueryClient();
   return useMutation({
@@ -230,20 +209,6 @@ export function useCaseDocuments(caseId: number) {
     queryFn: () => apiClient.get<CaseDocument[]>(`/hr/cases/${caseId}/documents`),
     enabled: caseId > 0,
     staleTime: 30_000,
-  });
-}
-
-export function useAddCaseDocument(caseId: number) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr-cases", "documents", "add", caseId],
-    mutationFn: (body: { name: string; url: string; restricted?: boolean }) =>
-      apiClient.post<CaseDocument>(`/hr/cases/${caseId}/documents`, body),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: caseKeys.documents(caseId) });
-      toast.success("Document added");
-    },
-    onError: (e) => toast.error(getErrorMessage(e)),
   });
 }
 

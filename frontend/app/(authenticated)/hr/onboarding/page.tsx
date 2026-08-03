@@ -147,7 +147,7 @@ function HrDocumentsTab() {
 const VALID_TABS = ["workflow", "plans", "wizard", "documents", "probation"] as const;
 
 export default function OnboardingPage() {
-  const isHROrCEO = useCan("hr:employees:manage");
+  const canManageEmployees = useCan("hr:employees:manage");
   const searchParams = useSearchParams();
   const requestedTab = searchParams.get("tab");
   const initialTab = (VALID_TABS as readonly string[]).includes(requestedTab ?? "")
@@ -158,45 +158,45 @@ export default function OnboardingPage() {
     <PageWrapper
       title="Onboarding"
       subtitle={
-        isHROrCEO
+        canManageEmployees
           ? "Hire one person or a whole cohort — then track documents and probation"
           : "Complete your onboarding steps"
       }
       variant="display"
-      noInternalScroll={!isHROrCEO}
-      backHref={isHROrCEO ? "/hr" : undefined}
+      noInternalScroll={!canManageEmployees}
+      backHref={canManageEmployees ? "/hr" : undefined}
       backLabel="Back to Employees"
     >
-      {isHROrCEO ? (
+      {canManageEmployees ? (
         <Tabs defaultValue={initialTab} className="space-y-4">
-          <TabsList className="rounded-xl border border-border/70 p-1 h-auto bg-muted/30 backdrop-blur-sm">
+          <TabsList className="rounded-xl border-border/70 bg-muted/30 backdrop-blur-sm">
             <TabsTrigger
               value="workflow"
-              className="text-xs h-8 px-3 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              className="text-xs"
             >
               Workflow
             </TabsTrigger>
             <TabsTrigger
               value="plans"
-              className="text-xs h-8 px-3 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              className="text-xs"
             >
               Plans
             </TabsTrigger>
             <TabsTrigger
               value="wizard"
-              className="text-xs h-8 px-3 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              className="text-xs"
             >
               New Employee
             </TabsTrigger>
             <TabsTrigger
               value="documents"
-              className="text-xs h-8 px-3 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              className="text-xs"
             >
               Documents
             </TabsTrigger>
             <TabsTrigger
               value="probation"
-              className="text-xs h-8 px-3 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              className="text-xs"
             >
               Probation
             </TabsTrigger>
@@ -224,10 +224,10 @@ export default function OnboardingPage() {
         </Tabs>
       ) : (
         <Tabs defaultValue="checklist" className="flex flex-col flex-1 min-h-0">
-          <TabsList className="shrink-0 rounded-lg border p-1 bg-muted/40">
+          <TabsList className="bg-muted/40">
             <TabsTrigger
               value="checklist"
-              className="text-xs h-8 px-3 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              className="text-xs"
             >
               My Documents
             </TabsTrigger>

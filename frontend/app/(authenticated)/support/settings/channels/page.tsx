@@ -59,7 +59,7 @@ import {
   type SupportChannel,
   type SupportChannelType,
 } from "@/hooks/api/support/channels";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { channelSchema, type ChannelForm } from "@/features/support/settings/channel-form.schema";
 
@@ -151,7 +151,7 @@ function ChannelDialog({ channel, onClose }: ChannelDialogProps) {
               toast.success("Channel updated");
               onClose();
             },
-            onError: (error) => toast.error(getApiError(error)),
+            onError: (error) => toast.error(getErrorMessage(error)),
           },
         );
       } else {
@@ -162,7 +162,7 @@ function ChannelDialog({ channel, onClose }: ChannelDialogProps) {
               toast.success("Channel created");
               onClose();
             },
-            onError: (error) => toast.error(getApiError(error)),
+            onError: (error) => toast.error(getErrorMessage(error)),
           },
         );
       }
@@ -352,7 +352,7 @@ export default function SupportChannelsPage() {
         { id: channel.id, isActive: !channel.isActive },
         {
           onSuccess: () => toast.success(channel.isActive ? "Channel deactivated" : "Channel activated"),
-          onError: (error) => toast.error(getApiError(error)),
+          onError: (error) => toast.error(getErrorMessage(error)),
         },
       );
     },
@@ -366,7 +366,7 @@ export default function SupportChannelsPage() {
         toast.success("Channel deleted");
         setDeleteTarget(null);
       },
-      onError: (error) => toast.error(getApiError(error)),
+      onError: (error) => toast.error(getErrorMessage(error)),
     });
   }, [deleteTarget, deleteChannel]);
 

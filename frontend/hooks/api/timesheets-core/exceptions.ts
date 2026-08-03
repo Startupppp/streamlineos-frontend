@@ -16,7 +16,7 @@ import type {
   RunDetectionResult,
   TimesheetException,
   TimesheetExceptionRecord,
-} from "@/features/timesheets-core/types";
+} from "@/features/timesheets/types";
 
 const exceptionsListPrefix = queryKeys.timesheets
   .exceptions(undefined)

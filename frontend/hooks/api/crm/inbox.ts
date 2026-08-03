@@ -46,7 +46,7 @@ export function useSnoozeCrmTask() {
       }
       return { snapshot };
     },
-    onError: (_err, _vars, ctx) => {
+    onError: (_, _vars, ctx) => {
       if (ctx?.snapshot) {
         qc.setQueryData(queryKeys.crmInbox.data(), ctx.snapshot);
       }
@@ -80,7 +80,7 @@ export function useCompleteCrmTask() {
       }
       return { snapshot };
     },
-    onError: (_err, _vars, ctx) => {
+    onError: (_, _vars, ctx) => {
       if (ctx?.snapshot) {
         qc.setQueryData(queryKeys.crmInbox.data(), ctx.snapshot);
       }

@@ -23,13 +23,13 @@ interface TreeNode {
 }
 
 const ROLE_DOT: Record<string, string> = {
-  Ceo: "bg-amber-500",
+  Final: "bg-amber-500",
   Hr: "bg-blue-500",
   Admin: "bg-blue-500",
 };
 
 const ROLE_ACCENT: Record<string, string> = {
-  Ceo: "border-l-amber-500",
+  Final: "border-l-amber-500",
   Hr: "border-l-blue-500",
   Admin: "border-l-blue-500",
 };
@@ -77,7 +77,7 @@ function buildTree(nodes: OrgChartNode[]): TreeNode[] {
 
   for (const root of [...roots]) detectAndBreakCycles(root.employee.id);
 
-  const priority: Record<string, number> = { Ceo: 0, Admin: 1, Hr: 2 };
+  const priority: Record<string, number> = { Final: 0, Admin: 1, Hr: 2 };
 
   function sortNodes(treeNodes: TreeNode[]) {
     treeNodes.sort((a, b) => {
@@ -160,7 +160,7 @@ function TreeBranch({ node, depth = 0, isLast = false }: { node: TreeNode; depth
 }
 
 const LEGEND_ITEMS = [
-  { label: "CEO", cls: ROLE_DOT.Ceo },
+  { label: "FINAL", cls: ROLE_DOT.Final },
   { label: "Admin", cls: ROLE_DOT.Admin },
   { label: "HR", cls: ROLE_DOT.Hr },
   { label: "Other", cls: "bg-muted-foreground/40" },
@@ -203,7 +203,7 @@ export default function OrgChartPage() {
       if (!groups.has(role)) groups.set(role, []);
       groups.get(role)!.push(root);
     }
-    const priority: Record<string, number> = { Ceo: 0, Admin: 1, Hr: 2 };
+    const priority: Record<string, number> = { Final: 0, Admin: 1, Hr: 2 };
     return Array.from(groups.entries()).sort((a, b) => {
       const pa = priority[a[0]] ?? 99;
       const pb = priority[b[0]] ?? 99;
@@ -269,9 +269,7 @@ export default function OrgChartPage() {
       }
       filters={
         <div className="flex items-center gap-2">
-          <div className="min-w-0 w-48">
-          <SearchInput placeholder="Search members…" value={search} onValueChange={handleSearchChange} />
-        </div>
+        <SearchInput placeholder="Search members…" value={search} onValueChange={handleSearchChange} />
           <ViewToggle value={view} options={ORG_VIEW_OPTIONS} onChange={setView} showLabel />
         </div>
       }

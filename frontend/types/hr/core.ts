@@ -66,21 +66,6 @@ export interface HrSensitiveData {
   bgvStatus: string | null;
 }
 
-export interface HrEffectiveDatedChange {
-  id: number;
-  orgId: string;
-  employmentId: number;
-  changeType: string;
-  status: "PENDING" | "APPROVED" | "APPLIED" | "REJECTED" | "CANCELLED";
-  effectiveFrom: string;
-  effectiveTo: string | null;
-  oldValue: Record<string, unknown> | null;
-  newValue: Record<string, unknown>;
-  appliedAt: string | null;
-  createdAt: string;
-  createdBy: string;
-}
-
 export interface HrLocation {
   id: number;
   orgId: string;

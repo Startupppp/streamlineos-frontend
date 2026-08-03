@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import type { SignAuditEvent, SignCertificate, SignEnvelope, SignEnvelopeFull } from "@/types/sign";
+import type { SignAuditEvent, SignEnvelope, SignEnvelopeFull } from "@/types/sign";
 
 export interface CreateSignEnvelopeInput {
   title: string;
@@ -119,40 +119,12 @@ export function useSendSignEnvelopeReminder(id: number) {
   });
 }
 
-export function useExtendSignEnvelopeExpiration(id: number) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["signEnvelopes", "extend-expiration", id],
-    mutationFn: (expiresAt: string) => apiClient.post<SignEnvelope>(`/sign/envelopes/${id}/extend-expiration`, { expiresAt }),
-    onSuccess: () => invalidateEnvelope(qc, id),
-  });
-}
-
-export function useCorrectSignEnvelope(id: number) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["signEnvelopes", "correct", id],
-    mutationFn: (input: { reason?: string; recipients?: { id: number; name?: string; email?: string; phone?: string }[] }) =>
-      apiClient.post<SignEnvelope>(`/sign/envelopes/${id}/correct`, input),
-    onSuccess: () => invalidateEnvelope(qc, id),
-  });
-}
-
 export function useSignEnvelopeAudit(id: number | undefined) {
   return useQuery({
     queryKey: queryKeys.signEnvelopes.audit(id ?? 0),
     queryFn: () => apiClient.get<SignAuditEvent[]>(`/sign/envelopes/${id}/audit`),
     enabled: id !== undefined,
     staleTime: 15_000,
-  });
-}
-
-export function useSignEnvelopeCertificate(id: number | undefined) {
-  return useQuery({
-    queryKey: queryKeys.signEnvelopes.certificate(id ?? 0),
-    queryFn: () => apiClient.get<{ url: string; certificate: SignCertificate }>(`/sign/envelopes/${id}/certificate`),
-    enabled: id !== undefined,
-    retry: false,
   });
 }
 

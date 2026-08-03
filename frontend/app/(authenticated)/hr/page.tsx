@@ -272,7 +272,7 @@ export default function HRDashboardPage() {
               icon={Briefcase}
               label="Recruitment"
               description="Jobs & pipeline"
-              tone="violet"
+              tone="blue"
             />
           </div>
         </HrHero>

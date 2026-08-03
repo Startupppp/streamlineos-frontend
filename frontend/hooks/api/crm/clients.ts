@@ -5,15 +5,11 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type {
   ClientAccountWithActivities,
-  ClientActivity,
   ClientAccountFilters,
   PaginatedClientAccounts,
-  LogClientActivityInput,
   ClientTimelineEvent,
   SimpleClient,
   ClientOpportunity,
-  CreateClientOpportunityInput,
-  OnboardingTemplate,
   OnboardingItem,
 } from "@/types/crm";
 
@@ -33,26 +29,6 @@ export function useClientAccount(id: number) {
     queryFn: () => apiClient.get<ClientAccountWithActivities>(`/clients/${id}`),
     enabled: id > 0,
     staleTime: 2 * 60_000,
-  });
-}
-
-export function useLogClientActivity() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["clients", "activities", "create"] as const,
-    mutationFn: (input: LogClientActivityInput) =>
-      apiClient.post<ClientActivity>(
-        `/clients/${input.clientAccountId}/activities`,
-        input
-      ),
-    onSuccess: (_, vars) => {
-      qc.invalidateQueries({
-        queryKey: queryKeys.clients.activities(vars.clientAccountId),
-      });
-      qc.invalidateQueries({
-        queryKey: queryKeys.clients.detail(vars.clientAccountId),
-      });
-    },
   });
 }
 
@@ -85,61 +61,12 @@ export function useClientOpportunities(clientId?: number) {
   });
 }
 
-export function useCreateClientOpportunity() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["clientOpportunities", "create"] as const,
-    mutationFn: (input: CreateClientOpportunityInput) =>
-      apiClient.post<ClientOpportunity>("/clients/opportunities", input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.clientOpportunities.all }),
-  });
-}
-
-export function useUpdateClientOpportunity() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["clientOpportunities", "update"] as const,
-    mutationFn: ({ id, ...data }: Partial<CreateClientOpportunityInput> & { id: number }) =>
-      apiClient.patch<ClientOpportunity>(`/clients/opportunities/${id}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.clientOpportunities.all }),
-  });
-}
-
-export function useDeleteClientOpportunity() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["clientOpportunities", "delete"] as const,
-    mutationFn: (id: number) => apiClient.delete(`/clients/opportunities/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.clientOpportunities.all }),
-  });
-}
-
-export function useOnboardingTemplates() {
-  return useQuery({
-    queryKey: queryKeys.clientOnboarding.templates(),
-    queryFn: () => apiClient.get<OnboardingTemplate[]>("/clients/onboarding/templates"),
-    staleTime: 2 * 60_000,
-  });
-}
-
 export function useClientOnboardingItems(clientId: number) {
   return useQuery({
     queryKey: queryKeys.clientOnboarding.items(clientId),
     queryFn: () => apiClient.get<OnboardingItem[]>("/clients/onboarding/items", { clientId }),
     staleTime: 2 * 60_000,
     enabled: clientId > 0,
-  });
-}
-
-export function useCreateOnboardingItem() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["clientOnboarding", "items", "create"] as const,
-    mutationFn: (input: {
-      clientId: number; title: string; description?: string;
-      assignedTo?: string; dueDate?: string; templateId?: number;
-    }) => apiClient.post<OnboardingItem>("/clients/onboarding/items", input),
-    onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: queryKeys.clientOnboarding.items(vars.clientId) }),
   });
 }
 
@@ -155,22 +82,3 @@ export function useToggleOnboardingItem() {
   });
 }
 
-export function useDeleteOnboardingItem() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["clientOnboarding", "items", "delete"] as const,
-    mutationFn: ({ id }: { id: number; clientId: number }) =>
-      apiClient.delete(`/clients/onboarding/items/${id}`),
-    onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: queryKeys.clientOnboarding.items(vars.clientId) }),
-  });
-}
-
-export function useCreateOnboardingTemplate() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["clientOnboarding", "templates", "create"] as const,
-    mutationFn: (input: { name: string; description?: string; isDefault?: boolean }) =>
-      apiClient.post<OnboardingTemplate>("/clients/onboarding/templates", input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.clientOnboarding.templates() }),
-  });
-}

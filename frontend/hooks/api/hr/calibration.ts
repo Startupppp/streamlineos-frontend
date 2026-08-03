@@ -25,9 +25,9 @@ export interface NineBoxEntry {
 }
 
 const keys = {
-  all: ["hr", "calibration"] as const,
-  entries: (cycleId: number) => ["hr", "calibration", "entries", cycleId] as const,
-  nineBox: (cycleId: number) => ["hr", "calibration", "nine-box", cycleId] as const,
+  all: ["streamlineos", "hr", "calibration"] as const,
+  entries: (cycleId: number) => ["streamlineos", "hr", "calibration", "entries", cycleId] as const,
+  nineBox: (cycleId: number) => ["streamlineos", "hr", "calibration", "nine-box", cycleId] as const,
 };
 
 export function useCalibrationEntries(cycleId: number) {
@@ -51,6 +51,7 @@ export function useNineBox(cycleId: number) {
 export function useUpsertCalibrationEntry(cycleId: number) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "calibration", "upsert", cycleId],
     mutationFn: (body: { employeeId: string; preRating?: string; postRating?: string; note?: string }) =>
       apiClient.post<CalibrationEntry>(`/hr/performance/calibration/cycles/${cycleId}/entries`, body),
     onSuccess: () => {

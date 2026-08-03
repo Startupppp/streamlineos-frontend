@@ -46,25 +46,25 @@ const QUICK_ACTIONS: {
   {
     key: "professional",
     label: "Professional",
-    instruction: (_s, body) =>
+    instruction: (_, body) =>
       `Rewrite the following email in a clear, professional tone. Keep the meaning. Return improved subject if needed and bodyHtml.\n\nCurrent body HTML:\n${body || "(empty — write a short professional placeholder asking for context)"}`,
   },
   {
     key: "friendly",
     label: "Friendly",
-    instruction: (_s, body) =>
+    instruction: (_, body) =>
       `Rewrite the following email in a warm, concise, friendly tone without being casual-sloppy.\n\nCurrent body HTML:\n${body || "(empty)"}`,
   },
   {
     key: "shorten",
     label: "Shorten",
-    instruction: (_s, body) =>
+    instruction: (_, body) =>
       `Shorten this email by ~40% while keeping key asks and next steps.\n\nCurrent body HTML:\n${body || "(empty)"}`,
   },
   {
     key: "expand",
     label: "Expand",
-    instruction: (_s, body) =>
+    instruction: (_, body) =>
       `Expand this email with a brief context opener and a clear closing, without fluff.\n\nCurrent body HTML:\n${body || "(empty)"}`,
   },
   {

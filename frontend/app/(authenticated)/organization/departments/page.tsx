@@ -13,7 +13,7 @@ import {
   useUpdateOrgDepartment,
   useDeleteOrgDepartment,
 } from "@/hooks/api/org-hierarchy";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -80,7 +80,7 @@ function DeptForm({
   defaultValues,
   branches,
   onSubmit,
-  isPending: _isPending,
+  isPending: _,
 }: {
   defaultValues?: FormValues;
   branches: { id: string; name: string }[];
@@ -228,7 +228,7 @@ export default function OrgDepartmentsPage() {
             toast.success("Department created");
             setShowCreate(false);
           },
-          onError: (err) => toast.error(getApiError(err)),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -252,7 +252,7 @@ export default function OrgDepartmentsPage() {
             toast.success("Department updated");
             setEditing(null);
           },
-          onError: (err) => toast.error(getApiError(err)),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -268,7 +268,7 @@ export default function OrgDepartmentsPage() {
             toast.success("Department archived");
             setShowArchived(true);
           },
-          onError: (err) => toast.error(getApiError(err)),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -284,7 +284,7 @@ export default function OrgDepartmentsPage() {
             toast.success("Department restored");
             setShowArchived(false);
           },
-          onError: (err) => toast.error(getApiError(err)),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -298,7 +298,7 @@ export default function OrgDepartmentsPage() {
         toast.success("Department deleted");
         setDeleting(null);
       },
-      onError: (err) => toast.error(getApiError(err)),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }, [deleting, remove]);
 
@@ -419,7 +419,7 @@ export default function OrgDepartmentsPage() {
   );
 
   return (
-    <RequireModule module="HR">
+    <RequireModule module="hr">
     <PageWrapper
       title="Departments"
       subtitle="Departments organized within branches."
@@ -432,7 +432,7 @@ export default function OrgDepartmentsPage() {
             onClick={handleToggleArchived}
           >
             <Archive className="h-4 w-4 mr-1.5" />
-            {showArchived ? "Show Active" : `Archived (${archived.length})`}
+            {showArchived ? "Show Active" : "Archived"}
           </Button>
           <AnimatedIconButton
             icon={PlusIcon}
@@ -447,9 +447,7 @@ export default function OrgDepartmentsPage() {
         </div>
       }
       filters={
-        <div className="min-w-0 w-full flex-1 md:min-w-[160px] md:max-w-xs">
-          <SearchInput placeholder="Search departments…" value={search} onValueChange={handleSearchInputChange} />
-        </div>
+        <SearchInput placeholder="Search departments…" value={search} onValueChange={handleSearchInputChange} />
       }
     >
       <DataTable

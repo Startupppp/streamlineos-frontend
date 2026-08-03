@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { UserCombobox } from "@/components/ui/user-combobox";
@@ -32,7 +33,7 @@ import {
   useMarkStaleKbPage,
 } from "@/hooks/api/kb/pages";
 import { PageRecordLinks } from "./page-record-links";
-import { KbInfoIcon } from "@/features/knowledge-base/lib/kb-icons";
+import { kbFormatDate } from "@/features/knowledge-base/lib/kb-date-utils";
 import type { KbPageDetail } from "@/hooks/api/kb/pages";
 
 const STATUS_OPTIONS: Array<{ value: "draft" | "in_review" | "published" | "archived"; label: string }> = [
@@ -61,37 +62,11 @@ const CONTENT_TYPE_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "playbook", label: "Playbook" },
 ];
 
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
 interface PageMetadataSheetProps {
   page: KbPageDetail;
   pageId: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-}
-
-export interface PageMetadataSheetTriggerProps {
-  onClick: () => void;
-}
-
-export function PageMetadataSheetTrigger({ onClick }: PageMetadataSheetTriggerProps) {
-  return (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="w-8"
-      onClick={onClick}
-      aria-label="Page settings"
-    >
-      <KbInfoIcon className="h-4 w-4" />
-    </Button>
-  );
 }
 
 export default function PageMetadataSheet({
@@ -259,31 +234,31 @@ export default function PageMetadataSheet({
                   }
                 >
                   {showPublish && (
-                    <Button
+                    <LoadingButton
                       className={ACTION_BTN_BASE}
                       onClick={handlePublish}
-                      disabled={publishPage.isPending}
+                      isPending={publishPage.isPending}
                     >
                       Publish
-                    </Button>
+                    </LoadingButton>
                   )}
                   {status !== "archived" ? (
-                    <Button
+                    <LoadingButton
                       variant="outline"
                       className={ACTION_BTN_DANGER}
                       onClick={handleArchive}
-                      disabled={archivePage.isPending}
+                      isPending={archivePage.isPending}
                     >
                       Archive
-                    </Button>
+                    </LoadingButton>
                   ) : (
-                    <Button
+                    <LoadingButton
                       className={ACTION_BTN_BASE}
                       onClick={handleUnarchive}
-                      disabled={unarchivePage.isPending}
+                      isPending={unarchivePage.isPending}
                     >
                       Unarchive
-                    </Button>
+                    </LoadingButton>
                   )}
                 </div>
               )}
@@ -347,7 +322,7 @@ export default function PageMetadataSheet({
                 </div>
                 {trustState === "verified" && page.verifiedUntil && (
                   <p className="text-[12px] text-muted-foreground">
-                    Verified until {formatDate(page.verifiedUntil)}
+                    Verified until {kbFormatDate(page.verifiedUntil)}
                   </p>
                 )}
                 {!verifyFormOpen ? (
@@ -358,14 +333,14 @@ export default function PageMetadataSheet({
                     >
                       Verify
                     </Button>
-                    <Button
+                    <LoadingButton
                       variant="outline"
                       className={ACTION_BTN_WARNING}
                       onClick={handleMarkStale}
-                      disabled={markStalePage.isPending}
+                      isPending={markStalePage.isPending}
                     >
                       Mark stale
-                    </Button>
+                    </LoadingButton>
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -378,13 +353,13 @@ export default function PageMetadataSheet({
                       className={FIELD_CLASS}
                     />
                     <div className="grid grid-cols-2 gap-2">
-                      <Button
+                      <LoadingButton
                         className={ACTION_BTN_BASE}
                         onClick={handleConfirmVerify}
-                        disabled={verifyPage.isPending}
+                        isPending={verifyPage.isPending}
                       >
                         Confirm
-                      </Button>
+                      </LoadingButton>
                       <Button
                         variant="outline"
                         className={ACTION_BTN_NEUTRAL}
@@ -400,7 +375,7 @@ export default function PageMetadataSheet({
 
             {page.nextReviewAt && (
               <p className="text-[12px] text-muted-foreground">
-                Next review: {formatDate(page.nextReviewAt)}
+                Next review: {kbFormatDate(page.nextReviewAt)}
               </p>
             )}
 

@@ -99,42 +99,6 @@ export interface LeadActivity {
   user?: LeadUser | null;
 }
 
-export interface LeadNote {
-  id: number;
-  leadId: number;
-  orgId: string;
-  authorId: string;
-  body: string;
-  createdAt: string | null;
-  author?: LeadUser | null;
-}
-
-export interface LeadTask {
-  id: number;
-  leadId: number;
-  orgId: string;
-  title: string;
-  dueDate: string | null;
-  assigneeId: string | null;
-  status: "open" | "done";
-  createdAt: string | null;
-  assignee?: LeadUser | null;
-}
-
-export interface LeadEmail {
-  id: number;
-  leadId: number;
-  orgId: string;
-  direction: "sent" | "received";
-  subject: string | null;
-  body: string | null;
-  fromEmail: string;
-  toEmail: string;
-  sentAt: string | null;
-  messageId: string | null;
-  createdAt: string | null;
-}
-
 export interface TimelineItem {
   id: number;
   type: "note" | "task" | "email" | "activity";
@@ -381,27 +345,6 @@ export interface DistributeResult {
   absentCount: number;
   absentNames: string[];
   summary: { userId: string; name: string; count: number }[];
-}
-
-export interface LeadClient {
-  id: number;
-  orgId: string;
-  leadId: number | null;
-  name: string;
-  email: string | null;
-  phone: string | null;
-  company: string | null;
-  designation: string | null;
-  city: string | null;
-  investmentValue: string | null;
-  status: string;
-  accountManagerId: string | null;
-  notes: string | null;
-  convertedAt: string | null;
-  createdAt: string | null;
-  updatedAt: string | null;
-  accountManager?: LeadUser | null;
-  lead?: { id: number; source: string | null; priority: string | null } | null;
 }
 
 

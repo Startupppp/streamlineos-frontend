@@ -4,13 +4,11 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type {
-  ArInvoice,
   ArPayment,
   ArPaymentMethod,
   CreditNote,
   CreditNoteStatus,
   RecurringInvoiceTemplate,
-  CustomerStatement,
   RecordPaymentInput,
   CreateCreditNoteInput,
   ApplyCreditNoteInput,
@@ -30,10 +28,6 @@ const arKeys = {
     all: [...base, "recurring-templates"] as const,
     list: (p?: unknown) => [...base, "recurring-templates", "list", p] as const,
     detail: (id: number) => [...base, "recurring-templates", id] as const,
-  },
-  statements: {
-    detail: (clientId: number, p?: unknown) =>
-      [...base, "statement", clientId, p] as const,
   },
   arPayments: {
     all: [...base, "ar-payments"] as const,
@@ -78,15 +72,6 @@ export function useCreditNotes(params: ListCreditNotesParams = {}) {
   });
 }
 
-export function useCreditNote(id: number) {
-  return useQuery<CreditNote, Error>({
-    queryKey: arKeys.creditNotes.detail(id),
-    queryFn: () => apiClient.get<CreditNote>(`/accounting/credit-notes/${id}`),
-    enabled: Number.isInteger(id) && id > 0,
-    staleTime: 60_000,
-  });
-}
-
 export interface ListRecurringTemplatesParams {
   isActive?: boolean;
   page?: number;
@@ -101,38 +86,6 @@ export function useRecurringTemplates(params: ListRecurringTemplatesParams = {})
         "/accounting/recurring-invoices",
         toQuery(params),
       ),
-    staleTime: 60_000,
-  });
-}
-
-export function useRecurringTemplate(id: number) {
-  return useQuery<RecurringInvoiceTemplate, Error>({
-    queryKey: arKeys.recurringTemplates.detail(id),
-    queryFn: () =>
-      apiClient.get<RecurringInvoiceTemplate>(`/accounting/recurring-invoices/${id}`),
-    enabled: Number.isInteger(id) && id > 0,
-    staleTime: 60_000,
-  });
-}
-
-export interface CustomerStatementParams {
-  from?: string;
-  to?: string;
-}
-
-export function useCustomerStatement(
-  clientId: number,
-  params: CustomerStatementParams = {},
-  enabled = true,
-) {
-  return useQuery<CustomerStatement, Error>({
-    queryKey: arKeys.statements.detail(clientId, params),
-    queryFn: () =>
-      apiClient.get<CustomerStatement>(
-        `/accounting/customer-statements/${clientId}`,
-        toQuery(params),
-      ),
-    enabled: enabled && Number.isInteger(clientId) && clientId > 0,
     staleTime: 60_000,
   });
 }
@@ -215,7 +168,7 @@ export function usePostCreditNote() {
       apiClient.post<{ id: number; status: string; needsApproval?: boolean }>(
         `/accounting/credit-notes/${creditNoteId}/post`,
       ),
-    onSuccess: (_data, { creditNoteId }) => {
+    onSuccess: (_, { creditNoteId }) => {
       queryClient.invalidateQueries({
         queryKey: arKeys.creditNotes.detail(creditNoteId),
       });
@@ -278,7 +231,7 @@ export function useUpdateRecurringTemplate() {
         `/accounting/recurring-invoices/${templateId}`,
         body,
       ),
-    onSuccess: (_data, { templateId }) => {
+    onSuccess: (_, { templateId }) => {
       queryClient.invalidateQueries({
         queryKey: arKeys.recurringTemplates.all,
         exact: false,
@@ -298,7 +251,7 @@ export function useDeleteRecurringTemplate() {
       apiClient.delete<{ id: number; deleted: boolean }>(
         `/accounting/recurring-invoices/${templateId}`,
       ),
-    onSuccess: (_data, { templateId }) => {
+    onSuccess: (_, { templateId }) => {
       queryClient.invalidateQueries({
         queryKey: arKeys.recurringTemplates.all,
         exact: false,

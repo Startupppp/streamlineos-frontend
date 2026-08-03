@@ -7,33 +7,15 @@ export interface Employee {
   image: string | null;
   designation: string | null;
   isActive: boolean;
-  hasDashboardAccess: boolean;
   department?: { id: string; name: string } | null;
 }
 
-export type UserRole = string;
-
-export type { EmployeeStatusFilter } from "./employee-list-filters";
-
-export const ROLE_LABELS: Record<string, string> = {
-  CEO: "CEO",
-  HR: "HR",
-  SALES: "Sales",
-  CUSTOMER_SUPPORT: "Customer Support",
-  ENGINEERING: "Engineering",
-  DESIGN: "Design",
-  VIDEO_EDITOR: "Video Editor",
-  DIGITAL_MARKETING: "Digital Marketing",
-};
-
 export const PAGE_SIZE = 10;
-export const PAGE_SIZE_OPTIONS = [10, 25, 50] as const;
-export type PageSizeOption = (typeof PAGE_SIZE_OPTIONS)[number];
 
-const PROTECTED_TARGET_ROLES = new Set(["CEO", "OWNER", "ADMIN"]);
+const PROTECTED_TARGET_ROLES = new Set(["FINAL", "OWNER", "ADMIN"]);
 
 export function canDeleteEmployee(
-  targetRole: UserRole,
+  targetRole: string,
   targetId: string,
   targetIsActive: boolean,
   currentId: string | undefined,

@@ -21,7 +21,7 @@ import {
   type BusinessHours,
 } from "@/hooks/api/support/business-hours";
 import { toast } from "sonner";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import {
   businessHoursSchema, DEFAULT_FORM_VALUES, businessHoursToFormValues, buildMutationPayload,
@@ -57,7 +57,7 @@ export default function BusinessHoursPage() {
   const onCreateSubmit = useCallback((data: BusinessHoursForm) => {
     createBusinessHours.mutate(buildMutationPayload(data), {
       onSuccess: () => { toast.success("Business hours created"); setCreateOpen(false); },
-      onError: (err) => toast.error(getApiError(err)),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }, [createBusinessHours]);
 
@@ -72,7 +72,7 @@ export default function BusinessHoursPage() {
       { id: editingBh.id, ...buildMutationPayload(data) },
       {
         onSuccess: () => { toast.success("Business hours updated"); setEditingBh(null); },
-        onError: (err) => toast.error(getApiError(err)),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }, [editingBh, updateBusinessHours]);
@@ -86,7 +86,7 @@ export default function BusinessHoursPage() {
     if (deleteTargetId === null) return;
     deleteBusinessHours.mutate(deleteTargetId, {
       onSuccess: () => { toast.success("Business hours deleted"); setDeleteTargetId(null); },
-      onError: (err) => { toast.error(getApiError(err)); setDeleteTargetId(null); },
+      onError: (err) => { toast.error(getErrorMessage(err)); setDeleteTargetId(null); },
     });
   }, [deleteBusinessHours, deleteTargetId]);
 
@@ -94,15 +94,14 @@ export default function BusinessHoursPage() {
 
   const count = businessHoursList?.length ?? 0;
 
-  function makeEditBhHandler(bh: BusinessHours) {
-    return function handleEditBh() { handleStartEdit(bh); };
-  }
-
-  function makeDeleteBhHandler(id: number) {
-    return function handleDeleteBh() { handleDeleteRequest(id); };
-  }
-
-  const columns = useMemo<DataTableColumn<BusinessHours>[]>(() => [
+  const columns = useMemo<DataTableColumn<BusinessHours>[]>(() => {
+    function makeEditBhHandler(bh: BusinessHours) {
+      return function handleEditBh() { handleStartEdit(bh); };
+    }
+    function makeDeleteBhHandler(id: number) {
+      return function handleDeleteBh() { handleDeleteRequest(id); };
+    }
+    return [
     {
       key: "name",
       header: "Name",
@@ -151,7 +150,8 @@ export default function BusinessHoursPage() {
         </div>
       ),
     },
-  ], [handleStartEdit, handleDeleteRequest]);
+    ];
+  }, [handleStartEdit, handleDeleteRequest]);
 
   return (
     <>

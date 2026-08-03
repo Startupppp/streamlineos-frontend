@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { UploadIcon, DownloadIcon } from "@animateicons/react/lucide";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { fadeUp } from "@/lib/motion-variants";
@@ -152,25 +152,21 @@ export function EntityCard({
                   onChange={handleFileInputChange}
                   aria-label={`Import ${entity.label}`}
                 />
-                <Button
+                <LoadingButton
                   variant="outline"
                   size="sm"
                   className="flex-1 text-xs h-8 gap-1.5"
                   onClick={handleImportClick}
-                  disabled={upload.status === "uploading"}
+                  isPending={upload.status === "uploading"}
                   {...uploadHoverHandlers}
                 >
-                  {upload.status === "uploading" ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <UploadIcon ref={uploadIconRef} size={14} />
-                  )}
+                  {upload.status !== "uploading" && <UploadIcon ref={uploadIconRef} size={14} />}
                   Import
-                </Button>
+                </LoadingButton>
               </>
             )}
             {entity.supported.export && entity.exportEndpoint && (
-              <Button
+              <LoadingButton
                 variant="outline"
                 size="sm"
                 className={cn(
@@ -178,16 +174,12 @@ export function EntityCard({
                   entity.supported.import ? "flex-1" : "w-full",
                 )}
                 onClick={handleExportClick}
-                disabled={isExporting}
+                isPending={isExporting}
                 {...downloadHoverHandlers}
               >
-                {isExporting ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <DownloadIcon ref={downloadIconRef} size={14} />
-                )}
+                {!isExporting && <DownloadIcon ref={downloadIconRef} size={14} />}
                 Export
-              </Button>
+              </LoadingButton>
             )}
           </div>
 

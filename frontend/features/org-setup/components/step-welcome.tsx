@@ -36,7 +36,7 @@ export function StepWelcome({
             {firstName ? `Welcome, ${firstName}` : "Welcome"}
           </p>
           <h1 className="font-display text-[1.75rem] font-extrabold leading-[1.05] tracking-[-0.03em] text-foreground text-balance sm:text-[2.1rem] md:text-[2.35rem]">
-            Birth your workspace on{" "}
+            Launch your organization on{" "}
             <span className="brand-sweep">{BRAND_NAME}</span>
           </h1>
           <p className="w-full text-sm leading-relaxed text-muted-foreground sm:max-w-md sm:text-[15px]">

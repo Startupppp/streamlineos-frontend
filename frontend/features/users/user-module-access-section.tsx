@@ -15,14 +15,16 @@ import { getErrorMessage } from "@/lib/get-error-message";
 const MODULE_LABELS: Record<string, string> = {
   hr: "HR",
   crm: "CRM",
-  projects: "Projects",
+  build: "Build",
   accounting: "Accounting & Finance",
   inventory: "Inventory",
   kb: "Knowledge",
+  chat: "Chat",
   support: "Support",
   surveys: "Surveys",
   payroll: "Payroll",
   sign: "SignOS",
+  timesheets: "Timesheets",
 };
 
 interface ModuleToggleRowProps {
@@ -54,7 +56,7 @@ function ModuleToggleRow({ module, disabled, onToggle }: ModuleToggleRowProps) {
 }
 
 export function UserModuleAccessSection({ userId }: { userId: string }) {
-  const canManage = useCan("hr:employees:manage");
+  const canManage = useCan("settings:organization:manage");
   const { data: modules, isLoading } = useUserModuleAccess(userId);
   const setAccess = useSetUserModuleAccess(userId);
 

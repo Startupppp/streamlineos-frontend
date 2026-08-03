@@ -15,7 +15,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { getErrorMessage } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useMyDelegations, useCreateDelegation, useDeleteDelegation } from "@/hooks/api/hr/hr-workflows";
 import { HR_WORKFLOW_OBJECT_TYPES, HR_WORKFLOW_OBJECT_TYPE_LABELS } from "@/types/hr/workflows";
 
@@ -86,7 +86,7 @@ export function DelegationSettings({ open, onOpenChange }: Props) {
             {delegations?.map((d) => (
               <div key={d.id} className="flex items-center gap-2 rounded-lg border p-2.5 text-xs">
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium truncate">{d.delegateUserId}</p>
+                  <p className="font-medium truncate">{d.delegateName ?? d.delegateEmail?.split("@")[0] ?? "Unknown user"}</p>
                   <div className="flex items-center gap-1.5 mt-0.5">
                     {d.objectType ? (
                       <Badge variant="secondary" className="text-[10px]">{HR_WORKFLOW_OBJECT_TYPE_LABELS[d.objectType]}</Badge>

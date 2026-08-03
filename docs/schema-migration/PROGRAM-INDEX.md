@@ -1,0 +1,152 @@
+---
+type: program index — canonical wave map + critical-path execution checklist
+status: LIVING
+date: 2026-07-26
+authority: docs/schema-change-plan.md §9 (waves 0–9) is canonical
+---
+
+# Platform redesign — program index & critical path
+
+> **One source of truth for "what runs next."** The authoritative wave numbering is
+> `docs/schema-change-plan.md` §9 — a **10-wave program (0–9)**. Older topic-design docs use a
+> divergent numbering (they go up to `wave-12`); §1 below maps them so nothing is orphaned.
+> Tags: **[DB]** needs the user's Neon (AI cannot run) · **[CODE]** implementable now ·
+> **[TIME]** elapsed-time observation gate · **[COLLISION]** user is actively editing these files.
+
+---
+
+## 1. Canonical wave map (reconciles both numbering schemes)
+
+| Canonical wave (schema-change-plan §9) | Execution plan (this session) | Related topic-design docs (older numbering) |
+|---|---|---|
+| **0 — Migration control plane** | `wave-0-baseline-migration-runbook` **[DB]** | `wave-0-control-plane`, `wave-0-pm-reconciliation-adr`, `wave-0-rls-matrix`, `wave-0-composite-fk-matrix-{hr-payroll,inventory-finance,crm-projects-misc}`, `wave-0-id-transition-matrix-modules`, `wave-0-doc-contradiction-inventory`, `wave-4-schema-folder-reorg-map`, `id-transition-matrix` |
+| **1 — Tenant invariants** | `wave-1-execution-plan` | — |
+| **2 — Module authority** | `wave-2-6-execution-plan` (part 1) | `wave-2-module-authority-unify` |
+| **3 — Directory & Workforce** | `wave-3-execution-plan` | `wave-5-directory-workforce-design` ⚠️ *(older doc numbered this "wave 5")* |
+| **4 — Tenant-safe FKs** | `wave-4-execution-plan` | `wave-7-composite-fk-matrix`, the three `wave-0-composite-fk-matrix-*` |
+| **5 — RBAC correctness** | `wave-5-execution-plan` | — *(note: name-collides with the older `wave-5-directory` doc, which is really Wave 3)* |
+| **6 — Business Party** | `wave-2-6-execution-plan` (part 2) | `wave-6-business-party-design` |
+| **7 — PM + module boundaries** | `wave-7-execution-plan` | `wave-8-pm-hierarchy-design` *(SUPERSEDED → pm-reconciliation-adr)* |
+| **8 — Administration & portal UX** | `wave-8-execution-plan` | `wave-9-portal-audience-design` ⚠️ *(older doc numbered portal "wave 9")* |
+| **9 — Contract & retirement** | `wave-9-infra-retirement-plan` | `wave-10-rls-matrix` *(overlaps `wave-0-rls-matrix`)*, `wave-12-dead-code-inventory`, `GO-LIVE-runbook` |
+
+**Reconciliation actions (housekeeping, user's call):**
+- Keep `wave-0-rls-matrix` (54 KB, 134 tables) as canonical; fold/retire `wave-10-rls-matrix` (5 KB).
+- The older `wave-5-directory-workforce-design` is really canonical **Wave 3**; cross-reference or rename.
+- The older `wave-9-portal-audience-design` is canonical **Wave 8** (portal UX) + feeds **Wave 9** (portal-auth).
+
+---
+
+## 2. Critical-path execution checklist (dependency-ordered)
+
+### GATE 0 — must run before anything downstream  **[DB]**
+- [ ] **0.1** Create `prod-recon-baseline` Neon branch (backup). *(single most important safety step)*
+- [x] **0.2** Reconcile journal drift: journal the 3 un-journaled SQL files, fix out-of-order idx, convert `branch-sync-project-teams.sql` into a real migration. → `wave-0-baseline-migration-runbook` **DONE 2026-07-27.**
+- [x] **0.3** Generate + apply migrations for the 5 code-only tables (`organization_people`, `workers`, `worker_engagements`, `pm_workspaces`, `pm_workspace_memberships`). **DONE** — all 5 tables confirmed in live DB 2026-07-28.
+- [x] **0.4** Prove a clean DB reaches the same head reproducibly (Wave 0 exit criterion). **DONE 2026-07-28 — DB wiped + 70 migrations applied from empty, 782 tables.**
+- [ ] **0.5** **Neon pooler transaction-locality test** — prove `set_config(...,true)` is transaction-local under the actual pooler. *(hard gate for ALL RLS)* → `wave-0-rls-matrix` NT-07
+
+### TIER 1 — unblocked immediately after GATE 0 (candidate keys already exist)  **[CODE]+[DB]**
+- [ ] **7.G3+G1** Journal `pm_workspaces` migration + add composite FK on `pm_workspace_memberships.organization_membership_id → organization_members(org_id, id)`. *One `db:generate` pass.* → `wave-7-execution-plan`
+- [ ] **3.1–3.3** Directory migration + `worker_engagements` EXCLUSION overlap constraint (`btree_gist`) + employer legal entity. → `wave-3-execution-plan`
+- [ ] **1.1–1.6** Owner-pointer: `NOT VALID` composite FK → bootstrap repair → `VALIDATE` → `NOT NULL`; rejoin partial-unique. → `wave-1-execution-plan`
+- [ ] **5.A–5.C** `membership_role_assignments` table + dual-write + backfill. → `wave-5-execution-plan`
+
+### TIER 2 — the FK foundation (blocks Wave 6 + RLS)  **[DB]**
+- [ ] **4.A** Add `org_id` to ~68 tables that lack it (chat 8, inv lines 18, HR 25, junctions 27). → `wave-4-execution-plan`
+- [ ] **4.B** Add ~54 missing single-column `.references()` (referential integrity).
+- [ ] **4.C** Add `UNIQUE(org_id, id)` candidate keys to ~110 parents (anchor-first).
+- [ ] **4.D** Add ~270 composite FKs (`NOT VALID` → `VALIDATE`), quarantine invalid rows first.
+- [ ] **4.E** ~~Billing int→text~~ **DONE** by user (commit `0c8e21b`).
+- [ ] **4.F** RLS pilot on one low-risk table after its Phase-D FKs validate.
+
+### TIER 3 — parallelizable after their deps
+- [ ] **2.1–2.7** Module authority: backfill `org_modules` for all orgs → switch guards → drop `enabled_modules`. **Closes the verified module-gate inconsistency.** → `wave-2-6-execution-plan`
+- [ ] **6.1–6.11** Business Party consumer migration (`clients.id` int → `business_parties.party_id` text) — needs Wave 4 party FKs; **highest-risk step = invoice/purchase_bills type change**. → `wave-2-6-execution-plan`
+- [ ] **5.D–5.N** RBAC: retire `users.role` fallback, explicit DENY, typed resource grants, discovery endpoints, `ModuleAccessController` guard. *(delegations + team-fail-closed already DONE, `9c78440`.)*
+- [ ] **7.G2/G4/G5/G6** PM: provisioning on enable, `pm_workspace_id` NOT NULL + composite FKs, managed-product strategy fields, delivery-team membership proof.
+
+### TIER 4 — UX + infra + retirement
+- [ ] **9.infra** Domain-event outbox/inbox (greenfield), `email_outbox` org-scoping, idempotency coverage expansion, **portal-auth runtime** (`PortalJwtAuthGuard` + `aud` claim — currently absent). → `wave-9-infra-retirement-plan`
+- [ ] **8.1–8.10** Admin/portal UX: People/Membership split, PM route aliases, terminology pass, **portal isolation** (biggest, needs 9.infra portal-auth first). *(module-switcher renames already DONE.)* → `wave-8-execution-plan`
+- [ ] **9.RLS** Full RLS rollout (shadow → ENABLE → test → FORCE) after 4.C/4.D validate + GATE 0.5 passes.
+- [ ] **9.retire** Stop legacy writes, retirement telemetry, dead-code removal. → `wave-12-dead-code-inventory`
+
+### TIME GATES (cannot be shortcut by code)  **[TIME]**
+- [ ] Each cutover: **≥7-day shadow-read parity** before switching reads.
+- [ ] Each contract: **≥30 days / 2 releases** zero legacy use before dropping.
+
+---
+
+## 3. Already done (this program, both parties)
+- **Security:** membership-gated access + suspend/reactivate (`daa8303`); per-request membership re-check + api-tokens RBAC (`c14ea9a`).
+- **User, in parallel:** billing int→text (`0c8e21b`); delegations + team fail-closed (`9c78440`); CRM↔Inventory fulfillment bridge (`016d016`); PM Workspaces module (`7fcc9b9`, `08b07dc`); Administration IA rename; module-switcher renames.
+- **Design surface:** 8 Wave-0 gate docs + 8 execution plans + this index — every wave specified to step/SQL level.
+
+## 3b. Session progress — updated 2026-07-28
+
+> **UPDATE 2026-07-28:** journal is now **70 entries = 70 files** (was 47 at last write);
+> GATE 0.4 is **DONE** (DB wiped + cold-rebuilt, 782 tables, verified via live DB query).
+> See STATUS.md for the complete current snapshot.
+
+**Code authored + APPLIED TO THE DEV BRANCH `ep-autumn-truth-aot9sina` (previously not gate-passed; now cold-rebuild proven):**
+- Wave 4 tenant-integrity: 735 candidate keys, ~770 composite FKs, 79 self-maintaining
+  `org_id` triggers on line-item tables, ~100 bare-column `.references()`. (4.A/B/C/D applied to branch.)
+- Wave 6: party overlays (`crm_party_accounts`, `inv_party_vendor_profiles`), `support_tickets`
+  moved to `support/tickets.ts`, `deal.closed`→SO consumer (publish clean; draft-SO due to
+  deals having no line items), `<PartySelect>`, projects↔CRM decouple (T6.5).
+- Wave 7: G1 composite membership FK, G4 provisioning-on-enable, G5 managed-product fields.
+- Wave 8: managed-product link endpoint/hook/detail page; PAGES.md.
+- Wave 9: outbox worker+inbox (both parties), email `organization_id`, deprecation telemetry.
+- Wave 1: org/invitation status enums + purge + lifecycle columns; invitation soft-revoke/expire
+  + org purge worker.
+- Dead-code sweep: 7 backend + 3 frontend dead items removed.
+
+**GATE 0.2 (journal reconciliation) — DONE (`f25b51f` → superseded by `28dbfe4`+`2baf093`):**
+journal was 21 entries / 26 files with ~10 session changes applied only via ad-hoc SQL. The first
+pass folded everything into a monolithic `0307_wave_1_4_6_7_9_reconciliation.sql` — but a clean-DB
+replay proved that migration ECONNRESET on Neon (~2000 ops in one connection) AND that an entire
+**un-journaled additive FOUNDATION layer** (`managed_products`, directory `organization_people`/
+`workers`/`worker_engagements`, `business_parties`+contacts+addresses, portal tables) was never
+journaled at all. Reconciled properly into **21 discrete, dependency-ordered, idempotent migrations
+`0307`–`0327`** (foundation → idempotency → project_teams → owner pointer/trigger → org_modules(+backfill)
+→ org/invitation lifecycle → pm_workspaces → offer_fulfillment → party_overlays → managed_product_fields
+→ email_orgid → phase_a_orgid → defect_fks → phase_c_candidate_keys → phase_d_composite_fks →
+directory_party_fks → membership_fk → owner_not_null → decouple_projects_crm). Followed by
+migrations `0328`–`0349` (16 more) covering membership_role_assignments, worker-engagement overlap,
+pm_workspace_id NOT NULL, dead-object drops, array normalization, modules_catalog + FK, module
+ownership, module-scoped roles, org_units consolidation, role_assignment collapse, payroll generation
+collapse, invitation events, FK repairs, polymorphic-table retirement, org-table retirement.
+**Journal now 70 entries = 70 files, consistent.** (Updated 2026-07-28.)
+*Residual:* meta snapshots are still incomplete (pre-existing — only 0000/0016 exist), so `db:generate`
+stays TTY/snapshot-blocked.
+
+**GATE 0.4 (clean-DB reproducibility) — DONE (2026-07-28):** the Neon database was wiped
+(`DROP SCHEMA public CASCADE`) and all 70 migrations applied from empty via `pnpm db:bootstrap`.
+Live DB confirmed: 782 tables, 70 `drizzle.__drizzle_migrations` rows (verified via direct DB query).
+Two previously-noted cold-build defects were fixed in the chain:
+- **Extension bootstrap missing:** no migration creates `vector`/`pg_trgm`/`btree_gist`/`pgcrypto`/
+  `uuid-ossp`; pre-existing on the dev branch but absent on a fresh DB. `pnpm db:bootstrap` handles
+  this automatically; manual `CREATE EXTENSION IF NOT EXISTS ...` is also documented.
+- **`statement_timeout` cancels cold catalog DO blocks (`2baf093`):** heavy PL/pgSQL `DO` blocks that
+  add 600+ constraints in one statement exceed Neon's default timeout on a cold DB. Fixed by prepending
+  `SET statement_timeout = 0;` to all affected migrations.
+
+**BLOCKED — only the operator can do these:**
+- **0.1** create `prod-recon-baseline` backup branch.
+- **0.5** Neon pooler transaction-locality test (hard gate for all RLS).
+- **`db:generate`** needs a TTY (hits `promptNamedWithSchemasConflict`) — run locally.
+- All **cutover** steps need ≥7-day shadow-read parity; all **contract/DROP** steps need ≥30 days / 2
+  releases. These are elapsed-time and cannot be compressed.
+- **Operator SQL Steps 3–7** (`pending-operator-sql-runbook.md`) — data-migration scripts for DBs
+  with real organization data. No-ops on the current fresh DB (0 orgs).
+
+**Bottom line:** GATE 0.4 is now met. The program's remaining DEFINITION OF DONE items are GATE 0.5
+(RLS pooler test) and elapsed-time observation windows — neither closable by more code.
+
+## 4. Verified findings (medium; already sequenced, no emergency)
+- **Module-gate inconsistency** — `@RequireModule` denies-on-absent (JWT array) vs `@RequirePermission` allows-on-absent (`org_modules`, `entitlements.service.ts:132`). Not a bypass/BOLA; closed by Wave 2 backfill.
+- **Portal-auth runtime absent** — portal schema complete but no `PortalJwtAuthGuard`/`aud` claim; internal guard doesn't reject portal tokens. Sequenced in Wave 9.
+
+## 5. What only the user can do
+Every migration execution, the Neon pooler RLS test, and all `[TIME]` observation gates. The AI can write any migration/code against these plans, but cannot touch the database or compress elapsed-time gates.

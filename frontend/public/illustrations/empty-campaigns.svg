@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="240" viewBox="0 0 320 240" role="img" aria-hidden="true">
+  <ellipse cx="160" cy="198" rx="92" ry="14" fill="#f2f2f2"/>
+  <path d="M68 152c18-28 48-46 92-46s74 18 92 46" fill="none" stroke="#e8e8ef" stroke-width="2"/>
+  <!-- megaphone body -->
+  <path d="M118 88 L198 58 L198 158 L118 128 Z" fill="#3B82F6"/>
+  <path d="M118 88 L198 58 L198 158 L118 128 Z" fill="#60A5FA" opacity="0.35"/>
+  <rect x="86" y="98" width="36" height="24" rx="6" fill="#3f3d56"/>
+  <path d="M98 122 L98 152 Q98 164 112 164 L118 164" fill="none" stroke="#3f3d56" stroke-width="10" stroke-linecap="round"/>
+  <!-- mouthpiece ring -->
+  <ellipse cx="200" cy="108" rx="10" ry="50" fill="#2563EB"/>
+  <ellipse cx="204" cy="108" rx="5" ry="38" fill="#93C5FD" opacity="0.5"/>
+  <!-- sound waves -->
+  <path d="M228 78 Q248 108 228 138" fill="none" stroke="#3B82F6" stroke-width="4" stroke-linecap="round" opacity="0.55"/>
+  <path d="M246 62 Q278 108 246 154" fill="none" stroke="#3B82F6" stroke-width="4" stroke-linecap="round" opacity="0.35"/>
+  <path d="M264 48 Q308 108 264 168" fill="none" stroke="#3B82F6" stroke-width="3.5" stroke-linecap="round" opacity="0.2"/>
+  <!-- accent dots -->
+  <circle cx="78" cy="72" r="5" fill="#3B82F6" opacity="0.25"/>
+  <circle cx="248" cy="176" r="4" fill="#3B82F6" opacity="0.2"/>
+  <circle cx="96" cy="176" r="3.5" fill="#3f3d56" opacity="0.15"/>
+</svg>

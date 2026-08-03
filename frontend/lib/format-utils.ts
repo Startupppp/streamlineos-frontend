@@ -20,34 +20,11 @@ export function formatCurrencyFull(
   }).format(num);
 }
 
-export function formatNumber(value: number, decimals?: number): string {
-  if (decimals !== undefined) {
-    return value.toLocaleString(undefined, {
-      minimumFractionDigits: decimals,
-      maximumFractionDigits: decimals,
-    });
-  }
-  return value.toLocaleString();
-}
-
 export function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
-}
-
-export function truncate(str: string, maxLength: number): string {
-  if (str.length <= maxLength) return str;
-  return str.slice(0, maxLength - 3) + "...";
-}
-
-export function slugify(str: string): string {
-  return str
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
 }
 
 export const getInitials = (
@@ -165,15 +142,6 @@ export function numberToWords(num: number): string {
   const crores = Math.floor(num / 10000000);
   const remainder = num % 10000000;
   return convertLessThanThousand(crores) + " Crore" + (remainder ? " " + numberToWords(remainder) : "");
-}
-
-export function formatHoursMinutes(hours: string | number | null | undefined): string {
-  if (hours === null || hours === undefined) return "0h 00m";
-  const num = typeof hours === "string" ? parseFloat(hours) : hours;
-  if (Number.isNaN(num)) return "0h 00m";
-  const h = Math.floor(num);
-  const m = Math.round((num - h) * 60);
-  return `${h}h ${m.toString().padStart(2, "0")}m`;
 }
 
 const GREETING_AFTERNOON_HOUR = 12;

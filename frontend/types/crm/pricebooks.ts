@@ -39,8 +39,3 @@ export interface QuoteTemplate {
   updatedAt: string;
 }
 
-export interface ResolvedPrice {
-  unitPriceCents: number;
-  source: "pricebook" | "product";
-  pricebookName: string | null;
-}

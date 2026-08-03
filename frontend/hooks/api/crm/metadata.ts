@@ -80,6 +80,7 @@ export function useCrmPipelines(type?: CrmPipelineType) {
       if (!type) return sorted;
       return sorted.filter((p) => p.type === type);
     },
+    staleTime: 30_000,
   });
 }
 
@@ -96,6 +97,7 @@ export function useCrmStages(pipelineIdOrType: string) {
         .slice()
         .sort((a, b) => a.sortOrder - b.sortOrder);
     },
+    staleTime: 30_000,
   });
 }
 
@@ -109,6 +111,7 @@ export function useCrmOptions(type: CrmOptionType) {
         .slice()
         .sort((a, b) => a.sortOrder - b.sortOrder);
     },
+    staleTime: 30_000,
   });
 }
 
@@ -130,18 +133,6 @@ export function useUpdatePipeline() {
     mutationKey: ["crmMetadata", "pipelines", "update"] as const,
     mutationFn: ({ id, ...data }: { id: string } & Partial<Omit<CrmPipelineWithStages, "stages">>) =>
       apiClient.patch<CrmPipelineWithStages>(`/crm/pipelines/${id}`, data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.crmMetadata.all });
-    },
-  });
-}
-
-export function useDeletePipeline() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["crmMetadata", "pipelines", "delete"] as const,
-    mutationFn: (id: string) =>
-      apiClient.delete<{ success: boolean }>(`/crm/pipelines/${id}`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmMetadata.all });
     },
@@ -344,18 +335,6 @@ export function useUpdateBlueprint() {
   });
 }
 
-export function useDeleteBlueprint() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["crmMetadata", "blueprints", "delete"] as const,
-    mutationFn: (id: string) =>
-      apiClient.delete<{ success: boolean }>(`/crm/blueprints/${id}`),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.crmMetadata.blueprints() });
-    },
-  });
-}
-
 export type CreateTransitionInput = {
   fromStageKey: string;
   toStageKey: string;
@@ -368,7 +347,7 @@ export type UpdateTransitionInput = Partial<CreateTransitionInput>;
 
 export function useBlueprintTransitions(blueprintId: string | null) {
   return useQuery({
-    queryKey: ["crmMetadata", "blueprints", blueprintId, "transitions"] as const,
+    queryKey: queryKeys.crmMetadata.blueprintTransitions(blueprintId),
     queryFn: () =>
       apiClient.get<CrmBlueprintTransition[]>(`/crm/blueprints/${blueprintId}/transitions`),
     enabled: blueprintId !== null,
@@ -383,7 +362,7 @@ export function useCreateBlueprintTransition(blueprintId: string) {
     mutationFn: (input: CreateTransitionInput) =>
       apiClient.post<CrmBlueprintTransition>(`/crm/blueprints/${blueprintId}/transitions`, input),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ["crmMetadata", "blueprints", blueprintId, "transitions"] });
+      void qc.invalidateQueries({ queryKey: queryKeys.crmMetadata.blueprintTransitions(blueprintId) });
     },
   });
 }
@@ -398,7 +377,7 @@ export function useUpdateBlueprintTransition(blueprintId: string) {
         data
       ),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ["crmMetadata", "blueprints", blueprintId, "transitions"] });
+      void qc.invalidateQueries({ queryKey: queryKeys.crmMetadata.blueprintTransitions(blueprintId) });
     },
   });
 }
@@ -412,7 +391,7 @@ export function useDeleteBlueprintTransition(blueprintId: string) {
         `/crm/blueprints/${blueprintId}/transitions/${id}`
       ),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ["crmMetadata", "blueprints", blueprintId, "transitions"] });
+      void qc.invalidateQueries({ queryKey: queryKeys.crmMetadata.blueprintTransitions(blueprintId) });
     },
   });
 }

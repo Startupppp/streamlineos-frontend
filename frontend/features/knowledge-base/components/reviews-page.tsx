@@ -1,9 +1,10 @@
 "use client";
 
+import { PageWrapper } from "@/components/ui/page-wrapper";
+
 import { useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Badge } from "@/components/ui/badge";
@@ -46,17 +47,10 @@ import {
   KbXCircleIcon,
   KbAlertCircleIcon,
 } from "@/features/knowledge-base/lib/kb-icons";
+import { kbFormatDate } from "@/features/knowledge-base/lib/kb-date-utils";
 
 type StatusFilter = "all" | KbReviewStatus;
 type TypeFilter = "all" | KbReviewType;
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
 
 function isOverdue(dueAt: string | null, status: KbReviewStatus): boolean {
   if (!dueAt || status !== "pending") return false;
@@ -323,7 +317,7 @@ export default function ReviewsPage() {
               overdue ? "text-red-600 font-medium" : "text-muted-foreground",
             )}
           >
-            {review.dueAt ? formatDate(review.dueAt) : "—"}
+            {review.dueAt ? kbFormatDate(review.dueAt) : "—"}
             {overdue && " (overdue)"}
           </span>
         );

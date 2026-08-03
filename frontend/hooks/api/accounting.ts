@@ -75,6 +75,7 @@ interface CreateAccountInput {
 export function useCreateAccount() {
   const queryClient = useQueryClient();
   return useMutation<Account, Error, CreateAccountInput>({
+    mutationKey: ["create", "account"],
     mutationFn: (data) => apiClient.post<Account>("/accounting/accounts", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
@@ -91,6 +92,7 @@ interface UpdateAccountInput {
 export function useUpdateAccount(accountId: number) {
   const queryClient = useQueryClient();
   return useMutation<Account, Error, UpdateAccountInput>({
+    mutationKey: ["update", "account"],
     mutationFn: (data) => apiClient.patch<Account>(`/accounting/accounts/${accountId}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
@@ -121,6 +123,7 @@ export function useJournalEntry(entryId: number) {
     queryKey: queryKeys.accounting.journalEntry(entryId),
     queryFn: () => apiClient.get<JournalEntry>(`/accounting/journal/${entryId}`),
     enabled: Number.isInteger(entryId) && entryId > 0,
+    staleTime: 30_000,
   });
 }
 
@@ -133,6 +136,7 @@ interface ReverseJournalEntryResult {
 export function useReverseJournalEntry(entryId: number) {
   const queryClient = useQueryClient();
   return useMutation<ReverseJournalEntryResult, Error, void>({
+    mutationKey: ["reverse", "journal", "entry"],
     mutationFn: () =>
       apiClient.post<ReverseJournalEntryResult>(`/accounting/journal/${entryId}/reverse`),
     onSuccess: (result) => {
@@ -165,6 +169,7 @@ interface CreateJournalEntryResult {
 export function useCreateJournalEntry() {
   const queryClient = useQueryClient();
   return useMutation<CreateJournalEntryResult, Error, CreateJournalEntryInput>({
+    mutationKey: ["create", "journal", "entry"],
     mutationFn: (input) => apiClient.post<CreateJournalEntryResult>("/accounting/journal", input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
@@ -181,6 +186,7 @@ interface PostJournalEntryResult {
 export function usePostJournalEntry(entryId: number) {
   const queryClient = useQueryClient();
   return useMutation<PostJournalEntryResult, Error, void>({
+    mutationKey: ["post", "journal", "entry"],
     mutationFn: () => apiClient.post<PostJournalEntryResult>(`/accounting/journal/${entryId}/post`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
@@ -366,6 +372,7 @@ interface PurchaseBillCreateResult {
 export function useCreatePurchaseBill() {
   const queryClient = useQueryClient();
   return useMutation<PurchaseBillCreateResult, Error, CreatePurchaseBillInput>({
+    mutationKey: ["create", "purchase", "bill"],
     mutationFn: (input) => apiClient.post<PurchaseBillCreateResult>("/accounting/purchase-bills", input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
@@ -376,6 +383,7 @@ export function useCreatePurchaseBill() {
 export function usePostPurchaseBill(billId: number) {
   const queryClient = useQueryClient();
   return useMutation<{ id: number; status: PurchaseBillStatus }, Error, void>({
+    mutationKey: ["post", "purchase", "bill"],
     mutationFn: () =>
       apiClient.patch<{ id: number; status: PurchaseBillStatus }>(`/accounting/purchase-bills/${billId}`, { status: "POSTED" }),
     onSuccess: () => {
@@ -454,6 +462,7 @@ interface VendorPaymentResult {
 export function useRecordVendorPayment(billId: number) {
   const queryClient = useQueryClient();
   return useMutation<VendorPaymentResult, Error, RecordVendorPaymentInput>({
+    mutationKey: ["record", "vendor", "payment"],
     mutationFn: (input) =>
       apiClient.post<VendorPaymentResult>(`/accounting/purchase-bills/${billId}/payments`, input),
     onSuccess: () => {

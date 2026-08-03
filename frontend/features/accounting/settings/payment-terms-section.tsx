@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { toast } from "sonner";
 import { Star } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,9 +41,9 @@ export function PaymentTermsSection({ terms, canManage }: PaymentTermsSectionPro
     if (!v) { setAddOpen(false); setEditTerm(null); }
   }
 
-  function handleRequestDelete(key: string): void {
+  const handleRequestDelete = useCallback((key: string): void => {
     setDeleteKey(key);
-  }
+  }, []);
 
   function handleCancelDelete(): void {
     setDeleteKey(null);
@@ -69,51 +69,48 @@ export function PaymentTermsSection({ terms, canManage }: PaymentTermsSectionPro
     return t.key;
   }
 
-  const baseColumns: DataTableColumn<PaymentTerm>[] = [
-    {
-      key: "label",
-      header: "Label",
-      cell: (row) => <span className="text-xs">{row.label}</span>,
-    },
-    {
-      key: "days",
-      header: "Days",
-      cell: (row) => <span className="text-xs tabular-nums">{row.days} days</span>,
-    },
-    {
-      key: "isDefault",
-      header: "Default",
-      headerClassName: "w-12",
-      cell: (row) =>
-        row.isDefault ? <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" /> : null,
-    },
-  ];
-
-  const actionsColumn: DataTableColumn<PaymentTerm> = {
-    key: "actions",
-    header: "",
-    cell: (row) => (
-      <div className="flex gap-1">
-        <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setEditTerm(row)}>
-          Edit
-        </Button>
-        <LoadingButton
-          variant="ghost"
-          size="sm"
-          className="h-6 text-xs text-destructive hover:text-destructive"
-          onClick={() => handleRequestDelete(row.key)}
-          isPending={updateTerms.isPending && deleteKey === row.key}
-        >
-          Delete
-        </LoadingButton>
-      </div>
-    ),
-  };
-
-  const columns = useMemo(
-    () => (canManage ? [...baseColumns, actionsColumn] : baseColumns),
-    [canManage, updateTerms.isPending, deleteKey],
-  );
+  const columns = useMemo<DataTableColumn<PaymentTerm>[]>(() => {
+    const baseColumns: DataTableColumn<PaymentTerm>[] = [
+      {
+        key: "label",
+        header: "Label",
+        cell: (row) => <span className="text-xs">{row.label}</span>,
+      },
+      {
+        key: "days",
+        header: "Days",
+        cell: (row) => <span className="text-xs tabular-nums">{row.days} days</span>,
+      },
+      {
+        key: "isDefault",
+        header: "Default",
+        headerClassName: "w-12",
+        cell: (row) =>
+          row.isDefault ? <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" /> : null,
+      },
+    ];
+    const actionsColumn: DataTableColumn<PaymentTerm> = {
+      key: "actions",
+      header: "",
+      cell: (row) => (
+        <div className="flex gap-1">
+          <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setEditTerm(row)}>
+            Edit
+          </Button>
+          <LoadingButton
+            variant="ghost"
+            size="sm"
+            className="h-6 text-xs text-destructive hover:text-destructive"
+            onClick={() => handleRequestDelete(row.key)}
+            isPending={updateTerms.isPending && deleteKey === row.key}
+          >
+            Delete
+          </LoadingButton>
+        </div>
+      ),
+    };
+    return canManage ? [...baseColumns, actionsColumn] : baseColumns;
+  }, [canManage, updateTerms.isPending, deleteKey, handleRequestDelete]);
 
   return (
     <>

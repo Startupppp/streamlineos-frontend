@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   PayrollApprovalRow,
   SubmitApprovalResult,
@@ -10,11 +11,12 @@ import type {
 } from "@/types/payroll";
 
 export function useRunApprovals(runId: number, options?: { enabled?: boolean }) {
+  const canView = useCan("payroll:runs:view");
   return useQuery<PayrollApprovalRow[]>({
     queryKey: queryKeys.payroll.runApprovals(runId),
     queryFn: () => apiClient.get<PayrollApprovalRow[]>(`/payroll/runs/${runId}/approvals`),
     staleTime: 30_000,
-    enabled: runId > 0 && (options?.enabled ?? true),
+    enabled: canView && runId > 0 && (options?.enabled ?? true),
   });
 }
 
@@ -24,7 +26,7 @@ export function useSubmitApproval() {
     mutationKey: ["payroll", "submit-approval"],
     mutationFn: ({ runId }) =>
       apiClient.post<SubmitApprovalResult>(`/payroll/runs/${runId}/submit-approval`),
-    onSuccess: (_data, { runId }) => {
+    onSuccess: (_, { runId }) => {
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.runApprovals(runId) });
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
       void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "runs"] });
@@ -45,7 +47,7 @@ export function useApproveStage() {
         `/payroll/runs/${runId}/approvals/${approvalId}/approve`,
         { comment },
       ),
-    onSuccess: (_data, { runId }) => {
+    onSuccess: (_, { runId }) => {
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.runApprovals(runId) });
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
       void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "runs"] });
@@ -66,7 +68,7 @@ export function useRejectStage() {
         `/payroll/runs/${runId}/approvals/${approvalId}/reject`,
         { comment },
       ),
-    onSuccess: (_data, { runId }) => {
+    onSuccess: (_, { runId }) => {
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.runApprovals(runId) });
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
       void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "runs"] });
@@ -80,7 +82,7 @@ export function useLockRun() {
     mutationKey: ["payroll", "lock-run"],
     mutationFn: ({ runId }) =>
       apiClient.post<{ success: boolean }>(`/payroll/runs/${runId}/lock`),
-    onSuccess: (_data, { runId }) => {
+    onSuccess: (_, { runId }) => {
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
       void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "runs"] });
     },
@@ -93,7 +95,7 @@ export function useReopenRun() {
     mutationKey: ["payroll", "reopen-run"],
     mutationFn: ({ runId, reason }) =>
       apiClient.post<{ success: boolean }>(`/payroll/runs/${runId}/reopen`, { reason }),
-    onSuccess: (_data, { runId }) => {
+    onSuccess: (_, { runId }) => {
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
       void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "runs"] });
     },
@@ -106,7 +108,7 @@ export function useCloseRun() {
     mutationKey: ["payroll", "close-run"],
     mutationFn: ({ runId }) =>
       apiClient.post<{ success: boolean }>(`/payroll/runs/${runId}/close`),
-    onSuccess: (_data, { runId }) => {
+    onSuccess: (_, { runId }) => {
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
       void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "runs"] });
     },

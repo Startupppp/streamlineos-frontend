@@ -7,6 +7,7 @@ import {
 import Link from "next/link";
 import { useOrgHierarchyOverview } from "@/hooks/api/org-hierarchy";
 import { useOrgSettings } from "@/hooks/api/organization";
+import { useCan, useAccess } from "@/hooks/api/access";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { RequireModule } from "@/components/auth/require-module";
+import { AccessDenied } from "@/components/shared/access-denied";
 
 const SECTIONS = [
   {
@@ -91,15 +93,27 @@ function HealthCheck({ count, label, ok }: { count: number; label: string; ok: b
 }
 
 export default function OrganizationOverviewPage() {
-  const { data: overview, isLoading } = useOrgHierarchyOverview();
-  const { data: org } = useOrgSettings();
+  const { data: accessData } = useAccess();
+  const canView = useCan("settings:view");
+  const { data: overview, isLoading } = useOrgHierarchyOverview({ enabled: canView });
+  const { data: org } = useOrgSettings({ enabled: canView });
 
   const isSetupComplete = Boolean(
     org?.industry && org?.timezone && (overview?.businessUnits ?? 0) > 0
   );
 
+  if (accessData && !canView) {
+    return (
+      <RequireModule module="hr">
+        <PageWrapper title="Organization" subtitle="Manage your company hierarchy and cost centers.">
+          <AccessDenied message="You don't have permission to view organization settings." />
+        </PageWrapper>
+      </RequireModule>
+    );
+  }
+
   return (
-    <RequireModule module="HR">
+    <RequireModule module="hr">
     <PageWrapper
       title="Organization"
       subtitle={

@@ -106,11 +106,11 @@ export interface SuggestResult {
 }
 
 const keys = {
-  all: ["hr", "helpdesk"] as const,
-  list: (params?: Record<string, unknown>) => ["hr", "helpdesk", "list", params] as const,
-  detail: (id: number) => ["hr", "helpdesk", "detail", id] as const,
-  routing: () => ["hr", "helpdesk", "routing"] as const,
-  suggest: (q: string) => ["hr", "helpdesk", "suggest", q] as const,
+  all: ["streamlineos", "hr", "helpdesk"] as const,
+  list: (params?: Record<string, unknown>) => ["streamlineos", "hr", "helpdesk", "list", params] as const,
+  detail: (id: number) => ["streamlineos", "hr", "helpdesk", "detail", id] as const,
+  routing: () => ["streamlineos", "hr", "helpdesk", "routing"] as const,
+  suggest: (q: string) => ["streamlineos", "hr", "helpdesk", "suggest", q] as const,
 };
 
 export function useHelpdeskTickets(params?: Record<string, unknown>) {
@@ -178,18 +178,6 @@ export function useAddHelpdeskComment(ticketId: number) {
       apiClient.post<HelpdeskComment>(`/hr/helpdesk/${ticketId}/comments`, data),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: keys.detail(ticketId) });
-    },
-  });
-}
-
-export function useUpsertHelpdeskRouting() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "helpdesk", "routing", "upsert"],
-    mutationFn: (data: { category: string; assigneeUserId: string }) =>
-      apiClient.post<HelpdeskRoutingRule>("/hr/helpdesk/routing", data),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: keys.routing() });
     },
   });
 }

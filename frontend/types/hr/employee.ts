@@ -8,10 +8,6 @@ export type DocumentType =
   | "OFFER_LETTER"
   | "RESUME"
   | "OTHER";
-export type TicketPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
-export type TicketStatus = "TODO" | "IN_PROGRESS" | "IN_REVIEW" | "DONE";
-export type DeviceStatusExtended = "ACTIVE" | "INACTIVE" | "LOST" | "RETURNED";
-export type WorkLogStatus = "PENDING" | "APPROVED" | "REJECTED";
 
 export interface Department {
   id: string;
@@ -32,7 +28,6 @@ export interface Employee {
   image: string | null;
   isActive: boolean;
   joiningDate: string | null;
-  hasDashboardAccess: boolean;
   reportingTo: string | null;
   monthlySalary: string | null;
   bio: string | null;
@@ -48,11 +43,6 @@ export interface Pagination {
   limit: number;
   total: number;
   totalPages: number;
-}
-
-export interface PaginatedResult<T> {
-  data: T[];
-  pagination: Pagination;
 }
 
 export interface PaginatedEmployees {
@@ -135,22 +125,6 @@ export interface Document {
   updatedAt: Date | string | null;
 }
 
-export interface HelpdeskTicket {
-  id: number;
-  orgId: string;
-  userId: string;
-  title: string;
-  description: string | null;
-  category: string | null;
-  priority: TicketPriority | null;
-  status: TicketStatus | null;
-  assigneeId: string | null;
-  resolvedAt: Date | string | null;
-  resolution: string | null;
-  createdAt: Date | string | null;
-  updatedAt: Date | string | null;
-}
-
 export interface WorkLog {
   id: number;
   orgId: string;
@@ -173,27 +147,6 @@ export interface WorkLog {
     title: string;
     ticketNumber: number;
     project?: { id: number; name: string; key: string } | null;
-  } | null;
-}
-
-export interface Device {
-  id: number;
-  orgId: string;
-  userId: string;
-  deviceType: string;
-  deviceName: string;
-  serialNumber: string | null;
-  brand: string | null;
-  model: string | null;
-  notes: string | null;
-  assignedDate: Date | string | null;
-  returnDate: Date | string | null;
-  status: DeviceStatusExtended | null;
-  user?: {
-    id: string;
-    firstName: string | null;
-    lastName: string | null;
-    email: string;
   } | null;
 }
 
@@ -278,24 +231,11 @@ export interface CreateDocumentInput {
   tags?: string[];
 }
 
-export interface CreateHelpdeskTicketInput {
-  title: string;
-  description?: string;
-  category?: string;
-  priority?: TicketPriority;
-}
-
 export interface UpsertWorkLogInput {
   date: Date | string;
   hours?: number;
   description?: string;
   workLink?: string;
-}
-
-export interface UpdateWorkLogStatusInput {
-  id: number;
-  status: "APPROVED" | "REJECTED";
-  rejectionReason?: string;
 }
 
 export interface GetWorkLogsInput {
@@ -305,34 +245,6 @@ export interface GetWorkLogsInput {
   month?: number;
   dateFrom?: string;
   dateTo?: string;
-}
-
-export interface CreateDeviceInput {
-  userId: string;
-  deviceType: string;
-  deviceName: string;
-  serialNumber?: string;
-  brand?: string;
-  model?: string;
-  notes?: string;
-  assignedDate?: Date | string;
-}
-
-export interface UpdateDeviceInput {
-  deviceId: number;
-  userId?: string;
-  deviceType?: string;
-  deviceName?: string;
-  serialNumber?: string;
-  brand?: string;
-  model?: string;
-  notes?: string;
-  status?: DeviceStatusExtended;
-  returnDate?: Date | string;
-}
-
-export interface DeleteDeviceInput {
-  deviceId: number;
 }
 
 export interface OnboardEmployeeInput {

@@ -36,7 +36,7 @@ interface StarButtonProps {
 const StarButton = forwardRef<HTMLButtonElement, StarButtonProps>(
   function StarButton(
     { messageId, accountId, isStarred, onAction, threadId },
-    _ref,
+    _,
   ) {
     const { iconRef, hoverHandlers } = useAnimatedIcon();
     const handleClick = useCallback(
@@ -88,7 +88,7 @@ interface QuickActionsProps {
 const QuickActions = forwardRef<HTMLDivElement, QuickActionsProps>(
   function QuickActions(
     { messageId, accountId, threadId, folder, canAi, onAction, onAiBrief },
-    _ref,
+    _,
   ) {
     const { iconRef, hoverHandlers } = useAnimatedIcon();
     const handleArchive = useCallback(

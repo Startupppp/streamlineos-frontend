@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { Link } from 'lucide-react';
 import { useEditorRef } from 'platejs/react';
 import { triggerFloatingLink } from '@platejs/link/react';

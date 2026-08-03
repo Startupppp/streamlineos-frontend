@@ -1,13 +1,30 @@
 "use client";
 
+import { useMemo } from "react";
 import { useBurnoutFlags } from "@/hooks/api/hr/safety";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { Loader2, AlertTriangle } from "lucide-react";
+import { useOrgMembersByIds } from "@/hooks/api/organization";
+import { getUserDisplayName, type NamedUser } from "@/features/build/shared/resolve-user-name";
 
 export function BurnoutFlagsList() {
   const { data, isLoading } = useBurnoutFlags();
+
+  const userIds = useMemo(
+    () => [...new Set((data ?? []).map((f) => f.userId))],
+    [data],
+  );
+  const { data: membersData } = useOrgMembersByIds(userIds);
+
+  const memberById = useMemo(() => {
+    const map = new Map<string, NamedUser>();
+    for (const member of membersData?.data ?? []) {
+      map.set(member.userId, { name: member.name, email: member.email });
+    }
+    return map;
+  }, [membersData]);
 
   return (
     <Card className="p-4 bg-card border border-border rounded-xl">
@@ -33,7 +50,7 @@ export function BurnoutFlagsList() {
               className="flex items-center justify-between gap-2 rounded-lg border bg-orange-50 border-orange-200 dark:bg-orange-500/10 dark:border-orange-500/30 px-3 py-2 min-w-0"
             >
               <div className="min-w-0 flex-1">
-                <TruncatedText text={flag.userId} className="text-xs font-mono text-foreground" />
+                <TruncatedText text={getUserDisplayName(memberById.get(flag.userId))} className="text-xs font-medium text-foreground" />
                 <p className="text-xs text-muted-foreground">
                   {flag.checkCount} check-in{flag.checkCount !== 1 ? "s" : ""}
                 </p>

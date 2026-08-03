@@ -169,9 +169,8 @@ export default function QuoteDetailPage({
   }, [quoteId, markSigned, signedDocRef]);
 
   const handleEditSubmit = useCallback((values: QuoteSubmitValues) => {
-    const { dealId: _d, clientId: _c, ...rest } = values;
     updateQuote.mutate(
-      { id: quoteId, ...rest },
+      { id: quoteId, ...values },
       {
         onSuccess: () => { toast.success("Quote updated"); setEditOpen(false); },
         onError: (e) => toast.error(getErrorMessage(e)),

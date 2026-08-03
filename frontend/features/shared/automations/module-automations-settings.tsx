@@ -43,6 +43,7 @@ import {
 } from "@/components/automations/automation-meta";
 import { AutomationBuilderSheet } from "@/components/automations/automation-builder-sheet";
 import { AutomationRunsDialog } from "@/components/automations/automation-runs-dialog";
+import { matchesOrgModule } from "@/lib/module-vocabulary";
 
 export type SectionModule = "hr" | "support" | "finance";
 
@@ -206,7 +207,7 @@ function AutomationCardItem({
 
 export function ModuleAutomationsSettings({ config }: { config: ModuleAutomationsConfig }) {
   const { sectionModule, moduleLabel, moduleEnabledKey, subtitle } = config;
-  const { data: rules, isLoading, isError, refetch } = useAutomations();
+  const { data: automationsData, isLoading, isError, refetch } = useAutomations({ limit: 100 });
   const toggle = useToggleAutomation();
   const remove = useDeleteAutomation();
   const enabledModules = useEnabledModules();
@@ -218,9 +219,9 @@ export function ModuleAutomationsSettings({ config }: { config: ModuleAutomation
   const [togglingId, setTogglingId] = useState<number | null>(null);
 
   const moduleEnabled =
-    enabledModules.length === 0 || enabledModules.includes(moduleEnabledKey.toUpperCase());
+    enabledModules.length === 0 || matchesOrgModule(enabledModules, moduleEnabledKey);
 
-  const moduleRules = (rules ?? []).filter(
+  const moduleRules = (automationsData?.data ?? []).filter(
     (r) => getModuleForTrigger(r.triggerEvent) === sectionModule,
   );
 

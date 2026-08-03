@@ -2,18 +2,7 @@
 
 import { useCallback } from "react";
 
-const AVAILABLE_SCOPES = [
-  "read:all",
-  "write:all",
-  "read:org",
-  "write:org",
-  "read:hr",
-  "write:hr",
-  "read:crm",
-  "write:crm",
-  "read:projects",
-  "write:projects",
-];
+const AVAILABLE_SCOPES = ["leads:write", "leads:*", "*"];
 
 interface ScopeSelectorProps {
   value: string[];

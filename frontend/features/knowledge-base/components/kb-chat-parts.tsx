@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { MessageCircleIcon, BookOpenTextIcon } from "@animateicons/react/lucide";
+import { BookOpenTextIcon } from "@animateicons/react/lucide";
 import { MarkdownContent } from "@/components/markdown/markdown-content";
 import { AnimatedLogo } from "@/features/landing/components/animated-logo";
 import { cn } from "@/lib/utils";
@@ -122,33 +122,28 @@ export function ChatBubble({
       className={cn("flex", isUser ? "justify-end" : "justify-start")}
     >
       {isUser ? (
-        <div className="max-w-[80%] whitespace-pre-wrap break-words rounded-2xl rounded-br-sm bg-primary px-3.5 py-2 text-sm text-primary-foreground shadow-sm">
+        <div className="max-w-[85%] whitespace-pre-wrap break-words rounded-2xl rounded-br-sm bg-primary px-3.5 py-2 text-sm text-primary-foreground shadow-sm">
           {message.content}
         </div>
       ) : (
-        <div className="flex max-w-[88%] gap-2">
-          <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
-            <MessageCircleIcon size={15} />
-          </div>
-          <div
-            className={cn(
-              "min-w-0 rounded-2xl rounded-bl-sm border px-3.5 py-2.5 text-sm shadow-sm",
-              message.isError
-                ? "border-destructive/30 bg-destructive/5 text-destructive"
-                : "border-border bg-background text-foreground",
-            )}
-          >
-            {message.isError ? (
-              <p className="leading-relaxed">{message.content}</p>
-            ) : (
-              <div className="break-words">
-                <MarkdownContent content={message.content} />
-              </div>
-            )}
-            {message.citations && message.citations.length > 0 && (
-              <Citations citations={message.citations} onCitation={onCitation} />
-            )}
-          </div>
+        <div
+          className={cn(
+            "min-w-0 max-w-[85%] rounded-2xl rounded-bl-sm border px-3.5 py-2.5 text-sm shadow-sm",
+            message.isError
+              ? "border-destructive/30 bg-destructive/5 text-destructive"
+              : "border-border bg-background text-foreground",
+          )}
+        >
+          {message.isError ? (
+            <p className="leading-relaxed">{message.content}</p>
+          ) : (
+            <div className="break-words">
+              <MarkdownContent content={message.content} />
+            </div>
+          )}
+          {message.citations && message.citations.length > 0 && (
+            <Citations citations={message.citations} onCitation={onCitation} />
+          )}
         </div>
       )}
     </motion.div>
@@ -222,20 +217,15 @@ export function TypingBubble({ reduce }: { reduce: boolean }) {
       animate={{ opacity: 1, y: 0 }}
       className="flex justify-start"
     >
-      <div className="flex gap-2">
-        <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
-          <MessageCircleIcon size={15} />
-        </div>
-        <div className="flex items-center gap-1 rounded-2xl rounded-bl-sm border border-border bg-background px-4 py-3 shadow-sm">
-          {[0, 1, 2].map((i) => (
-            <motion.span
-              key={i}
-              className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60"
-              animate={reduce ? undefined : { opacity: [0.3, 1, 0.3] }}
-              transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
-            />
-          ))}
-        </div>
+      <div className="flex items-center gap-1 rounded-2xl rounded-bl-sm border border-border bg-background px-4 py-3 shadow-sm">
+        {[0, 1, 2].map((i) => (
+          <motion.span
+            key={i}
+            className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60"
+            animate={reduce ? undefined : { opacity: [0.3, 1, 0.3] }}
+            transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
+          />
+        ))}
       </div>
     </motion.div>
   );

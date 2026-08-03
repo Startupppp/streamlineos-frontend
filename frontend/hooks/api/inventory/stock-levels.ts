@@ -3,6 +3,7 @@
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type { StockAvailability } from "@/types/inventory";
 
 export type TransactionType =
@@ -224,6 +225,7 @@ function toStockTransaction(r: RawTransaction): StockTransaction {
 }
 
 export function useStockLevels(filters?: StockLevelFilters) {
+  const canView = useCan("inventory:stock:read");
   return useQuery<StockLevelsResult, Error>({
     queryKey: queryKeys.inventory.stockLevels(filters),
     queryFn: async () => {
@@ -250,10 +252,12 @@ export function useStockLevels(filters?: StockLevelFilters) {
     },
     staleTime: 60_000,
     placeholderData: keepPreviousData,
+    enabled: canView,
   });
 }
 
 export function useStockAvailability(variantId: number, warehouseId?: number) {
+  const canView = useCan("inventory:stock:read");
   return useQuery<StockAvailability, Error>({
     queryKey: queryKeys.inventory.availability(variantId, warehouseId),
     queryFn: () =>
@@ -261,12 +265,13 @@ export function useStockAvailability(variantId: number, warehouseId?: number) {
         variantId,
         ...(warehouseId !== undefined ? { warehouseId } : {}),
       }),
-    enabled: variantId > 0,
+    enabled: canView && variantId > 0,
     staleTime: 30_000,
   });
 }
 
 export function useStockTransactions(filters?: StockTransactionFilters) {
+  const canView = useCan("inventory:stock:read");
   return useQuery<StockTransactionsResult, Error>({
     queryKey: queryKeys.inventory.stockTransactions(filters),
     queryFn: async () => {
@@ -290,5 +295,6 @@ export function useStockTransactions(filters?: StockTransactionFilters) {
       };
     },
     staleTime: 2 * 60_000,
+    enabled: canView,
   });
 }

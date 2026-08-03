@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { motion } from "framer-motion";
 import { Plus, Pencil } from "lucide-react";
@@ -218,9 +218,7 @@ export default function HrPoliciesPage() {
       }
       filters={
         <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-          <div className="min-w-0 w-52">
-          <SearchInput placeholder="Search policies..." value={search} onValueChange={handleSearchChange} />
-        </div>
+        <SearchInput placeholder="Search policies..." value={search} onValueChange={handleSearchChange} />
           <Select
             value={typeFilter}
             onValueChange={(v) => {

@@ -23,6 +23,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useWinLossAnalysis } from "@/hooks/api/crm";
+import { formatCurrency } from "@/features/crm/lib/format-currency";
 
 const REASON_COLORS = [
   "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
@@ -32,12 +33,6 @@ const REASON_COLORS = [
   "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
   "bg-muted text-muted-foreground border-border",
 ];
-
-function formatCurrency(val: number) {
-  if (val >= 1_00_00_000) return `₹${(val / 1_00_00_000).toFixed(1)}Cr`;
-  if (val >= 1_00_000) return `₹${(val / 1_00_000).toFixed(1)}L`;
-  return `₹${val.toLocaleString("en-IN")}`;
-}
 
 export default function WinLossAnalysisPage() {
   const shouldReduceMotion = useReducedMotion();

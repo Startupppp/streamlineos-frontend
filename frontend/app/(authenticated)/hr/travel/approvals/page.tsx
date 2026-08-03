@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { memo, useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
@@ -27,7 +27,7 @@ import { useOrgMembers } from "@/hooks/api/organization";
 import {
   getUserDisplayName,
   type NamedUser,
-} from "@/features/projects/shared/resolve-user-name";
+} from "@/features/build/shared/resolve-user-name";
 
 function ApprovalsLoading() {
   return (

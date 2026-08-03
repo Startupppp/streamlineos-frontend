@@ -26,7 +26,7 @@ export function SupportTicketCombobox({
   const debouncedSearch = useDebouncedValue(search, 300);
 
   const { data, isFetching } = useSupportTickets({ limit: 100 });
-  const tickets = data?.items ?? [];
+  const tickets = useMemo(() => data?.items ?? [], [data]);
 
   const numericLookup = /^\d+$/.test(debouncedSearch.trim())
     ? Number(debouncedSearch.trim())

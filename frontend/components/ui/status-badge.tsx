@@ -22,7 +22,7 @@ const STATUS_VARIANT_MAP: Record<string, StatusVariant> = {
   SCREENING: "secondary",
   SUBMITTED: "secondary",
   DRAFT: "secondary",
-  PENDING_CEO: "secondary",
+  PENDING_FINAL: "secondary",
   SENT: "secondary",
   ISSUED: "secondary",
   PAUSED: "outline",

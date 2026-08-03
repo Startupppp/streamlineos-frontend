@@ -1,4 +1,3 @@
-export type LeaveStatus = "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
 export type AttendanceStatus = "OFFLINE" | "PRESENT" | "ON_BREAK" | "CHECKED_OUT";
 export type WfhRequestStatus = "PENDING" | "APPROVED" | "REJECTED";
 
@@ -36,49 +35,6 @@ export interface AttendanceStatusResult {
   todayLog: AttendanceLog | null | undefined;
   dailyStats: DailyStats;
   cooldownRemaining: number;
-}
-
-export interface LeaveType {
-  id: number;
-  orgId: string;
-  name: string;
-  daysPerYear: number;
-  carryForward: boolean | null;
-}
-
-export interface LeaveBalance {
-  id: number;
-  orgId: string;
-  userId: string;
-  leaveTypeId: number | null;
-  balance: string;
-  year: number;
-}
-
-export interface LeaveRequest {
-  id: number;
-  orgId: string;
-  userId: string;
-  leaveTypeId: number | null;
-  startDate: string;
-  endDate: string;
-  reason: string | null;
-  priority: string | null;
-  status: LeaveStatus | null;
-  approverId: string | null;
-  rejectionReason: string | null;
-  managerComment: string | null;
-  attachmentUrl: string | null;
-  isHalfDay: boolean;
-  halfDayPeriod: string | null;
-  coveringEmployeeId: string | null;
-  createdAt: Date | string | null;
-}
-
-export interface LeavesResult {
-  balances: LeaveBalance[];
-  types: LeaveType[];
-  requests: LeaveRequest[];
 }
 
 export interface WfhRequest {
@@ -138,12 +94,6 @@ export interface RequestLeaveInput {
   halfDayPeriod?: "AM" | "PM";
 }
 
-export interface ApproveLeaveInput {
-  requestId: number;
-  status: "APPROVED" | "REJECTED";
-  rejectionReason?: string;
-}
-
 export interface CreateWfhRequestInput {
   date: Date | string;
   reason?: string;
@@ -174,7 +124,7 @@ export interface UpdateHolidayInput {
 }
 
 export interface GetMonthlyAttendanceInput {
-  userId: string;
+  userId?: string;
   year: number;
   month: number;
 }
@@ -196,7 +146,7 @@ export interface TeamAttendanceStatusQuery {
   limit?: number;
   search?: string;
   status?: TeamAttendanceEntry["status"];
-  departmentId?: number;
+  departmentId?: string;
 }
 
 export interface TeamAttendanceStatusResponse {

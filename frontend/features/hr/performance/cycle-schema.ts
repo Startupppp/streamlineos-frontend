@@ -42,6 +42,4 @@ export function buildCycleSchema(options?: { enforceFutureDates?: boolean }) {
     });
 }
 
-export const cycleSchema = buildCycleSchema();
-
 export type CycleFormValues = z.infer<ReturnType<typeof buildCycleSchema>>;

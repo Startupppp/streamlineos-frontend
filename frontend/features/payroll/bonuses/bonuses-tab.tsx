@@ -2,38 +2,13 @@
 
 import { useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { toast } from "sonner";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
-import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { Input } from "@/components/ui/input";
-import { UserCombobox } from "@/components/ui/user-combobox";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { MonthPicker } from "@/features/payroll/shared/month-picker";
 import {
   Select,
   SelectContent,
@@ -41,293 +16,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MonthPicker } from "@/features/payroll/shared/month-picker";
 import { BonusStatusBadge } from "./bonus-status-badge";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
 import {
   useBonuses,
   useUpdateBonus,
-  useCreateBonus,
   type Bonus,
-  type BonusType,
 } from "@/hooks/api/payroll/bonuses-admin";
 import { useCan } from "@/hooks/api/access";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import { TruncatedText } from "@/components/ui/truncated-text";
-
-const TYPE_OPTIONS = [
-  { value: "all", label: "All Types" },
-  { value: "PERFORMANCE", label: "Performance" },
-  { value: "FESTIVAL", label: "Festival" },
-  { value: "REFERRAL", label: "Referral" },
-  { value: "SPOT", label: "Spot Award" },
-  { value: "ANNUAL", label: "Annual" },
-  { value: "JOINING", label: "Joining" },
-  { value: "RETENTION", label: "Retention" },
-  { value: "COMMISSION", label: "Commission" },
-  { value: "ADJUSTMENT", label: "Adjustment" },
-];
-
-const CREATE_TYPE_OPTIONS: { value: BonusType; label: string }[] = [
-  { value: "PERFORMANCE", label: "Performance" },
-  { value: "FESTIVAL", label: "Festival" },
-  { value: "REFERRAL", label: "Referral" },
-  { value: "SPOT", label: "Spot Award" },
-  { value: "ANNUAL", label: "Annual" },
-  { value: "JOINING", label: "Joining" },
-  { value: "RETENTION", label: "Retention" },
-  { value: "COMMISSION", label: "Commission" },
-  { value: "ADJUSTMENT", label: "Adjustment" },
-];
-
-const STATUS_OPTIONS = [
-  { value: "all", label: "All Statuses" },
-  { value: "PENDING", label: "Pending" },
-  { value: "APPROVED", label: "Approved" },
-  { value: "REJECTED", label: "Rejected" },
-  { value: "PAID", label: "Paid" },
-];
-
-const TYPE_COLORS: Record<string, string> = {
-  PERFORMANCE: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  FESTIVAL: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  REFERRAL: "bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-500/10 dark:text-cyan-300 dark:border-cyan-500/30",
-  SPOT: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  ANNUAL: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  JOINING: "bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-500/10 dark:text-teal-300 dark:border-teal-500/30",
-  RETENTION: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  COMMISSION: "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-500/10 dark:text-orange-300 dark:border-orange-500/30",
-  ADJUSTMENT: "bg-muted text-muted-foreground border-border",
-};
-
-const createBonusSchema = z.object({
-  userId: z.string().min(1, "Employee ID is required"),
-  type: z.enum([
-    "PERFORMANCE",
-    "FESTIVAL",
-    "REFERRAL",
-    "SPOT",
-    "ANNUAL",
-    "JOINING",
-    "RETENTION",
-    "COMMISSION",
-    "ADJUSTMENT",
-  ]),
-  amount: z
-    .string()
-    .min(1, "Amount is required")
-    .refine((v) => {
-      const n = parseFloat(v);
-      return Number.isFinite(n) && n > 0;
-    }, "Amount must be a positive number"),
-  month: z.string().min(1, "Month is required"),
-  reason: z.string().optional(),
-  taxable: z.boolean(),
-});
-
-type CreateBonusValues = z.infer<typeof createBonusSchema>;
-
-function getCurrentMonth(): string {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-}
-
-function getBonusMonth(bonus: Bonus): string | null {
-  if (bonus.month) return bonus.month;
-  if (!bonus.createdAt) return null;
-  const d = new Date(bonus.createdAt);
-  if (isNaN(d.getTime())) return null;
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-}
-
-function formatDate(value: string | null): string {
-  if (!value) return "—";
-  return new Date(value).toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
-
-interface CreateBonusDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}
-
-function CreateBonusDialog({ open, onOpenChange }: CreateBonusDialogProps) {
-  const createBonus = useCreateBonus();
-
-  const form = useForm<CreateBonusValues>({
-    resolver: zodResolver(createBonusSchema),
-    defaultValues: {
-      userId: "",
-      type: "PERFORMANCE",
-      amount: "",
-      month: getCurrentMonth(),
-      reason: "",
-      taxable: true,
-    },
-  });
-
-  function handleOpenChange(next: boolean) {
-    if (!next) form.reset();
-    onOpenChange(next);
-  }
-
-  function handleTaxableChange(checked: boolean) {
-    form.setValue("taxable", checked);
-  }
-
-  const handleSubmit = form.handleSubmit((values) => {
-    createBonus.mutate(
-      {
-        userId: values.userId,
-        type: values.type,
-        amount: parseFloat(values.amount),
-        month: values.month,
-        reason: values.reason || undefined,
-        taxable: values.taxable,
-      },
-      {
-        onSuccess: () => {
-          toast.success("Bonus created");
-          form.reset();
-          onOpenChange(false);
-        },
-        onError: (err) => toast.error(getErrorMessage(err)),
-      },
-    );
-  });
-
-  return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Create Bonus</DialogTitle>
-          <DialogDescription>
-            Add a one-time bonus for an employee. Approved bonuses are included in the selected
-            month&apos;s payroll run.
-          </DialogDescription>
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="userId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Employee <span className="text-destructive">*</span></FormLabel>
-                  <FormControl>
-                    <UserCombobox
-                      value={field.value}
-                      onChange={field.onChange}
-                      placeholder="Select employee"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Bonus Type</FormLabel>
-                  <FormControl>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {CREATE_TYPE_OPTIONS.map((o) => (
-                          <SelectItem key={o.value} value={o.value}>
-                            {o.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="amount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Amount <span className="text-destructive">*</span></FormLabel>
-                  <FormControl>
-                    <Input type="number" min="0" step="0.01" placeholder="0.00" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="month"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Payroll Month <span className="text-destructive">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <MonthPicker value={field.value} onChange={field.onChange} yearRange={[-1, 1]} className="w-full" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="reason"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Reason (optional)</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Brief reason for this bonus" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="taxable"
-              render={({ field }) => (
-                <FormItem>
-                  <div className="flex items-center gap-3">
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={handleTaxableChange}
-                        id="taxable-switch"
-                      />
-                    </FormControl>
-                    <Label htmlFor="taxable-switch" className="cursor-pointer text-sm font-medium">
-                      Taxable
-                    </Label>
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
-                Cancel
-              </Button>
-              <LoadingButton type="submit" isPending={createBonus.isPending} loadingText="Creating…">
-                Create Bonus
-              </LoadingButton>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
-  );
-}
+import { toast } from "sonner";
+import { CreateBonusDialog } from "./create-bonus-dialog";
+import {
+  TYPE_OPTIONS,
+  STATUS_OPTIONS,
+  TYPE_COLORS,
+  getCurrentMonth,
+  getBonusMonth,
+  formatDate,
+} from "./bonus-schema";
 
 export function BonusesTab() {
   const router = useRouter();
@@ -391,12 +99,13 @@ export function BonusesTab() {
   }
 
   const filtered = useMemo(
-    () => (data ?? []).filter((b) => {
-      const monthMatch = getBonusMonth(b) === month;
-      const typeMatch = type === "all" || b.type === type;
-      const statusMatch = status === "all" || b.status === status;
-      return monthMatch && typeMatch && statusMatch;
-    }),
+    () =>
+      (data ?? []).filter((b) => {
+        const monthMatch = getBonusMonth(b) === month;
+        const typeMatch = type === "all" || b.type === type;
+        const statusMatch = status === "all" || b.status === status;
+        return monthMatch && typeMatch && statusMatch;
+      }),
     [data, month, type, status],
   );
 
@@ -434,9 +143,15 @@ export function BonusesTab() {
       header: "Employee",
       cell: (row) => (
         <div className="min-w-0">
-          <TruncatedText text={row.userName ?? "Unknown user"} className="text-[11px] font-medium text-foreground max-w-[140px]" />
+          <TruncatedText
+            text={row.userName ?? "Unknown user"}
+            className="text-[11px] font-medium text-foreground max-w-[140px]"
+          />
           {row.userEmail && (
-            <TruncatedText text={row.userEmail} className="text-[10px] text-muted-foreground max-w-[140px]" />
+            <TruncatedText
+              text={row.userEmail}
+              className="text-[10px] text-muted-foreground max-w-[140px]"
+            />
           )}
         </div>
       ),
@@ -466,7 +181,10 @@ export function BonusesTab() {
       key: "reason",
       header: "Reason",
       cell: (row) => (
-        <TruncatedText text={row.reason ?? "—"} className="text-[10px] text-muted-foreground max-w-[160px]" />
+        <TruncatedText
+          text={row.reason ?? "—"}
+          className="text-[10px] text-muted-foreground max-w-[160px]"
+        />
       ),
     },
     {
@@ -484,44 +202,46 @@ export function BonusesTab() {
     ...(canManage ? [actionColumn] : []),
   ];
 
-  const filterBar = (
-    <div className={`${FILTER_TOOLBAR_ROW} mb-3`}>
-      <MonthPicker value={month} onChange={handleMonthChange} yearRange={[-1, 0]} className="w-44" />
-      <Select value={type} onValueChange={handleTypeChange}>
-        <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-36`}>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {TYPE_OPTIONS.map((o) => (
-            <SelectItem key={o.value} value={o.value}>
-              {o.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <Select value={status} onValueChange={handleStatusChange}>
-        <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-36`}>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {STATUS_OPTIONS.map((o) => (
-            <SelectItem key={o.value} value={o.value}>
-              {o.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      {canManage && (
-        <AnimatedIconButton icon={PlusIcon} iconClassName="mr-1.5" size="sm" className="ml-auto" onClick={handleOpenCreate}>
-          Add Bonus
-        </AnimatedIconButton>
-      )}
-    </div>
-  );
-
   return (
     <div className="flex flex-1 min-h-0 flex-col gap-0 pt-3">
-      {filterBar}
+      <div className={`${FILTER_TOOLBAR_ROW} mb-3`}>
+        <MonthPicker value={month} onChange={handleMonthChange} yearRange={[-1, 0]} className="w-44" />
+        <Select value={type} onValueChange={handleTypeChange}>
+          <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-36`}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {TYPE_OPTIONS.map((o) => (
+              <SelectItem key={o.value} value={o.value}>
+                {o.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={status} onValueChange={handleStatusChange}>
+          <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-36`}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {STATUS_OPTIONS.map((o) => (
+              <SelectItem key={o.value} value={o.value}>
+                {o.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {canManage && (
+          <AnimatedIconButton
+            icon={PlusIcon}
+            iconClassName="mr-1.5"
+            size="sm"
+            className="ml-auto"
+            onClick={handleOpenCreate}
+          >
+            Add Bonus
+          </AnimatedIconButton>
+        )}
+      </div>
       <DataTable
         className="flex-1 min-h-0"
         data={filtered}
@@ -537,7 +257,6 @@ export function BonusesTab() {
           />
         }
       />
-
       <CreateBonusDialog open={createOpen} onOpenChange={setCreateOpen} />
     </div>
   );

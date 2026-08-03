@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import type { SignBulkSendJob, SignBulkSendRow } from "@/types/sign";
+import type { SignBulkSendJob } from "@/types/sign";
 
 export interface CreateBulkSendJobInput {
   templateId: number;
@@ -38,15 +38,6 @@ export function useBulkSendJobs() {
   });
 }
 
-export function useBulkSendJob(id: number | undefined) {
-  return useQuery({
-    queryKey: queryKeys.signBulkSend.job(id ?? 0),
-    queryFn: () => apiClient.get<{ job: SignBulkSendJob; rows: SignBulkSendRow[] }>(`/sign/bulk-send/jobs/${id}`),
-    enabled: id !== undefined,
-    staleTime: 10_000,
-  });
-}
-
 export function useCancelBulkSendJob() {
   const qc = useQueryClient();
   return useMutation({
@@ -56,13 +47,5 @@ export function useCancelBulkSendJob() {
       qc.invalidateQueries({ queryKey: queryKeys.signBulkSend.job(data.id) });
       qc.invalidateQueries({ queryKey: queryKeys.signBulkSend.all });
     },
-  });
-}
-
-export function useBulkSendErrorReport(id: number | undefined) {
-  return useQuery({
-    queryKey: [...queryKeys.signBulkSend.job(id ?? 0), "error-report"] as const,
-    queryFn: () => apiClient.get<SignBulkSendRow[]>(`/sign/bulk-send/jobs/${id}/error-report`),
-    enabled: id !== undefined,
   });
 }

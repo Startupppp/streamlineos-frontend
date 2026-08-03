@@ -52,7 +52,7 @@ export function useUpdateContact() {
     mutationKey: ["contacts", "update"] as const,
     mutationFn: (input: UpdateContactInput) =>
       apiClient.patch<Contact>(`/contacts/${input.id}`, input),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.contacts.all });
       void qc.invalidateQueries({
         queryKey: queryKeys.contacts.detail(variables.id),
@@ -89,7 +89,7 @@ export function useAddContactRole() {
     mutationKey: ["contactRoles", "add"] as const,
     mutationFn: ({ contactId, input }: { contactId: number; input: ContactRoleCreateInput }) =>
       apiClient.post<ContactRole>(`/contacts/${contactId}/roles`, input),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.contactRoles.list(variables.contactId) });
     },
   });
@@ -101,7 +101,7 @@ export function useRemoveContactRole() {
     mutationKey: ["contactRoles", "remove"] as const,
     mutationFn: ({ contactId, roleId }: { contactId: number; roleId: string }) =>
       apiClient.delete<{ success: boolean }>(`/contacts/${contactId}/roles/${roleId}`),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.contactRoles.list(variables.contactId) });
     },
   });

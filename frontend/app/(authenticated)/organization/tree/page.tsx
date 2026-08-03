@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, type ChangeEvent } from "react";
+import { useState, useCallback } from "react";
 import { Building2, GitBranch, Briefcase, Users } from "lucide-react";
 import { ChevronRightIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -248,18 +248,16 @@ export default function OrgTreePage() {
   ];
 
   return (
-    <RequireModule module="HR">
+    <RequireModule module="hr">
       <PageWrapper
         title="Organization Tree"
         subtitle="Full hierarchy from business units down to teams"
         filters={
-          <div className="min-w-0 w-full flex-1 md:min-w-[160px] md:max-w-xs">
-            <SearchInput
-              placeholder="Search nodes…"
-              value={search}
-              onValueChange={handleSearchChange}
-            />
-          </div>
+          <SearchInput
+            placeholder="Search nodes…"
+            value={search}
+            onValueChange={handleSearchChange}
+          />
         }
       >
         <div className="space-y-3">

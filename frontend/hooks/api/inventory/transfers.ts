@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type { TransferStatus } from "@/features/inventory/lib";
 
 export type { TransferStatus };
@@ -191,6 +192,7 @@ export interface TransferFilters {
 }
 
 export function useTransfers(filters?: TransferFilters) {
+  const canView = useCan("inventory:stock:read");
   return useQuery<{ items: TransferListItem[]; total: number; page: number; totalPages: number }, Error>({
     queryKey: queryKeys.inventory.transfers(filters as Record<string, unknown>),
     queryFn: async () => {
@@ -215,10 +217,12 @@ export function useTransfers(filters?: TransferFilters) {
       };
     },
     staleTime: 2 * 60_000,
+    enabled: canView,
   });
 }
 
 export function useTransfer(transferId: number) {
+  const canView = useCan("inventory:stock:read");
   return useQuery<TransferDetail | null, Error>({
     queryKey: queryKeys.inventory.transfer(transferId),
     queryFn: async () => {
@@ -227,7 +231,7 @@ export function useTransfer(transferId: number) {
       );
       return res ? toTransferDetail(res) : null;
     },
-    enabled: transferId > 0,
+    enabled: canView && transferId > 0,
     staleTime: 2 * 60_000,
   });
 }
@@ -249,8 +253,8 @@ export function useCreateTransfer() {
         })),
       }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.transfers() });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.transfers() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
     },
   });
 }
@@ -262,9 +266,10 @@ export function useCompleteTransfer() {
     mutationFn: ({ transferId, lines }) =>
       apiClient.post<void>(`/inventory/stock/transfers/${transferId}/complete`, { lines }),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.transfers() });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.transfer(vars.transferId) });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.transfers() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.transfer(vars.transferId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.dashboard() });
     },
   });
 }
@@ -275,9 +280,10 @@ export function useDispatchTransfer() {
     mutationKey: ["inventory", "transfer", "dispatch"],
     mutationFn: ({ transferId }) =>
       apiClient.post<void>(`/inventory/stock/transfers/${transferId}/dispatch`, {}),
-    onSuccess: (_data, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.transfers() });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.transfer(vars.transferId) });
+    onSuccess: (_, vars) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.transfers() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.transfer(vars.transferId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
     },
   });
 }
@@ -292,9 +298,9 @@ export function useReserveTransfer() {
         {},
         { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
-    onSuccess: (_data, transferId) => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.transfers() });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.transfer(transferId) });
+    onSuccess: (_, transferId) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.transfers() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.transfer(transferId) });
     },
   });
 }
@@ -305,9 +311,9 @@ export function useCancelTransfer() {
     mutationKey: ["inventory", "transfer", "cancel"],
     mutationFn: (transferId) =>
       apiClient.post<void>(`/inventory/stock/transfers/${transferId}/cancel`, {}),
-    onSuccess: (_data, transferId) => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.transfers() });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.transfer(transferId) });
+    onSuccess: (_, transferId) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.transfers() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.transfer(transferId) });
     },
   });
 }

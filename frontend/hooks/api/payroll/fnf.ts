@@ -2,50 +2,45 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
+import { downloadBlob } from "@/lib/download-blob";
 import type { FnfSettlement, FnfStatement } from "@/types/payroll/reports";
 
-export const fnfKeys = {
-  all: ["payroll", "fnf"] as const,
-  list: () => ["payroll", "fnf", "list"] as const,
-  settlement: (id: number) => ["payroll", "fnf", id] as const,
-  statement: (id: number) => ["payroll", "fnf", id, "statement"] as const,
-};
-
 export function useFnfSettlements() {
+  const canView = useCan("payroll:fnf:view");
   return useQuery({
-    queryKey: fnfKeys.list(),
+    queryKey: queryKeys.payroll.fnfList(),
     queryFn: () => apiClient.get<FnfSettlement[]>("/payroll/fnf"),
     staleTime: 60_000,
+    enabled: canView,
   });
 }
 
 export function useFnfSettlement(settlementId: number) {
+  const canView = useCan("payroll:fnf:view");
   return useQuery({
-    queryKey: fnfKeys.settlement(settlementId),
+    queryKey: queryKeys.payroll.fnfSettlement(settlementId),
     queryFn: () => apiClient.get<FnfSettlement>(`/payroll/fnf/${settlementId}`),
     staleTime: 60_000,
+    enabled: canView && settlementId > 0,
   });
 }
 
 export function useFnfStatement(settlementId: number) {
+  const canView = useCan("payroll:fnf:view");
   return useQuery({
-    queryKey: fnfKeys.statement(settlementId),
+    queryKey: queryKeys.payroll.fnfStatement(settlementId),
     queryFn: () =>
       apiClient.get<FnfStatement>(`/payroll/fnf/${settlementId}/statement`),
     staleTime: 60_000,
+    enabled: canView && settlementId > 0,
   });
 }
 
 export async function downloadFnfStatement(settlementId: number): Promise<void> {
   const blob = await apiClient.download(`/payroll/fnf/${settlementId}/statement/download`);
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `FNF_Statement_${settlementId}.pdf`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+  downloadBlob(blob, `FNF_Statement_${settlementId}.pdf`);
 }
 
 export function useApproveFnf() {
@@ -64,7 +59,7 @@ export function useApproveFnf() {
         notes,
       }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: fnfKeys.all });
+      qc.invalidateQueries({ queryKey: queryKeys.payroll.fnfAll });
     },
   });
 }

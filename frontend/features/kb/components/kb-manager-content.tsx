@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { SearchInput } from "@/components/ui/search-input";
 import {
   Select,
@@ -37,7 +38,7 @@ import {
   EmptyKnowledgeIllustration,
   EmptySearchIllustration,
 } from "@/components/illustrations";
-import { BarChart2, CheckCircle2, FileText, FolderTree, Globe, Loader2, Sparkles } from "lucide-react";
+import { BarChart2, CheckCircle2, FileText, FolderTree, Globe, Sparkles } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { KbArticleCard } from "./kb-article-card";
@@ -47,16 +48,16 @@ import { KbNewArticleDialog } from "./kb-new-article-dialog";
 import { KbAnalyticsTab } from "./kb-analytics-tab";
 import { KbAskPanel } from "@/components/support/kb-ask-panel";
 import {
-  useKbArticles,
-  useKbCategories,
-  useDeleteKbArticle,
-  useDeleteKbCategory,
+  useSupportKbArticles,
+  useSupportKbCategories,
+  useDeleteSupportKbArticle,
+  useDeleteSupportKbCategory,
   type KbArticleListItem,
   type KbArticleStatus,
   type KbArticleVisibility,
   type KbCategory,
 } from "@/hooks/api/support/kb";
-import { useReindexAllKb } from "@/hooks/api/support/kb-rag";
+import { useReindexAllSupportKb } from "@/hooks/api/support/kb-rag";
 import { useAccess } from "@/hooks/api/access";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -92,10 +93,10 @@ export function KbManagerContent() {
 
   const { data: access } = useAccess();
   const supportEnabled = Boolean(
-    access?.isOrgOwner || access?.isPlatformAdmin || access?.modules?.support,
+    access?.isOrgOwner || access?.modules?.support,
   );
 
-  const categoriesQuery = useKbCategories({ enabled: supportEnabled });
+  const categoriesQuery = useSupportKbCategories({ enabled: supportEnabled });
   const categories = useMemo(() => categoriesQuery.data ?? [], [categoriesQuery.data]);
 
   const articleParams = useMemo(
@@ -108,12 +109,12 @@ export function KbManagerContent() {
     [statusParam, visibilityParam, categoryParam, debouncedSearch],
   );
 
-  const articlesQuery = useKbArticles(articleParams, { enabled: supportEnabled });
+  const articlesQuery = useSupportKbArticles(articleParams, { enabled: supportEnabled });
   const articles = useMemo(() => articlesQuery.data ?? [], [articlesQuery.data]);
 
-  const deleteCategoryMutation = useDeleteKbCategory();
-  const deleteArticleMutation = useDeleteKbArticle();
-  const reindexAll = useReindexAllKb();
+  const deleteCategoryMutation = useDeleteSupportKbCategory();
+  const deleteArticleMutation = useDeleteSupportKbArticle();
+  const reindexAll = useReindexAllSupportKb();
 
   const hasFilters =
     statusParam !== "all" ||
@@ -271,7 +272,6 @@ export function KbManagerContent() {
         placeholder="Search…"
         value={localSearch}
         onValueChange={handleSearchChange}
-        className="w-[200px]"
       />
       <Select value={statusParam} onValueChange={handleStatusChange}>
         <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-[130px]`}>
@@ -320,19 +320,16 @@ export function KbManagerContent() {
       }
       actions={
         <>
-          <Button
+          <LoadingButton
             variant="outline"
             size="sm"
             onClick={handleReindexAll}
-            disabled={reindexAll.isPending}
+            isPending={reindexAll.isPending}
+            loadingText="Indexing…"
           >
-            {reindexAll.isPending ? (
-              <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
-            ) : (
-              <Sparkles className="h-3.5 w-3.5 mr-1" />
-            )}
-            {reindexAll.isPending ? "Indexing…" : "Index all for AI"}
-          </Button>
+            {!reindexAll.isPending && <Sparkles className="h-3.5 w-3.5 mr-1" />}
+            Index all for AI
+          </LoadingButton>
           <Button variant="outline" size="sm" onClick={handleOpenCategoryDialog}>
             <FolderTree className="h-3.5 w-3.5 mr-1" /> New Category
           </Button>

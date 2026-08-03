@@ -79,7 +79,7 @@ export function WorkspacePreviewMain({
               transition={transition}
               className="truncate text-[11px] text-muted-foreground"
             >
-              {industryLabel || "Your workspace after launch"}
+              {industryLabel || "Your organization after launch"}
             </motion.p>
           </AnimatePresence>
         </div>
@@ -124,7 +124,7 @@ export function WorkspacePreviewMain({
                   transition={transition}
                   className="truncate text-xs font-semibold text-foreground"
                 >
-                  {hasModules ? "What you get" : "Workspace preview"}
+                  {hasModules ? "What you get" : "Organization preview"}
                 </motion.p>
               </AnimatePresence>
             </div>

@@ -47,7 +47,6 @@ import { CrmOptionBadge } from "@/features/crm/shared/metadata";
 import { formatCurrency } from "@/lib/format-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { cn } from "@/lib/utils";
 import type { RelatedLead } from "@/types/crm";
 
 function InfoRow({

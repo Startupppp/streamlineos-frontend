@@ -11,10 +11,8 @@ export const FIELD_CONTROL_DISABLED_CLASS =
 
 export const FIELD_SELECT_CONTENT_CLASS = "min-w-[var(--radix-select-trigger-width)]";
 
-export const FIELD_POPOVER_CONTENT_CLASS = "w-[var(--radix-popover-trigger-width)]";
-
 export const FIELD_SEARCH_POPOVER_CONTENT_CLASS =
-  "min-w-[var(--radix-popover-trigger-width)] w-[var(--radix-popover-trigger-width)]";
+  "min-w-[var(--radix-popover-trigger-width)] w-auto max-w-[var(--radix-popover-content-available-width)]";
 
 export const COMPACT_SEARCH_POPOVER_CONTENT_CLASS =
   "min-w-[max(16rem,var(--radix-popover-trigger-width))] w-auto max-w-[min(24rem,var(--radix-popover-content-available-width))]";

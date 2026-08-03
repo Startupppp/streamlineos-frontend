@@ -13,7 +13,7 @@ const sections = [
   { id: "infrastructure", title: "Infrastructure" },
   { id: "encryption", title: "Encryption" },
   { id: "auth", title: "Authentication & access" },
-  { id: "access-control", title: "Access control inside your workspace" },
+  { id: "access-control", title: "Access control inside your organization" },
   { id: "secrets", title: "Secrets & key management" },
   { id: "dev", title: "Secure development" },
   { id: "backups", title: "Backups & disaster recovery" },
@@ -118,10 +118,10 @@ export default function SecurityPage() {
         </ul>
       </LegalSection>
 
-      <LegalSection id="access-control" title="Access control inside your workspace">
+      <LegalSection id="access-control" title="Access control inside your organization">
         <p>
           Every action in {BRAND_NAME} is gated by a role-based permission system.
-          Out-of-the-box roles include CEO, HR, ADMIN, MANAGER, MEMBER, SALES, ENGINEERING,
+          Out-of-the-box roles are Organization Owner, Organization Admin, Module Owner, Module Admin and Module Member,
           DESIGN, plus branch-scoped variants. Permissions are checked on the server, never
           on the client.
         </p>

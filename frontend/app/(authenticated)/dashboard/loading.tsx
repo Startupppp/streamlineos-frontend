@@ -6,7 +6,7 @@ export default function DashboardLoading() {
   return (
     <PageWrapper
       title="Dashboard"
-      subtitle="Loading your workspace…"
+      subtitle="Loading your organization…"
       actions={<Skeleton className="h-9 w-28 rounded-md" />}
     >
       <div className="flex flex-1 min-h-0 flex-col gap-4">

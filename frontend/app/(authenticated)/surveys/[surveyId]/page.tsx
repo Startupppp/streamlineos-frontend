@@ -18,7 +18,7 @@ export default function SurveyDetailPage() {
 
   return (
     <DashboardGate permission="surveys:view">
-      <RequireModule module="SURVEYS">
+      <RequireModule module="surveys">
         <PageWrapper
           title={survey?.title ?? "Survey"}
           backHref="/surveys"

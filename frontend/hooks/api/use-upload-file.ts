@@ -34,6 +34,7 @@ async function uploadFileRequest({
 
 export function useUploadFile() {
   return useMutation({
+    mutationKey: ["upload", "file"],
     mutationFn: uploadFileRequest,
   });
 }

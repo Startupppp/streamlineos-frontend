@@ -17,11 +17,12 @@ export interface SupportTicketDraft {
 export function useSnoozeTicket() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["snooze", "ticket"],
     mutationFn: ({ ticketId, snoozedUntil }: { ticketId: number; snoozedUntil: Date }) =>
       apiClient.post<{ success: boolean; snoozedUntil: string }>(`/support/${ticketId}/snooze`, {
         snoozedUntil: snoozedUntil.toISOString(),
       }),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.support.detail(vars.ticketId) });
       qc.invalidateQueries({ queryKey: queryKeys.support.all });
     },
@@ -31,9 +32,10 @@ export function useSnoozeTicket() {
 export function useUnsnoozeTicket() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["unsnooze", "ticket"],
     mutationFn: (ticketId: number) =>
       apiClient.delete<{ success: boolean }>(`/support/${ticketId}/snooze`),
-    onSuccess: (_data, ticketId) => {
+    onSuccess: (_, ticketId) => {
       qc.invalidateQueries({ queryKey: queryKeys.support.detail(ticketId) });
       qc.invalidateQueries({ queryKey: queryKeys.support.all });
     },
@@ -43,6 +45,7 @@ export function useUnsnoozeTicket() {
 export function useSplitTicket() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["split", "ticket"],
     mutationFn: ({
       ticketId,
       title,
@@ -52,7 +55,7 @@ export function useSplitTicket() {
       title: string;
       description?: string;
     }) => apiClient.post<{ id: number }>(`/support/${ticketId}/split`, { title, description }),
-    onSuccess: (_data, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.support.detail(vars.ticketId) });
       qc.invalidateQueries({ queryKey: queryKeys.support.all });
     },
@@ -81,7 +84,7 @@ export function useUpsertTicketDraft() {
       body: string;
       isInternal?: boolean;
     }) => apiClient.put<SupportTicketDraft>(`/support/${ticketId}/draft`, { body, isInternal }),
-    onSuccess: (_data, vars) =>
+    onSuccess: (_, vars) =>
       qc.invalidateQueries({ queryKey: [...queryKeys.support.detail(vars.ticketId), "draft"] }),
   });
 }
@@ -92,7 +95,7 @@ export function useDeleteTicketDraft() {
     mutationKey: ["supportTicketDraft", "delete"],
     mutationFn: (ticketId: number) =>
       apiClient.delete<{ success: boolean }>(`/support/${ticketId}/draft`),
-    onSuccess: (_data, ticketId) =>
+    onSuccess: (_, ticketId) =>
       qc.invalidateQueries({ queryKey: [...queryKeys.support.detail(ticketId), "draft"] }),
   });
 }

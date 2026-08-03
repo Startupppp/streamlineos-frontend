@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 export type MovementType =
   | "PURCHASE"
@@ -387,6 +388,7 @@ function toDashboardMovement(row: RawTransactionRow): InventoryDashboardMovement
 }
 
 export function useInventoryDashboard() {
+  const canView = useCan("inventory:reports:read");
   return useQuery<InventoryDashboard, Error>({
     queryKey: queryKeys.inventory.dashboard(),
     queryFn: async () => {
@@ -412,10 +414,12 @@ export function useInventoryDashboard() {
       };
     },
     staleTime: 5 * 60_000,
+    enabled: canView,
   });
 }
 
 export function useStockSummary(params?: StockSummaryParams) {
+  const canView = useCan("inventory:reports:read");
   return useQuery<PaginatedResponse<StockSummaryRow>, Error>({
     queryKey: queryKeys.inventory.stockSummary(params),
     queryFn: async () => {
@@ -427,12 +431,14 @@ export function useStockSummary(params?: StockSummaryParams) {
       return { items, total: data.total, page: data.page, totalPages: data.totalPages };
     },
     staleTime: 5 * 60_000,
+    enabled: canView,
   });
 }
 
 export function useReorderReport(params?: ReorderReportParams) {
+  const canView = useCan("inventory:reports:read");
   return useQuery<PaginatedResponse<ReorderReportRow>, Error>({
-    queryKey: [...queryKeys.inventory.all, "reorderReport", params ?? {}] as const,
+    queryKey: queryKeys.inventory.reorderReport(params),
     queryFn: async () => {
       const data = await apiClient.get<RawReorderEnvelope>("/inventory/reports/reorder", {
         ...(params?.page !== undefined ? { page: String(params.page) } : {}),
@@ -442,19 +448,14 @@ export function useReorderReport(params?: ReorderReportParams) {
       return { items, total: data.total, page: data.page, totalPages: data.totalPages };
     },
     staleTime: 5 * 60_000,
+    enabled: canView,
   });
 }
 
 export function useMovementsReport(params?: MovementsParams) {
+  const canView = useCan("inventory:reports:read");
   return useQuery<PaginatedResponse<MovementReportRow>, Error>({
-    queryKey: queryKeys.inventory.movementsReport({
-      warehouseId: params?.warehouseId ?? null,
-      type: params?.type ?? null,
-      dateFrom: params?.dateFrom ?? null,
-      dateTo: params?.dateTo ?? null,
-      page: params?.page ?? null,
-      limit: params?.limit ?? null,
-    }),
+    queryKey: queryKeys.inventory.movementsReport(params),
     queryFn: async () => {
       const data = await apiClient.get<RawMovementsEnvelope>("/inventory/reports/movements", {
         ...(params?.dateFrom !== undefined ? { fromDate: params.dateFrom } : {}),
@@ -468,12 +469,14 @@ export function useMovementsReport(params?: MovementsParams) {
       return { items, total: data.total, page: data.page, totalPages: data.totalPages };
     },
     staleTime: 5 * 60_000,
+    enabled: canView,
   });
 }
 
 export function useSlowMovingReport(params?: SlowMovingParams) {
+  const canView = useCan("inventory:reports:read");
   return useQuery<PaginatedResponse<SlowMovingRow>, Error>({
-    queryKey: [...queryKeys.inventory.all, "slowMovingReport", params ?? {}] as const,
+    queryKey: queryKeys.inventory.slowMovingReport(params),
     queryFn: async () => {
       const data = await apiClient.get<PaginatedResponse<SlowMovingRow>>("/inventory/reports/slow-moving", {
         ...(params?.days !== undefined ? { days: String(params.days) } : {}),
@@ -483,12 +486,14 @@ export function useSlowMovingReport(params?: SlowMovingParams) {
       return data;
     },
     staleTime: 5 * 60_000,
+    enabled: canView,
   });
 }
 
 export function useExpiryReport(params?: ExpiryReportParams) {
+  const canView = useCan("inventory:reports:read");
   return useQuery<PaginatedResponse<ExpiryReportRow>, Error>({
-    queryKey: [...queryKeys.inventory.all, "expiryReport", params ?? {}] as const,
+    queryKey: queryKeys.inventory.expiryReport(params),
     queryFn: async () => {
       const data = await apiClient.get<PaginatedResponse<ExpiryReportRow>>("/inventory/reports/expiry", {
         ...(params?.withinDays !== undefined ? { withinDays: String(params.withinDays) } : {}),
@@ -500,5 +505,6 @@ export function useExpiryReport(params?: ExpiryReportParams) {
       return data;
     },
     staleTime: 5 * 60_000,
+    enabled: canView,
   });
 }

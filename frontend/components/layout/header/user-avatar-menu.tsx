@@ -1,6 +1,11 @@
 "use client";
 
-import { forwardRef, useCallback, type ComponentPropsWithoutRef } from "react";
+import {
+  forwardRef,
+  useCallback,
+  useState,
+  type ComponentPropsWithoutRef,
+} from "react";
 import Link from "next/link";
 import {
   CircleUser,
@@ -9,12 +14,10 @@ import {
   CreditCard,
   Key,
   LayoutGrid,
-  Lock,
+  Link2,
   LogOut,
   Shield,
-  ShieldAlert,
   ShieldCheck,
-  UserCheck,
   Users,
   Zap,
   type LucideIcon,
@@ -75,6 +78,7 @@ function buildMenuEntries(opts: {
 
   const accountLinks: MenuLink[] = [
     { href: "/settings", label: "My Account", icon: CircleUser },
+    { href: "/settings/connected-accounts", label: "Connected Accounts", icon: Link2 },
   ];
   if (canManageSettings) {
     accountLinks.push({
@@ -104,7 +108,7 @@ function buildMenuEntries(opts: {
             label: "Organization",
             icon: Building2,
           },
-          { href: "/users", label: "People", icon: Users },
+          { href: "/users", label: "Members", icon: Users },
         ],
       },
     );
@@ -116,16 +120,6 @@ function buildMenuEntries(opts: {
       accessLinks.push(
         { href: "/settings/roles", label: "Roles", icon: Shield },
         {
-          href: "/settings/permissions",
-          label: "Permission Matrix",
-          icon: ShieldAlert,
-        },
-        {
-          href: "/settings/rbac",
-          label: "Role Assignment",
-          icon: UserCheck,
-        },
-        {
           href: "/settings/delegations",
           label: "Access Policies",
           icon: ShieldCheck,
@@ -135,7 +129,6 @@ function buildMenuEntries(opts: {
     if (canManageSettings) {
       accessLinks.push(
         { href: "/settings/modules", label: "Modules", icon: LayoutGrid },
-        { href: "/settings/security", label: "Security", icon: Lock },
       );
     }
     if (accessLinks.length > 0) {
@@ -259,8 +252,8 @@ interface UserAvatarMenuProps {
 }
 
 export function UserAvatarMenu({
-  open,
-  onOpenChange,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
   hideTrigger = false,
 }: UserAvatarMenuProps) {
   const isMobile = useIsMobile();
@@ -278,6 +271,21 @@ export function UserAvatarMenu({
   const email = session?.user?.email ?? "";
   const image = resolveImageUrl(session?.user?.image);
   const initials = name.charAt(0).toUpperCase();
+
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+
+  const handleOpenChange = useCallback(
+    (next: boolean) => {
+      if (isControlled) {
+        controlledOnOpenChange?.(next);
+      } else {
+        setInternalOpen(next);
+      }
+    },
+    [isControlled, controlledOnOpenChange],
+  );
 
   const handleSignOutClick = useCallback(() => {
     handleSignOut();
@@ -345,7 +353,7 @@ export function UserAvatarMenu({
       <Drawer
         direction="bottom"
         open={open}
-        onOpenChange={onOpenChange}
+        onOpenChange={handleOpenChange}
       >
         {!hideTrigger ? (
           <DrawerTrigger asChild>{trigger}</DrawerTrigger>
@@ -358,7 +366,7 @@ export function UserAvatarMenu({
   }
 
   return (
-    <DropdownMenu open={open} onOpenChange={onOpenChange}>
+    <DropdownMenu open={open} onOpenChange={handleOpenChange}>
       <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"

@@ -1,4 +1,4 @@
-import { BillingPageSkeleton } from "@/features/timesheets-core/billing";
+import { BillingPageSkeleton } from "@/features/timesheets/billing";
 
 export default function TimesheetBillingLoading() {
   return <BillingPageSkeleton />;

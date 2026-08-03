@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -166,7 +166,6 @@ export function SafetyPageContent() {
         placeholder="Search..."
         value={search}
         onValueChange={handleSearchChange}
-        className="max-w-sm"
         aria-label="Search incidents"
       />
       <Select

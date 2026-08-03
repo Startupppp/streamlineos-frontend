@@ -14,12 +14,7 @@ import { EmptyTeamIllustration } from "@/components/illustrations";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCustomersOutstanding } from "@/hooks/api/accounting";
 import type { CustomerOutstanding } from "@/types/accounting";
-
-function formatCurrency(value: string): string {
-  const n = Number(value);
-  if (!Number.isFinite(n)) return value;
-  return n.toLocaleString(undefined, { style: "currency", currency: "INR", maximumFractionDigits: 2 });
-}
+import { formatCurrency } from "@/features/accounting/lib/format-currency";
 
 const columns: DataTableColumn<CustomerOutstanding>[] = [
   {
@@ -117,7 +112,7 @@ export default function CustomerLedgersPage() {
       subtitle="Track outstanding receivables by customer."
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
-          <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search customers..." className="w-[220px]" />
+          <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search customers..." />
           <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer select-none">
             <Checkbox checked={onlyOutstanding} onCheckedChange={handleOnlyOutstandingToggle} />
             Only outstanding

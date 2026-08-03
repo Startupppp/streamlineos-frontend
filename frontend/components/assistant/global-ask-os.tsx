@@ -263,7 +263,7 @@ export function GlobalAskOs() {
       sendMessage,
       qc,
       activeConversationId,
-      createConversation.mutateAsync,
+      createConversation,
       selectedPersona,
     ],
   );
@@ -395,7 +395,6 @@ export function GlobalAskOs() {
       className={anchorClassName}
       role="complementary"
       aria-label="Ask OS assistant"
-      aria-modal={isMobile && open ? true : undefined}
     >
       <AnimatePresence initial={false}>
         {open && (
@@ -635,7 +634,7 @@ export function GlobalAskOs() {
                       type="text"
                       value={input}
                       onChange={handleInputChange}
-                      placeholder="Ask anything about your workspace…"
+                      placeholder="Ask anything about your organization…"
                       disabled={isStreaming}
                       className="h-10 flex-1 rounded-xl border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-60"
                     />

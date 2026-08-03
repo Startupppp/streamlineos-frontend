@@ -21,7 +21,7 @@ export function BuilderLeftPanel({ envelopeId, documents, recipients, editable }
   return (
     <div className="h-full flex flex-col border-r border-border w-72 shrink-0">
       <Tabs defaultValue="recipients" className="flex-1 flex flex-col min-h-0">
-        <TabsList className="mx-3 mt-3 grid w-auto grid-cols-3">
+        <TabsList className="mx-3 mt-3">
           <TabsTrigger value="documents">Docs</TabsTrigger>
           <TabsTrigger value="recipients">Signers</TabsTrigger>
           <TabsTrigger value="fields">Fields</TabsTrigger>

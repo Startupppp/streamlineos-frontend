@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 export type WebhookEventType =
   | "inventory.product.created"
@@ -75,10 +76,12 @@ type WebhookEventsResponse = {
 };
 
 export function useWebhooks() {
+  const canView = useCan("inventory:webhooks:manage");
   return useQuery<Webhook[], Error>({
     queryKey: queryKeys.inventory.webhooks(),
     queryFn: () => apiClient.get<Webhook[]>("/inventory/webhooks"),
     staleTime: 60_000,
+    enabled: canView,
   });
 }
 
@@ -125,6 +128,7 @@ export function useDeleteWebhook() {
 }
 
 export function useWebhookEvents(webhookId: number, params?: WebhookEventsParams) {
+  const canView = useCan("inventory:webhooks:manage");
   return useQuery<WebhookEventsResponse, Error>({
     queryKey: queryKeys.inventory.webhookEvents(webhookId, params),
     queryFn: () =>
@@ -133,7 +137,7 @@ export function useWebhookEvents(webhookId: number, params?: WebhookEventsParams
         ...(params?.page ? { page: String(params.page) } : {}),
         ...(params?.limit ? { limit: String(params.limit) } : {}),
       }),
-    enabled: webhookId > 0,
+    enabled: canView && webhookId > 0,
     staleTime: 30_000,
   });
 }
@@ -144,7 +148,7 @@ export function useRetryWebhookEvent() {
     mutationKey: ["inventory", "webhook", "event", "retry"],
     mutationFn: ({ eventId }) =>
       apiClient.post<WebhookEvent>(`/inventory/webhooks/events/${eventId}/retry`),
-    onSuccess: (_res, vars) => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.webhookEvents(vars.webhookId) });
     },
   });

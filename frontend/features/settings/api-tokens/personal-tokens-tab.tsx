@@ -9,7 +9,7 @@ import {
   type CreateUserApiTokenResponse,
   type UserApiToken,
 } from "@/hooks/api/user-api-tokens";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -76,7 +76,7 @@ export function PersonalTokensTab({ showCreate, onShowCreateChange }: PersonalTo
         toast.success("Token revoked");
         setRevoking(null);
       },
-      onError: (err) => toast.error(getApiError(err)),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }, [revoking, revoke]);
 

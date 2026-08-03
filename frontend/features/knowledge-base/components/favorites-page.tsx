@@ -12,14 +12,14 @@ import {
   pageHref,
   KNOWLEDGE_BASE,
 } from "@/features/knowledge-base/lib/knowledge-routes";
-import type { KbPage } from "@/hooks/api/kb/pages";
+import type { KbPageListItem } from "@/hooks/api/kb/pages";
 import {
   KbFileTextIcon,
   KbStarIcon,
 } from "@/features/knowledge-base/lib/kb-icons";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
-function FavoriteRow({ page }: { page: KbPage }) {
+function FavoriteRow({ page }: { page: KbPageListItem }) {
   const toggleFavorite = useToggleFavoriteKbPage();
 
   function handleRemoveFavorite(e: React.MouseEvent) {

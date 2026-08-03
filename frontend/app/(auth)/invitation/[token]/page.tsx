@@ -20,6 +20,7 @@ import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { InvitationIllustration } from "@/components/illustrations";
 import { Mail, ArrowRight, Loader2 } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatRoleLabel } from "@/features/users/user-invite-roles";
 
 const newUserSchema = z.object({
   firstName: z.string().optional(),
@@ -79,8 +80,8 @@ function InvitationDetails({
       </div>
       <div className="flex items-center justify-between gap-4">
         <span className="text-xs font-medium text-muted-foreground">Role</span>
-        <span className="rounded-md bg-blue-50 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-blue-700">
-          {role}
+        <span className="rounded-md bg-blue-50 px-2 py-0.5 text-xs font-semibold tracking-wide text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
+          {formatRoleLabel(role)}
         </span>
       </div>
       {accountEmail ? (
@@ -233,20 +234,14 @@ export default function InvitationPage() {
                 accountEmail={session?.user?.email}
               />
               <div className="space-y-2">
-                <Button
+                <LoadingButton
                   className="h-11 w-full gap-2 font-medium"
                   onClick={handleExistingUserAccept}
-                  disabled={acceptInvitation.isPending}
+                  isPending={acceptInvitation.isPending}
                 >
-                  {acceptInvitation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <>
-                      {session ? "Accept & join" : "Sign in & join"}
-                      <ArrowRight className="h-4 w-4" />
-                    </>
-                  )}
-                </Button>
+                  {session ? "Accept & join" : "Sign in & join"}
+                  <ArrowRight className="h-4 w-4" />
+                </LoadingButton>
                 <Button
                   type="button"
                   variant="ghost"
@@ -366,8 +361,8 @@ export default function InvitationPage() {
               </div>
 
               <p className="pt-1 text-center text-[11px] leading-relaxed text-muted-foreground">
-                By accepting, you&apos;ll get access to this organization&apos;s workspace,
-                pipelines, and team tools.
+                By accepting, you&apos;ll join this organization and get access to
+                its projects, pipelines, and team tools.
               </p>
             </form>
           </CardContent>

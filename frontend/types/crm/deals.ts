@@ -127,107 +127,10 @@ export interface StatWithTrend<T = number> {
   trend: TrendValue;
 }
 
-export interface SalesFunnelItem {
-  stage: string;
-  value: number;
-  color: string;
-}
-
-export interface TopDeal {
-  company: string;
-  value: number;
-  stage: string;
-  rep: string;
-  probability: number;
-}
-
-export interface SalesLeaderboardItem {
-  name: string;
-  deals: number;
-  revenue: number;
-  avatar: string;
-}
-
-export interface SalesActivityItem {
-  type: "deal_won" | "meeting" | "proposal" | "call" | "email";
-  message: string;
-  time: string;
-  person: string;
-}
-
-export interface DealsByStage {
-  stage: string;
-  count: number;
-  value: number;
-  color: string;
-}
-
-export interface EnhancedSalesMetrics {
-  activeClients: number;
-  inactiveClients: number;
-  totalCalls: number;
-  totalMeetings: number;
-  totalEmails: number;
-  totalSiteVisits: number;
-  followUpNeeded: number;
-}
-
-export interface SalesDashboard {
-  salesStats: {
-    pipeline: StatWithTrend;
-    dealsWon: StatWithTrend;
-    conversionRate: StatWithTrend;
-    avgDealSize: StatWithTrend;
-  };
-  revenueTimeline: { month: string; value: number }[];
-  salesFunnel: SalesFunnelItem[];
-  topDeals: TopDeal[];
-  salesLeaderboard: SalesLeaderboardItem[];
-  salesActivity: SalesActivityItem[];
-  dealsByStage: DealsByStage[];
-  enhancedMetrics: EnhancedSalesMetrics;
-}
-
-export interface PersonStat {
-  label: string;
-  value: string | number;
-  trend?: { value: number; isPositive: boolean };
-}
-
-export interface PersonDeal {
-  company: string;
-  value: number;
-  stage: string;
-  probability: number;
-  closeDate: string;
-}
-
-export interface PersonAccount {
-  name: string;
-  revenue: number;
-  health: "healthy" | "at_risk" | "critical";
-  since: string;
-  renewalDate: string;
-}
-
-export interface PersonActivity {
-  type: "deal_won" | "meeting" | "proposal" | "call" | "email" | "ticket" | "escalation";
-  message: string;
-  time: string;
-}
-
 export interface DealStats {
   active: number;
   pipelineValue: number;
   wonValue: number;
-}
-
-export interface DealForecast {
-  totalWeighted: number;
-  totalBestCase: number;
-  totalDeals: number;
-  byMonth: Array<{ month: string; label: string; weighted: number; bestCase: number; dealCount: number }>;
-  byStage: Array<{ stage: string; count: number; totalValue: number; weightedValue: number; avgProbability: number }>;
 }
 
 export interface DealMeeting {
@@ -290,11 +193,6 @@ export interface CreateDealCompetitorInput {
   notes?: string;
 }
 
-export interface UpdateDealCompetitorInput {
-  status?: string;
-  notes?: string;
-}
-
 export type DealHealthLevel = "healthy" | "at_risk" | "critical" | "unknown";
 
 export interface DealHealth {
@@ -325,18 +223,6 @@ export interface ForecastSnapshot {
   overrideNote: string | null;
   overriddenBy: string | null;
   createdAt: string;
-}
-
-export interface ForecastSnapshotCompare {
-  period: string;
-  baseline: ForecastSnapshotData;
-  current: ForecastSnapshotData;
-  delta: {
-    totalWeighted: number;
-    totalBestCase: number;
-    totalDeals: number;
-    byCategory: Array<{ category: string; delta: number; pctChange: number }>;
-  };
 }
 
 export interface PatchNextStepInput {
@@ -373,34 +259,7 @@ export interface CreateStakeholderInput {
   notes?: string | null;
 }
 
-export interface UpdateStakeholderInput {
-  roleKey?: string | null;
-  influence?: string | null;
-  isPrimary?: boolean;
-  notes?: string | null;
-}
-
 export interface OverrideForecastInput {
   overrideAmount?: number;
   overrideNote?: string;
-}
-
-export interface CrmPersonProfile {
-  slug: string;
-  name: string;
-  initials: string;
-  role: string;
-  title: string;
-  department: string;
-  email: string;
-  phone: string;
-  location: string;
-  joinDate: string;
-  bio: string;
-  stats: PersonStat[];
-  monthlyPerformance: { month: string; value: number }[];
-  deals: PersonDeal[];
-  accounts: PersonAccount[];
-  activities: PersonActivity[];
-  skills: string[];
 }

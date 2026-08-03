@@ -7,7 +7,6 @@ export default function PayrollEmployeesLoading() {
   return (
     <PageWrapper
       title="Salary Profiles"
-      backHref="/payroll"
       actions={<Skeleton className="h-9 w-28 rounded-md" />}
       filters={
         <div className={FILTER_TOOLBAR_ROW}>

@@ -1,5 +1,5 @@
 import { requirePermission } from "@/lib/rbac/require-permission";
-import { BankTransfersContent } from "./bank-transfers-content";
+import { BankTransfersContent } from "@/features/payroll/bank-transfers/bank-transfers-content";
 
 export const metadata = { title: "Bank Transfers — Payroll" };
 

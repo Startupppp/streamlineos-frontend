@@ -1,16 +1,17 @@
 "use client";
 
+import { PageWrapper } from "@/components/ui/page-wrapper";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   KbArrowRightIcon,
   KbClockIcon,
-  KbLoader2Icon,
   KbRotateCcwIcon,
 } from "@/features/knowledge-base/lib/kb-icons";
-import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -31,17 +32,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import PublicPageContent from "./public-page-content";
 import { computeVersionDiff } from "@/features/knowledge-base/lib/version-diff";
 import { pageHref, KNOWLEDGE_BASE } from "@/features/knowledge-base/lib/knowledge-routes";
-
-function formatRelativeTime(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const minutes = Math.floor(diff / 60000);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
-  if (days > 0) return `${days}d ago`;
-  if (hours > 0) return `${hours}h ago`;
-  if (minutes > 0) return `${minutes}m ago`;
-  return "just now";
-}
+import { kbTimeAgo } from "@/features/knowledge-base/lib/kb-date-utils";
 
 interface DiffSummaryProps {
   versionTitle: string;
@@ -211,7 +202,7 @@ export default function PageHistoryPage({ pageId }: PageHistoryPageProps) {
                             Version {v.versionNumber}
                           </p>
                           <p className="text-xs text-muted-foreground mt-0.5">
-                            {v.authorName ? `${v.authorName} · ` : ""}{formatRelativeTime(v.createdAt)}
+                            {v.authorName ? `${v.authorName} · ` : ""}{kbTimeAgo(v.createdAt)}
                           </p>
                           {v.changeSummary && (
                             <TruncatedText text={v.changeSummary} className="text-xs text-muted-foreground mt-0.5" />
@@ -248,19 +239,17 @@ export default function PageHistoryPage({ pageId }: PageHistoryPageProps) {
                         <p className="text-xs text-muted-foreground mt-0.5">{versionDetail.changeSummary}</p>
                       )}
                     </div>
-                    <Button
+                    <LoadingButton
                       size="sm"
                       onClick={handleRestoreClick}
-                      disabled={restoreVersion.isPending || detailLoading || !versionDetail?.content}
+                      disabled={detailLoading || !versionDetail?.content}
+                      isPending={restoreVersion.isPending}
+                      loadingText="Restoring…"
                       className="shrink-0 gap-1.5 h-7 text-xs"
                     >
-                      {restoreVersion.isPending ? (
-                        <KbLoader2Icon className="h-3 w-3 animate-spin" />
-                      ) : (
-                        <KbRotateCcwIcon className="h-3 w-3" />
-                      )}
+                      <KbRotateCcwIcon className="h-3 w-3" />
                       Restore
-                    </Button>
+                    </LoadingButton>
                   </div>
                 </div>
 

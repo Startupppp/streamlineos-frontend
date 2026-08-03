@@ -10,4 +10,3 @@ export { DataTablePagination } from "./data-table-pagination";
 export { ListToolbar } from "./list-toolbar";
 export { EntityFormSheet } from "./entity-form-sheet";
 export { EntityFormDialog } from "./entity-form-dialog";
-export { SkeletonTable } from "./skeletons/skeleton-table";

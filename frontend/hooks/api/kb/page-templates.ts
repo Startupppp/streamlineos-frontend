@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 export type KbPageTemplate = {
   id: number;
@@ -23,9 +24,11 @@ export type CreateKbPageTemplateInput = {
 };
 
 export function useKbPageTemplates() {
+  const canViewPages = useCan("kb:pages:view");
   return useQuery({
     queryKey: queryKeys.kb.pageTemplates(),
     queryFn: () => apiClient.get<KbPageTemplate[]>("/kb/page-templates"),
+    enabled: canViewPages,
     staleTime: 300_000,
   });
 }

@@ -3,6 +3,11 @@
 import { memo, type ComponentType, type MouseEvent, type Ref } from "react";
 import type { IconHandle } from "@animateicons/react";
 import { Check } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { EVERYTHING_GOAL_ID } from "../lib/constants";
@@ -16,6 +21,7 @@ type AnimatedIcon = ComponentType<{
 type GoalChipProps = {
   goalId: string;
   label: string;
+  outcome: string;
   selected: boolean;
   Icon: AnimatedIcon;
   onToggle: (e: MouseEvent<HTMLButtonElement>) => void;
@@ -35,6 +41,7 @@ const CHIP_EVERYTHING_SELECTED =
 function GoalChipInner({
   goalId,
   label,
+  outcome,
   selected,
   Icon,
   onToggle,
@@ -43,48 +50,62 @@ function GoalChipInner({
   const isEverything = goalId === EVERYTHING_GOAL_ID;
 
   return (
-    <button
-      type="button"
-      role="checkbox"
-      aria-checked={selected}
-      data-goal-id={goalId}
-      onClick={onToggle}
-      {...hoverHandlers}
-      className={cn(
-        CHIP_BASE,
-        isEverything && "border-[2.5px] bg-transparent transition-none",
-        isEverything
-          ? selected
-            ? CHIP_EVERYTHING_SELECTED
-            : CHIP_EVERYTHING
-          : selected
-            ? CHIP_SELECTED
-            : CHIP_IDLE,
-      )}
-    >
-      <Icon
-        ref={iconRef as Ref<IconHandle>}
-        size={14}
-        className={cn(
-          "relative z-[1] shrink-0",
-          isEverything
-            ? "text-brand-core dark:text-brand-cyan"
-            : selected
-              ? "text-brand-core"
-              : "text-muted-foreground",
-        )}
-      />
-      <span className="relative z-[1] min-w-0 flex-1 truncate">{label}</span>
-      {selected && (
-        <Check
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          role="checkbox"
+          aria-checked={selected}
+          data-goal-id={goalId}
+          onClick={onToggle}
+          {...hoverHandlers}
           className={cn(
-            "relative z-[1] ml-auto h-3 w-3 shrink-0",
-            isEverything ? "text-brand-cyan" : "text-brand-core",
+            CHIP_BASE,
+            isEverything && "border-[2.5px] bg-transparent transition-none",
+            isEverything
+              ? selected
+                ? CHIP_EVERYTHING_SELECTED
+                : CHIP_EVERYTHING
+              : selected
+                ? CHIP_SELECTED
+                : CHIP_IDLE,
           )}
-          aria-hidden
-        />
-      )}
-    </button>
+        >
+          <Icon
+            ref={iconRef as Ref<IconHandle>}
+            size={14}
+            className={cn(
+              "relative z-[1] shrink-0",
+              isEverything
+                ? "text-brand-core dark:text-brand-cyan"
+                : selected
+                  ? "text-brand-core"
+                  : "text-muted-foreground",
+            )}
+          />
+          <span className="relative z-[1] min-w-0 flex-1 truncate">
+            {label}
+          </span>
+          {selected && (
+            <Check
+              className={cn(
+                "relative z-[1] ml-auto h-3 w-3 shrink-0",
+                isEverything ? "text-brand-cyan" : "text-brand-core",
+              )}
+              aria-hidden
+            />
+          )}
+        </button>
+      </TooltipTrigger>
+      <TooltipContent
+        side="top"
+        align="center"
+        className="max-w-56 space-y-0.5 px-2.5 py-1.5"
+      >
+        <p className="text-xs font-semibold leading-tight">{label}</p>
+        <p className="text-xs leading-snug text-muted-foreground">{outcome}</p>
+      </TooltipContent>
+    </Tooltip>
   );
 }
 

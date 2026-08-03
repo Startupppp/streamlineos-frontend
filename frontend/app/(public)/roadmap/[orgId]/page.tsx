@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
@@ -23,7 +23,7 @@ import {
   type PublicFeedbackPost,
   type PublicChangelogEntry,
   type ChangelogType,
-} from "@/hooks/api/projects/roadmap";
+} from "@/hooks/api/build/roadmap";
 
 const VOTER_KEY_STORAGE = "streamlineos:roadmap:voterKey";
 

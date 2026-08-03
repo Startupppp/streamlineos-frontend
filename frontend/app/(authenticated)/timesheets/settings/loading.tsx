@@ -1,4 +1,4 @@
-import { SettingsPageSkeleton } from "@/features/timesheets-core/settings";
+import { SettingsPageSkeleton } from "@/features/timesheets/settings";
 
 export default function Loading() {
   return <SettingsPageSkeleton />;

@@ -151,7 +151,7 @@ export function EmployeesListPage() {
 
   if (!canView) {
     return (
-      <PageWrapper title="Salary Profiles" backHref="/payroll">
+      <PageWrapper title="Salary Profiles">
         <EmptyState
           illustration={<EmptyPersonIllustration />}
           title="Access Denied"
@@ -165,8 +165,7 @@ export function EmployeesListPage() {
   return (
     <PageWrapper
       title="Salary Profiles"
-      subtitle={data ? `${data.total} profiles` : undefined}
-      backHref="/payroll"
+      subtitle="Per-employee CTC and pay configuration"
       actions={
         canUpdate ? (
           <Button size="sm" onClick={handleAddOpen}>

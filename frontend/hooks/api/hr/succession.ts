@@ -34,17 +34,9 @@ export function useSuccessionPlans() {
 export function useCreateSuccessionPlan() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "succession", "create"],
     mutationFn: (body: Omit<SuccessionPlan, "id" | "orgId" | "createdBy" | "createdAt" | "updatedAt">) =>
       apiClient.post<SuccessionPlan>("/hr/succession", body),
-    onSuccess: () => qc.invalidateQueries({ queryKey: keys.list() }),
-  });
-}
-
-export function useUpdateSuccessionPlan() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, ...body }: Partial<SuccessionPlan> & { id: number }) =>
-      apiClient.patch<SuccessionPlan>(`/hr/succession/${id}`, body),
     onSuccess: () => qc.invalidateQueries({ queryKey: keys.list() }),
   });
 }
@@ -52,6 +44,7 @@ export function useUpdateSuccessionPlan() {
 export function useDeleteSuccessionPlan() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "succession", "delete"],
     mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/hr/succession/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: keys.list() }),
   });

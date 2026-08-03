@@ -38,7 +38,8 @@ export type StateIllustrationPreset =
   | "devices"
   | "tasks"
   | "orders"
-  | "permissions";
+  | "permissions"
+  | "campaigns";
 
 const PRESET_TO_ILLUSTRATION: Record<StateIllustrationPreset, IllustrationName> = {
   default: "empty-search",
@@ -78,6 +79,7 @@ const PRESET_TO_ILLUSTRATION: Record<StateIllustrationPreset, IllustrationName> 
   tasks: "empty-projects",
   orders: "empty-documents",
   permissions: "security",
+  campaigns: "empty-campaigns",
 };
 
 export function StateIllustration({

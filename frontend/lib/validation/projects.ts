@@ -41,15 +41,3 @@ export const createTicketInputSchema = z.object({
   parentTicketId: z.number().int().positive().optional(),
   status: z.string().optional(),
 });
-
-export const addTimeEntryInputSchema = z.object({
-  ticketId: z.number({ error: "Please select a ticket" }).int().positive("Please select a ticket"),
-  date: z.date().refine((d) => d <= new Date(), { message: "Cannot log time for future dates" }),
-  hours: z.number().positive().max(24, "Cannot log more than 24 hours per entry"),
-  description: z.string().optional(),
-  imageUrl: z.string().optional().or(z.literal("")),
-  workLink: z.string().optional().or(z.literal("")).refine(
-    (val) => !val || val === "" || val.startsWith("http://") || val.startsWith("https://"),
-    { message: "Work link must be a valid URL" }
-  ),
-});

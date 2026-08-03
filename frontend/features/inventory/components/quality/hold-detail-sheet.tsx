@@ -17,10 +17,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Button } from "@/components/ui/button";
 import { useCan } from "@/hooks/api/access";
 import { useQualityHold, useReleaseQualityHold } from "@/hooks/api/inventory/quality";
-import type { QualityHold } from "@/hooks/api/inventory/quality";
 import { useProductVariants } from "@/hooks/api/inventory/products";
 import { QUALITY_HOLD_STATUS_BADGE, QUALITY_HOLD_STATUS_LABEL } from "@/features/inventory/lib";
 import { getErrorMessage } from "@/lib/get-error-message";

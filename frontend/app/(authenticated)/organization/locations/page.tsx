@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, type ChangeEvent } from "react";
+import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -12,7 +12,7 @@ import {
   useUpdateOrgLocation,
   useDeleteOrgLocation,
 } from "@/hooks/api/org-hierarchy";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -69,7 +69,7 @@ type FormValues = z.infer<typeof formSchema>;
 function LocationForm({
   defaultValues,
   onSubmit,
-  isPending: _isPending,
+  isPending: _,
 }: {
   defaultValues?: FormValues;
   onSubmit: (v: FormValues) => void;
@@ -188,7 +188,7 @@ export default function OrgLocationsPage() {
             toast.success("Location created");
             setShowCreate(false);
           },
-          onError: (err) => toast.error(getApiError(err)),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -205,7 +205,7 @@ export default function OrgLocationsPage() {
             toast.success("Location updated");
             setEditing(null);
           },
-          onError: (err) => toast.error(getApiError(err)),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -221,7 +221,7 @@ export default function OrgLocationsPage() {
             toast.success("Location archived");
             setShowArchived(true);
           },
-          onError: (err) => toast.error(getApiError(err)),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -237,7 +237,7 @@ export default function OrgLocationsPage() {
             toast.success("Location restored");
             setShowArchived(false);
           },
-          onError: (err) => toast.error(getApiError(err)),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -251,7 +251,7 @@ export default function OrgLocationsPage() {
         toast.success("Location deleted");
         setDeleting(null);
       },
-      onError: (err) => toast.error(getApiError(err)),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }, [deleting, remove]);
 
@@ -371,7 +371,7 @@ export default function OrgLocationsPage() {
   );
 
   return (
-    <RequireModule module="HR">
+    <RequireModule module="hr">
     <PageWrapper
       title="Locations"
       subtitle="Physical work locations and offices."
@@ -399,9 +399,7 @@ export default function OrgLocationsPage() {
         </div>
       }
       filters={
-        <div className="min-w-0 w-full flex-1 md:min-w-[160px] md:max-w-xs">
-          <SearchInput placeholder="Search locations…" value={search} onValueChange={handleSearchInputChange} />
-        </div>
+        <SearchInput placeholder="Search locations…" value={search} onValueChange={handleSearchInputChange} />
       }
     >
       <DataTable

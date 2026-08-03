@@ -1,44 +1,15 @@
 "use client";
 
-import React, { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
-import {
-  format,
-  startOfWeek,
-  endOfWeek,
-  eachDayOfInterval,
-  isWithinInterval,
-  differenceInCalendarDays,
-} from "date-fns";
+import { format, differenceInCalendarDays } from "date-fns";
 import { toast } from "sonner";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyLeaveIllustration } from "@/components/illustrations";
-import {
-  Filter,
-  Download,
-  CalendarDays,
-  History,
-  MoreVertical,
-  Eye,
-  Check,
-  X,
-  RotateCcw,
-} from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { ConfirmWithReasonSheet } from "@/components/ui/confirm-with-reason-sheet";
-import { useCancelLeave, useApproveLeaveDedicated, useRejectLeaveDedicated, useRevertLeave } from "@/hooks/api/hr";
-import { cn, resolveImageUrl } from "@/lib/utils";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { Filter, Download, History } from "lucide-react";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -47,231 +18,16 @@ const LeaveBalanceDonut = dynamic(
   { ssr: false, loading: () => <Skeleton className="h-[190px] w-full rounded-2xl" /> },
 );
 
-import type {
-  LeaveBalance,
-  LeaveRequest,
-  ApprovedLeave,
-} from "./leaves-shared";
+import type { LeaveBalance, LeaveRequest, ApprovedLeave } from "./leaves-shared";
 import { BalanceCard, balanceCardConfig, DEFAULT_CARD_CONFIG, priorityConfig } from "./leaves-shared";
+import { LeaveCalendarWidget } from "./leave-calendar-widget";
+import { RequestActionCell } from "./leave-request-action-cell";
+import { useCancelLeave, useApproveLeaveDedicated, useRejectLeaveDedicated, useRevertLeave } from "@/hooks/api/hr";
+import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import { useLeavePolicy } from "@/hooks/api/hr";
 import { TruncatedText } from "@/components/ui/truncated-text";
-
-function LeaveCalendarWidget({
-  approvedLeaves,
-}: {
-  approvedLeaves: ApprovedLeave[];
-}) {
-  const today = new Date();
-  const weekStart = startOfWeek(today, { weekStartsOn: 1 });
-  const weekEnd = endOfWeek(today, { weekStartsOn: 1 });
-  const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
-
-  const leavesPerDay = useMemo(
-    () =>
-      days.map((day) => ({
-        day,
-        leaves: approvedLeaves.filter((leave) => {
-          const start = new Date(leave.startDate);
-          const end = new Date(leave.endDate);
-          return isWithinInterval(day, { start, end });
-        }),
-      })),
-    [approvedLeaves, days],
-  );
-
-  const hasAnyLeave = leavesPerDay.some((d) => d.leaves.length > 0);
-  if (!hasAnyLeave) return null;
-
-  const todayStr = format(today, "yyyy-MM-dd");
-
-  return (
-    <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-          <div className="w-7 rounded-lg bg-emerald-100 dark:bg-emerald-500/10 flex items-center justify-center">
-            <CalendarDays
-              className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-300"
-              aria-hidden="true"
-            />
-          </div>
-          Who&apos;s Out This Week
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <div className="grid grid-cols-7 gap-1">
-          {leavesPerDay.map(({ day, leaves }) => {
-            const isToday = format(day, "yyyy-MM-dd") === todayStr;
-            return (
-              <div
-                key={day.toISOString()}
-                className={cn(
-                  "rounded-lg p-1.5 min-h-[64px] flex flex-col transition-colors duration-200",
-                  isToday
-                    ? "bg-primary/10 border border-primary/30"
-                    : "bg-muted/30 border border-transparent",
-                )}
-              >
-                <div
-                  className={cn(
-                    "text-[10px] font-medium text-center leading-tight mb-1",
-                    isToday
-                      ? "text-primary"
-                      : "text-muted-foreground",
-                  )}
-                >
-                  {format(day, "EEE")}
-                  <br />
-                  <span className={cn("text-[11px]", isToday && "font-bold")}>
-                    {format(day, "d")}
-                  </span>
-                </div>
-                <div className="flex flex-wrap gap-0.5 justify-center">
-                  {leaves.slice(0, 3).map((l) => (
-                    <Avatar
-                      key={l.id}
-                      className="h-5 w-5"
-                      title={`${l.user?.firstName} ${l.user?.lastName}`}
-                    >
-                      <AvatarImage src={resolveImageUrl(l.user?.image)} />
-                      <AvatarFallback className="text-[8px] bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
-                        {l.user?.firstName?.[0]}
-                        {l.user?.lastName?.[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                  ))}
-                  {leaves.length > 3 && (
-                    <span className="text-[9px] text-muted-foreground self-end">
-                      +{leaves.length - 3}
-                    </span>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-interface RequestActionCellProps {
-  request: LeaveRequest;
-  isAdmin: boolean;
-  isSelf: boolean;
-  onApprove?: (id: number) => void;
-  onReject?: (id: number, reason?: string) => void;
-  onRevert?: (id: number) => void;
-  onCancel?: (id: number) => void;
-}
-
-function RequestActionCell({
-  request,
-  isAdmin,
-  isSelf,
-  onApprove,
-  onReject,
-  onRevert,
-  onCancel,
-}: RequestActionCellProps) {
-  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
-
-  const status = request.status ?? "PENDING";
-
-  function handleOpenRejectDialog() {
-    setRejectDialogOpen(true);
-  }
-
-  function handleConfirmReject(reason: string) {
-    setRejectDialogOpen(false);
-    onReject?.(request.id, reason || undefined);
-  }
-
-  function handleCancelRequest() {
-    onCancel?.(request.id);
-  }
-
-  function handleApproveRequest() {
-    onApprove?.(request.id);
-  }
-
-  function handleRevertRequest() {
-    onRevert?.(request.id);
-  }
-
-  return (
-    <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="w-7"
-            aria-label="Actions"
-          >
-            <MoreVertical className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem>
-            <Eye className="mr-2 h-4 w-4" />
-            View Details
-          </DropdownMenuItem>
-          {isSelf && status === "PENDING" && onCancel && (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={handleCancelRequest}
-                className="text-muted-foreground"
-              >
-                <X className="mr-2 h-4 w-4" />
-                Cancel Request
-              </DropdownMenuItem>
-            </>
-          )}
-          {isAdmin && (
-            <>
-              <DropdownMenuSeparator />
-              {status !== "APPROVED" && status !== "CANCELLED" && (
-                <DropdownMenuItem
-                  onClick={handleApproveRequest}
-                  className="text-emerald-600"
-                >
-                  <Check className="mr-2 h-4 w-4" />
-                  Approve
-                </DropdownMenuItem>
-              )}
-              {status !== "REJECTED" && status !== "CANCELLED" && (
-                <DropdownMenuItem
-                  onClick={handleOpenRejectDialog}
-                  className="text-rose-600"
-                >
-                  <X className="mr-2 h-4 w-4" />
-                  Reject
-                </DropdownMenuItem>
-              )}
-              {(status === "APPROVED" || status === "REJECTED") && (
-                <DropdownMenuItem onClick={handleRevertRequest}>
-                  <RotateCcw className="mr-2 h-4 w-4" />
-                  Revert to Pending
-                </DropdownMenuItem>
-              )}
-            </>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
-      <ConfirmWithReasonSheet
-        open={rejectDialogOpen}
-        onOpenChange={setRejectDialogOpen}
-        title="Rejection reason"
-        reasonPlaceholder="Reason for rejection"
-        reasonRequired
-        confirmLabel="Reject"
-        onConfirm={handleConfirmReject}
-      />
-    </>
-  );
-}
 
 interface LeavesTabContentProps {
   balances: LeaveBalance[];
@@ -518,7 +274,7 @@ export function LeavesTabContent({
                 {status.charAt(0) + status.slice(1).toLowerCase()}
               </span>
               {row.managerComment && (
-                <TruncatedText text={`“${row.managerComment}”`} className="text-[10px] text-muted-foreground max-w-[120px]" />
+                <TruncatedText text={`"${row.managerComment}"`} className="text-[10px] text-muted-foreground max-w-[120px]" />
               )}
               {status === "REJECTED" && row.rejectionReason && (
                 <span

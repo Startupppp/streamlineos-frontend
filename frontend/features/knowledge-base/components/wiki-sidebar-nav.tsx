@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   KbBarChart2Icon,
+  KbBookOpenTextIcon,
   KbClipboardCheckIcon,
   KbClockIcon,
   KbLayoutGridIcon,
@@ -33,6 +34,7 @@ import {
   useAnimatedNavIconHover,
 } from "@/components/layout/sidebar/sidebar-animated-nav";
 import {
+  KNOWLEDGE_BASE,
   KB_ANALYTICS,
   KB_FAVORITES,
   KB_IMPORT,
@@ -52,6 +54,7 @@ interface WikiNavItem {
   label: string;
   href: string;
   icon: KbIconComponent;
+  exact?: boolean;
 }
 
 interface WikiNavGroup {
@@ -74,6 +77,7 @@ interface WikiSidebarFooterProps {
 
 function buildPrimaryItems(): WikiNavItem[] {
   return [
+    { label: "Wiki", href: KNOWLEDGE_BASE, icon: KbBookOpenTextIcon, exact: true },
     { label: "Recent", href: KB_RECENT, icon: KbClockIcon },
     { label: "Favorites", href: KB_FAVORITES, icon: KbStarIcon },
   ];
@@ -123,7 +127,14 @@ function buildNavGroups({
   ];
 }
 
-function isNavItemActive(pathname: string, href: string): boolean {
+function isNavItemActive(
+  pathname: string,
+  href: string,
+  exact?: boolean,
+): boolean {
+  if (exact) {
+    return pathname === href || pathname === `${href}/`;
+  }
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -329,7 +340,7 @@ export default function WikiSidebarNav({
 
   const activeGroupId = useMemo(() => {
     for (const group of groups) {
-      if (group.items.some((item) => isNavItemActive(pathname, item.href))) {
+      if (group.items.some((item) => isNavItemActive(pathname, item.href, item.exact))) {
         return group.id;
       }
     }
@@ -365,7 +376,7 @@ export default function WikiSidebarNav({
           <WikiNavLink
             key={item.href}
             item={item}
-            isActive={isNavItemActive(pathname, item.href)}
+            isActive={isNavItemActive(pathname, item.href, item.exact)}
             isCollapsed
           />
         ))}
@@ -373,7 +384,7 @@ export default function WikiSidebarNav({
           <WikiNavLink
             key={item.href}
             item={item}
-            isActive={isNavItemActive(pathname, item.href)}
+            isActive={isNavItemActive(pathname, item.href, item.exact)}
             isCollapsed
           />
         ))}
@@ -388,7 +399,7 @@ export default function WikiSidebarNav({
           <WikiNavLink
             key={item.href}
             item={item}
-            isActive={isNavItemActive(pathname, item.href)}
+            isActive={isNavItemActive(pathname, item.href, item.exact)}
           />
         ))}
       </div>
@@ -408,7 +419,7 @@ export default function WikiSidebarNav({
                 <WikiNavLink
                   key={item.href}
                   item={item}
-                  isActive={isNavItemActive(pathname, item.href)}
+                  isActive={isNavItemActive(pathname, item.href, item.exact)}
                 />
               ))}
             </AccordionContent>

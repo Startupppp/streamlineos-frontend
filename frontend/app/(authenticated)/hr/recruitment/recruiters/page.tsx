@@ -212,7 +212,7 @@ export default function RecruitersPage() {
         <RecruitmentEmptyState
           illustration={<EmptyTeamIllustration />}
           title="No recruiters found"
-          description="Users with HR, HR_MANAGER, CEO, ADMIN, or RECRUITER roles will appear here."
+          description="Users granted the recruitment permissions will appear here."
         />
       ) : (
         <div className="flex flex-1 min-h-0 flex-col gap-4">

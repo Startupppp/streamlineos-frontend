@@ -1,12 +1,11 @@
-"use client";
+﻿"use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Database } from "lucide-react";
 import { DownloadIcon } from "@animateicons/react/lucide";
@@ -25,7 +24,7 @@ import { useOrgMembers } from "@/hooks/api/organization";
 import {
   getUserDisplayName,
   type NamedUser,
-} from "@/features/projects/shared/resolve-user-name";
+} from "@/features/build/shared/resolve-user-name";
 
 export function EventStreamPageContent() {
   const canExport = useCan("hr:analytics:read");
@@ -46,10 +45,13 @@ export function EventStreamPageContent() {
     return map;
   }, [membersData]);
 
-  const resolveMemberName = (userId: string) => {
-    const member = memberById.get(userId);
-    return member ? getUserDisplayName(member) : userId;
-  };
+  const resolveMemberName = useCallback(
+    (userId: string) => {
+      const member = memberById.get(userId);
+      return member ? getUserDisplayName(member) : userId;
+    },
+    [memberById],
+  );
 
   const eventColumns: DataTableColumn<HrEvent>[] = useMemo(() => [
     {
@@ -93,7 +95,7 @@ export function EventStreamPageContent() {
         </span>
       ),
     },
-  ], [memberById]);
+  ], [resolveMemberName]);
 
   const catalogColumns: DataTableColumn<EventCatalogEntry>[] = [
     {

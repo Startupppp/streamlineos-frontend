@@ -252,7 +252,7 @@ export default function NotificationsPage() {
   return (
     <PageWrapper
       title="Notifications"
-      subtitle="Stay up to date with everything happening in your workspace"
+      subtitle="Stay up to date with everything happening in your organization"
       actions={
         showMarkAllRead ? (
           <LoadingButton

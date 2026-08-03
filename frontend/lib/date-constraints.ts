@@ -1,7 +1,7 @@
 import { addDays } from "date-fns";
 import type { RefinementCtx } from "zod";
 import { z } from "zod";
-import { formatDateOnly, getTodayString } from "@/lib/date-utils";
+import { getTodayString } from "@/lib/date-utils";
 
 export type DateBoundMode = "after" | "onOrAfter";
 
@@ -33,15 +33,6 @@ export function maxDate(...dates: Array<Date | undefined>): Date | undefined {
   for (const date of dates) {
     if (!date) continue;
     if (!result || date > result) result = date;
-  }
-  return result;
-}
-
-export function minDate(...dates: Array<Date | undefined>): Date | undefined {
-  let result: Date | undefined;
-  for (const date of dates) {
-    if (!date) continue;
-    if (!result || date < result) result = date;
   }
   return result;
 }
@@ -126,13 +117,6 @@ export function planningEndPickerProps(options?: {
   };
 }
 
-export function futureDatePickerProps(options?: {
-  existingValue?: string | null;
-  toYearOffset?: number;
-}): PlanningPickerBounds {
-  return planningStartPickerProps(options);
-}
-
 export function resolveDatePickerYearBounds(options: {
   fromDate?: Date;
   toDate?: Date;
@@ -152,17 +136,6 @@ export function resolveDatePickerYearBounds(options: {
     fromYear,
     toYear: Math.max(toYear, fromYear),
   };
-}
-
-export function combineDisabledDays(
-  ...matchers: Array<((date: Date) => boolean) | undefined>
-): ((date: Date) => boolean) | undefined {
-  const active = matchers.filter(
-    (matcher): matcher is (date: Date) => boolean => typeof matcher === "function",
-  );
-  if (active.length === 0) return undefined;
-  if (active.length === 1) return active[0];
-  return (date: Date) => active.some((matcher) => matcher(date));
 }
 
 type DateOrderKeys = {
@@ -213,8 +186,4 @@ export function refineNotBeforeToday(
       path: [path],
     });
   }
-}
-
-export function toDateOnlyString(date: Date): string {
-  return formatDateOnly(date);
 }

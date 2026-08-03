@@ -46,16 +46,6 @@ export interface ArInvoice {
   payments?: ArPayment[];
 }
 
-export interface ArInvoiceStats {
-  draft: number;
-  issued: number;
-  paid: number;
-  failed: number;
-  voided: number;
-  totalOutstanding: number;
-  totalPaid: number;
-}
-
 export interface ArPaymentAllocation {
   invoiceId: number;
   amount: string;
@@ -251,14 +241,3 @@ export interface UpdateInvoiceCollectionInput {
   promiseToPayDate?: string;
 }
 
-export interface CustomerStatementEntry {
-  date: string;
-  description: string;
-  debit: number | null;
-  credit: number | null;
-  balance: number;
-}
-
-export interface CustomerStatement {
-  entries: CustomerStatementEntry[];
-}

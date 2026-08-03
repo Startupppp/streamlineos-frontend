@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { useCollectors, useCreateCollector, usePatchCollector, type CollectorType, type CollectorStatus } from "@/hooks/api/surveys/collectors";
 
@@ -51,7 +51,7 @@ export function CollectorsCard({ surveyId }: { surveyId: number }) {
       await createCollector.mutateAsync({ collectorType: newType, name: COLLECTOR_TYPE_LABELS[newType] });
       toast.success("Collector created");
     } catch (error) {
-      toast.error(getApiError(error));
+      toast.error(getErrorMessage(error));
     }
   }
 
@@ -64,7 +64,7 @@ export function CollectorsCard({ surveyId }: { surveyId: number }) {
     try {
       await patchCollector.mutateAsync({ collectorId, input: { status: status === "active" ? "paused" : "active" } });
     } catch (error) {
-      toast.error(getApiError(error));
+      toast.error(getErrorMessage(error));
     }
   }
 

@@ -9,6 +9,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useIsMobile } from "@/hooks/common/use-mobile";
 import { cn } from "@/lib/utils";
 
@@ -126,17 +127,24 @@ const ResponsivePopoverContent = React.forwardRef<
         <DrawerHeader className="sr-only">
           <DrawerTitle>{title}</DrawerTitle>
         </DrawerHeader>
-        <div
-          className={cn(
-            stickyFooter
-              ? "flex min-h-0 flex-1 flex-col overflow-hidden"
-              : "min-h-0 flex-1 overflow-y-auto overscroll-contain",
-            className,
-            "w-full max-w-none",
-          )}
-        >
-          {children}
-        </div>
+        {stickyFooter ? (
+          <div
+            className={cn(
+              "flex min-h-0 flex-1 flex-col overflow-hidden",
+              className,
+              "w-full max-w-none",
+            )}
+          >
+            {children}
+          </div>
+        ) : (
+          <ScrollArea
+            className="w-full max-w-none max-h-[min(calc(92dvh-3.5rem),36rem)]"
+            viewportClassName="overscroll-contain"
+          >
+            <div className={cn(className, "w-full max-w-none")}>{children}</div>
+          </ScrollArea>
+        )}
       </DrawerContent>
     );
   }

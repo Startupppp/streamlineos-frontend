@@ -27,7 +27,6 @@ import { ContactDeleteDialog } from "@/features/crm/contacts/contact-delete-dial
 import { ContactMergeDialog } from "@/features/crm/contacts/detail/contact-merge-dialog";
 import type { Contact, DuplicateContactPair } from "@/types/crm";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
-import { cn } from "@/lib/utils";
 
 export default function ContactsPage() {
   const searchParams = useSearchParams();
@@ -264,9 +263,7 @@ export default function ContactsPage() {
         }
         filters={
           <div className={FILTER_TOOLBAR_ROW}>
-            <div className="w-[220px] max-w-[min(220px,70vw)]">
-              <SearchInput placeholder="Search contacts..." value={search} onValueChange={handleSearchChange} />
-            </div>
+            <SearchInput placeholder="Search contacts..." value={search} onValueChange={handleSearchChange} />
             <CrmOptionSelect
               type="source"
               value={sourceFilter}

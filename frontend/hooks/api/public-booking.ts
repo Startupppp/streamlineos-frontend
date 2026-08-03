@@ -50,6 +50,7 @@ interface ConfirmBookingResponse {
 
 export function useConfirmInterviewBooking(token: string) {
   return useMutation<ConfirmBookingResponse, Error, ConfirmBookingInput>({
+    mutationKey: ["confirm", "interview", "booking"],
     mutationFn: (input) =>
       apiClient.post<ConfirmBookingResponse>(`/public/interview-booking/${token}`, input),
   });

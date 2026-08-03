@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
 import { toast } from "sonner";
-import { apiClient, getApiError } from "@/lib/api-client";
+import { apiClient } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 function isLocalUrl(url: string): boolean {
   if (!url) return false;
@@ -56,7 +56,7 @@ export async function downloadFile(fileUrl: string, fileName?: string): Promise<
     window.URL.revokeObjectURL(blobUrl);
     toast.success("Download started");
   } catch (err) {
-    toast.error(getApiError(err) || "Failed to download file");
+    toast.error(getErrorMessage(err) || "Failed to download file");
   }
 }
 
@@ -67,48 +67,3 @@ function extractFileName(url: string): string {
   return match ? match[1] : lastPart;
 }
 
-export function useFileUrl() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const getUrl = useCallback(async (fileUrl: string): Promise<string | null> => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const url = await getSignedFileUrl(fileUrl);
-      return url;
-    } catch (err) {
-      setError(getApiError(err) || "Failed to get file URL");
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  const view = useCallback(async (fileUrl: string) => {
-    setIsLoading(true);
-    try {
-      await viewFile(fileUrl);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  const download = useCallback(async (fileUrl: string, fileName?: string) => {
-    setIsLoading(true);
-    try {
-      await downloadFile(fileUrl, fileName);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  return {
-    isLoading,
-    error,
-    getUrl,
-    view,
-    download,
-  };
-}

@@ -49,16 +49,6 @@ export interface Contact {
   deal?: { id: number; name: string } | null;
 }
 
-export interface ContactSearchResult {
-  id: number;
-  name: string;
-  email: string | null;
-  phone: string | null;
-  company: string | null;
-  jobTitle: string | null;
-  image: string | null;
-}
-
 export interface ContactFilters {
   search?: string;
   source?: string;
@@ -159,59 +149,7 @@ export interface CreateCrmOrganizationInput {
   description?: string;
 }
 
-export interface ClientHealthItem {
-  label: string;
-  value: number;
-  color: string;
-}
-
-export interface UpcomingRenewal {
-  client: string;
-  value: number;
-  date: string;
-  health: "healthy" | "at_risk" | "critical";
-}
-
-export interface KeyAccount {
-  name: string;
-  revenue: number;
-  health: "healthy" | "at_risk" | "critical";
-  csm: string;
-  since: string;
-}
-
-export interface CustomerInteractionItem {
-  type: "call" | "email" | "meeting" | "ticket" | "escalation";
-  message: string;
-  time: string;
-  person: string;
-}
-
-export interface SupportStats {
-  openTickets: number;
-  avgResolution: string;
-  firstResponse: string;
-  satisfaction: number;
-}
-
 import type { StatWithTrend } from "./deals";
-
-export interface CustomerExecutiveDashboard {
-  customerStats: {
-    totalClients: StatWithTrend;
-    nps: StatWithTrend;
-    csat: StatWithTrend;
-    retention: StatWithTrend;
-  };
-  clientHealth: ClientHealthItem[];
-  upcomingRenewals: UpcomingRenewal[];
-  keyAccounts: KeyAccount[];
-  customerInteractions: CustomerInteractionItem[];
-  supportStats: SupportStats;
-  retentionTimeline: { month: string; value: number }[];
-  csatTimeline: { month: string; value: number }[];
-}
-
 
 export interface SupportDashboardStats {
   openTickets: StatWithTrend;

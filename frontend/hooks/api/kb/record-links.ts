@@ -3,18 +3,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 export type KbPageRecordLink = {
   id: number;
   targetType: string;
   targetId: string | null;
   label: string | null;
-};
-
-export type KbLinkedPage = {
-  pageId: number;
-  title: string;
-  icon: string | null;
 };
 
 export type CreateKbPageRecordLinkInput = {
@@ -24,9 +19,11 @@ export type CreateKbPageRecordLinkInput = {
 };
 
 export function useKbPageRecordLinks(pageId: number) {
+  const canViewPages = useCan("kb:pages:view");
   return useQuery({
     queryKey: queryKeys.kb.pageRecordLinks(pageId),
     queryFn: () => apiClient.get<KbPageRecordLink[]>(`/kb/pages/${pageId}/record-links`),
+    enabled: canViewPages,
     staleTime: 30_000,
   });
 }
@@ -56,17 +53,5 @@ export function useRemoveKbPageRecordLink() {
     onSuccess: (_, params) => {
       void qc.invalidateQueries({ queryKey: queryKeys.kb.pageRecordLinks(params.pageId) });
     },
-  });
-}
-
-export function useKbLinkedPages(targetType: string, targetId: string) {
-  return useQuery({
-    queryKey: queryKeys.kb.recordLinksByRecord(targetType, targetId),
-    queryFn: () =>
-      apiClient.get<KbLinkedPage[]>(
-        `/kb/record-links/by-record?targetType=${encodeURIComponent(targetType)}&targetId=${encodeURIComponent(targetId)}`,
-      ),
-    staleTime: 30_000,
-    enabled: Boolean(targetType && targetId),
   });
 }

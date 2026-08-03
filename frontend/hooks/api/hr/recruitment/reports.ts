@@ -46,6 +46,7 @@ export interface CreateScheduledReportInput {
 
 export function useGenerateReport() {
   return useMutation({
+    mutationKey: ["hr", "recruitment", "reports", "generate"],
     mutationFn: (config: ReportConfig) =>
       apiClient.post<GenerateReportResult>("/hr/recruitment/reports/generate", config),
   });
@@ -62,6 +63,7 @@ export function useScheduledReports() {
 export function useCreateScheduledReport() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "reports", "create-scheduled"],
     mutationFn: (data: CreateScheduledReportInput) =>
       apiClient.post<ScheduledReport>("/hr/recruitment/reports/scheduled", data),
     onSuccess: () => {
@@ -73,6 +75,7 @@ export function useCreateScheduledReport() {
 export function useDeleteScheduledReport() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "reports", "delete-scheduled"],
     mutationFn: (id: number) => apiClient.delete(`/hr/recruitment/reports/scheduled/${id}`),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.hr.scheduledReports() });

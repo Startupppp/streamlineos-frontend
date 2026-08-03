@@ -1,13 +1,3 @@
-import {
-  WIZARD_COL_PAD,
-  WIZARD_COL_PAD_X,
-  WIZARD_COL_PAD_Y,
-} from "@/components/wizard-shell";
-
-export const ONBOARDING_COL_PAD_X = WIZARD_COL_PAD_X;
-export const ONBOARDING_COL_PAD_Y = WIZARD_COL_PAD_Y;
-export const ONBOARDING_COL_PAD = WIZARD_COL_PAD;
-
 export const STEP_IDS = {
   PERSONAL: "personal",
   BANK: "bank",
@@ -49,7 +39,7 @@ export const STEP_GUIDE: Record<StepId, StepGuide> = {
     minutes: 2,
   },
   finish: {
-    why: "After you submit, HR reviews this file while you explore the workspace.",
+    why: "After you submit, HR reviews this file while you explore the organization.",
     minutes: 1,
   },
 };

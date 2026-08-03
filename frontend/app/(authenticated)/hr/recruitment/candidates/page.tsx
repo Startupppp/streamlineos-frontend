@@ -1,7 +1,7 @@
 "use client";
 
 import { getErrorMessage } from "@/lib/get-error-message";
-import React, {
+import {
   useState,
   useCallback,
   useMemo,
@@ -41,7 +41,7 @@ import { AddCandidateSheet } from "@/features/hr/recruitment/candidates-list/add
 import { EditCandidateSheet } from "@/features/hr/recruitment/candidates-list/edit-candidate-sheet";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ErrorState } from "@/components/shared/error-state";
-import { RecruitmentListPagination } from "@/features/hr/recruitment/components/recruitment-list-pagination";
+import { TablePagination } from "@/components/ui/table-pagination";
 import {
   CandidateCard,
   CandidateCardSkeleton,
@@ -109,7 +109,7 @@ export default function CandidatesPage() {
   }, [debouncedSearch, setFilter]);
 
   // Search is server-side via the `search` query param.
-  const filteredCandidates = candidates ?? [];
+  const filteredCandidates = useMemo(() => candidates ?? [], [candidates]);
 
   const stageCounts = useMemo(() => {
     const counts = candidatesPage?.statusCounts;
@@ -237,9 +237,7 @@ export default function CandidatesPage() {
         subtitle="Manage and track your recruiting pipeline"
         filters={
           <div className={FILTER_TOOLBAR_ROW}>
-            <div className="min-w-0 w-[200px]">
-              <SearchInput placeholder="Search candidates…" value={searchQuery} onValueChange={handleSearchChange} />
-            </div>
+            <SearchInput placeholder="Search candidates…" value={searchQuery} onValueChange={handleSearchChange} />
             <FilterPillGroup>
               <FilterPill active={!statusFilter} onClick={handleClearStatusFilter}>
                 All · {candidates?.length ?? 0}
@@ -388,11 +386,10 @@ export default function CandidatesPage() {
                 />
               ))}
             </div>
-            <RecruitmentListPagination
+            <TablePagination
               page={candidatesPage?.page ?? 1}
               pageSize={candidatesPage?.pageSize ?? 24}
               total={candidatesPage?.total ?? 0}
-              totalPages={candidatesPage?.totalPages ?? 1}
               onPageChange={(p) => setFilter("page", p <= 1 ? null : String(p))}
             />
           </>

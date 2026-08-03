@@ -49,6 +49,42 @@ export function useHrDocumentStats(options?: { enabled?: boolean }) {
   });
 }
 
+export type MyOnboardingDocStatus =
+  | "PENDING"
+  | "SUBMITTED"
+  | "APPROVED"
+  | "REJECTED"
+  | "RE_UPLOAD_REQUESTED";
+
+export interface MyOnboardingDoc {
+  id: number;
+  documentTypeId: number;
+  documentTypeName: string;
+  isMandatory: boolean | null;
+  status: MyOnboardingDocStatus;
+  remarks: string | null;
+  version: number | null;
+  createdAt: string | null;
+}
+
+interface MyOnboardingDocsResponse {
+  data: MyOnboardingDoc[];
+  pagination: { page: number; limit: number; total: number; totalPages: number };
+}
+
+const MY_DOCS_LIMIT = 100;
+
+export function useMyOnboardingDocs(options?: { enabled?: boolean }) {
+  const params = { page: 1, limit: MY_DOCS_LIMIT };
+  return useQuery({
+    queryKey: queryKeys.hr.onboardingDocs(params),
+    queryFn: () =>
+      apiClient.get<MyOnboardingDocsResponse>("/hr/onboarding-docs/me", params),
+    staleTime: 60_000,
+    enabled: options?.enabled ?? true,
+  });
+}
+
 interface OnboardingDocsSummaryTotals {
   pagination: { total: number };
 }

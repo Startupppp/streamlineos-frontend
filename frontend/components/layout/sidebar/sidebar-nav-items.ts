@@ -1,4 +1,4 @@
-import {
+﻿import {
   LayoutDashboard,
   Users,
   Briefcase,
@@ -44,6 +44,7 @@ import {
   Zap,
   ListChecks,
   History,
+  LogIn,
   BarChart2,
   LifeBuoy,
   Inbox,
@@ -99,6 +100,8 @@ import {
   PackageCheck,
   DollarSign,
 } from "lucide-react";
+import { matchesOrgModule } from "@/lib/module-vocabulary";
+import { ROLES } from "@/lib/constants/roles";
 
 export interface NavRoute {
   label: string;
@@ -662,6 +665,12 @@ export const NAV_GROUPS: NavGroup[] = [
         requiredPermission: "hr:employees:view",
       },
       {
+        label: "Access",
+        icon: ShieldCheck,
+        href: "/hr/access",
+        requiredPermission: "hr:access:view",
+      },
+      {
         label: "Settings",
         icon: SlidersHorizontal,
         href: "/hr/settings/import-export",
@@ -931,6 +940,12 @@ export const NAV_GROUPS: NavGroup[] = [
         requiredPermission: "payroll:reports:view",
       },
       {
+        label: "Access",
+        icon: ShieldCheck,
+        href: "/payroll/access",
+        requiredPermission: "payroll:access:view",
+      },
+      {
         label: "Settings",
         icon: SlidersHorizontal,
         href: "/payroll/settings",
@@ -1082,6 +1097,12 @@ export const NAV_GROUPS: NavGroup[] = [
             href: "/crm/analytics",
           },
         ],
+      },
+      {
+        label: "Access",
+        icon: ShieldCheck,
+        href: "/crm/access",
+        requiredPermission: "crm:access:view",
       },
       {
         label: "Settings",
@@ -1491,6 +1512,12 @@ export const NAV_GROUPS: NavGroup[] = [
         ],
       },
       {
+        label: "Access",
+        icon: ShieldCheck,
+        href: "/accounting/access",
+        requiredPermission: "accounting:access:view",
+      },
+      {
         label: "Settings",
         icon: SlidersHorizontal,
         href: "/accounting/settings",
@@ -1756,6 +1783,12 @@ export const NAV_GROUPS: NavGroup[] = [
         href: "/inventory/settings",
         requiredPermission: "inventory:settings:manage",
       },
+      {
+        label: "Access",
+        icon: ShieldCheck,
+        href: "/inventory/access",
+        requiredPermission: "inventory:access:view",
+      },
     ],
   },
   {
@@ -1770,6 +1803,7 @@ export const NAV_GROUPS: NavGroup[] = [
       "timesheets:payroll:view",
       "timesheets:reports:view",
       "timesheets:settings:view",
+      "timesheets:access:view",
     ],
     routes: [
       {
@@ -1821,118 +1855,150 @@ export const NAV_GROUPS: NavGroup[] = [
         href: "/timesheets/settings",
         requiredPermission: "timesheets:settings:view",
       },
+      {
+        label: "Access",
+        icon: ShieldCheck,
+        href: "/timesheets/access",
+        requiredPermission: "timesheets:access:view",
+      },
     ],
   },
   {
-    label: "Projects",
-    module: "projects",
-    requiredPermission: ["projects:view", "projects:tickets:view"],
+    label: "Build",
+    module: "build",
+    requiredPermission: ["build:view", "build:tickets:view"],
     routes: [
       {
         label: "Home",
         icon: LayoutDashboard,
-        href: "/projects/command-center",
-        requiredPermission: "projects:view",
+        href: "/build/command-center",
+        requiredPermission: "build:view",
       },
       {
         label: "Inbox",
         icon: Inbox,
-        href: "/projects/inbox",
-        requiredPermission: "projects:tickets:view",
+        href: "/build/inbox",
+        requiredPermission: "build:tickets:view",
       },
       {
         label: "My issues",
         icon: CheckSquare,
-        href: "/projects/my-work",
-        requiredPermission: "projects:tickets:view",
+        href: "/build/my-work",
+        requiredPermission: "build:tickets:view",
       },
       {
         label: "Drafts",
         icon: FileText,
-        href: "/projects/drafts",
-        requiredPermission: "projects:tickets:view",
+        href: "/build/drafts",
+        requiredPermission: "build:tickets:view",
       },
       {
         label: "All issues",
         icon: Layers,
-        href: "/projects/all-work",
-        requiredPermission: "projects:tickets:view",
+        href: "/build/all-work",
+        requiredPermission: "build:tickets:view",
       },
       {
         label: "Projects",
         icon: Briefcase,
-        href: "/projects",
+        href: "/build",
         exact: true,
-        requiredPermission: "projects:view",
+        requiredPermission: "build:view",
       },
       {
         label: "Teams",
         icon: Network,
-        href: "/projects/teams",
-        requiredPermission: "projects:teams:view",
+        href: "/build/teams",
+        requiredPermission: "build:teams:view",
       },
       {
         label: "Members",
         icon: Users,
-        href: "/projects/members",
-        requiredPermission: "projects:view",
+        href: "/build/members",
+        requiredPermission: "build:view",
       },
       {
         label: "Customers",
         icon: Building2,
-        href: "/projects/customers",
+        href: "/build/customers",
         requiredPermission: "crm:leads:view",
       },
     ],
   },
   {
     label: "More",
-    module: "projects",
+    module: "build",
     defaultCollapsed: true,
     requiredPermission: [
-      "projects:roadmap:view",
-      "projects:goals:view",
-      "projects:portfolios:view",
-      "projects:approvals:view",
-      "projects:create",
+      "build:roadmap:view",
+      "build:goals:view",
+      "build:portfolios:view",
+      "build:managed-products:view",
+      "build:workspaces:view",
+      "build:approvals:view",
+      "build:create",
       "settings:manage",
     ],
     routes: [
       {
         label: "Roadmap",
         icon: Map,
-        href: "/projects/roadmap",
-        requiredPermission: "projects:roadmap:view",
+        href: "/build/roadmap",
+        requiredPermission: "build:roadmap:view",
       },
       {
         label: "Goals",
         icon: Target,
-        href: "/projects/goal",
-        requiredPermission: "projects:goals:view",
+        href: "/build/goal",
+        requiredPermission: "build:goals:view",
       },
       {
         label: "Portfolios",
         icon: LayoutGrid,
-        href: "/projects/portfolios",
-        requiredPermission: "projects:portfolios:view",
+        href: "/build/portfolios",
+        requiredPermission: "build:portfolios:view",
+      },
+      {
+        label: "Programs",
+        icon: Layers,
+        href: "/build/programs",
+        requiredPermission: "build:programs:view",
+      },
+      {
+        label: "Managed Products",
+        icon: Layers,
+        href: "/build/managed-products",
+        requiredPermission: "build:managed-products:view",
+      },
+      {
+        label: "PM Workspaces",
+        icon: Boxes,
+        href: "/build/pm-workspaces",
+        requiredPermission: "build:workspaces:view",
       },
       {
         label: "Approvals",
         icon: ClipboardCheck,
-        href: "/projects/approvals",
-        requiredPermission: "projects:approvals:view",
+        href: "/build/approvals",
+        requiredPermission: "build:approvals:view",
       },
       {
         label: "Templates",
         icon: LayoutTemplate,
-        href: "/projects/templates",
-        requiredPermission: "projects:create",
+        href: "/build/templates",
+        requiredPermission: "build:create",
       },
       {
         label: "Settings",
         icon: Plug,
-        href: "/projects/settings/integrations",
+        href: "/build/settings/integrations",
         requiredPermission: "settings:manage",
+      },
+      {
+        label: "Access",
+        icon: ShieldCheck,
+        href: "/build/access",
+        requiredPermission: "build:access:view",
       },
     ],
   },
@@ -1940,7 +2006,7 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "Support",
     module: "helpdesk",
     requiredPermission: [
-      "projects:tickets:view",
+      "build:tickets:view",
       "support:kb:view",
       "support:portal:tickets:view",
     ],
@@ -1949,13 +2015,13 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "All Tickets",
         icon: LifeBuoy,
         href: "/support",
-        requiredPermission: "projects:tickets:view",
+        requiredPermission: "build:tickets:view",
         children: [
           {
             label: "Support Inbox",
             icon: Inbox,
             href: "/support/inbox",
-            requiredPermission: "projects:tickets:view",
+            requiredPermission: "build:tickets:view",
           },
         ],
       },
@@ -1982,6 +2048,12 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: BarChart3,
         href: "/support/reports",
         requiredPermission: "support:reports:view",
+      },
+      {
+        label: "Access",
+        icon: ShieldCheck,
+        href: "/support/access",
+        requiredPermission: "support:access:view",
       },
       {
         label: "Settings",
@@ -2066,6 +2138,12 @@ export const NAV_GROUPS: NavGroup[] = [
         requiredPermission: "sign:audit:view",
       },
       {
+        label: "Access",
+        icon: ShieldCheck,
+        href: "/sign/access",
+        requiredPermission: "sign:access:view",
+      },
+      {
         label: "Settings",
         icon: SlidersHorizontal,
         href: "/sign/settings",
@@ -2079,15 +2157,15 @@ export const NAV_GROUPS: NavGroup[] = [
     requiredPermission: ["kb:pages:view"],
     routes: [
       {
-        label: "Wiki",
-        icon: NotebookPen,
-        href: "/knowledge",
+        label: "Ask KB",
+        icon: Library,
+        href: "/knowledge/chat",
         requiredPermission: "kb:pages:view",
       },
       {
-        label: "Knowledge Base",
-        icon: Library,
-        href: "/knowledge-base",
+        label: "Wiki",
+        icon: NotebookPen,
+        href: "/knowledge/wiki",
         requiredPermission: "kb:pages:view",
       },
     ],
@@ -2103,22 +2181,34 @@ export const NAV_GROUPS: NavGroup[] = [
         href: "/surveys",
         requiredPermission: "surveys:view",
       },
-    ],
-  },
-  {
-    label: "Workspace",
-    requiredPermission: "settings:manage",
-    routes: [
       {
-        label: "Workspace Settings",
-        icon: Building2,
-        href: "/settings/organization",
-        requiredPermission: "settings:manage",
+        label: "Access",
+        icon: ShieldCheck,
+        href: "/surveys/access",
+        requiredPermission: "surveys:access:view",
       },
     ],
   },
   {
     label: "Organization",
+    requiredPermission: ["settings:manage", "ownership:transfer:respond"],
+    routes: [
+      {
+        label: "Organization Settings",
+        icon: Building2,
+        href: "/settings/organization",
+        requiredPermission: "settings:manage",
+      },
+      {
+        label: "Incoming Transfer",
+        icon: ArrowLeftRight,
+        href: "/settings/incoming-transfer",
+        requiredPermission: "ownership:transfer:respond",
+      },
+    ],
+  },
+  {
+    label: "Structure",
     module: "hrms",
     requiredPermission: ["settings:manage", "settings:view"],
     routes: [
@@ -2174,33 +2264,62 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    label: "People",
-    requiredPermission: "hr:employees:view",
+    label: "Membership",
+    requiredPermission: "settings:view",
     routes: [
       {
-        label: "Users",
+        label: "Members",
         icon: UserCog,
         href: "/users",
         exact: true,
-        requiredPermission: "hr:employees:view",
+        requiredPermission: "settings:view",
       },
       {
         label: "Invitations",
         icon: MailOpen,
         href: "/users/invitations",
-        requiredPermission: "hr:employees:view",
+        requiredPermission: "settings:view",
+      },
+    ],
+  },
+  {
+    label: "People",
+    requiredPermission: "directory:people:view",
+    routes: [
+      {
+        label: "People Directory",
+        icon: Contact2,
+        href: "/directory",
+        exact: true,
+        requiredPermission: "directory:people:view",
+      },
+    ],
+  },
+  {
+    label: "Directory",
+    requiredPermission: [
+      "workforce:workers:view",
+      "party:parties:view",
+      "build:portal:view",
+    ],
+    routes: [
+      {
+        label: "Workers",
+        icon: Briefcase,
+        href: "/directory/workers",
+        requiredPermission: "workforce:workers:view",
       },
       {
-        label: "Suspended Users",
-        icon: ShieldAlert,
-        href: "/users/suspended",
-        requiredPermission: "hr:employees:view",
+        label: "Business Parties",
+        icon: Building2,
+        href: "/parties",
+        requiredPermission: "party:parties:view",
       },
       {
-        label: "Archived Users",
-        icon: UserX,
-        href: "/users/archived",
-        requiredPermission: "hr:employees:view",
+        label: "Client Access",
+        icon: ShieldCheck,
+        href: "/client-access",
+        requiredPermission: "build:portal:view",
       },
     ],
   },
@@ -2209,21 +2328,9 @@ export const NAV_GROUPS: NavGroup[] = [
     requiredPermission: ["settings:rbac:manage", "settings:manage"],
     routes: [
       {
-        label: "Roles",
+        label: "Roles & Permissions",
         icon: Shield,
         href: "/settings/roles",
-        requiredPermission: "settings:rbac:manage",
-      },
-      {
-        label: "Permission Matrix",
-        icon: ShieldAlert,
-        href: "/settings/permissions",
-        requiredPermission: "settings:rbac:manage",
-      },
-      {
-        label: "Role Assignment",
-        icon: UserCheck,
-        href: "/settings/rbac",
         requiredPermission: "settings:rbac:manage",
       },
       {
@@ -2270,12 +2377,6 @@ export const NAV_GROUPS: NavGroup[] = [
     requiredPermission: "settings:manage",
     routes: [
       {
-        label: "Password Policy",
-        icon: Lock,
-        href: "/settings/security",
-        requiredPermission: "settings:manage",
-      },
-      {
         label: "Session Policy",
         icon: Clock,
         href: "/settings/sessions",
@@ -2289,7 +2390,7 @@ export const NAV_GROUPS: NavGroup[] = [
       },
       {
         label: "Login History",
-        icon: History,
+        icon: LogIn,
         href: "/settings/login-history",
         requiredPermission: "settings:manage",
       },
@@ -2359,7 +2460,7 @@ export function getNavGroupsForUser(
 ): NavGroup[] {
   if (!role) return [];
 
-  const isOwner = role === "OWNER";
+  const isOwner = role === ROLES.OWNER;
   const granted = new Set(permissions ?? []);
 
   return NAV_GROUPS.filter(
@@ -2376,10 +2477,6 @@ export function getNavGroupsForUser(
       if (isOwner) return true;
       return matchesPermission(group.requiredPermission, granted);
     });
-}
-
-export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
-  return getNavGroupsForUser(role, role === "OWNER" ? undefined : []);
 }
 
 export function flattenNavRoutes(routes: NavRoute[]): NavRoute[] {
@@ -2413,14 +2510,20 @@ export function countProductNavLeaves(navGroups: NavGroup[]): number {
 }
 
 export function shouldHideProductSidebar(navGroups: NavGroup[]): boolean {
-  return countProductNavLeaves(navGroups) <= 1;
+  return countProductNavLeaves(navGroups) === 0;
+}
+
+export function isKnowledgeWikiPath(pathname: string): boolean {
+  return (
+    pathname === "/knowledge/wiki" || pathname.startsWith("/knowledge/wiki/")
+  );
 }
 
 export type ProductKey =
   | "home"
   | "crm"
   | "hrms"
-  | "projects"
+  | "build"
   | "timesheets"
   | "inventory"
   | "finance"
@@ -2442,7 +2545,7 @@ export const PRODUCT_DEFINITIONS: ProductDefinition[] = [
   { key: "home", label: "Home", href: "/dashboard", icon: LayoutDashboard },
   { key: "crm", label: "CRM", href: "/crm", icon: Handshake },
   { key: "hrms", label: "HRMS", href: "/hr", icon: Users },
-  { key: "projects", label: "Projects", href: "/projects", icon: Briefcase },
+  { key: "build", label: "Build", href: "/build", icon: Briefcase },
   { key: "timesheets", label: "Timesheets", href: "/timesheets", icon: Timer },
   { key: "inventory", label: "Inventory", href: "/inventory", icon: Package },
   { key: "finance", label: "Finance", href: "/accounting", icon: Calculator },
@@ -2450,13 +2553,13 @@ export const PRODUCT_DEFINITIONS: ProductDefinition[] = [
   {
     key: "documents",
     label: "Documents",
-    href: "/knowledge",
+    href: "/knowledge/chat",
     icon: Library,
   },
   { key: "surveys", label: "Surveys", href: "/surveys", icon: ClipboardList },
   {
     key: "administration",
-    label: "Settings",
+    label: "Administration",
     href: "/organization",
     icon: Building2,
   },
@@ -2473,7 +2576,7 @@ export const PRODUCT_DESCRIPTIONS: Record<ProductKey, string> = {
   home: "Overview & activity",
   crm: "Leads, deals & contacts",
   hrms: "People & payroll",
-  projects: "Plan & deliver work",
+  build: "Plan & deliver work",
   timesheets: "Track, approve & bill time",
   inventory: "Stock & orders",
   finance: "Accounts & books",
@@ -2511,7 +2614,7 @@ export const MODULE_ACCENTS: Record<ProductKey, ModuleAccent> = {
     indicator: "bg-emerald-600 dark:bg-emerald-500",
     border: "border-emerald-600 dark:border-emerald-500",
   },
-  projects: {
+  build: {
     text: "!text-violet-600 dark:!text-violet-400",
     bg: "bg-violet-50 dark:bg-violet-950/40",
     indicator: "bg-violet-600 dark:bg-violet-500",
@@ -2577,17 +2680,19 @@ const PRODUCT_NAV_GROUP_LABELS: Record<ProductKey, string[]> = {
   home: [],
   crm: ["CRM"],
   hrms: ["HR – People", "Recruitment"],
-  projects: ["Projects", "More"],
+  build: ["Build", "More"],
   timesheets: ["Timesheets"],
   inventory: ["Inventory"],
   finance: ["Accounting & Finance"],
   helpdesk: ["Support"],
-  documents: [],
+  documents: ["Knowledge"],
   surveys: ["Surveys"],
   administration: [
-    "Workspace",
     "Organization",
+    "Structure",
     "People",
+    "Membership",
+    "Directory",
     "Access Control",
     "Subscription",
     "Platform",
@@ -2607,63 +2712,106 @@ export function withoutHrSetupRoute(groups: NavGroup[]): NavGroup[] {
     .filter((group) => group.routes.length > 0);
 }
 
+const HOME_OVERVIEW_GROUP: NavGroup = {
+  label: "Overview",
+  routes: [
+    { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { label: "Mail", href: "/mail", icon: Inbox },
+    { label: "Calendar", href: "/calendar", icon: CalendarDays },
+    { label: "Chat", href: "/chat", icon: MessageSquareText },
+    { label: "Notifications", href: "/notifications", icon: Bell },
+    {
+      label: "Leave",
+      href: "/hr/leaves",
+      icon: CalendarCheck,
+      badge: "leaves" as const,
+      requiredPermission: "hr:leaves:view",
+      module: "hrms",
+    },
+    {
+      label: "Attendance",
+      href: "/hr/attendance",
+      icon: Clock,
+      requiredPermission: "hr:attendance:view",
+      module: "hrms",
+    },
+    {
+      label: "My Payroll",
+      href: "/payroll/me",
+      icon: Wallet,
+      requiredPermission: ["self:payroll", "self:payslips"],
+      module: "payroll",
+    },
+    {
+      label: "Expenses",
+      href: "/hr/expenses",
+      icon: Receipt,
+      requiredPermission: "hr:expenses:view",
+      module: "finance",
+    },
+    {
+      label: "Documents",
+      href: "/hr/documents",
+      icon: FileText,
+      requiredPermission: "hr:documents:view",
+      module: "hrms",
+    },
+    {
+      label: "Interviews",
+      href: "/hr/recruitment/interviews",
+      icon: Video,
+      requiredPermission: "hr:interviews:view",
+      module: "hrms",
+    },
+    {
+      label: "Announcements",
+      href: "/hr/announcements",
+      icon: Megaphone,
+      requiredPermission: "hr:employees:view",
+      module: "hrms",
+    },
+  ],
+};
+
+function getHomeNavGroups(
+  role: string | undefined,
+  permissions: string[] | undefined,
+  enabledModules: string[],
+): NavGroup[] {
+  const isOwner = role === ROLES.OWNER;
+  const granted = new Set(permissions ?? []);
+
+  const routes = HOME_OVERVIEW_GROUP.routes
+    .map((r) => filterRoute(r, isOwner, granted, enabledModules))
+    .filter((r): r is NavRoute => r !== null);
+
+  return [{ ...HOME_OVERVIEW_GROUP, routes }];
+}
+
 export function getNavGroupsForProduct(
   productKey: ProductKey,
   role: string | undefined,
   permissions: string[] | undefined,
   enabledModules: string[] = [],
 ): NavGroup[] {
-  if (productKey === "home") {
-    return [
-      {
-        label: "Overview",
-        routes: [
-          { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-          { label: "Mail", href: "/mail", icon: Inbox },
-          { label: "Calendar", href: "/calendar", icon: CalendarDays },
-          { label: "Chat", href: "/chat", icon: MessageSquareText },
-          { label: "Notifications", href: "/notifications", icon: Bell },
-        ],
-      },
-    ];
-  }
-  if (productKey === "documents") {
-    const isOwner = role === "OWNER";
-    const granted = new Set(permissions ?? []);
-    const documentRoutes = [
-      {
-        label: "Wiki",
-        icon: NotebookPen,
-        href: "/knowledge",
-      },
-      {
-        label: "Knowledge Base",
-        icon: Library,
-        href: "/knowledge-base",
-      },
-    ];
-    const visibleRoutes = documentRoutes
-      .map((route) => filterRoute(route, isOwner, granted, enabledModules))
-      .filter((route): route is NavRoute => route !== null);
-    if (visibleRoutes.length === 0) return [];
-    return [{ label: "Documents", routes: visibleRoutes }];
-  }
+  if (productKey === "home")
+    return getHomeNavGroups(role, permissions, enabledModules);
 
   const allGroups = getNavGroupsForUser(role, permissions, enabledModules);
   const labels = PRODUCT_NAV_GROUP_LABELS[productKey];
   return allGroups.filter((g) => labels.includes(g.label));
 }
 
-const MODULE_KEY_MAP: Partial<Record<ProductKey, string>> = {
-  crm: "CRM",
-  hrms: "HR",
-  projects: "PROJECTS",
-  inventory: "INVENTORY",
-  finance: "FINANCE",
-  helpdesk: "HELPDESK",
-  surveys: "SURVEYS",
-  payroll: "PAYROLL",
-  sign: "SIGN",
+const PRODUCT_MODULE_KEY: Partial<Record<ProductKey, string>> = {
+  crm: "crm",
+  hrms: "hr",
+  build: "build",
+  inventory: "inventory",
+  finance: "accounting",
+  helpdesk: "support",
+  surveys: "surveys",
+  payroll: "payroll",
+  sign: "sign",
 };
 
 export function isModuleEnabled(
@@ -2672,12 +2820,29 @@ export function isModuleEnabled(
 ): boolean {
   if (key === "home" || key === "administration") return true;
   if (enabledModules.length === 0) return true;
-  const moduleName = MODULE_KEY_MAP[key];
-  if (!moduleName) return true;
-  return enabledModules.map((m) => m.toUpperCase()).includes(moduleName);
+  const moduleKey = PRODUCT_MODULE_KEY[key];
+  if (!moduleKey) return true;
+  return matchesOrgModule(enabledModules, moduleKey);
 }
 
+const MODULE_KEY_TO_PRODUCT: Record<string, ProductKey> = {
+  hr: "hrms",
+  crm: "crm",
+  build: "build",
+  inventory: "inventory",
+  payroll: "payroll",
+  timesheets: "timesheets",
+  support: "helpdesk",
+  sign: "sign",
+};
+
 export function getProductFromPathname(pathname: string): ProductKey {
+  if (pathname.startsWith("/settings/module-access/")) {
+    const moduleKey = pathname.split("/")[3];
+    const product = moduleKey ? MODULE_KEY_TO_PRODUCT[moduleKey] : undefined;
+    if (product) return product;
+  }
+
   if (
     pathname === "/dashboard" ||
     pathname === "/" ||
@@ -2696,7 +2861,7 @@ export function getProductFromPathname(pathname: string): ProductKey {
   if (pathname.startsWith("/hr") || pathname.startsWith("/recruitment"))
     return "hrms";
   if (pathname.startsWith("/timesheets")) return "timesheets";
-  if (pathname.startsWith("/projects")) return "projects";
+  if (pathname.startsWith("/build")) return "build";
   if (pathname.startsWith("/inventory")) return "inventory";
   if (pathname.startsWith("/accounting")) return "finance";
   if (pathname.startsWith("/support/kb")) return "documents";
@@ -2709,7 +2874,10 @@ export function getProductFromPathname(pathname: string): ProductKey {
     pathname.startsWith("/organization") ||
     pathname.startsWith("/users") ||
     pathname.startsWith("/settings") ||
-    pathname.startsWith("/billing")
+    pathname.startsWith("/billing") ||
+    pathname.startsWith("/directory") ||
+    pathname.startsWith("/parties") ||
+    pathname.startsWith("/client-access")
   )
     return "administration";
   return "home";

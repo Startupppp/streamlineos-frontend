@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { SurveyStatusBadge } from "@/features/surveys/list/survey-status-badge";
 import { SURVEY_MODE_META } from "@/features/surveys/shared/survey-mode-meta";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   usePublishSurvey,
   usePauseSurvey,
@@ -41,7 +41,7 @@ export function SurveyBuilderHeader({ survey }: { survey: SurveyForm }) {
       await publish.mutateAsync(survey.id);
       toast.success("Survey published");
     } catch (error) {
-      toast.error(getApiError(error));
+      toast.error(getErrorMessage(error));
     }
   }, [publish, survey.id]);
 
@@ -50,7 +50,7 @@ export function SurveyBuilderHeader({ survey }: { survey: SurveyForm }) {
       await pause.mutateAsync(survey.id);
       toast.success("Survey paused");
     } catch (error) {
-      toast.error(getApiError(error));
+      toast.error(getErrorMessage(error));
     }
   }, [pause, survey.id]);
 
@@ -59,7 +59,7 @@ export function SurveyBuilderHeader({ survey }: { survey: SurveyForm }) {
       await close.mutateAsync(survey.id);
       toast.success("Survey closed");
     } catch (error) {
-      toast.error(getApiError(error));
+      toast.error(getErrorMessage(error));
     }
   }, [close, survey.id]);
 
@@ -68,7 +68,7 @@ export function SurveyBuilderHeader({ survey }: { survey: SurveyForm }) {
       await archive.mutateAsync(survey.id);
       toast.success("Survey archived");
     } catch (error) {
-      toast.error(getApiError(error));
+      toast.error(getErrorMessage(error));
     }
   }, [archive, survey.id]);
 
@@ -78,7 +78,7 @@ export function SurveyBuilderHeader({ survey }: { survey: SurveyForm }) {
       toast.success("Survey duplicated");
       router.push(`/surveys/${copy.id}`);
     } catch (error) {
-      toast.error(getApiError(error));
+      toast.error(getErrorMessage(error));
     }
   }, [duplicate, survey.id, router]);
 
@@ -87,7 +87,7 @@ export function SurveyBuilderHeader({ survey }: { survey: SurveyForm }) {
       const session = await createLiveSession.mutateAsync();
       router.push(`/surveys/live/${session.id}/host`);
     } catch (error) {
-      toast.error(getApiError(error));
+      toast.error(getErrorMessage(error));
     }
   }, [createLiveSession, router]);
 

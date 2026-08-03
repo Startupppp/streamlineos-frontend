@@ -1,5 +1,6 @@
-"use client";
+﻿"use client";
 
+import { LoadingButton } from "@/components/ui/loading-button";
 import { useState, useCallback, useMemo, useTransition, useEffect } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
@@ -30,6 +31,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ErrorState } from "@/components/shared/error-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
@@ -41,7 +43,7 @@ import {
 } from "@/hooks/api/users";
 import type { User } from "@/hooks/api/users";
 import { useOrgBranches, useOrgDepartments } from "@/hooks/api/org-hierarchy";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { UserStatusBadge } from "./user-status-badge";
 import { UserDetailSheet } from "./user-detail-sheet";
 import { UserInviteDialog } from "./user-invite-dialog";
@@ -65,8 +67,35 @@ import { EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { formatDistanceToNow } from "date-fns";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
+import { getUserDisplayName, getUserInitials } from "@/features/build/shared/resolve-user-name";
 import { useCan } from "@/hooks/api/access";
+import { USER_STRUCTURAL_ROLES, formatRoleLabel } from "@/features/users/user-invite-roles";
+
+type BulkAction = "suspend" | "archive";
+
+function assertNever(value: never): never {
+  throw new Error(`Unhandled bulk action: ${String(value)}`);
+}
+
+function getBulkActionCopy(action: BulkAction, count: number) {
+  const subject = `${count} user${count === 1 ? "" : "s"}`;
+  switch (action) {
+    case "suspend":
+      return {
+        title: `Suspend ${subject}?`,
+        description: `${subject} will lose access immediately. Their data and membership are retained and they can be reactivated at any time. Organization owners and module owners in the selection will be skipped.`,
+        confirmLabel: "Suspend",
+      };
+    case "archive":
+      return {
+        title: `Archive ${subject}?`,
+        description: `${subject} will be archived and lose access. Their data and membership are retained and they can be restored at any time. Organization owners and module owners in the selection will be skipped.`,
+        confirmLabel: "Archive",
+      };
+    default:
+      return assertNever(action);
+  }
+}
 
 export function UsersPage() {
   const router = useRouter();
@@ -155,8 +184,8 @@ export function UsersPage() {
           ? (status as "active" | "suspended" | "archived")
           : undefined,
       role: role !== "all" ? role : undefined,
-      departmentId: departmentId !== "all" ? Number(departmentId) : undefined,
-      branchId: branchId !== "all" ? Number(branchId) : undefined,
+      departmentId: departmentId !== "all" ? departmentId : undefined,
+      branchId: branchId !== "all" ? branchId : undefined,
       sortBy,
       sortOrder,
     },
@@ -169,26 +198,30 @@ export function UsersPage() {
   const { mutate: bulkSuspend, isPending: isSuspending } = useBulkSuspend();
   const { mutate: bulkArchive, isPending: isArchiving } = useBulkArchive();
   const { mutate: bulkRestore, isPending: isRestoring } = useBulkRestore();
+  const [pendingBulkAction, setPendingBulkAction] = useState<BulkAction | null>(null);
   const canCreate = useCan("hr:employees:create");
   const canManage = useCan("hr:employees:manage");
   const canExport = useCan("hr:export:manage");
 
   const branchMap = useMemo(() => {
-    const m = new Map<number, string>();
-    for (const b of branchesData?.data ?? []) m.set(Number(b.id), b.name);
+    const m = new Map<string, string>();
+    for (const b of branchesData?.data ?? []) m.set(String(b.id), b.name);
     return m;
   }, [branchesData]);
 
   const deptMap = useMemo(() => {
-    const m = new Map<number, string>();
-    for (const d of departmentsData?.data ?? []) m.set(Number(d.id), d.name);
+    const m = new Map<string, string>();
+    for (const d of departmentsData?.data ?? []) m.set(String(d.id), d.name);
     return m;
   }, [departmentsData]);
 
   const users = data?.data ?? [];
   const pagination = data?.pagination;
+  const selectableUsers = useMemo(() => users.filter((u) => !u.isOwner), [users]);
+  const ownerCount = users.length - selectableUsers.length;
   const someSelected = selectedIds.size > 0;
-  const allSelected = users.length > 0 && users.every((u) => selectedIds.has(u.id));
+  const allSelected =
+    selectableUsers.length > 0 && selectableUsers.every((u) => selectedIds.has(u.id));
   const bulkIsPending = isSuspending || isArchiving || isRestoring;
 
   function handleRowClick(user: User) {
@@ -196,15 +229,39 @@ export function UsersPage() {
     setSheetOpen(true);
   }
 
+  function handleRequestBulkSuspend() {
+    setPendingBulkAction("suspend");
+  }
+
+  function handleRequestBulkArchive() {
+    setPendingBulkAction("archive");
+  }
+
+  function handleBulkDialogOpenChange(open: boolean) {
+    if (!open) setPendingBulkAction(null);
+  }
+
+  function handleConfirmBulkAction() {
+    if (pendingBulkAction === "suspend") handleBulkSuspend();
+    else if (pendingBulkAction === "archive") handleBulkArchive();
+    setPendingBulkAction(null);
+  }
+
   function handleBulkSuspend() {
     bulkSuspend(
       { userIds: Array.from(selectedIds) },
       {
         onSuccess: (r) => {
-          toast.success(`${r.succeeded} user(s) suspended`);
+          if (r.failed > 0 && r.succeeded === 0) 
+            toast.error(`Failed to suspend ${r.failed} user(s)`);
+          else if (r.failed > 0) 
+            toast.warning(`${r.succeeded} user(s) suspended; ${r.failed} could not be updated`);
+          else 
+            toast.success(`${r.succeeded} user(s) suspended`);
+          
           setSelectedIds(new Set());
         },
-        onError: (e) => toast.error(getApiError(e)),
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }
@@ -214,10 +271,16 @@ export function UsersPage() {
       { userIds: Array.from(selectedIds) },
       {
         onSuccess: (r) => {
-          toast.success(`${r.succeeded} user(s) archived`);
+          if (r.failed > 0 && r.succeeded === 0) {
+            toast.error(`Failed to archive ${r.failed} user(s)`);
+          } else if (r.failed > 0) {
+            toast.warning(`${r.succeeded} user(s) archived; ${r.failed} could not be updated`);
+          } else {
+            toast.success(`${r.succeeded} user(s) archived`);
+          }
           setSelectedIds(new Set());
         },
-        onError: (e) => toast.error(getApiError(e)),
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }
@@ -227,10 +290,16 @@ export function UsersPage() {
       { userIds: Array.from(selectedIds) },
       {
         onSuccess: (r) => {
-          toast.success(`${r.succeeded} user(s) restored`);
+          if (r.failed > 0 && r.succeeded === 0) {
+            toast.error(`Failed to restore ${r.failed} user(s)`);
+          } else if (r.failed > 0) {
+            toast.warning(`${r.succeeded} user(s) restored; ${r.failed} could not be updated`);
+          } else {
+            toast.success(`${r.succeeded} user(s) restored`);
+          }
           setSelectedIds(new Set());
         },
-        onError: (e) => toast.error(getApiError(e)),
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }
@@ -300,7 +369,7 @@ export function UsersPage() {
       header: "Role",
       cell: (user) => (
         <Badge variant="secondary" className="text-[10px] h-4 px-1.5 font-normal">
-          {user.role}
+          {formatRoleLabel(user.role)}
         </Badge>
       ),
     },
@@ -315,7 +384,7 @@ export function UsersPage() {
       header: "Branch",
       cell: (user) => (
         <span className="text-muted-foreground">
-          {user.branchId != null ? (branchMap.get(user.branchId) ?? String(user.branchId)) : "—"}
+          {user.branchId != null ? (branchMap.get(String(user.branchId)) ?? String(user.branchId)) : "—"}
         </span>
       ),
     },
@@ -325,7 +394,7 @@ export function UsersPage() {
       cell: (user) => (
         <span className="text-muted-foreground">
           {user.departmentId != null
-            ? (deptMap.get(user.departmentId) ?? String(user.departmentId))
+            ? (deptMap.get(String(user.departmentId)) ?? String(user.departmentId))
             : "—"}
         </span>
       ),
@@ -406,11 +475,11 @@ export function UsersPage() {
           </SelectTrigger>
           <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
             <SelectItem value="all">All roles</SelectItem>
-            <SelectItem value="OWNER">Owner</SelectItem>
-            <SelectItem value="ADMIN">Admin</SelectItem>
-            <SelectItem value="MANAGER">Manager</SelectItem>
-            <SelectItem value="MEMBER">Member</SelectItem>
-            <SelectItem value="HR">HR</SelectItem>
+            {USER_STRUCTURAL_ROLES.map((role) => (
+              <SelectItem key={role.value} value={role.value}>
+                {role.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
         <Select value={departmentId} onValueChange={handleDeptChange}>
@@ -539,40 +608,43 @@ export function UsersPage() {
               </span>
               <div className="flex items-center gap-1.5 ml-auto flex-wrap">
                 {canManage && (
-                  <Button
+                  <LoadingButton
                     variant="outline"
                     size="sm"
                     className="h-7 text-xs"
-                    onClick={handleBulkSuspend}
+                    onClick={handleRequestBulkSuspend}
+                    isPending={isSuspending}
                     disabled={bulkIsPending}
                   >
                     <ShieldOff className="h-3 w-3 mr-1" />
                     Suspend
-                  </Button>
+                  </LoadingButton>
                 )}
                 {canManage && (
-                  <Button
+                  <LoadingButton
                     variant="outline"
                     size="sm"
                     className="h-7 text-xs"
-                    onClick={handleBulkArchive}
+                    onClick={handleRequestBulkArchive}
+                    isPending={isArchiving}
                     disabled={bulkIsPending}
                   >
                     <UserX className="h-3 w-3 mr-1" />
                     Archive
-                  </Button>
+                  </LoadingButton>
                 )}
                 {canManage && (
-                  <Button
+                  <LoadingButton
                     variant="outline"
                     size="sm"
                     className="h-7 text-xs"
                     onClick={handleBulkRestore}
+                    isPending={isRestoring}
                     disabled={bulkIsPending}
                   >
                     <RefreshCw className="h-3 w-3 mr-1" />
                     Restore
-                  </Button>
+                  </LoadingButton>
                 )}
                 {canManage && (
                   <Button
@@ -598,22 +670,22 @@ export function UsersPage() {
             </div>
           )}
 
-          {allSelected && !selectAllMatching && pagination && pagination.total > users.length && (
+          {allSelected && !selectAllMatching && pagination && pagination.total - ownerCount > selectableUsers.length && (
             <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-primary/5 border border-primary/20 text-xs text-foreground flex-wrap">
-              <span>All {users.length} users on this page are selected.</span>
+              <span>All {selectableUsers.length} users on this page are selected.</span>
               <button
                 type="button"
                 className="font-medium underline hover:no-underline ml-1"
                 onClick={handleSelectAllMatching}
               >
-                Select all {pagination.total} matching users
+                Select all {pagination.total - ownerCount} matching users
               </button>
             </div>
           )}
 
           {selectAllMatching && (
             <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-primary/5 border border-primary/20 text-xs text-foreground flex-wrap">
-              <span>All {pagination?.total} matching users are selected.</span>
+              <span>All {pagination ? pagination.total - ownerCount : 0} matching users are selected.</span>
               <button
                 type="button"
                 className="font-medium underline hover:no-underline ml-2"
@@ -642,6 +714,7 @@ export function UsersPage() {
               selection={{
                 selected: selectedIds,
                 onChange: handleSelectionChange,
+                isRowSelectable: (user) => !user.isOwner,
               }}
               sortState={{
                 field: sortBy,
@@ -677,6 +750,21 @@ export function UsersPage() {
         selectedIds={selectedIds}
         onSuccess={handleAssignSuccess}
       />
+      {pendingBulkAction !== null && (
+        <ConfirmDialog
+          open
+          onOpenChange={handleBulkDialogOpenChange}
+          title={getBulkActionCopy(pendingBulkAction, selectedIds.size).title}
+          description={
+            getBulkActionCopy(pendingBulkAction, selectedIds.size).description
+          }
+          confirmLabel={
+            getBulkActionCopy(pendingBulkAction, selectedIds.size).confirmLabel
+          }
+          isPending={pendingBulkAction === "suspend" ? isSuspending : isArchiving}
+          onConfirm={handleConfirmBulkAction}
+        />
+      )}
     </>
   );
 }

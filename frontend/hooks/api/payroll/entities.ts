@@ -2,6 +2,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 export interface CountryPackDescriptor {
   countryCode: string;
@@ -45,23 +47,20 @@ export interface EntityContext {
   honestyNote: string;
 }
 
-export const entityKeys = {
-  all: ["payroll", "entities"] as const,
-  packs: ["payroll", "entities", "country-packs"] as const,
-  context: (id: number) => ["payroll", "entities", id, "context"] as const,
-};
-
 export function usePayrollEntities() {
+  const canView = useCan("payroll:policies:view");
   return useQuery({
-    queryKey: entityKeys.all,
+    queryKey: queryKeys.payroll.entitiesAll,
     queryFn: () => apiClient.get<PayrollEntity[]>("/payroll/entities"),
     staleTime: 60_000,
+    enabled: canView,
   });
 }
 
 export function useCountryPacks() {
+  const canView = useCan("payroll:policies:view");
   return useQuery({
-    queryKey: entityKeys.packs,
+    queryKey: queryKeys.payroll.entityCountryPacks(),
     queryFn: () =>
       apiClient.get<{
         mode: string;
@@ -69,15 +68,17 @@ export function useCountryPacks() {
         packs: CountryPackDescriptor[];
       }>("/payroll/entities/country-packs"),
     staleTime: 5 * 60_000,
+    enabled: canView,
   });
 }
 
 export function useEntityContext(entityId: number | null) {
+  const canView = useCan("payroll:policies:view");
   return useQuery({
-    queryKey: entityKeys.context(entityId ?? 0),
+    queryKey: queryKeys.payroll.entityContext(entityId ?? 0),
     queryFn: () =>
       apiClient.get<EntityContext>(`/payroll/entities/${entityId}/context`),
-    enabled: entityId != null && entityId > 0,
+    enabled: canView && entityId != null && entityId > 0,
     staleTime: 60_000,
   });
 }

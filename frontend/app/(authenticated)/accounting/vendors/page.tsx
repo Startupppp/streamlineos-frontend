@@ -109,7 +109,7 @@ export default function VendorsListPage() {
       subtitle="Outstanding payables by vendor."
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
-          <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search vendors..." className="w-[220px]" />
+          <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search vendors..." />
           <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer select-none">
             <Checkbox
               checked={onlyOutstanding}

@@ -49,7 +49,6 @@ export function DocumentFilters({
         placeholder="Search documents..."
         value={searchTerm}
         onValueChange={onSearchChange}
-        className="max-w-sm"
         aria-label="Search documents"
       />
 

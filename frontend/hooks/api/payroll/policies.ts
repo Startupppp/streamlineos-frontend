@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   PolicyRow,
   PolicyCurrentResult,
@@ -57,14 +58,17 @@ type PolicyPreviewInput = {
 };
 
 export function usePayrollPolicyCurrent() {
+  const canView = useCan("payroll:policies:view");
   return useQuery({
     queryKey: queryKeys.payroll.policy(),
     queryFn: () => apiClient.get<PolicyCurrentResult>("/payroll/policies/current"),
     staleTime: 5 * 60_000,
+    enabled: canView,
   });
 }
 
 export function useToggleImpact(toggle: string, enabled = false) {
+  const canView = useCan("payroll:policies:view");
   return useQuery({
     queryKey: queryKeys.payroll.toggleImpact(toggle),
     queryFn: () =>
@@ -72,7 +76,7 @@ export function useToggleImpact(toggle: string, enabled = false) {
         toggle,
       }),
     staleTime: 30_000,
-    enabled: enabled && !!toggle,
+    enabled: enabled && !!toggle && canView,
   });
 }
 
@@ -121,12 +125,13 @@ export function useActivatePolicy() {
 }
 
 export function usePolicyVersions(policyId: number, enabled = true) {
+  const canView = useCan("payroll:policies:view");
   return useQuery({
     queryKey: queryKeys.payroll.policyVersions(policyId),
     queryFn: () =>
       apiClient.get<VersionRow[]>(`/payroll/policies/${policyId}/versions`),
     staleTime: 2 * 60_000,
-    enabled: enabled && policyId > 0,
+    enabled: enabled && policyId > 0 && canView,
   });
 }
 
@@ -139,7 +144,7 @@ export function useCreatePolicyVersion() {
         `/payroll/policies/${policyId}/versions`,
         data,
       ),
-    onSuccess: (_result, variables) => {
+    onSuccess: (_, variables) => {
       qc.invalidateQueries({
         queryKey: queryKeys.payroll.policyVersions(variables.policyId),
       });

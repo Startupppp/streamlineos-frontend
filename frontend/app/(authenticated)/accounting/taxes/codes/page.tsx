@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, type MouseEvent } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -92,6 +92,25 @@ function buildDefaultValues(code: TaxCode | null): TaxCodeFormValues {
     isReverseCharge: false,
     isActive: true,
   };
+}
+
+interface TaxCodeEditButtonProps {
+  row: TaxCode;
+  canManage: boolean;
+  onEdit: (row: TaxCode) => void;
+}
+
+function TaxCodeEditButton({ row, canManage, onEdit }: TaxCodeEditButtonProps) {
+  if (!canManage) return null;
+  function handleClick(e: MouseEvent<HTMLButtonElement>) {
+    e.stopPropagation();
+    onEdit(row);
+  }
+  return (
+    <Button variant="ghost" size="sm" className="text-xs" onClick={handleClick}>
+      Edit
+    </Button>
+  );
 }
 
 export default function TaxCodesPage() {
@@ -199,7 +218,7 @@ export default function TaxCodesPage() {
       cell: (row) => (
         <Badge
           variant="outline"
-          className={row.isActive ? "border-emerald-500/30 text-emerald-700 bg-emerald-500/5" : "text-muted-foreground"}
+          className={row.isActive ? "border-emerald-500/30 text-emerald-700 bg-emerald-500/5 dark:text-emerald-300 dark:border-emerald-500/20 dark:bg-emerald-500/10" : "text-muted-foreground"}
         >
           {row.isActive ? "Active" : "Inactive"}
         </Badge>
@@ -208,21 +227,7 @@ export default function TaxCodesPage() {
     {
       key: "actions",
       header: "",
-      cell: (row) => (
-        canManage ? (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-xs"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleEditRow(row);
-            }}
-          >
-            Edit
-          </Button>
-        ) : null
-      ),
+      cell: (row) => <TaxCodeEditButton row={row} canManage={canManage} onEdit={handleEditRow} />,
     },
   ];
 

@@ -91,7 +91,7 @@ export function TemplatesPageContent() {
     const current = searchParams.get("search") ?? "";
     if (debouncedSearchInput === current) return;
     updateUrl({ search: debouncedSearchInput || undefined });
-  }, [debouncedSearchInput]);
+  }, [debouncedSearchInput, searchParams, updateUrl]);
 
   const handleSearchChange = useCallback((value: string) => {
     setSearchInput(value);
@@ -161,12 +161,11 @@ export function TemplatesPageContent() {
   }, [refetch]);
 
   const templates = data?.items ?? [];
-  const total = data?.total ?? 0;
   const hasActiveFilters = !!(search || category !== "all" || complexity !== "all");
 
   const filters = (
     <>
-      <SearchInput value={searchInput} onValueChange={handleSearchChange} placeholder="Search templates…" className="w-48" />
+      <SearchInput value={searchInput} onValueChange={handleSearchChange} placeholder="Search templates…" />
       <Select value={category} onValueChange={handleCategoryChange}>
         <SelectTrigger className={`${FILTER_SELECT_TRIGGER} h-9 w-44`}>
           <SelectValue placeholder="Category" />
@@ -198,9 +197,7 @@ export function TemplatesPageContent() {
     <>
       <PageWrapper
         title="Template Library"
-        subtitle={
-          isLoading ? "Loading…" : `${total} template${total !== 1 ? "s" : ""}`
-        }
+        subtitle="Reusable payroll configuration templates"
         filters={filters}
       >
         {isError ? (

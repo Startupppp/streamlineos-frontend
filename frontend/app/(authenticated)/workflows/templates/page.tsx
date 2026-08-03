@@ -118,9 +118,7 @@ export default function WorkflowTemplatesPage() {
 
   const filtersBar = (
     <div className={FILTER_TOOLBAR_ROW}>
-      <div className="min-w-[200px] max-w-xs flex-1">
-        <SearchInput placeholder="Search templates..." value={search} onValueChange={handleSearchChange} />
-      </div>
+      <SearchInput placeholder="Search templates..." value={search} onValueChange={handleSearchChange} />
       <div className="flex items-center gap-1">
         <button
           onClick={() => handleCategoryChange("all")}

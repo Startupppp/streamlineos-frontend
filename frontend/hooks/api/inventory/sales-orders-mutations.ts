@@ -118,7 +118,7 @@ export function useCreateSalesOrder() {
         })),
       }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
     },
   });
 }
@@ -129,9 +129,9 @@ export function useConfirmSalesOrder() {
     mutationKey: ["inventory", "salesOrders", "confirm"],
     mutationFn: ({ soId }) =>
       apiClient.post<void>(`/inventory/sales-orders/${soId}/confirm`, {}),
-    onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrder(variables.soId) });
+    onSuccess: (_, variables) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrder(variables.soId) });
     },
   });
 }
@@ -151,10 +151,10 @@ export function useShipSalesOrder() {
         },
         { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
-    onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrder(variables.soId) });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
+    onSuccess: (_, variables) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrder(variables.soId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
     },
   });
 }
@@ -165,9 +165,9 @@ export function useInvoiceSalesOrder() {
     mutationKey: ["inventory", "salesOrders", "invoice"],
     mutationFn: ({ soId }) =>
       apiClient.post<CreatedInvoice>(`/inventory/sales-orders/${soId}/invoice`, {}),
-    onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrder(variables.soId) });
+    onSuccess: (_, variables) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrder(variables.soId) });
     },
   });
 }
@@ -185,9 +185,10 @@ export function useReserveSalesOrder() {
         },
         { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
-    onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrder(variables.soId) });
+    onSuccess: (_, variables) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrder(variables.soId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
     },
   });
 }
@@ -198,9 +199,9 @@ export function usePickSalesOrder() {
     mutationKey: ["inventory", "salesOrders", "pick"],
     mutationFn: ({ soId, lines }) =>
       apiClient.post<void>(`/inventory/sales-orders/${soId}/pick`, { lines }),
-    onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrder(variables.soId) });
+    onSuccess: (_, variables) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrder(variables.soId) });
     },
   });
 }
@@ -216,9 +217,9 @@ export function usePackSalesOrder() {
         ...(dimensionsW !== undefined ? { dimensionsW } : {}),
         ...(dimensionsH !== undefined ? { dimensionsH } : {}),
       }),
-    onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrder(variables.soId) });
+    onSuccess: (_, variables) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrder(variables.soId) });
     },
   });
 }
@@ -233,9 +234,10 @@ export function useCancelSalesOrder() {
         { ...(reason !== undefined ? { reason } : {}) },
         { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
-    onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrder(variables.soId) });
+    onSuccess: (_, variables) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrder(variables.soId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
     },
   });
 }
@@ -259,9 +261,9 @@ export function useUpdateSalesOrder() {
             }
           : {}),
       }),
-    onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrder(variables.soId) });
+    onSuccess: (_, variables) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrder(variables.soId) });
     },
   });
 }

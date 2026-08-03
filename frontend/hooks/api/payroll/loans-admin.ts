@@ -2,6 +2,8 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 export type LoanStatus = "PENDING" | "APPROVED" | "ACTIVE" | "REPAID" | "REJECTED";
 
@@ -28,16 +30,13 @@ export interface LoanAdminItem {
   };
 }
 
-export const loansAdminKeys = {
-  all: ["hr", "loans"] as const,
-  list: () => ["hr", "loans", "list"] as const,
-};
-
 export function useAdminLoans() {
+  const canView = useCan("hr:payroll:view");
   return useQuery({
-    queryKey: loansAdminKeys.list(),
+    queryKey: queryKeys.payroll.loansAdmin(),
     queryFn: () => apiClient.get<LoanAdminItem[]>("/hr/loans"),
     staleTime: 30_000,
+    enabled: canView,
   });
 }
 
@@ -53,7 +52,7 @@ export function useUpdateLoanStatus() {
     mutationFn: ({ loanId, status }: UpdateLoanStatusInput) =>
       apiClient.patch<{ success: boolean }>(`/hr/loans/${loanId}`, { status }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: loansAdminKeys.all });
+      qc.invalidateQueries({ queryKey: queryKeys.payroll.loansAdmin() });
     },
   });
 }

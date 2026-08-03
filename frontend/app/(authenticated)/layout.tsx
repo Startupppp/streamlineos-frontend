@@ -1,10 +1,12 @@
 import { getServerAuth } from "../../lib/get-server-auth";
 import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { signInPathForMissingSession } from "../../lib/auth-session-cookies";
+import { getServerAccess } from "../../lib/rbac/get-server-access";
 import { DashboardShell } from "../../components/layout/dashboard-shell";
 import { FeedbucketEmbed } from "../../components/feedbucket/feedbucket-embed";
 import { AppThemeProvider } from "../../components/theme/app-theme-provider";
+import { AppThemeScript } from "../../components/theme/app-theme-script";
 
 export default async function DashboardLayout({
   children,
@@ -15,19 +17,41 @@ export default async function DashboardLayout({
 
   if (!session?.user) redirect(signInPathForMissingSession());
 
+  const requestHeaders = await headers();
+  const nonce = requestHeaders.get("x-nonce") ?? undefined;
+  const pathname = requestHeaders.get("x-pathname") ?? "";
   const cookieStore = await cookies();
-  const isAdminLike = session.user.isPlatformAdmin || session.user.isOrgOwner;
-  const hasDashboardAccess =
-    isAdminLike || session.user.hasDashboardAccess !== false;
+
+  const isOrgOwner = session.user.isOrgOwner === true;
+  const hasOrg = Boolean(session.orgId);
+  const ownerSetupPending = isOrgOwner && !session.orgOnboardingCompletedAt;
+  const orgSetupCookieName = session.orgId
+    ? `org-setup-done--${session.orgId}`
+    : null;
+  const orgSetupDone = orgSetupCookieName
+    ? Boolean(cookieStore.get(orgSetupCookieName)?.value)
+    : false;
+  const forceOrgSetup = !hasOrg || (ownerSetupPending && !orgSetupDone);
+
+  if (forceOrgSetup) redirect("/org-setup");
+
+  const isSettingsRoute =
+    pathname === "/settings" || pathname.startsWith("/settings/");
+  if (!isSettingsRoute) {
+    const { mfa } = await getServerAccess();
+    if (mfa?.enforced && !mfa.satisfied) {
+      redirect("/settings?tab=security&mfa=required");
+    }
+  }
 
   const defaultCollapsed =
     cookieStore.get("sidebar-collapsed")?.value === "true";
 
   return (
     <AppThemeProvider>
+      <AppThemeScript nonce={nonce} />
       <DashboardShell
         userId={session.user.id}
-        hasDashboardAccess={hasDashboardAccess}
         defaultCollapsed={defaultCollapsed}
       >
         {children}

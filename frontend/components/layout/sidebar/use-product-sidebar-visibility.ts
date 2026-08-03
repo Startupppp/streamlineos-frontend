@@ -12,6 +12,7 @@ import {
   getNavGroupsForProduct,
   shouldHideProductSidebar,
   getProductFromPathname,
+  isKnowledgeWikiPath,
   withoutHrSetupRoute,
   type NavGroup,
   type ProductKey,
@@ -32,7 +33,7 @@ export function useProductSidebarVisibility(): {
   const { data: hrChecklist } = useModuleChecklist("HR", canViewHr);
 
   const isOrgOwner =
-    access?.isOrgOwner === true || access?.isPlatformAdmin === true;
+    access?.isOrgOwner === true;
   const effectiveRole = isOrgOwner ? "OWNER" : "MEMBER";
 
   const activeProduct = getProductFromPathname(pathname);
@@ -51,7 +52,8 @@ export function useProductSidebarVisibility(): {
   }, [activeProduct, effectiveRole, permissions, enabledModules, hideHrSetup]);
 
   const hideSidebar =
-    status !== "loading" && shouldHideProductSidebar(navGroups);
+    status !== "loading" &&
+    (shouldHideProductSidebar(navGroups) || isKnowledgeWikiPath(pathname));
 
   return {
     hideSidebar,

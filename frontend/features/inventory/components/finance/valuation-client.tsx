@@ -48,11 +48,11 @@ const METHOD_BADGE_CLASS: Record<CostingMethod, string> = {
 };
 
 function formatCents(cents: number): string {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
+  return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(cents / 100);
 }
 
 function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("en-US", {
+  return new Date(dateStr).toLocaleDateString("en-IN", {
     month: "short",
     day: "numeric",
     year: "numeric",

@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import Link from "next/link"
 import {
@@ -31,6 +31,7 @@ import { useCan } from "@/hooks/api/access"
 import { useEnabledModules } from "@/hooks/api/access/org-modules"
 import { useCommandPalette } from "@/features/command-palette/hooks/use-command-palette"
 import { cn } from "@/lib/utils"
+import { matchesOrgModule } from "@/lib/module-vocabulary"
 import type { PermissionKey } from "@/lib/rbac/permissions"
 import {
   QUICK_CREATE_GROUPS,
@@ -39,14 +40,10 @@ import {
 
 const HOVER_CLOSE_DELAY_MS = 200
 
-export type { CreateAction, CreateGroup } from "./quick-create-groups"
-export { QUICK_CREATE_GROUPS } from "./quick-create-groups"
-
 function isModuleEnabled(enabledModules: string[], moduleKey?: string): boolean {
   if (!moduleKey) return true
   if (enabledModules.length === 0) return true
-  const upper = moduleKey.toUpperCase()
-  return enabledModules.some((m) => m.toUpperCase() === upper)
+  return matchesOrgModule(enabledModules, moduleKey)
 }
 
 export function useQuickCreateGroups(): CreateGroup[] {
@@ -54,8 +51,8 @@ export function useQuickCreateGroups(): CreateGroup[] {
   const canMail = useCan("mail:messages:send")
   const canCalendar = useCan("calendar:write")
   const canChat = useCan("chat:channels:write")
-  const canProject = useCan("projects:create")
-  const canIssue = useCan("projects:tickets:create")
+  const canProject = useCan("build:create")
+  const canIssue = useCan("build:tickets:create")
   const canSupport = useCan("support:tickets:create")
   const canLead = useCan("crm:leads:create")
   const canContact = useCan("crm:contacts:manage")
@@ -76,8 +73,8 @@ export function useQuickCreateGroups(): CreateGroup[] {
       ["mail:messages:send", canMail],
       ["calendar:write", canCalendar],
       ["chat:channels:write", canChat],
-      ["projects:create", canProject],
-      ["projects:tickets:create", canIssue],
+      ["build:create", canProject],
+      ["build:tickets:create", canIssue],
       ["support:tickets:create", canSupport],
       ["crm:leads:create", canLead],
       ["crm:contacts:manage", canContact],

@@ -3,6 +3,7 @@
 import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   TemplateRow,
   TemplatePreviewResult,
@@ -31,6 +32,7 @@ type PreviewInput = {
 };
 
 export function usePayrollTemplates(params?: TemplateListParams) {
+  const canView = useCan("payroll:templates:view");
   return useQuery({
     queryKey: queryKeys.payroll.templates(params as Record<string, unknown> | undefined),
     queryFn: () =>
@@ -40,6 +42,7 @@ export function usePayrollTemplates(params?: TemplateListParams) {
       ),
     staleTime: 5 * 60_000,
     placeholderData: keepPreviousData,
+    enabled: canView,
   });
 }
 

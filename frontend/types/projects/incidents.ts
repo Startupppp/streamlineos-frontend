@@ -36,6 +36,8 @@ export interface IncidentUpdate {
   newStatus: IncidentStatus | null;
   createdBy: string | null;
   createdAt: string;
+  createdByName: string | null;
+  createdByEmail: string | null;
 }
 
 export interface IncidentDetail extends Incident {

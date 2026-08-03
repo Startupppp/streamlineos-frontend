@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useCallback, useMemo } from "react";
 import { useForm } from "react-hook-form";
@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Money } from "@/features/accounting/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
+import { getUserDisplayName } from "@/features/build/shared/resolve-user-name";
 import { useCreateReimbursementBatch, usePendingForBatch } from "@/hooks/api/accounting/expenses";
 import type { ExpenseWithRelations } from "@/types/hr/expenses";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -41,7 +41,10 @@ export function CreateBatchSheet({ open, onOpenChange, onCreated }: CreateBatchS
     defaultValues: { name: "" },
   });
 
-  const pendingExpenses: ExpenseWithRelations[] = pendingQuery.data?.expenses ?? [];
+  const pendingExpenses = useMemo<ExpenseWithRelations[]>(
+    () => pendingQuery.data?.expenses ?? [],
+    [pendingQuery.data],
+  );
 
   const runningTotal = useMemo(
     () =>

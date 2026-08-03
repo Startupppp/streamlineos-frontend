@@ -10,7 +10,7 @@ import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { ArrowUpDown, ArrowUp, ArrowDown, MessageCircle } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
@@ -20,19 +20,6 @@ import {
 import { useCrmOptions, resolveOption } from "@/hooks/api/crm/metadata";
 import { CrmOptionBadge } from "@/features/crm/shared/metadata";
 import { AIScoreButton } from "../ai-score-button";
-
-interface SortIconProps {
-  column: string;
-  sortColumn: string;
-  sortDirection: "asc" | "desc";
-}
-
-export function SortIcon({ column, sortColumn, sortDirection }: SortIconProps) {
-  if (sortColumn !== column) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-30" />;
-  return sortDirection === "asc"
-    ? <ArrowUp className="h-3 w-3 ml-1 text-primary" />
-    : <ArrowDown className="h-3 w-3 ml-1 text-primary" />;
-}
 
 export interface RenderCellOptions {
   lead: Lead;

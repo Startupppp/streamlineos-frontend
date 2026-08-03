@@ -24,7 +24,7 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 function terminationStatusBadgeClass(status: string | null): string {
   if (status === "APPROVED" || status === "COMPLETED")
     return "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800";
-  if (status === "PENDING_CEO")
+  if (status === "PENDING_FINAL")
     return "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-800";
   if (status === "REJECTED")
     return "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-800";
@@ -36,7 +36,7 @@ function terminationStatusBadgeClass(status: string | null): string {
 function terminationStatusLabel(status: string | null): string {
   const labels: Record<string, string> = {
     DRAFT: "Draft",
-    PENDING_CEO: "Pending CEO",
+    PENDING_FINAL: "Pending FINAL",
     APPROVED: "Approved",
     REJECTED: "Rejected",
     SENT: "Email Sent",
@@ -50,8 +50,8 @@ interface TerminationDetailSheetProps {
   onOpenChange: (open: boolean) => void;
   reviewRecord: Termination | null;
   reviewDecision?: "approve" | "reject" | null;
-  ceoRemarks?: string;
-  onCeoRemarksChange?: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  finalRemarks?: string;
+  onFinalRemarksChange?: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   isPending?: boolean;
   onSubmit?: () => void;
   isViewOnly?: boolean;
@@ -62,8 +62,8 @@ export function TerminationDetailSheet({
   onOpenChange,
   reviewRecord,
   reviewDecision = null,
-  ceoRemarks = "",
-  onCeoRemarksChange,
+  finalRemarks = "",
+  onFinalRemarksChange,
   isPending = false,
   onSubmit,
   isViewOnly = false,
@@ -111,7 +111,7 @@ export function TerminationDetailSheet({
                 ? "border-l-emerald-500"
                 : reviewRecord.status === "REJECTED"
                   ? "border-l-rose-500"
-                  : reviewRecord.status === "PENDING_CEO"
+                  : reviewRecord.status === "PENDING_FINAL"
                     ? "border-l-amber-400"
                     : "border-l-slate-300 dark:border-l-slate-600",
             )}
@@ -240,7 +240,7 @@ export function TerminationDetailSheet({
               <Separator />
               <div className="space-y-1.5">
                 <Label className="text-sm font-semibold">
-                  CEO Remarks{" "}
+                  FINAL Remarks{" "}
                   {reviewDecision === "reject" ? (
                     <span className="text-destructive">*</span>
                   ) : (
@@ -255,26 +255,26 @@ export function TerminationDetailSheet({
                       ? "Remarks are required when rejecting..."
                       : "Add any remarks or comments..."
                   }
-                  value={ceoRemarks}
-                  onChange={onCeoRemarksChange}
+                  value={finalRemarks}
+                  onChange={onFinalRemarksChange}
                   rows={3}
-                  aria-label="CEO remarks"
+                  aria-label="FINAL remarks"
                   className="resize-none"
                 />
               </div>
             </>
           )}
 
-          {isViewOnly && reviewRecord.ceoRemarks && (
+          {isViewOnly && reviewRecord.finalRemarks && (
             <>
               <Separator />
               <div className="space-y-1.5">
                 <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  CEO Remarks
+                  FINAL Remarks
                 </p>
                 <div className="rounded-lg border border-border bg-muted/30 px-3 py-2.5">
                   <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                    {reviewRecord.ceoRemarks}
+                    {reviewRecord.finalRemarks}
                   </p>
                 </div>
               </div>

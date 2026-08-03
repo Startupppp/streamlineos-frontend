@@ -16,21 +16,13 @@ import { cn } from "@/lib/utils";
 import { OnboardingInitiateSheet } from "./onboarding-initiate-sheet";
 import { useOnboardingStatus, type OnboardingStatus } from "@/hooks/api/hr/onboarding";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { getInitials } from "@/lib/format-utils";
 
 function isStalledBadge(row: OnboardingStatus): boolean {
   if (row.percentComplete >= 100) return false;
   if (!row.lastCompletedAt) return false;
   const last = new Date(row.lastCompletedAt).getTime();
   return Date.now() - last > 48 * 60 * 60 * 1000;
-}
-
-function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
 }
 
 type RowStatus = "completed" | "stalled" | "in_progress" | "not_started";

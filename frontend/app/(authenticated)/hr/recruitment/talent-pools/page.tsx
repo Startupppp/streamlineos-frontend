@@ -22,6 +22,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger, SheetBody } from "@/components/ui/sheet";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -210,7 +211,10 @@ function PoolMemberRow({ member: m, onRemove }: PoolMemberRowProps) {
 }
 
 function PoolMembersList({ poolId }: { poolId: number }) {
-  const { data: members, isLoading } = usePoolMembers(poolId);
+  const [page, setPage] = useState(1);
+  const { data: membersData, isLoading } = usePoolMembers(poolId, { page, limit: 20 });
+  const members = membersData?.data;
+  const pagination = membersData?.pagination;
   const removeMember = useRemovePoolMember(poolId);
 
   const handleRemove = useCallback(
@@ -222,6 +226,10 @@ function PoolMembersList({ poolId }: { poolId: number }) {
     },
     [removeMember],
   );
+
+  function handlePageChange(nextPage: number) {
+    setPage(nextPage);
+  }
 
   if (isLoading) {
     return <div className="space-y-2">{[1, 2].map((i) => <Skeleton key={i} className="h-14 w-full rounded-xl" />)}</div>;
@@ -236,6 +244,14 @@ function PoolMembersList({ poolId }: { poolId: number }) {
       {members.map((m) => (
         <PoolMemberRow key={m.membershipId} member={m} onRemove={handleRemove} />
       ))}
+      {pagination && pagination.totalPages > 1 && (
+        <TablePagination
+          page={page}
+          pageSize={pagination.limit}
+          total={pagination.total}
+          onPageChange={handlePageChange}
+        />
+      )}
     </div>
   );
 }

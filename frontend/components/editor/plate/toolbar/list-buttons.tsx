@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { List, ListOrdered, CheckSquare, Outdent, Indent } from 'lucide-react';
 import { useEditorRef } from 'platejs/react';
 import type { TElement } from 'platejs';

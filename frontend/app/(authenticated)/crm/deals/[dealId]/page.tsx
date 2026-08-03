@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { use, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
@@ -239,12 +239,12 @@ export default function DealDetailPage({
       setIsCreatingProject(true);
       try {
         const newProject = await apiClient.post<{ id: number }>(
-          "/projects/from-deal",
+          "/build/from-deal",
           { dealId, name: data.name.trim(), startDate: data.startDate, endDate: data.endDate },
         );
         toast.success("Project created successfully");
         setCreateProjectOpen(false);
-        router.push(`/projects/${newProject.id}`);
+        router.push(`/build/${newProject.id}`);
       } catch {
         toast.error("Failed to create project");
       } finally {

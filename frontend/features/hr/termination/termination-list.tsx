@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import { format } from "date-fns";
 import {
   CheckCircle2,
@@ -20,9 +19,11 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { EmptyState } from "@/components/ui/empty-state";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
-import type { Termination, TerminationStatus } from "@/hooks/api/hr";
+import type { Termination, TerminationStatus, TerminationPagination } from "@/hooks/api/hr";
+import { getInitials } from "@/lib/format-utils";
 import {
   TERMINATION_STATUS_LABELS,
   TERMINATION_STATUSES,
@@ -36,20 +37,10 @@ function statusLabel(status: TerminationStatus | null): string {
   return status ?? "Unknown";
 }
 
-function getInitials(name: string | null): string {
-  if (!name) return "?";
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-}
-
 interface TerminationCardProps {
   record: Termination;
   isHR: boolean;
-  isCEO: boolean;
+  canApproveExit: boolean;
   onView: (record: Termination) => void;
   onSubmit: (id: number) => void;
   onApprove: (id: number) => void;
@@ -63,7 +54,7 @@ interface TerminationCardProps {
 function TerminationCard({
   record,
   isHR,
-  isCEO,
+  canApproveExit,
   onView,
   onSubmit,
   onApprove,
@@ -129,9 +120,9 @@ function TerminationCard({
               )}
             </div>
 
-            {status === "REJECTED" && record.ceoRemarks && (
+            {status === "REJECTED" && record.finalRemarks && (
               <p className="text-[11px] text-rose-600 dark:text-rose-300 mt-1 line-clamp-2">
-                CEO: {record.ceoRemarks}
+                FINAL: {record.finalRemarks}
               </p>
             )}
 
@@ -170,7 +161,7 @@ function TerminationCard({
                 className="text-xs gap-1.5 duration-200"
                 onClick={() => onSubmit(record.id)}
                 disabled={isSubmitting}
-                aria-label={`Submit termination for ${employee?.name ?? "employee"} for CEO approval`}
+                aria-label={`Submit termination for ${employee?.name ?? "employee"} for FINAL approval`}
               >
                 <AlertTriangle className="h-3 w-3" />
                 Submit for Approval
@@ -184,14 +175,14 @@ function TerminationCard({
                 className="text-xs gap-1.5 duration-200"
                 onClick={() => onSubmit(record.id)}
                 disabled={isSubmitting}
-                aria-label={`Resubmit termination for ${employee?.name ?? "employee"} for CEO approval`}
+                aria-label={`Resubmit termination for ${employee?.name ?? "employee"} for FINAL approval`}
               >
                 <AlertTriangle className="h-3 w-3" />
                 Resubmit
               </Button>
             )}
 
-            {isCEO && status === "PENDING_CEO" && (
+            {canApproveExit && status === "PENDING_FINAL" && (
               <>
                 <Button
                   size="sm"
@@ -267,8 +258,11 @@ const STATUS_FILTER_OPTIONS: { value: StatusFilter; label: string }[] = [
 
 interface TerminationListProps {
   terminations: Termination[];
+  statusCounts?: Record<string, number>;
+  pagination?: TerminationPagination;
+  onPageChange: (page: number) => void;
   isHR: boolean;
-  isCEO: boolean;
+  canApproveExit: boolean;
   statusFilter: StatusFilter;
   onStatusFilterChange: (value: StatusFilter) => void;
   onView: (record: Termination) => void;
@@ -283,8 +277,11 @@ interface TerminationListProps {
 
 export function TerminationList({
   terminations,
+  statusCounts,
+  pagination,
+  onPageChange,
   isHR,
-  isCEO,
+  canApproveExit,
   statusFilter,
   onStatusFilterChange,
   onView,
@@ -296,19 +293,7 @@ export function TerminationList({
   isSubmitting,
   isCompleting,
 }: TerminationListProps) {
-  const list = useMemo(() => {
-    if (statusFilter === "ALL") return terminations;
-    return terminations.filter((t) => t.status === statusFilter);
-  }, [terminations, statusFilter]);
-
-  const statusCounts = useMemo(() => {
-    const counts: Record<string, number> = { ALL: terminations.length };
-    for (const s of TERMINATION_STATUSES) counts[s] = 0;
-    for (const t of terminations) {
-      if (t.status) counts[t.status] = (counts[t.status] ?? 0) + 1;
-    }
-    return counts;
-  }, [terminations]);
+  const counts = statusCounts ?? {};
 
   return (
     <>
@@ -322,19 +307,19 @@ export function TerminationList({
             onClick={() => onStatusFilterChange(value)}
           >
             {label}
-            {statusCounts[value] > 0 && (
+            {(counts[value] ?? 0) > 0 && (
               <Badge
                 variant={statusFilter === value ? "secondary" : "outline"}
                 className="ml-1 text-[9px] px-1.5 py-0 h-4 font-semibold"
               >
-                {statusCounts[value]}
+                {counts[value]}
               </Badge>
             )}
           </Button>
         ))}
       </div>
 
-      {list.length === 0 ? (
+      {terminations.length === 0 ? (
         <EmptyState
           illustrationPreset="person"
           title={
@@ -346,12 +331,12 @@ export function TerminationList({
         />
       ) : (
         <div className="space-y-2">
-          {list.map((record: Termination) => (
+          {terminations.map((record: Termination) => (
             <TerminationCard
               key={record.id}
               record={record}
               isHR={isHR}
-              isCEO={isCEO}
+              canApproveExit={canApproveExit}
               onView={onView}
               onSubmit={onSubmit}
               onApprove={onApprove}
@@ -363,6 +348,16 @@ export function TerminationList({
             />
           ))}
         </div>
+      )}
+
+      {pagination && pagination.totalPages > 1 && (
+        <TablePagination
+          page={pagination.page}
+          pageSize={pagination.limit}
+          total={pagination.total}
+          onPageChange={onPageChange}
+          className="mt-4 rounded-xl"
+        />
       )}
     </>
   );

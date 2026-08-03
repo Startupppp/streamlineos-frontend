@@ -3,6 +3,7 @@
 import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   SalaryComponent,
   ComponentType,
@@ -40,6 +41,7 @@ type UpdateComponentInput = {
 };
 
 export function usePayrollComponents(params?: ComponentListParams) {
+  const canView = useCan("payroll:components:view");
   return useQuery({
     queryKey: queryKeys.payroll.components(params as Record<string, unknown> | undefined),
     queryFn: () =>
@@ -49,6 +51,7 @@ export function usePayrollComponents(params?: ComponentListParams) {
       ),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
+    enabled: canView,
   });
 }
 

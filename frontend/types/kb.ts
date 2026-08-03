@@ -1,3 +1,5 @@
+import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
+
 export type KbAudience = "internal" | "public" | "mixed";
 
 export type KbArticleStatus = "draft" | "in_review" | "published" | "archived";
@@ -15,17 +17,6 @@ export interface KbSpace {
   articleCount?: number;
   createdAt: string;
   updatedAt: string;
-}
-
-export interface KbCategory {
-  id: number;
-  spaceId: number | null;
-  parentId: number | null;
-  name: string;
-  slug: string;
-  description: string | null;
-  icon: string | null;
-  sortOrder: number;
 }
 
 export interface KbArticleListItem {
@@ -56,14 +47,6 @@ export interface KbArticle extends KbArticleListItem {
   category?: { id: number; name: string; slug: string } | null;
 }
 
-export interface PaginatedArticles {
-  items: KbArticleListItem[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-}
-
 export interface CreateSpaceInput {
   name: string;
   description?: string | null;
@@ -79,65 +62,6 @@ export interface UpdateSpaceInput {
   audience?: KbAudience;
   icon?: string | null;
   isPublicHelpCenter?: boolean;
-}
-
-export interface CreateCategoryInput {
-  name: string;
-  description?: string | null;
-  icon?: string | null;
-  sortOrder?: number;
-  parentId?: number | null;
-}
-
-export interface CreateArticleInput {
-  title: string;
-  spaceId: number;
-  categoryId?: number | null;
-  excerpt?: string | null;
-  content?: string;
-  contentText?: string;
-  status?: KbArticleStatus;
-  visibility?: KbVisibility;
-  tags?: string[] | null;
-  seoTitle?: string | null;
-  seoDescription?: string | null;
-  reviewIntervalDays?: number | null;
-}
-
-export interface UpdateArticleInput {
-  articleId: number;
-  title?: string;
-  spaceId?: number | null;
-  categoryId?: number | null;
-  excerpt?: string | null;
-  content?: string;
-  contentText?: string;
-  status?: KbArticleStatus;
-  visibility?: KbVisibility;
-  tags?: string[] | null;
-  seoTitle?: string | null;
-  seoDescription?: string | null;
-  reviewIntervalDays?: number | null;
-}
-
-export interface VerifyArticleInput {
-  articleId: number;
-  reviewIntervalDays?: number | null;
-}
-
-export interface VoteArticleInput {
-  articleId: number;
-  helpful: boolean;
-  comment?: string;
-}
-
-export interface ListArticlesParams {
-  spaceId?: number;
-  categoryId?: number;
-  status?: KbArticleStatus;
-  search?: string;
-  page?: number;
-  pageSize?: number;
 }
 
 export interface KbSearchResult {
@@ -239,115 +163,9 @@ export interface KbNoResultRow {
   count: number;
 }
 
-export interface KbVerificationItem {
-  id: number;
-  title: string;
-  slug: string;
-  spaceId: number | null;
-  ownerId: string | null;
-  lastVerifiedAt: string | null;
-  reviewIntervalDays: number | null;
-}
-
 export interface KbAnalyticsRange {
   from?: string;
   to?: string;
-}
-
-export type KbSpaceRole = "viewer" | "commenter" | "editor" | "publisher" | "admin";
-
-export interface KbSpaceMember {
-  id: number;
-  spaceId: number;
-  userId: string | null;
-  role: string | null;
-  team: string | null;
-  spaceRole: KbSpaceRole;
-  userName: string | null;
-  userEmail: string | null;
-  userImage: string | null;
-}
-
-export type KbSpaceMemberRow = Omit<KbSpaceMember, "userName" | "userEmail" | "userImage">;
-
-export interface AddKbSpaceMemberInput {
-  userId?: string;
-  role?: string;
-  spaceRole: KbSpaceRole;
-}
-
-export interface KbAiDraftInput {
-  prompt: string;
-  title?: string;
-}
-
-export interface KbAiImproveInput {
-  text: string;
-  instruction?: string;
-}
-
-export interface KbAiSummarizeInput {
-  text: string;
-}
-
-export interface KbAiContent {
-  content: string;
-}
-
-export interface KbArticleVersion {
-  id: number;
-  articleId: number;
-  versionNumber: number;
-  title: string;
-  content: string;
-  excerpt: string | null;
-  changeSummary: string | null;
-  authorId: string | null;
-  createdAt: string;
-}
-
-export interface KbTag {
-  id: number;
-  orgId: string;
-  name: string;
-  slug: string;
-  createdAt: string;
-}
-
-export type KbTranslationStatus = "draft" | "in_progress" | "translated" | "published" | "outdated";
-
-export interface KbTranslation {
-  id: number;
-  articleId: number;
-  locale: string;
-  title: string;
-  content: string;
-  contentText: string;
-  excerpt: string | null;
-  status: KbTranslationStatus;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface UpsertTranslationInput {
-  articleId: number;
-  locale: string;
-  title: string;
-  content?: string;
-  contentText?: string;
-  excerpt?: string | null;
-  status?: KbTranslationStatus;
-}
-
-export interface KbComment {
-  id: number;
-  articleId: number;
-  authorId: string | null;
-  parentId: number | null;
-  content: string;
-  resolvedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface KbPageAnalyticsRow {
@@ -373,8 +191,6 @@ export interface KbContentGapRow {
   lastOccurredAt: string;
   gapKind: "search" | "ai_no_context";
 }
-
-import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
 
 export type KbResearchBriefStatus = "queued" | "running" | "completed" | "failed";
 

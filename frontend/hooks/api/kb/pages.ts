@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 export type KbPage = {
   id: number;
@@ -23,6 +24,8 @@ export type KbPage = {
   createdAt: string;
   updatedAt: string;
 };
+
+export type KbPageListItem = Omit<KbPage, "content" | "contentText">;
 
 export type KbPageDetail = KbPage & {
   ancestors: Array<{ id: number; title: string }>;
@@ -106,88 +109,103 @@ export type MoveKbPageInput = {
 };
 
 export function useKbPagesTree() {
+  const canView = useCan("kb:pages:view");
   return useQuery({
     queryKey: queryKeys.kb.pagesTree(),
     queryFn: () => apiClient.get<KbPageTreeNode[]>("/kb/pages/tree"),
     staleTime: 30_000,
+    enabled: canView,
   });
 }
 
 export function useKbProjectPagesTree(projectId: number) {
+  const canView = useCan("kb:pages:view");
   return useQuery({
     queryKey: queryKeys.kb.pagesTreeByProject(projectId),
     queryFn: () => apiClient.get<KbPageTreeNode[]>("/kb/pages/tree", { projectId }),
     staleTime: 30_000,
-    enabled: Number.isFinite(projectId) && projectId > 0,
+    enabled: canView && Number.isFinite(projectId) && projectId > 0,
   });
 }
 
 export function useKbPagesRecent() {
+  const canView = useCan("kb:pages:view");
   return useQuery({
     queryKey: queryKeys.kb.pagesRecent(),
-    queryFn: () => apiClient.get<KbPage[]>("/kb/pages/recent"),
+    queryFn: () => apiClient.get<KbPageListItem[]>("/kb/pages/recent"),
     staleTime: 30_000,
+    enabled: canView,
   });
 }
 
 export function useKbPagesFavorites() {
+  const canView = useCan("kb:pages:view");
   return useQuery({
     queryKey: queryKeys.kb.pagesFavorites(),
-    queryFn: () => apiClient.get<KbPage[]>("/kb/pages/favorites"),
+    queryFn: () => apiClient.get<KbPageListItem[]>("/kb/pages/favorites"),
     staleTime: 30_000,
+    enabled: canView,
   });
 }
 
 export function useKbPagesTrash() {
+  const canView = useCan("kb:pages:view");
   return useQuery({
     queryKey: queryKeys.kb.pagesTrash(),
     queryFn: () => apiClient.get<KbPage[]>("/kb/pages/trash"),
     staleTime: 30_000,
+    enabled: canView,
   });
 }
 
 export function useKbPagesSearch(q: string) {
+  const canView = useCan("kb:pages:view");
   return useQuery({
     queryKey: queryKeys.kb.pagesSearch(q),
     queryFn: () => apiClient.get<KbPageSearchResult[]>("/kb/pages/search", { q }),
     staleTime: 0,
-    enabled: q.length > 0,
+    enabled: canView && q.length > 0,
   });
 }
 
 export function useKbPage(pageId: number) {
+  const canView = useCan("kb:pages:view");
   return useQuery({
     queryKey: queryKeys.kb.page(pageId),
     queryFn: () => apiClient.get<KbPageDetail>(`/kb/pages/${pageId}`),
     staleTime: 15_000,
-    enabled: Number.isFinite(pageId) && pageId > 0,
+    enabled: canView && Number.isFinite(pageId) && pageId > 0,
   });
 }
 
 export function useKbPageBacklinks(pageId: number) {
+  const canView = useCan("kb:pages:view");
   return useQuery({
     queryKey: queryKeys.kb.pageBacklinks(pageId),
     queryFn: () => apiClient.get<KbPageBacklink[]>(`/kb/pages/${pageId}/backlinks`),
     staleTime: 60_000,
-    enabled: Number.isFinite(pageId) && pageId > 0,
+    enabled: canView && Number.isFinite(pageId) && pageId > 0,
   });
 }
 
 export function useKbPageVersions(pageId: number) {
+  const canView = useCan("kb:pages:view");
   return useQuery({
     queryKey: queryKeys.kb.pageVersions(pageId),
     queryFn: () => apiClient.get<KbPageVersion[]>(`/kb/pages/${pageId}/versions`),
     staleTime: 60_000,
-    enabled: Number.isFinite(pageId) && pageId > 0,
+    enabled: canView && Number.isFinite(pageId) && pageId > 0,
   });
 }
 
 export function useKbPageVersion(pageId: number, versionNumber: number) {
+  const canView = useCan("kb:pages:view");
   return useQuery({
     queryKey: queryKeys.kb.pageVersion(pageId, versionNumber),
     queryFn: () => apiClient.get<KbPageVersion>(`/kb/pages/${pageId}/versions/${versionNumber}`),
     staleTime: 300_000,
     enabled:
+      canView &&
       Number.isFinite(pageId) &&
       pageId > 0 &&
       Number.isFinite(versionNumber) &&
@@ -200,7 +218,7 @@ export function useCreateKbPage() {
   return useMutation({
     mutationKey: ["kb", "pages", "create"],
     mutationFn: (input: CreateKbPageInput) => apiClient.post<KbPage>("/kb/pages", input),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.kb.pagesTree() });
       qc.invalidateQueries({ queryKey: queryKeys.kb.pagesRecent() });
       qc.invalidateQueries({ queryKey: queryKeys.kb.kbPages() });
@@ -217,7 +235,7 @@ export function useUpdateKbPage() {
     mutationKey: ["kb", "pages", "update"],
     mutationFn: ({ pageId, ...data }: UpdateKbPageInput & { pageId: number }) =>
       apiClient.patch<KbPage>(`/kb/pages/${pageId}`, data),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.kb.page(variables.pageId) });
       qc.invalidateQueries({ queryKey: queryKeys.kb.pagesTree() });
       qc.invalidateQueries({ queryKey: queryKeys.kb.pagesRecent() });
@@ -293,7 +311,7 @@ export function useMoveKbPage() {
     mutationKey: ["kb", "pages", "move"],
     mutationFn: ({ pageId, ...data }: MoveKbPageInput & { pageId: number }) =>
       apiClient.post<KbPage>(`/kb/pages/${pageId}/move`, data),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.kb.pagesTree() });
       qc.invalidateQueries({ queryKey: queryKeys.kb.page(variables.pageId) });
     },
@@ -306,7 +324,7 @@ export function useLockKbPage() {
     mutationKey: ["kb", "pages", "lock"],
     mutationFn: ({ pageId, isLocked }: { pageId: number; isLocked: boolean }) =>
       apiClient.patch<KbPage>(`/kb/pages/${pageId}/lock`, { isLocked }),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.kb.page(variables.pageId) });
     },
   });
@@ -329,10 +347,10 @@ export function useToggleFavoriteKbPage() {
       });
       return { snapshot };
     },
-    onError: (_err, { pageId }, context) => {
+    onError: (_, { pageId }, context) => {
       qc.setQueryData(queryKeys.kb.page(pageId), context?.snapshot);
     },
-    onSettled: (_data, _err, { pageId }) => {
+    onSettled: (_, _err, { pageId }) => {
       qc.invalidateQueries({ queryKey: queryKeys.kb.page(pageId) });
       qc.invalidateQueries({ queryKey: queryKeys.kb.pagesFavorites() });
     },
@@ -353,7 +371,7 @@ export function useSetKbPageVisibility() {
     mutationKey: ["kb", "pages", "visibility"],
     mutationFn: ({ pageId, visibility }: { pageId: number; visibility: "private" | "org" | "public" }) =>
       apiClient.patch<KbPageDetail>(`/kb/pages/${pageId}/visibility`, { visibility }),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.kb.page(variables.pageId) });
       qc.invalidateQueries({ queryKey: queryKeys.kb.pagesTree() });
     },
@@ -366,7 +384,7 @@ export function useRestoreKbPageVersion() {
     mutationKey: ["kb", "pages", "restoreVersion"],
     mutationFn: ({ pageId, versionNumber }: { pageId: number; versionNumber: number }) =>
       apiClient.post<KbPage>(`/kb/pages/${pageId}/versions/${versionNumber}/restore`),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.kb.page(variables.pageId) });
       qc.invalidateQueries({ queryKey: queryKeys.kb.pageVersions(variables.pageId) });
     },
@@ -378,7 +396,7 @@ export function usePublishKbPage() {
   return useMutation({
     mutationKey: ["kb", "pages", "publish"],
     mutationFn: (pageId: number) => apiClient.post<KbPageDetail>(`/kb/pages/${pageId}/publish`, {}),
-    onSuccess: (_data, pageId) => {
+    onSuccess: (_, pageId) => {
       qc.invalidateQueries({ queryKey: queryKeys.kb.page(pageId) });
       qc.invalidateQueries({ queryKey: queryKeys.kb.pagesTree() });
     },
@@ -390,7 +408,7 @@ export function useArchiveKbPage() {
   return useMutation({
     mutationKey: ["kb", "pages", "archive"],
     mutationFn: (pageId: number) => apiClient.post<KbPageDetail>(`/kb/pages/${pageId}/archive`, {}),
-    onSuccess: (_data, pageId) => {
+    onSuccess: (_, pageId) => {
       qc.invalidateQueries({ queryKey: queryKeys.kb.page(pageId) });
       qc.invalidateQueries({ queryKey: queryKeys.kb.pagesTree() });
     },
@@ -402,7 +420,7 @@ export function useUnarchiveKbPage() {
   return useMutation({
     mutationKey: ["kb", "pages", "unarchive"],
     mutationFn: (pageId: number) => apiClient.post<KbPageDetail>(`/kb/pages/${pageId}/unarchive`, {}),
-    onSuccess: (_data, pageId) => {
+    onSuccess: (_, pageId) => {
       qc.invalidateQueries({ queryKey: queryKeys.kb.page(pageId) });
       qc.invalidateQueries({ queryKey: queryKeys.kb.pagesTree() });
     },
@@ -415,7 +433,7 @@ export function useVerifyKbPage() {
     mutationKey: ["kb", "pages", "verify"],
     mutationFn: ({ pageId, intervalDays }: { pageId: number; intervalDays?: number }) =>
       apiClient.post<KbPageDetail>(`/kb/pages/${pageId}/verify`, { intervalDays }),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.kb.page(variables.pageId) });
       qc.invalidateQueries({ queryKey: queryKeys.kb.pagesTree() });
     },
@@ -427,7 +445,7 @@ export function useMarkStaleKbPage() {
   return useMutation({
     mutationKey: ["kb", "pages", "markStale"],
     mutationFn: (pageId: number) => apiClient.post<KbPageDetail>(`/kb/pages/${pageId}/mark-stale`, {}),
-    onSuccess: (_data, pageId) => {
+    onSuccess: (_, pageId) => {
       qc.invalidateQueries({ queryKey: queryKeys.kb.page(pageId) });
       qc.invalidateQueries({ queryKey: queryKeys.kb.pagesTree() });
     },

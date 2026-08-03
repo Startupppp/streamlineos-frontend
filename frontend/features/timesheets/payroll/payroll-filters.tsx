@@ -91,7 +91,7 @@ export function PayrollFilters({ payPeriod, rows }: PayrollFiltersProps) {
         <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[140px]")} aria-label="Period preset">
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
           <SelectItem value="this-period">This Period</SelectItem>
           <SelectItem value="last-period">Last Period</SelectItem>
           <SelectItem value="this-month">This Month</SelectItem>
@@ -111,7 +111,7 @@ export function PayrollFilters({ payPeriod, rows }: PayrollFiltersProps) {
         <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[160px]")} aria-label="Filter by person">
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
           <SelectItem value="all">All people</SelectItem>
           {rows.map((r) => (
             <SelectItem key={r.userId} value={r.userId}>

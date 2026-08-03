@@ -29,16 +29,6 @@ export function useAddSignRecipient(envelopeId: number) {
   });
 }
 
-export function useUpdateSignRecipient(envelopeId: number) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["signRecipients", "update", envelopeId],
-    mutationFn: ({ id, input }: { id: number; input: Partial<CreateSignRecipientInput> }) =>
-      apiClient.patch<SignRecipient>(`/sign/recipients/${id}`, input),
-    onSuccess: () => invalidateEnvelope(qc, envelopeId),
-  });
-}
-
 export function useDeleteSignRecipient(envelopeId: number) {
   const qc = useQueryClient();
   return useMutation({

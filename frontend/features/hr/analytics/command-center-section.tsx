@@ -97,9 +97,9 @@ function DrillableStatCard({ label, value, hint, icon, tone = "default", onClick
 }
 
 function formatCurrency(cents: number): string {
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat("en-IN", {
     style: "currency",
-    currency: "USD",
+    currency: "INR",
     notation: "compact",
     maximumFractionDigits: 1,
   }).format(cents / 100);

@@ -23,7 +23,9 @@ import { UserPreferencesTab } from "./user-preferences-tab";
 import { UserLoginHistoryTab } from "./user-login-history-tab";
 import { UserMembershipSection } from "./user-membership-section";
 import { UserModuleAccessSection } from "./user-module-access-section";
+import { UserAccessLinksSection } from "./user-access-links-section";
 import { UserAuditTab } from "./user-audit-tab";
+import { formatRoleLabel } from "./user-invite-roles";
 import {
   Mail,
   Phone,
@@ -122,12 +124,12 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
                 />
               ) : (
                 <Tabs defaultValue="profile" className="flex min-h-0 flex-1 flex-col gap-0">
-                  <TabsList className="flex h-9 min-h-9 max-h-9 w-full sm:w-full shrink-0 justify-stretch overflow-hidden bg-muted/50 rounded-md p-0.5 gap-0.5">
+                  <TabsList className="overflow-hidden bg-muted/50 rounded-md p-0.5 gap-0.5">
                     {TAB_ITEMS.map(({ value, label }) => (
                       <TabsTrigger
                         key={value}
                         value={value}
-                        className="h-7 min-w-0 flex-1 shrink px-1 truncate text-sm font-medium"
+                        className="px-1 truncate"
                       >
                         {label}
                       </TabsTrigger>
@@ -167,7 +169,7 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
                           </div>
                           <div className="flex flex-wrap gap-1.5 mt-2">
                             <Badge variant="secondary" className="text-[10px] h-5 px-1.5">
-                              {user.role}
+                              {formatRoleLabel(user.role)}
                             </Badge>
                             <UserStatusBadge isActive={user.isActive} />
                           </div>
@@ -273,6 +275,9 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
 
                       <Separator />
                       <UserModuleAccessSection userId={user.id} />
+
+                      <Separator />
+                      <UserAccessLinksSection userId={user.id} />
                     </div>
                   </TabsContent>
 

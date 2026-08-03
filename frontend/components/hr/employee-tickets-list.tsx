@@ -1,9 +1,8 @@
-"use client";
+﻿"use client";
 
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
-import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import Link from "next/link";
 
@@ -53,7 +52,7 @@ const TICKET_COLUMNS: DataTableColumn<Ticket>[] = [
     cell: (row) =>
       row.project ? (
         <Link
-          href={"/projects/" + row.project.id}
+          href={"/build/" + row.project.id}
           className="hover:underline text-primary"
         >
           {row.project.name}

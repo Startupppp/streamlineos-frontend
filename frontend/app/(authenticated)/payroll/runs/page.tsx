@@ -1,5 +1,5 @@
 import { requirePermission } from "@/lib/rbac/require-permission";
-import { RunsPageContent } from "./runs-page-content";
+import { RunsPageContent } from "@/features/payroll/runs/runs-page-content";
 
 export const metadata = { title: "Payroll Runs" };
 

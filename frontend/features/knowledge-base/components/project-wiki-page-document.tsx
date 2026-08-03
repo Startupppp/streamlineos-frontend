@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
@@ -27,7 +27,7 @@ export default function ProjectWikiPageDocument({ projectId, pageId }: ProjectWi
     <div className="flex min-h-full flex-col">
       <div className="flex shrink-0 items-center gap-2 border-b border-border/60 px-4 py-2">
         <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-muted-foreground" asChild>
-          <Link href={`/projects/${projectId}/wiki`}>
+          <Link href={`/build/${projectId}/wiki`}>
             <ChevronLeft className="h-3.5 w-3.5" />
             Wiki
           </Link>

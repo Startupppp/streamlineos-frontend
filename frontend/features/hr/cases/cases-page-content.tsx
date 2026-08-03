@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,8 @@ import {
 } from "@/components/ui/tabs";
 import { StateIllustration } from "@/components/illustrations";
 import { useCan } from "@/hooks/api/access";
+import { useOrgMembersByIds } from "@/hooks/api/organization";
+import { getUserDisplayName, type NamedUser } from "@/features/build/shared/resolve-user-name";
 import { useHrCases, useDisciplinaryActions } from "@/hooks/api/hr/cases";
 import type { HrCase, CaseCategory, CaseStatus, CaseSeverity } from "@/hooks/api/hr/cases";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -97,6 +99,20 @@ export function CasesPageContent() {
 
   const { data: disciplinaryData, isLoading: discLoading } = useDisciplinaryActions({ page });
 
+  const employeeIds = useMemo(
+    () => [...new Set((disciplinaryData?.data ?? []).map((r) => r.employeeId))],
+    [disciplinaryData?.data],
+  );
+  const { data: membersData } = useOrgMembersByIds(employeeIds);
+
+  const memberById = useMemo(() => {
+    const map = new Map<string, NamedUser>();
+    for (const member of membersData?.data ?? []) {
+      map.set(member.userId, { name: member.name, email: member.email });
+    }
+    return map;
+  }, [membersData]);
+
   const handleSearchChange = useCallback((value: string) => {
     setSearch(value);
     setPage(1);
@@ -155,7 +171,6 @@ export function CasesPageContent() {
         placeholder="Search cases..."
         value={search}
         onValueChange={handleSearchChange}
-        className="max-w-sm"
         aria-label="Search cases"
       />
       <Select
@@ -245,7 +260,7 @@ export function CasesPageContent() {
         onValueChange={(v) => { setActiveTab(v as ActiveTab); setPage(1); }}
         className="flex min-h-0 flex-1 flex-col pb-6"
       >
-        <TabsList className="mb-4 w-max max-w-full shrink-0">
+        <TabsList className="mb-4">
           <TabsTrigger value="cases">Cases</TabsTrigger>
           <TabsTrigger value="disciplinary">Disciplinary Actions</TabsTrigger>
         </TabsList>
@@ -302,8 +317,8 @@ export function CasesPageContent() {
               columns={[
                 {
                   key: "employee",
-                  header: "Employee ID",
-                  cell: (row) => <span className="font-mono text-xs">{row.employeeId}</span>,
+                  header: "Employee",
+                  cell: (row) => <span className="text-sm">{getUserDisplayName(memberById.get(row.employeeId))}</span>,
                 },
                 {
                   key: "actionType",

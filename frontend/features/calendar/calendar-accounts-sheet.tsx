@@ -19,12 +19,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyCalendarIllustration } from "@/components/illustrations";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { Loader2, RefreshCw, Unplug } from "lucide-react";
+import { RefreshCw, Unplug } from "lucide-react";
 import { StarIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
@@ -266,16 +267,15 @@ export function CalendarAccountsSheet({ open, onClose }: CalendarAccountsSheetPr
 
   const connectActions = canManage ? (
     <div className="order-3 sm:order-2 px-4 py-2 border-t sm:border-t-0 sm:border-b shrink-0 flex flex-row flex-wrap gap-2">
-      <Button
+      <LoadingButton
         variant="outline"
         size="sm"
         className="flex-1 h-11 px-4 text-xs bg-card justify-center gap-2 min-w-[9rem]"
-        disabled={pendingToolkit !== null}
+        disabled={pendingToolkit !== null && pendingToolkit !== "googlecalendar"}
+        isPending={pendingToolkit === "googlecalendar"}
         onClick={handleConnectGoogle}
       >
-        {pendingToolkit === "googlecalendar" ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
+        {pendingToolkit !== "googlecalendar" && (
           <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
             <path
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -296,17 +296,16 @@ export function CalendarAccountsSheet({ open, onClose }: CalendarAccountsSheetPr
           </svg>
         )}
         Google Calendar
-      </Button>
-      <Button
+      </LoadingButton>
+      <LoadingButton
         variant="outline"
         size="sm"
         className="flex-1 h-11 px-4 text-xs bg-card justify-center gap-2 min-w-[9rem]"
-        disabled={pendingToolkit !== null}
+        disabled={pendingToolkit !== null && pendingToolkit !== "outlook"}
+        isPending={pendingToolkit === "outlook"}
         onClick={handleConnectOutlook}
       >
-        {pendingToolkit === "outlook" ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
+        {pendingToolkit !== "outlook" && (
           <svg className="h-4 w-4 shrink-0" viewBox="0 0 21 21" aria-hidden="true">
             <rect x="1" y="1" width="9" height="9" fill="#f25022" />
             <rect x="11" y="1" width="9" height="9" fill="#7fba00" />
@@ -315,7 +314,7 @@ export function CalendarAccountsSheet({ open, onClose }: CalendarAccountsSheetPr
           </svg>
         )}
         Microsoft Outlook
-      </Button>
+      </LoadingButton>
     </div>
   ) : null;
 

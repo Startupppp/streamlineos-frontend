@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
+import { getInitials } from "@/lib/format-utils";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
@@ -36,16 +37,6 @@ interface ReviewTableProps {
   canReview: boolean;
   onOpenReview: (emp: EmployeeDocSummary) => void;
   pagination?: ReviewTablePagination;
-}
-
-function getInitials(name: string | null): string {
-  if (!name) return "?";
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
 }
 
 function getStatusBadgeClass(status: string | null): string {

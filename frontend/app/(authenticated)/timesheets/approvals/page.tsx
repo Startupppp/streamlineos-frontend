@@ -1,7 +1,7 @@
-"use client";
+import { requirePermission } from "@/lib/rbac/require-permission";
+import { ApprovalsView } from "@/features/timesheets/approvals";
 
-import { ApprovalsView } from "@/features/timesheets-core/approvals";
-
-export default function TimesheetApprovalsPage() {
+export default async function TimesheetApprovalsPage() {
+  await requirePermission("timesheets:approvals:view");
   return <ApprovalsView />;
 }

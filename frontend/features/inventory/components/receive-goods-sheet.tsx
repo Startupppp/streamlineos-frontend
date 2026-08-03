@@ -10,13 +10,6 @@ import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Form,
@@ -28,7 +21,9 @@ import {
 } from "@/components/ui/form";
 import { AppSheet } from "@/components/shared/app-sheet";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { useReceiveGoods, useLocations, useWarehouses } from "@/hooks/api/inventory";
+import { useReceiveGoods } from "@/hooks/api/inventory";
+import { WarehouseSelect } from "@/components/inventory/warehouse-select";
+import { LocationSelect } from "@/components/inventory/location-select";
 import type { PurchaseOrder, ReceiveGoodsInput, ReceiveGoodsLineInput } from "@/types/inventory";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { TrackingMethod } from "@/types/inventory";
@@ -245,11 +240,7 @@ const GrnLineRow = memo(function GrnLineRow({ meta, index, control }: GrnLineRow
 export function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetProps) {
   const receiveMutation = useReceiveGoods(po.id);
   const [selectedWarehouseId, setSelectedWarehouseId] = useState<number>(po.warehouseId ?? 0);
-  const warehousesQuery = useWarehouses({ status: "active" });
-  const activeWarehouses = (warehousesQuery.data ?? []).filter((w) => w.isActive);
-  const effectiveWarehouseId = selectedWarehouseId > 0 ? selectedWarehouseId : 0;
-  const locationsQuery = useLocations(effectiveWarehouseId);
-  const activeLocations = (locationsQuery.data ?? []).filter((l) => l.isActive);
+  const effectiveWarehouseId = selectedWarehouseId > 0 ? selectedWarehouseId : undefined;
 
   const pendingLines = po.lines.filter(
     (l) => Number(l.quantity) > Number(l.quantityReceived),
@@ -385,27 +376,14 @@ export function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetP
           {!po.warehouseId && (
             <FormItem>
               <FormLabel>Warehouse *</FormLabel>
-              <Select
+              <WarehouseSelect
                 value={selectedWarehouseId > 0 ? String(selectedWarehouseId) : ""}
-                onValueChange={(v) => {
+                onChange={(v) => {
                   setSelectedWarehouseId(Number(v));
                   form.resetField("locationId");
                 }}
-                disabled={warehousesQuery.isLoading}
-              >
-                <SelectTrigger>
-                  <SelectValue
-                    placeholder={warehousesQuery.isLoading ? "Loading…" : "Select a warehouse"}
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {activeWarehouses.map((wh) => (
-                    <SelectItem key={wh.id} value={String(wh.id)}>
-                      {wh.name} ({wh.code})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                activeOnly
+              />
             </FormItem>
           )}
           <FormField
@@ -414,32 +392,14 @@ export function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetP
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Receive at Location *</FormLabel>
-                <Select
-                  value={field.value != null && field.value > 0 ? String(field.value) : ""}
-                  onValueChange={(v) => field.onChange(Number(v))}
-                  disabled={locationsQuery.isLoading || effectiveWarehouseId === 0}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={
-                          effectiveWarehouseId === 0
-                            ? "Select a warehouse first"
-                            : locationsQuery.isLoading
-                              ? "Loading…"
-                              : "Select a location"
-                        }
-                      />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {activeLocations.map((loc) => (
-                      <SelectItem key={loc.id} value={String(loc.id)}>
-                        {loc.name} ({loc.code})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <LocationSelect
+                    warehouseId={effectiveWarehouseId}
+                    value={field.value != null && field.value > 0 ? String(field.value) : ""}
+                    onChange={(v) => field.onChange(Number(v))}
+                    activeOnly
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}

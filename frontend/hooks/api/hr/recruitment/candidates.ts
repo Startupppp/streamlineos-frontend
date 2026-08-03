@@ -63,14 +63,6 @@ interface BulkRejectResult {
   emailsSent: number;
 }
 
-export interface SourceEffectivenessRow {
-  source: string;
-  total: number;
-  hired: number;
-  rejected: number;
-  hireRate: number;
-}
-
 interface RecruitmentFunnelStage {
   stage: string;
   count: number;
@@ -182,20 +174,9 @@ export function useCandidateDuplicates() {
 export function useLinkDuplicateCandidate() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "candidates", "link-duplicate"],
     mutationFn: ({ candidateId, duplicateOfId }: { candidateId: number; duplicateOfId: number }) =>
       apiClient.post<{ success: boolean }>(`/hr/recruitment/candidates/${candidateId}/link-duplicate`, { duplicateOfId }),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.candidates() });
-      void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "candidateDuplicates"] });
-    },
-  });
-}
-
-export function useUnlinkDuplicateCandidate() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (candidateId: number) =>
-      apiClient.post<{ success: boolean }>(`/hr/recruitment/candidates/${candidateId}/unlink-duplicate`, {}),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.hr.candidates() });
       void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "candidateDuplicates"] });
@@ -206,6 +187,7 @@ export function useUnlinkDuplicateCandidate() {
 export function useBulkShortlistCandidates() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "candidates", "bulk-shortlist"],
     mutationFn: (candidateIds: number[]) =>
       apiClient.post<{ shortlisted: number; skipped: number }>("/hr/recruitment/candidates/bulk-shortlist", { candidateIds }),
     onSuccess: () => {
@@ -235,12 +217,13 @@ export function useCandidate(id: number) {
 export function useGenerateCandidateAiScore() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "candidates", "ai-score"],
     mutationFn: (candidateId: number) =>
       apiClient.post<AiScoreResult>(
         `/hr/recruitment/candidates/${candidateId}/ai-score`,
         {}
       ),
-    onSuccess: (_data, candidateId) => {
+    onSuccess: (_, candidateId) => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.candidate(candidateId) });
       qc.invalidateQueries({ queryKey: queryKeys.hr.candidates() });
     },
@@ -249,6 +232,7 @@ export function useGenerateCandidateAiScore() {
 
 export function useGenerateCandidateCompositeScore() {
   return useMutation({
+    mutationKey: ["hr", "recruitment", "candidates", "composite-score"],
     mutationFn: (candidateId: number) =>
       apiClient.post<CompositeScoreResult>(
         `/hr/recruitment/candidates/${candidateId}/composite-score`,
@@ -260,6 +244,7 @@ export function useGenerateCandidateCompositeScore() {
 export function useCreateCandidate() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "candidates", "create"],
     mutationFn: (data: CreateCandidateInput) =>
       apiClient.post<Candidate>("/hr/recruitment/candidates", data),
     onSuccess: () => {
@@ -272,9 +257,10 @@ export function useCreateCandidate() {
 export function useUpdateCandidate() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "candidates", "update"],
     mutationFn: ({ id, ...data }: UpdateCandidateInput & { id: number }) =>
       apiClient.patch<{ success: boolean }>(`/hr/recruitment/candidates/${id}`, data),
-    onSuccess: (_data, { id }) => {
+    onSuccess: (_, { id }) => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.candidates() });
       qc.invalidateQueries({ queryKey: queryKeys.hr.candidate(id) });
       qc.invalidateQueries({ queryKey: queryKeys.hr.recruitmentPipeline() });
@@ -285,6 +271,7 @@ export function useUpdateCandidate() {
 export function useDeleteCandidate() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "candidates", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/recruitment/candidates/${id}`),
     onSuccess: () => {
@@ -298,6 +285,7 @@ export function useDeleteCandidate() {
 export function useCreateApplication() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "applications", "create"],
     mutationFn: ({ candidateId, ...data }: { candidateId: number; jobPostingId: number; coverLetter?: string }) =>
       apiClient.post<CandidateApplication>(
         `/hr/recruitment/candidates/${candidateId}/applications`,
@@ -321,6 +309,7 @@ export function useAtsKanban() {
 export function useUpdateCandidateStage() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "candidates", "update-stage"],
     mutationFn: ({ candidateId, stage }: { candidateId: number; stage: CandidateStatus }) =>
       apiClient.patch<{ id: number; stage: CandidateStatus; changed: boolean }>(
         `/hr/recruitment/candidates/${candidateId}/stage`,
@@ -359,7 +348,7 @@ export function useUpdateCandidateStage() {
 
       return { previous };
     },
-    onError: (_err, _vars, context) => {
+    onError: (_, _vars, context) => {
       if (context?.previous) {
         qc.setQueryData(ATS_KANBAN_KEY, context.previous);
       }
@@ -376,6 +365,7 @@ export function useUpdateCandidateStage() {
 export function useBulkRejectCandidates() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "recruitment", "candidates", "bulk-reject"],
     mutationFn: (data: BulkRejectInput) =>
       apiClient.post<BulkRejectResult>(
         "/hr/recruitment/candidates/bulk-reject",
@@ -385,14 +375,6 @@ export function useBulkRejectCandidates() {
       void qc.invalidateQueries({ queryKey: queryKeys.hr.candidates() });
       void qc.invalidateQueries({ queryKey: ATS_KANBAN_KEY });
     },
-  });
-}
-
-export function useSourceEffectiveness() {
-  return useQuery({
-    queryKey: [...queryKeys.hr.all, "sourceEffectiveness"] as const,
-    queryFn: () => apiClient.get<SourceEffectivenessRow[]>("/reports/source-effectiveness"),
-    staleTime: 2 * 60_000,
   });
 }
 

@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { Minus } from 'lucide-react';
 import { useEditorReadOnly, useEditorRef } from 'platejs/react';
 import { Separator } from '@/components/ui/separator';

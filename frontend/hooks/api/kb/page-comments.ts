@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 export type KbPageComment = {
   id: number;
@@ -23,11 +24,12 @@ export type CreateKbPageCommentInput = {
 };
 
 export function useKbPageComments(pageId: number) {
+  const canUpdatePages = useCan("kb:pages:update");
   return useQuery({
     queryKey: queryKeys.kb.pageComments(pageId),
     queryFn: () => apiClient.get<KbPageComment[]>(`/kb/pages/${pageId}/comments`),
     staleTime: 30_000,
-    enabled: pageId > 0,
+    enabled: canUpdatePages && pageId > 0,
   });
 }
 
@@ -37,7 +39,7 @@ export function useCreateKbPageComment() {
     mutationKey: ["kb", "pageComments", "create"],
     mutationFn: ({ pageId, ...data }: CreateKbPageCommentInput & { pageId: number }) =>
       apiClient.post<KbPageComment>(`/kb/pages/${pageId}/comments`, data),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.kb.pageComments(variables.pageId) });
     },
   });
@@ -49,7 +51,7 @@ export function useUpdateKbPageComment() {
     mutationKey: ["kb", "pageComments", "update"],
     mutationFn: ({ commentId, content }: { commentId: number; pageId: number; content: string }) =>
       apiClient.patch<KbPageComment>(`/kb/page-comments/${commentId}`, { content }),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.kb.pageComments(variables.pageId) });
     },
   });
@@ -61,7 +63,7 @@ export function useDeleteKbPageComment() {
     mutationKey: ["kb", "pageComments", "delete"],
     mutationFn: ({ commentId }: { commentId: number; pageId: number }) =>
       apiClient.delete<void>(`/kb/page-comments/${commentId}`),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.kb.pageComments(variables.pageId) });
     },
   });
@@ -73,7 +75,7 @@ export function useResolveKbPageComment() {
     mutationKey: ["kb", "pageComments", "resolve"],
     mutationFn: ({ commentId }: { commentId: number; pageId: number }) =>
       apiClient.post<KbPageComment>(`/kb/page-comments/${commentId}/resolve`),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.kb.pageComments(variables.pageId) });
     },
   });

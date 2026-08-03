@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+﻿import { fireEvent, render, screen } from "@testing-library/react";
 import type { PropsWithChildren } from "react";
 import { DashboardShell } from "./dashboard-shell";
 
@@ -23,7 +23,7 @@ jest.mock("next/link", () => {
 });
 
 jest.mock("next/navigation", () => ({
-  usePathname: () => "/projects",
+  usePathname: () => "/build",
 }));
 
 jest.mock("./app-sidebar", () => ({
@@ -64,10 +64,6 @@ jest.mock("@/features/chat/chat-mobile-bottom-nav", () => ({
 
 jest.mock("./command-palette", () => ({
   CommandPalette: () => null,
-}));
-
-jest.mock("../auth/not-activated-page", () => ({
-  NotActivatedPage: () => null,
 }));
 
 jest.mock("@/components/ui/drawer", () => ({
@@ -122,8 +118,8 @@ jest.mock("./sidebar/use-product-sidebar-visibility", () => ({
       {
         label: "Projects",
         routes: [
-          { label: "Home", href: "/projects/command-center", icon: () => null },
-          { label: "Inbox", href: "/projects/inbox", icon: () => null },
+          { label: "Home", href: "/build/command-center", icon: () => null },
+          { label: "Inbox", href: "/build/inbox", icon: () => null },
         ],
       },
     ],
@@ -149,7 +145,6 @@ describe("DashboardShell mobile navigation", () => {
     render(
       <DashboardShell
         userId="user-1"
-        hasDashboardAccess
         defaultCollapsed={false}
       >
         <div>Content</div>
@@ -176,7 +171,6 @@ describe("DashboardShell mobile navigation", () => {
     render(
       <DashboardShell
         userId="user-1"
-        hasDashboardAccess
         defaultCollapsed={false}
       >
         <div>Content</div>

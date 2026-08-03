@@ -62,14 +62,6 @@ export function useCreateFeedbackCycle() {
   });
 }
 
-export function useFeedbackCycle(id: number) {
-  return useQuery({
-    queryKey: queryKeys.hr.feedbackCycle(id),
-    queryFn: () => apiClient.get<FeedbackCycle>(`/hr/feedback/cycles/${id}`),
-    staleTime: 2 * 60_000,
-  });
-}
-
 export function useUpdateFeedbackCycleStatus() {
   const qc = useQueryClient();
   return useMutation({

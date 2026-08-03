@@ -83,14 +83,6 @@ export function useWorkAuthorizations(params?: Record<string, unknown>) {
   });
 }
 
-export function useWorkAuthorization(id: number) {
-  return useQuery<WorkAuthorization>({
-    queryKey: queryKeys.hr.workAuthorization(id),
-    queryFn: () => apiClient.get(`/hr/global/work-authorizations/${id}`),
-    staleTime: 60_000,
-  });
-}
-
 export function useCreateWorkAuth() {
   const qc = useQueryClient();
   return useMutation({
@@ -135,14 +127,6 @@ export function useComplianceRequirements(params?: Record<string, unknown>) {
   return useQuery<PaginatedResponse<ComplianceRequirement>>({
     queryKey: queryKeys.hr.complianceRequirements(params),
     queryFn: () => apiClient.get("/hr/global/compliance/requirements", params),
-    staleTime: 120_000,
-  });
-}
-
-export function useComplianceRequirement(id: number) {
-  return useQuery<ComplianceRequirement>({
-    queryKey: queryKeys.hr.complianceRequirement(id),
-    queryFn: () => apiClient.get(`/hr/global/compliance/requirements/${id}`),
     staleTime: 120_000,
   });
 }
@@ -245,14 +229,6 @@ export function useContracts(params?: Record<string, unknown>) {
   });
 }
 
-export function useContract(id: number) {
-  return useQuery<HrContract>({
-    queryKey: queryKeys.hr.contract(id),
-    queryFn: () => apiClient.get(`/hr/global/contracts/${id}`),
-    staleTime: 60_000,
-  });
-}
-
 export function useCreateContract() {
   const qc = useQueryClient();
   return useMutation({
@@ -310,7 +286,7 @@ export function useConvertToEmployee() {
 
 export function useInternshipCertificate(contractId: number, enabled = false) {
   return useQuery<{ html: string; templateId: number | null }>({
-    queryKey: ["hr", "global", "contracts", contractId, "certificate"],
+    queryKey: queryKeys.hr.internshipCertificate(contractId),
     queryFn: () => apiClient.get(`/hr/global/contracts/${contractId}/internship-certificate`),
     enabled,
     staleTime: 300_000,

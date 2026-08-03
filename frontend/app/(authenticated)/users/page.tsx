@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 };
 
 export default async function Page() {
-  await requirePermission("hr:employees:view");
+  await requirePermission("settings:view");
   return (
     <Suspense>
       <UsersPage />

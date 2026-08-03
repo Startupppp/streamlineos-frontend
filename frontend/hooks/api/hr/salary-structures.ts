@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 
 export interface SalaryStructureTemplate {
   id: number;
@@ -23,7 +24,7 @@ export type CreateSalaryTemplateInput = Omit<SalaryStructureTemplate, "id" | "or
 
 export function useSalaryStructureTemplates() {
   return useQuery<SalaryStructureTemplate[]>({
-    queryKey: ["hr", "salary-structure-templates"],
+    queryKey: queryKeys.hr.salaryStructureTemplates(),
     queryFn: () => apiClient.get<SalaryStructureTemplate[]>("/hr/payroll/salary-structures"),
     staleTime: 120_000,
   });
@@ -35,7 +36,7 @@ export function useCreateSalaryTemplate() {
     mutationKey: ["hr", "salary-structure-templates", "create"],
     mutationFn: (data: CreateSalaryTemplateInput) =>
       apiClient.post<SalaryStructureTemplate>("/hr/payroll/salary-structures", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["hr", "salary-structure-templates"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.salaryStructureTemplates() }),
   });
 }
 
@@ -45,7 +46,7 @@ export function useUpdateSalaryTemplate() {
     mutationKey: ["hr", "salary-structure-templates", "update"],
     mutationFn: ({ id, ...data }: Partial<CreateSalaryTemplateInput> & { id: number }) =>
       apiClient.patch<SalaryStructureTemplate>(`/hr/payroll/salary-structures/${id}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["hr", "salary-structure-templates"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.salaryStructureTemplates() }),
   });
 }
 
@@ -54,6 +55,6 @@ export function useDeleteSalaryTemplate() {
   return useMutation({
     mutationKey: ["hr", "salary-structure-templates", "delete"],
     mutationFn: (id: number) => apiClient.delete<void>(`/hr/payroll/salary-structures/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["hr", "salary-structure-templates"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.salaryStructureTemplates() }),
   });
 }

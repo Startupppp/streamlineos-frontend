@@ -74,19 +74,6 @@ export function usePositions(params?: { status?: string; departmentId?: number; 
   });
 }
 
-export function useVacantPositions(params?: { page?: number; limit?: number }) {
-  return useQuery<PositionsListResponse>({
-    queryKey: [...POSITIONS_KEY, "vacant", params],
-    queryFn: () => {
-      const p: Record<string, unknown> = {};
-      if (params?.page) p["page"] = params.page;
-      if (params?.limit) p["limit"] = params.limit;
-      return apiClient.get<PositionsListResponse>("/hr/governance/positions/vacant", p);
-    },
-    staleTime: 30_000,
-  });
-}
-
 export function useReorgScenarios(params?: { status?: string; page?: number; limit?: number }) {
   return useQuery<ScenariosListResponse>({
     queryKey: [...SCENARIOS_KEY, params],
@@ -110,32 +97,6 @@ export function useSimulateScenario(scenarioId: number | undefined) {
   });
 }
 
-export function useCreatePosition() {
-  const qc = useQueryClient();
-  return useMutation<Position, Error, Omit<Position, "id" | "orgId" | "createdAt">>({
-    mutationKey: [...POSITIONS_KEY, "create"],
-    mutationFn: (payload) => apiClient.post<Position>("/hr/governance/positions", payload),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: POSITIONS_KEY });
-      toast.success("Position created");
-    },
-    onError: (err) => toast.error(getErrorMessage(err)),
-  });
-}
-
-export function useUpdatePosition() {
-  const qc = useQueryClient();
-  return useMutation<Position, Error, { positionId: number; data: Partial<Position & { effectiveFrom: string }> }>({
-    mutationKey: [...POSITIONS_KEY, "update"],
-    mutationFn: ({ positionId, data }) => apiClient.patch<Position>(`/hr/governance/positions/${positionId}`, data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: POSITIONS_KEY });
-      toast.success("Position updated");
-    },
-    onError: (err) => toast.error(getErrorMessage(err)),
-  });
-}
-
 export function useDeletePosition() {
   const qc = useQueryClient();
   return useMutation<void, Error, number>({
@@ -144,33 +105,6 @@ export function useDeletePosition() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: POSITIONS_KEY });
       toast.success("Position deleted");
-    },
-    onError: (err) => toast.error(getErrorMessage(err)),
-  });
-}
-
-export function useAssignPosition() {
-  const qc = useQueryClient();
-  return useMutation<Position, Error, { positionId: number; incumbentUserId: string }>({
-    mutationKey: [...POSITIONS_KEY, "assign"],
-    mutationFn: ({ positionId, incumbentUserId }) =>
-      apiClient.post<Position>(`/hr/governance/positions/${positionId}/assign`, { incumbentUserId }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: POSITIONS_KEY });
-      toast.success("Employee assigned to position");
-    },
-    onError: (err) => toast.error(getErrorMessage(err)),
-  });
-}
-
-export function useCreateReorgScenario() {
-  const qc = useQueryClient();
-  return useMutation<ReorgScenario, Error, { name: string; changes: Record<string, unknown> }>({
-    mutationKey: [...SCENARIOS_KEY, "create"],
-    mutationFn: (payload) => apiClient.post<ReorgScenario>("/hr/governance/scenarios", payload),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: SCENARIOS_KEY });
-      toast.success("Reorg scenario created");
     },
     onError: (err) => toast.error(getErrorMessage(err)),
   });

@@ -14,10 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { LoadingButton } from "@/components/ui/loading-button";
 import {
   Select,
@@ -27,9 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
-import { AlertTriangle, Lock } from "lucide-react";
-import { PlusIcon, XIcon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { Lock } from "lucide-react";
 import type {
   HrCustomFieldDefinition,
   CreateCustomFieldPayload,
@@ -47,6 +42,9 @@ import {
   type FieldFormValues,
 } from "../lib/custom-field-form";
 import { FieldPreview } from "./field-preview";
+import { FieldOptionsEditor } from "./field-options-editor";
+import { FieldTypeSections } from "./field-type-sections";
+import { FieldFlagsAndVisibility } from "./field-flags-visibility";
 
 interface CustomFieldUpsertSheetProps {
   open: boolean;
@@ -55,23 +53,6 @@ interface CustomFieldUpsertSheetProps {
   field?: HrCustomFieldDefinition;
   onSave: (payload: CreateCustomFieldPayload | UpdateCustomFieldPayload) => Promise<void>;
   isPending: boolean;
-}
-
-function RemoveOptionButton({ onClick }: { onClick: () => void }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button
-      type="button"
-      variant="ghost"
-      size="icon"
-      className="w-7 text-muted-foreground hover:text-destructive shrink-0"
-      onClick={onClick}
-      aria-label="Remove option"
-      {...hoverHandlers}
-    >
-      <XIcon ref={iconRef} size={14} />
-    </Button>
-  );
 }
 
 function parseOptionalNumber(raw: string | undefined): number | undefined {
@@ -119,7 +100,6 @@ export function CustomFieldUpsertSheet({
 }: CustomFieldUpsertSheetProps) {
   const [confirmSensitiveOpen, setConfirmSensitiveOpen] = useState(false);
   const [pendingValues, setPendingValues] = useState<FieldFormValues | null>(null);
-  const { iconRef: addOptionIconRef, hoverHandlers: addOptionHoverHandlers } = useAnimatedIcon();
 
   const isEdit = !!field;
 
@@ -152,18 +132,6 @@ export function CustomFieldUpsertSheet({
   }, [open, field, entityType, form]);
 
   const needsOptions = watchedFieldType === "select" || watchedFieldType === "multi_select";
-  const needsTextValidation = watchedFieldType === "text";
-  const needsNumericValidation = watchedFieldType === "number" || watchedFieldType === "currency";
-  const needsDateValidation = watchedFieldType === "date";
-
-  function handleAddOption() {
-    appendOption({ label: "", value: "" });
-  }
-
-  function handleOptionLabelChange(idx: number, label: string) {
-    const slug = label.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
-    form.setValue(`options.${idx}.value`, slug);
-  }
 
   async function performSave(values: FieldFormValues) {
     const settings = buildSettings(values);
@@ -232,7 +200,9 @@ export function CustomFieldUpsertSheet({
             {isEdit && field.isSensitive && (
               <div className="flex items-center gap-1.5 mt-1">
                 <Lock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-300" />
-                <span className="text-xs text-amber-700 dark:text-amber-300 font-medium">Sensitive field</span>
+                <span className="text-xs text-amber-700 dark:text-amber-300 font-medium">
+                  Sensitive field
+                </span>
               </div>
             )}
           </SheetHeader>
@@ -347,261 +317,18 @@ export function CustomFieldUpsertSheet({
                 )}
               </div>
 
-              {(watchedFieldType === "text" ||
-                watchedFieldType === "number" ||
-                watchedFieldType === "currency" ||
-                watchedFieldType === "date") && (
-                <div className="space-y-1">
-                  <Label className="text-xs font-medium">Placeholder</Label>
-                  <Input
-                    {...form.register("placeholder")}
-                    className="text-sm"
-                    placeholder="Shown when the field is empty"
-                  />
-                </div>
-              )}
+              <FieldTypeSections form={form} watchedFieldType={watchedFieldType} />
 
               {needsOptions && (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-xs font-medium">Options *</Label>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 text-xs px-2 gap-1"
-                      onClick={handleAddOption}
-                      {...addOptionHoverHandlers}
-                    >
-                      <PlusIcon ref={addOptionIconRef} size={12} /> Add Option
-                    </Button>
-                  </div>
-                  {optionFields.length === 0 && (
-                    <p className="text-xs text-muted-foreground">No options yet. Add at least one.</p>
-                  )}
-                  {optionFields.map((optField, idx) => (
-                    <div key={optField.id} className="flex gap-2 items-start">
-                      <div className="flex-1 space-y-1">
-                        <Input
-                          {...form.register(`options.${idx}.label`)}
-                          className="text-xs"
-                          placeholder="Label"
-                          onChange={(e) => {
-                            form.register(`options.${idx}.label`).onChange(e);
-                            handleOptionLabelChange(idx, e.target.value);
-                          }}
-                        />
-                        {form.formState.errors.options?.[idx]?.label && (
-                          <p className="text-[10px] text-destructive">
-                            {form.formState.errors.options[idx]?.label?.message}
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex-1 space-y-1">
-                        <Input
-                          {...form.register(`options.${idx}.value`)}
-                          className="text-xs font-mono"
-                          placeholder="value"
-                        />
-                        {form.formState.errors.options?.[idx]?.value && (
-                          <p className="text-[10px] text-destructive">
-                            {form.formState.errors.options[idx]?.value?.message}
-                          </p>
-                        )}
-                      </div>
-                      <RemoveOptionButton onClick={() => removeOption(idx)} />
-                    </div>
-                  ))}
-                </div>
+                <FieldOptionsEditor
+                  form={form}
+                  optionFields={optionFields}
+                  onAppend={appendOption}
+                  onRemove={removeOption}
+                />
               )}
 
-              {(needsTextValidation || needsNumericValidation || needsDateValidation) && (
-                <div className="space-y-2">
-                  <Label className="text-xs font-medium">Validation Rules</Label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {needsTextValidation && (
-                      <>
-                        <div className="space-y-1">
-                          <Label className="text-[11px] text-muted-foreground">Min Length</Label>
-                          <Input
-                            type="number"
-                            {...form.register("validationMinLength")}
-                            className="text-xs"
-                            placeholder="0"
-                            min={0}
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <Label className="text-[11px] text-muted-foreground">Max Length</Label>
-                          <Input
-                            type="number"
-                            {...form.register("validationMaxLength")}
-                            className="text-xs"
-                            placeholder="500"
-                            min={1}
-                          />
-                        </div>
-                      </>
-                    )}
-                    {needsNumericValidation && (
-                      <>
-                        <div className="space-y-1">
-                          <Label className="text-[11px] text-muted-foreground">Min Value</Label>
-                          <Input
-                            type="number"
-                            {...form.register("validationMinValue")}
-                            className="text-xs"
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <Label className="text-[11px] text-muted-foreground">Max Value</Label>
-                          <Input
-                            type="number"
-                            {...form.register("validationMaxValue")}
-                            className="text-xs"
-                          />
-                        </div>
-                      </>
-                    )}
-                    {needsDateValidation && (
-                      <>
-                        <div className="space-y-1">
-                          <Label className="text-[11px] text-muted-foreground">Date From</Label>
-                          <Input
-                            type="date"
-                            {...form.register("validationDateMin")}
-                            className="text-xs"
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <Label className="text-[11px] text-muted-foreground">Date To</Label>
-                          <Input
-                            type="date"
-                            {...form.register("validationDateMax")}
-                            className="text-xs"
-                          />
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              <Separator />
-
-              <div className="space-y-3">
-                <Label className="text-xs font-medium">Field Flags</Label>
-                <div className="flex items-center gap-2">
-                  <Controller
-                    control={form.control}
-                    name="isRequired"
-                    render={({ field: f }) => (
-                      <Switch checked={f.value} onCheckedChange={f.onChange} id="isRequired" />
-                    )}
-                  />
-                  <Label htmlFor="isRequired" className="text-sm cursor-pointer">
-                    Required
-                  </Label>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Controller
-                      control={form.control}
-                      name="isSensitive"
-                      render={({ field: f }) => (
-                        <Switch checked={f.value} onCheckedChange={f.onChange} id="isSensitive" />
-                      )}
-                    />
-                    <Label htmlFor="isSensitive" className="text-sm cursor-pointer">
-                      Sensitive
-                    </Label>
-                    {watchedIsSensitive && <Lock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-300" />}
-                  </div>
-                  {watchedIsSensitive && (
-                    <div className="flex gap-2 p-3 bg-amber-50 border border-amber-200 rounded-md dark:bg-amber-500/10 dark:border-amber-500/30">
-                      <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-300 shrink-0 mt-0.5" />
-                      <p className="text-xs text-amber-800 dark:text-amber-300">{SENSITIVE_WARNING_TEXT}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-3">
-                <Label className="text-xs font-medium">Visibility</Label>
-                <div className="space-y-2">
-                  {(
-                    [
-                      {
-                        name: "visibilityHrOnly",
-                        label: "HR only (hidden from managers and employees)",
-                      },
-                      { name: "visibilityManagerVisible", label: "Visible to managers" },
-                      {
-                        name: "visibilitySelfService",
-                        label: "Visible in employee self-service",
-                      },
-                      { name: "visibilityHiddenFromExports", label: "Hidden from exports" },
-                    ] as const
-                  ).map(({ name, label }) => (
-                    <div key={name} className="flex items-center gap-2">
-                      <Controller
-                        control={form.control}
-                        name={name}
-                        render={({ field: f }) => (
-                          <Checkbox id={name} checked={f.value} onCheckedChange={f.onChange} />
-                        )}
-                      />
-                      <Label htmlFor={name} className="text-sm font-normal cursor-pointer">
-                        {label}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-3">
-                <Label className="text-xs font-medium">Reporting &amp; Search</Label>
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-2">
-                    <Controller
-                      control={form.control}
-                      name="searchable"
-                      render={({ field: f }) => (
-                        <Checkbox
-                          id="searchable"
-                          checked={f.value}
-                          onCheckedChange={f.onChange}
-                        />
-                      )}
-                    />
-                    <Label htmlFor="searchable" className="text-sm font-normal cursor-pointer">
-                      Include in search results
-                    </Label>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Controller
-                      control={form.control}
-                      name="reportable"
-                      render={({ field: f }) => (
-                        <Checkbox
-                          id="reportable"
-                          checked={f.value}
-                          onCheckedChange={f.onChange}
-                        />
-                      )}
-                    />
-                    <Label htmlFor="reportable" className="text-sm font-normal cursor-pointer">
-                      Available in reports
-                    </Label>
-                  </div>
-                </div>
-              </div>
-
-              <Separator />
+              <FieldFlagsAndVisibility form={form} watchedIsSensitive={watchedIsSensitive} />
 
               <div className="space-y-2">
                 <Label className="text-xs font-medium text-muted-foreground">Preview</Label>

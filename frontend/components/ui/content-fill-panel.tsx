@@ -8,7 +8,7 @@ export const CONTENT_FILL_PANEL = "flex min-h-full w-full flex-1 flex-col";
 /** Horizontal page inset used by PageWrapper headers, filters, and content. */
 export const PAGE_CHROME_X = "px-4 sm:px-6 lg:px-8";
 
-/** Minimal bottom breathing room; the shell already reserves the Ask OS bar height (md:pb-6), so content sits just above the bar. */
+/** Minimal bottom breathing room; mobile bottom-nav inset is reserved by the shell fill wrapper. */
 export const PAGE_CHROME_BOTTOM = "pb-2";
 
 export const FILTER_SELECT_TRIGGER =

@@ -227,7 +227,7 @@ export default function PublicFormPage() {
     staleTime: 60_000,
   });
 
-  const fields = formQuery.data?.fields ?? [];
+  const fields = useMemo(() => formQuery.data?.fields ?? [], [formQuery.data]);
 
   const schema = useMemo(() => buildDynamicSchema(fields), [fields]);
 

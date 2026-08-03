@@ -45,8 +45,6 @@ export interface CreateLogicRuleInput {
   sortOrder?: number;
 }
 
-export type PatchLogicRuleInput = Partial<CreateLogicRuleInput>;
-
 function useInvalidateBuilder(surveyId: number) {
   const qc = useQueryClient();
   return () => qc.invalidateQueries({ queryKey: queryKeys.surveys.builder(surveyId) });
@@ -57,16 +55,6 @@ export function useCreateLogicRule(surveyId: number) {
   return useMutation({
     mutationKey: ["surveys", "logic", "create", surveyId] as const,
     mutationFn: (input: CreateLogicRuleInput) => apiClient.post(`/surveys/${surveyId}/logic`, input),
-    onSuccess: invalidate,
-  });
-}
-
-export function usePatchLogicRule(surveyId: number) {
-  const invalidate = useInvalidateBuilder(surveyId);
-  return useMutation({
-    mutationKey: ["surveys", "logic", "patch", surveyId] as const,
-    mutationFn: ({ ruleId, input }: { ruleId: number; input: PatchLogicRuleInput }) =>
-      apiClient.patch(`/surveys/${surveyId}/logic/${ruleId}`, input),
     onSuccess: invalidate,
   });
 }

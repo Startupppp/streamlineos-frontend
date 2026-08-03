@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 import { useMemo } from "react";
-import { useReleases } from "@/hooks/api/projects/releases";
+import { useReleases } from "@/hooks/api/build/releases";
 import { Combobox } from "@/components/ui/combobox";
 
 interface ReleaseComboboxProps {

@@ -1,10 +1,10 @@
-"use client";
+﻿"use client";
 
 import { useCallback, type ReactNode } from "react";
 import Link from "next/link";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { FinanceStatusBadge, Money } from "@/features/accounting/shared";
-import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
+import { getUserDisplayName } from "@/features/build/shared/resolve-user-name";
 import type { FinReimbursementBatch, ReimbursementBatchStatus } from "@/types/accounting/expenses";
 import type { FinanceStatus } from "@/features/accounting/shared";
 

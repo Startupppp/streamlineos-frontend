@@ -15,8 +15,6 @@ export type LabelColor = (typeof LABEL_COLORS)[number];
 
 export const DEFAULT_LABEL_COLOR: LabelColor = LABEL_COLORS[0];
 
-export const FALLBACK_LABEL_COLOR = DEFAULT_LABEL_COLOR;
-
 export function isValidHexColor(value: string): boolean {
   return HEX_COLOR.test(value);
 }
@@ -37,5 +35,5 @@ export function resolveLabelColor(value: string | null | undefined): string {
   if (value && isValidHexColor(value)) {
     return value.toLowerCase();
   }
-  return FALLBACK_LABEL_COLOR;
+  return DEFAULT_LABEL_COLOR;
 }

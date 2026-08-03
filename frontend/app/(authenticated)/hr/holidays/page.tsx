@@ -2,55 +2,17 @@
 
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  format,
-  startOfMonth,
-  endOfMonth,
-  eachDayOfInterval,
-  getDay,
-  addMonths,
-  subMonths,
-  isSameDay,
-  parseISO,
-  isAfter,
-  startOfDay,
-  getYear,
-  eachMonthOfInterval,
-  startOfYear,
-  endOfYear,
-} from "date-fns";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { getYear, parseISO } from "date-fns";
+import { addMonths, subMonths } from "date-fns";
 import { toast } from "sonner";
-import {
-  CalendarDays,
-  Pencil,
-  RotateCcw,
-  List,
-  Calendar,
-  Globe,
-  Clock,
-} from "lucide-react";
-import { Trash2Icon, PlusIcon, ChevronLeftIcon, ChevronRightIcon } from "@animateicons/react/lucide";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetBody } from "@/components/ui/sheet";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { SearchInput } from "@/components/ui/search-input";
-import { DatePicker } from "@/components/ui/date-picker";
-import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { LoadingButton } from "@/components/ui/loading-button";
-import { EmptyState } from "@/components/ui/empty-state";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
-import { TruncatedText } from "@/components/ui/truncated-text";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -60,397 +22,13 @@ import {
   useDeleteHoliday,
   type Holiday,
 } from "@/hooks/api/hr/holidays";
-
-const holidaySchema = z.object({
-  name: z
-    .string()
-    .transform((v) => v.trim().replace(/\s+/g, " "))
-    .pipe(
-      z
-        .string()
-        .min(2, "Holiday name must be at least 2 characters")
-        .max(100, "Holiday name must be at most 100 characters")
-        .refine((v) => /[a-zA-Z]/.test(v), "Holiday name must contain at least one letter")
-        .refine(
-          (v) => /^[\p{L}\p{N}\s'.-]+$/u.test(v),
-          "Holiday name can only use letters, numbers, spaces, apostrophes, periods, and hyphens",
-        ),
-    ),
-  date: z.string().min(1, "Date is required"),
-  recurring: z.boolean(),
-});
-
-type HolidayFormValues = z.infer<typeof holidaySchema>;
-
-const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-type ViewMode = "calendar" | "list" | "year" | "upcoming" | "location";
-
-const VIEW_OPTIONS: { value: ViewMode; label: string; icon: React.ElementType }[] = [
-  { value: "calendar", label: "Calendar", icon: Calendar },
-  { value: "list", label: "List", icon: List },
-  { value: "year", label: "Year", icon: CalendarDays },
-  { value: "upcoming", label: "Upcoming", icon: Clock },
-  { value: "location", label: "By Location", icon: Globe },
-];
-
-function HolidayItem({
-  holiday,
-  canManage,
-  onEdit,
-  onDelete,
-}: {
-  holiday: Holiday;
-  canManage: boolean;
-  onEdit: (h: Holiday) => void;
-  onDelete: (id: string) => void;
-}) {
-  function handleEditClick() {
-    onEdit(holiday);
-  }
-  function handleDeleteClick() {
-    onDelete(holiday.id);
-  }
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: -8 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.18, ease: "easeOut" }}
-      className="flex items-center gap-3 bg-card border border-border rounded-lg px-4 py-3 shadow-sm"
-    >
-      <div className="bg-muted rounded-md px-2.5 py-1.5 text-center min-w-[48px]">
-        <p className="text-xs font-medium text-muted-foreground">{format(parseISO(holiday.date), "MMM")}</p>
-        <p className="text-lg font-bold text-foreground leading-none">{format(parseISO(holiday.date), "d")}</p>
-      </div>
-      <div className="flex-1 min-w-0">
-        <TruncatedText text={holiday.name} className="font-medium text-foreground" />
-        <p className="text-xs text-muted-foreground">{format(parseISO(holiday.date), "EEEE, MMMM d")}</p>
-      </div>
-      {holiday.recurring && (
-        <Badge variant="secondary" className="shrink-0 text-xs">
-          <RotateCcw className="h-3 w-3 mr-1" /> Recurring
-        </Badge>
-      )}
-      {canManage && (
-        <div className="flex gap-1 shrink-0">
-          <Button variant="ghost" size="icon" className="w-7" aria-label={`Edit ${holiday.name}`} onClick={handleEditClick}>
-            <Pencil className="h-3.5 w-3.5" />
-          </Button>
-          <AnimatedIconButton
-            icon={Trash2Icon}
-            variant="ghost"
-            size="icon"
-            className="w-7 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"
-            iconSize={14}
-            aria-label={`Delete ${holiday.name}`}
-            onClick={handleDeleteClick}
-          />
-        </div>
-      )}
-    </motion.div>
-  );
-}
-
-function CalendarView({
-  holidays,
-  viewDate,
-  canManage,
-  onPrev,
-  onNext,
-  onEdit,
-  onDelete,
-  onAdd,
-}: {
-  holidays: Holiday[];
-  viewDate: Date;
-  canManage: boolean;
-  onPrev: () => void;
-  onNext: () => void;
-  onEdit: (h: Holiday) => void;
-  onDelete: (id: string) => void;
-  onAdd: () => void;
-}) {
-  const monthHolidays = useMemo(() => {
-    const start = startOfMonth(viewDate);
-    const end = endOfMonth(viewDate);
-    return holidays.filter((h) => {
-      const d = parseISO(h.date);
-      return d >= start && d <= end;
-    });
-  }, [holidays, viewDate]);
-
-  const calendarDays = useMemo(() => {
-    const start = startOfMonth(viewDate);
-    const end = endOfMonth(viewDate);
-    return { days: eachDayOfInterval({ start, end }), startPad: getDay(start) };
-  }, [viewDate]);
-
-  return (
-    <div className="space-y-4">
-      <div className="bg-card border border-border rounded-lg shadow-sm p-4">
-        <div className="flex items-center justify-between mb-4">
-          <AnimatedIconButton icon={ChevronLeftIcon} variant="ghost" size="icon" iconSize={16} aria-label="Previous month" onClick={onPrev} />
-          <h2 className="text-lg font-semibold text-foreground">{format(viewDate, "MMMM yyyy")}</h2>
-          <AnimatedIconButton icon={ChevronRightIcon} variant="ghost" size="icon" iconSize={16} aria-label="Next month" onClick={onNext} />
-        </div>
-        <div className="grid grid-cols-7 gap-1">
-          {WEEKDAYS.map((day) => (
-            <div key={day} className="text-center text-xs font-medium text-muted-foreground py-1">
-              {day}
-            </div>
-          ))}
-          {Array.from({ length: calendarDays.startPad }).map((_, i) => (
-            <div key={`pad-${i}`} />
-          ))}
-          {calendarDays.days.map((day) => {
-            const dayHolidays = holidays.filter((h) => isSameDay(parseISO(h.date), day));
-            const isHoliday = dayHolidays.length > 0;
-            return (
-              <div
-                key={day.toISOString()}
-                className={`relative flex flex-col items-center justify-start rounded-md p-1.5 min-h-[40px] text-sm ${
-                  isHoliday ? "bg-primary/5 border border-primary/20" : "hover:bg-muted"
-                }`}
-                title={isHoliday ? dayHolidays.map((h) => h.name).join(", ") : undefined}
-              >
-                <span className={`font-medium ${isHoliday ? "text-primary" : "text-foreground"}`}>
-                  {format(day, "d")}
-                </span>
-                {isHoliday && (
-                  <div className="flex gap-0.5 mt-0.5">
-                    {dayHolidays.slice(0, 2).map((_, idx) => (
-                      <span key={idx} className="w-1.5 h-1.5 rounded-full bg-primary" />
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-          {format(viewDate, "MMMM")} Holidays
-        </h3>
-        {monthHolidays.length === 0 ? (
-          <EmptyState
-            illustrationPreset="calendar"
-            illustrationSize="md"
-            title={`No holidays in ${format(viewDate, "MMMM")}`}
-            action={canManage ? { label: "Add one", onClick: onAdd } : undefined}
-            compact
-            className="rounded-lg border border-border bg-muted/20 py-8"
-          />
-        ) : (
-          monthHolidays.map((h) => (
-            <HolidayItem
-              key={h.id}
-              holiday={h}
-              canManage={canManage}
-              onEdit={onEdit}
-              onDelete={onDelete}
-            />
-          ))
-        )}
-      </div>
-    </div>
-  );
-}
-
-function ListView({
-  holidays,
-  canManage,
-  onEdit,
-  onDelete,
-  onAdd,
-  yearFilter,
-}: {
-  holidays: Holiday[];
-  canManage: boolean;
-  onEdit: (h: Holiday) => void;
-  onDelete: (id: string) => void;
-  onAdd: () => void;
-  yearFilter: number | "all";
-}) {
-  const [search, setSearch] = useState("");
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
-
-  const filtered = useMemo(() => {
-    let items = holidays;
-    if (yearFilter !== "all") {
-      items = items.filter((h) => getYear(parseISO(h.date)) === yearFilter);
-    }
-    if (search.trim()) {
-      const q = search.trim().toLowerCase();
-      items = items.filter((h) => h.name.toLowerCase().includes(q));
-    }
-    return [...items].sort((a, b) => {
-      const diff = new Date(a.date).getTime() - new Date(b.date).getTime();
-      return sortDir === "asc" ? diff : -diff;
-    });
-  }, [holidays, yearFilter, search, sortDir]);
-
-  function handleSearchChange(value: string) {
-    setSearch(value);
-  }
-
-  function handleSortToggle() {
-    setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-  }
-
-  return (
-    <div className="space-y-3">
-      <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-        <SearchInput
-          placeholder="Search holidays..."
-          value={search}
-          onValueChange={handleSearchChange}
-           className="max-w-xs"
-         />
-        <Button variant="outline" size="sm" className="text-xs" onClick={handleSortToggle}>
-          Date {sortDir === "asc" ? "↑" : "↓"}
-        </Button>
-      </div>
-      {filtered.length === 0 ? (
-        <EmptyState
-          illustrationPreset="calendar"
-          illustrationSize="md"
-          title={search ? "No holidays match your search" : "No holidays for this period"}
-          action={canManage && !search ? { label: "Add Holiday", onClick: onAdd } : undefined}
-          compact
-          className="rounded-lg border border-border bg-muted/20 py-10"
-        />
-      ) : (
-        <div className="space-y-2">
-          {filtered.map((h) => (
-            <HolidayItem key={h.id} holiday={h} canManage={canManage} onEdit={onEdit} onDelete={onDelete} />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function YearOverview({
-  holidays,
-  yearFilter,
-}: {
-  holidays: Holiday[];
-  yearFilter: number | "all";
-}) {
-  const year = yearFilter === "all" ? getYear(new Date()) : yearFilter;
-  const months = eachMonthOfInterval({ start: startOfYear(new Date(year, 0)), end: endOfYear(new Date(year, 0)) });
-
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-      {months.map((monthStart) => {
-        const monthEnd = endOfMonth(monthStart);
-        const monthHolidays = holidays.filter((h) => {
-          const d = parseISO(h.date);
-          return d >= monthStart && d <= monthEnd;
-        });
-        return (
-          <div key={monthStart.toISOString()} className="bg-card border border-border rounded-lg p-3">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
-              {format(monthStart, "MMMM")}
-            </p>
-            {monthHolidays.length === 0 ? (
-              <p className="text-xs text-muted-foreground italic">No holidays</p>
-            ) : (
-              <div className="space-y-1">
-                {monthHolidays.map((h) => (
-                  <div key={h.id} className="flex items-center gap-1.5">
-                    <span className="text-xs font-medium text-foreground tabular-nums w-5 shrink-0">
-                      {format(parseISO(h.date), "d")}
-                    </span>
-                    <TruncatedText text={h.name} className="text-xs text-muted-foreground" />
-                    {h.recurring && <RotateCcw className="h-2.5 w-2.5 text-muted-foreground/60 shrink-0" />}
-                  </div>
-                ))}
-              </div>
-            )}
-            {monthHolidays.length > 0 && (
-              <p className="text-[10px] text-muted-foreground mt-2 font-medium">
-                {monthHolidays.length} holiday{monthHolidays.length > 1 ? "s" : ""}
-              </p>
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function UpcomingView({
-  holidays,
-  canManage,
-  onEdit,
-  onDelete,
-  onAdd,
-}: {
-  holidays: Holiday[];
-  canManage: boolean;
-  onEdit: (h: Holiday) => void;
-  onDelete: (id: string) => void;
-  onAdd: () => void;
-}) {
-  const upcoming = useMemo(() => {
-    const today = startOfDay(new Date());
-    return [...holidays]
-      .filter((h) => isAfter(parseISO(h.date), today) || isSameDay(parseISO(h.date), today))
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [holidays]);
-
-  if (upcoming.length === 0) {
-    return (
-      <EmptyState
-        illustrationPreset="calendar"
-        illustrationSize="md"
-        title="No upcoming holidays"
-        action={canManage ? { label: "Add Holiday", onClick: onAdd } : undefined}
-        compact
-        className="rounded-lg border border-border bg-muted/20 py-10"
-      />
-    );
-  }
-
-  const grouped = upcoming.reduce<Record<string, Holiday[]>>((acc, h) => {
-    const key = format(parseISO(h.date), "MMMM yyyy");
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(h);
-    return acc;
-  }, {});
-
-  return (
-    <div className="space-y-4">
-      {Object.entries(grouped).map(([month, items]) => (
-        <div key={month}>
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{month}</h3>
-          <div className="space-y-2">
-            {items.map((h) => (
-              <HolidayItem key={h.id} holiday={h} canManage={canManage} onEdit={onEdit} onDelete={onDelete} />
-            ))}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function LocationView() {
-  return (
-    <EmptyState
-      illustrationPreset="travel"
-      illustrationSize="md"
-      title="Location-based holidays not yet configured"
-      description="Assign offices or regions to employees in Org settings to group holidays by location."
-      compact
-      className="rounded-lg border border-border bg-muted/20 py-10"
-    />
-  );
-}
+import { VIEW_OPTIONS, type ViewMode, type HolidayFormValues } from "@/features/hr/holidays/lib/holiday-schema";
+import { CalendarView } from "@/features/hr/holidays/components/calendar-view";
+import { ListView } from "@/features/hr/holidays/components/list-view";
+import { YearOverview } from "@/features/hr/holidays/components/year-overview";
+import { UpcomingView } from "@/features/hr/holidays/components/upcoming-view";
+import { LocationView } from "@/features/hr/holidays/components/location-view";
+import { HolidaySheet } from "@/features/hr/holidays/components/holiday-sheet";
 
 export default function HolidaysPage() {
   const { data: holidays, isLoading } = useHolidays();
@@ -465,12 +43,7 @@ export default function HolidaysPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingHoliday, setEditingHoliday] = useState<Holiday | null>(null);
 
-  const form = useForm<HolidayFormValues>({
-    resolver: zodResolver(holidaySchema),
-    defaultValues: { recurring: false, name: "", date: "" },
-  });
-
-  const allHolidays = holidays ?? [];
+  const allHolidays = useMemo(() => holidays ?? [], [holidays]);
 
   const availableYears = useMemo(() => {
     const years = new Set<number>();
@@ -489,12 +62,10 @@ export default function HolidaysPage() {
   }
   function handleCreateClick() {
     setEditingHoliday(null);
-    form.reset({ recurring: false, name: "", date: "" });
     setSheetOpen(true);
   }
   function handleEditClick(holiday: Holiday) {
     setEditingHoliday(holiday);
-    form.reset({ name: holiday.name, date: holiday.date, recurring: holiday.recurring });
     setSheetOpen(true);
   }
   function handleDeleteClick(id: string) {
@@ -535,7 +106,6 @@ export default function HolidaysPage() {
         onSuccess: () => {
           toast.success("Holiday added");
           setSheetOpen(false);
-          form.reset();
         },
         onError: (err) => toast.error(getErrorMessage(err)),
       });
@@ -551,7 +121,6 @@ export default function HolidaysPage() {
   }
 
   const isPending = createMutation.isPending || updateMutation.isPending;
-
   const showYearFilter = viewMode === "list" || viewMode === "year";
 
   return (
@@ -574,7 +143,7 @@ export default function HolidaysPage() {
             </Select>
           )}
           <Tabs value={viewMode} onValueChange={handleViewChange}>
-            <TabsList className="grid h-9 min-h-9 w-auto grid-cols-5 gap-1 p-1">
+            <TabsList>
               {VIEW_OPTIONS.map((opt) => {
                 const Icon = opt.icon;
                 return (
@@ -582,7 +151,7 @@ export default function HolidaysPage() {
                     key={opt.value}
                     value={opt.value}
                     title={opt.label}
-                    className="h-7 min-h-7 w-full justify-center gap-1.5 px-3 text-sm"
+                    className="gap-1.5"
                   >
                     <Icon className="size-4" />
                     <span className="hidden sm:inline">{opt.label}</span>
@@ -657,65 +226,13 @@ export default function HolidaysPage() {
         </AnimatePresence>
       )}
 
-      <Sheet open={sheetOpen} onOpenChange={handleSheetOpenChange}>
-        <SheetContent className="w-full sm:max-w-md p-0 flex flex-col gap-0">
-          <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
-            <SheetTitle>{editingHoliday ? "Edit Holiday" : "Add Holiday"}</SheetTitle>
-          </SheetHeader>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleFormSubmit)} className="flex-1 flex flex-col overflow-hidden">
-              <SheetBody className="px-6 py-5 space-y-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Holiday Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Independence Day" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="date"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Date</FormLabel>
-                      <FormControl>
-                        <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="recurring"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center gap-3 rounded-lg border p-3">
-                      <FormControl>
-                        <Switch checked={field.value} onCheckedChange={field.onChange} />
-                      </FormControl>
-                      <div>
-                        <FormLabel className="font-medium cursor-pointer">Recurring</FormLabel>
-                        <p className="text-xs text-muted-foreground">Repeat annually on the same date</p>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-              </SheetBody>
-              <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
-                <LoadingButton type="submit" isPending={isPending} loadingText="Saving..." className="w-full">
-                  {editingHoliday ? "Update Holiday" : "Add Holiday"}
-                </LoadingButton>
-              </SheetFooter>
-            </form>
-          </Form>
-        </SheetContent>
-      </Sheet>
+      <HolidaySheet
+        open={sheetOpen}
+        editingHoliday={editingHoliday}
+        isPending={isPending}
+        onOpenChange={handleSheetOpenChange}
+        onSubmit={handleFormSubmit}
+      />
     </PageWrapper>
   );
 }

@@ -62,9 +62,7 @@ export function TasksToolbar({
 
   return (
     <div className={FILTER_TOOLBAR_ROW}>
-      <div className="w-[180px] max-w-[min(180px,70vw)]">
-          <SearchInput placeholder="Search tasks..." value={search} onValueChange={handleSearchChange} />
-        </div>
+        <SearchInput placeholder="Search tasks..." value={search} onValueChange={handleSearchChange} />
 
       <Select value={typeFilter || "all"} onValueChange={handleTypeFilter}>
         <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[110px] text-[11px]")}>

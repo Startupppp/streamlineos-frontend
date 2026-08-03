@@ -1,5 +1,6 @@
 "use client";
 
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useState, useCallback, useTransition, useEffect } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
@@ -10,7 +11,7 @@ import { MailIcon, XIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Button } from "@/components/ui/button";
+import { useCan } from "@/hooks/api/access";
 import { SearchInput } from "@/components/ui/search-input";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -26,16 +27,18 @@ import { ErrorState } from "@/components/shared/error-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { UserInviteDialog } from "@/features/users/user-invite-dialog";
+import { USER_INVITE_ROLES, formatRoleLabel } from "@/features/users/user-invite-roles";
 import {
   useInvitations,
   useResendInvite,
   useCancelInvitation,
+  useChangeInvitationRole,
 } from "@/hooks/api/users";
 import type { Invitation } from "@/hooks/api/users";
-import { getApiError } from "@/lib/api-client";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { LoadingButton } from "@/components/ui/loading-button";
 
-type InvStatus = "pending" | "accepted" | "expired";
+type InvStatus = "pending" | "accepted" | "expired" | "revoked";
 type StatusFilter = "all" | InvStatus;
 
 const STATUS_CLASSES: Record<InvStatus, string> = {
@@ -45,12 +48,47 @@ const STATUS_CLASSES: Record<InvStatus, string> = {
     "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
   expired:
     "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  revoked:
+    "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-500/30",
 };
 
 function getStatus(inv: Invitation): InvStatus {
-  if (inv.acceptedAt) return "accepted";
+  if (inv.status === "REVOKED") return "revoked";
+  if (inv.acceptedAt || inv.status === "ACCEPTED") return "accepted";
   if (isPast(new Date(inv.expiresAt))) return "expired";
   return "pending";
+}
+
+function InvitationRoleSelect({
+  invitationId,
+  role,
+  disabled,
+  onChange,
+}: {
+  invitationId: string;
+  role: string;
+  disabled: boolean;
+  onChange: (invitationId: string, role: string) => void;
+}) {
+  const handleValueChange = useCallback(
+    (value: string) => onChange(invitationId, value),
+    [invitationId, onChange],
+  );
+
+  return (
+    <Select value={role} onValueChange={handleValueChange} disabled={disabled}>
+      <SelectTrigger className="h-6 w-fit min-w-[7rem] border-input bg-card text-[11px]">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+        {USER_INVITE_ROLES.map((r) => (
+          <SelectItem key={r.value} value={r.value}>
+            {r.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
 }
 
 export function UserInvitationsPanel() {
@@ -64,22 +102,29 @@ export function UserInvitationsPanel() {
     setOpen: openInvite,
   } = useQueryParamOpen("create");
   const [cancelId, setCancelId] = useState<string | null>(null);
+  const canViewInvitations = useCan("settings:organization:manage");
+  const canInvite = useCan("settings:organization:manage");
+  const canCancelInvitation = useCan("settings:organization:manage");
 
   const q = searchParams.get("q") ?? "";
   const status = (searchParams.get("status") ?? "all") as StatusFilter;
   const page = Number(searchParams.get("page") ?? "1");
-  const includeAccepted = status === "all" || status === "accepted";
+  const includeAccepted = status === "all" || status === "accepted" || status === "revoked";
 
   const [localSearch, setLocalSearch] = useState(q);
   const debouncedLocalSearch = useDebouncedValue(localSearch, 300);
 
-  const { data, isLoading, isError, refetch } = useInvitations({
-    page,
-    limit: 20,
-    includeAccepted,
-  });
+  const { data, isLoading, isError, refetch } = useInvitations(
+    {
+      page,
+      limit: 20,
+      includeAccepted,
+    },
+    { enabled: canViewInvitations },
+  );
   const { mutate: resend, isPending: isResending } = useResendInvite();
   const { mutate: cancel, isPending: isCancelling } = useCancelInvitation();
+  const { mutate: changeRole, isPending: isChangingRole } = useChangeInvitationRole();
 
   const allRows = data?.data ?? [];
   const filtered = allRows.filter((inv) => {
@@ -127,7 +172,7 @@ export function UserInvitationsPanel() {
       resend(id, {
         onSuccess: () => toast.success("Invitation resent"),
         onError: (e) => {
-          const message = getApiError(e);
+          const message = getErrorMessage(e);
           toast.error(
             message.includes("not found")
               ? "This invitation can no longer be resent."
@@ -140,6 +185,19 @@ export function UserInvitationsPanel() {
 
   const handleCancelRequest = useCallback((id: string) => setCancelId(id), []);
 
+  const handleRoleChange = useCallback(
+    (invitationId: string, role: string) => {
+      changeRole(
+        { invitationId, role },
+        {
+          onSuccess: () => toast.success("Invitation role updated"),
+          onError: (err) => toast.error(getErrorMessage(err)),
+        },
+      );
+    },
+    [changeRole],
+  );
+
   const handleCancelConfirm = useCallback(() => {
     if (!cancelId) return;
     cancel(cancelId, {
@@ -148,7 +206,7 @@ export function UserInvitationsPanel() {
         setCancelId(null);
       },
       onError: (e) => {
-        const message = getApiError(e);
+        const message = getErrorMessage(e);
         toast.error(
           message.includes("not found") || message.includes("already accepted")
             ? "This invitation can no longer be cancelled."
@@ -191,11 +249,25 @@ export function UserInvitationsPanel() {
     {
       key: "role",
       header: "Role",
-      cell: (inv) => (
-        <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0">
-          {inv.role}
-        </Badge>
-      ),
+      cell: (inv) => {
+        const status = getStatus(inv);
+        const editable = (status === "pending" || status === "expired") && canInvite;
+        if (!editable) {
+          return (
+            <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0">
+              {formatRoleLabel(inv.role)}
+            </Badge>
+          );
+        }
+        return (
+          <InvitationRoleSelect
+            invitationId={inv.id}
+            role={inv.role}
+            disabled={isChangingRole}
+            onChange={handleRoleChange}
+          />
+        );
+      },
     },
     {
       key: "invited",
@@ -214,13 +286,25 @@ export function UserInvitationsPanel() {
       header: "Status",
       cell: (inv) => {
         const s = getStatus(inv);
+        const showDeliveryFailed = inv.deliveryFailed && (s === "pending" || s === "expired");
         return (
-          <Badge
-            variant="outline"
-            className={`h-4 text-[9px] px-1.5 py-0 capitalize ${STATUS_CLASSES[s]}`}
-          >
-            {s}
-          </Badge>
+          <div className="flex items-center gap-1">
+            <Badge
+              variant="outline"
+              className={`h-4 text-[9px] px-1.5 py-0 capitalize ${STATUS_CLASSES[s]}`}
+            >
+              {s}
+            </Badge>
+            {showDeliveryFailed ? (
+              <Badge
+                variant="outline"
+                className="h-4 text-[9px] px-1.5 py-0 bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30"
+                title="The invitation email could not be delivered. Resend to try again."
+              >
+                Email failed
+              </Badge>
+            ) : null}
+          </div>
         );
       },
     },
@@ -231,22 +315,24 @@ export function UserInvitationsPanel() {
       className: "w-[72px]",
       cell: (inv) => {
         const s = getStatus(inv);
-        const canResend = s === "pending" || s === "expired";
-        const canCancel = s === "pending" || s === "expired";
+        const isActionable = s === "pending" || s === "expired";
+        const canResend = isActionable && canInvite;
+        const canCancel = isActionable && canCancelInvitation;
         if (!canResend && !canCancel) return null;
         return (
           <div className="flex items-center gap-0.5">
             {canResend && (
-              <Button
+              <LoadingButton
                 variant="ghost"
                 size="icon"
                 className="h-7 w-7"
                 onClick={() => handleResend(inv.id)}
-                disabled={isResending || isCancelling}
+                isPending={isResending}
+                disabled={isCancelling}
                 aria-label="Resend invitation"
               >
                 <RefreshCw className="h-4 w-4" />
-              </Button>
+              </LoadingButton>
             )}
             {canCancel && (
               <AnimatedIconButton
@@ -278,7 +364,9 @@ export function UserInvitationsPanel() {
       action={
         hasFilters
           ? { label: "Clear filters", onClick: handleClearFilters }
-          : { label: "Invite User", onClick: handleOpenInvite }
+          : canInvite
+            ? { label: "Invite User", onClick: handleOpenInvite }
+            : undefined
       }
       className="border-0 bg-transparent"
     />
@@ -290,26 +378,26 @@ export function UserInvitationsPanel() {
         title="Invitations"
         subtitle="Manage and track team invitations."
         actions={
-          <AnimatedIconButton
-            icon={MailIcon}
-            iconSize={14}
-            iconClassName="mr-1.5"
-            size="sm"
-            className="w-full sm:w-auto"
-            onClick={handleOpenInvite}
-          >
-            Invite User
-          </AnimatedIconButton>
+          canInvite ? (
+            <AnimatedIconButton
+              icon={MailIcon}
+              iconSize={14}
+              iconClassName="mr-1.5"
+              size="sm"
+              className="w-full sm:w-auto"
+              onClick={handleOpenInvite}
+            >
+              Invite User
+            </AnimatedIconButton>
+          ) : undefined
         }
         filters={
           <>
-            <div className="min-w-0 w-full flex-1 md:min-w-[160px] md:max-w-xs">
-              <SearchInput
-                value={localSearch}
-                onValueChange={handleSearchChange}
-                placeholder="Search by email…"
-              />
-            </div>
+            <SearchInput
+              value={localSearch}
+              onValueChange={handleSearchChange}
+              placeholder="Search by email…"
+            />
             <Select value={status} onValueChange={handleStatusChange}>
               <SelectTrigger
                 className={`w-[140px] shrink-0 ${FILTER_SELECT_TRIGGER}`}
@@ -321,6 +409,7 @@ export function UserInvitationsPanel() {
                 <SelectItem value="pending">Pending</SelectItem>
                 <SelectItem value="accepted">Accepted</SelectItem>
                 <SelectItem value="expired">Expired</SelectItem>
+                <SelectItem value="revoked">Revoked</SelectItem>
               </SelectContent>
             </Select>
           </>

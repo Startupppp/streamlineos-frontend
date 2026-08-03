@@ -5,7 +5,7 @@ import { LogoutIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { useSessions, useRevokeSession, useRevokeAllSessions, type UserSession } from "@/hooks/api/hr/sessions";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { formatClientDeviceLabel, formatIpAddress } from "@/lib/format-utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -55,7 +55,7 @@ export default function SessionsPage() {
         toast.success("Session revoked");
         setRevoking(null);
       },
-      onError: (err) => toast.error(getApiError(err)),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }
 
@@ -73,7 +73,7 @@ export default function SessionsPage() {
         toast.success("All other sessions revoked");
         setConfirmRevokeAll(false);
       },
-      onError: (err) => toast.error(getApiError(err)),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }
 
@@ -184,13 +184,11 @@ export default function SessionsPage() {
           onClick={handleRevokeAllClick}
           disabled={revokeAll.isPending || allSessions.filter((s) => !s.isCurrent).length === 0}
         >
-          Revoke all other sessions
+          Revoke others
         </AnimatedIconButton>
       }
       filters={
-        <div className="min-w-0 w-full flex-1 md:min-w-[160px] md:max-w-xs">
-          <SearchInput placeholder="Search by device or IP…" value={search} onValueChange={handleSearchChange} />
-        </div>
+        <SearchInput placeholder="Search by device or IP…" value={search} onValueChange={handleSearchChange} />
       }
     >
       <div className="flex flex-1 min-h-0 flex-col gap-3">

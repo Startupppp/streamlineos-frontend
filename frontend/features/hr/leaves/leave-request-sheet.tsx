@@ -1,34 +1,13 @@
 "use client";
 
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format, startOfDay } from "date-fns";
 import { toast } from "sonner";
 
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { DatePicker } from "@/components/ui/date-picker";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Button } from "@/components/ui/button";
-import { FileUpload } from "@/components/storage/file-upload";
+import { Form } from "@/components/ui/form";
 import { HrSheet } from "@/features/hr/hr-sheet";
-import { AlertCircle } from "lucide-react";
-import Link from "next/link";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   clearEndIfInvalid,
@@ -38,25 +17,13 @@ import {
 } from "@/lib/date-constraints";
 import { useRequestLeave, useLeavePolicy } from "@/hooks/api/hr";
 import { leaveFormSchema, type LeaveFormValues } from "./leave-request-schema";
+import { countWorkdays } from "./leave-date-helpers";
+import { LeaveRequestFormFields } from "./leave-request-form-fields";
 import type {
   LeaveType,
   Approver,
   LeaveBalance,
 } from "@/features/hr/leaves/components/leaves-shared";
-
-const isWeekend = (d: Date) => d.getDay() === 0 || d.getDay() === 6;
-
-/** Match backend leave-days.ts countWorkdays (Mon–Fri). */
-function countWorkdays(startStr: string, endStr: string): number {
-  const end = new Date(`${endStr}T00:00:00`);
-  const current = new Date(`${startStr}T00:00:00`);
-  let count = 0;
-  while (current <= end) {
-    if (!isWeekend(current)) count++;
-    current.setDate(current.getDate() + 1);
-  }
-  return count;
-}
 
 interface LeaveRequestSheetProps {
   open: boolean;
@@ -154,24 +121,12 @@ export function LeaveRequestSheet({
     const available = Number(matchedBal.balance ?? 0);
     return {
       requestedDays: days,
-      balancePreview: {
-        available,
-        after: available - days,
-        typeName: selectedType.name,
-      },
+      balancePreview: { available, after: available - days, typeName: selectedType.name },
     };
-  }, [
-    watchedLeaveTypeId,
-    watchedStartDate,
-    watchedEndDate,
-    watchedHalfDay,
-    leaveTypes,
-    balances,
-  ]);
+  }, [watchedLeaveTypeId, watchedStartDate, watchedEndDate, watchedHalfDay, leaveTypes, balances]);
 
   const leaveDayLimitError = useMemo(() => {
-    if (!watchedLeaveTypeId || !watchedStartDate || !watchedEndDate)
-      return null;
+    if (!watchedLeaveTypeId || !watchedStartDate || !watchedEndDate) return null;
     const selectedType = leaveTypes.find(
       (t) => t.id.toString() === watchedLeaveTypeId,
     );
@@ -182,14 +137,7 @@ export function LeaveRequestSheet({
       return `${selectedType.name} cannot exceed ${maxDays} days. You selected ${requestedDays} day${requestedDays !== 1 ? "s" : ""}.`;
     }
     return null;
-  }, [
-    watchedLeaveTypeId,
-    watchedStartDate,
-    watchedEndDate,
-    requestedDays,
-    leaveTypes,
-    leaveMaxDays,
-  ]);
+  }, [watchedLeaveTypeId, watchedStartDate, watchedEndDate, requestedDays, leaveTypes, leaveMaxDays]);
 
   const handleAttachmentUpload = useCallback(
     (url: string) => setAttachmentUrl(url),
@@ -203,7 +151,6 @@ export function LeaveRequestSheet({
         return;
       }
       const approverId = data.approverId || approvers[0]?.id;
-
       requestLeaveMutation.mutate(
         {
           leaveTypeId: parseInt(data.leaveTypeId),
@@ -223,19 +170,11 @@ export function LeaveRequestSheet({
             setAttachmentUrl(null);
             onOpenChange(false);
           },
-          onError: (err) =>
-            toast.error(getErrorMessage(err)),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
-    [
-      leaveDayLimitError,
-      approvers,
-      attachmentUrl,
-      form,
-      onOpenChange,
-      requestLeaveMutation,
-    ],
+    [leaveDayLimitError, approvers, attachmentUrl, form, onOpenChange, requestLeaveMutation],
   );
 
   const { isValid, isDirty } = form.formState;
@@ -254,313 +193,19 @@ export function LeaveRequestSheet({
       onDiscard={() => form.reset()}
     >
       <Form {...form}>
-        <div className="space-y-5">
-          <FormField
-            control={form.control}
-            name="leaveTypeId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
-                  Leave Type
-                </FormLabel>
-                {leaveTypes.length === 0 ? (
-                  <div className="space-y-2 rounded-lg border border-dashed border-amber-300/80 bg-amber-50/80 px-3 py-3 dark:border-amber-500/30 dark:bg-amber-500/10">
-                    <p className="text-sm font-medium text-foreground">
-                      No leave types configured
-                    </p>
-                    <p className="text-xs leading-relaxed text-muted-foreground">
-                      Set up leave types (for example Casual, Sick, Unpaid) before
-                      employees can request leave.
-                    </p>
-                    <Button variant="outline" size="sm" className="h-8 w-full sm:w-auto" asChild>
-                      <Link href="/hr/leave-policies">Configure leave types</Link>
-                    </Button>
-                  </div>
-                ) : (
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="text-sm">
-                        <SelectValue placeholder="Select leave type" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent
-                      position="popper"
-                      className="z-[200] max-h-60 min-w-[var(--radix-select-trigger-width)]"
-                    >
-                      {leaveTypes.map((t) => (
-                        <SelectItem key={t.id} value={t.id.toString()}>
-                          {t.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <div className="space-y-1.5">
-            <p className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
-              Date Range
-            </p>
-            <div className="grid grid-cols-2 gap-3">
-              <FormField
-                control={form.control}
-                name="startDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs font-medium text-muted-foreground">
-                      From
-                    </FormLabel>
-                    <FormControl>
-                      <DatePicker
-                        value={field.value}
-                        onChange={handleLeaveStartDateChange}
-                        fromDate={leaveStartBounds.fromDate}
-                        fromYear={leaveStartBounds.fromYear}
-                        toYear={leaveStartBounds.toYear}
-                        placeholder="Start date"
-                        disabledDays={isWeekend}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="endDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs font-medium text-muted-foreground">
-                      To
-                    </FormLabel>
-                    <FormControl>
-                      <DatePicker
-                        value={field.value}
-                        onChange={field.onChange}
-                        fromDate={leaveEndBounds.fromDate}
-                        fromYear={leaveEndBounds.fromYear}
-                        toYear={leaveEndBounds.toYear}
-                        placeholder="End date"
-                        disabledDays={isWeekend}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </div>
-
-          <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-3">
-            <FormField
-              control={form.control}
-              name="halfDay"
-              render={({ field }) => (
-                <FormItem className="flex items-center gap-2.5">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <FormLabel className="text-xs font-medium text-foreground !mt-0 cursor-pointer">
-                    Half Day Request
-                  </FormLabel>
-                </FormItem>
-              )}
-            />
-
-            {watchedHalfDay && (
-              <FormField
-                control={form.control}
-                name="halfDayPeriod"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs font-medium text-muted-foreground">
-                      Period
-                    </FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="text-sm">
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-                        <SelectItem value="AM">
-                          AM (Morning — first half)
-                        </SelectItem>
-                        <SelectItem value="PM">
-                          PM (Afternoon — second half)
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
-          </div>
-
-          <FormField
-            control={form.control}
-            name="priority"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
-                  Priority
-                </FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger className="text-sm">
-                      <SelectValue placeholder="Select priority" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-                    <SelectItem value="LOW">
-                      <span className="flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                        Low
-                      </span>
-                    </SelectItem>
-                    <SelectItem value="MEDIUM">
-                      <span className="flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-amber-500" />
-                        Medium
-                      </span>
-                    </SelectItem>
-                    <SelectItem value="HIGH">
-                      <span className="flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-red-500" />
-                        High
-                      </span>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {approvers.length > 1 && (
-            <FormField
-              control={form.control}
-              name="approverId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
-                    Approver
-                  </FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="text-sm">
-                        <SelectValue placeholder="Select approver" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-                      {approvers.map((u) => (
-                        <SelectItem key={u.id} value={u.id}>
-                          {u.name ||
-                            `${u.firstName || ""} ${u.lastName || ""}`.trim() ||
-                            u.email}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
-
-          <FormField
-            control={form.control}
-            name="reason"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
-                  Reason
-                </FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder="E.g. Family function, Doctor appointment..."
-                    className="resize-none text-sm min-h-[80px]"
-                    rows={3}
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-foreground/80 uppercase tracking-wider block">
-              Attach Document{" "}
-              <span className="normal-case font-normal text-muted-foreground tracking-normal">
-                (Optional)
-              </span>
-            </label>
-            <FileUpload
-              folder="leave-attachments"
-              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-              maxSize={5 * 1024 * 1024}
-              onUploadComplete={handleAttachmentUpload}
-            />
-          </div>
-
-          {balancePreview && requestedDays > 0 && (
-            <div
-              className={`flex items-start gap-2.5 p-3 rounded-lg border text-xs ${
-                balancePreview.after < 0
-                  ? "bg-destructive/10 border-destructive/20 text-destructive"
-                  : "bg-muted/50 border-border text-foreground"
-              }`}
-            >
-              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-              <span>
-                This will consume{" "}
-                <strong>
-                  {requestedDays} day{requestedDays !== 1 ? "s" : ""}
-                </strong>{" "}
-                of your{" "}
-                <strong>
-                  {balancePreview.available} remaining {balancePreview.typeName}{" "}
-                  days.
-                </strong>
-                {balancePreview.after >= 0 ? (
-                  <>
-                    {" "}
-                    You will have{" "}
-                    <strong>
-                      {balancePreview.after} day
-                      {balancePreview.after !== 1 ? "s" : ""}
-                    </strong>{" "}
-                    left.
-                  </>
-                ) : (
-                  <>
-                    {" "}
-                    This exceeds your balance by{" "}
-                    <strong>
-                      {Math.abs(balancePreview.after)} day
-                      {Math.abs(balancePreview.after) !== 1 ? "s" : ""}.
-                    </strong>
-                  </>
-                )}
-              </span>
-            </div>
-          )}
-
-          {leaveDayLimitError && (
-            <div className="flex items-start gap-2.5 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
-              <AlertCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
-              <p className="text-xs text-destructive">{leaveDayLimitError}</p>
-            </div>
-          )}
-        </div>
+        <LeaveRequestFormFields
+          form={form}
+          leaveTypes={leaveTypes}
+          approvers={approvers}
+          balances={balances}
+          leaveStartBounds={leaveStartBounds}
+          leaveEndBounds={leaveEndBounds}
+          onStartDateChange={handleLeaveStartDateChange}
+          onAttachmentUpload={handleAttachmentUpload}
+          requestedDays={requestedDays}
+          balancePreview={balancePreview}
+          leaveDayLimitError={leaveDayLimitError}
+        />
       </Form>
     </HrSheet>
   );

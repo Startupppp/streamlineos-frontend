@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, memo } from "react";
+import { useState, useMemo, memo } from "react";
 import { isBefore, isAfter, format } from "date-fns";
 import { motion } from "framer-motion";
 import { useHrWfhRequests } from "@/hooks/api/hr";

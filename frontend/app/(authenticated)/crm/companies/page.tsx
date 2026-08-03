@@ -278,9 +278,7 @@ export default function CompaniesPage() {
         }
         filters={
           <div className={FILTER_TOOLBAR_ROW}>
-            <div className="min-w-0 flex-1 lg:max-w-md">
-              <SearchInput placeholder="Search companies..." value={search} onValueChange={handleSearchChange} />
-            </div>
+            <SearchInput placeholder="Search companies..." value={search} onValueChange={handleSearchChange} />
           </div>
         }
       >
