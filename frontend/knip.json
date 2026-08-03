@@ -13,9 +13,23 @@
     "**/*.test.{ts,tsx}",
     "**/*.spec.{ts,tsx}",
     "**/__tests__/**/*.{ts,tsx}",
-    "feedbucket-widget/build.mjs"
+    "feedbucket-widget/build.mjs",
+    "feedbucket-widget/src/index.ts"
   ],
   "project": ["**/*.{ts,tsx,mjs,cjs}"],
-  "ignore": [".next/**", "public/**", "next-env.d.ts", "feedbucket-widget/dist/**"],
+  "ignore": [
+    ".next/**",
+    "public/**",
+    "next-env.d.ts",
+    "feedbucket-widget/dist/**",
+    "components/illustrations/**",
+    "components/ui/card.tsx",
+    "components/ui/dialog.tsx",
+    "components/ui/drawer.tsx",
+    "components/ui/dropdown-menu.tsx",
+    "components/ui/table.tsx",
+    "lib/rbac/permissions/**"
+  ],
+  "ignoreDependencies": ["sharp", "tailwindcss", "@tailwindcss/typography"],
   "ignoreExportsUsedInFile": true
 }
