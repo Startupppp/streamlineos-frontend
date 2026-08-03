@@ -111,7 +111,10 @@ function DocumentItem({ doc }: DocumentItemProps) {
         <FileText className="h-4 w-4 text-primary" />
       </div>
       <div className="flex-1 min-w-0">
-        <TruncatedText text={doc.name} className="text-sm font-medium text-foreground" />
+        <TruncatedText
+          text={doc.name}
+          className="text-sm font-medium text-foreground"
+        />
         <div className="flex items-center gap-2 mt-0.5">
           <Badge variant="outline" className="text-[10px] px-1.5 py-0">
             {DOC_TYPE_LABELS[doc.type] ?? doc.type}
@@ -187,8 +190,13 @@ function MyPendingUploadsSection() {
               key={`${doc.documentTypeId}-${doc.reason}`}
               className="flex items-center justify-between gap-2 text-[10px] text-amber-700 dark:text-amber-400"
             >
-              <TruncatedText text={doc.documentTypeName} className="min-w-0 flex-1" />
-              <span className="shrink-0">{PENDING_REASON_LABEL[doc.reason]}</span>
+              <TruncatedText
+                text={doc.documentTypeName}
+                className="min-w-0 flex-1"
+              />
+              <span className="shrink-0">
+                {PENDING_REASON_LABEL[doc.reason]}
+              </span>
             </li>
           ))}
           {count > MAX_PENDING_SHOWN && (
@@ -270,14 +278,6 @@ export const PublicDocumentsCard = memo(function PublicDocumentsCard() {
             )}
           </div>
         )}
-        {!canViewDocStats && !showSummaryStrip && pendingUploadCount === 0 && (
-          <EmptyState
-            illustration={<EmptyPublicDocsIllustration className="h-24 w-24" />}
-            title="Nothing pending"
-            description="Documents awaiting your signature or upload will appear here."
-            compact
-          />
-        )}
         {canViewDocStats &&
           (isLoading ? (
             <div className="space-y-3">
@@ -293,7 +293,9 @@ export const PublicDocumentsCard = memo(function PublicDocumentsCard() {
             </div>
           ) : !documents?.length ? (
             <EmptyState
-              illustration={<EmptyPublicDocsIllustration className="h-24 w-24" />}
+              illustration={
+                <EmptyPublicDocsIllustration className="h-24 w-24" />
+              }
               title="No public documents"
               description="Public documents shared by HR will appear here."
               compact
