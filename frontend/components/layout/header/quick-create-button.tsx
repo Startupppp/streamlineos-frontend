@@ -40,9 +40,6 @@ import {
 
 const HOVER_CLOSE_DELAY_MS = 200
 
-export type { CreateAction, CreateGroup } from "./quick-create-groups"
-export { QUICK_CREATE_GROUPS } from "./quick-create-groups"
-
 function isModuleEnabled(enabledModules: string[], moduleKey?: string): boolean {
   if (!moduleKey) return true
   if (enabledModules.length === 0) return true

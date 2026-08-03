@@ -173,8 +173,6 @@ export interface BalanceSheetReport {
   balanced: boolean;
 }
 
-export type AgingBucket = "current" | "d1_30" | "d31_60" | "d61_90" | "d91_plus";
-
 export interface AgedReceivablesRow {
   clientId: number;
   clientName: string;

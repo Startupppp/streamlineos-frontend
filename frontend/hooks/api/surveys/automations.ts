@@ -34,8 +34,6 @@ export interface CreateAutomationInput {
   action: AutomationAction;
 }
 
-export type PatchAutomationInput = Partial<CreateAutomationInput>;
-
 export function useSurveyAutomations(surveyId: number) {
   return useQuery({
     queryKey: queryKeys.surveys.automations(surveyId),

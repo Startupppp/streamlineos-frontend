@@ -50,14 +50,6 @@ export interface OrgMember {
   totpEnabled?: boolean;
 }
 
-export interface Invitation {
-  id: string;
-  email: string;
-  role: string;
-  expiresAt: Date;
-  createdAt: Date;
-}
-
 export interface Branch {
   id: number;
   orgId: string;

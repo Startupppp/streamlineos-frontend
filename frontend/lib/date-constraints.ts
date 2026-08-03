@@ -37,15 +37,6 @@ export function maxDate(...dates: Array<Date | undefined>): Date | undefined {
   return result;
 }
 
-export function minDate(...dates: Array<Date | undefined>): Date | undefined {
-  let result: Date | undefined;
-  for (const date of dates) {
-    if (!date) continue;
-    if (!result || date < result) result = date;
-  }
-  return result;
-}
-
 export function planningFloorDate(existingValue?: string | null): Date {
   const today = startOfLocalDay();
   const existing = parseDateOnly(existingValue);

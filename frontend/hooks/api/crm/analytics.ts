@@ -25,63 +25,11 @@ export interface SalesDashboardKPIsResult {
   prevAvgDealSize: number;
 }
 
-export interface SalesFunnelStageResult {
-  stage: string;
-  count: number;
-  value: number;
-  color: string;
-  dropOffPct: number | null;
-}
-
-export interface SalesLeaderboardEntryResult {
-  repId: number;
-  name: string;
-  initials: string;
-  dealsWon: number;
-  totalDeals: number;
-  revenue: number;
-  winRate: number;
-}
-
 export interface RevenueVsGoalEntryResult {
   month: string;
   actual: number;
   target: number;
 }
-
-export interface DealVelocityResult {
-  avgDaysToClose: number;
-  medianDaysToClose: number;
-  fastestCloseDays: number;
-  slowestCloseDays: number;
-  dealCount: number;
-}
-
-export interface AgingDealResult {
-  id: number;
-  companyName: string;
-  stage: string;
-  value: number;
-  daysSinceUpdate: number;
-  salesRepId: number | null;
-}
-
-export interface CycleLengthResult {
-  avgDays: number | null;
-  medianDays: number | null;
-  minDays: number | null;
-  maxDays: number | null;
-  histogram: { label: string; count: number }[];
-  totalDeals: number;
-}
-
-export interface LostAnalysisResult {
-  total: number;
-  totalValue: number;
-  reasons: { reason: string; count: number; totalValue: number; pct: number }[];
-}
-
-
 
 
 export function useSupportDashboard() {

@@ -10,7 +10,7 @@ import { DailyHistoryTable } from "@/features/hr/attendance/daily-history-table"
 import { TeamAttendanceCard } from "@/features/hr/attendance/team-attendance-card";
 import { AttendanceRegularizationDialog } from "@/features/hr/attendance/attendance-regularization-dialog";
 
-export function AttendanceContent({ userId, isAdmin = false }: { userId: string; isAdmin?: boolean }) {
+export function AttendanceContent({ isAdmin = false }: { isAdmin?: boolean }) {
   return (
     <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
       <div className="overscroll-contain flex flex-col gap-4 min-w-0 min-h-full flex-1">
@@ -23,8 +23,8 @@ export function AttendanceContent({ userId, isAdmin = false }: { userId: string;
         </div>
 
         <div className="space-y-4">
-          <AttendanceCalendar userId={userId} />
-          <AttendanceHeatmap userId={userId} />
+          <AttendanceCalendar />
+          <AttendanceHeatmap />
           {isAdmin && <ManageHolidaysCard />}
         </div>
       </div>

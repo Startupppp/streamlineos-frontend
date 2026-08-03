@@ -31,12 +31,6 @@ export interface DigestGroup {
   samples: DigestSample[];
 }
 
-export interface InventoryDigest {
-  groups: DigestGroup[];
-  totalNew: number;
-  narration?: string;
-}
-
 export function useExplainInsight() {
   return useMutation<InsightNarration, Error, number>({
     mutationKey: ["inventory", "ai", "insight", "explain"],

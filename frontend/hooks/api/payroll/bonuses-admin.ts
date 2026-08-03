@@ -15,7 +15,6 @@ export type BonusType =
   | "RETENTION"
   | "COMMISSION"
   | "ADJUSTMENT";
-export type BonusStatus = "PENDING" | "APPROVED" | "REJECTED" | "PAID";
 export type IncentiveStatus = "PENDING" | "APPROVED" | "REJECTED" | "ADDED_TO_PAYROLL";
 
 export interface Bonus {

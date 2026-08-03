@@ -15,8 +15,6 @@ import type {
   PublicChangelogEntry,
 } from "@/types/projects";
 export type {
-  RoadmapStatus,
-  FeedbackStatus,
   ChangelogType,
   RoadmapItem,
   FeedbackPost,

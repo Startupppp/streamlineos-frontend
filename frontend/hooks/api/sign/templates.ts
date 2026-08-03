@@ -20,15 +20,6 @@ export interface CreateEnvelopeFromTemplateInput {
   sourceEntityId?: string;
 }
 
-export interface PublishPublicFormInput {
-  slug: string;
-  accessCode?: string;
-  maxSubmissions?: number;
-  expiresAt?: string;
-  completionRedirectUrl?: string;
-  embedAllowed?: boolean;
-}
-
 export function useSignTemplates() {
   return useQuery({
     queryKey: queryKeys.signTemplates.list(),

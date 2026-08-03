@@ -177,31 +177,7 @@ export interface CustomerInteractionItem {
   person: string;
 }
 
-export interface SupportStats {
-  openTickets: number;
-  avgResolution: string;
-  firstResponse: string;
-  satisfaction: number;
-}
-
 import type { StatWithTrend } from "./deals";
-
-export interface CustomerExecutiveDashboard {
-  customerStats: {
-    totalClients: StatWithTrend;
-    nps: StatWithTrend;
-    csat: StatWithTrend;
-    retention: StatWithTrend;
-  };
-  clientHealth: ClientHealthItem[];
-  upcomingRenewals: UpcomingRenewal[];
-  keyAccounts: KeyAccount[];
-  customerInteractions: CustomerInteractionItem[];
-  supportStats: SupportStats;
-  retentionTimeline: { month: string; value: number }[];
-  csatTimeline: { month: string; value: number }[];
-}
-
 
 export interface SupportDashboardStats {
   openTickets: StatWithTrend;

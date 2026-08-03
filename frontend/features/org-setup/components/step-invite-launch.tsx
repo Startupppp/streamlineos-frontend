@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { INVITE_ROLES } from "../lib/constants";
-import { USER_INVITE_ROLES } from "@/features/users/user-invite-roles";
+import { formatRoleLabel } from "@/features/users/user-invite-roles";
 import type { Invitee, WizardData } from "../lib/wizard-data-schema";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { StepGeneration } from "./step-generation";
@@ -26,13 +26,6 @@ type StepInviteLaunchProps = {
   onBack: () => void;
   onChangeInvitees: (invitees: Invitee[]) => void;
 };
-
-function getInviteRoleLabel(roleValue: string): string {
-  return (
-    USER_INVITE_ROLES.find((option) => option.value === roleValue)?.label ??
-    roleValue
-  );
-}
 
 export function StepInviteLaunch({
   data,
@@ -114,7 +107,7 @@ export function StepInviteLaunch({
             <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
               {INVITE_ROLES.map((roleValue) => (
                 <SelectItem key={roleValue} value={roleValue}>
-                  {getInviteRoleLabel(roleValue)}
+                  {formatRoleLabel(roleValue)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -149,7 +142,7 @@ export function StepInviteLaunch({
               />
               <div className="flex shrink-0 items-center gap-1.5">
                 <span className="text-xs font-medium text-muted-foreground">
-                  {getInviteRoleLabel(invitee.role)}
+                  {formatRoleLabel(invitee.role)}
                 </span>
                 <button
                   type="button"

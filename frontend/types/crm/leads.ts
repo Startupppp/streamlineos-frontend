@@ -71,14 +71,6 @@ export interface PaginatedClientAccounts {
   totalPages: number;
 }
 
-export interface LogClientActivityInput {
-  clientAccountId: number;
-  activityType: string;
-  title: string;
-  description?: string;
-  metadata?: Record<string, unknown>;
-}
-
 export interface RelatedLead {
   id: number;
   name: string | null;

@@ -85,7 +85,6 @@ import { createLowlight } from "lowlight";
 import { common } from "lowlight";
 import {
   EditorPageContext,
-  useEditorPageContext,
   EditorPageContextValue,
 } from "./plate-context";
 import { normalizePlateValue, getPlainText } from "./plate-value-convert";
@@ -130,9 +129,6 @@ import { FixedToolbar } from "./toolbar/fixed-toolbar";
 import { LinkFloatingToolbar } from "./toolbar/link-floating-toolbar";
 import { uploadEditorMedia } from "./upload-media";
 import type { EditorMediaUploader } from "./upload-media";
-
-export { EditorPageContext, useEditorPageContext };
-export type { EditorPageContextValue };
 
 export interface PlateDocumentEditorProps {
   value?: unknown;

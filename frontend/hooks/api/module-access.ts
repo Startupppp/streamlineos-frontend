@@ -21,14 +21,6 @@ export interface ModuleRolePermission {
   scope: DataScope;
 }
 
-export interface ModuleRoleView {
-  roleId: number;
-  name: string;
-  slug: string;
-  isSystem: boolean;
-  permissions: ModuleRolePermission[];
-}
-
 export interface ModuleRoleGroup {
   id: number;
   name: string;

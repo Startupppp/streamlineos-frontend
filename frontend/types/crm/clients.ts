@@ -28,16 +28,6 @@ export interface ClientOpportunity {
   client?: { id: number; name: string } | null;
 }
 
-export interface CreateClientOpportunityInput {
-  clientId: number;
-  title: string;
-  type?: "upsell" | "cross_sell";
-  stage?: "identified" | "proposed" | "negotiating" | "won" | "lost";
-  value?: string;
-  notes?: string;
-  expectedCloseDate?: string;
-}
-
 export interface OnboardingTemplate {
   id: number;
   orgId: string;

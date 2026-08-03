@@ -348,7 +348,7 @@ export default function NewJournalEntryPage() {
 
   const accountOptions = accountsQuery.data?.items ?? [];
 
-  const lineRows: LineRowContext[] = fields.map((field, index) => ({
+  const lineRows: LineRowContext[] = fields.map((_field, index) => ({
     index,
     accountOptions,
     canRemove: fields.length > 2,

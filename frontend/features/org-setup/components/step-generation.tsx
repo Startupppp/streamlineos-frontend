@@ -250,10 +250,7 @@ export function StepGeneration({ data }: StepGenerationProps) {
       const inviteFailures: string[] = [];
       for (const group of inviteGroups) {
         try {
-          const inviteResult = await bulkInviteRef.current.mutateAsync({
-            ...group,
-            orgId: res?.orgId,
-          });
+          const inviteResult = await bulkInviteRef.current.mutateAsync({ ...group });
           for (const item of inviteResult.results)
             if (!item.success)
               inviteFailures.push(item.error ? `${item.email}: ${item.error}` : item.email);

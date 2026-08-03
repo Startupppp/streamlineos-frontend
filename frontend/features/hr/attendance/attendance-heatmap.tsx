@@ -98,10 +98,10 @@ function SummarySkeleton() {
   );
 }
 
-export function AttendanceHeatmap({ userId }: { userId: string }) {
+export function AttendanceHeatmap() {
   const [year, setYear] = useState(new Date().getFullYear());
 
-  const { data, isLoading, isFetching } = useAttendanceHeatmap({ userId, year });
+  const { data, isLoading, isFetching } = useAttendanceHeatmap({ year });
   const showSkeleton = isLoading || (isFetching && !data);
 
   const handlePrevYear = useCallback(() => setYear((y) => y - 1), []);

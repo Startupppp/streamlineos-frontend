@@ -89,12 +89,6 @@ export function useCollectionsSummary() {
   });
 }
 
-export interface ListCollectionActivitiesParams {
-  clientId?: number;
-  page?: number;
-  pageSize?: number;
-}
-
 export function useCreateReminderPolicy() {
   const queryClient = useQueryClient();
   return useMutation<ReminderPolicy, Error, CreateReminderPolicyInput>({

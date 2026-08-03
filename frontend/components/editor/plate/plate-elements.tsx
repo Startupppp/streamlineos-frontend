@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import Image from 'next/image';
 import { PlateElement, PlateLeaf, useReadOnly } from 'platejs/react';
 import type { PlateElementProps, PlateLeafProps } from 'platejs/react';
 import type { TElement } from 'platejs';

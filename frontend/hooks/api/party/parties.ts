@@ -6,12 +6,9 @@ import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type {
   BusinessParty,
-  PartyContact,
   PartiesPage,
   CreatePartyInput,
   UpdatePartyInput,
-  CreateContactInput,
-  UpdateContactInput,
 } from "@/types/party/parties";
 
 export interface UsePartiesParams {
@@ -93,47 +90,3 @@ export function useDeleteParty() {
   });
 }
 
-export function useCreateContact() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["party", "contacts", "create"],
-    mutationFn: (input: CreateContactInput) =>
-      apiClient.post<PartyContact>(`/party/parties/${input.partyId}/contacts`, input),
-    onSuccess: (_, variables) => {
-      void qc.invalidateQueries({
-        queryKey: queryKeys.party.contacts(variables.partyId),
-      });
-    },
-  });
-}
-
-export function useUpdateContact() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["party", "contacts", "update"],
-    mutationFn: ({
-      partyContactId,
-      ...input
-    }: UpdateContactInput & { partyContactId: string; partyId: string }) =>
-      apiClient.patch<PartyContact>(`/party/contacts/${partyContactId}`, input),
-    onSuccess: (_, variables) => {
-      void qc.invalidateQueries({
-        queryKey: queryKeys.party.contacts(variables.partyId),
-      });
-    },
-  });
-}
-
-export function useDeleteContact() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["party", "contacts", "delete"],
-    mutationFn: ({ partyContactId }: { partyContactId: string; partyId: string }) =>
-      apiClient.delete(`/party/contacts/${partyContactId}`),
-    onSuccess: (_, variables) => {
-      void qc.invalidateQueries({
-        queryKey: queryKeys.party.contacts(variables.partyId),
-      });
-    },
-  });
-}

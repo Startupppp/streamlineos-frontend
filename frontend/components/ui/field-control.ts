@@ -11,14 +11,6 @@ export const FIELD_CONTROL_DISABLED_CLASS =
 
 export const FIELD_SELECT_CONTENT_CLASS = "min-w-[var(--radix-select-trigger-width)]";
 
-/**
- * Match the trigger as a MINIMUM, then grow with the content, capped at the
- * space Radix reports as available. A bare `w-[--radix-popover-trigger-width]`
- * pins the panel to a narrow trigger and clips long option labels.
- */
-export const FIELD_POPOVER_CONTENT_CLASS =
-  "min-w-[var(--radix-popover-trigger-width)] w-auto max-w-[var(--radix-popover-content-available-width)]";
-
 export const FIELD_SEARCH_POPOVER_CONTENT_CLASS =
   "min-w-[var(--radix-popover-trigger-width)] w-auto max-w-[var(--radix-popover-content-available-width)]";
 

@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useCan } from "@/hooks/api/access";
 
 export default function AttendancePage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const isAdmin = useCan("hr:attendance:manage");
 
   if (status === "loading") {
@@ -30,9 +30,6 @@ export default function AttendancePage() {
     );
   }
 
-  const userId = session?.user?.id;
-  if (!userId) return null;
-
   return (
     <PageWrapper
       title="Attendance"
@@ -40,7 +37,7 @@ export default function AttendancePage() {
       noInternalScroll
       contentClassName="flex flex-col"
  variant="display">
-      <AttendanceContent userId={userId} isAdmin={isAdmin} />
+      <AttendanceContent isAdmin={isAdmin} />
     </PageWrapper>
   );
 }

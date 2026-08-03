@@ -40,16 +40,6 @@ export type KbImportJob = {
   updatedAt: string;
 };
 
-export type ExportKbPageInput = {
-  format: "markdown" | "html";
-};
-
-export type ExportResult = {
-  jobId: number;
-  format: "markdown" | "html";
-  content: string;
-};
-
 export type KbExportJob = {
   id: number;
   orgId: string;

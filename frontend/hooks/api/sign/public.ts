@@ -134,7 +134,3 @@ export function useDeclineSignSession(token: string) {
   });
 }
 
-export interface SignPublicFormDefinition {
-  form: { slug: string; requiresAccessCode: boolean; embedAllowed: boolean };
-  template: { id: number; name: string; description: string | null };
-}

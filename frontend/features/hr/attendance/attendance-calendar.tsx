@@ -43,17 +43,12 @@ const LEGEND_STATUSES = [
   "weekend",
 ] as const;
 
-export const AttendanceCalendar = memo(function AttendanceCalendar({
-  userId,
-}: {
-  userId: string;
-}) {
+export const AttendanceCalendar = memo(function AttendanceCalendar() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth();
 
   const { data: monthlyLogs, isLoading } = useHrMonthlyAttendance({
-    userId,
     year,
     month,
   });

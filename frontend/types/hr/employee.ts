@@ -8,9 +8,6 @@ export type DocumentType =
   | "OFFER_LETTER"
   | "RESUME"
   | "OTHER";
-export type TicketPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
-export type TicketStatus = "TODO" | "IN_PROGRESS" | "IN_REVIEW" | "DONE";
-export type DeviceStatusExtended = "ACTIVE" | "INACTIVE" | "LOST" | "RETURNED";
 
 export interface Department {
   id: string;
@@ -46,11 +43,6 @@ export interface Pagination {
   limit: number;
   total: number;
   totalPages: number;
-}
-
-export interface PaginatedResult<T> {
-  data: T[];
-  pagination: Pagination;
 }
 
 export interface PaginatedEmployees {
@@ -133,22 +125,6 @@ export interface Document {
   updatedAt: Date | string | null;
 }
 
-export interface HelpdeskTicket {
-  id: number;
-  orgId: string;
-  userId: string;
-  title: string;
-  description: string | null;
-  category: string | null;
-  priority: TicketPriority | null;
-  status: TicketStatus | null;
-  assigneeId: string | null;
-  resolvedAt: Date | string | null;
-  resolution: string | null;
-  createdAt: Date | string | null;
-  updatedAt: Date | string | null;
-}
-
 export interface WorkLog {
   id: number;
   orgId: string;
@@ -171,27 +147,6 @@ export interface WorkLog {
     title: string;
     ticketNumber: number;
     project?: { id: number; name: string; key: string } | null;
-  } | null;
-}
-
-export interface Device {
-  id: number;
-  orgId: string;
-  userId: string;
-  deviceType: string;
-  deviceName: string;
-  serialNumber: string | null;
-  brand: string | null;
-  model: string | null;
-  notes: string | null;
-  assignedDate: Date | string | null;
-  returnDate: Date | string | null;
-  status: DeviceStatusExtended | null;
-  user?: {
-    id: string;
-    firstName: string | null;
-    lastName: string | null;
-    email: string;
   } | null;
 }
 

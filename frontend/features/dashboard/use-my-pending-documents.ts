@@ -23,16 +23,13 @@ const NEEDS_REUPLOAD: ReadonlySet<MyOnboardingDoc["status"]> = new Set([
 
 
 export function useMyPendingDocuments() {
-  const { data: session } = useSession();
-  const userId = session?.user?.id;
   const { hrEnabled } = useDashboardAccess();
   const canUploadOwnDocs = useCan("self:onboarding-docs");
   const enabled = hrEnabled && canUploadOwnDocs;
 
-  const { data: docsResponse, isLoading: docsLoading } = useMyOnboardingDocs(
-    userId,
-    { enabled },
-  );
+  const { data: docsResponse, isLoading: docsLoading } = useMyOnboardingDocs({
+    enabled,
+  });
   const { data: documentTypes, isLoading: typesLoading } = useHrDocumentTypes({
     enabled,
   });

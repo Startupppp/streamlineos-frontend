@@ -69,7 +69,7 @@ import { formatDistanceToNow } from "date-fns";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getUserDisplayName, getUserInitials } from "@/features/build/shared/resolve-user-name";
 import { useCan } from "@/hooks/api/access";
-import { USER_STRUCTURAL_ROLES } from "@/features/users/user-invite-roles";
+import { USER_STRUCTURAL_ROLES, formatRoleLabel } from "@/features/users/user-invite-roles";
 
 type BulkAction = "suspend" | "archive";
 
@@ -369,7 +369,7 @@ export function UsersPage() {
       header: "Role",
       cell: (user) => (
         <Badge variant="secondary" className="text-[10px] h-4 px-1.5 font-normal">
-          {user.role}
+          {formatRoleLabel(user.role)}
         </Badge>
       ),
     },

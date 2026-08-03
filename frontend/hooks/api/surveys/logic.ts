@@ -45,8 +45,6 @@ export interface CreateLogicRuleInput {
   sortOrder?: number;
 }
 
-export type PatchLogicRuleInput = Partial<CreateLogicRuleInput>;
-
 function useInvalidateBuilder(surveyId: number) {
   const qc = useQueryClient();
   return () => qc.invalidateQueries({ queryKey: queryKeys.surveys.builder(surveyId) });

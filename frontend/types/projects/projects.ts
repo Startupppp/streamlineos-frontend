@@ -265,15 +265,6 @@ export interface CreateCycleInput {
   endDate: string;
 }
 
-export interface UpdateCycleInput {
-  id: number;
-  name?: string;
-  description?: string;
-  status?: CycleStatus;
-  startDate?: string;
-  endDate?: string;
-}
-
 export interface CreateModuleInput {
   projectId: number;
   name: string;
@@ -282,16 +273,6 @@ export interface CreateModuleInput {
   leadId?: string;
   startDate?: string;
   endDate?: string;
-}
-
-export interface UpdateModuleInput {
-  id: number;
-  name?: string;
-  description?: string;
-  status?: ModuleStatus;
-  leadId?: string | null;
-  startDate?: string | null;
-  endDate?: string | null;
 }
 
 export interface CreateViewInput {

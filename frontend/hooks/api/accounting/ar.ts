@@ -9,7 +9,6 @@ import type {
   CreditNote,
   CreditNoteStatus,
   RecurringInvoiceTemplate,
-  CustomerStatement,
   RecordPaymentInput,
   CreateCreditNoteInput,
   ApplyCreditNoteInput,
@@ -29,10 +28,6 @@ const arKeys = {
     all: [...base, "recurring-templates"] as const,
     list: (p?: unknown) => [...base, "recurring-templates", "list", p] as const,
     detail: (id: number) => [...base, "recurring-templates", id] as const,
-  },
-  statements: {
-    detail: (clientId: number, p?: unknown) =>
-      [...base, "statement", clientId, p] as const,
   },
   arPayments: {
     all: [...base, "ar-payments"] as const,
@@ -91,28 +86,6 @@ export function useRecurringTemplates(params: ListRecurringTemplatesParams = {})
         "/accounting/recurring-invoices",
         toQuery(params),
       ),
-    staleTime: 60_000,
-  });
-}
-
-export interface CustomerStatementParams {
-  from?: string;
-  to?: string;
-}
-
-export function useCustomerStatement(
-  clientId: number,
-  params: CustomerStatementParams = {},
-  enabled = true,
-) {
-  return useQuery<CustomerStatement, Error>({
-    queryKey: arKeys.statements.detail(clientId, params),
-    queryFn: () =>
-      apiClient.get<CustomerStatement>(
-        `/accounting/customer-statements/${clientId}`,
-        toQuery(params),
-      ),
-    enabled: enabled && Number.isInteger(clientId) && clientId > 0,
     staleTime: 60_000,
   });
 }

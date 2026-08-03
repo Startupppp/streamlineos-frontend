@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import ReactDOM from 'react-dom';
 import { PlateElement, useEditorRef } from 'platejs/react';
 import type { PlateElementProps, PlateEditor } from 'platejs/react';

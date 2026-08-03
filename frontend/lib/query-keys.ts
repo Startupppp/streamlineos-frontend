@@ -36,11 +36,11 @@ export const queryKeys = {
     holidaysCalendar: (params: { year: number; month: number }) =>
       [...base, "hr", "holidaysCalendar", params] as const,
     monthlyAttendance: (params: {
-      userId: string;
+      userId?: string;
       year: number;
       month: number;
     }) => [...base, "hr", "monthlyAttendance", params] as const,
-    attendanceHeatmap: (params: { userId: string; year: number }) =>
+    attendanceHeatmap: (params: { year: number }) =>
       [...base, "hr", "attendanceHeatmap", params] as const,
     employeeStats: (userId: string) =>
       [...base, "hr", "employeeStats", userId] as const,
@@ -596,10 +596,7 @@ export const queryKeys = {
       [...base, "dashboard", "recentProjects", orgId] as const,
     teamAvailability: (orgId: string) =>
       [...base, "dashboard", "teamAvailability", orgId] as const,
-    myIssues: (userId?: string) =>
-      userId === undefined
-        ? ([...base, "dashboard", "myIssues"] as const)
-        : ([...base, "dashboard", "myIssues", userId] as const),
+    myIssues: () => [...base, "dashboard", "myIssues"] as const,
     activeSprintSummary: (orgId: string) =>
       [...base, "dashboard", "activeSprintSummary", orgId] as const,
     recentActivity: (orgId: string) =>

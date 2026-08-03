@@ -89,25 +89,6 @@ export interface CreateEngagementInput {
   designation?: string;
 }
 
-export interface UpdateEngagementInput {
-  startsOn?: string;
-  endsOn?: string | null;
-  workerType?: WorkerType;
-  isPrimary?: boolean;
-  designation?: string | null;
-  departmentId?: string | null;
-  businessUnitId?: string | null;
-  branchId?: string | null;
-  locationId?: string | null;
-  teamId?: string | null;
-  managerEngagementId?: string | null;
-  jobRoleId?: number | null;
-  jobLevelId?: number | null;
-  employmentTypeId?: number | null;
-  probationEndsOn?: string | null;
-  noticePeriodDays?: number | null;
-}
-
 export interface TerminateEngagementInput {
   terminationReason?: string;
   terminationNotes?: string;

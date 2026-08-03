@@ -158,36 +158,6 @@ export function useCreateLocation() {
   });
 }
 
-export function useUpdateLocation() {
-  const qc = useQueryClient();
-  return useMutation<
-    WarehouseLocation,
-    Error,
-    {
-      warehouseId: number;
-      locationId: number;
-      data: {
-        name?: string;
-        code?: string;
-        locationType?: LocationType;
-        isPickable?: boolean;
-        isReceivable?: boolean;
-        isSellable?: boolean;
-        capacity?: number | null;
-        isActive?: boolean;
-      };
-    }
-  >({
-    mutationKey: ["inventory", "location", "update"],
-    mutationFn: ({ warehouseId, locationId, data }) =>
-      apiClient.patch<WarehouseLocation>(`/inventory/warehouses/${warehouseId}/locations/${locationId}`, data),
-    onSuccess: (_, vars) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.locations(vars.warehouseId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.warehouses() });
-    },
-  });
-}
-
 export function useSetDefaultWarehouse() {
   const qc = useQueryClient();
   return useMutation<

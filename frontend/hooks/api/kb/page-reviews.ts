@@ -27,13 +27,6 @@ export type KbPageReview = {
   updatedAt: string;
 };
 
-export type CreatePageReviewInput = {
-  type: KbReviewType;
-  reviewerId?: string;
-  dueAt?: string;
-  note?: string;
-};
-
 export type ApproveReviewInput = {
   note?: string;
 };

@@ -124,28 +124,6 @@ export interface PlanDefinition {
   maxEmployees: number | null;
 }
 
-export interface BillingSummary {
-  subscription: {
-    plan: SubscriptionPlan;
-    status: string;
-    trialEndsAt: string | null;
-    trialDaysRemaining: number | null;
-    currentPeriodEnd: string | null;
-    isActive: boolean;
-    isTrial: boolean;
-  } | null;
-  invoiceStats: {
-    totalPaid: string;
-    totalOutstanding: string;
-    draft: number;
-    sent: number;
-    paid: number;
-    overdue: number;
-    cancelled: number;
-  };
-  isConfigured: boolean;
-}
-
 export function useBillingPlans() {
   return useQuery<{ plans: PlanDefinition[] }, Error>({
     queryKey: queryKeys.billing.plans(),

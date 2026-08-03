@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { ExternalLink, Link, Text, Unlink } from 'lucide-react';
 import {
   FloatingLinkUrlInput,

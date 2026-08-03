@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import Link from "next/link";
 import { ArrowRight, UserX } from "lucide-react";
 import { useForm } from "react-hook-form";

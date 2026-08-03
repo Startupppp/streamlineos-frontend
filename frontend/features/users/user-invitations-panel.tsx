@@ -27,7 +27,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { UserInviteDialog } from "@/features/users/user-invite-dialog";
-import { USER_INVITE_ROLES } from "@/features/users/user-invite-roles";
+import { USER_INVITE_ROLES, formatRoleLabel } from "@/features/users/user-invite-roles";
 import {
   useInvitations,
   useResendInvite,
@@ -255,7 +255,7 @@ export function UserInvitationsPanel() {
         if (!editable) {
           return (
             <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0">
-              {inv.role}
+              {formatRoleLabel(inv.role)}
             </Badge>
           );
         }

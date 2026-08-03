@@ -206,27 +206,6 @@ export interface EditMessageInput {
   content: string;
 }
 
-export interface PollOption {
-  id: number;
-  text: string;
-  voteCount: number;
-}
-
-export interface PollVote {
-  optionId: number;
-  userId: string;
-}
-
-export interface Poll {
-  id: number;
-  messageId: number;
-  question: string;
-  options: PollOption[];
-  votes: PollVote[];
-  endsAt: Date | string | null;
-  createdAt: Date | string | null;
-}
-
 export interface ThreadPage {
   parentMessage: Message;
   replies: Message[];

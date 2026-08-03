@@ -1,12 +1,8 @@
 export type {
   SalesOrderStatus,
-  SalesOrderFilters,
   SalesOrderListItem,
-  SalesOrdersListResponse,
-  SalesOrderLine,
   SalesOrderDetail,
   AtpEntry,
-  UpdateSalesOrderInput,
 } from "./sales-orders-types";
 
 export { useSalesOrders, useSalesOrder, useSoAtp } from "./sales-orders-queries";

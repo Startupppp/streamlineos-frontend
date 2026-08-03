@@ -47,17 +47,6 @@ export interface BankTransaction {
   createdAt: string;
 }
 
-export interface BankImport {
-  id: number;
-  bankAccountId: number;
-  fileName: string;
-  rowCount: number;
-  importedCount: number;
-  duplicateCount: number;
-  errorCount: number;
-  createdAt: string;
-}
-
 export interface ReconciliationSuggestedMatch {
   id: number;
   bankTransactionId: number;

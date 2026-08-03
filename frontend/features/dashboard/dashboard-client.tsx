@@ -130,7 +130,7 @@ export function DashboardClient() {
     data: myIssuesData,
     isLoading: ticketsLoading,
     error: ticketsError,
-  } = useMyIssues(currentUserId ?? "", { enabled: projectsEnabled });
+  } = useMyIssues({ enabled: projectsEnabled });
 
   const { data: sprintSummary, isLoading: sprintLoading } =
     useActiveSprintSummary({ enabled: projectsEnabled });

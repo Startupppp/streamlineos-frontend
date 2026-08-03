@@ -58,10 +58,6 @@ export interface Program {
   projectCount?: number;
 }
 
-export interface ProgramDetail extends Program {
-  projects: LinkedProject[];
-}
-
 export interface CreateProgramInput {
   name: string;
   description?: string;

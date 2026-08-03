@@ -12,7 +12,6 @@ import type {
   UpdateDealStageInput,
   LogDealActivityInput,
   DealStats,
-  DealForecast,
   DealMeeting,
   CreateDealMeetingInput,
   WinLossAnalysis,
@@ -20,7 +19,6 @@ import type {
   CreateDealCompetitorInput,
   DealHealth,
   ForecastSnapshot,
-  ForecastSnapshotCompare,
   CaptureForecastSnapshotInput,
   PatchNextStepInput,
   DealStakeholder,
@@ -31,7 +29,6 @@ import type {
 export type {
   DealActivity,
   DealStats,
-  DealForecast,
   DealMeeting,
   CreateDealMeetingInput,
   WinLossAnalysis,
@@ -294,15 +291,6 @@ export function useCaptureForecastSnapshot() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.deals.forecastSnapshots() });
     },
-  });
-}
-
-export function useForecastCompare(period: string) {
-  return useQuery({
-    queryKey: queryKeys.deals.forecastCompare(period),
-    queryFn: () => apiClient.get<ForecastSnapshotCompare>("/deals/forecast/compare", { period }),
-    staleTime: 5 * 60_000,
-    enabled: period.length > 0,
   });
 }
 

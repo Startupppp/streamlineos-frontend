@@ -162,24 +162,6 @@ export interface InterviewerAvailabilityResponse {
   availability: InterviewerAvailability[];
 }
 
-export interface CreateBookingLinkInput {
-  candidateId: number;
-  jobPostingId?: number;
-  interviewerIds: string[];
-  durationMinutes?: number;
-  interviewType?: "VIDEO" | "PHONE" | "IN_PERSON";
-  availableSlots: { start: string; end: string }[];
-  expiresInDays?: number;
-  notes?: string;
-}
-
-export interface BookingLinkResponse {
-  id: number;
-  token: string;
-  bookingUrl: string;
-  expiresAt: string;
-}
-
 const INTERVIEW_SLAS_KEY = queryKeys.hr.interviewSlas();
 const SLA_REPORT_KEY = queryKeys.hr.slaReport();
 const INTERVIEW_STATS_KEY = [...queryKeys.hr.all, "interviewStats"] as const;

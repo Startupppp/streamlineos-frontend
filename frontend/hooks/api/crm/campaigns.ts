@@ -64,18 +64,6 @@ export function useUpdateCampaign() {
   });
 }
 
-export function useDeleteCampaign() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["crmCampaigns", "delete"] as const,
-    mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/crm/campaigns/${id}`),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.crmCampaigns.all });
-    },
-  });
-}
-
 export function useCampaignRoi(campaignId: number) {
   return useQuery({
     queryKey: queryKeys.crmCampaigns.roi(campaignId),

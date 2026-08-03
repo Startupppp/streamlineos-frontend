@@ -172,50 +172,6 @@ export interface EnhancedSalesMetrics {
   followUpNeeded: number;
 }
 
-export interface SalesDashboard {
-  salesStats: {
-    pipeline: StatWithTrend;
-    dealsWon: StatWithTrend;
-    conversionRate: StatWithTrend;
-    avgDealSize: StatWithTrend;
-  };
-  revenueTimeline: { month: string; value: number }[];
-  salesFunnel: SalesFunnelItem[];
-  topDeals: TopDeal[];
-  salesLeaderboard: SalesLeaderboardItem[];
-  salesActivity: SalesActivityItem[];
-  dealsByStage: DealsByStage[];
-  enhancedMetrics: EnhancedSalesMetrics;
-}
-
-export interface PersonStat {
-  label: string;
-  value: string | number;
-  trend?: { value: number; isPositive: boolean };
-}
-
-export interface PersonDeal {
-  company: string;
-  value: number;
-  stage: string;
-  probability: number;
-  closeDate: string;
-}
-
-export interface PersonAccount {
-  name: string;
-  revenue: number;
-  health: "healthy" | "at_risk" | "critical";
-  since: string;
-  renewalDate: string;
-}
-
-export interface PersonActivity {
-  type: "deal_won" | "meeting" | "proposal" | "call" | "email" | "ticket" | "escalation";
-  message: string;
-  time: string;
-}
-
 export interface DealStats {
   active: number;
   pipelineValue: number;
@@ -286,11 +242,6 @@ export interface DealCompetitor {
 
 export interface CreateDealCompetitorInput {
   competitorKey: string;
-  status?: string;
-  notes?: string;
-}
-
-export interface UpdateDealCompetitorInput {
   status?: string;
   notes?: string;
 }
@@ -367,13 +318,6 @@ export interface DealStakeholder {
 
 export interface CreateStakeholderInput {
   contactId: number;
-  roleKey?: string | null;
-  influence?: string | null;
-  isPrimary?: boolean;
-  notes?: string | null;
-}
-
-export interface UpdateStakeholderInput {
   roleKey?: string | null;
   influence?: string | null;
   isPrimary?: boolean;

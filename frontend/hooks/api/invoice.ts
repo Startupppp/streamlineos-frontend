@@ -139,20 +139,6 @@ export const useDeleteInvoice = () => {
   });
 };
 
-export interface RecurringInvoice {
-  id: number;
-  invoiceNumber: string;
-  clientId: number | null;
-  clientName: string | null;
-  total: string;
-  currency: string;
-  status: InvoiceStatus;
-  recurringInterval: string | null;
-  nextRecurringDate: string | null;
-  overdue: boolean;
-}
-
-
 interface RecordPaymentInput {
   invoiceId: number;
   amount: number;

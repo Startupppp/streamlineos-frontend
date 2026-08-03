@@ -10,7 +10,6 @@ import type {
   ClientTimelineEvent,
   SimpleClient,
   ClientOpportunity,
-  OnboardingTemplate,
   OnboardingItem,
 } from "@/types/crm";
 
@@ -62,14 +61,6 @@ export function useClientOpportunities(clientId?: number) {
   });
 }
 
-export function useOnboardingTemplates() {
-  return useQuery({
-    queryKey: queryKeys.clientOnboarding.templates(),
-    queryFn: () => apiClient.get<OnboardingTemplate[]>("/clients/onboarding/templates"),
-    staleTime: 2 * 60_000,
-  });
-}
-
 export function useClientOnboardingItems(clientId: number) {
   return useQuery({
     queryKey: queryKeys.clientOnboarding.items(clientId),
@@ -91,12 +82,3 @@ export function useToggleOnboardingItem() {
   });
 }
 
-export function useCreateOnboardingTemplate() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["clientOnboarding", "templates", "create"] as const,
-    mutationFn: (input: { name: string; description?: string; isDefault?: boolean }) =>
-      apiClient.post<OnboardingTemplate>("/clients/onboarding/templates", input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.clientOnboarding.templates() }),
-  });
-}

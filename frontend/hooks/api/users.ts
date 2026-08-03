@@ -333,7 +333,7 @@ export const useBulkInviteUsers = () => {
   return useMutation<
     { results: Array<{ email: string; success: boolean; invitationId?: string; error?: string }> },
     Error,
-    { emails: string[]; role: string; orgId?: string }
+    { emails: string[]; role: string }
   >({
     mutationKey: ["users", "bulk-invite"],
     mutationFn: (data) =>

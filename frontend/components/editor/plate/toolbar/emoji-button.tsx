@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Smile } from 'lucide-react';
 import { useEditorRef } from 'platejs/react';
 import {

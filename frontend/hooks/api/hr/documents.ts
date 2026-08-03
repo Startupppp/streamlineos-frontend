@@ -74,22 +74,14 @@ interface MyOnboardingDocsResponse {
 
 const MY_DOCS_LIMIT = 100;
 
-/**
- * The caller's OWN onboarding documents. `userId` is always sent explicitly:
- * the backend widens this endpoint to the whole org for `hr:onboarding:manage`
- * holders, so omitting it would return every employee's documents to an admin.
- */
-export function useMyOnboardingDocs(
-  userId: string | undefined,
-  options?: { enabled?: boolean },
-) {
-  const params = { userId, page: 1, limit: MY_DOCS_LIMIT };
+export function useMyOnboardingDocs(options?: { enabled?: boolean }) {
+  const params = { page: 1, limit: MY_DOCS_LIMIT };
   return useQuery({
     queryKey: queryKeys.hr.onboardingDocs(params),
     queryFn: () =>
-      apiClient.get<MyOnboardingDocsResponse>("/hr/onboarding-docs", params),
+      apiClient.get<MyOnboardingDocsResponse>("/hr/onboarding-docs/me", params),
     staleTime: 60_000,
-    enabled: !!userId && (options?.enabled ?? true),
+    enabled: options?.enabled ?? true,
   });
 }
 

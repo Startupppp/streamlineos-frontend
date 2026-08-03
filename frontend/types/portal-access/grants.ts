@@ -53,15 +53,6 @@ export interface ProjectClientGrantsPage {
   pagination: PaginationMeta;
 }
 
-export interface CreateMembershipInput {
-  partyContactId: string;
-  userId?: string;
-}
-
-export interface UpdateMembershipStatusInput {
-  status: "ACTIVE" | "SUSPENDED" | "REVOKED";
-}
-
 export interface CreateGrantInput {
   portalMembershipId: string;
   projectId: number;

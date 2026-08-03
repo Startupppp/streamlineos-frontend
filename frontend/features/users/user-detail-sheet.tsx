@@ -25,6 +25,7 @@ import { UserMembershipSection } from "./user-membership-section";
 import { UserModuleAccessSection } from "./user-module-access-section";
 import { UserAccessLinksSection } from "./user-access-links-section";
 import { UserAuditTab } from "./user-audit-tab";
+import { formatRoleLabel } from "./user-invite-roles";
 import {
   Mail,
   Phone,
@@ -168,7 +169,7 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
                           </div>
                           <div className="flex flex-wrap gap-1.5 mt-2">
                             <Badge variant="secondary" className="text-[10px] h-5 px-1.5">
-                              {user.role}
+                              {formatRoleLabel(user.role)}
                             </Badge>
                             <UserStatusBadge isActive={user.isActive} />
                           </div>

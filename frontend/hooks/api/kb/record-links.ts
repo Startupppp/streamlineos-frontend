@@ -12,12 +12,6 @@ export type KbPageRecordLink = {
   label: string | null;
 };
 
-export type KbLinkedPage = {
-  pageId: number;
-  title: string;
-  icon: string | null;
-};
-
 export type CreateKbPageRecordLinkInput = {
   targetType: string;
   targetId: string;

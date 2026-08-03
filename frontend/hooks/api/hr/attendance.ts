@@ -166,13 +166,17 @@ export function useHrMonthlyAttendance(params: GetMonthlyAttendanceInput) {
   return useQuery({
     queryKey: queryKeys.hr.monthlyAttendance(params),
     queryFn: () =>
-      apiClient.get<AttendanceLog[]>("/hr/attendance/monthly", params as unknown as Record<string, unknown>),
+      apiClient.get<AttendanceLog[]>("/hr/attendance/monthly", {
+        year: params.year,
+        month: params.month,
+        ...(params.userId ? { userId: params.userId } : {}),
+      }),
     staleTime: 2 * 60_000,
-    enabled: canAttendance && !!params.userId,
+    enabled: canAttendance,
   });
 }
 
-export function useAttendanceHeatmap(params: { userId: string; year: number }) {
+export function useAttendanceHeatmap(params: { year: number }) {
   const canAttendance = useCan("hr:attendance:view");
   return useQuery({
     queryKey: queryKeys.hr.attendanceHeatmap(params),
@@ -182,9 +186,9 @@ export function useAttendanceHeatmap(params: { userId: string; year: number }) {
         userId: string;
         heatmap: { date: string; hours: number; sessions: number; intensity: number }[];
         summary: { totalDays: number; totalHours: string; avgHoursPerDay: string; longestStreak: number };
-      }>("/hr/attendance/heatmap", params as unknown as Record<string, unknown>),
+      }>("/hr/attendance/heatmap", { year: params.year }),
     staleTime: 2 * 60_000,
-    enabled: canAttendance && !!params.userId,
+    enabled: canAttendance,
   });
 }
 

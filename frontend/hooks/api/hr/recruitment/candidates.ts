@@ -63,14 +63,6 @@ interface BulkRejectResult {
   emailsSent: number;
 }
 
-export interface SourceEffectivenessRow {
-  source: string;
-  total: number;
-  hired: number;
-  rejected: number;
-  hireRate: number;
-}
-
 interface RecruitmentFunnelStage {
   stage: string;
   count: number;

@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import Link from "next/link";
 import { format, isValid } from "date-fns";
 import { cn } from "@/lib/utils";

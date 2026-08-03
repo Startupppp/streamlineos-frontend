@@ -6,24 +6,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
-import type { PeriodDetail, PeriodStatus, TimesheetPeriod } from "@/features/timesheets/types";
-
-interface PeriodsQuery {
-  userId?: string;
-  status?: PeriodStatus;
-  limit?: number;
-}
-
-export function usePeriods(query: PeriodsQuery = {}, enabled = true) {
-  const canView = useCan("timesheets:entries:view");
-  const params = { userId: query.userId, status: query.status, limit: query.limit };
-  return useQuery({
-    queryKey: queryKeys.timesheets.periods(params),
-    queryFn: () => apiClient.get<TimesheetPeriod[]>("/timesheets/periods", params),
-    staleTime: 30_000,
-    enabled: enabled && canView,
-  });
-}
+import type { PeriodDetail, TimesheetPeriod } from "@/features/timesheets/types";
 
 export function useCurrentPeriod() {
   const canView = useCan("timesheets:entries:view");
@@ -69,10 +52,3 @@ export function useRecallPeriod() {
   return usePeriodAction("recall", "Timesheet recalled");
 }
 
-export function useReopenPeriod() {
-  return usePeriodAction("reopen", "Timesheet reopened");
-}
-
-export function useLockPeriod() {
-  return usePeriodAction("lock", "Period locked");
-}

@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { useCreateProject, useAddProjectMember } from "@/hooks/api/build/projects";
 import { useApplyProjectTemplate } from "@/hooks/api/build/templates";
@@ -12,8 +11,6 @@ import type { WizardDraft } from "./use-project-create";
 export function useProjectProvisioning(onSuccess: () => void) {
   const [isProvisioning, setIsProvisioning] = useState(false);
   const router = useRouter();
-  const { data: session } = useSession();
-  const creatorId = session?.user?.id;
   const createProject = useCreateProject();
   const applyTemplate = useApplyProjectTemplate();
   const addMember = useAddProjectMember();
@@ -22,10 +19,8 @@ export function useProjectProvisioning(onSuccess: () => void) {
     setIsProvisioning(true);
     try {
       let projectId: number;
-      const memberIds = creatorId
-        ? Array.from(new Set([creatorId, ...draft.memberIds]))
-        : draft.memberIds;
-      const managerId = draft.managerId || creatorId || undefined;
+      const memberIds = Array.from(new Set(draft.memberIds));
+      const managerId = draft.managerId || undefined;
 
       if (draft.templateId !== null) {
         const result = await applyTemplate.mutateAsync({

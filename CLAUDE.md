@@ -1,452 +1,372 @@
 # CLAUDE.md — StreamlineOS Engineering Constitution v5
 
-> Single source of truth for AI-assisted development on StreamlineOS.
-> **Read this file fully before ANY change.** When a rule here conflicts with your
-> instinct, this file wins. When two rules conflict, §29 (Precedence) decides.
-> Version-sensitive rules are tagged **[verify-version]** — confirm against the repo's
-> installed version before enforcing.
+> Read fully before ANY change. This file wins over instinct; §29 resolves conflicts.
+> **[verify-version]** = re-confirm against the installed version before enforcing.
+> Visual/UI matters defer to `UI-UX-SYSTEM.md`.
 
 ---
 
-## 0. Cardinal Rules — non-negotiable (violating any one fails the task)
+## 0. Cardinal Rules — violating one fails the task
 
-1. **Inspect before you change.** Explore the real repo — structure, tokens, components, hooks, APIs, schema — before writing a line. Never assume structure; never hallucinate a file, symbol, route, or API you have not confirmed exists.
-2. **Reuse before you create.** Use an existing component/hook/service/util (or a variant) before making a new one. Create new only when nothing fits, and minimally.
-3. **Work page by page, audit-first.** Only touch the page(s) I name. AUDIT → show a PLAN → wait for my confirmation → then edit.
-4. **Business logic lives in the backend, never the frontend.** All REST endpoints, controllers, services, and the DB schema live in the NestJS repo (`streamlineos-api`). The Next.js repo holds UI, client state, and TanStack Query hooks only. (§6)
-5. **Authorize at the data layer, on every read AND write, scoped by tenant.** Middleware, client checks, and page redirects are advisory only and are bypassable. Re-assert object-level + tenant access in the service/DAL every time. (§20)
-6. **Strict TypeScript, always.** No `any`, no casting hacks, no `@ts-ignore`/`@ts-expect-error`, no `!` non-null assertion abuse. Everything typed against the real backend contract.
-7. **Verify before you claim done.** Build passes, lint passes, types pass — every time. Then update `PAGES.md`. "Done" without a green build+lint+types is not done. (§26)
-8. **Keep files small and single-purpose.** Soft cap **500 lines / target ≤300** per file; split by responsibility past that. Exceptions in §9.
-9. **Leave less code than you found where you can.** Delete dead code, unused components/hooks/APIs/types, and their files. Never add speculative abstractions (YAGNI).
-10. **Living rules.** Any new rule/preference/correction I state mid-task is added to this file immediately (correct section, concise), confirmed, and followed from then on.
-11. **Git is orchestrator-only.** Orchestrator MAY `commit` verified work on the current branch between tasks. NEVER push/checkout/branch/merge/pull/fetch/reset/stash/rebase. Subagents/workflows run NO git commands ever.
-
----
+1. **Inspect before you change.** Confirm every file, symbol, route, API, and schema exists. Never assume, never hallucinate.
+2. **Reuse before you create.** New code only when nothing existing fits, and minimally.
+3. **Page by page, audit-first.** Touch only pages I name: AUDIT → PLAN → my confirmation → edit.
+4. **Business logic is backend-only.** All REST/controllers/services/schema live in `streamlineos-api`. Frontend = UI, client state, Query hooks. (§6)
+5. **Authorize at the data layer** on every read AND write, scoped by tenant. Middleware, client checks, and redirects are advisory and bypassable. (§20)
+6. **Strict TypeScript.** No `any`, no casting hacks, no `@ts-ignore`/`@ts-expect-error`, no `!` abuse.
+7. **Verify before "done".** Types pass (build where it is the only proof), then update `PAGES.md`. (§3, §26)
+8. **Small files.** Target ≤300 lines, hard review at 500; split by responsibility. Exceptions in §9.
+9. **Leave less code than you found.** Delete dead code and its files. No speculative abstractions (YAGNI).
+10. **Living rules.** Any rule or correction I state mid-task is added here immediately, in the right section, and followed from then on.
+11. **Git is orchestrator-only.** MAY `commit` verified work on the current branch between tasks. NEVER push/checkout/branch/merge/pull/fetch/reset/stash/rebase. Subagents run no git commands.
 
 ## 1. Mission & Stack
 
-Build an enterprise-grade, **multi-tenant** SaaS platform (StreamlineOS): scalable, secure, reliable, maintainable, performant, and production-ready.
+Enterprise-grade **multi-tenant** SaaS (StreamlineOS): scalable, secure, reliable, maintainable, performant.
 
-**Two repos, hard boundary:**
-- **Frontend** — Next.js (App Router) · TypeScript (strict) · Tailwind CSS · shadcn/ui · TanStack Query (v5) · React Context · react-hook-form + Zod · Sonner · Framer Motion. Package manager: **pnpm**.
-- **Backend (`streamlineos-api`)** — NestJS (REST) · Drizzle ORM · Neon (Postgres) · Redis · Zod validation. **Owns all business logic, APIs, and the DB schema.**
+- **Frontend** — Next.js App Router · TypeScript strict · Tailwind · shadcn/ui · TanStack Query v5 · React Context · react-hook-form + Zod · Sonner · Framer Motion · **pnpm**.
+- **Backend (`streamlineos-api`)** — NestJS REST · Drizzle · Neon Postgres · Redis · Zod. **Owns all business logic, APIs, and schema.**
 
 ## 2. Core Principles
 
-Never hallucinate · Inspect before changing · Reuse before creating · Simplicity over cleverness · Normalize data · Reduce technical debt · SOLID · DRY · KISS · YAGNI · Secure-by-default · Deny-by-default authorization · Fail fast and loud at boundaries. Think like a CTO + Principal Engineer + Product Manager + Security Engineer + Database Architect — improve the architecture, not just the code.
+Never hallucinate · Inspect before changing · Reuse before creating · Simplicity over cleverness · Normalize data · SOLID · DRY · KISS · YAGNI · Secure-by-default · Deny-by-default authz · Fail fast at boundaries. Think CTO + Principal Engineer + PM + Security Engineer + DB Architect: improve the architecture, not just the code.
 
 ---
 
-## 3. Workflow (strict — page by page)
+## 3. Workflow
 
-- Work **PAGE BY PAGE**; never modify pages I haven't named.
-- When I name a page: **AUDIT and show a plan** (change / remove / add). **Wait for confirmation** before editing.
-- Ambiguous + structural → **ask briefly** before coding. Don't guess.
-- Check `.claude/` rules before starting any task.
-- After fixing: run **typecheck** (and **build** where it is the only way to prove the change), fix all errors, then update `PAGES.md` (mark done + one-line summary).
-- **Never run lint or tests unprompted (living rule, 2026-08-01):** `eslint`, `jest` and any test/spec run happen ONLY when I explicitly ask for them. They are slow and I will decide when they are worth the wait. `tsc --noEmit` is always allowed and remains the default proof. This narrows §26: a change is reportable as done on a green typecheck, with lint/tests called out as *not run* rather than silently claimed.
-- When I say **"go"**, pick the next unchecked page in `PAGES.md`.
-- **Parallelism:** decompose into independent sub-tasks, dispatch each to a separate subagent via the Task tool, commit between tasks.
+- Work **page by page**. When I name a page: audit, show a plan (change/remove/add), **wait for confirmation**.
+- Ambiguous + structural → ask briefly. Don't guess. Check `.claude/` rules first.
+- **`tsc --noEmit` is the default proof and always allowed. Never run lint or tests unless I explicitly ask** — they are slow and I decide when they are worth it. Report them as *not run*, never as passing.
+- After fixing: typecheck (and `next build` where it is the only way to prove the change), then update `PAGES.md`.
+- **"go"** = take the next unchecked page in `PAGES.md`.
+- **Parallelism:** decompose into independent sub-tasks, one subagent each, commit between tasks.
 
 ## 4. Mandatory Discovery (before coding)
 
-Identify from the actual codebase: Module · Business problem · Entities · Existing schema · Existing APIs · Existing cache keys · Existing RBAC keys/guards · Existing components · Existing services · Existing hooks · A simpler alternative.
+From the real codebase, identify: module · business problem · entities · existing schema, APIs, cache keys, RBAC keys/guards, components, services, hooks · a simpler alternative.
 
-## 5. Audit Dimensions (per page/module)
+## 5. Audit Dimensions
 
-Architecture · Database · API · Cache · Backend · Frontend · UI · UX · Security · Performance · Product completeness. Then implement, then validate.
+Architecture · Database · API · Cache · Backend · Frontend · UI · UX · Security · Performance · Product completeness → implement → validate.
 
 ---
 
-## 6. Frontend ↔ Backend Boundary (architectural backbone)
+## 6. Frontend ↔ Backend Boundary
 
-- **Backend owns ALL APIs & business logic.** Every controller/route handler/business service is written in the NestJS backend only. The frontend holds only UI, client state, and TanStack Query hooks (`lib/api/`) that call the backend.
-- **Do NOT add `app/api/**` business routes or `lib/services/**` business logic in the frontend.** The only `app/api/**` allowed are NextAuth / auth-bridge routes.
-- **DB schema source-of-truth is the backend:** `backend/src/db/schema/**`. Drizzle config (`backend/drizzle.config.ts`) and migrations (`backend/migrations/`) live in the backend. Run migrations from the backend only: `pnpm -C backend db:generate` · `db:push` · `db:migrate`.
-- **The frontend has NO database access at all (living rule, corrected 2026-08-03):** this section previously described a "minimal auth-only" Drizzle schema at `frontend/lib/db/schema/` for NextAuth's DrizzleAdapter. That directory does not exist, nothing imports `lib/db`, and no adapter is configured — NextAuth runs `strategy: "jwt"` and every lookup goes through the backend (`/auth/session-data/:userId`, `/me/access`). The backend's NextAuth-adapter `sessions` table was correspondingly dead and was dropped in migration `0390`; `accounts` and `verification_tokens` stay because the backend genuinely uses them (Google account linking, email verification). Never add a DB client, schema, or migration to the frontend — if a server component needs data, it calls the backend with the session's `backendJwt` (canonical: `lib/rbac/get-server-access.ts`).
-- **External app integrations (living rule, 2026-07-04):** all third-party app connectivity (calendar, mail, chat, files) goes through **Composio** via the backend `integrations` module (`@composio/core`, server-side only) — never direct provider OAuth flows, never provider access/refresh tokens in our DB. Composio custodies tokens; we mirror only connected-account metadata (`user_integration_connections`). The frontend receives redirect URLs and connection state exclusively from backend endpoints.
+- **Backend owns ALL APIs and business logic.** Frontend holds UI, client state, and Query hooks only.
+- **No `app/api/**` business routes, no `lib/services/**` business logic in the frontend.** The only frontend `route.ts` is NextAuth / auth-bridge.
+- **Schema source of truth: `backend/src/db/schema/**`.** Drizzle config + `backend/migrations/` live in the backend; run migrations there only (`pnpm -C backend db:generate | db:push | db:migrate`).
+- **The frontend has NO database access at all.** No DB client, schema, adapter, or migration — NextAuth runs `strategy: "jwt"` and every lookup goes through the backend. Server components fetch with the session's `backendJwt` (canonical: `lib/rbac/get-server-access.ts`).
+- **Third-party app connectivity goes through Composio** via the backend `integrations` module (server-side only) — never direct provider OAuth, never provider tokens in our DB. We mirror only connection metadata (`user_integration_connections`); the frontend gets redirect URLs and state from backend endpoints.
 - **Retired — do not use:** `pnpm sync:schema`, `pnpm check:schema`.
-
----
 
 ## 7. TypeScript & Code Quality
 
-- Readable, reusable, efficient, clean, extensible, scalable, maintainable, robust, secure. SOLID throughout.
-- **`strict: true`** (enables `strictNullChecks`, `noImplicitAny`, `strictFunctionTypes`, etc.). Also enable `noUncheckedIndexedAccess`.
-- No `any` — use `unknown` + narrowing. No `@ts-ignore`/`@ts-expect-error`. No non-null assertion (`!`) abuse — restructure or use optional chaining / `??`. No casting hacks.
-- **Never force types (living rule, 2026-07-11):** don't silence TS with `as SomeShape` / `as unknown as X`. This includes raw `db.execute(sql\`…\`)` results — the rows are `Record<string, unknown>`; read each field through a converter at the use site (`Number(row.count)`, `String(row.month)`, `row?.field ?? fallback`), never `(row[0] as { count: string })`. If a cast feels necessary, fix the source type or the query projection instead.
-- **Discriminated unions** for state machines and API responses (shared literal `type`/`status` field), with exhaustive `switch` + `assertNever` default so missing cases fail at compile time.
-- **Validate untrusted input at runtime with Zod** at every boundary (API bodies/params, Server Actions, env). Types are compile-time only and do not protect a running endpoint.
-- **Zod schemas live in dedicated `*-schema.ts` files (living rule, 2026-07-18):** never inline a non-trivial Zod schema inside a controller, route handler, component, or hook — define it in a co-located `*-schema.ts` (frontend: beside the form/feature that owns it; backend: the module's `dto/` or a `*-schema.ts`) and import it. Derive the TS type from that one source with `z.infer<typeof xSchema>` — never hand-maintain a parallel `interface`. Trivial single-field param guards (`z.object({ id: z.string().uuid() })`) may stay inline; anything larger, or reused in more than one place, gets its own file.
-- **No anonymous functions for event handlers** — named handlers only.
-- **No comments in code.** Remove stray comments, commented-out code, and `console.log`s.
-- **Eliminate ALL dead code** and delete its files; verify nothing else imports them.
-- Mentally test edge cases before finishing: errors, loading, empty, network failure, invalid input, auth, concurrency, StrictMode double-invoke.
+- `strict: true` + `noUncheckedIndexedAccess`. No `any` (use `unknown` + narrowing), no `@ts-ignore`, no `!` abuse, no casting hacks.
+- **Never force types.** No `as SomeShape` / `as unknown as X`. Raw `db.execute(sql\`…\`)` rows are `Record<string, unknown>` — convert at the use site (`Number(row.count)`, `String(row.month)`, `row?.field ?? fallback`). If a cast feels necessary, fix the source type or the query projection.
+- **Discriminated unions** for state machines and API responses, with exhaustive `switch` + `assertNever`.
+- **Zod-validate every untrusted boundary** (API bodies/params, env). Types are compile-time only.
+- **Zod schemas live in `*-schema.ts` files** beside the feature (frontend) or in the module's `dto/` (backend) — never inlined in a controller, route, component, or hook. Derive the type with `z.infer`; never hand-maintain a parallel `interface`. Trivial single-field guards may stay inline.
+- **Named event handlers only** — no anonymous functions.
+- **No comments in code.** Remove stray comments, commented-out code, `console.log`s.
+- **Delete all dead code and its files**, verifying nothing imports them.
+- Mentally test edge cases before finishing: error, loading, empty, network failure, invalid input, auth, concurrency, StrictMode double-invoke.
 
 ## 8. Component Architecture
 
-- Split into multiple components/files **only when logically necessary** (separation of concerns), never by default.
-- **Priority:** `@custom/` or `@shared/` if available → fallback `@ui/` (shadcn/ui). Error/loading/empty states use `@pre-ui/` if it exists, else minimal ones styled from design tokens.
-- Always reuse existing components; never create a new one if an existing (or variant) can serve.
-- Lazy-load heavy client components (dynamic import). `React.memo`/`useMemo` only for **measured** hot paths.
-- **Icons:** Use `@animateicons/react` exclusively. Only use icons available at https://animateicons.in/icons/lucide (248 Lucide) and https://animateicons.in/icons/huge (33 Huge). For any icon not available there, fall back to `lucide-react` static icon — never `@phosphor-icons/react` or any other icon library for new code.
-- **Animated icons on hover (living rule, 2026-07-10):** icons on interactive/hoverable surfaces (cards, row action buttons, nav items, popover/sheet triggers) must be the animated components from `@animateicons/react/lucide` (`XxxIcon`) driven by the shared `useAnimatedIcon()` hook (`hooks/common/use-animated-icon.ts` → `{ iconRef, hoverHandlers }`: attach `ref={iconRef}` to the icon, spread `hoverHandlers` on the hoverable element). Static `lucide-react` only for non-interactive icons or icons absent from the animated set. **Canonical helper (living rule, 2026-07-16):** any shadcn `Button` carrying an interactive icon uses `<AnimatedIconButton icon={XxxIcon} …ButtonProps>` (`components/ui/animated-icon-button.tsx` — wires the hook internally, works under `DropdownMenuTrigger asChild`, `iconSize` 14 default/16 for h-4); plain `<button>`/DataTable-cell contexts extract a small named `forwardRef` sub-component calling the hook (hooks can't run in cell callbacks). Animated names differ from lucide (`MoreHorizontal`→`EllipsisIcon`); verify the export exists in `node_modules/@animateicons/react` before importing — `PencilIcon` does NOT exist (keep `Pencil` static). Other wrappers to reuse/extend: `features/knowledge-base/lib/kb-icons.tsx`, `components/layout/sidebar/sidebar-animated-nav.tsx`.
-- **Rich text (living rule, updated 2026-07-03):** simple rich-text fields (ticket descriptions, blog, comments) reuse `components/editor/tiptap-editor.tsx` (TipTap on shadcn styling) — extend it rather than adding another simple editor. **Notion-style document surfaces (KB Wiki pages) use Plate (`platejs`, shadcn-based)** under `components/editor/plate/` — do not build document-editor features on TipTap. Lazy-load editors in dialogs/sheets.
+- Split into files only when separation of concerns demands it, never by default.
+- **Priority:** `@custom/` or `@shared/` → `@ui/` (shadcn). Error/loading/empty from `@pre-ui/` if present, else minimal token-styled ones.
+- Lazy-load heavy client components. `React.memo`/`useMemo` only for **measured** hot paths.
+- **Icons:** `@animateicons/react` only (248 Lucide + 33 Huge at animateicons.in); anything absent falls back to a static `lucide-react` icon. Never `@phosphor-icons/react` or any other library in new code.
+- **Interactive icons are animated.** Icons on hoverable surfaces (cards, row actions, nav, popover/sheet triggers) use `@animateicons/react/lucide` driven by `useAnimatedIcon()` (`hooks/common/use-animated-icon.ts` → `{ iconRef, hoverHandlers }`). Any shadcn `Button` with an interactive icon uses `<AnimatedIconButton icon={XxxIcon} …>` (`components/ui/animated-icon-button.tsx`; works under `DropdownMenuTrigger asChild`; `iconSize` 14 default / 16 for `h-4`). Plain `<button>` and DataTable cells extract a small `forwardRef` sub-component (hooks can't run in cell callbacks). Animated names differ from lucide (`MoreHorizontal`→`EllipsisIcon`) — verify the export exists in `node_modules/@animateicons/react`; **`PencilIcon` does not exist** (keep `Pencil` static).
+- **Rich text:** simple fields (ticket descriptions, blog, comments) reuse `components/editor/tiptap-editor.tsx` — extend it, don't add another. Notion-style document surfaces (KB Wiki) use Plate under `components/editor/plate/`. Lazy-load editors in dialogs/sheets.
 
 ## 9. File & Folder Structure + Naming (STRICT)
 
-**Structure:**
-- Feature components → `features/<feature>/components/`; feature libs → `features/<feature>/lib/`; feature hooks → `features/<feature>/hooks/`.
-- **Banned:** `_components/` and `_lib/` inside `app/` route folders.
-- `app/` contains **only** route files: `page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`, `not-found.tsx`, `route.ts` (auth-bridge only).
-- Cross-feature reusable UI → `components/`; shared hooks → `hooks/`; shared utils → `lib/`; types → `types/` or co-located.
-- **Feature-first, not type-first.** Group by business capability; a feature owns its components/hooks/queries/types. Genuinely shared code only goes in the shared roots above.
-- Max nesting ~3–4 folders deep. When fixing a page, move misplaced files into this structure and update all imports.
-- A feature's public surface is its barrel `index.ts`; import feature internals through it, not by deep path.
-- **Module name vs entity name — do not conflate (living rule, 2026-07-31):** a Build **sub-domain** is named for the module (`BuildQaModule`, `BuildFormsModule`, `build-approvals.module.ts`), never `Projects*` — QA, forms, governance, incidents, meetings, portfolios, teams, workflow and managed-products are **not** projects, and calling them `Projects*` is the `client`/`customer`/`account` drift the naming rules forbid. But `build/core/` legitimately keeps `Projects*` (`ProjectsService`, `projects.service.ts`) because it manages the **`projects` entity** — and `project` ≠ `product` ≠ `Build module` are three distinct concepts (§16). Renaming the entity service to `Build*` would erase that distinction. Rule: **name the module for the module, the entity service for the entity.** Applied 2026-07-31: 13 module classes + 16 files renamed `Projects*`→`Build*`; `core/` deliberately untouched.
-- **Backend module folders are nested, not hyphen-flattened (living rule, 2026-07-31):** `backend/src/modules/<module>/` contains one sub-folder per sub-domain plus `core/` for the module's own controllers/services — e.g. `build/{core,approvals,client-portal,comment-drafts,execution,forms,governance,incidents,managed-products,meetings,pm-workspaces,portfolios,qa,teams,workflow}/`. **Never create `modules/<module>-<subdomain>/` at the top level.** Full rule + rationale in §18.
-- **Backend schema folders (living rule, 2026-07-27):** `backend/src/db/schema/` is organized as `common/` (cross-cutting: enums, auth, organization, access, shared, notifications, workflow, integrations, idempotency, outbox) + one folder per business module (`build/`, `crm/`, `hr/`, `inventory/`, `payroll/`, `accounting/`, `billing/`, `ai/`, `support/`, `kb/`, `party/`, `directory/`, `portal-access/`, `e-sign/`, …), each with an `index.ts` sub-barrel; consumers import only from the single root barrel `db/schema`, never deep paths. Folder names match the real business domain — never internal codenames (`signos`→`e-sign`) or misleading labels. Remove dead/unused schema files as part of any reorg (verify zero symbol AND raw-table-name references AND no dependent FK before deleting).
+**Structure**
+- Feature code → `features/<feature>/{components,lib,hooks}/`. **Banned:** `_components/`, `_lib/` inside `app/`.
+- `app/` holds route files only: `page/layout/loading/error/not-found.tsx`, `route.ts` (auth-bridge only).
+- Cross-feature UI → `components/`; shared hooks → `hooks/`; shared utils → `lib/`; types → `types/` or co-located.
+- **Feature-first, not type-first.** A feature owns its components/hooks/queries/types and exposes them through its barrel `index.ts` — import through the barrel, not deep paths. Max ~3–4 folders deep. Move misplaced files when fixing a page and update imports.
+- **Name the module for the module, the entity service for the entity.** Build sub-domains are `BuildQaModule`, `build-approvals.module.ts` — never `Projects*` (QA/forms/incidents are not projects). But `build/core/` keeps `ProjectsService` because it manages the **`projects` entity**, and `project` ≠ `product` ≠ Build module (§16).
+- **Backend module folders nest, never hyphen-flatten:** `modules/<module>/<subdomain>/` plus `core/` for the module's own controllers/services (e.g. `build/{core,approvals,qa,teams,…}/`). **Never `modules/<module>-<subdomain>/`.** Full rule in §18.
+- **Backend schema folders:** `db/schema/` = `common/` (enums, auth, organization, access, shared, notifications, workflow, integrations, idempotency, outbox) + one folder per business module, each with an `index.ts`. Consumers import only from the root barrel `db/schema`. Folder names match the real domain, never codenames. Remove dead schema files in any reorg.
 
-**Naming:**
-- **kebab-case for all file and folder names** (`project-upsert-form.tsx`, `use-project-list.ts`) — avoids macOS/Linux case bugs in CI.
-- React components: PascalCase symbol in a kebab-case file. Hooks: `use-*` file, `useX` symbol. Server-side query/fetch helpers: `get-*`. Zod schemas: `*-schema.ts`.
-- Folder/segment names singular where it reads naturally. Route params are **descriptive, never `[id]`** (see §17).
+**Naming**
+- **kebab-case for all files and folders** (avoids macOS/Linux case bugs in CI). PascalCase component symbol in a kebab-case file; hooks `use-*`/`useX`; server fetch helpers `get-*`; Zod `*-schema.ts`.
+- Folder/segment names singular where it reads naturally. **Route params are descriptive, never `[id]`** (§17).
 
-**File size (soft cap — split by responsibility past it):**
-- **Target ≤300 lines, hard-review at 500.** Over 500 → split into smaller components/hooks/services unless the file is one of these legitimate exceptions:
-  - generated files (Drizzle migrations, generated types/clients),
-  - shadcn/ui primitives you haven't modified,
-  - `*.d.ts` declaration files.
-- Splitting must follow separation of concerns — never split a cohesive unit just to hit a number.
-- **Permission catalogs are folders, not files (living rule, 2026-07-27):** the RBAC permission catalog is NO LONGER a size exception. Both repos keep it as a directory of one file per business module behind a single barrel — backend `modules/rbac/permissions/` (`hr.ts`, `crm.ts`, `build.ts`, … + `role-defaults.ts` + `index.ts`), frontend `lib/rbac/permissions/`. Never reintroduce a single monolithic `permissions.constants.ts`. Adding a module's keys means touching that module's file only, which is also what module-scoped RBAC (`permissions.module_key`) needs. A single catalog artifact that is genuinely cohesive (one module's key list, `ROLE_DEFAULT_PERMISSIONS`) may exceed 500 lines rather than be split artificially.
-- **The two catalogs must not drift (living rule, 2026-07-27):** every key in the frontend `PermissionKey` union must exist in the backend catalog and vice versa. A frontend-only key silently fails `useCan` forever; a backend-only key can't be gated. Verified drift found 2026-07-27: `branch:read` existed only in the frontend; `hr:leaves:read`, `audit-log:read`, `branch:view` only in the backend. The durable fix is server-filtered permission discovery (the frontend stops shipping an authoritative catalog).
+**File size**
+- Target ≤300 lines, hard review at 500 → split by responsibility. Exceptions: generated files (migrations, generated types/clients), unmodified shadcn primitives, `*.d.ts`.
+- **Permission catalogs are folders, not files** — one file per business module behind a barrel: backend `modules/rbac/permissions/` (`hr.ts`, `crm.ts`, `build.ts`, … + `role-defaults.ts` + `index.ts`), frontend `lib/rbac/permissions/`. Never reintroduce a monolithic `permissions.constants.ts`. A single cohesive catalog artifact may exceed 500 lines rather than be split artificially.
+- **The two catalogs must not drift.** Every frontend `PermissionKey` must exist in the backend catalog and vice versa — a frontend-only key silently fails `useCan` forever; a backend-only key can't be gated.
 
 ## 10. State, Effects & Data Fetching
 
-- Minimize `useState`/`useEffect`. **NEVER use `useEffect` to trigger API calls** — use TanStack Query (`useQuery` to read, `useMutation` to write) exclusively. `useEffect` is for DOM sync, subscriptions, and framework concerns only.
-- **Global/shared state — Zustand is NOT installed; do not add it (living rule, 2026-08-01):** TanStack Query owns ALL server state; the small amount of genuinely shared client state uses **React Context**, co-located with its feature (`components/assistant/ask-os-context.tsx`, `features/hr/shared/hr-context.tsx`, `components/theme/app-theme-provider.tsx`, `features/command-palette/hooks/use-command-palette.ts`). Zustand was listed in §1 and mandated here for months, but the frontend has **zero `zustand` imports and no `zustand` entry in `package.json`** (verified 2026-08-01) — the rule described an intention, not the repo. Never add a state library to satisfy a doc: an unused abstraction is exactly what §0.9 and YAGNI forbid. If a real need outgrows Context + Query, that is a deliberate decision to make at that point, and this rule gets rewritten then.
+- Minimize `useState`/`useEffect`. **NEVER use `useEffect` to trigger API calls** — TanStack Query only (`useQuery` to read, `useMutation` to write). `useEffect` is for DOM sync, subscriptions, and framework concerns.
+- **Zustand is NOT installed; do not add it.** TanStack Query owns all server state; genuinely shared client state uses **React Context**, co-located with its feature. Never add a state library to satisfy a doc.
 - No prop drilling > 2 levels — composition or context.
-- Any `useEffect` that fires a mutation/API call/irreversible side-effect MUST guard StrictMode double-invoke:
-  ```ts
-  const calledRef = useRef(false);
-  if (calledRef.current) return;
-  calledRef.current = true;
-  ```
-  Reset the ref only inside a user-initiated retry handler — never unconditionally on re-render.
-- All client fetching goes through TanStack Query hooks in `lib/api/` — **no raw `fetch`/`axios` in components.**
-- Server Components fetch on the server where possible; TanStack Query only for interactive client needs (mutations, polling, refetch, infinite scroll).
+- Any `useEffect` firing a mutation or irreversible side-effect guards StrictMode double-invoke with a `calledRef`, reset only inside a user-initiated retry handler.
+- All client fetching goes through Query hooks in `lib/api/` — **no raw `fetch`/`axios` in components.** Server Components fetch on the server; Query is for interactive needs (mutations, polling, refetch, infinite scroll).
 
 ## 11. TanStack Query (v5)
 
-- **Query key factories:** centralize keys and co-locate `queryKey`, `queryFn`, and `staleTime` in one exported `queryOptions` per entity — no hand-typed key arrays scattered around.
-- **Every query key carries the active org id (living rule, 2026-07-31):** `frontend/lib/query-keys.ts` roots every key at `const base = ["streamlineos"]` with no tenant segment, so a user who belongs to two orgs shares one cache across an org switch — `queryKeys.hr.employees(params)` is byte-identical in Org A and Org B, and TanStack renders A's cached rows to B on mount while the refetch is still in flight. The org id belongs in `base`, not per-factory: the handful of keys that already thread it by hand (`dashboard.stats(orgId)`, `roadmap.publicBoard(orgId)`) prove the need and show the per-callsite approach does not scale across ~500 factories. Until that lands, an org switch MUST `queryClient.clear()`. **Verified 2026-07-31 — already correct, keep it that way:** `useSwitchOrg` (`hooks/common/auth-hooks.ts:136`) calls `queryClient.clear()` in `onSuccess` after `await update({ orgId })` and before `router.replace`, and the leave/delete-org paths in `org-danger-zone-section.tsx` clear too; this is the regression to guard, not an open bug. The same discipline applies to any `localStorage`/`sessionStorage` cache holding org-scoped data — key it by org (`hr-doc-folders-${orgId}` is the correct pattern) or clear it on switch.
-- **`staleTime` vs `gcTime`** (note: v5 renamed `cacheTime` → `gcTime`). Calibrate `staleTime` to volatility: session/org ~5min, permissions ~30s, list data ~30s–2min, rarely-changing config longer; live data → `staleTime: 0` + `refetchInterval`. Don't leave everything at the default `staleTime: 0`.
-- Every `useMutation` includes a `mutationKey`; every `useQuery` includes a calibrated `staleTime`.
-- **Gate every query by the caller's access (living rule, 2026-07-23):** a `useQuery` that hits a permission- or module-gated backend endpoint MUST set `enabled` to the user's access for that endpoint — `enabled: useCan("<the endpoint's exact @RequirePermission key>")` (AND a module-enabled check where the endpoint has `@RequireModule`). **Never fire an API the user's role cannot access** — it 403-spams the console and wastes Neon CPU. This applies especially to **globally-mounted surfaces** (DashboardShell, sidebar, header, `TrialBanner`, onboarding/success checklists, providers) and **dashboard widgets**, which mount for everyone: pass an `enabled`/permission gate down (e.g. gate the whole checklist/progress hook on `canSetUpWorkspace`, gate `usePendingApprovals` on `hr:leaves:approve`, gate `useSubscription` on `settings:view`). Owner/platform-admin bypass all permissions, so an owner-gated global query never 403s. The frontend gate must match the backend `@RequirePermission` exactly (mismatched gates — e.g. gating on `settings:manage` while the endpoint requires `hr:leaves:approve` — cause 403s for users who pass the wrong gate). **CLOBBER PITFALL:** a query hook that accepts `options` MUST NOT re-declare `enabled` AFTER the `...options` spread (`{ …, ...options, enabled: !!orgId }` silently overrides every caller's `enabled` → the gate does nothing and the query fires for everyone). Combine instead: `enabled: !!orgId && (options?.enabled ?? true)` (or destructure `enabled` out of options first). This exact bug made `usePendingApprovals`/`useDashboardStats` fire despite gated callers.
-- **Invalidate by true key prefix** (no trailing `undefined` slot) so list caches actually match; use `exact: true` only when you mean it.
-- **Optimistic updates:** `onMutate` → `cancelQueries` → snapshot → `setQueryData`; `onError` → roll back from snapshot; `onSettled` → `invalidateQueries`.
-- Dedupe identical inflight requests with a shared Promise (token/session fetch) — never let N callers each fire the same call.
-- Client request/response types must match the backend Zod contract exactly — no hand-maintained drift (extra fields are silently stripped → silent no-ops).
-- **Optimistic writes on interactive surfaces (living rule, 2026-07-10):** inline edits on board/list/card surfaces (assignee, status, priority, type, points, dates, drag-reorder) MUST be optimistic — `onMutate` cancels + snapshots + patches the **exact cache the view renders from** (e.g. the project-detail cache the kanban board reads, not a sibling list cache the view ignores), `onError` rolls back from the snapshot, `onSettled` reconciles. NEVER rely on invalidate-and-refetch for perceived speed, and NEVER invalidate a heavy detail/aggregate query (full project detail, all reports, burndown, velocity) on **every** field change — gate each aggregate behind the specific fields that actually move it, and let it refetch in the background (invalidation is a no-op when the view is unmounted). Resolve related display objects (e.g. the assignee avatar/name) from an already-cached list inside the patch so the card is correct with zero round-trip.
-- **Never hydrate a collection through a parent-detail endpoint (living rule, 2026-07-10):** a list/board view must read its rows from a dedicated **paginated, column-projected** endpoint (`GET /projects/:id/tickets`), never from an unbounded `with: { tickets: { … } }` embedded in `GET /projects/:id`. Parent-detail endpoints return only the parent + light metadata (name, key, statuses, members) — never every child row with per-row sub-joins, which re-runs on every mutation invalidation.
+- **Query key factories:** centralize keys; co-locate `queryKey` + `queryFn` + `staleTime` in one exported `queryOptions` per entity. No hand-typed key arrays.
+- **Every query key should carry the active org id.** `lib/query-keys.ts` roots every key at `["streamlineos"]` with no tenant segment, so a two-org user shares one cache across a switch and sees Org A's rows in Org B. The org id belongs in `base`, not per-factory. Until that lands, an org switch MUST `queryClient.clear()` — `useSwitchOrg` and the leave/delete-org paths already do; that is the regression to guard. Same discipline for any `localStorage` cache holding org-scoped data (key it by org, or clear on switch).
+- **Calibrate `staleTime`** to volatility (session/org ~5min, permissions ~30s, lists ~30s–2min, live data `0` + `refetchInterval`). Note v5 renamed `cacheTime` → `gcTime`. Every `useMutation` has a `mutationKey`; every `useQuery` a calibrated `staleTime`.
+- **Gate every query by the caller's access.** A query hitting a permission- or module-gated endpoint sets `enabled: useCan("<the endpoint's exact @RequirePermission key>")` (plus a module check where `@RequireModule` applies). **Never fire an API the user's role cannot access** — it 403-spams and burns Neon CPU. This matters most on globally-mounted surfaces (shell, sidebar, header, banners, checklists, providers) and dashboard widgets, which mount for everyone. The frontend gate must match the backend key exactly. **Clobber pitfall:** never re-declare `enabled` after the `...options` spread — it silently overrides every caller's gate. Combine: `enabled: !!orgId && (options?.enabled ?? true)`.
+- **Invalidate by true key prefix** (no trailing `undefined` slot); `exact: true` only when you mean it.
+- **Optimistic updates:** `onMutate` → `cancelQueries` → snapshot → `setQueryData`; `onError` → roll back; `onSettled` → invalidate.
+- **Dedupe identical inflight requests** with a shared Promise (token/session fetch).
+- Client request/response types match the backend Zod contract exactly — drift silently strips fields into no-ops.
+- **Inline edits on board/list/card surfaces MUST be optimistic** — patch the **exact cache the view renders from**, roll back on error, reconcile on settled. Never rely on invalidate-and-refetch for perceived speed, and never invalidate a heavy detail/aggregate query on every field change — gate each aggregate behind the fields that actually move it. Resolve related display objects (assignee avatar/name) from an already-cached list inside the patch.
+- **Never hydrate a collection through a parent-detail endpoint.** Lists/boards read from a dedicated **paginated, column-projected** endpoint (`GET /projects/:id/tickets`), never an unbounded `with: { tickets: … }` on `GET /projects/:id`. Parent-detail returns the parent + light metadata only.
 
 ## 12. Forms & Validation
 
-- **react-hook-form + Zod** for every form. Per-field validation with visible error messages.
-- **Small form → Dialog. Large/multi-section form → Sheet.** Before building either, inspect existing Sheets/Dialogs (UI + UX) and match that format exactly.
+- **react-hook-form + Zod** for every form, with per-field visible errors.
+- **Small form → Dialog. Large/multi-section form → Sheet.** Match the existing Sheets/Dialogs exactly (§7 of `UI-UX-SYSTEM.md`).
 
 ## 13. Design System (source of truth: landing, `/signin`, `/signup`)
 
-- Colors, typography, spacing, radius, shadows come **only** from tokens extracted from those pages (`tailwind.config`/`globals.css`). Never invent colors or arbitrary values. Follow shadcn palette conventions mapped to the detected palette.
-- Compact, clean layout: remove unnecessary spacing, tighten cards, no oversized padding/margins.
-- **UI reference standard:** `/signin` and `/signup` are the canonical reference for compact card layout, consistent hover/active/focus states, and spacing. When fixing or building any new page/sheet/dialog, match their density and interaction patterns; avoid redundant padding/margins (especially in Sheets) and ensure hover text/background maintain readable contrast.
-- Modern, mobile-first responsive (verify **375 / 768 / 1280px**), accessible (ARIA, keyboard nav).
-- Notifications: **Sonner** toasts for success/error/info.
-- **One customer email + env-driven branding (living rule, 2026-07-20):** exactly ONE customer-facing email — `BRAND_SUPPORT_EMAIL` (`lib/branding.ts`, `NEXT_PUBLIC_SUPPORT_EMAIL` override, default support@streamlineos.in) — handles support, sales, security, and founder inquiries. Never add per-purpose addresses (sales@/security@/founders@ are retired). Brand domain is env-overridable via `NEXT_PUBLIC_BRAND_DOMAIN`; never hardcode domains/emails in pages — import from `lib/branding.ts`.
+- Colors, typography, spacing, radius, shadows come **only** from tokens in `tailwind.config`/`globals.css`. Never invent colors or arbitrary values.
+- `/signin` and `/signup` are the canonical reference for compact card layout, hover/active/focus states, and density. Match them; avoid redundant padding (especially in Sheets); keep hover text/background contrast readable.
+- Mobile-first responsive (verify **375 / 768 / 1280**), accessible (ARIA, keyboard nav). Toasts: **Sonner**.
+- **One customer email + env-driven branding.** `BRAND_SUPPORT_EMAIL` (`lib/branding.ts`, `NEXT_PUBLIC_SUPPORT_EMAIL`, default support@streamlineos.in) covers support/sales/security/founder. Never add per-purpose addresses or hardcode domains/emails — import from `lib/branding.ts` (`NEXT_PUBLIC_BRAND_DOMAIN` overrides the domain).
 
 ## 14. Animations & UI Polish
 
-> Current design-token values below. If §13's extracted tokens differ, the extracted tokens win — update this section as a living rule.
+> Canonical spec: **`UI-UX-SYSTEM.md`** — read it before any UI work. Its tokens win over anything here.
 
-- Every page feels like a **$10k+ SaaS product** — polished, dense, purposeful; no default buttons or flat cards. Canonical spec: `UI-UX-SYSTEM.md` (repo root) — read it before any UI work.
-- **Extracted-token reality (living rule, reconciled 2026-07-02):** the system is **ink-first** (Linear/Stripe style) — `--primary: #0b1220` slate-900 fills for primary CTAs, `--accent: #3b82f6` blue-500 for links/interactive states, slate-neutral chrome. The violet/indigo gradient CTA style is RETIRED; brand gradients live only on landing/marketing surfaces, never inside the authenticated shell. One primary button per view.
-- **HRMS keeps its rich hero/color surface (living rule, 2026-07-19):** the HR module is an explicit exception to strict ink-first — its gradient hero band (`HrHero`, soft sky/blue gradient), colored tone quick-action tiles (blue/amber/emerald/violet `HrQuickAction`), and tinted section chrome are DESIRED and must be PRESERVED. Aditya liked the HRMS look and wants it kept. Do NOT flatten HR surfaces to pure ink or purge their gradients/tones in conformance passes; keep the visual richness while still applying structural fixes (fill-chain, compact filters, no double-cards, spacing). Other modules stay ink-first unless a themed accent palette is selected.
-- **Blue replaces purple (living rule, 2026-07-11):** wherever legacy violet/purple/indigo accents are removed or an accent color is needed (progress fills, active tab/nav indicators, icon tints, chart seeds, selection highlights), use the **blue family** (`blue-500`/`blue-600`) — never violet/purple. Emerald/amber/red stay reserved for semantic status only.
-- **Theme-accent tokens over literal blue (living rule, 2026-07-13):** the shell now has a multi-theme system (Light/Dark/System × 18 accent palettes in `themes.css`; accents tint ALL neutral chrome via `color-mix` blocks). Interactive accent surfaces (unread indicators/dots/left-bars, selection tints, active filter states, count badges, drag/selected card states) MUST use theme tokens — `bg-primary` solid, `bg-primary/5..15` tints, `border-l-primary`, `--ring` — never hardcoded `blue-*`. The default Ink theme renders pure monochrome; blue may appear only when a blue palette is selected. Literal blue stays only for semantic "info" status and chart seeds. This narrows the 2026-07-11 rule: blue is the replacement for retired violet in semantic/chart contexts, not the color for theme-accent surfaces.
-- **Dark mode conformance (living rule, 2026-07-13):** every colored light-tint pairing (`bg-X-50 text-X-700 border-X-200` chips/banners) carries `dark:bg-X-500/10 dark:text-X-300 dark:border-X-500/30`; standalone colored icons carry `dark:text-X-400`. Never hardcode neutral hexes/`bg-white`/`slate-*` chrome — semantic tokens only (they flip in `.dark`). `bg-primary/N` tints are theme-correct (whitish glow in dark Ink is intended monochrome).
-- **Framer Motion** for page/step transitions (`AnimatePresence` + `motion.div`, slide+fade), list stagger, entrance.
-- Step/route transition: `initial={{opacity:0,x:24}} animate={{opacity:1,x:0}} exit={{opacity:0,x:-24}}`, `duration:0.22, ease:"easeOut"`, in `<AnimatePresence mode="wait">`.
-- Selection cards/chips: subtle `hover:shadow-md` + accent border on selected — no scale transforms in dense lists.
-- Progress bars animate fill: `transition: width 0.4s ease`.
-- Micro-interactions everywhere: hover lift, `whileTap={{scale:0.97}}` on standalone CTAs only.
-- **Loading buttons (living rule, 2026-07-10):** every button that triggers a mutation/async action uses the shared `<LoadingButton>` (`components/ui/loading-button.tsx` — wraps `Button`, takes `isPending` → disables + shows a circular `Loader2` spinner, optional `loadingText`). Never hand-roll `disabled={mutation.isPending}` + a `Loader2`/spinner ternary at call sites. Press feedback (`active:scale`) is already built into `Button` via the `press-scale` utility — never re-add it per button.
-- **Every authenticated page uses `PageWrapper`** (`components/ui/page-wrapper.tsx`: title, subtitle, eyebrow, badge, backHref, actions, filters). Never `min-h-screen`/page-level gradients/ad-hoc `<h1>` inside the shell.
-- **PageWrapper consistency (living rule, 2026-07-07):** keep sibling pages within a module visually uniform. (a) **No `backHref` on a page that has its own sidebar nav entry** — a top-level nav page has nothing to go "back" to; `backHref`/the back arrow is only for nested/detail pages reached from a parent. (b) Use the **default heading `variant`** for standard pages; reserve `variant="display"` for genuine module hero/landing surfaces, applied consistently — don't mix default and display across sibling list pages. (c) Don't surface a bare row **count** in the title `badge` or as the whole `subtitle` ("5 portfolios") unless the user asks; give a descriptive subtitle instead, and keep `badge` for meaningful status labels.
-- **Interactive components animate open/close and press.** shadcn/Radix **Dialog** & **Sheet** animate via their `data-[state=open]`/`data-[state=closed]` hooks with `tailwindcss-animate`: Dialog fades + zooms (`fade-in-0 zoom-in-95` in / `fade-out-0 zoom-out-95` out) with an overlay fade; **Sheet** slides from its edge (`slide-in-from-right` / `slide-out-to-right`, matched to the side); dropdowns, popovers, and tooltips fade + zoom from their trigger side. **Buttons** get a hover state (color/shadow lift), `active:scale-[0.98]`, and `whileTap`. Keep it snappy (~150–250ms, `ease-out`) and consistent across the app, and **respect `prefers-reduced-motion`** (fall back to instant/opacity-only).
-- Cards (in-shell): `bg-card border border-border rounded-xl shadow-sm` — no backdrop-blur/heavy shadows in the authenticated shell; the glassy `rounded-2xl shadow-xl` card style is for auth/landing surfaces only.
-- Full-page backgrounds: the shell owns the background (`--background` slate-50). Pages NEVER repaint it — no `min-h-screen`, no page-level gradients inside `(authenticated)`.
-- **Translucent panel fills (living rule, 2026-07-15):** translucent card/panel fills in the shell stay ≥75% card opacity with borders ≥70% opacity (pm-chrome `PM_PANEL`) so panels don't wash out against the canvas. A deeper canvas (`#f4f6fa` + `--border #d7dee8`) was trialed for stronger card lift and rolled back — get an explicit decision before changing surface tokens again.
-- **Flat filter toolbars (living rule, 2026-07-15):** filter rows must not wrap Inputs/Selects in an outer `rounded-xl border bg-card` panel — that creates nested cards (fields already use `border-input bg-card`). Use a flat flex row (`PM_TOOLBAR` / Course Library pattern); keep compact groups like `ViewToggle` / `TabsList` as the only bordered chrome. Prefer `FILTER_SELECT_TRIGGER` (`h-8 border-input bg-card`) on filter selects.
-- **StatCardGrid is always one horizontally-scrolling row (living rule, updated 2026-07-23):** `StatCardGrid` (`components/ui/stat-card.tsx`) is a single row of equal-width cards (`gridTemplateColumns: repeat(N, minmax(10rem, 1fr))` from child count; `[&>*]:min-w-0 [&>*]:h-full`). It is a horizontal-scroll container at **every** breakpoint (`overflow-x-auto scrollbar-hide touch-pan-x`, snap on mobile only via `md:snap-none`): the ROW scrolls when the cards don't fit, so the PAGE never scrolls horizontally. Never `md:overflow-x-visible` (that lets the row push page-level horizontal scroll on tablet). Never multi-row responsive breakpoints (`grid-cols-1` / `sm:grid-cols-2` / `xl:grid-cols-*`), never compress/truncate labels below ~10rem, never wrap to a second row. Callers MUST use `StatCardGrid` — never a bespoke `grid grid-cols-*` wrapper around stat cards.
-- **Shared pagination + server-driven lists (living rule, 2026-07-25):** every paginated list uses the ONE shared `TablePagination` (`components/ui/table-pagination.tsx` — numbered pages + ellipsis, "Showing X–Y of Z", props `{ page, pageSize, total, onPageChange }`, responsive) — never hand-roll a per-feature prev/next footer (the 3 old feature paginations were consolidated into it; `components/shared/data-table-pagination.tsx` stays ONLY because it adds a page-size selector + first/last buttons). NEVER hardcode pagination params in a query hook — `apiClient.get(".../x?page=1&limit=100")` + `select`-away-the-`pagination`-envelope is banned; the hook takes `{ page, limit, status? }`, is RBAC-gated (`enabled: useCan("<the endpoint's @RequirePermission key>")`, §11), and returns the real `{ data, pagination }` envelope. When a list has per-status filter-count badges, the backend list endpoint returns a `statusCounts` `GROUP BY status` aggregate (org-scoped) so the UI can paginate + filter **server-side** without fetching the whole table for counts (canonical: `TerminationService.list` → `{ data, pagination, statusCounts }`). Reference external component designs from `D:\projects\virabha` when building a new shared primitive.
-- **Lone filter / lone action fill their space on mobile (living rule, 2026-07-23):** when a page's filter bar has a SINGLE control (typically a search), it fills the full available width on mobile — never collapse a sole search into a dropdown/Drawer trigger. `PageWrapper` already gives its first `filters` child `flex-1` on mobile (`flex-none` on `sm+`), so put the search first and don't wrap it. When a page has a SINGLE primary action, pass it directly as `actions` — `PageWrapper` makes a lone action full-width on mobile (`[&>*]:w-full sm:[&>*]:w-auto`); never wrap it in a grid/flex that defeats this. Multi-filter bars keep search first (fills width) and collapse the rest into a mobile Drawer.
-- **Select dropdown width fits long options (living rule, 2026-07-19):** a Select whose option labels can be long (categories, entity/person names, multi-word statuses, long enum labels) MUST let its dropdown grow to fit — use `SelectContent className="min-w-[var(--radix-select-trigger-width)]"` (at least trigger width, grows for content), NEVER `w-[var(--radix-select-trigger-width)]` (which clips long options to the narrow trigger). Filter TRIGGERS stay compact by default, but do NOT force a rigid narrow fixed width on a select with long options — size the trigger to content (`w-fit` / `min-w-[..px]`) so the selected value isn't truncated. Not every select shares the same width.
-- **Mobile overlays are Drawers (living rule, updated 2026-07-23):** on mobile (`< md`) any filter/display/menu/multi-section panel that would open as a Popover or Sheet uses a **Drawer** instead — via `ResponsivePopover` (`components/ui/responsive-popover.tsx`: Drawer `< md`, Popover on desktop) for popover-style triggers, and a Drawer for what would be a Sheet. **Never a raw `Popover`/`Sheet` for a mobile filter/menu collapse.** Desktop/tablet keep their Popover/Sheet unchanged; only mobile behavior changes and nothing else must break. Tiny 1–3 item menus and date pickers are exempt. Specialized drill-down filters (e.g. ticket `filter-command-menu`) may keep a custom mobile Drawer.
-- **Module-aware mobile chrome (living rule, updated 2026-07-22):** on mobile, each module’s primary sidebar destinations become the bottom tab bar (`MobileModuleBottomNav` via `getMobileModuleBottomTabs` from the active product’s `navGroups`, capped at 5 — overflow lives in the Menu drawer). A floating action button (`MobileShellFab`) opens Ask OS · Menu (sidebar/product drawer) · Search (command palette) · Profile (account drawer) — those four are never bottom tabs. Chat keeps `ChatMobileBottomNav` on `/chat/**` (composer-aware); module tabs + FAB are suppressed during an open chat conversation. Desktop sidebar + header stay unchanged. Reserve content `pb-[calc(4rem+…)]` only when a bottom bar is mounted.
-- Sequential list entrance: staggered `delay: idx * 0.08`. Success states: spring bounce + confetti where appropriate.
+- Every page reads as a **$10k+ SaaS product**: polished, dense, purposeful. One primary button per view.
+- **Ink-first system** (Linear/Stripe): `--primary` slate-900 fills for primary CTAs, `--accent` blue-500 for links/interactive states, slate-neutral chrome. Brand gradients are landing/marketing only, never inside the authenticated shell.
+- **HRMS keeps its rich hero/color surface** — the HR gradient hero (`HrHero`), colored tone tiles (`HrQuickAction`), and tinted chrome are DESIRED. Do not flatten HR to ink or purge its gradients in conformance passes; still apply structural fixes (fill-chain, compact filters, no double-cards, spacing). Other modules stay ink-first.
+- **Blue replaces purple.** Wherever legacy violet/indigo is removed or an accent is needed, use `blue-500`/`blue-600` — never violet. Emerald/amber/red stay semantic-status-only.
+- **Theme-accent tokens over literal blue.** Interactive accent surfaces (unread dots/bars, selection tints, active filters, count badges, selected cards) use `bg-primary`, `bg-primary/5..15`, `border-l-primary`, `--ring` — never hardcoded `blue-*` (18 accent palettes tint all chrome; default Ink is monochrome). Literal blue only for semantic "info" and chart seeds.
+- **Dark mode conformance.** Every colored light tint (`bg-X-50 text-X-700 border-X-200`) carries `dark:bg-X-500/10 dark:text-X-300 dark:border-X-500/30`; standalone colored icons carry `dark:text-X-400`. Never hardcode neutral hexes/`bg-white`/`slate-*` chrome — semantic tokens only.
+- **Framer Motion** for page/step transitions (`AnimatePresence` + `motion.div`), list stagger (`delay: idx * 0.08`), entrance. Step/route transition: `initial={{opacity:0,x:24}} animate={{opacity:1,x:0}} exit={{opacity:0,x:-24}}`, `duration:0.22, ease:"easeOut"`, inside `<AnimatePresence mode="wait">`.
+- **Interactive components animate open/close and press** via Radix `data-[state]` + `tailwindcss-animate`: Dialog fade+zoom, Sheet slides from its edge, dropdowns/popovers/tooltips fade+zoom from the trigger. Keep it 150–250ms `ease-out` and **respect `prefers-reduced-motion`** (opacity-only fallback). Press feedback is built into `Button` — never re-add `active:scale` per button.
+- **Every async button is `<LoadingButton isPending>`** (`components/ui/loading-button.tsx`). Never hand-roll `disabled={isPending}` + a spinner ternary.
+- **Every authenticated page uses `PageWrapper`** (`components/ui/page-wrapper.tsx`). Never `min-h-screen`, page-level gradients, or ad-hoc `<h1>` inside the shell — the shell owns the background.
+  - **No `backHref` on a page that has its own sidebar nav entry** (only nested/detail pages reached from a parent).
+  - Use the default heading `variant`; reserve `variant="display"` for genuine module hero surfaces, applied consistently across siblings.
+  - Don't put a bare row count in `badge` or as the whole `subtitle` — give a descriptive subtitle; keep `badge` for meaningful status.
+- **Cards in-shell:** `bg-card border border-border rounded-xl shadow-sm`. No backdrop-blur/heavy shadows; the glassy `rounded-2xl shadow-xl` style is auth/landing only. Translucent panel fills stay ≥75% card opacity with ≥70% borders. Get an explicit decision before changing surface tokens.
+- **Flat filter toolbars.** Never wrap filter Inputs/Selects in an outer `rounded-xl border bg-card` panel (fields already carry `border-input bg-card` → nested cards). Use a flat flex row; `ViewToggle`/`TabsList` are the only bordered chrome. Prefer `FILTER_SELECT_TRIGGER` on filter selects.
+- **`StatCardGrid` is always one horizontally-scrolling row** (`components/ui/stat-card.tsx`): equal-width cards from child count, `overflow-x-auto` at **every** breakpoint so the ROW scrolls and the PAGE never does. Never `md:overflow-x-visible`, never multi-row breakpoints, never wrap or compress below ~10rem. Callers MUST use `StatCardGrid`, never a bespoke `grid grid-cols-*`.
+- **One shared pagination.** Every paginated list uses `TablePagination` (`components/ui/table-pagination.tsx`); never hand-roll a per-feature prev/next footer (`components/shared/data-table-pagination.tsx` survives only because it adds page-size + first/last). **Never hardcode pagination params in a hook** — no `?page=1&limit=100` + `select`-away-the-envelope. Hooks take `{ page, limit, status? }`, are RBAC-gated, and return the real `{ data, pagination }`. Per-status filter badges come from a server-side `statusCounts` aggregate so filtering paginates server-side.
+- **Lone filter / lone action fill their space on mobile.** A single filter (usually search) fills full width — never collapse a sole search into a dropdown/Drawer. A single primary action goes straight into `actions` (PageWrapper makes it full-width on mobile). Multi-filter bars keep search first and collapse the rest into a mobile Drawer.
+- **Select dropdowns fit long options:** `SelectContent className="min-w-[var(--radix-select-trigger-width)]"` — never `w-[…]` (clips). Size triggers to content (`w-fit`/`min-w-[..px]`) when values are long; not every select is the same width.
+- **Mobile overlays are Drawers.** Below `md`, any filter/display/menu/multi-section panel that would be a Popover or Sheet becomes a Drawer — via `ResponsivePopover` (`components/ui/responsive-popover.tsx`) for popover triggers. Never a raw `Popover`/`Sheet` for a mobile filter/menu. Desktop unchanged. Tiny 1–3 item menus and date pickers are exempt.
+- **Module-aware mobile chrome.** Each module's primary sidebar destinations become the bottom tab bar (`MobileModuleBottomNav`, capped at 5; overflow in the Menu drawer). `MobileShellFab` opens Ask OS · Menu · Search · Profile — never bottom tabs. Chat keeps `ChatMobileBottomNav`; module tabs + FAB are suppressed during an open conversation. Reserve `pb-[calc(4rem+…)]` only when a bottom bar is mounted.
 
 ## 15. Layout & States (every page satisfies ALL)
 
-- **Loading:** skeletons matching the real layout, not lone spinners.
-- **Empty:** fills available content height (`flex-1`/`h-full`) with icon + message + primary action. Never a small floating block.
-- **Empty-state illustrations (living rule, 2026-07-03):** full-page/main-region empty states use a themed SVG component from `components/illustrations` (extend that set in the `_shared.tsx` tokens/style when nothing fits — compositions may be adapted from unDraw, but always shipped as recolored inline components, never raw downloaded SVG files). Icon-only empty states are for compact/table-cell contexts only.
+- **Loading:** skeletons matching the real layout, never lone spinners.
+- **Empty:** fills available content height (`flex-1`/`h-full`) with icon + message + primary action — never a small floating block. Full-page empty states use a themed SVG from `components/illustrations` (extend that set in `_shared.tsx` style; never ship raw downloaded SVGs). Icon-only empties are for compact/table-cell contexts.
 - **Error:** friendly message + retry.
-- **Error messages — single global helper (living rule, 2026-07-07):** ALL user-facing error text (toasts, inline form/page errors) goes through the one canonical `getErrorMessage(error: unknown)` in `lib/get-error-message.ts`. **Never** hand-roll `error instanceof Error ? error.message : "…"` ternaries or read `.message` raw at call sites — pass the caught value straight to `getErrorMessage`. `getApiError` is a thin delegate to it; don't reintroduce a second implementation. The helper surfaces the **real backend message** and only substitutes a friendly generic for bare status-lines (`"409 …"`), network failures, or empty errors. The API client (`lib/api-client.ts`) is the **only** place that parses an error response: it extracts the backend `message` (string **or** a NestJS validation `string[]`, joined) and attaches the HTTP `status` to `ApiError` — branch on `isApiError(e) && e.status === …` when you need status-specific UX, never on message-prefix string matching.
-- Long content scrolls **inside the main content area only**; sidebar + shell never scroll with the page (sidebar `h-screen sticky`; main `overflow-y-auto`).
-- No unintended overflow/scrollbars: `min-w-0`, `truncate`, `flex-1`, proper overflow — not fixed heights that burst.
-- Unconnected integration (calendar, payments, …) → clear **"Connect X"** banner with a connect action; never fail silently or render broken data.
-- **Show names, never raw IDs (living rule, 2026-07-10):** the UI (cards, tables, CSV/exports, tooltips, activity logs, filter chips) MUST render human-readable labels — a person's display name (via the shared `getUserDisplayName`/`getUserInitials`), a project/ticket title, a status/label name — **never** a raw UUID/numeric FK or an `assigneeId`-style value. Resolve the id to its entity (from an already-cached list where possible) at the display boundary. A visible id in the UI is a bug.
-- **Inline contextual AI on detail/record surfaces (living rule, 2026-07-17):** every individual/detail page (KB doc, ticket, lead/deal, support ticket, employee/candidate, product/vendor, invoice/variance, calendar event, blog post, etc.) should offer a compact **inline** AI affordance where it genuinely reduces human effort — never forced/gimmicky AI, never on trivial pages. Use the shared `AiActionsMenu` (`components/ai/ai-actions-menu.tsx` — a Sparkles dropdown of contextual actions → draft result in a sheet via `AiDraftCard`, with built-in loading/quota(402)/permission(403)/error states). Each action reuses the module's EXISTING gateway-backed AI endpoint (add a new one only when none fits); results are draft-first (the user applies, never auto-edit/send/post), credit-metered, and `useCan`-gated. Errors via `getErrorMessage`. Do NOT duplicate the primitive per module — extend `AiActionsMenu`.
-- **Edit-in-place on cards/rows (living rule, 2026-07-10):** on board cards and list/table rows, **every** editable field (assignee, status, priority, type, points, labels, cycle, sprint, dates) must be changeable inline via a compact popover — the user should not have to open the detail panel to change a field. Reuse the shared inline field components (`features/projects/views/card-inline-fields.tsx`) and drive them through the optimistic mutation, never a separate non-optimistic path.
+- **All user-facing error text goes through `getErrorMessage(error: unknown)`** (`lib/get-error-message.ts`). Never hand-roll `error instanceof Error ? … : …` or read `.message` raw. It surfaces the real backend message and substitutes a friendly generic only for bare status lines, network failures, or empty errors. **`lib/api-client.ts` is the only place that parses an error response** — it extracts the backend `message` (string or NestJS `string[]`, joined) and attaches `status` to `ApiError`; branch on `isApiError(e) && e.status === …`, never on message-prefix matching.
+- Long content scrolls **inside the main content area only** (sidebar `h-screen sticky`; main `overflow-y-auto`).
+- No unintended overflow: `min-w-0`, `truncate`, `flex-1`, proper overflow — not fixed heights that burst.
+- Unconnected integration → clear **"Connect X"** banner with an action; never fail silently or render broken data.
+- **Show names, never raw IDs.** Cards, tables, exports, tooltips, activity logs, and filter chips render display names (`getUserDisplayName`/`getUserInitials`), titles, or status labels — never a UUID or `assigneeId`. Resolve from an already-cached list at the display boundary. A visible id is a bug.
+- **Inline contextual AI on detail/record surfaces.** Detail pages offer a compact AI affordance where it genuinely reduces effort — never forced, never on trivial pages. Use the shared `AiActionsMenu` (`components/ai/ai-actions-menu.tsx`); each action reuses the module's existing gateway-backed endpoint, is draft-first (user applies — never auto-send), credit-metered, `useCan`-gated, and errors via `getErrorMessage`. Extend the primitive, don't duplicate it per module.
+- **Edit-in-place on cards/rows.** Every editable field (assignee, status, priority, type, points, labels, cycle, dates) is changeable inline via a compact popover — reuse `features/build/views/card-inline-fields.tsx` driven by the optimistic mutation.
 
 ## 16. Feature Completeness (per page)
 
-- Verify the page's feature has everything: list, create, edit, delete, filters, pagination, permissions, all states. ADD what's missing; REMOVE what's not required (including files), then fix folder placement + imports.
-- **Product-specific (HR):** onboarding/profile forms collect only what a real HR platform asks a new joiner — personal (phone, DOB, gender, home address, emergency contact), bank/payroll, ID & document uploads. Exclude recruitment-only data (years of experience, skills).
-- Employee onboarding form is **never** shown to org owners or platform/super admins — gate **server-side** and redirect (owner → setup/dashboard; platform admin → `/owner`).
-- **Workspace/onboarding gating (living rule, 2026-07-19):** a signed-in user with no workspace is always routed to `/org-setup` (platform admins → `/owner`) — enforced by the live-session check in `app/(authenticated)/layout.tsx`, which is authoritative over the middleware's advisory JWT-claim gates. Completing OR skipping a wizard must be durably remembered: server stamps the DB, invalidates the `userSession` cache, and the client calls `completeOnboardingGate` (`lib/onboarding-gate.ts` — 30-day gate cookie + `useSession().update()` claim refresh). Never bounce a user back into a wizard they skipped; never rely on short-lived cookies or a fire-and-forget `signIn` for this.
-- **Module-owned surfaces (living rule, 2026-07-02):** custom fields, automations, integrations, and data-hub import/export are module-scoped features — surface them inside each module's own settings area, never as global `/settings/*` pages. Global settings keeps only org-wide concerns (security, billing, roles, modules, org profile).
-- **One unified calendar (living rule, 2026-07-11):** `/calendar` is the single calendar surface for every employee. Never build module-specific calendar pages (`/hr/calendar` etc.). Module events (holidays, leaves, birthdays/anniversaries, review cycles, training, travel, interviews) are exposed as toggleable SOURCES inside the global `/calendar` via backend aggregate endpoints.
-- **The delivery/strategy module is "Build" (living rule, 2026-07-27):** the module formerly labelled Projects / Product Management is named **Build** — one umbrella covering BOTH project management (delivery: `projects`, tickets, sprints, QA, backlog) AND product management (strategy: `managed_products`, roadmap, OKRs, feedback). Route `/build` (`/projects` redirects), RBAC segment `build:*`, module-enablement key `BUILD`, schema/module/feature folders `build/`. **`project` ≠ `product`:** a Project is a delivery record, a Managed Product is a strategic product — DISTINCT tables/entities, never conflated or merged. Physical table names keep their entity names (`projects`, `managed_products`, `project_teams`…); only the module namespace is `build`.
-- **Plan entitlements (living rule, 2026-07-16):** plan tiers are FREE / PAID / ENTERPRISE, resolved server-side from `subscriptions` by `PlanLimitsService` (`backend/src/modules/billing/plan-limits.service.ts`; catalog + LimitKeys in `plan-entitlements.constants.ts`). Every creation endpoint for a limited resource (members, projects, kbPages, chatChannels, crmLeads/Contacts/Deals, supportTickets, automations, signEnvelopes, surveys, acctInvoices) MUST call `assertWithinLimit(orgId, key)` before insert. Paid-only modules (payroll, inventory) are blocked at `setModuleEnabled` on FREE — existing enablement is not retroactively revoked. Frontend reads `GET /billing/entitlements` via `useEntitlements`.
-- **Platform billing is exactly 2 pages (living rule, 2026-07-16):** `/billing` (tabbed: Plan + promo code + seats + usage meters · Invoices & Payments · Billing Profile) and `/billing/ai-credits` (wallet, top-up packs, auto-top-up, history). `/settings/subscription` and `/billing/seats` are redirects — never resurrect them. `/billing/invoices` is the org's own customer invoicing (accounting), not platform billing.
-- **AI billing is token-metered, Cursor-style (living rule, 2026-07-20):** credits burn by ACTUAL tokens — `computeTokenCharge(model, in, out)` in `backend/src/modules/ai/billing/ai-model-pricing.constants.ts` (per-model USD/1M rates × `AI_MARGIN 1.5`, `CREDIT_USD_VALUE $0.01`, min 0.01 credit) — never flat per-action charging; the old `AI_FEATURE_COSTS` are reserve ceilings only (`getReserveEstimateMilli`). The ledger stores integer **milli-credits** (1 credit = 1000); every API boundary emits fractional credits; settle refunds under-run and debits overage (balance may go slightly negative). New AI endpoints use the gateway `*WithUsage` variants and return an `aiUsage` meta (`{ model, promptTokens, completionTokens, totalTokens, credits, costUsd }`); every AI result surface renders the shared `AiUsageChip` (`components/ai/ai-usage-chip.tsx`, formatters in `lib/format-ai.ts`). `/billing/ai-credits` is the usage dashboard (`GET /billing/ai-credits/usage?days=7|30|90` aggregating `ai_usage_logs.credits_milli`).
+- Verify the feature has list, create, edit, delete, filters, pagination, permissions, and all states. ADD what's missing; REMOVE what isn't required (including files); fix folder placement + imports.
+- **HR:** onboarding/profile forms collect only what a real HR platform asks a new joiner — personal (phone, DOB, gender, address, emergency contact), bank/payroll, ID & document uploads. Exclude recruitment-only data (years of experience, skills).
+- The employee onboarding form is **never** shown to org owners or platform admins — gate **server-side** and redirect (owner → setup/dashboard; platform admin → `/owner`).
+- **Workspace gating:** a signed-in user with no workspace goes to `/org-setup` (platform admins → `/owner`), enforced by the live-session check in `app/(authenticated)/layout.tsx` (authoritative over the middleware's advisory JWT gates). Completing OR skipping a wizard is durably remembered — server stamps the DB, invalidates the `userSession` cache, client calls `completeOnboardingGate` (`lib/onboarding-gate.ts`). Never bounce a user back into a wizard they skipped.
+- **Module-owned surfaces:** custom fields, automations, integrations, and data-hub import/export live inside each module's settings — never as global `/settings/*` pages. Global settings keeps org-wide concerns only (security, billing, roles, modules, org profile).
+- **One unified calendar.** `/calendar` is the single calendar for every employee — never module-specific calendar pages. Module events (holidays, leaves, birthdays, review cycles, training, travel, interviews) are toggleable SOURCES fed by backend aggregate endpoints.
+- **The delivery/strategy module is "Build"** — one umbrella over project management (`projects`, tickets, sprints, QA, backlog) AND product management (`managed_products`, roadmap, OKRs, feedback). Route `/build` (`/projects` redirects), RBAC `build:*`, module key `BUILD`, folders `build/`. **`project` ≠ `product`:** distinct tables/entities, never merged. Physical table names keep their entity names; only the module namespace is `build`.
+- **Plan entitlements:** FREE / PAID / ENTERPRISE, resolved server-side from `subscriptions` by `PlanLimitsService` (`backend/src/modules/billing/core/plan-limits.service.ts`). Every creation endpoint for a limited resource calls `assertWithinLimit(orgId, key)` before insert. Paid-only modules (payroll, inventory) are blocked at `setModuleEnabled` on FREE; existing enablement is not retroactively revoked. Frontend reads `GET /billing/entitlements` via `useEntitlements`.
+- **Platform billing is exactly 2 pages:** `/billing` (Plan + promo + seats + usage · Invoices & Payments · Billing Profile) and `/billing/ai-credits` (wallet, top-ups, auto-top-up, history). `/settings/subscription` and `/billing/seats` are redirects — never resurrect them. `/billing/invoices` is the org's own customer invoicing (accounting), not platform billing.
+- **AI billing is token-metered, Cursor-style.** Credits burn by actual tokens via `computeTokenCharge(model, in, out)` (`backend/src/modules/ai/core/billing/ai-model-pricing.constants.ts`) — never flat per-action charging; `AI_FEATURE_COSTS` are reserve ceilings only. The ledger stores integer **milli-credits**; APIs emit fractional credits; settle refunds under-run and debits overage. New AI endpoints use the gateway `*WithUsage` variants, return an `aiUsage` meta, and render the shared `AiUsageChip`.
 
 ---
 
-## 17. Next.js (App Router) — best practices
+## 17. Next.js (App Router)
 
-> **StreamlineOS context (reconcile with §6).** The frontend calls the NestJS backend for all business data and mutations — it owns no business APIs and no business DB. So: Server Components fetch by calling the backend (server-to-server) or the client uses TanStack Query; **business Server Actions / Route Handlers are NOT used here** — the only frontend `route.ts` is NextAuth/auth-bridge, and webhooks/public APIs live in the backend; and the Data Access Layer principle below is a **backend service-layer** rule. The rendering, routing, caching, params, and auth-bridge practices below still apply to the frontend.
+> The frontend owns no business APIs and no business DB (§6): Server Components fetch by calling the backend, or the client uses Query. **Business Server Actions and Route Handlers are NOT used here** — the only frontend `route.ts` is NextAuth; webhooks and public APIs live in the backend. The DAL principle below is a **backend service-layer** rule.
 
 **Server / Client boundary**
-- Server Components are the default. Add `"use client"` only for state, event handlers, effects, or browser APIs — and push it to the **leaves** of the tree to shrink the client bundle.
-- Fetch data in Server Components; pass serializable props to Client Components. Don't fetch in `useEffect` when a server fetch will do.
-- A Server Component can't be imported into a Client Component — pass it as `children`. Context providers are Client Components rendered as deep as possible, wrapping Server children via `children`.
+- Server Components by default. `"use client"` only for state, handlers, effects, or browser APIs — pushed to the **leaves**.
+- Fetch in Server Components, pass serializable props down. A Server Component can't be imported into a Client Component — pass it as `children`. Providers are Client Components rendered as deep as possible.
 
-**Data fetching & waterfalls**
-- Initiate independent requests in parallel (`Promise.all` / preload) — sequential `await`s create waterfalls.
-- `fetch` GETs are auto-memoized within a render; wrap non-`fetch` server-side data access (e.g. backend calls) in React `cache()` to dedupe within a render.
-- Push fetches down to the components that need them and wrap those in `<Suspense>` rather than fetching at the root.
+**Data fetching**
+- Parallelize independent requests (`Promise.all`/preload) — sequential `await`s create waterfalls. Wrap non-`fetch` server data access in React `cache()` to dedupe per render. Push fetches down and wrap in `<Suspense>`.
 
-**Caching [verify-version]** — defaults changed across majors; confirm the installed version:
-- Classic layers: Request Memoization (per-render), Data Cache (persistent server), Full Route Cache (static HTML/RSC), Router Cache (client).
-- **Next 15:** `fetch` is **uncached by default** — opt in with `cache: 'force-cache'` or `next: { revalidate }`.
-- **Next 16 Cache Components:** dynamic by default; opt into caching with `use cache` + `cacheLife` + `cacheTag`. `use cache` scopes can't read `cookies()`/`headers()` — read outside, pass as args.
-- **Every mutation pairs with invalidation:** `revalidateTag('post:'+id)` / `revalidatePath(path)` (Next 16: `updateTag` for read-your-writes). Tag specifically — never one global tag. Test caching with `next build && next start`, never `next dev`.
+**Caching [verify-version]**
+- Layers: Request Memoization · Data Cache · Full Route Cache · Router Cache.
+- **Next 15:** `fetch` is uncached by default — opt in with `cache: 'force-cache'` or `next: { revalidate }`.
+- **Next 16 Cache Components:** dynamic by default; opt in with `use cache` + `cacheLife` + `cacheTag` (can't read `cookies()`/`headers()` — read outside, pass as args).
+- **Every mutation pairs with invalidation:** `revalidateTag('post:'+id)`/`revalidatePath` (Next 16: `updateTag` for read-your-writes). Tag specifically. Test caching with `next build && next start`, never `next dev`.
 
-**Server Actions** — treat as public POST endpoints:
-- Inside every action: (1) Zod-validate input, (2) verify auth, (3) verify object-level + tenant authorization. Client validation is UX only.
-- Keep any such action thin — it calls the NestJS backend and handles only Next-specific concerns (`revalidateTag`/`revalidatePath`); it holds no business logic or DB access. Webhooks and public APIs live in the backend (§6), not in frontend Route Handlers.
+**Server Actions** (if ever used) — treat as public POST endpoints: Zod-validate, verify auth, verify object-level + tenant authz. Keep them thin: call the backend, handle only `revalidateTag`/`revalidatePath`.
 
 **Routing & params [verify-version]**
 - `params`/`searchParams` are Promises — `const { projectId } = await params`. Validate bracket-folder params as untrusted input.
-- **Descriptive route params, never `[id]`.** Backend (`:projectId`) and frontend (`app/(authenticated)/projects/[projectId]`) match, and the destructured variable matches.
+- **Descriptive route params, never `[id]`.** Backend `:projectId` and frontend `[projectId]` match, and the destructured variable matches.
 
 **Rendering, assets, errors**
-- `next/image` for images, `next/link` for nav, `next/font` to self-host fonts (no layout shift), `next/script` with an explicit strategy for third-party JS. Static assets in `public/`.
-- `error.tsx` (segment) with `reset()`, `global-error.tsx` (root), `not-found.tsx` (404). Log details server-side; production hides raw error text.
-- Minimize client bundle via dynamic imports / code splitting; keep client components small.
+- `next/image`, `next/link`, `next/font`, `next/script` with an explicit strategy. Static assets in `public/`.
+- `error.tsx` with `reset()`, `global-error.tsx`, `not-found.tsx`. Log server-side; production hides raw error text.
+- Minimize client bundle via dynamic imports; keep client components small.
 
 **Middleware — NOT for authorization**
-- Middleware is bypassable (CVE-2025-29927). Use it only for optimistic redirects / locale / coarse routing UX; **re-verify auth at the data layer.** Keep Next.js patched (≥15.2.3 / ≥14.2.25) and strip `x-middleware-subrequest` at the proxy.
-- **Next 16 file convention (living rule, 2026-07-19):** the routing layer is `frontend/proxy.ts` (named `proxy` export, Node.js runtime) — `middleware.ts` is deprecated in Next 16 and was migrated/deleted; never recreate it. Route-permission maps do NOT belong in proxy.ts (the JWT carries no permissions claim — gating is server-side `requirePermission` + backend `PermissionGuard`).
+- Middleware is bypassable (CVE-2025-29927): optimistic redirects / locale / coarse routing UX only; **re-verify at the data layer.** Keep Next patched (≥15.2.3 / ≥14.2.25); strip `x-middleware-subrequest` at the proxy.
+- **The routing layer is `frontend/proxy.ts`** (named `proxy` export, Node runtime) — `middleware.ts` is deprecated in Next 16 and was deleted; never recreate it. Route-permission maps don't belong there (the JWT carries no permissions claim — gating is server-side `requirePermission` + backend `PermissionGuard`).
 
-**Env & secrets**
-- Env vars are server-only except `NEXT_PUBLIC_`-prefixed (inlined into the client bundle) — never put a secret behind that prefix. Only server/DAL code reads secrets.
+**Env & secrets** — server-only except `NEXT_PUBLIC_` (inlined into the client bundle). Never put a secret behind that prefix.
 
-**Data Access Layer (DAL) — backend service-layer rule**
-- In the NestJS backend, centralize business data access in a service layer. Each function: verify session, verify object-level + tenant authorization, use explicit `select` (never `select *`), return minimal DTOs (never raw ORM rows). On the frontend, the only server-side data surface is the NextAuth auth-bridge (auth-only schema, §6) and `require-permission.ts` (which calls the backend `/me/access`); mark such frontend server modules `import 'server-only'` and keep DB packages + secret env vars out of client code.
+**Data Access Layer (backend rule)** — centralize business data access in services: verify session, verify object-level + tenant authz, explicit `select` (never `select *`), return minimal DTOs (never raw ORM rows). On the frontend, mark server-only modules `import 'server-only'`.
 
 ## 18. Backend (NestJS)
 
 - **Thin controllers; services own business logic.** One controller per resource/domain.
-- **DTO validation:** register a global `ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true })` in `main.ts` (Zod pipe is an acceptable alternative). `whitelist` strips undeclared props (blocks mass-assignment); `forbidNonWhitelisted` 400s unknown props; `transform` builds DTO instances + coerces types.
-- **Module folders are nested by domain, never hyphen-flattened (living rule, 2026-07-31).** A NestJS module that belongs to a parent business module lives *inside* it as a sub-folder — `modules/build/core/`, `modules/build/approvals/`, `modules/build/client-portal/`, `modules/build/qa/` — **never** `modules/build-approvals/` at the top level (https://docs.nestjs.com/modules). The parent module's own controllers/services live in `<module>/core/`, so the parent folder holds only sub-folders and reads as a table of contents. Each sub-folder is a real `@Module` with its own `*.module.ts`, `*.controller.ts`, `*.service.ts` and `dto/`, registered in `app.module.ts` via its nested path. Cross-module access goes through the other module's **service** (imported via its `*.module.ts`), never its repository or schema. Applied 2026-07-31: 15 flat `build-*` folders were collapsed into `build/` (182 files); `build/` itself moved to `build/core/`. Apply the same shape to any future module family (`hr/`, `crm/`, `inv/`) rather than adding hyphenated siblings.
-- **Validation stays Zod — do NOT introduce `class-validator` (living rule, 2026-07-31).** The NestJS docs demonstrate `class-validator` DTOs (`@IsEmail()`, `@IsNotEmpty()`), and that is a valid NestJS approach — but this repo has **2,177 `ZodValidationPipe` call sites, zero class-validator decorators, and neither `class-validator` nor `class-transformer` installed**. Adopting decorator DTOs would mean two dependencies plus a platform-wide rewrite of every payload, contradicting §7 (Zod schemas in `*-schema.ts`) and §29.4 (the repo's established consistent pattern wins). **Take the NestJS validation *principles*, not its library:** validation is (a) declared once per payload in a dedicated schema file, (b) applied at the boundary via a pipe, (c) strict — unknown keys are stripped or rejected (`z.object().strict()` is the Zod equivalent of `whitelist` + `forbidNonWhitelisted`), and (d) the single source of the TS type via `z.infer`. If a future greenfield module wants decorator DTOs, that is a deliberate cross-repo decision, not a per-file choice.
-- **Validation is registered GLOBALLY (living rule, 2026-07-31).** Per-handler opt-in means a forgotten pipe = silently unvalidated input. The global mechanism is `ZodValidationInterceptor` (`common/validation/zod-validation.interceptor.ts`), registered once in `app.module.ts` as `{ provide: APP_INTERCEPTOR, useClass: ZodValidationInterceptor }`. A handler declares its schemas with `@Validate({ body, query, params })` (`common/validation/validate.decorator.ts`) and the interceptor parses `req.body` / `req.query` / `req.params` before the handler runs.
-  - **It is an interceptor, not a pipe, on purpose.** Only an interceptor receives the `ExecutionContext` needed to read handler metadata; a global pipe sees just the argument and cannot resolve a per-route schema without an `any` cast.
-  - **It is a pass-through when no `@Validate` is present**, so it composes with — and never changes the behaviour of — the ~2,177 existing handlers that attach `ZodValidationPipe` at the parameter. New endpoints should prefer `@Validate`; existing ones need no migration.
-  - Unknown-key handling lives in the schema: `z.object().strict()` is the Zod equivalent of `whitelist` + `forbidNonWhitelisted`.
-  - A thrown `ZodError` is mapped to a 400 by `AllExceptionsFilter` — the same path the per-parameter pipe already uses. Never catch and re-shape it at the call site.
-- **Guards** for authN/authZ; attach metadata with custom decorators + `Reflector`; deny by default. **Interceptors** for logging/timing/response shaping; **Pipes** for validation/transform; a **global Exception Filter** for a consistent JSON error envelope (log full error server-side, return generic message).
-- **Serialization:** `ClassSerializerInterceptor` + `@Exclude()` at class level, `@Expose()` only returned fields; `@Exclude({ toPlainOnly: true })` for secrets like `password`. Never leak sensitive columns.
-- **Config:** `@nestjs/config` global + startup `validationSchema` (required vars `.required()`, `NODE_ENV` enum, sensible defaults). Fail fast on missing/invalid config. `.env` out of git; commit `.env.example`.
-- **Stateless handlers** (safe for horizontal scaling) · `async/await` everywhere, never block the event loop · structured logging · global error handling · graceful shutdown hooks · `/health` via `@nestjs/terminus`.
-- **HTTP semantics:** GET/HEAD are safe + idempotent — no writes in a GET. State changes via POST/PATCH/DELETE.
-- **API versioning** (URI/header) · cursor-based pagination for live data · consistent filter/sort conventions.
-- **Idempotency:** mutating endpoints accept a client `Idempotency-Key`; store first result keyed by (key + tenant), replay it on retry, 409 while in-flight, compare params and error on mismatch, expire after a TTL.
+- **Module folders nest by domain, never hyphen-flatten.** A sub-module lives inside its parent (`modules/build/qa/`), never `modules/build-qa/`. The parent's own controllers/services live in `<module>/core/`, so the parent folder reads as a table of contents. Each sub-folder is a real `@Module` with its own `*.module.ts`/`*.controller.ts`/`*.service.ts`/`dto/`, registered in `app.module.ts` by nested path. **Cross-module access goes through the other module's service**, never its repository or schema.
+- **Validation stays Zod — do NOT introduce `class-validator`.** The repo has ~2,177 `ZodValidationPipe` call sites, zero decorator DTOs, and neither `class-validator` nor `class-transformer` installed. Take the NestJS validation *principles*, not its library: declared once per payload in a dedicated schema file, applied at the boundary by a pipe, strict about unknown keys (`z.object().strict()` = `whitelist` + `forbidNonWhitelisted`), and the single source of the type via `z.infer`.
+- **Validation is registered GLOBALLY** — per-handler opt-in means a forgotten pipe is silently unvalidated input. `ZodValidationInterceptor` (`common/validation/zod-validation.interceptor.ts`) is registered once in `app.module.ts` as `APP_INTERCEPTOR`; handlers declare `@Validate({ body, query, params })` and it parses before the handler runs.
+  - It is an **interceptor, not a pipe**, because only an interceptor gets the `ExecutionContext` needed to read per-route metadata (a global pipe would need an `any` cast).
+  - It is a **pass-through without `@Validate`**, so it composes with existing per-parameter pipes — new endpoints prefer `@Validate`; existing ones need no migration.
+  - A thrown `ZodError` maps to 400 in `AllExceptionsFilter` — never catch and re-shape it at the call site.
+- **Guards** for authN/authZ (metadata via custom decorators + `Reflector`, deny by default) · **Interceptors** for logging/shaping · **Pipes** for validation · a **global Exception Filter** for one JSON error envelope (log fully, return generic).
+- **Serialization:** `ClassSerializerInterceptor` + `@Exclude()` at class level, `@Expose()` only on returned fields, `@Exclude({ toPlainOnly: true })` for secrets. Never leak sensitive columns.
+- **Config:** `@nestjs/config` global + startup `validationSchema` (required vars `.required()`, `NODE_ENV` enum). Fail fast on bad config. `.env` out of git; commit `.env.example`.
+- Stateless handlers · `async/await` everywhere · structured logging · global error handling · graceful shutdown · `/health` via `@nestjs/terminus`.
+- **HTTP semantics:** GET/HEAD are safe and idempotent — no writes in a GET. API versioning · cursor pagination for live data · consistent filter/sort conventions.
+- **Idempotency:** mutating endpoints accept a client `Idempotency-Key`; store the first result keyed by (key + tenant), replay on retry, 409 while in-flight, error on param mismatch, expire after a TTL.
 
 ## 19. Database (Drizzle + Neon)
 
-- **Normalize lifecycle entities** — invitations, members, approvals, comments, notifications, audit logs, tasks, events, documents → each its own table with PK, `tenant_id`/`org_id` FK, `status`, `created_at`, indexes. **Never JSONB arrays** for these (can't be individually indexed, paginated, atomically updated, or soft-deleted).
-- Every table: UUID or identity PK (prefer `generatedAlwaysAsIdentity()` over `serial`). Every tenant-scoped table: non-nullable `org_id`/`tenant_id` FK with index. Money as integer cents, never float.
-- **Tenant-scoped uniqueness is composite (living rule, 2026-07-07):** any "unique per org" business key (project `key`, SKU, code, slug, name-within-tenant) MUST use a composite `uniqueIndex(org_id, <col>)` — **never** a bare global `.unique()` on the column alone. A global unique lets one tenant's value (e.g. project key `STRE`) block every other org from using it — a cross-tenant DoS + info leak. (Fixed 2026-07-07: `projects.key` `.unique()` → `uniqueIndex("uniq_projects_org_key").on(orgId, key)`, migration `0175`.) Always catch the resulting DB `23505` in the service and throw a friendly `ConflictException` (→ 409), never let it surface as an unhandled 500.
-- **Never a dual-purpose polymorphic FK (living rule, 2026-07-31):** an `entity_type` + `entity_id` pair that points at a different table depending on the type value is banned for NEW tables — no FK is possible, so there is no referential integrity, no `ON DELETE` behaviour, and orphans accumulate silently; worse, in a multi-tenant DB it defeats the composite tenant FK because the target table is unknown at DDL time. Use an **exclusive arc** (one nullable real FK per linkable type + a `CHECK` that exactly one is set) when the type set is small and stable, or a **link table per relationship** when it is not; either way the link row carries its own `org_id` and leads its composite index with it. Existing pairs (`notifications`, calendar events in `db/schema/common/shared.ts`) are grandfathered as **denormalized display/dedupe pointers only** (`idx_notifications_dedupe`) — they may render a label or key a dedupe index, and must never be the sole path used to resolve, join, or cascade a record.
-- **Composite indexes ordered most-selective-first**, leading with `org_id`/`tenant_id`; e.g. `(org_id, status, created_at DESC)`. Index every FK. No full-table scans.
-- Select only needed columns. **No N+1** — proper joins / relational `with`. Prepared statements (`sql.placeholder`) for hot queries. Multi-step writes in a **single transaction** (`db.transaction`, pass `tx` down). Atomic upserts (`INSERT … ON CONFLICT DO UPDATE`) for counters/idempotent creates; counters need a unique `(org, resource, actor)` index + upsert.
+- **Normalize lifecycle entities** — invitations, members, approvals, comments, notifications, audit logs, tasks, events, documents each get a table with PK, `org_id` FK, `status`, `created_at`, indexes. **Never JSONB arrays** for these (can't be indexed, paginated, atomically updated, or soft-deleted).
+- Every table: UUID or `generatedAlwaysAsIdentity()` PK (never `serial`). Every tenant-scoped table: non-nullable indexed `org_id` FK. Money as integer cents, never float.
+- **Tenant-scoped uniqueness is composite.** Any "unique per org" business key (project key, SKU, code, slug) uses `uniqueIndex(org_id, <col>)` — **never** a bare global `.unique()`, which lets one tenant's value block every other org (cross-tenant DoS + info leak). Catch DB `23505` in the service and throw a `ConflictException` (409), never an unhandled 500.
+- **Never a dual-purpose polymorphic FK.** An `entity_type` + `entity_id` pair pointing at different tables is banned for new tables — no FK, no referential integrity, no `ON DELETE`, and it defeats the composite tenant FK. Use an **exclusive arc** (one nullable FK per type + a `CHECK` that exactly one is set) for a small stable type set, or a **link table per relationship**; either carries its own `org_id` leading its composite index. Existing pairs (`notifications`, calendar events) are grandfathered as **display/dedupe pointers only** — never the sole path to resolve, join, or cascade a record.
+- **Composite indexes most-selective-first, leading with `org_id`** (e.g. `(org_id, status, created_at DESC)`). Index every FK. No full-table scans.
+- Select only needed columns. **No N+1** — joins or relational `with`. Multi-step writes in a **single transaction** (`db.transaction`, pass `tx` down). Atomic upserts for counters/idempotent creates (unique `(org, resource, actor)` index + upsert).
 - **Free-text search:** `to_tsvector` + GIN (or `pg_trgm`) — never leading-wildcard `ILIKE`.
 - **All list endpoints paginated**, hard cap **100/page** (public included). **Soft-delete** with `deleted_at`.
-- **High-volume append-only tables are RANGE-partitioned by time with a stated retention (living rule, 2026-07-31):** `ai_usage_logs`, audit logs, notifications, chat messages and event/outbox streams grow without bound, and index bloat plus vacuum cost land on the whole table. Partition on `created_at` (monthly; weekly where volume demands it), pre-create partitions ahead of need, and archive by `DETACH PARTITION CONCURRENTLY` + `DROP TABLE` — never a bulk `DELETE`. Constraint to decide BEFORE partitioning: the partition key must be part of every PRIMARY KEY / UNIQUE constraint, so the PK becomes composite (`(id, created_at)`) and a bare `id` is no longer globally unique — keep the `(org_id, id)` tenant key intact. Do not partition a table that is not demonstrably large; record the row count that triggered it in the migration.
-- **Migrations:** `generate` + `migrate` in CI (durable, auditable); `push` for local dev only. Never hand-edit generated SQL — regenerate. Additive migrations: add nullable → backfill in batches → add NOT NULL; build indexes concurrently on large tables; one purpose per migration; name constraints/indexes explicitly.
-- **Adding an FK or NOT NULL takes ACCESS EXCLUSIVE — split it in two (living rule, 2026-07-31):** `ADD CONSTRAINT … FOREIGN KEY` locks BOTH the child table and the referenced table while it installs its triggers, so one long-running SELECT on `organizations` stalls every write to both until it finishes (GoCardless documented a ~15s API outage from exactly this). Always `ADD CONSTRAINT … NOT VALID` (lock held only for a catalog write) → `VALIDATE CONSTRAINT` (SHARE UPDATE EXCLUSIVE, concurrent with writes). Same shape for NOT NULL: `ADD CONSTRAINT … CHECK (col IS NOT NULL) NOT VALID` → `VALIDATE` → `SET NOT NULL` (PG 12+ skips the table scan when a valid CHECK already proves it) → drop the CHECK in a separate statement. Every migration sets `lock_timeout` (≈5s) so it fails fast instead of queueing behind a lock and blocking the table behind it. This is distinct from the `SET statement_timeout = 0` exception below, which is for long single-statement catalog migrations only — the two are not interchangeable.
-- **Migration reproducibility (living rule, 2026-07-27):** "applied to the Neon branch" ≠ "migrated" — a change counts only when it is in the Drizzle journal (`migrations/` + `meta/_journal.json`) AND `db:migrate` reproduces it on an EMPTY DB. Cold-DB rules proven this session: (1) a fresh DB must `CREATE EXTENSION` `vector`/`pg_trgm`/`btree_gist`/`pgcrypto`/`uuid-ossp` BEFORE `db:migrate` (no migration creates them; never fold into `0000` — editing an applied migration changes its hash); (2) heavy catalog PL/pgSQL `DO`-block migrations (600+ `ADD CONSTRAINT`/FK) MUST prepend `SET statement_timeout = 0;` or Neon cancels the single long statement on a cold build; (3) to turn a unique INDEX into a unique CONSTRAINT that an FK already targets, use `ADD CONSTRAINT … UNIQUE USING INDEX` (promotes in place) — never `DROP INDEX` + re-`ADD` (the dependent FK blocks the drop); (4) author reconciliation as DISCRETE dependency-ordered migrations, never one monolith (a ~2000-op single migration ECONNRESETs on Neon).
+- **Partition high-volume append-only tables by time** (`ai_usage_logs`, audit logs, notifications, chat messages, event/outbox streams): RANGE on `created_at`, monthly or weekly, partitions pre-created, archived by `DETACH PARTITION CONCURRENTLY` + `DROP TABLE` — never a bulk `DELETE`. Decide BEFORE partitioning: the partition key must be in every PK/UNIQUE, so the PK becomes `(id, created_at)` and bare `id` is no longer globally unique — keep the `(org_id, id)` tenant key. Don't partition a table that isn't demonstrably large; record the triggering row count in the migration.
+- **Migrations:** `generate` + `migrate` in CI; `push` for local dev only. Never hand-edit generated SQL — regenerate. Additive: add nullable → backfill in batches → add NOT NULL; build indexes concurrently on large tables; one purpose per migration; name constraints/indexes explicitly.
+- **Adding an FK or NOT NULL takes ACCESS EXCLUSIVE — split it in two.** `ADD CONSTRAINT … FOREIGN KEY` locks BOTH tables while installing triggers, so one long SELECT on `organizations` stalls every write to both. Always `ADD CONSTRAINT … NOT VALID` → `VALIDATE CONSTRAINT`. Same for NOT NULL: `ADD CONSTRAINT … CHECK (col IS NOT NULL) NOT VALID` → `VALIDATE` → `SET NOT NULL` → drop the CHECK separately. Every migration sets `lock_timeout` (~5s) so it fails fast instead of queueing and blocking the table behind it.
+- **Migration reproducibility:** "applied to the Neon branch" ≠ "migrated" — it counts only when it's in the Drizzle journal AND `db:migrate` reproduces it on an EMPTY DB. Cold-DB rules: (1) a fresh DB must `CREATE EXTENSION` `vector`/`pg_trgm`/`btree_gist`/`pgcrypto`/`uuid-ossp` BEFORE `db:migrate` — never fold this into `0000` (editing an applied migration changes its hash); (2) heavy catalog PL/pgSQL `DO`-block migrations must prepend `SET statement_timeout = 0;` or Neon cancels them on a cold build; (3) to turn a unique index into a unique constraint an FK already targets, use `ADD CONSTRAINT … UNIQUE USING INDEX` — never `DROP INDEX` + re-`ADD` (the dependent FK blocks the drop); (4) author reconciliation as discrete dependency-ordered migrations — a ~2000-op monolith ECONNRESETs on Neon.
 
 ## 20. Security (OWASP API Top 10 — 2023)
 
-- **A01 BOLA (the #1 API risk):** every endpoint taking a resource id re-asserts the caller's access to **that specific object** (org + record) on **reads AND writes** — role/module ability alone is insufficient. Centralize in an access service; call it in every mutating method. Test with two accounts (A can't touch B's data).
-- **Cross-tenant misses return 404, never 403 (living rule, 2026-07-31):** when an object-level check fails because the record belongs to another org — or does not exist — return `NotFoundException`. A 403 on a cross-tenant id confirms the record exists, turning a BOLA probe into an existence oracle (enumerate ids, learn another tenant's id ranges and row counts). Reserve `ForbiddenException` for a caller inside the **correct** tenant who lacks the permission or scope — the only case where "it exists but you may not" is safe to disclose.
-- **A02 Broken Authentication:** integrate the repo's existing auth (sessions/JWT/OAuth) — never a parallel path. Account lockout + rate limiting on login; generic auth-failure messages.
-- **A03 BOPLA (Excessive Data Exposure + Mass Assignment):** allowlist input (DTO `whitelist`) and output (DTO/serialization). Reject/ignore client-sent protected fields (`role`, `isAdmin`, `orgId`).
-- **A04 Unrestricted Resource Consumption:** rate limits, quotas, timeouts, payload caps, pagination caps. **AI/LLM metering:** reserve/consume credits **atomically BEFORE** the paid call; refund only on provider failure — never check-then-spend. Anonymous traffic must never spend the shared LLM budget (**denial-of-wallet**); short-circuit before embedding when the org has no eligible content.
-- **A05 Broken Function Level Authorization:** role/permission checks on privileged/admin routes via Guards; deny by default.
-- **AI retrieval filters by the asker's access in the query, never in the prompt (living rule, 2026-07-31):** every RAG/vector search binds the caller's permissions into the SQL predicate **before** candidates reach the model — tenant scope AND the same object-level visibility the direct read endpoint enforces (space membership, page/article visibility, `own`/`team` DataScope, draft vs published). Instructing the model to "only use documents the user can see" is not a control: a chunk is disclosed the moment it enters the context window, and prompt-level filtering fails under adversarial input. Capture the ACL alongside the chunk at index time so the filter stays a cheap indexed predicate rather than a post-hoc join. **Verified 2026-07-31 — insecure default, found and FIXED:** `modules/ai/core/services/kb-rag.service.ts` applied `kbArticles.status`, `kbArticles.visibility`, `kbSpaces.audience` and `kbSpaces.deletedAt` only inside an `if (publicOnly)` branch, so the DEFAULT path filtered on `eq(kbArticleChunks.orgId, orgId)` alone. It was **not** exploitable: `KbRagService` is injected only into `KbRagController` (`@Public()`, `POST /public/kb/ask`, rate-limited), whose single call site always passed `publicOnly: true`, and authenticated asks route through `KbAskService`/`KbSearchService`, which enforce `KbAccessService.getAccessibleSpaceIds(user)` + article restrictions + `status = 'published'`. The defect was a safe-by-convention API one omitted flag — or one new caller — away from going live. Fix applied: the `publicOnly` flag was deleted and the four predicates plus the `kbSpaces` join made unconditional, so the unsafe state is **unrepresentable** rather than merely unreached. Prefer that shape — delete the flag — over documenting a safe-usage convention.
+- **A01 BOLA (the #1 risk):** every endpoint taking a resource id re-asserts the caller's access to **that specific object** (org + record) on **reads AND writes** — role/module ability alone is insufficient. Centralize in an access service; call it in every mutating method. Test with two accounts.
+- **Cross-tenant misses return 404, never 403.** A 403 on another org's id confirms the record exists, turning a BOLA probe into an existence oracle. Reserve `ForbiddenException` for a caller inside the **correct** tenant who lacks the permission.
+- **A02 Broken Authentication:** integrate the existing auth path, never a parallel one. Account lockout + rate limiting on login; generic auth-failure messages.
+- **A03 BOPLA:** allowlist input (`whitelist`) and output (DTO/serialization). Reject client-sent protected fields (`role`, `isAdmin`, `orgId`).
+- **A04 Unrestricted Resource Consumption:** rate limits, quotas, timeouts, payload caps, pagination caps. **AI/LLM metering: reserve/consume credits atomically BEFORE the paid call**, refund only on provider failure — never check-then-spend. Anonymous traffic must never spend the shared LLM budget (**denial-of-wallet**); short-circuit before embedding when the org has no eligible content.
+- **A05 Broken Function Level Authorization:** Guards on privileged routes; deny by default.
+- **AI retrieval filters by the asker's access in the SQL predicate, never in the prompt.** Every RAG/vector search binds tenant scope AND the same object-level visibility the direct read endpoint enforces (space membership, page visibility, `own`/`team` scope, draft vs published) **before** candidates reach the model — a chunk is disclosed the moment it enters the context window, and prompt-level filtering fails under adversarial input. Capture the ACL alongside the chunk at index time so the filter stays a cheap indexed predicate. **Make the unsafe state unrepresentable** — delete the "safe usage" flag rather than documenting a convention (a `publicOnly` flag in `kb-rag.service.ts` once left the default path filtering on `orgId` alone; the fix was removing the flag and making the predicates unconditional).
 - **A06 Sensitive Business Flows:** bot mitigation / rate limiting on abusable flows (signup, purchase).
 - **A07 SSRF:** never fetch user-supplied URLs without an allowlist; block internal/metadata endpoints.
-- **A08 Security Misconfiguration:** Helmet headers, strict CORS to known origins, disable verbose errors/docs in prod, secure defaults, avoid inline styles/scripts (CSP-friendly). HTTPS-only assumptions (secure cookies, no mixed content).
-- **A09 Improper Inventory Management:** track and retire old API versions / zombie endpoints.
-- **A10 Unsafe Consumption of APIs:** validate + sanitize responses from third-party/upstream services.
-- **Tenant isolation (defense in depth):** every tenant table has `tenant_id` + leading composite index; every query scoped by tenant. Prefer **Postgres RLS** as a DB-enforced backstop (`FORCE ROW LEVEL SECURITY`, `USING` + `WITH CHECK` policies against a per-request GUC set via `SET LOCAL` in a transaction; app role lacks `BYPASSRLS`). A forgotten `WHERE` must not become a breach.
-- **AuthZ placement (by layer, see §21):** the **backend** gates every protected endpoint with `@RequirePermission` + `PermissionGuard` (server-resolved via `AccessService`); **frontend** server components / auth-bridge routes use `requirePermission()` (which calls the backend `/me/access`). Client checks and `middleware.ts` are UX only and never sufficient.
-- **Input/output:** validate all input (Zod); parameterized queries via the ORM only (no injection); sanitize rendered HTML (XSS); secure cookies (`httpOnly`, `Secure`, `SameSite`); Server Actions get Origin/Host checks, Route Handlers need manual CSRF.
-- **Passwords:** **Argon2id** (min m=19456 KiB, t=2, p=1); scrypt/bcrypt (work factor ≥10, 72-byte limit) only as fallback. Unique salt per password. Never fast hashes (MD5/SHA-256) for passwords.
-- **Secrets & supply chain:** no hard-coded secrets — validated env vars only; only the DAL reads secrets. Validate file uploads. Log sensitive actions without exposing data. Audit dependencies (`pnpm audit` + SCA); keep Next.js patched.
+- **A08 Security Misconfiguration:** Helmet, strict CORS, no verbose errors/docs in prod, CSP-friendly markup, HTTPS-only assumptions.
+- **A09 Improper Inventory Management:** track and retire old API versions and zombie endpoints.
+- **A10 Unsafe Consumption of APIs:** validate and sanitize upstream/third-party responses.
+- **Tenant isolation (defense in depth):** every tenant table has `org_id` + a leading composite index; every query scoped by tenant. **Postgres RLS is live** as the DB-enforced backstop — `app.current_org_id()` RAISEs `42501` when the transaction GUC is unset, so **every write must run inside a tenant transaction** (`runInTenantTransaction`), including guard/interceptor and cron paths. A forgotten `WHERE` must not become a breach.
+- **AuthZ placement (§21):** backend gates every protected endpoint with `@RequirePermission` + `PermissionGuard`; frontend server components use `requirePermission()`. Client checks and routing middleware are UX only.
+- **Input/output:** Zod-validate all input; parameterized ORM queries only; sanitize rendered HTML; secure cookies (`httpOnly`, `Secure`, `SameSite`).
+- **Passwords:** **Argon2id** (m≥19456 KiB, t=2, p=1); scrypt/bcrypt (≥10, 72-byte limit) as fallback. Unique salt. Never fast hashes.
+- **Secrets & supply chain:** no hard-coded secrets — validated env vars only. Validate uploads. Log sensitive actions without exposing data. Audit dependencies; keep Next patched.
 
-## 21. RBAC Engine — server-resolved (read before adding ANY feature)
+## 21. RBAC Engine — server-resolved
 
-Permissions are resolved from the DB on **every request** via `AccessService`. **CASL is fully removed from the backend.** The frontend keeps `lib/abilities.ts` only as a lightweight (NON-CASL) server-side SSR helper.
+Permissions resolve from the DB on **every request** via `AccessService`. **CASL is fully removed from both repos.**
 
-> **Verified against repo (2026-07-03):** decorator import is `../access/require-permission.decorator`; `ROLE_DEFAULT_PERMISSIONS` lives in `permissions.constants.ts` (not role-templates); scope helper is `applyScope(scope: DataScope, userId: string, cols: ScopeColumns): SQL` in `modules/access/apply-scope.ts`; `bumpPermissionsVersion(tx, orgId)` is a standalone helper in `common/rbac/access-invalidate.ts`; permission resolution is `AccessService.resolveUserPermissions(orgId, userId)`.
-> **Verified against repo (2026-07-18):** `PermissionGuard` denies guarded handlers without `@RequirePermission`, exempts an explicit `@Public` route only when no permission metadata exists, and reaches the org-owner/platform-admin bypass only after permission metadata is present. Explicit permissions still run on non-JWT authentication routes that use `@Public` to bypass only the global JWT guard. JWT-only routes do not apply `PermissionGuard`; a controller-wide metadata audit verifies every guarded non-public route has a cataloged permission.
+**Key format** — `"module:resource:action"`, three lowercase colon-separated segments (`"hr:employees:view"`); `action` ∈ view · create · update · delete · manage · assign · export · approve · reject · import. Resolved via `GET /me/access` — **never** in JWT claims.
 
-### Permission key format
-`"module:resource:action"`, three lowercase colon-separated segments (`"hr:employees:view"`). `action` ∈ {view, create, update, delete, manage, assign, export, approve, reject, import}. Resolved via `GET /me/access` — **never** in JWT claims.
-
-### Key files (do not delete)
-- `backend/src/modules/rbac/permissions.constants.ts` — permission catalog + `ROLE_DEFAULT_PERMISSIONS` (source of truth).
+**Key files (do not delete)**
+- `backend/src/modules/rbac/permissions/` — catalog folder, one file per module + `role-defaults.ts` (`ROLE_DEFAULT_PERMISSIONS`) + `index.ts`.
 - `backend/src/modules/rbac/role-templates.constants.ts` — role templates.
-- `backend/src/common/rbac/access-invalidate.ts` — standalone `bumpPermissionsVersion(tx, orgId)`.
-- `backend/src/db/schema/access.ts` — RBAC schema (backend source of truth).
+- `backend/src/common/rbac/access-invalidate.ts` — `bumpPermissionsVersion(tx, orgId)`.
+- `backend/src/db/schema/common/access.ts` — RBAC schema (source of truth).
 - `backend/src/modules/access/access.service.ts` — `resolveUserPermissions`; caches per `(userId, orgId)`; degrades pre-migration.
-- `backend/src/modules/access/permission.guard.ts` — `PermissionGuard` (reads `@RequirePermission`, sets `req.rbacScope`).
-- `backend/src/modules/access/apply-scope.ts` — `applyScope` helper.
-- `frontend/lib/api/hooks/access.ts` — `useAccess`, `useCan`, `useModuleEnabled`.
-- `frontend/components/auth/can.tsx` — `<Can permission="…">`, `<RequireModule module="…">`.
-- `frontend/lib/abilities.ts` — lightweight NON-CASL server-side `AppAbility`.
-- `frontend/lib/rbac/require-permission.ts` — server-side page permission check.
-- `backend/src/scripts/backfill-rbac-access.ts` — seeds default grants (run once after migration).
+- `backend/src/modules/access/permission.guard.ts` — reads `@RequirePermission`, sets `req.rbacScope`.
+- `backend/src/modules/access/apply-scope.ts` — `applyScope(scope, userId, cols)`.
+- `backend/src/modules/access/require-permission.decorator.ts` — the decorator.
+- `frontend/hooks/api/access.ts` — `useAccess`, `useCan`, `useModuleEnabled`, `usePermissionCatalog`.
+- `frontend/components/auth/require-module.tsx` — `<RequireModule module="…">`.
+- `frontend/lib/rbac/require-permission.ts` — server-side page check (`requireSession`, `requirePermission`).
+- `frontend/lib/rbac/get-server-access.ts` — cached server-side access fetch.
 
-### Add a protected backend endpoint
-1. Add the key(s) to `permissions.constants.ts`; if a role default, add to `ROLE_DEFAULT_PERMISSIONS`.
-2. Decorate the controller method:
-   ```ts
-   @UseGuards(JwtAuthGuard, PermissionGuard)
-   @RequirePermission("newmodule:resource:view")
-   @Get()
-   async list(@Req() req: RequestWithUser) { ... }
-   ```
-3. List endpoints — apply DataScope. Create `newmodule-scope.ts`, read `req.rbacScope` in the service, filter:
-   ```ts
-   if (scope === "own")  return { ...query, assignedToId: actor.userId };
-   if (scope === "none") return { ...query, assignedToId: -1 };
-   return query; // "all"/"team" handled upstream
-   ```
-4. Every role/permission mutation calls `bumpPermissionsVersion` in the same transaction:
-   ```ts
-   await this.db.transaction(async (tx) => {
-     await tx.insert(rolePermissionGrants).values(...);
-     await bumpPermissionsVersion(tx, orgId);
-   });
-   ```
-5. Bust the access cache for `(userId, orgId)` in any service that changes role assignments/grants.
+**Add a protected backend endpoint**
+1. Add the key to the module's file in `permissions/`; if it's a role default, add it to `role-defaults.ts`.
+2. Decorate: `@UseGuards(JwtAuthGuard, PermissionGuard)` + `@RequirePermission("newmodule:resource:view")`.
+3. List endpoints apply DataScope — read `req.rbacScope` in the service and filter (`own` → `assignedToId = actor.userId`; `none` → deny; `all`/`team` handled upstream).
+4. Every role/permission mutation calls `bumpPermissionsVersion(tx, orgId)` **in the same transaction**.
+5. Bust the `(userId, orgId)` access cache in any service that changes role assignments or grants.
 
-### Frontend gates
-- Client: `const canCreate = useCan("newmodule:resource:create");`
-- Declarative: `<Can permission="newmodule:resource:delete"><DeleteButton/></Can>`
-- Module on/off: `<RequireModule module="newmodule">…</RequireModule>` / `useModuleEnabled("newmodule")`
-- Server page: `const { session } = await requirePermission("newmodule:resource:view");`
-- New keys auto-appear in `/settings/roles` (reads `GET /rbac/permissions`) — no frontend change.
+**Frontend gates** — `useCan("newmodule:resource:create")` for client checks; `<RequireModule module="newmodule">` / `useModuleEnabled` for module on/off; `requirePermission()` in server pages. New keys auto-appear in `/settings/roles` (reads `GET /rbac/permissions`).
 
-### DB migration for RBAC schema
-Edit `access.ts` → `pnpm -C backend db:generate` → `db:push`/`db:migrate` (needs TTY + enums `data_scope`, `principal_group_type`) → after first deploy `pnpm -C backend backfill:rbac`.
-
-### Runtime notes
+**Runtime notes**
 - Tables `user_roles`, `role_permission_grants`, `group_roles`, `access_versions` must exist; `AccessService` degrades pre-migration.
-- Org owners (`isOrgOwner`) and platform/super admins (`isPlatformAdmin`) bypass all checks.
-- Resolution cached per `(userId, orgId)` in Redis with TTL; busted by `bumpPermissionsVersion`.
-- `DataScope`: `"all"` · `"team"` (same dept) · `"own"` (`assignedToId === userId`) · `"none"` (deny).
+- Org owners (`isOrgOwner`) and platform admins (`isPlatformAdmin`) bypass permission checks — **so an owner never exercises the non-owner path; probe with `isOrgOwner=false` before declaring a gate correct.** Module enablement is tenant config, not a permission: owners are **not** exempt from it.
+- Resolution cached per `(userId, orgId)` in Redis, busted by `bumpPermissionsVersion`.
+- `DataScope`: `all` · `team` (same dept) · `own` · `none`.
+- Guards run **before** interceptors, so a guard's own DB queries have no tenant GUC — wrap them explicitly (§20).
 
-### RBAC — NEVER
-- Never `@CheckAbility`/`AbilityGuard`/`useAbility()` (CASL, deleted).
-- Never import `@casl/ability`, `@casl/react`, `@/lib/abilities-context` (deleted).
-- Never `requireAuthorize(...)` or `hasRoleOrPrivileged` (old helpers, deleted).
-- Never put permission checks in JWT claims — resolve server-side via `/me/access`.
-- Never read `req.user.permissions` for access decisions — use `PermissionGuard` + `AccessService` (JWT is stale; DB is authoritative).
-- Never skip `@RequirePermission` on a protected endpoint.
-- Never add a permission without a catalog entry.
-- Never skip `bumpPermissionsVersion` when mutating role/permission tables.
-- Never send a lowercase/mixed-case role **slug** from the client (living rule, 2026-07-25). Role slugs are **UPPERCASE_SNAKE** validated by `/^[A-Z_]+$/` (backend `createRoleSchema`/`cloneTemplateSchema`) — the canonical slug lives in `ROLE_TEMPLATES` (`PROJECT_MANAGER`, `HR_ADMIN`…), is keyed uppercase in `ROLE_DEFAULT_PERMISSIONS`, and matches the legacy `users.role` column. Create/clone UIs MUST uppercase before POSTing (canonical: `CreateRoleDialog.slugify()`); template **ids** stay lowercase (`project_manager`). When cloning a template, omit `slug`/`name` to inherit the canonical values rather than re-declaring them client-side. (Fixed 2026-07-25: `pm-access-sheet.tsx` sent `project_manager` → 400.)
+**RBAC — NEVER**
+- Never `@CheckAbility`/`AbilityGuard`/`useAbility()`/`@casl/*`/`lib/abilities` (all deleted), never `requireAuthorize`/`hasRoleOrPrivileged`.
+- Never put permission checks in JWT claims; never read `req.user.permissions` for decisions (JWT is stale, DB is authoritative).
+- Never skip `@RequirePermission` on a protected endpoint, add a permission without a catalog entry, or skip `bumpPermissionsVersion`.
+- **Never send a lowercase/mixed-case role slug from the client.** Slugs are `UPPERCASE_SNAKE` (`/^[A-Z_]+$/`), canonical in `ROLE_TEMPLATES`; template **ids** stay lowercase. Uppercase before POSTing (canonical: `CreateRoleDialog.slugify()`); when cloning a template, omit `slug`/`name` to inherit canonical values.
 
 ---
 
-## 22. Caching (system-wide)
+## 22. Caching
 
-- **Backend:** Redis for read-heavy data with **explicit invalidation on every mutation**. Public read-only GETs set `Cache-Control` (`s-maxage` + `stale-while-revalidate` per volatility).
-- **Frontend:** TanStack Query `staleTime` per §11.
+- **Backend:** Redis for read-heavy data with **explicit invalidation on every mutation**. Public read-only GETs set `Cache-Control` (`s-maxage` + `stale-while-revalidate`).
+- **Frontend:** Query `staleTime` per §11.
 - **Never cache user/permission-scoped data in a shared cache.**
 
 ## 23. Performance
 
-Bundle size · lazy loading · dynamic imports · query optimization · cache efficiency · deduped requests · parallel (not sequential) data fetching · granular Suspense streaming.
+Bundle size · lazy loading · dynamic imports · query optimization · cache efficiency · deduped requests · parallel fetching · granular Suspense streaming.
 
-- **Never render an unbounded collection to the DOM — window it (living rule, 2026-07-24):** a surface that can hold a large, unbounded number of items MUST render only what fits the viewport (plus a small overscan), never the entire array. Rendering hundreds/thousands of rows/cards at once freezes the tab (layout + paint + React reconciliation blow up). Two allowed strategies, in order of preference: (1) **server pagination** — the shared `DataTable` (`components/ui/data-table.tsx`) is already bounded (≤50 client / server page, hard cap 100/page per §19); prefer it for tabular data and always pass a real `pagination` prop so users can page through. (2) **Virtualization (windowing)** for surfaces that can't paginate — long boards, infinite feeds, big grids — via **`react-window` v2** (`List` + `useDynamicRowHeight`), the canonical example being the kanban virtual column (`features/projects/views/kanban-virtual-ticket-list.tsx`). The moment a view does `items.map(...)` over a collection with no upper bound (no pagination, no `slice`, no windowing), it is a hang-risk bug. When combining virtualization with `@hello-pangea/dnd`, use `Droppable mode="virtual"` + `renderClone`. **react-window v2 gotcha:** its `List` stores its scroll container in `useState(null)`, so `listRef`'s `api.element` is `null` on the first render (the element only lands on a second render). dnd's `useValidation` runs a no-deps passive effect after every commit, so routing `provided.innerRef` through `api.element` reliably trips "innerRef has not been provided with a HTMLElement" on first mount. Fix (see `kanban-virtual-ticket-list.tsx` `VirtualDroppableShell`): wrap `<List>` in a `<div style={{display:"contents"}}>` shell and, in a `useLayoutEffect`, point `provided.innerRef` at `shellRef.current.firstElementChild` — the real scroll DOM node exists at render-1 commit, so the check passes with zero layout impact. Note: a virtualized (own-scroll) column nested inside a horizontally-scrolling board still legitimately trips dnd's dev-only "nested scroll container" warning — that combination is accepted; drag/drop works.
-- **AI endpoint efficiency (living rule, 2026-07-16):** every AI endpoint must be super efficient end-to-end. Assemble prompt context in the fewest queries possible (`Promise.all` for independent fetches, explicit column projection, hard caps on row counts and text lengths — never dump whole entities into prompts). Default to the fast/cheap model tier and cap max output tokens per feature; use the standard tier only where quality demonstrably requires it. Short-circuit BEFORE any provider call when the org/user has no eligible context. Never re-embed unchanged content (content-hash guard). Dedupe identical in-flight AI requests. Cache derived AI context/results tenant-scoped with explicit invalidation where staleness is acceptable. Vector queries always run against a proper ANN index (HNSW). Every AI call records latency/tokens/cost through the AI gateway.
+- **Never render an unbounded collection — window it.** Rendering hundreds of rows freezes the tab. Two allowed strategies: (1) **server pagination** — the shared `DataTable` is already bounded (§19's 100/page cap); always pass a real `pagination` prop. (2) **Virtualization** for surfaces that can't paginate (long boards, infinite feeds) via **`react-window` v2** (`List` + `useDynamicRowHeight`); canonical: `features/build/views/kanban-virtual-ticket-list.tsx`. A `items.map(...)` over a collection with no pagination, `slice`, or windowing is a hang-risk bug.
+  - With `@hello-pangea/dnd`, use `Droppable mode="virtual"` + `renderClone`. **react-window v2 gotcha:** its `List` stores the scroll container in `useState(null)`, so `api.element` is `null` on first render and dnd's validation trips "innerRef has not been provided with a HTMLElement". Fix: wrap `<List>` in a `display:contents` shell and point `provided.innerRef` at `shellRef.current.firstElementChild` in a `useLayoutEffect`. A virtualized column inside a horizontally-scrolling board still trips dnd's dev-only nested-scroll warning — accepted; drag/drop works.
+- **Note:** `prepare: false` is set on the Neon driver, so `sql.placeholder` prepared statements are inert here — optimize via indexes, projection, and N+1 removal instead.
+- **AI endpoints must be efficient end-to-end.** Assemble prompt context in the fewest queries (`Promise.all`, explicit projection, hard caps on rows and text length — never dump whole entities into prompts). Default to the fast/cheap model tier with a per-feature output cap; use the standard tier only where quality demands it. Short-circuit BEFORE any provider call when there's no eligible context. Never re-embed unchanged content (content-hash guard — hash the **source text**, not the rejoined chunks). Dedupe in-flight AI requests. Cache derived context tenant-scoped with explicit invalidation. Vector queries always hit an ANN (HNSW) index. Every call records latency/tokens/cost through the AI gateway.
 
 ## 24. Reliability & Future-Proofing
 
-- **Deny by default; fail fast at boundaries.** Validate every external input; return typed, consistent errors.
-- **Idempotent + transactional writes** so retries are safe (§18, §19).
-- **Stateless services** so horizontal scaling and redeploys are safe.
-- **Depend on abstractions across feature boundaries; one-directional dependency flow** (features → shared, never shared → features). No circular dependencies.
-- **Version-sensitive rules tagged `[verify-version]`** — re-check against installed versions rather than assuming. Prefer additive, backward-compatible schema and API changes.
-- **Prefer boring, well-supported patterns** over experimental APIs in production paths; isolate anything experimental behind a clear seam.
+- Deny by default; fail fast at boundaries; validate every external input; return typed consistent errors.
+- Idempotent + transactional writes so retries are safe (§18, §19). Stateless services so scaling and redeploys are safe.
+- Depend on abstractions across feature boundaries; one-directional flow (features → shared, never shared → features). No circular dependencies.
+- Re-check `[verify-version]` rules against installed versions. Prefer additive, backward-compatible schema and API changes, and boring well-supported patterns in production paths.
 
 ## 25. Refactoring & Dead-Code
 
-Remove dead/duplicate code, unused schemas/APIs/hooks/components/types — and delete their files, verifying nothing still imports them. Don't abstract prematurely; extract an abstraction only once real duplication reveals its shape.
-
-- **Dead-code claims are proven by a module-graph tool, not grep (living rule, 2026-07-31):** import-search answers "who imports this by name" and misses side-effect imports (`import "./x";`), dynamic `import()`, and re-export chains — a blind spot that already cost a live file deletion. Prove non-use with **knip** (whole-repo mark-and-sweep from configured entry points; reports unused files, exports, types AND dependencies; `--reporter compact` exits non-zero for CI), then confirm with a real `next build` / `nest build` — `tsc --noEmit` does not catch a missing side-effect import. Neither repo has knip, madge or jscpd installed today. Deleting a schema file additionally requires zero symbol references, zero raw table-name references, and no dependent FK (§9).
+- Remove dead/duplicate code, unused schemas/APIs/hooks/components/types — and delete their files. Don't abstract prematurely.
+- **Dead-code claims are proven by a module-graph tool, not grep.** Import-search misses side-effect imports (`import "./x";`), dynamic `import()`, and re-export chains — a blind spot that already cost a live file deletion. Prove non-use with **knip**, then confirm with a real `next build` / `nest build` (`tsc --noEmit` does not catch a missing side-effect import). Deleting a schema file additionally requires zero symbol references, zero raw table-name references, and no dependent FK (§9).
 
 ## 26. Definition of Done
 
-Types ✓ (Build ✓ where run; Lint ✓ / Tests ✓ **only when explicitly requested** — otherwise report them as not run, never as passing) · CRUD complete · RBAC complete (gated + scoped) · Tenant-scoped queries ✓ · Caching correct + invalidated on mutation · Responsive (375/768/1280) · Accessible · Secure (BOLA re-asserted, inputs validated, no secrets leaked) · Tests present (§27) · No file over the 500-line cap without a §9 exception · `PAGES.md` updated.
+Types ✓ (Build ✓ where run; **Lint/Tests only when I explicitly ask — otherwise reported as not run, never as passing**) · CRUD complete · RBAC gated + scoped · tenant-scoped queries · caching invalidated on mutation · responsive (375/768/1280) · accessible · secure (BOLA re-asserted, inputs validated, no secrets leaked) · tests present (§27) · no file over 500 lines without a §9 exception · `PAGES.md` updated.
 
 ## 27. Testing
 
-- A new module ships **controller e2e specs** (auth + RBAC + scope allow/deny, credit exhaustion, cross-tenant isolation) **and** unit tests for access/credit/permission logic **before** it's done.
-- Unit-test services with mocked providers; e2e-test controllers. Code must be implicitly testable; add minimal tests when the repo has a test setup.
+- A new module ships **controller e2e specs** (auth + RBAC + scope allow/deny, credit exhaustion, cross-tenant isolation) **and** unit tests for access/credit/permission logic before it's done.
+- Unit-test services with mocked providers; e2e-test controllers. Keep code implicitly testable.
 
 ## 28. Output Format
 
-- **Audit step:** concise plan listing violations found + intended changes. Wait for confirmation.
-- **Fix step:** only modified/added/deleted file paths with their changes. No long prose unless justifying a decision.
+- **Audit:** concise plan — violations found + intended changes. Wait for confirmation.
+- **Fix:** only modified/added/deleted paths with their changes. No long prose unless justifying a decision.
 - Always be able to state: Findings · Root cause · Recommended solution · Files changed · Validation.
 
-## 29. Precedence (conflict resolution)
+## 29. Precedence
 
 1. My explicit instruction in the current turn.
 2. Cardinal Rules (§0).
 3. This file's specific sections over its general principles.
-4. The repo's established, consistent pattern over anything ambiguous here — and when you rely on it, tell me so we codify it as a living rule.
+4. The repo's established consistent pattern over anything ambiguous here — and when you rely on it, tell me so we codify it.
 
 When genuinely unsure and the choice is structural, **ask briefly** rather than guess.

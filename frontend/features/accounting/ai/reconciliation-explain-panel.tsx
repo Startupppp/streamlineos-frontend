@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { cn } from "@/lib/utils";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { AiDraftCard, AiGeneratedLabel } from "@/components/ai";

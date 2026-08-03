@@ -56,17 +56,15 @@ export const useDashboardStats = (
 };
 
 export const useMyIssues = (
-  userId: string,
   options?: Omit<UseQueryOptions<MyIssue[], Error>, "queryKey" | "queryFn">
 ) => {
   const buildEnabled = useModuleEnabled("build");
   return useQuery<MyIssue[], Error>({
-    queryKey: queryKeys.dashboard.myIssues(userId),
-    queryFn: () =>
-      apiClient.get<MyIssue[]>("/dashboard/my-issues", { userId, limit: "20" }),
+    queryKey: queryKeys.dashboard.myIssues(),
+    queryFn: () => apiClient.get<MyIssue[]>("/dashboard/my-issues"),
     staleTime: 5 * 60 * 1000,
     ...options,
-    enabled: !!userId && buildEnabled && (options?.enabled ?? true),
+    enabled: buildEnabled && (options?.enabled ?? true),
   });
 };
 

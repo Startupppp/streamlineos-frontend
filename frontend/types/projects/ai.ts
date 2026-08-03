@@ -108,13 +108,6 @@ export interface ChangeImpactResult {
   evidence: ChangeImpactEvidence;
 }
 
-export interface ProposedActionItem {
-  title: string;
-  ownerName: string;
-  dueDateHint: string;
-  rationale: string;
-}
-
 export interface TicketHandoffCitation {
   source: "description" | "comment" | "decision";
   excerpt: string;
