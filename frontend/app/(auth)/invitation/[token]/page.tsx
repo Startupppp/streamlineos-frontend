@@ -20,6 +20,7 @@ import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { InvitationIllustration } from "@/components/illustrations";
 import { Mail, ArrowRight, Loader2 } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatRoleLabel } from "@/features/users/user-invite-roles";
 
 const newUserSchema = z.object({
   firstName: z.string().optional(),
@@ -79,8 +80,8 @@ function InvitationDetails({
       </div>
       <div className="flex items-center justify-between gap-4">
         <span className="text-xs font-medium text-muted-foreground">Role</span>
-        <span className="rounded-md bg-blue-50 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-blue-700">
-          {role}
+        <span className="rounded-md bg-blue-50 px-2 py-0.5 text-xs font-semibold tracking-wide text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
+          {formatRoleLabel(role)}
         </span>
       </div>
       {accountEmail ? (

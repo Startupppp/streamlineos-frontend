@@ -35,9 +35,6 @@ export default async function DashboardLayout({
 
   if (forceOrgSetup) redirect("/org-setup");
 
-  // Enforcement itself lives in the backend `MfaGuard`; this only spares the
-  // user a shell full of 403s. `/settings` is exempt so the enrolment screen
-  // stays reachable.
   const isSettingsRoute =
     pathname === "/settings" || pathname.startsWith("/settings/");
   if (!isSettingsRoute) {

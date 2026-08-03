@@ -28,6 +28,20 @@ let cachedToken: { value: string; expiresAt: number } | null = null;
 let fetchingTokenPromise: Promise<string | null> | null = null;
 let autoSignOutSuppressed = false;
 
+const TOKEN_REFRESH_SKEW_MS = 30_000;
+
+function readTokenExpiry(token: string): number | null {
+  const payload = token.split(".")[1];
+  if (!payload) return null;
+  try {
+    const json = atob(payload.replace(/-/g, "+").replace(/_/g, "/"));
+    const claims = JSON.parse(json) as { exp?: unknown };
+    return typeof claims.exp === "number" ? claims.exp * 1000 : null;
+  } catch {
+    return null;
+  }
+}
+
 export function clearBackendTokenCache(): void {
   cachedToken = null;
   fetchingTokenPromise = null;
@@ -38,8 +52,7 @@ export function setAutoSignOutSuppressed(value: boolean): void {
 }
 
 async function getBackendToken(): Promise<string | null> {
-  const now = Date.now();
-  if (cachedToken && cachedToken.expiresAt - 30_000 > now)
+  if (cachedToken && cachedToken.expiresAt - TOKEN_REFRESH_SKEW_MS > Date.now())
     return cachedToken.value;
   if (fetchingTokenPromise) return fetchingTokenPromise;
   fetchingTokenPromise = (async () => {
@@ -48,7 +61,8 @@ async function getBackendToken(): Promise<string | null> {
       if (!res.ok) return null;
       const data = (await res.json()) as { backendJwt?: string };
       if (!data.backendJwt) return null;
-      cachedToken = { value: data.backendJwt, expiresAt: now + 540_000 };
+      const expiresAt = readTokenExpiry(data.backendJwt);
+      cachedToken = expiresAt === null ? null : { value: data.backendJwt, expiresAt };
       return data.backendJwt;
     } catch {
       return null;

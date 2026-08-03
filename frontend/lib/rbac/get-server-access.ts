@@ -7,10 +7,6 @@ import type { AccessResponse } from "@/types/access";
 
 const REQUEST_TIMEOUT_MS = 8_000;
 
-/**
- * Deny-by-default snapshot. Returned whenever the caller has no session or the
- * backend cannot be reached, so a transport failure can never widen access.
- */
 const DENIED: AccessResponse = {
   permissions: [],
   isOrgOwner: false,
@@ -29,11 +25,6 @@ function unwrap(body: unknown): AccessResponse | null {
   return snapshot as unknown as AccessResponse;
 }
 
-/**
- * Server-side read of `GET /me/access` — the single authority for what the
- * caller may do. Memoized per render so the shell layout and every
- * `requirePermission` gate on the page share one backend round-trip.
- */
 export const getServerAccess = cache(async (): Promise<AccessResponse> => {
   const session = await getServerAuth();
   const token = session?.backendJwt;

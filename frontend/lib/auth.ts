@@ -8,6 +8,10 @@ import { headers as nextHeaders } from "next/headers";
 import { SignJWT, decodeJwt } from "jose";
 import type { Plan } from "@/lib/billing/feature-gates";
 import { BACKEND_URL } from "@/lib/backend-url";
+import {
+  INTERNAL_TOKEN_AUDIENCE,
+  INTERNAL_TOKEN_ISSUER,
+} from "@/lib/backend-token-contract";
 
 const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET ?? "";
 
@@ -428,17 +432,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           if (cachedJwt) {
             session.backendJwt = cachedJwt;
           } else {
-            const minted = await new SignJWT({
-              orgId,
-              branchId,
-              role,
-              enabledModules,
-              plan,
-              isOrgOwner,
-              sessionId,
-            })
+            const minted = await new SignJWT({ orgId, sessionId })
               .setProtectedHeader({ alg: "HS256" })
               .setSubject(userId)
+              .setIssuer(INTERNAL_TOKEN_ISSUER)
+              .setAudience(INTERNAL_TOKEN_AUDIENCE)
               .setIssuedAt()
               .setExpirationTime("10m")
               .sign(new TextEncoder().encode(jwtSecret));

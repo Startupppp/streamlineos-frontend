@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TablePagination } from "@/components/ui/table-pagination";
+import { toast } from "sonner";
 import {
   useModuleMembers,
+  useModuleMyPermissions,
   useModuleRoleGroups,
   type ModuleMember,
 } from "@/hooks/api/module-access";
@@ -131,20 +133,41 @@ export function ModuleMembersTab({ moduleKey, canManage, focusUserId }: ModuleMe
   const allGroups = (groupsQuery.data ?? []).map((g) => ({ id: g.id, name: g.name }));
   const existingMemberIds = new Set(members.map((m) => m.userId));
 
+  const focusLookup = useModuleMembers(moduleKey, 1, 1, {
+    enabled: focusUserId !== undefined,
+    userId: focusUserId,
+  });
+  const myPermissionsQuery = useModuleMyPermissions(moduleKey);
+
   const triggeredRef = useRef(false);
 
   useEffect(() => {
-    if (!focusUserId) return;
-    if (!membersQuery.isSuccess) return;
+    if (focusUserId === undefined) return;
+    if (!focusLookup.isSuccess || !myPermissionsQuery.isSuccess) return;
     if (triggeredRef.current) return;
     triggeredRef.current = true;
-    const found = membersQuery.data.data.find((m) => m.userId === focusUserId) ?? null;
+
+    const found = focusLookup.data.data[0] ?? null;
+    if (!canManage) {
+      toast.info(
+        found === null
+          ? "This person is not a member of this module, and you do not have permission to add them."
+          : `${resolveDisplayName(found)} is a member of this module. You do not have permission to change their groups.`,
+      );
+      return;
+    }
     if (found !== null) {
       setEditTarget(found);
     } else {
       setAddOpen(true);
     }
-  }, [focusUserId, membersQuery.isSuccess, membersQuery.data]);
+  }, [
+    focusUserId,
+    focusLookup.isSuccess,
+    focusLookup.data,
+    myPermissionsQuery.isSuccess,
+    canManage,
+  ]);
 
   const handleOpenAdd = useCallback(() => setAddOpen(true), []);
   const handleEditMember = useCallback(

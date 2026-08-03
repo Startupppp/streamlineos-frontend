@@ -357,15 +357,22 @@ export function useModuleMembers(
   moduleKey: string,
   page: number,
   pageSize: number,
-  options?: { enabled?: boolean },
+  options?: { enabled?: boolean; userId?: string },
 ) {
   const canView = useCan(viewKey(moduleKey));
+  const userId = options?.userId;
   return useQuery<PaginatedResult<ModuleMember>, Error>({
-    queryKey: queryKeys.moduleAccess.members(moduleKey, { page, pageSize }),
-    queryFn: () =>
-      apiClient.get<PaginatedResult<ModuleMember>>(
-        `/module-access/${moduleKey}/members?page=${page}&pageSize=${pageSize}`,
-      ),
+    queryKey: queryKeys.moduleAccess.members(moduleKey, { page, pageSize, userId }),
+    queryFn: () => {
+      const params = new URLSearchParams({
+        page: String(page),
+        pageSize: String(pageSize),
+      });
+      if (userId !== undefined) params.set("userId", userId);
+      return apiClient.get<PaginatedResult<ModuleMember>>(
+        `/module-access/${moduleKey}/members?${params.toString()}`,
+      );
+    },
     enabled: canView && (options?.enabled ?? true),
     staleTime: 60_000,
     placeholderData: (prev) => prev,

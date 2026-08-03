@@ -17,7 +17,7 @@ export interface UserApiToken {
 
 export interface CreateUserApiTokenInput {
   name: string;
-  scopes?: string[];
+  scopes: string[];
   expiresAt?: string;
 }
 

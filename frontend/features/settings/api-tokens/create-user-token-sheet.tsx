@@ -30,11 +30,11 @@ import {
   FormMessage,
   FormDescription,
 } from "@/components/ui/form";
-import { ScopeSelector } from "./scope-selector";
+import { PermissionScopeSelector } from "./permission-scope-selector";
 
 const userTokenFormSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100),
-  scopes: z.array(z.string()),
+  scopes: z.array(z.string()).min(1, "Select at least one permission"),
   expiresAt: z.string().optional(),
 });
 
@@ -123,8 +123,14 @@ export function CreateUserTokenSheet({
                 name="scopes"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Scopes</FormLabel>
-                    <ScopeSelector
+                    <FormLabel>
+                      Permissions <span className="text-destructive">*</span>
+                    </FormLabel>
+                    <FormDescription>
+                      The token can only do what you select here, and never more
+                      than your own access allows.
+                    </FormDescription>
+                    <PermissionScopeSelector
                       value={field.value}
                       onChange={field.onChange}
                     />
