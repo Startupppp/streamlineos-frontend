@@ -373,7 +373,7 @@ export function useModuleMembers(
 
 export function useAddModuleMember(moduleKey: string) {
   const queryClient = useQueryClient();
-  return useMutation<{ success: true }, Error, { userId: string; groupIds?: number[] }>({
+  return useMutation<{ success: true }, Error, { userId: string; groupIds: number[] }>({
     mutationKey: ["moduleAccess", moduleKey, "add-module-member"],
     mutationFn: (body) =>
       apiClient.post<{ success: true }>(

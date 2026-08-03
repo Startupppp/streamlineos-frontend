@@ -30,21 +30,6 @@ export interface PartiesPage {
   pagination: PartiesPagination;
 }
 
-export interface PartyContact {
-  partyContactId: string;
-  organizationId: string;
-  partyId: string;
-  firstName: string;
-  lastName: string | null;
-  email: string | null;
-  phone: string | null;
-  title: string | null;
-  isPrimary: boolean;
-  deletedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface CreatePartyInput {
   name: string;
   partyType?: PartyType;
@@ -70,21 +55,3 @@ export interface UpdatePartyInput {
   status?: string;
 }
 
-export interface CreateContactInput {
-  partyId: string;
-  firstName: string;
-  lastName?: string;
-  email?: string;
-  phone?: string;
-  title?: string;
-  isPrimary?: boolean;
-}
-
-export interface UpdateContactInput {
-  firstName?: string;
-  lastName?: string | null;
-  email?: string | null;
-  phone?: string | null;
-  title?: string | null;
-  isPrimary?: boolean;
-}

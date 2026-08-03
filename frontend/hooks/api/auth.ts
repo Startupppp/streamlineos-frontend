@@ -38,6 +38,18 @@ interface LoginHistoryPage {
   limit: number;
 }
 
+export function useUpdateMyProfile() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["me", "profile", "update"],
+    mutationFn: (data: { name?: string; image?: string }) =>
+      apiClient.patch<{ success: true }>("/me/profile", data),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.employees() });
+    },
+  });
+}
+
 export function useDevices() {
   return useQuery({
     queryKey: queryKeys.auth.devices(),

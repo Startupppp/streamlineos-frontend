@@ -131,7 +131,6 @@ export function ModuleMembersTab({ moduleKey, canManage, focusUserId }: ModuleMe
   const members = membersQuery.data?.data ?? [];
   const pagination = membersQuery.data?.pagination;
   const allGroups = (groupsQuery.data ?? []).map((g) => ({ id: g.id, name: g.name }));
-  const existingMemberIds = new Set(members.map((m) => m.userId));
 
   const focusLookup = useModuleMembers(moduleKey, 1, 1, {
     enabled: focusUserId !== undefined,
@@ -254,7 +253,6 @@ export function ModuleMembersTab({ moduleKey, canManage, focusUserId }: ModuleMe
         open={addOpen}
         onOpenChange={setAddOpen}
         moduleKey={moduleKey}
-        existingMemberIds={existingMemberIds}
         allGroups={allGroups}
         defaultUserId={focusUserId}
       />

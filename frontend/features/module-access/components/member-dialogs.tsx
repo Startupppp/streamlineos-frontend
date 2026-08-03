@@ -40,7 +40,6 @@ interface AddMemberDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   moduleKey: string;
-  existingMemberIds: Set<string>;
   allGroups: ModuleMemberGroup[];
   defaultUserId?: string;
 }
@@ -49,7 +48,6 @@ export function AddMemberDialog({
   open,
   onOpenChange,
   moduleKey,
-  existingMemberIds,
   allGroups,
   defaultUserId,
 }: AddMemberDialogProps) {
@@ -58,9 +56,7 @@ export function AddMemberDialog({
   const candidatesQuery = useModuleMemberCandidates(moduleKey);
   const addMember = useAddModuleMember(moduleKey);
 
-  const candidates = (candidatesQuery.data ?? []).filter(
-    (c) => !existingMemberIds.has(c.userId),
-  );
+  const candidates = candidatesQuery.data ?? [];
 
   const handleClose = useCallback(
     (nextOpen: boolean) => {
@@ -85,10 +81,9 @@ export function AddMemberDialog({
   }, []);
 
   const handleAdd = useCallback(() => {
-    if (!selectedUserId) return;
-    const groupIds = selectedGroupIds.size > 0 ? Array.from(selectedGroupIds) : undefined;
+    if (!selectedUserId || selectedGroupIds.size === 0) return;
     addMember.mutate(
-      { userId: selectedUserId, groupIds },
+      { userId: selectedUserId, groupIds: Array.from(selectedGroupIds) },
       {
         onSuccess: () => {
           toast.success("Member added");
@@ -134,9 +129,12 @@ export function AddMemberDialog({
             </Select>
           </div>
 
-          {allGroups.length > 0 && (
+          {allGroups.length > 0 ? (
             <div className="space-y-1.5">
-              <p className="text-sm font-medium">Assign to groups (optional)</p>
+              <p className="text-sm font-medium">Assign to groups</p>
+              <p className="text-[11px] text-muted-foreground">
+                A member gets module access through its groups — pick at least one.
+              </p>
               <div className="space-y-1 max-h-40 overflow-y-auto">
                 {allGroups.map((group) => (
                   <label
@@ -154,6 +152,13 @@ export function AddMemberDialog({
                 ))}
               </div>
             </div>
+          ) : (
+            <div className="rounded-md border border-border/60 bg-muted/30 px-3 py-2.5">
+              <p className="text-[11px] leading-relaxed text-muted-foreground">
+                This module has no role groups yet. Create one on the Roles tab
+                first — a member can only get access through a group.
+              </p>
+            </div>
           )}
         </div>
 
@@ -170,7 +175,7 @@ export function AddMemberDialog({
             isPending={addMember.isPending}
             loadingText="Adding…"
             onClick={handleAdd}
-            disabled={!selectedUserId}
+            disabled={!selectedUserId || selectedGroupIds.size === 0}
           >
             <UserPlus className="h-4 w-4 mr-1.5" />
             Add member

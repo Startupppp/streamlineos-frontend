@@ -149,34 +149,6 @@ export interface CreateCrmOrganizationInput {
   description?: string;
 }
 
-export interface ClientHealthItem {
-  label: string;
-  value: number;
-  color: string;
-}
-
-export interface UpcomingRenewal {
-  client: string;
-  value: number;
-  date: string;
-  health: "healthy" | "at_risk" | "critical";
-}
-
-export interface KeyAccount {
-  name: string;
-  revenue: number;
-  health: "healthy" | "at_risk" | "critical";
-  csm: string;
-  since: string;
-}
-
-export interface CustomerInteractionItem {
-  type: "call" | "email" | "meeting" | "ticket" | "escalation";
-  message: string;
-  time: string;
-  person: string;
-}
-
 import type { StatWithTrend } from "./deals";
 
 export interface SupportDashboardStats {

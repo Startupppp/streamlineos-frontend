@@ -76,11 +76,6 @@ export interface CreateBudgetInput {
   dimensionType: BudgetDimensionType;
 }
 
-export interface UpdateBudgetInput {
-  name?: string;
-  dimensionType?: BudgetDimensionType;
-}
-
 export interface DuplicateBudgetInput {
   newFiscalYear: string;
   newName: string;

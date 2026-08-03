@@ -34,23 +34,7 @@ import { useSimulateAccess } from "@/hooks/api/access/simulate";
 import { getInitials } from "@/lib/format-utils";
 import type { Employee } from "@/types/hr";
 import type { DataScope } from "@/types/access";
-
-const MODULE_LABELS: Record<string, string> = {
-  hr: "Human Resources",
-  crm: "CRM & Sales",
-  build: "Build",
-  settings: "Settings",
-  reports: "Reports",
-  accounting: "Accounting",
-  dashboard: "Dashboards",
-  kb: "Knowledge Base",
-  inventory: "Inventory",
-  support: "Support",
-  self: "Self-Service",
-  branch: "Branches",
-  dm: "Digital Marketing",
-  chat: "Chat",
-};
+import { MODULE_LABELS } from "@/components/rbac/permission-matrix-types";
 
 const SCOPE_BADGE_VARIANT: Record<DataScope, "default" | "secondary" | "outline"> = {
   all: "default",

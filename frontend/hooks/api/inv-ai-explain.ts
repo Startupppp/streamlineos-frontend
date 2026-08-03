@@ -17,20 +17,6 @@ export interface InsightNarration {
   evidenceSnapshot: Record<string, unknown>;
 }
 
-interface DigestSample {
-  id: number;
-  title: string;
-  body: string;
-  severity: string;
-}
-
-export interface DigestGroup {
-  insightType: string;
-  count: number;
-  severityCounts: Record<string, number>;
-  samples: DigestSample[];
-}
-
 export function useExplainInsight() {
   return useMutation<InsightNarration, Error, number>({
     mutationKey: ["inventory", "ai", "insight", "explain"],

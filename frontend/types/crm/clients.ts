@@ -28,16 +28,6 @@ export interface ClientOpportunity {
   client?: { id: number; name: string } | null;
 }
 
-export interface OnboardingTemplate {
-  id: number;
-  orgId: string;
-  name: string;
-  description: string | null;
-  isDefault: boolean;
-  createdBy: string;
-  createdAt: string;
-}
-
 export interface OnboardingItem {
   id: number;
   orgId: string;

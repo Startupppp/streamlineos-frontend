@@ -127,63 +127,10 @@ export interface StatWithTrend<T = number> {
   trend: TrendValue;
 }
 
-export interface SalesFunnelItem {
-  stage: string;
-  value: number;
-  color: string;
-}
-
-export interface TopDeal {
-  company: string;
-  value: number;
-  stage: string;
-  rep: string;
-  probability: number;
-}
-
-export interface SalesLeaderboardItem {
-  name: string;
-  deals: number;
-  revenue: number;
-  avatar: string;
-}
-
-export interface SalesActivityItem {
-  type: "deal_won" | "meeting" | "proposal" | "call" | "email";
-  message: string;
-  time: string;
-  person: string;
-}
-
-export interface DealsByStage {
-  stage: string;
-  count: number;
-  value: number;
-  color: string;
-}
-
-export interface EnhancedSalesMetrics {
-  activeClients: number;
-  inactiveClients: number;
-  totalCalls: number;
-  totalMeetings: number;
-  totalEmails: number;
-  totalSiteVisits: number;
-  followUpNeeded: number;
-}
-
 export interface DealStats {
   active: number;
   pipelineValue: number;
   wonValue: number;
-}
-
-export interface DealForecast {
-  totalWeighted: number;
-  totalBestCase: number;
-  totalDeals: number;
-  byMonth: Array<{ month: string; label: string; weighted: number; bestCase: number; dealCount: number }>;
-  byStage: Array<{ stage: string; count: number; totalValue: number; weightedValue: number; avgProbability: number }>;
 }
 
 export interface DealMeeting {
@@ -276,18 +223,6 @@ export interface ForecastSnapshot {
   overrideNote: string | null;
   overriddenBy: string | null;
   createdAt: string;
-}
-
-export interface ForecastSnapshotCompare {
-  period: string;
-  baseline: ForecastSnapshotData;
-  current: ForecastSnapshotData;
-  delta: {
-    totalWeighted: number;
-    totalBestCase: number;
-    totalDeals: number;
-    byCategory: Array<{ category: string; delta: number; pctChange: number }>;
-  };
 }
 
 export interface PatchNextStepInput {

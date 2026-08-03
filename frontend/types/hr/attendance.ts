@@ -1,4 +1,3 @@
-export type LeaveStatus = "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
 export type AttendanceStatus = "OFFLINE" | "PRESENT" | "ON_BREAK" | "CHECKED_OUT";
 export type WfhRequestStatus = "PENDING" | "APPROVED" | "REJECTED";
 

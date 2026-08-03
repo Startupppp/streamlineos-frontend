@@ -47,6 +47,14 @@ export function useUserOnboarding(userId: string) {
   });
 }
 
+export function useMyOnboarding() {
+  return useQuery<OnboardingTask[]>({
+    queryKey: queryKeys.hr.onboardingUser("me"),
+    queryFn: () => apiClient.get<OnboardingTask[]>("/onboarding/me"),
+    staleTime: 60_000,
+  });
+}
+
 
 export function useCompleteOnboardingTask() {
   const qc = useQueryClient();

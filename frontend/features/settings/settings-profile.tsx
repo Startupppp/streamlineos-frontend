@@ -12,7 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AvatarCropDialog } from "@/components/ui/avatar-crop-dialog";
 import { Camera, Loader2 } from "lucide-react";
 import { Trash2Icon, CheckIcon, XIcon } from "@animateicons/react/lucide";
-import { useUpdateProfile } from "@/hooks/api/hr";
+import { useUpdateMyProfile } from "@/hooks/api/auth";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
@@ -41,7 +41,7 @@ export function SettingsProfile() {
     defaultValues: { name: "" },
   });
 
-  const updateProfile = useUpdateProfile();
+  const updateProfile = useUpdateMyProfile();
 
   const isPhotoBusy = uploading;
   const isSavingName = updateProfile.isPending && !uploading;
@@ -91,7 +91,7 @@ export function SettingsProfile() {
 
       await new Promise<void>((resolve, reject) => {
         updateProfile.mutate(
-          { userId: session.user.id, image: imageValue },
+          { image: imageValue },
           {
             onSuccess: async () => {
               await updateSession({});
@@ -123,7 +123,7 @@ export function SettingsProfile() {
     try {
       await new Promise<void>((resolve, reject) => {
         updateProfile.mutate(
-          { userId: session.user.id, image: "" },
+          { image: "" },
           {
             onSuccess: async () => { await updateSession({}); setPreviewUrl(null); resolve(); },
             onError: (err) => reject(err),
@@ -142,7 +142,7 @@ export function SettingsProfile() {
     if (!session?.user?.id) return;
     const nextName = values.name.trim();
     updateProfile.mutate(
-      { userId: session.user.id, name: nextName },
+      { name: nextName },
       {
         onSuccess: async () => {
           await updateSession({ name: nextName });

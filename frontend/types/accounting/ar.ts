@@ -241,14 +241,3 @@ export interface UpdateInvoiceCollectionInput {
   promiseToPayDate?: string;
 }
 
-export interface CustomerStatementEntry {
-  date: string;
-  description: string;
-  debit: number | null;
-  credit: number | null;
-  balance: number;
-}
-
-export interface CustomerStatement {
-  entries: CustomerStatementEntry[];
-}

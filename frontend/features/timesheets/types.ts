@@ -184,12 +184,6 @@ export interface RatesResponse {
   rateCards: TimesheetRateCard[];
 }
 
-export interface RatePreview {
-  billRate: number | null;
-  currency: string;
-  source: string | null;
-}
-
 export type BudgetType = "HOURS" | "AMOUNT";
 
 export interface BudgetBurn {
