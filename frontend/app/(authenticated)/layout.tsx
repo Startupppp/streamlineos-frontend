@@ -2,6 +2,7 @@ import { getServerAuth } from "../../lib/get-server-auth";
 import { redirect } from "next/navigation";
 import { cookies, headers } from "next/headers";
 import { signInPathForMissingSession } from "../../lib/auth-session-cookies";
+import { getServerAccess } from "../../lib/rbac/get-server-access";
 import { DashboardShell } from "../../components/layout/dashboard-shell";
 import { FeedbucketEmbed } from "../../components/feedbucket/feedbucket-embed";
 import { AppThemeProvider } from "../../components/theme/app-theme-provider";
@@ -16,7 +17,9 @@ export default async function DashboardLayout({
 
   if (!session?.user) redirect(signInPathForMissingSession());
 
-  const nonce = (await headers()).get("x-nonce") ?? undefined;
+  const requestHeaders = await headers();
+  const nonce = requestHeaders.get("x-nonce") ?? undefined;
+  const pathname = requestHeaders.get("x-pathname") ?? "";
   const cookieStore = await cookies();
 
   const isOrgOwner = session.user.isOrgOwner === true;
@@ -32,9 +35,17 @@ export default async function DashboardLayout({
 
   if (forceOrgSetup) redirect("/org-setup");
 
-  const isAdminLike = session.user.isOrgOwner;
-  const hasDashboardAccess =
-    isAdminLike || session.user.hasDashboardAccess !== false;
+  // Enforcement itself lives in the backend `MfaGuard`; this only spares the
+  // user a shell full of 403s. `/settings` is exempt so the enrolment screen
+  // stays reachable.
+  const isSettingsRoute =
+    pathname === "/settings" || pathname.startsWith("/settings/");
+  if (!isSettingsRoute) {
+    const { mfa } = await getServerAccess();
+    if (mfa?.enforced && !mfa.satisfied) {
+      redirect("/settings?tab=security&mfa=required");
+    }
+  }
 
   const defaultCollapsed =
     cookieStore.get("sidebar-collapsed")?.value === "true";
@@ -44,7 +55,6 @@ export default async function DashboardLayout({
       <AppThemeScript nonce={nonce} />
       <DashboardShell
         userId={session.user.id}
-        hasDashboardAccess={hasDashboardAccess}
         defaultCollapsed={defaultCollapsed}
       >
         {children}

@@ -32,6 +32,7 @@ export function useMfaVerify() {
       apiClient.post<{ enabled: boolean }>("/auth/mfa/verify", data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.mfa.all });
+      qc.invalidateQueries({ queryKey: queryKeys.access.me() });
     },
   });
 }
@@ -44,6 +45,7 @@ export function useMfaDisable() {
       apiClient.post<{ disabled: boolean }>("/auth/mfa/disable", { token }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.mfa.all });
+      qc.invalidateQueries({ queryKey: queryKeys.access.me() });
     },
   });
 }

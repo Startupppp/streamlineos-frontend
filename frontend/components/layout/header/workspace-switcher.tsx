@@ -19,6 +19,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { cn } from "@/lib/utils"
 import { TruncatedText } from "@/components/ui/truncated-text"
 import { useGetOrganizations, useSwitchOrg } from "@/hooks/common/auth-hooks"
+import { useAccess } from "@/hooks/api/access"
 import { CreateWorkspaceDialog } from "@/components/layout/header/create-workspace-dialog"
 
 interface WorkspaceSwitcherProps {
@@ -163,6 +164,7 @@ export function WorkspaceSwitcher({
   drawerOnly = false,
 }: WorkspaceSwitcherProps) {
   const { data: session } = useSession()
+  const { data: access } = useAccess()
   const { data: organizations } = useGetOrganizations()
   const switchOrg = useSwitchOrg()
   const [createOpen, setCreateOpen] = useState(false)
@@ -174,7 +176,7 @@ export function WorkspaceSwitcher({
   const activeOrgId = session?.orgId as string | null | undefined
   const activeOrg = organizations?.find((o) => o.id === activeOrgId) ?? organizations?.[0]
   const otherOrgs = organizations?.filter((o) => o.id !== activeOrg?.id) ?? []
-  const isOrgOwner = session?.user?.isOrgOwner === true
+  const isOrgOwner = access?.isOrgOwner === true
 
   const handleOpenChange = useCallback(
     (next: boolean) => {

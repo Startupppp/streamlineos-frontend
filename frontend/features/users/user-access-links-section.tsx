@@ -34,8 +34,9 @@ function RbacRolesBlock() {
   return (
     <div className="rounded-md border border-border/50 bg-muted/20 px-3 py-2.5 space-y-2">
       <p className="text-[11px] text-muted-foreground leading-relaxed">
-        Custom roles define what this person can see and do. A member invited as
-        &ldquo;Member&rdquo; has no resource-level access until assigned at least one custom role.
+        Roles define what this person can see and do. A member invited as
+        &ldquo;Member&rdquo; gets resource-level access once assigned a module role
+        below, or an Org Admin / custom role here.
       </p>
       <Link
         href="/settings/roles"

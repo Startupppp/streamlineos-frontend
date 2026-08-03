@@ -66,10 +66,6 @@ jest.mock("./command-palette", () => ({
   CommandPalette: () => null,
 }));
 
-jest.mock("../auth/not-activated-page", () => ({
-  NotActivatedPage: () => null,
-}));
-
 jest.mock("@/components/ui/drawer", () => ({
   Drawer: ({
     children,
@@ -149,7 +145,6 @@ describe("DashboardShell mobile navigation", () => {
     render(
       <DashboardShell
         userId="user-1"
-        hasDashboardAccess
         defaultCollapsed={false}
       >
         <div>Content</div>
@@ -176,7 +171,6 @@ describe("DashboardShell mobile navigation", () => {
     render(
       <DashboardShell
         userId="user-1"
-        hasDashboardAccess
         defaultCollapsed={false}
       >
         <div>Content</div>

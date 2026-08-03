@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -30,14 +30,13 @@ export function ModuleAccessPage({ moduleKey, title }: ModuleAccessPageProps) {
   const myPermissionsQuery = useModuleMyPermissions(moduleKey);
   const myPerms = myPermissionsQuery.data;
 
-  const canManage = useMemo(() => {
-    if (!myPerms) return false;
-    if (myPerms.isOrgOwner) return true;
-    if (myPerms.isModuleOwner || myPerms.isModuleAdmin) return true;
-    return myPerms.permissions.some(
-      (p) => p.key === `${moduleKey}:access:manage`,
-    );
-  }, [myPerms, moduleKey]);
+  const canManage =
+    myPerms?.isOrgOwner === true ||
+    myPerms?.isOrgAdmin === true ||
+    myPerms?.isModuleAdmin === true;
+
+  const canTransferOwnership =
+    myPerms?.isOrgOwner === true || myPerms?.isModuleOwner === true;
 
   const [auditLogOpen, setAuditLogOpen] = useState(false);
   const handleOpenAuditLog = useCallback(() => setAuditLogOpen(true), []);
@@ -82,7 +81,7 @@ export function ModuleAccessPage({ moduleKey, title }: ModuleAccessPageProps) {
         </TabsContent>
 
         <TabsContent value="ownership" className="mt-0">
-          <OwnershipSection moduleKey={moduleKey} canManage={canManage} />
+          <OwnershipSection moduleKey={moduleKey} canManage={canTransferOwnership} />
         </TabsContent>
       </Tabs>
 

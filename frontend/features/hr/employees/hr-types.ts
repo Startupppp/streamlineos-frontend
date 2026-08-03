@@ -7,7 +7,6 @@ export interface Employee {
   image: string | null;
   designation: string | null;
   isActive: boolean;
-  hasDashboardAccess: boolean;
   department?: { id: string; name: string } | null;
 }
 

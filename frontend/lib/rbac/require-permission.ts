@@ -5,21 +5,13 @@ import { headers } from "next/headers";
 import type { Session } from "next-auth";
 import { getServerAuth } from "@/lib/get-server-auth";
 import { signInPathForMissingSession } from "@/lib/auth-session-cookies";
-import { getSessionAbility } from "@/lib/abilities-server";
-import type { AppAbility } from "@/lib/abilities";
+import { getServerAccess } from "@/lib/rbac/get-server-access";
+import type { AccessResponse } from "@/types/access";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 
 interface RequirePermissionResult {
   session: Session;
-  ability: AppAbility;
-}
-
-function parsePermission(permission: string): { verb: string; subject: string } {
-  const parts = permission.split(":");
-  if (parts.length < 2) return { verb: "read", subject: permission };
-  const verb = parts[parts.length - 1];
-  const subject = parts.slice(0, -1).join(":");
-  return { verb, subject };
+  access: AccessResponse;
 }
 
 async function getCurrentPath(): Promise<string | null> {
@@ -57,12 +49,10 @@ export async function requirePermission(
     redirect(signInPathForMissingSession());
   }
 
-  const ability = await getSessionAbility();
+  const access = await getServerAccess();
   const perms = Array.isArray(permission) ? permission : [permission];
-  const allowed = perms.some((p) => {
-    const { verb, subject } = parsePermission(p);
-    return ability.can(verb, subject);
-  });
+  const granted = new Set(access.permissions);
+  const allowed = access.isOrgOwner || perms.some((p) => granted.has(p));
 
   if (!allowed) {
     if (options.redirectTo) redirect(options.redirectTo);
@@ -72,5 +62,5 @@ export async function requirePermission(
     redirect(`/access-denied?${params.toString()}`);
   }
 
-  return { session, ability };
+  return { session, access };
 }

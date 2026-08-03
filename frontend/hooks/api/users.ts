@@ -82,7 +82,6 @@ interface User {
   departmentId: string | null;
   branchId: string | null;
   isActive: boolean;
-  hasDashboardAccess: boolean;
   reportingTo: string | null;
   team: string | null;
   bio: string | null;

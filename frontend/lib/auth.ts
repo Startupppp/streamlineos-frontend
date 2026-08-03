@@ -90,14 +90,10 @@ interface SessionData {
   image: string | null;
   role: string | null;
   isActive: boolean;
-  hasDashboardAccess: boolean;
   branchId: number | null;
-  totpEnabled: boolean;
   orgId: string | null;
   isOrgOwner: boolean;
-  mfaEnforced: boolean;
   enabledModules: string[];
-  permissions: string[];
   plan: Plan | null;
   orgOnboardingCompletedAt: string | null;
   userOnboardingCompletedAt: string | null;
@@ -213,13 +209,9 @@ function buildUserFromSessionData(
     image: sessionData.image,
     role: sessionData.role ?? undefined,
     isActive: sessionData.isActive,
-    hasDashboardAccess: sessionData.hasDashboardAccess,
     orgId: sessionData.orgId ?? null,
     isOrgOwner: sessionData.isOrgOwner,
     branchId: sessionData.branchId ?? null,
-    totpEnabled: sessionData.totpEnabled,
-    mfaEnforced: sessionData.mfaEnforced,
-    permissions: sessionData.permissions,
     plan: sessionData.plan ?? null,
     enabledModules: sessionData.enabledModules,
     orgOnboardingCompletedAt: sessionData.orgOnboardingCompletedAt,
@@ -315,14 +307,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           user.image = sessionData.image ?? user.image;
           user.role = sessionData.role ?? undefined;
           user.isActive = sessionData.isActive;
-          user.hasDashboardAccess = sessionData.hasDashboardAccess;
           user.orgId = sessionData.orgId ?? null;
           user.isOrgOwner = sessionData.isOrgOwner;
-
           user.branchId = sessionData.branchId ?? null;
-          user.totpEnabled = sessionData.totpEnabled;
-          user.mfaEnforced = sessionData.mfaEnforced;
-          user.permissions = sessionData.permissions;
           user.plan = sessionData.plan ?? null;
           user.enabledModules = sessionData.enabledModules;
           user.orgOnboardingCompletedAt = sessionData.orgOnboardingCompletedAt;
@@ -342,8 +329,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.orgId = user.orgId ?? null;
         token.isOrgOwner = user.isOrgOwner ?? false;
         token.orgOnboardingCompletedAt = user.orgOnboardingCompletedAt ?? null;
-        token.totpEnabled = user.totpEnabled ?? false;
-        token.mfaEnforced = user.mfaEnforced ?? false;
         token.userOnboardingCompletedAt =
           user.userOnboardingCompletedAt ?? null;
         token.sessionId = user.sessionId ?? randomUUID();
@@ -363,8 +348,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             token.isOrgOwner = fresh.isOrgOwner;
             token.role = fresh.role ?? undefined;
             token.isActive = fresh.isActive;
-            token.mfaEnforced = fresh.mfaEnforced;
-            token.totpEnabled = fresh.totpEnabled;
             token.orgOnboardingCompletedAt = fresh.orgOnboardingCompletedAt;
             token.userOnboardingCompletedAt = fresh.userOnboardingCompletedAt;
           } else if (
@@ -399,7 +382,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const isOrgOwner = fresh
           ? fresh.isOrgOwner
           : ((token.isOrgOwner as boolean | undefined) ?? false);
-        const permissions = fresh?.permissions ?? [];
         const enabledModules = fresh?.enabledModules ?? [];
         const plan = fresh?.plan ?? null;
         const role = fresh?.role ?? (token.role as string | undefined) ?? "";
@@ -417,14 +399,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           session.user.image =
             fresh?.image ?? (token.picture as string | null | undefined) ?? null;
           session.user.isActive = fresh?.isActive ?? (token.isActive as boolean);
-          session.user.hasDashboardAccess = fresh?.hasDashboardAccess ?? true;
           session.user.isOrgOwner = isOrgOwner;
         }
         session.orgId = orgId;
         session.branchId = branchId;
         session.sessionId = token.sessionId as string | undefined;
         session.plan = plan;
-        session.permissions = permissions;
         session.enabledModules = enabledModules;
         if (token.daysUntilExpiry !== undefined)
           session.daysUntilExpiry = token.daysUntilExpiry as number;

@@ -245,13 +245,6 @@ export async function proxy(req: NextRequest) {
         !onboardingDone
       )
         return redirectTo(req, "/employee-onboarding");
-
-      if (
-        token.mfaEnforced === true &&
-        token.totpEnabled !== true &&
-        !matchesRoute(pathname, "/settings")
-      )
-        return redirectTo(req, "/settings", "?tab=security&mfa=required");
     }
   }
 
@@ -261,6 +254,7 @@ export async function proxy(req: NextRequest) {
 
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set("x-nonce", nonce);
+  requestHeaders.set("x-pathname", pathname);
   const response = NextResponse.next({
     request: { headers: requestHeaders },
   });

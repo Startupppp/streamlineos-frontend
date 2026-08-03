@@ -7,7 +7,6 @@ import { usePathname } from "next/navigation";
 import { AppSidebar } from "./app-sidebar";
 import { GlobalHeader } from "./header/global-header";
 import { CommandPalette } from "./command-palette";
-import { NotActivatedPage } from "../auth/not-activated-page";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { usePushSubscription } from "@/hooks/common/use-push-subscription";
 import { TrialBanner } from "@/components/billing/trial-banner";
@@ -64,14 +63,12 @@ function setSidebarCookie(collapsed: boolean) {
 
 interface DashboardShellProps {
   userId: string;
-  hasDashboardAccess: boolean;
   defaultCollapsed: boolean;
   children: React.ReactNode;
 }
 
 export function DashboardShell({
   userId,
-  hasDashboardAccess,
   defaultCollapsed,
   children,
 }: DashboardShellProps) {
@@ -175,7 +172,7 @@ export function DashboardShell({
   const showChatBottomNav = isChatRoute && !isChatConversationOpen;
   const showAboveBottomNav = showModuleBottomNav || showChatBottomNav;
 
-  if (hasDashboardAccess && (accessLoading || accessError)) {
+  if (accessLoading || accessError) {
     return (
       <div className="flex h-dvh flex-col overflow-hidden">
         {accessError ? (
@@ -194,7 +191,7 @@ export function DashboardShell({
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden overscroll-none">
-      {hasDashboardAccess && <ChatUnreadNotifications currentUserId={userId} />}
+      <ChatUnreadNotifications currentUserId={userId} />
       <Link
         href="#dashboard-content"
         className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-[200] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:text-sm focus:font-medium"
@@ -202,103 +199,97 @@ export function DashboardShell({
         Skip to content
       </Link>
 
-      {hasDashboardAccess ? (
-        <CommandPaletteProvider>
-          <AskOsProvider>
-            <CommandPalette />
+      <CommandPaletteProvider>
+        <AskOsProvider>
+          <CommandPalette />
 
-            <TrialBanner />
+          <TrialBanner />
 
-            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-              <GlobalHeader
-                isSidebarCollapsed={isSidebarCollapsed}
-                onToggleSidebar={handleToggleSidebar}
-                showSidebarToggle={!hideSidebar}
-                mobileNavOpen={mobileMenuOpen}
-              />
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+            <GlobalHeader
+              isSidebarCollapsed={isSidebarCollapsed}
+              onToggleSidebar={handleToggleSidebar}
+              showSidebarToggle={!hideSidebar}
+              mobileNavOpen={mobileMenuOpen}
+            />
 
-              <div className="flex min-h-0 flex-1 overflow-hidden">
-                {!hideSidebar && (
-                  <aside
-                    aria-label="Sidebar"
-                    style={{ width: sidebarW }}
-                    className="relative z-50 hidden h-full shrink-0 flex-col overflow-visible border-r border-sidebar-border bg-sidebar transition-[width] duration-300 ease-in-out md:flex"
-                  >
-                    <AppSidebar isCollapsed={isSidebarCollapsed} />
-                  </aside>
-                )}
-
-                <main
-                  id="dashboard-content"
-                  className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden md:pb-6"
+            <div className="flex min-h-0 flex-1 overflow-hidden">
+              {!hideSidebar && (
+                <aside
+                  aria-label="Sidebar"
+                  style={{ width: sidebarW }}
+                  className="relative z-50 hidden h-full shrink-0 flex-col overflow-visible border-r border-sidebar-border bg-sidebar transition-[width] duration-300 ease-in-out md:flex"
                 >
-                  <div
-                    className={cn(
-                      "flex min-h-0 flex-1 flex-col overflow-hidden",
-                      getMobileModuleContentPaddingClassName(
-                        showModuleBottomNav,
-                      ),
-                      isChatRoute &&
-                        getChatMobileContentPaddingClassName(
-                          isChatConversationOpen,
-                        ),
-                    )}
-                  >
-                    {children}
-                    <WelcomeToast />
-                    <SuccessChecklist />
-                  </div>
-                </main>
-              </div>
-            </div>
+                  <AppSidebar isCollapsed={isSidebarCollapsed} />
+                </aside>
+              )}
 
-            {!hideSidebar && (
-              <Drawer
-                open={mobileMenuOpen}
-                onOpenChange={setMobileMenuOpen}
-                direction="bottom"
-                modal
+              <main
+                id="dashboard-content"
+                className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden md:pb-6"
               >
-                <DrawerContent className="z-[100] flex h-[96dvh] max-h-[96dvh] w-full flex-col gap-0 overflow-hidden rounded-t-xl border-t border-sidebar-border bg-sidebar p-0 pb-[env(safe-area-inset-bottom)]">
-                  <DrawerTitle className="sr-only">Navigation</DrawerTitle>
-                  <AppSidebar
-                    isMobile
-                    onNavigate={handleCloseMobileMenu}
-                    onRequestProductSwitcher={handleRequestProductSwitcher}
-                    onRequestWorkspaceSwitcher={handleRequestWorkspaceSwitcher}
-                  />
-                </DrawerContent>
-              </Drawer>
-            )}
+                <div
+                  className={cn(
+                    "flex min-h-0 flex-1 flex-col overflow-hidden",
+                    getMobileModuleContentPaddingClassName(
+                      showModuleBottomNav,
+                    ),
+                    isChatRoute &&
+                      getChatMobileContentPaddingClassName(
+                        isChatConversationOpen,
+                      ),
+                  )}
+                >
+                  {children}
+                  <WelcomeToast />
+                  <SuccessChecklist />
+                </div>
+              </main>
+            </div>
+          </div>
 
-            <ProductSwitcherMenu
-              drawerOnly
-              open={productSwitcherOpen}
-              onOpenChange={setProductSwitcherOpen}
-            />
-            <WorkspaceSwitcher
-              drawerOnly
-              open={workspaceSwitcherOpen}
-              onOpenChange={setWorkspaceSwitcherOpen}
-            />
+          {!hideSidebar && (
+            <Drawer
+              open={mobileMenuOpen}
+              onOpenChange={setMobileMenuOpen}
+              direction="bottom"
+              modal
+            >
+              <DrawerContent className="z-[100] flex h-[96dvh] max-h-[96dvh] w-full flex-col gap-0 overflow-hidden rounded-t-xl border-t border-sidebar-border bg-sidebar p-0 pb-[env(safe-area-inset-bottom)]">
+                <DrawerTitle className="sr-only">Navigation</DrawerTitle>
+                <AppSidebar
+                  isMobile
+                  onNavigate={handleCloseMobileMenu}
+                  onRequestProductSwitcher={handleRequestProductSwitcher}
+                  onRequestWorkspaceSwitcher={handleRequestWorkspaceSwitcher}
+                />
+              </DrawerContent>
+            </Drawer>
+          )}
 
-            <MobileModuleBottomNav />
-            {isChatRoute && (
-              <ChatMobileBottomNav onOpenMobileMenu={handleOpenMobileMenu} />
-            )}
-            {!(isChatRoute && isChatConversationOpen) && (
-              <MobileShellFab
-                onOpenMobileMenu={handleOpenMobileMenu}
-                showAboveBottomNav={showAboveBottomNav}
-              />
-            )}
-          </AskOsProvider>
-        </CommandPaletteProvider>
-      ) : (
-        <div className="min-h-0 flex-1 overflow-auto">
-          <NotActivatedPage />
-        </div>
-      )}
+          <ProductSwitcherMenu
+            drawerOnly
+            open={productSwitcherOpen}
+            onOpenChange={setProductSwitcherOpen}
+          />
+          <WorkspaceSwitcher
+            drawerOnly
+            open={workspaceSwitcherOpen}
+            onOpenChange={setWorkspaceSwitcherOpen}
+          />
+
+          <MobileModuleBottomNav />
+          {isChatRoute && (
+            <ChatMobileBottomNav onOpenMobileMenu={handleOpenMobileMenu} />
+          )}
+          {!(isChatRoute && isChatConversationOpen) && (
+            <MobileShellFab
+              onOpenMobileMenu={handleOpenMobileMenu}
+              showAboveBottomNav={showAboveBottomNav}
+            />
+          )}
+        </AskOsProvider>
+      </CommandPaletteProvider>
     </div>
   );
 }

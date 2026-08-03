@@ -138,7 +138,7 @@ export function OwnershipSection({
         description={
           canManage
             ? "This module has no owner yet. Assign one so requests and approvals have a clear destination."
-            : "This module has no owner yet. An organization admin can assign one."
+            : "This module has no owner yet. An organization owner can assign one."
         }
         {...(canManage
           ? { action: { label: "Assign owner", onClick: handleOpenTransfer } }

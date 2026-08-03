@@ -31,7 +31,6 @@ export interface Employee {
   image: string | null;
   isActive: boolean;
   joiningDate: string | null;
-  hasDashboardAccess: boolean;
   reportingTo: string | null;
   monthlySalary: string | null;
   bio: string | null;
