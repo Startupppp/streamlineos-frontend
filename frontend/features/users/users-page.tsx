@@ -199,9 +199,9 @@ export function UsersPage() {
   const { mutate: bulkArchive, isPending: isArchiving } = useBulkArchive();
   const { mutate: bulkRestore, isPending: isRestoring } = useBulkRestore();
   const [pendingBulkAction, setPendingBulkAction] = useState<BulkAction | null>(null);
-  const canCreate = useCan("hr:employees:create");
-  const canManage = useCan("hr:employees:manage");
-  const canExport = useCan("hr:export:manage");
+  const canCreate = useCan("settings:organization:manage");
+  const canManage = useCan("settings:organization:manage");
+  const canExport = useCan("settings:organization:manage");
 
   const branchMap = useMemo(() => {
     const m = new Map<string, string>();
@@ -438,7 +438,7 @@ export function UsersPage() {
           : "Invite your first team member to get started."
       }
       action={
-        !q && status === "all" && role === "all"
+        !q && status === "all" && role === "all" && canCreate
           ? { label: "Invite User", onClick: handleOpenInvite }
           : undefined
       }

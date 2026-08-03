@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { useUser } from "@/hooks/api/users";
+import { useCan } from "@/hooks/api/access";
 import { UserStatusBadge } from "./user-status-badge";
 import { UserEditForm } from "./user-edit-form";
 import { UserSessionsTab } from "./user-sessions-tab";
@@ -42,6 +43,8 @@ interface UserDetailSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
+
+const PRIVILEGED_TABS = new Set(["sessions", "devices", "login-history", "audit"]);
 
 const TAB_ITEMS = [
   { value: "profile", label: "Profile" },
@@ -87,7 +90,11 @@ function ProfileSkeleton() {
 
 export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const canManage = useCan("settings:organization:manage");
   const { data: user, isLoading } = useUser(userId ?? "", { enabled: !!userId && open });
+  const visibleTabs = canManage
+    ? TAB_ITEMS
+    : TAB_ITEMS.filter((tab) => !PRIVILEGED_TABS.has(tab.value));
 
   const handleEditSuccess = useCallback(() => {
     setIsEditing(false);
@@ -116,7 +123,7 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
 
           {!isLoading && user && (
             <>
-              {isEditing ? (
+              {isEditing && canManage ? (
                 <UserEditForm
                   user={user}
                   onSuccess={handleEditSuccess}
@@ -125,7 +132,7 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
               ) : (
                 <Tabs defaultValue="profile" className="flex min-h-0 flex-1 flex-col gap-0">
                   <TabsList className="overflow-hidden bg-muted/50 rounded-md p-0.5 gap-0.5">
-                    {TAB_ITEMS.map(({ value, label }) => (
+                    {visibleTabs.map(({ value, label }) => (
                       <TabsTrigger
                         key={value}
                         value={value}
@@ -157,15 +164,17 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
                                 </p>
                               )}
                             </div>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-7 shrink-0 text-xs"
-                              onClick={handleStartEditing}
-                            >
-                              <Pencil className="h-3.5 w-3.5 mr-1" />
-                              Edit
-                            </Button>
+                            {canManage && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-7 shrink-0 text-xs"
+                                onClick={handleStartEditing}
+                              >
+                                <Pencil className="h-3.5 w-3.5 mr-1" />
+                                Edit
+                              </Button>
+                            )}
                           </div>
                           <div className="flex flex-wrap gap-1.5 mt-2">
                             <Badge variant="secondary" className="text-[10px] h-5 px-1.5">
@@ -281,21 +290,25 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
                     </div>
                   </TabsContent>
 
-                  <TabsContent value="sessions" className={TAB_PANEL_CLASS}>
-                    <UserSessionsTab userId={user.id} />
-                  </TabsContent>
+                  {canManage && (
+                    <>
+                      <TabsContent value="sessions" className={TAB_PANEL_CLASS}>
+                        <UserSessionsTab userId={user.id} />
+                      </TabsContent>
 
-                  <TabsContent value="devices" className={TAB_PANEL_CLASS}>
-                    <UserDevicesTab userId={user.id} />
-                  </TabsContent>
+                      <TabsContent value="devices" className={TAB_PANEL_CLASS}>
+                        <UserDevicesTab userId={user.id} />
+                      </TabsContent>
 
-                  <TabsContent value="login-history" className={TAB_PANEL_CLASS}>
-                    <UserLoginHistoryTab userId={user.id} />
-                  </TabsContent>
+                      <TabsContent value="login-history" className={TAB_PANEL_CLASS}>
+                        <UserLoginHistoryTab userId={user.id} />
+                      </TabsContent>
 
-                  <TabsContent value="audit" className={TAB_PANEL_CLASS}>
-                    <UserAuditTab userId={user.id} />
-                  </TabsContent>
+                      <TabsContent value="audit" className={TAB_PANEL_CLASS}>
+                        <UserAuditTab userId={user.id} />
+                      </TabsContent>
+                    </>
+                  )}
 
                   <TabsContent value="preferences" className={TAB_PANEL_CLASS}>
                     <UserPreferencesTab userId={user.id} />

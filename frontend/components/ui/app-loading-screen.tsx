@@ -246,7 +246,7 @@ export function AppLoadingScreen({
               delay: 0.35,
             }}
           >
-            Syncing workspace
+            Syncing organization
           </motion.span>
         </div>
       </div>

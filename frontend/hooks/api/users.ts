@@ -157,12 +157,13 @@ export const useUserSessions = (
   userId: string,
   options?: Omit<UseQueryOptions<UserSession[], Error>, "queryKey" | "queryFn">
 ) => {
+  const canManage = useCan("settings:organization:manage");
   return useQuery<UserSession[], Error>({
     queryKey: queryKeys.users.sessions(userId),
     queryFn: () => apiClient.get<UserSession[]>(`/users/${userId}/sessions`),
-    enabled: !!userId,
-    ...options,
     staleTime: 30_000,
+    ...options,
+    enabled: !!userId && canManage && (options?.enabled ?? true),
   });
 };
 
@@ -170,12 +171,13 @@ export const useUserDevices = (
   userId: string,
   options?: Omit<UseQueryOptions<UserDevice[], Error>, "queryKey" | "queryFn">
 ) => {
+  const canManage = useCan("settings:organization:manage");
   return useQuery<UserDevice[], Error>({
     queryKey: queryKeys.users.devices(userId),
     queryFn: () => apiClient.get<UserDevice[]>(`/users/${userId}/devices`),
-    enabled: !!userId,
-    ...options,
     staleTime: 30_000,
+    ...options,
+    enabled: !!userId && canManage && (options?.enabled ?? true),
   });
 };
 
@@ -478,6 +480,7 @@ export const useUserLoginHistory = (
   params?: { page?: number; limit?: number; success?: boolean },
   options?: Omit<UseQueryOptions<LoginHistoryResponse, Error>, "queryKey" | "queryFn">
 ) => {
+  const canManage = useCan("settings:organization:manage");
   return useQuery<LoginHistoryResponse, Error>({
     queryKey: queryKeys.users.loginHistory(userId, params as Record<string, unknown> | undefined),
     queryFn: () =>
@@ -486,9 +489,9 @@ export const useUserLoginHistory = (
         ...(params?.limit ? { limit: String(params.limit) } : {}),
         ...(params?.success !== undefined ? { success: String(params.success) } : {}),
       }),
-    enabled: !!userId,
-    ...options,
     staleTime: 30_000,
+    ...options,
+    enabled: !!userId && canManage && (options?.enabled ?? true),
   });
 };
 
@@ -608,6 +611,7 @@ export const useUserAuditLog = (
   params?: { page?: number; limit?: number; from?: string; to?: string },
   options?: Omit<UseQueryOptions<AuditResponse, Error>, "queryKey" | "queryFn">
 ) => {
+  const canManage = useCan("settings:organization:manage");
   return useQuery<AuditResponse, Error>({
     queryKey: [...queryKeys.users.detail(userId), "audit", params] as readonly unknown[],
     queryFn: () =>
@@ -617,9 +621,9 @@ export const useUserAuditLog = (
         ...(params?.from ? { from: params.from } : {}),
         ...(params?.to ? { to: params.to } : {}),
       }),
-    enabled: !!userId,
-    ...options,
     staleTime: 30_000,
+    ...options,
+    enabled: !!userId && canManage && (options?.enabled ?? true),
   });
 };
 
