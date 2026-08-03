@@ -13,7 +13,6 @@ import {
   Headphones,
   BookOpen,
   MessageSquare,
-  CreditCard,
   Target,
   type LucideIcon,
 } from "lucide-react";
@@ -33,39 +32,36 @@ import {
 import { getErrorMessage } from "@/lib/get-error-message";
 
 const MODULE_LABELS: Record<string, string> = {
-  CRM: "Set up CRM",
-  HR: "Set up HR",
-  INVENTORY: "Set up Inventory",
-  FINANCE: "Set up Accounting",
-  PROJECTS: "Set up Projects",
-  HELPDESK: "Set up Support",
-  KNOWLEDGE: "Set up Knowledge",
-  CHAT: "Set up Chat",
-  PAYMENTS: "Connect payments",
+  crm: "Set up CRM",
+  hr: "Set up HR",
+  inventory: "Set up Inventory",
+  accounting: "Set up Accounting",
+  build: "Set up Build",
+  support: "Set up Support",
+  kb: "Set up Knowledge Base",
+  chat: "Set up Chat",
 };
 
 const MODULE_ICONS: Record<string, LucideIcon> = {
-  CRM: Target,
-  HR: Users,
-  INVENTORY: Package,
-  FINANCE: Landmark,
-  PROJECTS: FolderKanban,
-  HELPDESK: Headphones,
-  KNOWLEDGE: BookOpen,
-  CHAT: MessageSquare,
-  PAYMENTS: CreditCard,
+  crm: Target,
+  hr: Users,
+  inventory: Package,
+  accounting: Landmark,
+  build: FolderKanban,
+  support: Headphones,
+  kb: BookOpen,
+  chat: MessageSquare,
 };
 
 const MODULE_TONE: Record<string, { bg: string; text: string }> = {
-  CRM: { bg: "bg-primary/10", text: "text-primary" },
-  HR: { bg: "bg-primary/10", text: "text-primary" },
-  INVENTORY: { bg: "bg-primary/10", text: "text-primary" },
-  FINANCE: { bg: "bg-amber-50 dark:bg-amber-500/10", text: "text-amber-600 dark:text-amber-400" },
-  PROJECTS: { bg: "bg-primary/10", text: "text-primary" },
-  HELPDESK: { bg: "bg-primary/10", text: "text-primary" },
-  KNOWLEDGE: { bg: "bg-primary/10", text: "text-primary" },
-  CHAT: { bg: "bg-emerald-50 dark:bg-emerald-500/10", text: "text-emerald-600 dark:text-emerald-400" },
-  PAYMENTS: { bg: "bg-amber-50 dark:bg-amber-500/10", text: "text-amber-600 dark:text-amber-400" },
+  crm: { bg: "bg-primary/10", text: "text-primary" },
+  hr: { bg: "bg-primary/10", text: "text-primary" },
+  inventory: { bg: "bg-primary/10", text: "text-primary" },
+  accounting: { bg: "bg-amber-50 dark:bg-amber-500/10", text: "text-amber-600 dark:text-amber-400" },
+  build: { bg: "bg-primary/10", text: "text-primary" },
+  support: { bg: "bg-primary/10", text: "text-primary" },
+  kb: { bg: "bg-primary/10", text: "text-primary" },
+  chat: { bg: "bg-emerald-50 dark:bg-emerald-500/10", text: "text-emerald-600 dark:text-emerald-400" },
 };
 
 const DEFAULT_TONE = { bg: "bg-muted", text: "text-muted-foreground" };
