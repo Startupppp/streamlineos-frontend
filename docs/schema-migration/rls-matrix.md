@@ -1,7 +1,7 @@
 ---
 wave: 0
 type: rls matrix (key spine)
-status: DRAFT
+status: NEEDS RECONCILIATION
 date: 2026-08-04
 full_inventory: wave-0-rls-matrix.md
 policy_templates: wave-0-rls-matrix.md §1
@@ -47,6 +47,8 @@ GUCs (fail-closed): `app.organization_id`, `app.organization_membership_id`, `ap
 ## Shadow observation (no FORCE RLS until matrix approved)
 
 Tables above marked Wave 4+ remain on service-layer BOLA + `runInTenantTransaction` only. Do **not** enable FORCE RLS on new table groups without an approved row in this matrix and a negative GUC test in CI.
+
+> Implementation audit, 2026-08-04: migrations `0376`-`0378` enabled ordinary (not FORCE) RLS more broadly by discovering text `org_id`/`organization_id` columns; `0378` is explicitly catalog-wide. That implementation is broader than this approved key-spine matrix, so the sentence above is not a claim about current database state. Do not copy the catalog-wide approach into new migrations. Reconcile every enabled table into tenant-owned, nullable global-overlay, public/bootstrap, or global/platform classifications and test its real service paths before tightening, replacing, or removing a policy.
 
 ## Exclusions (no RLS — compensating control)
 
