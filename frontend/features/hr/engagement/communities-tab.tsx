@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import { Users, UserCheck } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -92,7 +92,17 @@ function CommunityCard({ community, currentUserId }: CommunityCardProps) {
 }
 
 export function CommunitiesTab({ currentUserId }: { currentUserId: string }) {
-  const { data: communities, isLoading } = useEngagementCommunities();
+  const {
+    data,
+    isLoading,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useEngagementCommunities();
+  const communities = useMemo(
+    () => data?.pages.flatMap((page) => page.items) ?? [],
+    [data],
+  );
   const createCommunity = useCreateCommunity();
 
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -171,6 +181,19 @@ export function CommunitiesTab({ currentUserId }: { currentUserId: string }) {
           {communities.map((c) => (
             <CommunityCard key={c.id} community={c} currentUserId={currentUserId} />
           ))}
+        </div>
+      )}
+
+      {hasNextPage && (
+        <div className="flex justify-center">
+          <LoadingButton
+            variant="outline"
+            size="sm"
+            isPending={isFetchingNextPage}
+            onClick={() => void fetchNextPage()}
+          >
+            Load more
+          </LoadingButton>
         </div>
       )}
 

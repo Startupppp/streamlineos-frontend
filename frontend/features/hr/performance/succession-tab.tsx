@@ -56,7 +56,14 @@ export function SuccessionTab() {
   const [form, setForm] = useState<FormState>(DEFAULT_FORM);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  const { data: plans = [], isLoading } = useSuccessionPlans();
+  const {
+    data,
+    isLoading,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useSuccessionPlans();
+  const plans = useMemo(() => data?.pages.flatMap((page) => page.items) ?? [], [data]);
   const { data: membersData } = useOrgMembers(1, 200);
   const create = useCreateSuccessionPlan();
   const remove = useDeleteSuccessionPlan();
@@ -172,6 +179,18 @@ export function SuccessionTab() {
               </Card>
             );
           })}
+          {hasNextPage && (
+            <div className="flex justify-center pt-2">
+              <LoadingButton
+                variant="outline"
+                size="sm"
+                isPending={isFetchingNextPage}
+                onClick={() => void fetchNextPage()}
+              >
+                Load more
+              </LoadingButton>
+            </div>
+          )}
         </div>
       )}
 

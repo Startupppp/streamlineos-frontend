@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 
 export type SuccessionReadiness = "ready_now" | "1_2_years" | "3_plus";
@@ -19,14 +19,25 @@ export interface SuccessionPlan {
   updatedAt: string;
 }
 
+interface SuccessionPage {
+  items: SuccessionPlan[];
+  nextCursor: string | null;
+}
+
 const keys = {
   list: () => ["hr", "succession", "list"] as const,
 };
 
 export function useSuccessionPlans() {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: keys.list(),
-    queryFn: () => apiClient.get<SuccessionPlan[]>("/hr/succession"),
+    initialPageParam: null as string | null,
+    queryFn: ({ pageParam }) => {
+      const params = new URLSearchParams({ limit: "30" });
+      if (pageParam) params.set("cursor", pageParam);
+      return apiClient.get<SuccessionPage>(`/hr/succession?${params}`);
+    },
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     staleTime: 60_000,
   });
 }

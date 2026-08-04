@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 
 export interface MoodCheckin {
@@ -219,10 +219,21 @@ export function usePollResults(pollId: number) {
   });
 }
 
+interface CommunityPage {
+  items: HrCommunity[];
+  nextCursor: string | null;
+}
+
 export function useEngagementCommunities() {
-  return useQuery<HrCommunity[]>({
+  return useInfiniteQuery({
     queryKey: KEYS.communities,
-    queryFn: () => apiClient.get<HrCommunity[]>("/hr/engagement/communities"),
+    initialPageParam: null as string | null,
+    queryFn: ({ pageParam }) => {
+      const params = new URLSearchParams({ limit: "30" });
+      if (pageParam) params.set("cursor", pageParam);
+      return apiClient.get<CommunityPage>(`/hr/engagement/communities?${params}`);
+    },
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     staleTime: 2 * 60_000,
   });
 }

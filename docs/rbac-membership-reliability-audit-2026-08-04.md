@@ -62,7 +62,7 @@ The current source contains 741 non-exempt schema tables detected by the invento
 - [ ] Use `UPDATE ... RETURNING` for employee linkage and project only response fields, never encrypted/sensitive columns.
 - [ ] Replace reporting-chain O(depth) reads with a recursive CTE plus cycle protection.
 - [ ] Verify indexes with `EXPLAIN (ANALYZE, BUFFERS)` and `pg_stat_user_indexes`. Candidates include invitation `(org_id, status, created_at DESC)`; likely redundant indexes include the extra users-email and owner lookup indexes.
-- [ ] Finish replacing legacy request-path Redis pattern scans with versioned tenant/resource cache namespaces. `CacheService` and the migrated RBAC, membership, organization, HR, finance, CRM, inventory, and collaboration families now use O(1) namespace generation bumps; the remaining inventory families are tracked in `docs/schema-redesign/todo.md`.
+- [x] Replace request-path Redis pattern scans with versioned tenant/resource cache namespaces. All production reader/writer families now use O(1) generation bumps, repository-wide source search returns zero `invalidatePattern(...)` references, and the compatibility `SCAN` method and test have been removed.
 - [x] Add a distributed cache-fill lease for cross-instance stampede protection. The Redis lease uses bounded waiting, `NX`/expiry acquisition, and token-checked release; process-local single-flight remains the first tier. TTL jitter/stale-while-revalidate can be added only where product staleness policy permits it.
 - [ ] Batch chat reminder scheduling/worker hydration and delivery; use `FOR UPDATE SKIP LOCKED`, bounded concurrency, and bulk status updates.
 - [ ] Batch contact import, default chart seeding, and other looped inserts; stream large CSV exports instead of loading a tenant into memory.
@@ -81,3 +81,9 @@ Do not call a table or column unnecessary until all pass:
 ## Extreme-scale gate
 
 Serial integer membership/role/grant identifiers cannot represent ten billion records. Before that order of scale, migrate high-cardinality identities to bigint or UUIDv7, shard/partition from measured access patterns, use pooling/read replicas, isolate append-only audit/event storage, and prove SLOs with load, soak, failover, hot-tenant, cache-loss, and migration tests. Scale is an evidence and infrastructure claim, not a code-style claim.
+
+### Contact export memory bound (2026-08-04)
+
+- `GET /contacts/export` retains its CSV response contract and frontend consumer.
+- The backend now reads contacts with an organization-scoped, soft-delete-filtered keyset query in bounded 500-row pages and writes chunks with HTTP backpressure.
+- CSV formula neutralization and quoting continue through the shared CSV serializer; a regression test covers multi-page output, a single header, and formula neutralization.
