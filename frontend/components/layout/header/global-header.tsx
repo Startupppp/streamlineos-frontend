@@ -1,25 +1,34 @@
-"use client"
+"use client";
 
-import dynamic from "next/dynamic"
-import Link from "next/link"
-import { Search, CalendarDays, MessageSquare } from "lucide-react"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { cn } from "@/lib/utils"
-import { HeaderBrand } from "./header-brand"
-import { ProductSwitcherMenu } from "./product-switcher-menu"
-import { WorkspaceSwitcher } from "./workspace-switcher"
-import { QuickCreateButton } from "./quick-create-button"
-import { UserAvatarMenu } from "./user-avatar-menu"
-import { SidebarCollapseToggle } from "./sidebar-collapse-toggle"
+import dynamic from "next/dynamic";
+import Link from "next/link";
+import { Search, CalendarDays, MessageSquare } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
+import { HeaderBrand } from "./header-brand";
+import { ProductSwitcherMenu } from "./product-switcher-menu";
+import { WorkspaceSwitcher } from "./org-switcher";
+import { PmWorkspaceContextChip } from "./pm-workspace-context-chip";
+import { QuickCreateButton } from "./quick-create-button";
+import { UserAvatarMenu } from "./user-avatar-menu";
+import { SidebarCollapseToggle } from "./sidebar-collapse-toggle";
 
 const NotificationBell = dynamic(
-  () => import("@/features/notifications/notification-bell").then((m) => m.NotificationBell),
+  () =>
+    import("@/features/notifications/notification-bell").then(
+      (m) => m.NotificationBell,
+    ),
   { ssr: false },
-)
+);
 
 function SearchButton() {
   function handleClick() {
-    const isMac = navigator.userAgent.toLowerCase().includes("mac")
+    const isMac = navigator.userAgent.toLowerCase().includes("mac");
     document.dispatchEvent(
       new KeyboardEvent("keydown", {
         key: "k",
@@ -27,7 +36,7 @@ function SearchButton() {
         ctrlKey: !isMac,
         bubbles: true,
       }),
-    )
+    );
   }
 
   return (
@@ -43,7 +52,7 @@ function SearchButton() {
         ⌘K
       </kbd>
     </button>
-  )
+  );
 }
 
 function HeaderIconLink({
@@ -51,9 +60,9 @@ function HeaderIconLink({
   label,
   children,
 }: {
-  href: string
-  label: string
-  children: React.ReactNode
+  href: string;
+  label: string;
+  children: React.ReactNode;
 }) {
   return (
     <Tooltip delayDuration={0}>
@@ -66,35 +75,50 @@ function HeaderIconLink({
           {children}
         </Link>
       </TooltipTrigger>
-      <TooltipContent side="bottom" className="text-xs">{label}</TooltipContent>
+      <TooltipContent side="bottom" className="text-xs">
+        {label}
+      </TooltipContent>
     </Tooltip>
-  )
+  );
 }
 
 function DesktopHeader({
   isSidebarCollapsed,
   onToggleSidebar,
   showSidebarToggle,
+  hideAdminChrome = false,
 }: {
-  isSidebarCollapsed: boolean
-  onToggleSidebar?: () => void
-  showSidebarToggle: boolean
+  isSidebarCollapsed: boolean;
+  onToggleSidebar?: () => void;
+  showSidebarToggle: boolean;
+  hideAdminChrome?: boolean;
 }) {
-  const showLabels = !isSidebarCollapsed || !showSidebarToggle
+  const showLabels = !isSidebarCollapsed || !showSidebarToggle;
 
   return (
     <div className="flex items-center h-full w-full px-4 gap-3">
       <div className="flex items-center gap-2.5 shrink-0 min-w-0">
         <HeaderBrand showLabel={showLabels} />
-        <ProductSwitcherMenu />
-        {showSidebarToggle && onToggleSidebar && (
+        {!hideAdminChrome && (
+          <>
+            <ProductSwitcherMenu />
+            {showSidebarToggle && onToggleSidebar && (
+              <SidebarCollapseToggle
+                isCollapsed={isSidebarCollapsed}
+                onToggle={onToggleSidebar}
+              />
+            )}
+            <div className="w-px h-4 bg-sidebar-border" />
+            <WorkspaceSwitcher variant="header" />
+            <PmWorkspaceContextChip />
+          </>
+        )}
+        {hideAdminChrome && showSidebarToggle && onToggleSidebar && (
           <SidebarCollapseToggle
             isCollapsed={isSidebarCollapsed}
             onToggle={onToggleSidebar}
           />
         )}
-        <div className="w-px h-4 bg-sidebar-border" />
-        <WorkspaceSwitcher variant="header" />
       </div>
 
       <div className="flex min-w-0 flex-1 justify-center px-4">
@@ -114,16 +138,19 @@ function DesktopHeader({
 
         <NotificationBell />
 
-        <div className="w-px h-4 bg-sidebar-border mx-1" />
-
-        <QuickCreateButton />
+        {!hideAdminChrome && (
+          <>
+            <div className="w-px h-4 bg-sidebar-border mx-1" />
+            <QuickCreateButton />
+          </>
+        )}
 
         <div className="w-px h-4 bg-sidebar-border mx-1" />
 
         <UserAvatarMenu />
       </div>
     </div>
-  )
+  );
 }
 
 function MobileHeader({ hidden }: { hidden?: boolean }) {
@@ -139,11 +166,14 @@ function MobileHeader({ hidden }: { hidden?: boolean }) {
         <HeaderBrand />
       </div>
       <div className="flex items-center gap-1 shrink-0">
-        <div id="mobile-header-checklist-slot" className="relative inline-flex items-center" />
+        <div
+          id="mobile-header-checklist-slot"
+          className="relative inline-flex items-center"
+        />
         <NotificationBell />
       </div>
     </div>
-  )
+  );
 }
 
 export function GlobalHeader({
@@ -151,11 +181,13 @@ export function GlobalHeader({
   onToggleSidebar,
   showSidebarToggle = true,
   mobileNavOpen = false,
+  hideAdminChrome = false,
 }: {
-  isSidebarCollapsed?: boolean
-  onToggleSidebar?: () => void
-  showSidebarToggle?: boolean
-  mobileNavOpen?: boolean
+  isSidebarCollapsed?: boolean;
+  onToggleSidebar?: () => void;
+  showSidebarToggle?: boolean;
+  mobileNavOpen?: boolean;
+  hideAdminChrome?: boolean;
 }) {
   return (
     <header className="h-14 border-b border-sidebar-border bg-sidebar text-sidebar-foreground shrink-0 z-40 relative">
@@ -165,6 +197,7 @@ export function GlobalHeader({
             isSidebarCollapsed={isSidebarCollapsed}
             onToggleSidebar={onToggleSidebar}
             showSidebarToggle={showSidebarToggle}
+            hideAdminChrome={hideAdminChrome}
           />
         </div>
         <div className="md:hidden h-full">
@@ -172,5 +205,5 @@ export function GlobalHeader({
         </div>
       </TooltipProvider>
     </header>
-  )
+  );
 }

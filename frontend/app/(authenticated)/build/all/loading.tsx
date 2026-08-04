@@ -6,7 +6,7 @@ export default function ProjectsLoading() {
   return (
     <PageWrapper
       title="All Projects"
-      subtitle="Browse and manage every project in your workspace"
+      subtitle="Browse and manage every project in your organization"
       actions={<Skeleton className="hidden h-9 w-28 rounded-md sm:block" />}
     >
       <PmPageShell>

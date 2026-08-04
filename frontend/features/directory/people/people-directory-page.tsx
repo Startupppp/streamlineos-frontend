@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
@@ -187,12 +188,16 @@ export function PeopleDirectoryPage() {
       sortValue: (r) => displayName(r),
       className: TABLE_TITLE_CELL,
       cell: (row) => (
-        <span
-          className={cn("font-medium text-foreground", TEXT_ONE_LINE)}
+        <Link
+          href={`/directory/${row.organizationPersonId}`}
+          className={cn(
+            "font-medium text-foreground hover:text-primary transition-colors",
+            TEXT_ONE_LINE,
+          )}
           title={displayName(row)}
         >
           {displayName(row)}
-        </span>
+        </Link>
       ),
     },
     {

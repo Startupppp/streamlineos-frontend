@@ -133,7 +133,7 @@ export function ModuleMembersTab({ moduleKey, canManage, focusUserId }: ModuleMe
   const allGroups = (groupsQuery.data ?? []).map((g) => ({ id: g.id, name: g.name }));
 
   const focusLookup = useModuleMembers(moduleKey, 1, 1, {
-    enabled: focusUserId !== undefined,
+    enabled: focusUserId !== undefined && canManage,
     userId: focusUserId,
   });
   const myPermissionsQuery = useModuleMyPermissions(moduleKey);
@@ -141,20 +141,21 @@ export function ModuleMembersTab({ moduleKey, canManage, focusUserId }: ModuleMe
   const triggeredRef = useRef(false);
 
   useEffect(() => {
-    if (focusUserId === undefined) return;
-    if (!focusLookup.isSuccess || !myPermissionsQuery.isSuccess) return;
-    if (triggeredRef.current) return;
-    triggeredRef.current = true;
+    triggeredRef.current = false;
+  }, [focusUserId, moduleKey]);
 
-    const found = focusLookup.data.data[0] ?? null;
+  useEffect(() => {
+    if (focusUserId === undefined) return;
+    if (!myPermissionsQuery.isSuccess) return;
+    if (triggeredRef.current) return;
     if (!canManage) {
-      toast.info(
-        found === null
-          ? "This person is not a member of this module, and you do not have permission to add them."
-          : `${resolveDisplayName(found)} is a member of this module. You do not have permission to change their groups.`,
-      );
+      triggeredRef.current = true;
+      toast.info("You do not have permission to inspect or change this member's module access.");
       return;
     }
+    if (!focusLookup.isSuccess) return;
+    triggeredRef.current = true;
+    const found = focusLookup.data.data[0] ?? null;
     if (found !== null) {
       setEditTarget(found);
     } else {

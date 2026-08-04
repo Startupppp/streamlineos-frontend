@@ -72,7 +72,7 @@ export function AddMemberDialog({ open, onOpenChange }: AddMemberDialogProps) {
         <DialogHeader>
           <DialogTitle>Add member</DialogTitle>
           <DialogDescription>
-            Pick an org member to add to this workspace.
+            Pick an org member to add to this PM Workspace.
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-3 py-1">

@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ type StepWelcomeProps = {
   onSkip: () => void;
   isSkipping?: boolean;
   firstName?: string;
+  restoreSlot?: ReactNode;
 };
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -20,6 +22,7 @@ export function StepWelcome({
   onSkip,
   isSkipping = false,
   firstName = "",
+  restoreSlot,
 }: StepWelcomeProps) {
   const reduceMotion = useReducedMotion();
 
@@ -44,6 +47,8 @@ export function StepWelcome({
             then you land ready to run.
           </p>
         </div>
+
+        {restoreSlot}
 
         <div className="w-full min-w-0 space-y-2 pt-1">
           <Button

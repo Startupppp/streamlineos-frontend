@@ -12,20 +12,13 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { EmptyState } from "@/components/ui/empty-state";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { MemberCandidateSelect } from "./member-candidate-select";
 import {
   useModuleGroupMembers,
   useAddModuleGroupMember,
   useRemoveModuleGroupMember,
-  useModuleMemberCandidates,
   type ModuleGroupMember,
 } from "@/hooks/api/module-access";
 
@@ -102,16 +95,10 @@ export function MemberAssignmentSheet({
   const [removingId, setRemovingId] = useState<string | null>(null);
 
   const membersQuery = useModuleGroupMembers(moduleKey, groupId);
-  const candidatesQuery = useModuleMemberCandidates(moduleKey);
   const addMember = useAddModuleGroupMember(moduleKey);
   const removeMember = useRemoveModuleGroupMember(moduleKey);
 
   const members = membersQuery.data ?? [];
-  const memberIds = new Set(members.map((m) => m.userId));
-  const candidates = (candidatesQuery.data ?? []).filter(
-    (c) => !memberIds.has(c.userId),
-  );
-
   const handleAdd = useCallback(() => {
     if (!selectedUserId) return;
     addMember.mutate(
@@ -162,24 +149,15 @@ export function MemberAssignmentSheet({
 
         {canManage && (
           <div className="px-5 py-4 border-b border-border shrink-0 flex gap-2">
-            <Select value={selectedUserId} onValueChange={handleSelectChange}>
-              <SelectTrigger className="flex-1 min-w-0 h-9 text-sm">
-                <SelectValue placeholder="Select member to add…" />
-              </SelectTrigger>
-              <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-                {candidates.length === 0 ? (
-                  <div className="py-3 px-3 text-xs text-muted-foreground">
-                    All org members already added
-                  </div>
-                ) : (
-                  candidates.map((c) => (
-                    <SelectItem key={c.userId} value={c.userId}>
-                      {c.displayName}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
+            <div className="flex-1 min-w-0">
+              <MemberCandidateSelect
+                moduleKey={moduleKey}
+                value={selectedUserId}
+                onValueChange={handleSelectChange}
+                enabled={open}
+                excludeAssigned={false}
+              />
+            </div>
             <LoadingButton
               size="sm"
               isPending={addMember.isPending}

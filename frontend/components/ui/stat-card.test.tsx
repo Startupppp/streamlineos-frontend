@@ -70,4 +70,22 @@ describe("StatCardGrid", () => {
     expect(grid).not.toHaveClass("sm:grid-cols-2");
     expect(grid).not.toHaveClass("xl:grid-cols-3");
   });
+
+  it("counts fragment children so CRM conditional cards stay one row", () => {
+    const { container } = render(
+      <StatCardGrid cols={4}>
+        <StatCard label="Open Roles" value={1} />
+        <StatCard label="Conversion Rate" value="10%" />
+        <>
+          <StatCard label="MRR (Won)" value="₹1K" />
+          <StatCard label="Pipeline Value" value="₹2K" />
+        </>
+      </StatCardGrid>,
+    );
+
+    const grid = container.firstElementChild;
+    expect(grid).toHaveStyle({
+      gridTemplateColumns: "repeat(4, minmax(10rem, 1fr))",
+    });
+  });
 });

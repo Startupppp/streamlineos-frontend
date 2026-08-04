@@ -438,7 +438,7 @@ export function GlobalAskOs() {
                         Ask OS
                       </p>
                       <p className="mt-0.5 text-[10px] text-muted-foreground">
-                        Your workspace assistant
+                        Your organization assistant
                       </p>
                     </div>
                   </div>

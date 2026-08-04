@@ -107,7 +107,7 @@ export function unwrapEmployees(
 }
 
 export function useHrEmployees(params?: HrEmployeesParams, options?: { enabled?: boolean }) {
-  const canRead = useCan("hr:employees:read");
+  const canView = useCan("hr:employees:view");
   const limit = params?.limit ?? 20;
   return useQuery({
     queryKey: queryKeys.hr.employees(params),
@@ -119,7 +119,7 @@ export function useHrEmployees(params?: HrEmployeesParams, options?: { enabled?:
       return normalizeEmployeesResponse(res, limit);
     },
     staleTime: 2 * 60_000,
-    enabled: canRead && (options?.enabled ?? true),
+    enabled: canView && (options?.enabled ?? true),
   });
 }
 
@@ -130,12 +130,12 @@ export function useHrEmployees(params?: HrEmployeesParams, options?: { enabled?:
 export function useHrEmployeeOptions(
   params?: Omit<HrEmployeesParams, "page"> & { enabled?: boolean },
 ) {
-  const canRead = useCan("hr:employees:read");
+  const canView = useCan("hr:employees:view");
   const { enabled, ...rest } = params ?? {};
   const merged = { limit: 100, isActive: "true" as const, ...rest, page: 1 };
   const query = useHrEmployees(
     { ...merged, limit: Math.min(merged.limit, 100) },
-    { enabled: canRead && (enabled ?? true) },
+    { enabled: canView && (enabled ?? true) },
   );
   return {
     ...query,

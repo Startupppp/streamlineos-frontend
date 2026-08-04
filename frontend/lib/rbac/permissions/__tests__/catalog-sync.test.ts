@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { PERMISSIONS } from "../roles";
+import { MODULE_ACCESS_PERMISSIONS } from "../module-access";
 
 const BACKEND_PERMS_DIR = path.resolve(
   __dirname,
@@ -13,14 +14,6 @@ const EXCLUDED_BACKEND_FILES = new Set([
   "role-defaults.ts",
   "types.ts",
 ]);
-
-/**
- * Keys the frontend ships that the backend catalog does not declare.
- *
- * A phantom key makes `useCan("that:key")` false forever — the UI silently
- * hides a control nobody can ever unlock. Keep this empty.
- */
-const KNOWN_PHANTOM_KEYS = new Set<string>();
 
 function extractNamesFromSource(source: string): string[] {
   return [...source.matchAll(/^\s*name:\s*["'`]([^"'`]+)["'`]/gm)].map((m) => m[1]);
@@ -38,7 +31,10 @@ describe("permission catalog sync", () => {
       const names = files.flatMap((f) =>
         extractNamesFromSource(fs.readFileSync(path.join(BACKEND_PERMS_DIR, f), "utf8")),
       );
-      backendNames = new Set(names);
+      backendNames = new Set([
+        ...names.filter((name) => !name.includes("${")),
+        ...MODULE_ACCESS_PERMISSIONS.map((permission) => permission.name),
+      ]);
       backendAvailable = true;
     } catch {
       backendNames = new Set();
@@ -53,10 +49,17 @@ describe("permission catalog sync", () => {
 
   it("has no phantom keys — every frontend permission exists in the backend catalog", () => {
     if (!backendAvailable) return;
-    const newPhantoms = PERMISSIONS.map((p) => p.name).filter(
-      (name) => !backendNames.has(name) && !KNOWN_PHANTOM_KEYS.has(name),
-    );
+    const newPhantoms = PERMISSIONS.map((p) => p.name).filter((name) => !backendNames.has(name));
     expect(newPhantoms).toEqual([]);
+  });
+
+  it("exposes every backend permission in the frontend PermissionKey type", () => {
+    if (!backendAvailable) return;
+    const content = fs.readFileSync(path.resolve(__dirname, "../types.ts"), "utf8");
+    const unionValues = new Set(
+      [...content.matchAll(/\|\s*["']([^"']+)["']/gm)].map((match) => match[1]),
+    );
+    expect([...backendNames].filter((name) => !unionValues.has(name))).toEqual([]);
   });
 
   it("every frontend PERMISSIONS name appears in the PermissionKey union type", () => {

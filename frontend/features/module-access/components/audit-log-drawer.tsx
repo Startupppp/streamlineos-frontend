@@ -43,6 +43,13 @@ function resolveActorName(entry: AuditLogEntry): string {
   return entry.actorName || entry.actorEmail || "Unknown user";
 }
 
+function resolveTargetName(entry: AuditLogEntry): string | null {
+  if (entry.targetName) return entry.targetName;
+  if (entry.metadata && typeof entry.metadata.name === "string") return entry.metadata.name;
+  if (!entry.targetType) return null;
+  return entry.targetType === "user" ? "Organization member" : "Module role";
+}
+
 function AuditEntryRowSkeleton() {
   return (
     <div className="px-4 py-3 border-b border-border/60 space-y-1.5">
@@ -54,6 +61,7 @@ function AuditEntryRowSkeleton() {
 
 function AuditEntryRow({ entry }: { entry: AuditLogEntry }) {
   const actorName = resolveActorName(entry);
+  const targetName = resolveTargetName(entry);
   return (
     <div className="px-4 py-3 border-b border-border/60 last:border-0">
       <div className="flex items-start justify-between gap-2">
@@ -61,9 +69,7 @@ function AuditEntryRow({ entry }: { entry: AuditLogEntry }) {
           <p className="text-sm font-medium truncate">{entry.action}</p>
           <p className="text-[11px] text-muted-foreground mt-0.5">
             By {actorName}
-            {entry.targetType && entry.targetId
-              ? ` · ${entry.targetType} ${entry.targetId}`
-              : ""}
+            {targetName ? ` · ${targetName}` : ""}
           </p>
         </div>
         <time

@@ -17,6 +17,20 @@ on:
 jobs:
   backend:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: streamlineos
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U user -d streamlineos"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
     defaults:
       run:
         working-directory: backend
@@ -54,6 +68,12 @@ jobs:
 
       - name: Unit Tests
         run: pnpm test -- --runInBand
+
+      - name: Bootstrap Test Database
+        run: pnpm db:bootstrap
+
+      - name: Controller E2E Tests
+        run: pnpm test:e2e:ci
 
       - name: Build
         run: pnpm build

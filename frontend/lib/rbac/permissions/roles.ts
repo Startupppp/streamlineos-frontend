@@ -24,7 +24,7 @@ import { ACCOUNTING_PERMISSIONS } from "./accounting";
 import { PAYROLL_PERMISSIONS } from "./payroll";
 import { OWNERSHIP_PERMISSIONS } from "./ownership";
 
-export const PERMISSIONS = [
+const permissionEntries = [
   ...HR_PERMISSIONS,
   ...CRM_PERMISSIONS,
   ...SHARED_PERMISSIONS,
@@ -50,5 +50,9 @@ export const PERMISSIONS = [
   ...TASKS_PERMISSIONS,
   ...WORKFLOWS_PERMISSIONS,
   ...MODULE_ACCESS_PERMISSIONS,
+];
+
+export const PERMISSIONS = [
+  ...new Map(permissionEntries.map((permission) => [permission.name, permission])).values(),
 ];
 

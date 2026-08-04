@@ -24,23 +24,24 @@ function shouldRetryQuery(failureCount: number, error: unknown): boolean {
   return true;
 }
 
+export function createAppQueryClient(): QueryClient {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 1000 * 60 * 2,
+        gcTime: 1000 * 60 * 10,
+        refetchOnWindowFocus: false,
+        retry: shouldRetryQuery,
+      },
+      mutations: {
+        retry: 0,
+      },
+    },
+  });
+}
+
 export function QueryProvider({ children }: { children: React.ReactNode }) {
-  const [queryClient] = useState(
-    () =>
-      new QueryClient({
-        defaultOptions: {
-          queries: {
-            staleTime: 1000 * 60 * 2,
-            gcTime: 1000 * 60 * 10,
-            refetchOnWindowFocus: true,
-            retry: shouldRetryQuery,
-          },
-          mutations: {
-            retry: 0,
-          },
-        },
-      })
-  );
+  const [queryClient] = useState(createAppQueryClient);
 
   return (
     <QueryClientProvider client={queryClient}>

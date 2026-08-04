@@ -70,6 +70,57 @@ export function useEmployeeProfileHistory(employeeUserId: string) {
   });
 }
 
+export function useCreateWorkerProfile(workerId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["payroll", "workers", workerId, "create-profile"],
+    mutationFn: (body: CreateProfileBody) =>
+      apiClient.post<{ profileId: number }>(`/payroll/workers/${workerId}/profiles`, body),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.payroll.worker(workerId) });
+      void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "employees"] });
+    },
+  });
+}
+
+export function usePatchWorkerProfile(workerId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["payroll", "workers", workerId, "patch-profile"],
+    mutationFn: ({ profileId, body }: { profileId: number; body: Partial<CreateProfileBody> }) =>
+      apiClient.patch<{ ok: boolean }>(
+        `/payroll/workers/${workerId}/profiles/${profileId}`,
+        body,
+      ),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.payroll.worker(workerId) });
+      void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "employees"] });
+    },
+  });
+}
+
+export function useWorkerProfile(workerId: string) {
+  const canView = useCan("payroll:salaries:view");
+  return useQuery({
+    queryKey: queryKeys.payroll.worker(workerId),
+    queryFn: () =>
+      apiClient.get<EmployeeProfileDetail>(`/payroll/workers/${workerId}`),
+    staleTime: 60_000,
+    enabled: canView && !!workerId,
+  });
+}
+
+export function useWorkerProfileHistory(workerId: string) {
+  const canView = useCan("payroll:salaries:view");
+  return useQuery({
+    queryKey: [...queryKeys.payroll.worker(workerId), "history"],
+    queryFn: () =>
+      apiClient.get<EmployeeSalaryProfile[]>(`/payroll/workers/${workerId}/history`),
+    staleTime: 60_000,
+    enabled: canView && !!workerId,
+  });
+}
+
 export function useCreateProfile(employeeUserId: string) {
   const qc = useQueryClient();
   return useMutation({

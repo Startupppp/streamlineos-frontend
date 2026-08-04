@@ -27,20 +27,13 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { isApiError } from "@/lib/api-client";
+import { MemberCandidateSelect } from "./member-candidate-select";
 import {
   useModuleOwnership,
   useTransferModuleOwnership,
   useCancelModuleOwnershipTransfer,
-  useModuleMemberCandidates,
 } from "@/hooks/api/module-access";
 import {
   transferOwnershipSchema,
@@ -59,7 +52,6 @@ export function OwnershipSection({
   const [transferOpen, setTransferOpen] = useState(false);
   const ownershipQuery = useModuleOwnership(moduleKey);
   const cancelMutation = useCancelModuleOwnershipTransfer(moduleKey);
-  const candidatesQuery = useModuleMemberCandidates(moduleKey);
   const transferMutation = useTransferModuleOwnership(moduleKey);
 
   const form = useForm<TransferOwnershipInput>({
@@ -148,9 +140,7 @@ export function OwnershipSection({
     );
   }
 
-  const candidates = (candidatesQuery.data ?? []).filter(
-    (c) => c.userId !== ownership.ownerId,
-  );
+  const transferTarget = form.watch("toUserId");
 
   return (
     <>
@@ -210,9 +200,7 @@ export function OwnershipSection({
           <DialogHeader>
             <DialogTitle>Transfer module ownership</DialogTitle>
             <DialogDescription>
-              {candidates.length === 0
-                ? "You are currently the only active member of this organization. Invite someone and have them accept before you can transfer ownership."
-                : "The selected user must accept the transfer before it takes effect."}
+              The selected user must accept the transfer before it takes effect.
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
@@ -227,27 +215,14 @@ export function OwnershipSection({
                   <FormItem>
                     <FormLabel>Transfer to</FormLabel>
                     <FormControl>
-                      <Select
+                      <MemberCandidateSelect
+                        moduleKey={moduleKey}
                         value={field.value}
                         onValueChange={field.onChange}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a member…" />
-                        </SelectTrigger>
-                        <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-                          {candidates.length === 0 ? (
-                            <div className="py-3 px-3 text-xs text-muted-foreground">
-                              No eligible members
-                            </div>
-                          ) : (
-                            candidates.map((c) => (
-                              <SelectItem key={c.userId} value={c.userId}>
-                                {c.displayName} ({c.email})
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
+                        enabled={transferOpen}
+                        excludeAssigned={false}
+                        excludedUserId={ownership.ownerId}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -265,7 +240,7 @@ export function OwnershipSection({
                 <LoadingButton
                   type="submit"
                   isPending={transferMutation.isPending}
-                  disabled={candidates.length === 0}
+                  disabled={!transferTarget}
                   loadingText="Initiating…"
                 >
                   Transfer

@@ -39,9 +39,14 @@ const EMPTY_DEFAULTS: WorkerFormValues = {
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  defaultOrganizationPersonId?: string;
 }
 
-export function WorkerFormDialog({ open, onOpenChange }: Props) {
+export function WorkerFormDialog({
+  open,
+  onOpenChange,
+  defaultOrganizationPersonId,
+}: Props) {
   const createWorker = useCreateWorker();
 
   const form = useForm<WorkerFormValues>({
@@ -51,8 +56,12 @@ export function WorkerFormDialog({ open, onOpenChange }: Props) {
 
   useEffect(() => {
     if (!open) return;
-    form.reset(EMPTY_DEFAULTS);
-  }, [open, form]);
+    form.reset({
+      organizationPersonId: defaultOrganizationPersonId ?? "",
+      workerNumber: "",
+      isPayee: false,
+    });
+  }, [open, form, defaultOrganizationPersonId]);
 
   function handleSubmit(values: WorkerFormValues) {
     createWorker.mutate(
@@ -115,22 +124,24 @@ export function WorkerFormDialog({ open, onOpenChange }: Props) {
           className="space-y-4"
           noValidate
         >
-          <FormField
-            control={form.control}
-            name="organizationPersonId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Person ID</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="Organization person UUID" />
-                </FormControl>
-                <FormDescription className="text-xs text-muted-foreground">
-                  The ID of the organization person to link. A person picker will be added in a future release.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {!defaultOrganizationPersonId ? (
+            <FormField
+              control={form.control}
+              name="organizationPersonId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Person ID</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Organization person UUID" />
+                  </FormControl>
+                  <FormDescription className="text-xs text-muted-foreground">
+                    The ID of the organization person to link.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          ) : null}
           <FormField
             control={form.control}
             name="workerNumber"

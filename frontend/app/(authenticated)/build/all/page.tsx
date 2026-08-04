@@ -345,7 +345,7 @@ export default function ProjectsPage() {
       )}
       <PageWrapper
         title="All Projects"
-        subtitle="Browse and manage every project in your workspace"
+        subtitle="Browse and manage every project in your organization"
         actions={
           <>
             <ResumeLastProjectAction />

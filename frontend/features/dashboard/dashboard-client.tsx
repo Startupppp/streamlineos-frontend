@@ -7,16 +7,12 @@ import { useRouter } from "next/navigation";
 import {
   useDashboardStats,
   useRecentProjects,
-  useTeamAvailability,
+  useTeamAttendance,
   useActiveSprintSummary,
   useRecentActivity,
   useTodayActivities,
   useMyIssues,
 } from "@/hooks/api/dashboard";
-import {
-  useNotifications,
-  useUnreadNotificationCount,
-} from "@/hooks/api/notifications";
 import { RefreshCw, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -63,6 +59,7 @@ import { TimesheetWidget } from "@/components/dashboard/timesheet-widget";
 import { AnnouncementsWidget } from "@/components/dashboard/announcements-widget";
 import { UpcomingEventsWidget } from "@/components/dashboard/upcoming-events-widget";
 import { shouldRenderDashboardLoading } from "./dashboard-hydration";
+import { DeferredDashboardContent } from "./deferred-dashboard-content";
 
 const ExecutiveKpiWidget = dynamic(
   () =>
@@ -105,6 +102,7 @@ export function DashboardClient() {
     todayFormatted: string;
   } | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [deferredVisible, setDeferredVisible] = useState(false);
 
   const {
     data: stats,
@@ -117,50 +115,46 @@ export function DashboardClient() {
     data: recentProjects,
     isLoading: projectsLoading,
     error: projectsError,
-  } = useRecentProjects({ enabled: projectsEnabled && canViewTickets });
-  const { data: teamAvailability, isLoading: teamLoading } =
-    useTeamAvailability({ enabled: hrEnabled && canViewAttendance });
+  } = useRecentProjects({
+    enabled: deferredVisible && projectsEnabled && canViewTickets,
+  });
+  const { data: teamAttendance, isLoading: teamLoading } = useTeamAttendance({
+    enabled: deferredVisible && hrEnabled && canViewAttendance,
+  });
+  const teamAvailability = useMemo(
+    () =>
+      teamAttendance?.records.map((record) => ({
+        userId: record.userId,
+        name: record.userName ?? "Team member",
+        image: record.userImage,
+        checkIn: record.checkIn,
+        checkOut: record.checkOut,
+        isOnline: Boolean(record.checkIn && !record.checkOut),
+      })),
+    [teamAttendance],
+  );
   const {
     data: recentActivity,
     isLoading: activityLoading,
     error: activityError,
-  } = useRecentActivity({ enabled: projectsEnabled && canViewTickets });
+  } = useRecentActivity({
+    enabled: deferredVisible && projectsEnabled && canViewTickets,
+  });
 
   const {
     data: myIssuesData,
     isLoading: ticketsLoading,
     error: ticketsError,
-  } = useMyIssues({ enabled: projectsEnabled });
+  } = useMyIssues({ enabled: deferredVisible && projectsEnabled });
 
   const { data: sprintSummary, isLoading: sprintLoading } =
-    useActiveSprintSummary({ enabled: projectsEnabled });
+    useActiveSprintSummary({
+      enabled: deferredVisible && projectsEnabled,
+    });
 
   const { data: todayActivities } = useTodayActivities({
-    enabled: crmEnabled && canViewCrmLeads,
+    enabled: deferredVisible && crmEnabled && canViewCrmLeads,
   });
-
-  const prevUnreadRef = useRef<number | null>(null);
-  const { data: unreadData } = useUnreadNotificationCount();
-  const { data: latestNotifications } = useNotifications({ limit: 5 });
-
-  useEffect(() => {
-    if (unreadData === undefined) return;
-    const currentCount = unreadData.count ?? 0;
-    if (
-      prevUnreadRef.current !== null &&
-      currentCount > prevUnreadRef.current &&
-      latestNotifications
-    ) {
-      const newOnes = latestNotifications.slice(
-        0,
-        currentCount - prevUnreadRef.current,
-      );
-      for (const n of newOnes) {
-        toast(n.title, { description: n.message ?? undefined, duration: 5000 });
-      }
-    }
-    prevUnreadRef.current = currentCount;
-  }, [unreadData, latestNotifications]);
 
   const shownMeetingToastRef = useRef(false);
   useEffect(() => {
@@ -196,6 +190,9 @@ export function DashboardClient() {
     : "Dashboard";
 
   const handleRefresh = useCallback(() => void refetch(), [refetch]);
+  const handleDeferredVisible = useCallback(() => {
+    setDeferredVisible(true);
+  }, []);
   const handleGoToProjects = useCallback(
     () => router.push("/build/all"),
     [router],
@@ -342,24 +339,35 @@ export function DashboardClient() {
           </motion.div>
         )}
 
-        <motion.div
-          variants={fadeUp}
-          initial="hidden"
-          animate="visible"
-          className="grid gap-3 grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
+        <DeferredDashboardContent
+          onVisible={handleDeferredVisible}
+          fallback={
+            <div className="grid gap-3 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+              <WidgetSkeleton rows={3} />
+              <WidgetSkeleton rows={3} />
+              <WidgetSkeleton rows={3} />
+            </div>
+          }
         >
-          {projectsEnabled && <MyTasksWidget />}
-          {projectsEnabled && <TimesheetWidget />}
-          {hrEnabled && <LeaveBalanceWidget />}
-          <AlertsWidget />
-          <AnnouncementsWidget />
-          <UpcomingEventsWidget />
-          {canViewExecutive && <BusinessPulseWidget />}
-          {hrEnabled && canViewAttendance && <MyAttendanceWidget />}
-          <PayrollWidget />
-          <ExpensesWidget />
-          <RecruitmentWidget />
-        </motion.div>
+          <>
+            <motion.div
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              className="grid gap-3 grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
+            >
+              {projectsEnabled && <MyTasksWidget />}
+              {projectsEnabled && <TimesheetWidget />}
+              {hrEnabled && <LeaveBalanceWidget />}
+              <AlertsWidget />
+              <AnnouncementsWidget />
+              <UpcomingEventsWidget />
+              {canViewExecutive && <BusinessPulseWidget />}
+              {hrEnabled && canViewAttendance && <MyAttendanceWidget />}
+              <PayrollWidget />
+              <ExpensesWidget />
+              <RecruitmentWidget />
+            </motion.div>
 
         {showHrTeamRow && (
           <motion.div
@@ -369,7 +377,12 @@ export function DashboardClient() {
             className="grid gap-3 grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
           >
             {canViewLeaves && <LeavesTodayWidget />}
-            {canViewAttendance && <TeamAttendanceWidget />}
+            {canViewAttendance && (
+              <TeamAttendanceWidget
+                data={teamAttendance}
+                isLoading={teamLoading}
+              />
+            )}
             {canApproveLeaves && <PendingApprovalsWidget />}
           </motion.div>
         )}
@@ -415,7 +428,7 @@ export function DashboardClient() {
           </motion.div>
         )}
 
-        {showBottomRow && (
+            {showBottomRow && (
           <motion.div
             variants={fadeUp}
             initial="hidden"
@@ -450,7 +463,9 @@ export function DashboardClient() {
               </div>
             )}
           </motion.div>
-        )}
+            )}
+          </>
+        </DeferredDashboardContent>
       </div>
     </PageWrapper>
   );

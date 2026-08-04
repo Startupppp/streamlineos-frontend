@@ -32,6 +32,7 @@ export interface Worker {
   displayName: string | null;
   workEmail: string | null;
   avatarUrl: string | null;
+  userId: string | null;
 }
 
 export interface WorkerEngagement {

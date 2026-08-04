@@ -20,7 +20,12 @@ export function DashboardGate({
   const { data: session, status } = useSession();
   const { data: access, isLoading: accessLoading } = useAccess();
 
-  if (status === "loading" || accessLoading) return <AppLoadingScreen />;
+  // Session/access refreshes must not unmount the current page. The branded
+  // loading screen is only appropriate before we have an authorization
+  // snapshot; background refetches keep rendering the last verified state.
+  if ((status === "loading" && !session) || (accessLoading && !access)) {
+    return <AppLoadingScreen />;
+  }
 
   const userRole = session?.user?.role;
 

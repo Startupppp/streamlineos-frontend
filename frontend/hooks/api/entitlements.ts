@@ -40,11 +40,12 @@ export interface Entitlements {
   limits: Record<LimitKey, EntitlementLimit>;
 }
 
-export function useEntitlements() {
+export function useEntitlements(enabled = true) {
   return useQuery<Entitlements, Error>({
     queryKey: queryKeys.billing.entitlements(),
     queryFn: () => apiClient.get<Entitlements>("/billing/entitlements"),
     staleTime: 900_000,
     retry: false,
+    enabled,
   });
 }

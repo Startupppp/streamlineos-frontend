@@ -117,14 +117,17 @@ export function UserMembershipSection({ userId }: UserMembershipSectionProps) {
       label: "Branch",
       icon: <GitBranch className="h-3.5 w-3.5 text-muted-foreground" />,
       value: membership?.branchId
-        ? (branches.find((b) => String(b.id) === String(membership.branchId))?.name ?? String(membership.branchId))
+        ? (branches.find((b) => String(b.id) === String(membership.branchId))
+            ?.name ?? "Unknown branch")
         : null,
     },
     {
       label: "Department",
       icon: <Building2 className="h-3.5 w-3.5 text-muted-foreground" />,
       value: membership?.departmentId
-        ? (departments.find((d) => String(d.id) === String(membership.departmentId))?.name ?? String(membership.departmentId))
+        ? (departments.find(
+            (d) => String(d.id) === String(membership.departmentId),
+          )?.name ?? "Unknown department")
         : null,
     },
     {

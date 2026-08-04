@@ -5,7 +5,7 @@ export const HR_PERMISSIONS: Permission[] = [
     name: "hr:employees:view",
     resource: "hr:employees",
     action: "view",
-    description: "View employees list",
+    description: "View employee records",
   },
   {
     name: "hr:employees:create",

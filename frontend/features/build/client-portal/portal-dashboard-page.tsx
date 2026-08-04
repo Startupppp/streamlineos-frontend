@@ -143,7 +143,7 @@ export function PortalDashboardPage({ projectId }: PortalDashboardPageProps) {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Project" backHref="/build/portal">
+      <PageWrapper title="Project" backHref="/portal">
         <DashboardSkeleton />
       </PageWrapper>
     );
@@ -151,7 +151,7 @@ export function PortalDashboardPage({ projectId }: PortalDashboardPageProps) {
 
   if (isError || !overview) {
     return (
-      <PageWrapper title="Project Dashboard" backHref="/build/portal">
+      <PageWrapper title="Project Dashboard" backHref="/portal">
         <PmPageShell withGlow={false}>
           <ErrorState className="min-h-[14rem]" onRetry={handleRetry} />
         </PmPageShell>
@@ -164,7 +164,7 @@ export function PortalDashboardPage({ projectId }: PortalDashboardPageProps) {
   return (
     <PageWrapper
       title={project.name}
-      backHref="/build/portal"
+      backHref="/portal"
       badge={
         <Badge variant="outline" className="text-[10px] capitalize">
           {project.status}

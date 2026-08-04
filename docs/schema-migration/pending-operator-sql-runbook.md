@@ -126,11 +126,12 @@ header before running.
 psql "$DATABASE_URL" -f docs/schema-migration/drop-dead-tables.sql
 ```
 
-Drops 10 verified-dead tables (`service_accounts`, `allowance_types`,
-`payroll_statutory_rule_sets`, and the abandoned LMS/Training cluster `courses`,
-`course_categories`, `course_enrollments`, `training_programs`, `training_attendance`) and deletes
-orphaned `hr:learning:%` grants. The file contains commented row-count checks — run them first if you
-want to confirm the tables are empty.
+Drops 7 verified code-dead candidate tables (`service_accounts`, `allowance_types`, and the
+abandoned LMS/Training cluster `courses`, `course_categories`, `course_enrollments`,
+`training_programs`, `training_attendance`) and deletes orphaned `hr:learning:%` grants.
+`payroll_statutory_rule_sets` is deliberately preserved because it contains seeded statutory data.
+Run the row-count and inbound-FK preflights in the SQL file before applying it through the canonical
+migration ledger; do not execute this file directly against production.
 
 ## Step 8 — post-run verification (for Steps 3–7 on a populated DB)
 
@@ -143,7 +144,7 @@ SELECT count(*) AS stale_PROJECTS_arrays FROM organizations WHERE 'PROJECTS' = A
 -- dead tables gone
 SELECT count(*) AS dead_tables_remaining FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
 WHERE n.nspname='public' AND c.relkind='r' AND c.relname IN
- ('service_accounts','allowance_types','payroll_statutory_rule_sets','courses','course_categories',
+ ('service_accounts','allowance_types','courses','course_categories',
   'course_enrollments','training_programs','training_attendance');                                        -- expect 0
 ```
 

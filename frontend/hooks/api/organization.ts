@@ -40,7 +40,7 @@ export const useOrgMembers = (
     "queryKey" | "queryFn"
   >,
 ) => {
-  const safeLimit = Math.min(Math.max(limit, 1), 200);
+  const safeLimit = Math.min(Math.max(limit, 1), 100);
   const canViewMembers = useCan("settings:view");
   const { enabled: callerEnabled, ...restOptions } = options ?? {};
   return useQuery<MembersResponse, Error>({
@@ -154,12 +154,19 @@ export const useUpdateOrgSettings = () => {
   });
 };
 
-export const useArchiveOrg = () => {
+export interface UpdateOrgSecurityInput {
+  mfaEnforced?: boolean;
+  allowedEmailDomains?: string[];
+  maxConcurrentSessions?: number | null;
+  ipAllowlist?: string[];
+}
+
+export const useUpdateOrgSecurity = () => {
   const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, void>({
-    mutationKey: ["archive", "org"],
-    mutationFn: () =>
-      apiClient.post<{ success: boolean }>("/organization/archive", {}),
+  return useMutation<{ success: boolean }, Error, UpdateOrgSecurityInput>({
+    mutationKey: ["organization", "security", "update"],
+    mutationFn: (data) =>
+      apiClient.patch<{ success: boolean }>("/organization/security", data),
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: queryKeys.organization.settings(),
@@ -168,16 +175,75 @@ export const useArchiveOrg = () => {
   });
 };
 
+type ArchivedOrganization = {
+  id: string;
+  name: string;
+  slug: string | null;
+};
+
+export const useArchivedOrganizations = (
+  options?: Omit<
+    UseQueryOptions<ArchivedOrganization[], Error>,
+    "queryKey" | "queryFn"
+  >,
+) => {
+  const { enabled: callerEnabled, ...restOptions } = options ?? {};
+  return useQuery<ArchivedOrganization[], Error>({
+    queryKey: queryKeys.organization.archived(),
+    queryFn: () =>
+      apiClient.get<ArchivedOrganization[]>("/organization/archived"),
+    staleTime: 30_000,
+    ...restOptions,
+    enabled: callerEnabled ?? true,
+  });
+};
+
+export const useArchiveOrg = () => {
+  return useMutation<
+    { success: boolean; nextOrgId: string | null },
+    Error,
+    void
+  >({
+    mutationKey: ["archive", "org"],
+    mutationFn: () =>
+      apiClient.post<{ success: boolean; nextOrgId: string | null }>(
+        "/organization/archive",
+        {},
+      ),
+    onMutate: () => {
+      setAutoSignOutSuppressed(true);
+    },
+    onSettled: () => {
+      window.setTimeout(() => setAutoSignOutSuppressed(false), 4000);
+    },
+  });
+};
+
 export const useRestoreOrg = () => {
   const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, void>({
+  return useMutation<{ success: boolean; orgId: string }, Error, string>({
     mutationKey: ["restore", "org"],
-    mutationFn: () =>
-      apiClient.post<{ success: boolean }>("/organization/restore", {}),
+    mutationFn: (orgId) =>
+      apiClient.post<{ success: boolean; orgId: string }>(
+        "/organization/restore",
+        { orgId },
+      ),
+    onMutate: () => {
+      setAutoSignOutSuppressed(true);
+    },
     onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.organization.all,
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.organization.archived(),
+      });
       void queryClient.invalidateQueries({
         queryKey: queryKeys.organization.settings(),
       });
+    },
+    onSettled: () => {
+      window.setTimeout(() => setAutoSignOutSuppressed(false), 4000);
     },
   });
 };

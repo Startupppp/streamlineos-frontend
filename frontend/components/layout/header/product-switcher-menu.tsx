@@ -135,7 +135,7 @@ function ProductTile({
       {isActive && effectivelyEnabled && (
         <motion.span
           role="img"
-          aria-label="Selected product"
+          aria-label="Selected module"
           initial={
             shouldReduceMotion ? { opacity: 0 } : { scale: 0, opacity: 0 }
           }
@@ -335,7 +335,7 @@ export function ProductSwitcherMenu({
 
   const activeProduct = getProductFromPathname(pathname);
   const enabledModules = useEnabledModules();
-  const { data: entitlements } = useEntitlements();
+  const { data: entitlements } = useEntitlements(open);
   const lockedModules = entitlements?.lockedModules ?? [];
   const canManageModules = useCan("settings:manage");
   const { permissions } = usePermissions();

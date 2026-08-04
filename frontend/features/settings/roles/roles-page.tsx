@@ -50,6 +50,7 @@ import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { useCan } from "@/hooks/api/access";
 import type { Role } from "@/types/organization";
 import { PermissionMatrix } from "@/components/rbac/permission-matrix";
 import { CreateRoleDialog } from "@/components/rbac/create-role-dialog";
@@ -58,6 +59,7 @@ import { RoleAssignmentsSheet } from "@/components/rbac/role-assignments-sheet";
 import { RoleTemplateDialog } from "./role-dialogs";
 
 export function RolesPage() {
+  const canViewAudit = useCan("audit-log:read");
   const {
     data: roles,
     isLoading,
@@ -123,13 +125,15 @@ export function RolesPage() {
       subtitle="Configure access controls for each role."
       noInternalScroll
       actions={
-        <div className="grid w-full grid-cols-3 gap-2 sm:flex sm:w-auto sm:flex-nowrap sm:justify-end">
-          <Button variant="outline" size="sm" asChild className="w-full gap-1.5 sm:w-auto">
-            <Link href="/settings/roles/audit">
-              <ClipboardList className="h-3.5 w-3.5" />
-              <span className="truncate">Audit</span>
-            </Link>
-          </Button>
+        <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-nowrap sm:justify-end">
+          {canViewAudit && (
+            <Button variant="outline" size="sm" asChild className="w-full gap-1.5 sm:w-auto">
+              <Link href="/settings/roles/audit">
+                <ClipboardList className="h-3.5 w-3.5" />
+                <span className="truncate">Audit</span>
+              </Link>
+            </Button>
+          )}
           <Button variant="outline" size="sm" asChild className="w-full gap-1.5 sm:w-auto">
             <Link href="/settings/roles/simulate">
               <FlaskConical className="h-3.5 w-3.5" />

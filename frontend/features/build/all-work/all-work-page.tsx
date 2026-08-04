@@ -129,7 +129,7 @@ export function AllWorkPage() {
   }, [refetch]);
 
   const subtitleText = isLoading
-    ? "Loading workspace tickets…"
+    ? "Loading tickets…"
     : `${total} ticket${total === 1 ? "" : "s"} across projects`;
 
   return (

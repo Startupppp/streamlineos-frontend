@@ -13,6 +13,10 @@ import type { AuditLogRow as AuditLogEntry } from "@/hooks/api/audit-log";
 import { getInitials } from "@/lib/format-utils";
 
 const RBAC_ACTIONS = [
+  "role.changed",
+  "role.permissions.set",
+  "role.member.added",
+  "role.member.removed",
   "role.assigned",
   "role.unassigned",
   "role.created",
@@ -25,6 +29,10 @@ const RBAC_ACTIONS = [
 type ActionVariant = "default" | "secondary" | "outline" | "destructive";
 
 const ACTION_META: Record<string, { label: string; variant: ActionVariant; Icon: React.ElementType }> = {
+  "role.changed": { label: "Role Changed", variant: "secondary", Icon: ShieldCheck },
+  "role.permissions.set": { label: "Permissions Updated", variant: "default", Icon: ShieldCheck },
+  "role.member.added": { label: "Member Added", variant: "default", Icon: UserCheck },
+  "role.member.removed": { label: "Member Removed", variant: "secondary", Icon: UserX },
   "role.assigned": { label: "Role Assigned", variant: "default", Icon: UserCheck },
   "role.unassigned": { label: "Role Unassigned", variant: "secondary", Icon: UserX },
   "role.created": { label: "Role Created", variant: "default", Icon: ShieldCheck },
@@ -38,7 +46,7 @@ const PAGE_SIZE = 25;
 
 export default function AuditPage() {
   return (
-    <DashboardGate permission="settings:rbac:manage">
+    <DashboardGate permission="audit-log:read">
       <AuditContent />
     </DashboardGate>
   );
@@ -49,7 +57,6 @@ function resolveTargetLabel(log: AuditLogEntry): string | null {
   if (!meta) return log.targetType ?? null;
   if (typeof meta.roleName === "string") return meta.roleName;
   if (typeof meta.permissionKey === "string") return meta.permissionKey;
-  if (typeof meta.roleId === "number") return `Role ${meta.roleId}`;
   return log.targetType ?? null;
 }
 
@@ -88,7 +95,7 @@ const columns: DataTableColumn<AuditLogEntry>[] = [
     key: "actor",
     header: "Actor",
     cell: (log) => {
-      const displayName = log.userName ?? log.userEmail ?? log.userId;
+      const displayName = log.userName ?? log.userEmail ?? "Unknown";
       return (
         <div className="flex items-center gap-2 min-w-0">
           <Avatar className="h-6 w-6 shrink-0">
@@ -154,7 +161,7 @@ const columns: DataTableColumn<AuditLogEntry>[] = [
 function AuditContent() {
   const [page, setPage] = useState(1);
 
-  const query = useAuditLogs({ page, pageSize: PAGE_SIZE, targetType: "role" });
+  const query = useAuditLogs({ page, pageSize: PAGE_SIZE, actions: RBAC_ACTIONS });
 
   const handleRetry = useCallback(() => {
     void query.refetch();
@@ -163,10 +170,6 @@ function AuditContent() {
   const handlePageChange = useCallback((p: number) => {
     setPage(p);
   }, []);
-
-  const rbacLogs = query.data?.logs.filter(
-    (log) => RBAC_ACTIONS.includes(log.action),
-  ) ?? [];
 
   return (
     <PageWrapper
@@ -186,7 +189,7 @@ function AuditContent() {
 
         {!query.isError && (
           <DataTable
-            data={rbacLogs}
+            data={query.data?.logs ?? []}
             columns={columns}
             getRowKey={(log) => log.id}
             isLoading={query.isLoading}

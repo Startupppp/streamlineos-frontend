@@ -113,8 +113,10 @@ function SessionsSection() {
             <Monitor className="h-4 w-4 text-muted-foreground" />
           </div>
           <div>
-            <p className="text-[13px] font-semibold text-foreground">Active sessions</p>
-            <p className="text-[11px] text-muted-foreground">Manage where you are signed in.</p>
+            <p className="text-[13px] font-semibold text-foreground">My sessions</p>
+            <p className="text-[11px] text-muted-foreground">
+              Manage the devices signed in to your account.
+            </p>
           </div>
         </div>
         {otherSessions.length > 0 && (

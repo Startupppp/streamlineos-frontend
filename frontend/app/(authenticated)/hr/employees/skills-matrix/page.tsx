@@ -32,7 +32,7 @@ const LEVEL_LABELS: Record<number, string> = {
 };
 
 export default function SkillsMatrixPage() {
-  const canReadEmployees = useCan("hr:employees:read");
+  const canReadEmployees = useCan("hr:employees:view");
   const { data, isLoading, isError, refetch } = useSkillsMatrix({
     enabled: canReadEmployees,
   });

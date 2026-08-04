@@ -126,7 +126,7 @@ export function MembersPage() {
     <>
       <PageWrapper
         title="Members"
-        subtitle="Workspace members and their roles."
+        subtitle="PM Workspace members and their roles."
         noInternalScroll
         filtersClassName="flex-col items-stretch gap-2 overflow-x-visible"
         filters={
@@ -186,8 +186,8 @@ export function MembersPage() {
                   q
                     ? "Try adjusting your search."
                     : canManage
-                      ? "Add the first member to this workspace."
-                      : "Workspace members will appear here."
+                      ? "Add the first member to this PM Workspace."
+                      : "PM Workspace members will appear here."
                 }
                 action={
                   !q && canManage
@@ -216,8 +216,8 @@ export function MembersPage() {
         title="Remove member?"
         description={
           removeTarget
-            ? `${getUserDisplayName(removeTarget)} will be removed from this workspace.`
-            : "This member will be removed from the workspace."
+            ? `${getUserDisplayName(removeTarget)} will be removed from this PM Workspace.`
+            : "This member will be removed from the PM Workspace."
         }
         confirmLabel="Remove"
         cancelLabel="Cancel"

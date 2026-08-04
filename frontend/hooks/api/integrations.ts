@@ -44,7 +44,10 @@ export function useFinalizeIntegrationConnection() {
     mutationFn: (connectedAccountId: string) =>
       apiClient.post<IntegrationConnection>("/integrations/connections/finalize", { connectedAccountId }),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.integrations.all });
+      void qc.invalidateQueries({
+        queryKey: queryKeys.integrations.connections(),
+        exact: true,
+      });
       void qc.invalidateQueries({ queryKey: queryKeys.calendar.all });
       void qc.invalidateQueries({ queryKey: queryKeys.mail.all });
     },
@@ -58,7 +61,10 @@ export function useDisconnectIntegration() {
     mutationFn: (connectionId: number) =>
       apiClient.delete<{ deleted: boolean }>(`/integrations/connections/${connectionId}`),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.integrations.all });
+      void qc.invalidateQueries({
+        queryKey: queryKeys.integrations.connections(),
+        exact: true,
+      });
       void qc.invalidateQueries({ queryKey: queryKeys.calendar.all });
       void qc.invalidateQueries({ queryKey: queryKeys.mail.all });
     },
@@ -72,7 +78,10 @@ export function useSetPrimaryIntegration() {
     mutationFn: (connectionId: number) =>
       apiClient.patch<IntegrationConnection>(`/integrations/connections/${connectionId}/primary`, {}),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.integrations.all });
+      void qc.invalidateQueries({
+        queryKey: queryKeys.integrations.connections(),
+        exact: true,
+      });
     },
   });
 }

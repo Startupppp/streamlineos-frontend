@@ -1,13 +1,12 @@
-﻿"use client";
-
-import { use } from "react";
-import { PortalDashboardPage } from "@/features/build/client-portal/portal-dashboard-page";
+﻿import { redirect } from "next/navigation";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
 }
 
-export default function PortalProjectRoute({ params }: PageProps) {
-  const { projectId: projectIdStr } = use(params);
-  return <PortalDashboardPage projectId={parseInt(projectIdStr, 10)} />;
+export default async function LegacyBuildPortalProjectRedirect({
+  params,
+}: PageProps) {
+  const { projectId } = await params;
+  redirect(`/portal/${projectId}`);
 }

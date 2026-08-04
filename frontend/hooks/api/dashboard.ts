@@ -9,11 +9,14 @@ import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import type {
   DashboardStats,
   RecentProject,
-  TeamMember,
   SprintSummary,
   RecentActivity,
   MyIssue,
 } from "@/types/dashboard";
+import {
+  DAILY_DATA_STALE_TIME_MS,
+  NOTIFICATION_FALLBACK_INTERVAL_MS,
+} from "@/lib/query-request-policies";
 
 export interface PublicDoc {
   id: number;
@@ -106,23 +109,6 @@ export const useRecentProjects = (
   });
 };
 
-export const useTeamAvailability = (
-  options?: Omit<UseQueryOptions<TeamMember[], Error>, "queryKey" | "queryFn">
-) => {
-  const { data: session } = useSession();
-  const orgId = session?.orgId ?? "";
-  const canView = useCan("hr:attendance:view");
-  return useQuery<TeamMember[], Error>({
-    queryKey: queryKeys.dashboard.teamAvailability(orgId),
-    queryFn: () => apiClient.get<TeamMember[]>("/dashboard/team-availability"),
-    refetchInterval: 60_000,
-    staleTime: 65_000,
-    refetchIntervalInBackground: false,
-    ...options,
-    enabled: !!orgId && canView && (options?.enabled ?? true),
-  });
-};
-
 export const useActiveSprintSummary = (
   options?: Omit<
     UseQueryOptions<SprintSummary | null, Error>,
@@ -202,7 +188,7 @@ interface PendingApprovalsCount {
   total: number;
 }
 
-interface TeamAttendance {
+export interface TeamAttendance {
   total: number;
   present: number;
   clockedIn: number;
@@ -218,17 +204,6 @@ interface TeamAttendance {
   }[];
 }
 
-function hrWidgetKeys(orgId: string) {
-  return {
-    leavesToday: [...queryKeys.dashboard.all, "leavesToday", orgId] as const,
-    upcomingHolidays: [...queryKeys.dashboard.all, "upcomingHolidays", orgId] as const,
-    myLeaveBalance: [...queryKeys.dashboard.all, "myLeaveBalance", orgId] as const,
-    birthdays: [...queryKeys.dashboard.all, "birthdays", orgId] as const,
-    pendingApprovals: [...queryKeys.dashboard.all, "pendingApprovals", orgId] as const,
-    teamAttendance: [...queryKeys.dashboard.all, "teamAttendance", orgId] as const,
-  };
-}
-
 export const useLeavesToday = (
   options?: Omit<UseQueryOptions<LeaveToday[], Error>, "queryKey" | "queryFn">
 ) => {
@@ -236,11 +211,9 @@ export const useLeavesToday = (
   const orgId = session?.orgId ?? "";
   const canView = useCan("hr:leaves:view");
   return useQuery<LeaveToday[], Error>({
-    queryKey: hrWidgetKeys(orgId).leavesToday,
+    queryKey: queryKeys.dashboard.leavesToday(orgId),
     queryFn: () => apiClient.get<LeaveToday[]>("/dashboard/leaves-today"),
-    staleTime: 65_000,
-    refetchInterval: 60_000,
-    refetchIntervalInBackground: false,
+    staleTime: 2 * 60_000,
     ...options,
     enabled: !!orgId && canView && (options?.enabled ?? true),
   });
@@ -251,9 +224,9 @@ export const useUpcomingHolidays = () => {
   const orgId = session?.orgId ?? "";
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<UpcomingHoliday[]>({
-    queryKey: hrWidgetKeys(orgId).upcomingHolidays,
+    queryKey: queryKeys.dashboard.upcomingHolidays(orgId),
     queryFn: () => apiClient.get<UpcomingHoliday[]>("/dashboard/upcoming-holidays"),
-    staleTime: 5 * 60_000,
+    staleTime: DAILY_DATA_STALE_TIME_MS,
     enabled: !!orgId && hrEnabled,
   });
 };
@@ -263,7 +236,7 @@ export const useMyLeaveBalance = () => {
   const orgId = session?.orgId ?? "";
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<LeaveBalance[]>({
-    queryKey: hrWidgetKeys(orgId).myLeaveBalance,
+    queryKey: queryKeys.dashboard.myLeaveBalance(orgId),
     queryFn: () => apiClient.get<LeaveBalance[]>("/dashboard/my-leave-balance"),
     staleTime: 5 * 60_000,
     enabled: !!orgId && hrEnabled,
@@ -277,10 +250,9 @@ export const useBirthdays = (
   const orgId = session?.orgId ?? "";
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<BirthdayEntry[], Error>({
-    queryKey: hrWidgetKeys(orgId).birthdays,
+    queryKey: queryKeys.dashboard.birthdays(orgId),
     queryFn: () => apiClient.get<BirthdayEntry[]>("/dashboard/birthdays"),
-    staleTime: 5 * 60_000,
-    refetchInterval: 60_000,
+    staleTime: DAILY_DATA_STALE_TIME_MS,
     ...options,
     enabled: !!orgId && hrEnabled && (options?.enabled ?? true),
   });
@@ -294,26 +266,28 @@ export const usePendingApprovals = (
   const canApprove = useCan("hr:leaves:approve");
   const { enabled: enabledOption, ...restOptions } = options ?? {};
   return useQuery<PendingApprovalsCount, Error>({
-    queryKey: hrWidgetKeys(orgId).pendingApprovals,
+    queryKey: queryKeys.dashboard.pendingApprovals(orgId),
     queryFn: () => apiClient.get<PendingApprovalsCount>("/dashboard/pending-approvals"),
-    staleTime: 65_000,
-    refetchInterval: 60_000,
+    staleTime: NOTIFICATION_FALLBACK_INTERVAL_MS,
+    refetchInterval: NOTIFICATION_FALLBACK_INTERVAL_MS,
     refetchIntervalInBackground: false,
     ...restOptions,
     enabled: !!orgId && canApprove && (enabledOption ?? true),
   });
 };
 
-export const useTeamAttendance = () => {
+export const useTeamAttendance = (
+  options?: Omit<UseQueryOptions<TeamAttendance, Error>, "queryKey" | "queryFn">
+) => {
   const { data: session } = useSession();
   const orgId = session?.orgId ?? "";
   const canView = useCan("hr:attendance:view");
   return useQuery<TeamAttendance>({
-    queryKey: hrWidgetKeys(orgId).teamAttendance,
+    queryKey: queryKeys.dashboard.teamAttendance(orgId),
     queryFn: () => apiClient.get<TeamAttendance>("/dashboard/team-attendance"),
     staleTime: 65_000,
-    refetchInterval: 60_000,
-    enabled: !!orgId && canView,
+    ...options,
+    enabled: !!orgId && canView && (options?.enabled ?? true),
   });
 };
 

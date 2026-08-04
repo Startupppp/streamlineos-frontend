@@ -11,7 +11,7 @@ import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { usePushSubscription } from "@/hooks/common/use-push-subscription";
 import { TrialBanner } from "@/components/billing/trial-banner";
 import { ProductSwitcherMenu } from "./header/product-switcher-menu";
-import { WorkspaceSwitcher } from "./header/workspace-switcher";
+import { WorkspaceSwitcher } from "./header/org-switcher";
 import { useProductSidebarVisibility } from "./sidebar/use-product-sidebar-visibility";
 import { useAccess } from "@/hooks/api/access";
 import { AppLoadingScreen } from "@/components/ui/app-loading-screen";
@@ -27,6 +27,7 @@ import {
   getMobileModuleContentPaddingClassName,
   shouldShowMobileModuleBottomNav,
 } from "./mobile/mobile-module-nav-items";
+import { isPortalChromelessPath } from "./sidebar/sidebar-nav-items";
 import { cn } from "@/lib/utils";
 
 const SuccessChecklist = dynamic(
@@ -41,14 +42,6 @@ const WelcomeToast = dynamic(
   () =>
     import("@/components/workspace-onboarding/welcome-toast").then(
       (m) => m.WelcomeToast,
-    ),
-  { ssr: false },
-);
-
-const ChatUnreadNotifications = dynamic(
-  () =>
-    import("@/components/chat/chat-unread-notifications").then(
-      (m) => m.ChatUnreadNotifications,
     ),
   { ssr: false },
 );
@@ -74,6 +67,7 @@ export function DashboardShell({
 }: DashboardShellProps) {
   const pathname = usePathname();
   const route = pathname ?? "";
+  const isPortalRoute = isPortalChromelessPath(route);
   const [isSidebarCollapsed, setIsSidebarCollapsed] =
     useState(defaultCollapsed);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -82,6 +76,7 @@ export function DashboardShell({
   const [workspaceSwitcherOpen, setWorkspaceSwitcherOpen] = useState(false);
   const { hideSidebar, navGroups } = useProductSidebarVisibility();
   const {
+    data: access,
     isLoading: accessLoading,
     isError: accessError,
     error: accessErr,
@@ -166,13 +161,15 @@ export function DashboardShell({
     : SIDEBAR_EXPANDED_W;
   const isChatRoute = route.startsWith("/chat");
   const showModuleBottomNav = useMemo(
-    () => shouldShowMobileModuleBottomNav(navGroups, { isChatRoute }),
-    [navGroups, isChatRoute],
+    () =>
+      !isPortalRoute &&
+      shouldShowMobileModuleBottomNav(navGroups, { isChatRoute }),
+    [navGroups, isChatRoute, isPortalRoute],
   );
   const showChatBottomNav = isChatRoute && !isChatConversationOpen;
   const showAboveBottomNav = showModuleBottomNav || showChatBottomNav;
 
-  if (accessLoading || accessError) {
+  if ((accessLoading && !access) || (accessError && !access)) {
     return (
       <div className="flex h-dvh flex-col overflow-hidden">
         {accessError ? (
@@ -191,7 +188,6 @@ export function DashboardShell({
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden overscroll-none">
-      <ChatUnreadNotifications currentUserId={userId} />
       <Link
         href="#dashboard-content"
         className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-[200] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:text-sm focus:font-medium"
@@ -211,6 +207,7 @@ export function DashboardShell({
               onToggleSidebar={handleToggleSidebar}
               showSidebarToggle={!hideSidebar}
               mobileNavOpen={mobileMenuOpen}
+              hideAdminChrome={isPortalRoute}
             />
 
             <div className="flex min-h-0 flex-1 overflow-hidden">
@@ -231,9 +228,7 @@ export function DashboardShell({
                 <div
                   className={cn(
                     "flex min-h-0 flex-1 flex-col overflow-hidden",
-                    getMobileModuleContentPaddingClassName(
-                      showModuleBottomNav,
-                    ),
+                    getMobileModuleContentPaddingClassName(showModuleBottomNav),
                     isChatRoute &&
                       getChatMobileContentPaddingClassName(
                         isChatConversationOpen,
@@ -267,16 +262,20 @@ export function DashboardShell({
             </Drawer>
           )}
 
-          <ProductSwitcherMenu
-            drawerOnly
-            open={productSwitcherOpen}
-            onOpenChange={setProductSwitcherOpen}
-          />
-          <WorkspaceSwitcher
-            drawerOnly
-            open={workspaceSwitcherOpen}
-            onOpenChange={setWorkspaceSwitcherOpen}
-          />
+          {!isPortalRoute && (
+            <ProductSwitcherMenu
+              drawerOnly
+              open={productSwitcherOpen}
+              onOpenChange={setProductSwitcherOpen}
+            />
+          )}
+          {!isPortalRoute && (
+            <WorkspaceSwitcher
+              drawerOnly
+              open={workspaceSwitcherOpen}
+              onOpenChange={setWorkspaceSwitcherOpen}
+            />
+          )}
 
           <MobileModuleBottomNav />
           {isChatRoute && (

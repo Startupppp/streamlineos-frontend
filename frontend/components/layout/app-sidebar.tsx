@@ -99,6 +99,7 @@ export function AppSidebar({
   const { permissions } = usePermissions();
   const canApproveLeaves = useCan("hr:leaves:approve");
   const canViewHr = useCan("hr:employees:view");
+  const canReadChat = useCan("chat:channels:read");
   const enabledModules = useEnabledModules();
   const isHrModuleEnabled = isModuleEnabled("hrms", enabledModules);
   const { data: hrChecklist } = useModuleChecklist("HR", canViewHr);
@@ -181,8 +182,10 @@ export function AppSidebar({
   const pendingLeaves = pendingApprovalsData?.pendingLeaves ?? 0;
 
   const isChatModuleEnabled = access?.modules?.chat !== false;
-  const { data: chatUnread } = useChatUnreadTotal(isChatModuleEnabled);
-  const unreadChatCount = typeof chatUnread === "number" ? chatUnread : 0;
+  const { data: chatUnread } = useChatUnreadTotal(
+    isChatModuleEnabled && canReadChat,
+  );
+  const unreadChatCount = chatUnread?.total ?? 0;
 
   const { data: notifData } = useUnreadNotificationCount();
   const unreadNotifCount = notifData?.count ?? 0;

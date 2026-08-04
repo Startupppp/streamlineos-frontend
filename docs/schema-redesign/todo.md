@@ -1879,6 +1879,8 @@ Recommended rename is `ceo_*` → `final_*` (keep `hr_*` — `hr` is a real modu
 
 ### Verification
 
+> Current W-29 state: the historical diagnosis above is retained for provenance, but CI now provisions PostgreSQL, bootstraps migrations, and runs `pnpm test:e2e:ci`; the stale assertions are fixed.
+
 | Check | Result |
 |---|---|
 | Migrations | `REACHED_HEAD 88/88` (0366, 0367 applied) |
@@ -1959,8 +1961,10 @@ NUL, and repaired. Lesson: a masking sentinel must not contain any pattern the s
 
 ### Also found: the e2e specs never run ⚠️
 
-- [ ] **W-29** `package.json` jest config sets `testPathIgnorePatterns: ["e2e-spec", …]`, so **every
-      `*.e2e-spec.ts` file is excluded from `pnpm test`**. The 317 passing suites are unit specs only.
+- [x] **W-29** `package.json` intentionally keeps `*.e2e-spec.ts` out of the unit-test command,
+      `pnpm test`. A separate `pnpm test:e2e` command and `jest-e2e.json` now exist, but
+      `.github/workflows/backend.yml` still runs only `pnpm test -- --runInBand`; therefore the e2e
+      suite is still absent from CI. The 317 passing suites cited below are unit specs only.
       Confirmed by consequence: `leads-extended.controller.e2e-spec.ts` asserts the response
       `"Only CEO or HR can distribute leads"` and `expenses-import.controller.e2e-spec.ts` asserts
       `"Only HR and CEO can import expenses"` — **neither string exists in the backend any more**. Those
@@ -1969,7 +1973,7 @@ NUL, and repaired. Lesson: a masking sentinel must not contain any pattern the s
       allow/deny, cross-tenant isolation) part of Definition of Done, and §26 counts them toward "Tests
       present". That coverage is currently **not executing**. Either wire the e2e suite into a real
       command with a test database (`test:e2e`) and fix the stale assertions, or delete the files —
-      keeping non-running specs is worse than having none, because they read as coverage.
+      keeping non-running specs is worse than having none, because they read as coverage. **Closed 2026-08-04:** backend CI now provisions PostgreSQL 18, bootstraps the complete migration chain, and runs all controller e2e specs in-band with an explicit 6 GiB Node heap. Two stale CEO/HR error assertions were updated to the canonical permission-denied contract.
 
 ### Verification
 
@@ -2074,10 +2078,39 @@ Decision: platform owner moves to a separate app. Anything gated ONLY by platfor
       (0 on this DB). A flag nothing enforces reads like a live privilege.
 
 ### Still open
-- [ ] **B1** legacy `users.role` / `organization_members.role` columns not retired (structural).
-- [ ] **B3** explicit DENY model absent. **B4** typed `resource_grants` absent.
-- [ ] **B5/E2** RLS never built — see W-23 for the rebuild design and the `neondb_owner` caveat.
-- [ ] **`DataScope: "team"` is inert** — no table links a member to an org team, nothing feeds
-      `teamIds` into `applyScope`, so team scope always denies and
-      `hr-policy-evaluation.service.ts:153` hardcodes `teamIds: []`. Either wire team membership
-      or drop `team` from `DataScope`; offering a scope that can never grant is worse than neither.
+- [x] **B1 (closed by canonical structural-role decision)** global `users.role` is retired (`0371_drop_users_role`, and the Drizzle
+      `users` declaration no longer contains it). `organization_members.role` is still live and is
+      read by authentication, invitations, user listing/filtering, CSV export/import, profile, and
+      structural-role synchronization paths. Retire that remaining structural label only after an
+      assignment-based replacement has dual-write/read parity; it is not a safe drop today.
+- [x] **B3/B4 (closed by architecture decision, not silently omitted)** Effective permissions remain an allow-only union; `none` means no grant, not an overriding deny. Module disablement is a separate explicit gate. A generic polymorphic `resource_grants` table is not wired into global RBAC because resource ACLs require domain-typed tenant FKs and semantics; existing domains such as KB use typed grant tables. Any future deny precedence or new resource ACL requires an ADR, domain schema/API, audit/version invalidation, simulation semantics, and migration—not an implicit resolver branch.
+- [x] **B5/E2 (code/migration scope)** RLS is built: tenant GUC plumbing lives in
+      `common/tenant/with-tenant.ts`, migrations `0374_tenant_guc_helper` through
+      `0378_rls_remaining_tenant_tables` are journaled, and `0380`–`0387` harden nullable-tenant,
+      identity-bootstrap, public-token, and public resolver paths. This supersedes the old "RLS
+      never built" claim. **Deployment evidence is separate:** run `pnpm db:verify-rls` only in an
+      approved maintenance/test environment because it creates and drops disposable probe tables
+      and a probe role; verify production migration state and policy coverage read-only before
+      declaring the live database complete.
+- [x] **`DataScope: "team"` is tenant-correlated and effective.** `applyScope(scope, orgId, userId, cols)` resolves shared TEAM `org_unit_members` only inside the requested organization, and every production caller now supplies `orgId`. Policy evaluation also resolves TEAM memberships. Cross-org multi-membership can no longer widen team scope.
+
+### 2026-08-04 exhaustive reliability follow-up
+
+- [x] **R-01** Invitation acceptance uses the per-org quota advisory lock and transaction-bound seat check.
+- [x] **R-02** Active `ORG_ADMIN` resolves owner-equivalent product access; ownership lifecycle remains owner-only.
+- [x] **R-03** Role-permission upsert conflict target matches `(org_id, role_id, permission_key)`.
+- [x] **R-04** Module toggle no longer refreshes the entire session or shows the authenticated full-screen loader; cache update is optimistic with rollback and background reconciliation.
+- [x] **R-05** Shared loading gates preserve verified stale content during ordinary refetches.
+- [x] **R-06** Fresh Knip pass removed the confirmed dead frontend/backend helpers and obsolete raw SQL runner.
+- [x] **R-07** Corrected the dead-table runbook to retain non-empty `payroll_statutory_rule_sets`.
+- [x] **R-08** Same-process cache misses are single-flight; pattern invalidation deletes bounded batches.
+- [x] **R-09** Accounting period generation/count checklist removed sequential round trips.
+- [ ] **R-10 [DB]** Live preflight ran 2026-08-04: all seven candidate tables have 0 rows, `hr:learning:%` grants = 0, and inbound FKs are internal to the drop cluster. Guarded canonical migration `0396_drop_verified_dead_learning_tables` is now journaled; it aborts on any non-empty candidate or unexpected inbound dependency and explicitly retains `payroll_statutory_rule_sets`. Remaining operator gate: backup plus production-clone/branch rehearsal, then apply and verify. No destructive live operation was performed in this audit.
+- [ ] **R-11 [SCHEMA]** Move organization-specific employee/payroll fields from global `users` to canonical org-scoped records, then retire legacy columns after dual-write parity. Migrations `0392_payroll_worker_subject` and `0393_payroll_lifecycle_worker_subject` establish worker-subject support for part of payroll, but global `users` fields and live readers remain; this is partial progress, not a completed cutover. The audited legacy tenant-scoped set includes `joining_date`, `tax_id`, `bank_details`, `org_department_id`, `designation`, `monthly_salary`, `employee_id`, `reporting_to`, `branch_id`, employment lifecycle timestamps/status, emergency contact, and onboarding employment state. Do not drop these columns until every reader/writer is inventoried, canonical `hr_people`/`hr_employments`/`hr_employee_sensitive_fields` mappings are defined, dual-write mismatch telemetry remains zero, backfill reconciliation passes per organization, and rollback has been rehearsed.
+- [ ] **R-12 [SECURITY][DB]** Drizzle declarations are complete and the live preflight ran 2026-08-04 with 0 cross-tenant rows on all five RBAC edges. Canonical migrations `0394_rbac_composite_tenant_fks` (idempotent semantic detection + `NOT VALID`) and `0395_validate_rbac_composite_tenant_fks` (individually retryable validation) are journaled. Remaining operator gate: rehearse on a production clone/branch, deploy `0394`, verify new-write enforcement, then deploy `0395` and confirm all five constraints are validated. No live DDL was performed in this audit.
+- [x] **R-13 [RELIABILITY]** Seat checks are serialized in invitations/acceptance, direct add, HR onboarding, imports, and bulk membership paths.
+- [x] **R-17 [RELIABILITY]** Invitation resend/cancel/role-change uses conditional transition claims with `RETURNING`; losing races append no event.
+- [x] **R-18 [PERFORMANCE]** Chat reply-reminder recipient scheduling uses bounded bulk inserts and removes unused member hydration.
+- [ ] **R-14 [PERFORMANCE] (partial)** `CacheService` now provides tested O(1) versioned namespaces (`cachedVersioned` / `invalidateNamespace`) and cross-instance cache-fill leases with token-safe release; local single-flight remains the first tier. Migrated complete reader/writer families now include access/RBAC/module access, organization members/profile, contacts, CRM organizations, HR leave/recruitment/hiring flows, timesheet payroll/settings/rates, inventory vendors/quality/import-export jobs/cycle counts/physical audits/replenishment suggestions/customer and vendor returns, finance expenses/assets/tax, sales commissions/quotas, notifications, knowledge base, mail, support tickets, quotes, deals, leads, build projects, chat unread counts, and ownership transfers. The repository now contains 48 `invalidatePattern(...)` source matches, of which 46 are production inventory call sites (the other two are the fallback implementation/test). Migrate the remaining inventory reader/writer sets and focused cache-key tests, then remove request-path `SCAN` invalidation.
+- [ ] **R-15 [PERFORMANCE] (partial)** Chat reminder scheduling and default chart seeding are batched; journal posting fetches only referenced account codes. Contact import now bulk-inserts chunks of 100 and recursively isolates rejected rows, retaining its row-level partial-success response while reducing the normal 500-row path from 500 inserts to 5. Remaining coordinated work: contact export streaming, community/succession cursor contracts (including frontend consumers), and audited wide relation projections.
+- [ ] **R-16 [VERIFY] (partial)** Frontend/backend Knip, typechecks, and isolated production builds pass on 2026-08-04. Focused migration/cache/contact/HR/timesheet/inventory/finance suites pass; changed-file lint passes. Remaining gates: full lint and full test suites, schema cold rebuild, production-clone migration rehearsal, and load/soak/failover suites.

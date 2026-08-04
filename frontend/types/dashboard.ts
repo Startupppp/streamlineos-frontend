@@ -24,15 +24,6 @@ export interface RecentProject {
   updatedAt: Date;
 }
 
-export interface TeamMember {
-  userId: string;
-  name: string;
-  image: string | null;
-  checkIn: string | null;
-  checkOut: string | null;
-  isOnline: boolean | null;
-}
-
 export interface MyIssue {
   id: number;
   title: string;

@@ -1,3 +1,5 @@
+import { activeAttendancePollInterval } from "@/lib/query-request-policies";
+
 export const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
 
 export interface CalendarDay {
@@ -34,5 +36,5 @@ export function attendancePollInterval(
     | { todayLog?: { checkIn?: string | Date | null; checkOut?: string | Date | null } | null }
     | undefined,
 ): number | false {
-  return data?.todayLog?.checkIn && !data.todayLog.checkOut ? 60000 : false;
+  return activeAttendancePollInterval(data);
 }

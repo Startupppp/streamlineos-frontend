@@ -107,13 +107,13 @@ type OrgSummary = {
   joinedAt: string | null;
 };
 
-export function useGetOrganizations() {
+export function useGetOrganizations(enabled = true) {
   const { status } = useSession();
   return useQuery<OrgSummary[]>({
     queryKey: queryKeys.organization.all,
     queryFn: () => apiClient.get<OrgSummary[]>("/organization"),
     staleTime: 60_000,
-    enabled: status === "authenticated",
+    enabled: status === "authenticated" && enabled,
     placeholderData: keepPreviousData,
   });
 }

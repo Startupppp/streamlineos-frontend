@@ -70,6 +70,7 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { getUserDisplayName, getUserInitials } from "@/features/build/shared/resolve-user-name";
 import { useCan } from "@/hooks/api/access";
 import { USER_STRUCTURAL_ROLES, formatRoleLabel } from "@/features/users/user-invite-roles";
+import { resolveOrgUnitName } from "./resolve-org-unit-name";
 
 type BulkAction = "suspend" | "archive";
 
@@ -381,7 +382,11 @@ export function UsersPage() {
       header: "Branch",
       cell: (user) => (
         <span className="text-muted-foreground">
-          {user.branchId != null ? (branchMap.get(String(user.branchId)) ?? String(user.branchId)) : "—"}
+          {resolveOrgUnitName(
+            branchMap,
+            user.branchId === null ? null : String(user.branchId),
+            "Unknown branch",
+          )}
         </span>
       ),
     },
@@ -390,9 +395,11 @@ export function UsersPage() {
       header: "Dept",
       cell: (user) => (
         <span className="text-muted-foreground">
-          {user.departmentId != null
-            ? (deptMap.get(String(user.departmentId)) ?? String(user.departmentId))
-            : "—"}
+          {resolveOrgUnitName(
+            deptMap,
+            user.departmentId === null ? null : String(user.departmentId),
+            "Unknown department",
+          )}
         </span>
       ),
     },
@@ -428,7 +435,7 @@ export function UsersPage() {
   const emptyStateNode = (
     <EmptyState
       illustrationPreset="team"
-      title="No users found"
+      title="No members found"
       description={
         q || status !== "all" || role !== "all"
           ? "Try adjusting your search or filters."
@@ -512,8 +519,8 @@ export function UsersPage() {
   return (
     <>
       <PageWrapper
-        title="Users"
-        subtitle="Manage members, roles, and access."
+        title="Members"
+        subtitle="Manage organization memberships, roles, and access."
         actions={
           <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-nowrap sm:justify-end">
             {(canExport || canCreate) && (
@@ -669,7 +676,7 @@ export function UsersPage() {
 
           {isError ? (
             <ErrorState
-              title="Failed to load users"
+              title="Failed to load members"
               description="An error occurred while loading users."
               onRetry={handleRetry}
             />

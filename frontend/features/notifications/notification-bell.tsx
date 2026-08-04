@@ -27,7 +27,7 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { cn } from "@/lib/utils";
 import {
   useUnreadNotificationCount,
-  useNotifications,
+  useUnreadNotifications,
   useMarkNotificationRead,
   useMarkAllNotificationsRead,
 } from "@/hooks/api/notifications";
@@ -256,7 +256,7 @@ export function NotificationBell() {
     data: notifications,
     isLoading,
     isError,
-  } = useNotifications({ section: "UNREAD", limit: 10 });
+  } = useUnreadNotifications({ enabled: open });
   const markRead = useMarkNotificationRead();
   const markAllRead = useMarkAllNotificationsRead();
 

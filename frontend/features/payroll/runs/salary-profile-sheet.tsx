@@ -34,7 +34,10 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { useOrgMembers } from "@/hooks/api/organization";
-import { useCreateProfile, usePatchProfile } from "@/hooks/api/payroll/employees";
+import { useWorkers } from "@/hooks/api/directory/workers";
+import { useModuleEnabled, useCan } from "@/hooks/api/access";
+import { useCreateProfile, useCreateWorkerProfile, usePatchProfile, usePatchWorkerProfile } from "@/hooks/api/payroll/employees";
+import { usePayrollWorkforceLabel } from "@/features/payroll/lib/payroll-workforce-label";
 import { usePayrollPolicyCurrent } from "@/hooks/api/payroll/policies";
 import type { EmployeeSalaryProfile } from "@/types/payroll/runs";
 
@@ -49,8 +52,30 @@ const profileSchema = z.object({
 });
 type ProfileForm = z.infer<typeof profileSchema>;
 
+function formatPayrollSubject(userId: string): string {
+  return `user:${userId}`;
+}
+
+function formatWorkerPayrollSubject(workerId: string): string {
+  return `worker:${workerId}`;
+}
+
+function parsePayrollSubject(value: string): { userId: string | null; workerId: string | null } {
+  if (value.startsWith("worker:")) {
+    return { userId: null, workerId: value.slice("worker:".length) };
+  }
+  if (value.startsWith("user:")) {
+    return { userId: value.slice("user:".length), workerId: null };
+  }
+  if (value.length > 0) {
+    return { userId: value, workerId: null };
+  }
+  return { userId: null, workerId: null };
+}
+
 interface SalaryProfileSheetProps {
   employeeUserId?: string;
+  workerId?: string;
   open: boolean;
   onClose: () => void;
   existingProfile?: EmployeeSalaryProfile | null;
@@ -58,37 +83,77 @@ interface SalaryProfileSheetProps {
 
 export function SalaryProfileSheet({
   employeeUserId,
+  workerId,
   open,
   onClose,
   existingProfile,
 }: SalaryProfileSheetProps) {
-  const [pickedUserId, setPickedUserId] = useState("");
+  const [pickedSubject, setPickedSubject] = useState("");
 
-  const showPicker = !employeeUserId;
-  const resolvedUserId = employeeUserId ?? pickedUserId;
+  const showPicker = !employeeUserId && !workerId;
+  const parsedPicker = parsePayrollSubject(pickedSubject);
+  const resolvedUserId = employeeUserId ?? parsedPicker.userId ?? "";
+  const resolvedWorkerId = workerId ?? parsedPicker.workerId ?? "";
 
   const isEdit = !!existingProfile;
+  const workforceLabel = usePayrollWorkforceLabel();
+  const hrEnabled = useModuleEnabled("hr");
+  const canViewWorkers = useCan("workforce:workers:view");
+  const usePayeeDirectory = showPicker && !hrEnabled && canViewWorkers;
   const { data: policyData } = usePayrollPolicyCurrent();
   const policyCurrency = policyData?.policy?.currency ?? "INR";
   const taxRegimeApplicable = policyData?.taxRegimeApplicable ?? true;
   const multiCurrency = policyData?.activeVersion?.toggles?.multiCurrency ?? false;
   const createMutation = useCreateProfile(resolvedUserId);
   const patchMutation = usePatchProfile(resolvedUserId);
+  const createWorkerMutation = useCreateWorkerProfile(resolvedWorkerId);
+  const patchWorkerMutation = usePatchWorkerProfile(resolvedWorkerId);
 
   const { data: membersData } = useOrgMembers(1, 100, undefined, {
-    enabled: showPicker && open,
+    enabled: showPicker && open && (hrEnabled || !canViewWorkers),
     staleTime: 2 * 60_000,
   });
 
-  const memberOptions = useMemo<ComboboxOption[]>(
-    () =>
-      (membersData?.data ?? []).map((m) => ({
-        value: m.userId,
-        label: m.name ?? m.email,
-        sublabel: m.email,
-      })),
-    [membersData],
-  );
+  const { data: payeesData } = useWorkers({
+    page: 1,
+    limit: 100,
+    status: "ACTIVE",
+  });
+
+  const memberOptions = useMemo<ComboboxOption[]>(() => {
+    if (usePayeeDirectory) {
+      const payeeOptions = (payeesData?.data ?? [])
+        .filter((worker) => worker.isPayee)
+        .map((worker) => {
+          const label =
+            worker.displayName ??
+            [worker.firstName, worker.lastName].filter(Boolean).join(" ") ??
+            worker.workEmail ??
+            "Payee";
+          const value = worker.userId
+            ? formatPayrollSubject(worker.userId)
+            : formatWorkerPayrollSubject(worker.workerId);
+          return {
+            value,
+            label,
+            sublabel: worker.workEmail ?? undefined,
+          };
+        });
+
+      const seen = new Set<string>();
+      return payeeOptions.filter((option) => {
+        if (seen.has(option.value)) return false;
+        seen.add(option.value);
+        return true;
+      });
+    }
+
+    return (membersData?.data ?? []).map((m) => ({
+      value: formatPayrollSubject(m.userId),
+      label: m.name ?? m.email,
+      sublabel: m.email,
+    }));
+  }, [usePayeeDirectory, membersData?.data, payeesData?.data]);
 
   const form = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),
@@ -104,9 +169,9 @@ export function SalaryProfileSheet({
   });
 
   const [prevOpen, setPrevOpen] = useState(open);
-  if (open !== prevOpen) {
+    if (open !== prevOpen) {
     setPrevOpen(open);
-    if (open && !employeeUserId) setPickedUserId("");
+    if (open && !employeeUserId && !workerId) setPickedSubject("");
   }
 
   useEffect(() => {
@@ -124,8 +189,8 @@ export function SalaryProfileSheet({
   }, [open, existingProfile, form, policyCurrency]);
 
   function handleSubmit(values: ProfileForm) {
-    if (!resolvedUserId) {
-      toast.error("Please select an employee");
+    if (!resolvedUserId && !resolvedWorkerId) {
+      toast.error(`Please select a ${workforceLabel.singularLower}`);
       return;
     }
 
@@ -140,22 +205,41 @@ export function SalaryProfileSheet({
     };
 
     if (isEdit && existingProfile) {
-      patchMutation.mutate(
-        { profileId: existingProfile.id, body: payload },
-        {
-          onSuccess: () => { toast.success("Profile updated"); onClose(); },
-          onError: () => toast.error("Failed to update profile"),
-        },
-      );
+      const onSuccess = () => {
+        toast.success("Profile updated");
+        onClose();
+      };
+      const onError = () => toast.error("Failed to update profile");
+      if (resolvedWorkerId && !resolvedUserId) {
+        patchWorkerMutation.mutate(
+          { profileId: existingProfile.id, body: payload },
+          { onSuccess, onError },
+        );
+      } else {
+        patchMutation.mutate(
+          { profileId: existingProfile.id, body: payload },
+          { onSuccess, onError },
+        );
+      }
     } else {
-      createMutation.mutate(payload, {
-        onSuccess: () => { toast.success("Profile created"); onClose(); },
-        onError: () => toast.error("Failed to create profile"),
-      });
+      const onSuccess = () => {
+        toast.success("Profile created");
+        onClose();
+      };
+      const onError = () => toast.error("Failed to create profile");
+      if (resolvedWorkerId && !resolvedUserId) {
+        createWorkerMutation.mutate(payload, { onSuccess, onError });
+      } else {
+        createMutation.mutate(payload, { onSuccess, onError });
+      }
     }
   }
 
-  const isPending = createMutation.isPending || patchMutation.isPending;
+  const isPending =
+    createMutation.isPending ||
+    patchMutation.isPending ||
+    createWorkerMutation.isPending ||
+    patchWorkerMutation.isPending;
 
   return (
     <Sheet open={open} onOpenChange={onClose}>
@@ -173,12 +257,12 @@ export function SalaryProfileSheet({
             <SheetBody className="px-6 py-4 space-y-3">
               {showPicker && (
                 <FormItem>
-                  <FormLabel>Employee *</FormLabel>
+                  <FormLabel>{workforceLabel.singular} *</FormLabel>
                   <Combobox
                     options={memberOptions}
-                    value={pickedUserId}
-                    onChange={setPickedUserId}
-                    placeholder="Select employee…"
+                    value={pickedSubject}
+                    onChange={setPickedSubject}
+                    placeholder={`Select ${workforceLabel.singularLower}…`}
                     searchPlaceholder="Search by name or email…"
                   />
                 </FormItem>
@@ -311,7 +395,7 @@ export function SalaryProfileSheet({
               <LoadingButton
                 type="submit"
                 size="sm"
-                disabled={showPicker && !pickedUserId}
+                disabled={showPicker && !pickedSubject}
                 isPending={isPending}
                 loadingText={isEdit ? "Updating…" : "Creating…"}
               >

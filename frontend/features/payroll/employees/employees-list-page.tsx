@@ -20,6 +20,7 @@ import { useEmployeeProfiles } from "@/hooks/api/payroll/employees";
 import { useCan } from "@/hooks/api/access";
 import type { EmployeeSalaryProfile, SalaryProfileStatus } from "@/types/payroll/runs";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { usePayrollWorkforceLabel } from "@/features/payroll/lib/payroll-workforce-label";
 import { useState } from "react";
 
 const STATUS_CONFIG: Record<SalaryProfileStatus, { className: string; label: string }> = {
@@ -36,6 +37,7 @@ export function EmployeesListPage() {
 
   const canView = useCan("payroll:salaries:view");
   const canUpdate = useCan("payroll:salaries:update");
+  const workforceLabel = usePayrollWorkforceLabel();
 
   const search = searchParams.get("search") ?? "";
   const workerType = searchParams.get("workerType") ?? "all";
@@ -82,11 +84,11 @@ export function EmployeesListPage() {
   const columns: DataTableColumn<EmployeeSalaryProfile>[] = [
     {
       key: "employee",
-      header: "Employee",
+      header: workforceLabel.singular,
       cell: (row) => (
         <div className="flex flex-col gap-0.5 min-w-0">
-          <TruncatedText text={row.userName} className="text-[11px] font-medium" />
-          <TruncatedText text={row.userEmail} className="text-[10px] text-muted-foreground" />
+          <TruncatedText text={row.userName ?? "Payee"} className="text-[11px] font-medium" />
+          <TruncatedText text={row.userEmail ?? "—"} className="text-[10px] text-muted-foreground" />
         </div>
       ),
     },
@@ -138,7 +140,13 @@ export function EmployeesListPage() {
   ];
 
   function handleRowClick(row: EmployeeSalaryProfile) {
-    router.push(`/payroll/employees/${row.userId}`);
+    if (row.userId) {
+      router.push(`/payroll/employees/${row.userId}`);
+      return;
+    }
+    if (row.workerId) {
+      router.push(`/payroll/workers/${row.workerId}`);
+    }
   }
 
   function handleAddOpen() {
@@ -165,7 +173,7 @@ export function EmployeesListPage() {
   return (
     <PageWrapper
       title="Salary Profiles"
-      subtitle="Per-employee CTC and pay configuration"
+      subtitle={workforceLabel.profileSubtitle}
       actions={
         canUpdate ? (
           <Button size="sm" onClick={handleAddOpen}>
@@ -210,7 +218,7 @@ export function EmployeesListPage() {
         onRowClick={handleRowClick}
         isLoading={isLoading}
         minWidth="680px"
-        search={{ value: search, onChange: handleSearchChange, placeholder: "Search employees…" }}
+        search={{ value: search, onChange: handleSearchChange, placeholder: workforceLabel.searchPlaceholder }}
         pagination={{
           mode: "server",
           page,
@@ -246,7 +254,7 @@ export function EmployeesListPage() {
           <EmptyState
             illustration={<EmptyPersonIllustration />}
             title="No salary profiles"
-            description="Add salary profiles to include employees in payroll runs"
+            description={workforceLabel.emptyDescription}
           />
         }
       />

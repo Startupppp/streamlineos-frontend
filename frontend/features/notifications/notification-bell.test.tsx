@@ -37,7 +37,7 @@ jest.mock("@/hooks/common/use-animated-icon", () => ({
 
 jest.mock("@/hooks/api/notifications", () => ({
   useUnreadNotificationCount: () => ({ data: { count: 0 } }),
-  useNotifications: () => ({
+  useUnreadNotifications: () => ({
     data: [],
     isLoading: false,
     isError: false,

@@ -25,8 +25,9 @@ import {
   LeaveOrganizationDialog,
   LeaveOrganizationMenuItem,
 } from "@/features/settings/organization/leave-organization-control";
+import { ArchivedOrgsRestore } from "@/features/settings/organization/archived-orgs-restore";
 
-interface WorkspaceSwitcherProps {
+interface OrganizationSwitcherProps {
   variant?: "header" | "sidebar";
   iconOnly?: boolean;
   className?: string;
@@ -42,7 +43,7 @@ interface WorkspaceOrg {
   name: string;
 }
 
-interface WorkspaceSwitcherPanelProps {
+interface OrganizationSwitcherPanelProps {
   activeOrg: WorkspaceOrg | undefined;
   otherOrgs: WorkspaceOrg[];
   isPending: boolean;
@@ -55,7 +56,7 @@ interface WorkspaceSwitcherPanelProps {
   layout: "dropdown" | "drawer";
 }
 
-function WorkspaceSwitcherPanel({
+function OrganizationSwitcherPanel({
   activeOrg,
   otherOrgs,
   isPending,
@@ -66,7 +67,7 @@ function WorkspaceSwitcherPanel({
   onRequestLeave,
   onClose,
   layout,
-}: WorkspaceSwitcherPanelProps) {
+}: OrganizationSwitcherPanelProps) {
   const handleSwitch = useCallback(
     (orgId: string) => {
       onSwitch(orgId);
@@ -122,6 +123,7 @@ function WorkspaceSwitcherPanel({
             ))}
           </>
         )}
+        <ArchivedOrgsRestore variant="compact" />
         {isOrgOwner && (
           <>
             <DropdownMenuSeparator />
@@ -139,6 +141,7 @@ function WorkspaceSwitcherPanel({
             <DropdownMenuSeparator />
             <LeaveOrganizationMenuItem
               layout="dropdown"
+              canLeave={canLeave}
               onRequestLeave={handleLeave}
             />
           </>
@@ -155,7 +158,7 @@ function WorkspaceSwitcherPanel({
         </p>
       </div>
       <div className="flex items-center gap-2 rounded-md px-2 py-2 text-sm text-foreground">
-        <Check className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+        <Check className="h-3.5 w-3.5 text-primary shrink-0" />
         <TruncatedText
           text={activeOrg?.name ?? ""}
           className="font-medium text-foreground"
@@ -173,6 +176,7 @@ function WorkspaceSwitcherPanel({
           <TruncatedText text={org.name} className="text-foreground" />
         </button>
       ))}
+      <ArchivedOrgsRestore variant="compact" className="px-0" />
       {isOrgOwner && (
         <button
           type="button"
@@ -186,6 +190,7 @@ function WorkspaceSwitcherPanel({
       {canLeave && (
         <LeaveOrganizationMenuItem
           layout="drawer"
+          canLeave={canLeave}
           onRequestLeave={handleLeave}
         />
       )}
@@ -193,7 +198,7 @@ function WorkspaceSwitcherPanel({
   );
 }
 
-export function WorkspaceSwitcher({
+function OrganizationSwitcher({
   variant = "header",
   iconOnly = false,
   className,
@@ -202,10 +207,9 @@ export function WorkspaceSwitcher({
   triggerOnly = false,
   onRequestOpen,
   drawerOnly = false,
-}: WorkspaceSwitcherProps) {
+}: OrganizationSwitcherProps) {
   const { data: session } = useSession();
   const { data: access } = useAccess();
-  const { data: organizations } = useGetOrganizations();
   const switchOrg = useSwitchOrg();
   const [createOpen, setCreateOpen] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
@@ -213,6 +217,7 @@ export function WorkspaceSwitcher({
 
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : internalOpen;
+  const { data: organizations } = useGetOrganizations(open);
 
   const activeOrgId = session?.orgId as string | null | undefined;
   const activeOrg =
@@ -284,7 +289,9 @@ export function WorkspaceSwitcher({
     <button
       type="button"
       onClick={triggerOnly ? handleTriggerClick : undefined}
-      aria-label={isLabelHidden ? workspaceName : undefined}
+      aria-label={
+        isLabelHidden ? `Switch organization — ${workspaceName}` : "Switch organization"
+      }
       className={cn(
         "flex items-center outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors",
         isLabelHidden
@@ -331,7 +338,7 @@ export function WorkspaceSwitcher({
         <Drawer open={open} onOpenChange={handleOpenChange} direction="bottom">
           <DrawerContent className="flex h-[min(96dvh,40rem)] max-h-[96dvh] w-full flex-col gap-0 overflow-hidden rounded-t-xl border-t bg-sidebar p-4 pb-[env(safe-area-inset-bottom)] shadow-2xl">
             <DrawerTitle className="sr-only">Organizations</DrawerTitle>
-            <WorkspaceSwitcherPanel {...panelProps} layout="drawer" />
+            <OrganizationSwitcherPanel {...panelProps} layout="drawer" />
           </DrawerContent>
         </Drawer>
         {createDialog}
@@ -383,7 +390,7 @@ export function WorkspaceSwitcher({
           <DropdownMenuTrigger asChild>{triggerButton}</DropdownMenuTrigger>
         )}
         <DropdownMenuContent align="start" className="w-52">
-          <WorkspaceSwitcherPanel {...panelProps} layout="dropdown" />
+          <OrganizationSwitcherPanel {...panelProps} layout="dropdown" />
         </DropdownMenuContent>
       </DropdownMenu>
       {createDialog}
@@ -391,3 +398,5 @@ export function WorkspaceSwitcher({
     </>
   );
 }
+
+export { OrganizationSwitcher as WorkspaceSwitcher };

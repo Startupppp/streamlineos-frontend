@@ -84,7 +84,7 @@ export function PortalListPage() {
                   transition={pmSnappy}
                 >
                   <Link
-                    href={`/build/portal/${project.id}`}
+                    href={`/portal/${project.id}`}
                     className={cn(
                       PM_PANEL,
                       "group block p-5 transition-[border-color,box-shadow] duration-200 hover:border-primary/35 hover:shadow-md",

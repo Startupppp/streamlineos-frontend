@@ -1,6 +1,8 @@
-﻿import { notFound } from "next/navigation";
+﻿import { notFound, redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { isApiError } from "@/lib/api-client";
 import { serverApiClient } from "@/lib/api/server-client";
+import { withPmWorkspacePath } from "@/lib/build/pm-workspace-path";
 import type { ProjectWithDetails } from "@/types/projects";
 import { AccessDeniedView } from "@/features/build/project-detail/access-denied-view";
 import { BackendUnavailableView } from "@/features/build/project-detail/backend-unavailable-view";
@@ -52,6 +54,13 @@ export default async function ProjectLayout({
   }
 
   if (!project) return notFound();
+
+  if (project.pmWorkspaceId) {
+    const headerList = await headers();
+    const pathname = headerList.get("x-pathname") ?? `/build/${projectId}`;
+    const search = headerList.get("x-search") ?? "";
+    redirect(withPmWorkspacePath(pathname, search, project.pmWorkspaceId));
+  }
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">

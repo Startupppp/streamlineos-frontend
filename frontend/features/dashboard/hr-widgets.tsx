@@ -28,11 +28,11 @@ import {
   useMyLeaveBalance,
   useBirthdays,
   usePendingApprovals,
-  useTeamAttendance,
   type LeaveToday,
   type UpcomingHoliday,
   type LeaveBalance,
   type BirthdayEntry,
+  type TeamAttendance,
 } from "@/hooks/api/dashboard";
 
 interface MyLeaveRequestSummary {
@@ -314,9 +314,13 @@ export function PendingApprovalsWidget() {
   );
 }
 
-export function TeamAttendanceWidget() {
-  const { data, isLoading } = useTeamAttendance();
-
+export function TeamAttendanceWidget({
+  data,
+  isLoading,
+}: {
+  data: TeamAttendance | undefined;
+  isLoading: boolean;
+}) {
   return (
     <WidgetCard
       icon={Users}

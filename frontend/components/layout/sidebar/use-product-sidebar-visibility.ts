@@ -13,6 +13,7 @@ import {
   shouldHideProductSidebar,
   getProductFromPathname,
   isKnowledgeWikiPath,
+  isPortalChromelessPath,
   withoutHrSetupRoute,
   type NavGroup,
   type ProductKey,
@@ -53,7 +54,9 @@ export function useProductSidebarVisibility(): {
 
   const hideSidebar =
     status !== "loading" &&
-    (shouldHideProductSidebar(navGroups) || isKnowledgeWikiPath(pathname));
+    (shouldHideProductSidebar(navGroups) ||
+      isKnowledgeWikiPath(pathname) ||
+      isPortalChromelessPath(pathname));
 
   return {
     hideSidebar,

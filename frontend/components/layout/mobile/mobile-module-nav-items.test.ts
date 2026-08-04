@@ -29,7 +29,7 @@ const projectsNav: NavGroup[] = [
       { label: "Drafts", icon: Inbox, href: "/build/drafts" },
       { label: "All issues", icon: Briefcase, href: "/build/all-work" },
       { label: "Projects", icon: Briefcase, href: "/build", exact: true },
-      { label: "Teams", icon: Users, href: "/build/teams" },
+      { label: "Delivery Teams", icon: Users, href: "/build/teams" },
     ],
   },
 ];
@@ -64,7 +64,7 @@ describe("mobile module nav items", () => {
       const all = getAllMobileModuleTabs(projectsNav);
       expect(all).toHaveLength(7);
       expect(all[0]!.label).toBe("Home");
-      expect(all[6]!.label).toBe("Teams");
+      expect(all[6]!.label).toBe("Delivery Teams");
     });
 
     it("deduplicates routes with the same href across groups", () => {
@@ -128,7 +128,7 @@ describe("mobile module nav items", () => {
       expect(overflow.map((r) => r.label)).toEqual([
         "All issues",
         "Projects",
-        "Teams",
+        "Delivery Teams",
       ]);
     });
 
@@ -146,7 +146,7 @@ describe("mobile module nav items", () => {
       expect(groups[0]!.routes.map((r) => r.label)).toEqual([
         "All issues",
         "Projects",
-        "Teams",
+        "Delivery Teams",
       ]);
     });
 

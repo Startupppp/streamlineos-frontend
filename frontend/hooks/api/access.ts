@@ -16,15 +16,15 @@ export const useAccess = (
   >,
 ) => {
   const { data: session } = useSession();
-
   const orgId = session?.orgId;
+  const { enabled: enabledOption, ...restOptions } = options ?? {};
 
   return useQuery<AccessResponse, Error>({
-    enabled: !!orgId,
     staleTime: 5 * 60_000,
-    queryKey: queryKeys.access.me(),
+    queryKey: queryKeys.access.me(orgId),
     queryFn: () => apiClient.get<AccessResponse>("/me/access"),
-    ...options,
+    ...restOptions,
+    enabled: !!orgId && (enabledOption ?? true),
   });
 };
 
@@ -45,7 +45,6 @@ export function useModuleEnabled(moduleKey: string): boolean {
   if (!data) return true;
   return data.modules[normalizeOrgModuleKey(moduleKey)] !== false;
 }
-
 
 export const usePermissionCatalog = (
   options?: Omit<UseQueryOptions<Permission[], Error>, "queryKey" | "queryFn">,

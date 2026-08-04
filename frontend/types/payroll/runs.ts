@@ -176,7 +176,8 @@ export interface RunInput {
 
 export interface EmployeeSalaryProfile {
   id: number;
-  userId: string;
+  userId: string | null;
+  workerId?: string | null;
   workerType: PayrollWorkerType;
   currency: string;
   payoutCurrency?: string | null;
@@ -185,8 +186,8 @@ export interface EmployeeSalaryProfile {
   costCenter: string | null;
   status: SalaryProfileStatus;
   effectiveFrom: string;
-  userName: string;
-  userEmail: string;
+  userName: string | null;
+  userEmail: string | null;
 }
 
 export interface EmployeeProfileDetail {

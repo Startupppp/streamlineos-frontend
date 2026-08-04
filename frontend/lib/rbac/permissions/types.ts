@@ -404,7 +404,6 @@ export type PermissionKey =
   | "hr:safety:manage"
   | "hr:benefits:view"
   | "hr:benefits:manage"
-  | "hr:employees:read"
   | "hr:compliance:manage"
   | "hr:contracts:view"
   | "hr:contracts:manage"

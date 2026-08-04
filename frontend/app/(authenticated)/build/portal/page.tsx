@@ -1,7 +1,5 @@
-﻿"use client";
+﻿import { redirect } from "next/navigation";
 
-import { PortalListPage } from "@/features/build/client-portal/portal-list-page";
-
-export default function PortalRoute() {
-  return <PortalListPage />;
+export default function LegacyBuildPortalRedirect() {
+  redirect("/portal");
 }

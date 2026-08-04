@@ -1864,7 +1864,7 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    label: "Build",
+    label: "Product Management",
     module: "build",
     requiredPermission: ["build:view", "build:tickets:view"],
     routes: [
@@ -1906,7 +1906,7 @@ export const NAV_GROUPS: NavGroup[] = [
         requiredPermission: "build:view",
       },
       {
-        label: "Teams",
+        label: "Delivery Teams",
         icon: Network,
         href: "/build/teams",
         requiredPermission: "build:teams:view",
@@ -2208,8 +2208,76 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    label: "People",
+    requiredPermission: [
+      "directory:people:view",
+      "settings:view",
+      "settings:organization:manage",
+      "workforce:workers:view",
+      "party:parties:view",
+      "build:portal:view",
+    ],
+    routes: [
+      {
+        label: "Directory",
+        icon: Contact2,
+        href: "/directory",
+        exact: true,
+        requiredPermission: "directory:people:view",
+      },
+      {
+        label: "Members",
+        icon: UserCog,
+        href: "/users",
+        exact: true,
+        requiredPermission: "settings:view",
+      },
+      {
+        label: "Invitations",
+        icon: MailOpen,
+        href: "/users/invitations",
+        requiredPermission: "settings:organization:manage",
+      },
+      {
+        label: "Workers",
+        icon: Briefcase,
+        href: "/directory/workers",
+        requiredPermission: "workforce:workers:view",
+      },
+      {
+        label: "Business Parties",
+        icon: Building2,
+        href: "/parties",
+        requiredPermission: "party:parties:view",
+      },
+      {
+        label: "Portal Access",
+        icon: ShieldCheck,
+        href: "/client-access",
+        requiredPermission: "build:portal:view",
+      },
+    ],
+  },
+  {
+    label: "Access",
+    requiredPermission: ["settings:rbac:manage", "settings:manage"],
+    routes: [
+      {
+        label: "Roles & Permissions",
+        icon: Shield,
+        href: "/settings/roles",
+        requiredPermission: "settings:rbac:manage",
+      },
+      {
+        label: "Access Policies",
+        icon: ShieldCheck,
+        href: "/settings/delegations",
+        requiredPermission: "settings:manage",
+      },
+    ],
+  },
+  {
     label: "Structure",
-    module: "hrms",
     requiredPermission: ["settings:manage", "settings:view"],
     routes: [
       {
@@ -2232,7 +2300,7 @@ export const NAV_GROUPS: NavGroup[] = [
         requiredPermission: "settings:view",
       },
       {
-        label: "Teams",
+        label: "Organization Teams",
         icon: Users,
         href: "/organization/teams",
         requiredPermission: "settings:view",
@@ -2264,85 +2332,19 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    label: "Membership",
-    requiredPermission: "settings:view",
+    label: "Modules",
+    requiredPermission: "settings:manage",
     routes: [
       {
-        label: "Members",
-        icon: UserCog,
-        href: "/users",
-        exact: true,
-        requiredPermission: "settings:view",
-      },
-      {
-        label: "Invitations",
-        icon: MailOpen,
-        href: "/users/invitations",
-        requiredPermission: "settings:organization:manage",
-      },
-    ],
-  },
-  {
-    label: "People",
-    requiredPermission: "directory:people:view",
-    routes: [
-      {
-        label: "People Directory",
-        icon: Contact2,
-        href: "/directory",
-        exact: true,
-        requiredPermission: "directory:people:view",
-      },
-    ],
-  },
-  {
-    label: "Directory",
-    requiredPermission: [
-      "workforce:workers:view",
-      "party:parties:view",
-      "build:portal:view",
-    ],
-    routes: [
-      {
-        label: "Workers",
-        icon: Briefcase,
-        href: "/directory/workers",
-        requiredPermission: "workforce:workers:view",
-      },
-      {
-        label: "Business Parties",
-        icon: Building2,
-        href: "/parties",
-        requiredPermission: "party:parties:view",
-      },
-      {
-        label: "Client Access",
-        icon: ShieldCheck,
-        href: "/client-access",
-        requiredPermission: "build:portal:view",
-      },
-    ],
-  },
-  {
-    label: "Access Control",
-    requiredPermission: ["settings:rbac:manage", "settings:manage"],
-    routes: [
-      {
-        label: "Roles & Permissions",
-        icon: Shield,
-        href: "/settings/roles",
-        requiredPermission: "settings:rbac:manage",
-      },
-      {
-        label: "Access Policies",
-        icon: ShieldCheck,
-        href: "/settings/delegations",
+        label: "Modules",
+        icon: LayoutGrid,
+        href: "/settings/modules",
         requiredPermission: "settings:manage",
       },
     ],
   },
   {
-    label: "Subscription",
+    label: "Billing",
     requiredPermission: "settings:manage",
     routes: [
       {
@@ -2357,18 +2359,6 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: Zap,
         href: "/billing/ai-credits",
         requiredPermission: "billing:ai-credits:view",
-      },
-    ],
-  },
-  {
-    label: "Platform",
-    requiredPermission: "settings:manage",
-    routes: [
-      {
-        label: "Modules",
-        icon: LayoutGrid,
-        href: "/settings/modules",
-        requiredPermission: "settings:manage",
       },
     ],
   },
@@ -2513,6 +2503,17 @@ export function shouldHideProductSidebar(navGroups: NavGroup[]): boolean {
   return countProductNavLeaves(navGroups) === 0;
 }
 
+export function isPortalChromelessPath(pathname: string): boolean {
+  if (pathname === "/portal") return true;
+  if (
+    pathname.startsWith("/portal/projects") ||
+    pathname.startsWith("/portal/accept-invitation")
+  ) {
+    return false;
+  }
+  return /^\/portal\/[^/]+/.test(pathname);
+}
+
 export function isKnowledgeWikiPath(pathname: string): boolean {
   return (
     pathname === "/knowledge/wiki" || pathname.startsWith("/knowledge/wiki/")
@@ -2545,7 +2546,7 @@ export const PRODUCT_DEFINITIONS: ProductDefinition[] = [
   { key: "home", label: "Home", href: "/dashboard", icon: LayoutDashboard },
   { key: "crm", label: "CRM", href: "/crm", icon: Handshake },
   { key: "hrms", label: "HRMS", href: "/hr", icon: Users },
-  { key: "build", label: "Build", href: "/build", icon: Briefcase },
+  { key: "build", label: "Product Management", href: "/build", icon: Briefcase },
   { key: "timesheets", label: "Timesheets", href: "/timesheets", icon: Timer },
   { key: "inventory", label: "Inventory", href: "/inventory", icon: Package },
   { key: "finance", label: "Finance", href: "/accounting", icon: Calculator },
@@ -2576,7 +2577,7 @@ export const PRODUCT_DESCRIPTIONS: Record<ProductKey, string> = {
   home: "Overview & activity",
   crm: "Leads, deals & contacts",
   hrms: "People & payroll",
-  build: "Plan & deliver work",
+  build: "Strategy, delivery & execution",
   timesheets: "Track, approve & bill time",
   inventory: "Stock & orders",
   finance: "Accounts & books",
@@ -2680,7 +2681,7 @@ const PRODUCT_NAV_GROUP_LABELS: Record<ProductKey, string[]> = {
   home: [],
   crm: ["CRM"],
   hrms: ["HR – People", "Recruitment"],
-  build: ["Build", "More"],
+  build: ["Product Management", "More"],
   timesheets: ["Timesheets"],
   inventory: ["Inventory"],
   finance: ["Accounting & Finance"],
@@ -2689,13 +2690,11 @@ const PRODUCT_NAV_GROUP_LABELS: Record<ProductKey, string[]> = {
   surveys: ["Surveys"],
   administration: [
     "Organization",
-    "Structure",
     "People",
-    "Membership",
-    "Directory",
-    "Access Control",
-    "Subscription",
-    "Platform",
+    "Access",
+    "Structure",
+    "Modules",
+    "Billing",
     "Security",
     "Developer",
   ],
@@ -2861,6 +2860,10 @@ export function getProductFromPathname(pathname: string): ProductKey {
   if (pathname.startsWith("/hr") || pathname.startsWith("/recruitment"))
     return "hrms";
   if (pathname.startsWith("/timesheets")) return "timesheets";
+  if (pathname.startsWith("/portal/projects") || pathname.startsWith("/portal/accept-invitation")) {
+    return "home";
+  }
+  if (pathname.startsWith("/portal")) return "build";
   if (pathname.startsWith("/build")) return "build";
   if (pathname.startsWith("/inventory")) return "inventory";
   if (pathname.startsWith("/accounting")) return "finance";

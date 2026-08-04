@@ -24,7 +24,6 @@ import { UserCombobox } from "@/components/ui/user-combobox";
 import { useAccess, useCan } from "@/hooks/api/access";
 import {
   useArchiveOrg,
-  useRestoreOrg,
   useLeaveOrg,
   useDeleteOrg,
   useOrgMembers,
@@ -57,14 +56,12 @@ export function OrgDangerZoneSection({ org }: Props) {
 
   const [transferOpen, setTransferOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
-  const [restoreOpen, setRestoreOpen] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const [selectedUserId, setSelectedUserId] = useState("");
 
   const archiveMutation = useArchiveOrg();
-  const restoreMutation = useRestoreOrg();
   const initiateTransfer = useInitiateOrgTransfer();
   const cancelTransfer = useCancelOrgTransfer();
   const leaveMutation = useLeaveOrg();
@@ -107,16 +104,11 @@ export function OrgDangerZoneSection({ org }: Props) {
     setArchiveOpen(open);
   }, []);
 
-  const handleRestoreOpenChange = useCallback((open: boolean) => {
-    setRestoreOpen(open);
-  }, []);
-
   const handleLeaveOpenChange = useCallback((open: boolean) => {
     setLeaveOpen(open);
   }, []);
 
   const handleOpenArchive = useCallback(() => setArchiveOpen(true), []);
-  const handleOpenRestore = useCallback(() => setRestoreOpen(true), []);
   const handleOpenLeave = useCallback(() => setLeaveOpen(true), []);
 
   const handleOpenDelete = useCallback(() => {
@@ -179,19 +171,20 @@ export function OrgDangerZoneSection({ org }: Props) {
 
   function handleConfirmArchive() {
     archiveMutation.mutate(undefined, {
-      onSuccess: () => {
+      onSuccess: async (data) => {
         toast.success("Organization archived");
         setArchiveOpen(false);
-      },
-      onError: (err) => toast.error(getErrorMessage(err)),
-    });
-  }
-
-  function handleConfirmRestore() {
-    restoreMutation.mutate(undefined, {
-      onSuccess: () => {
-        toast.success("Organization restored");
-        setRestoreOpen(false);
+        clearBackendTokenCache();
+        await update(
+          data.nextOrgId ? { orgId: data.nextOrgId } : { orgId: null },
+        );
+        queryClient.clear();
+        if (data.nextOrgId) {
+          router.replace("/dashboard");
+        } else {
+          router.replace("/org-setup");
+        }
+        router.refresh();
       },
       onError: (err) => toast.error(getErrorMessage(err)),
     });
@@ -335,37 +328,21 @@ export function OrgDangerZoneSection({ org }: Props) {
           </OrgSettingsActionRow>
         )}
 
-        {showOwnerManageActions && (
+        {showOwnerManageActions && org.status !== "ARCHIVED" && (
           <>
-            {org.status === "ARCHIVED" ? (
-              <OrgSettingsActionRow
-                title="Restore Organization"
-                description="Restore access for all members"
+            <OrgSettingsActionRow
+              title="Archive Organization"
+              description="Members will lose access until you restore it from org setup or the organization switcher"
+            >
+              <Button
+                variant="outline"
+                size="sm"
+                className={DESTRUCTIVE_OUTLINE_BTN}
+                onClick={handleOpenArchive}
               >
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={DESTRUCTIVE_OUTLINE_BTN}
-                  onClick={handleOpenRestore}
-                >
-                  Restore
-                </Button>
-              </OrgSettingsActionRow>
-            ) : (
-              <OrgSettingsActionRow
-                title="Archive Organization"
-                description="Members will lose access until the org is restored"
-              >
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={DESTRUCTIVE_OUTLINE_BTN}
-                  onClick={handleOpenArchive}
-                >
-                  Archive
-                </Button>
-              </OrgSettingsActionRow>
-            )}
+                Archive
+              </Button>
+            </OrgSettingsActionRow>
 
             <OrgSettingsActionRow
               title="Delete Organization"
@@ -447,19 +424,10 @@ export function OrgDangerZoneSection({ org }: Props) {
             open={archiveOpen}
             onOpenChange={handleArchiveOpenChange}
             title="Archive Organization"
-            description="This will archive your organization. Members will lose access until it's restored."
+            description="This will archive your organization. Other members lose access immediately. You can restore it later from org setup or the organization switcher."
             onConfirm={handleConfirmArchive}
             isPending={archiveMutation.isPending}
             destructive
-          />
-
-          <ConfirmDialog
-            open={restoreOpen}
-            onOpenChange={handleRestoreOpenChange}
-            title="Restore Organization"
-            description="Restore this organization and re-enable member access."
-            onConfirm={handleConfirmRestore}
-            isPending={restoreMutation.isPending}
           />
 
           <Dialog open={deleteOpen} onOpenChange={handleDeleteOpenChange}>

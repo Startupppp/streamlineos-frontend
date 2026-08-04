@@ -59,6 +59,22 @@ function getStatus(inv: Invitation): InvStatus {
   return "pending";
 }
 
+export function isInvitationResendPending(
+  isPending: boolean,
+  pendingInvitationId: string | undefined,
+  invitationId: string,
+): boolean {
+  return isPending && pendingInvitationId === invitationId;
+}
+
+export function isInvitationRoleChangePending(
+  isPending: boolean,
+  pendingInvitationId: string | undefined,
+  invitationId: string,
+): boolean {
+  return isPending && pendingInvitationId === invitationId;
+}
+
 function InvitationRoleSelect({
   invitationId,
   role,
@@ -123,9 +139,17 @@ export function UserInvitationsPanel() {
     },
     { enabled: canViewInvitations },
   );
-  const { mutate: resend, isPending: isResending } = useResendInvite();
+  const {
+    mutate: resend,
+    isPending: isResending,
+    variables: resendingInvitationId,
+  } = useResendInvite();
   const { mutate: cancel, isPending: isCancelling } = useCancelInvitation();
-  const { mutate: changeRole, isPending: isChangingRole } = useChangeInvitationRole();
+  const {
+    mutate: changeRole,
+    isPending: isChangingRole,
+    variables: changingRoleVariables,
+  } = useChangeInvitationRole();
 
   const rows = data?.data ?? [];
 
@@ -256,7 +280,11 @@ export function UserInvitationsPanel() {
           <InvitationRoleSelect
             invitationId={inv.id}
             role={inv.role}
-            disabled={isChangingRole}
+            disabled={isInvitationRoleChangePending(
+              isChangingRole,
+              changingRoleVariables?.invitationId,
+              inv.id,
+            )}
             onChange={handleRoleChange}
           />
         );
@@ -308,6 +336,11 @@ export function UserInvitationsPanel() {
       className: "w-[110px]",
       cell: (inv) => {
         const s = getStatus(inv);
+        const isResendingRow = isInvitationResendPending(
+          isResending,
+          resendingInvitationId,
+          inv.id,
+        );
         const isActionable = s === "pending" || s === "expired";
         const canResend = isActionable && canInvite;
         const canReinvite = s === "revoked" && canInvite;
@@ -321,7 +354,7 @@ export function UserInvitationsPanel() {
                 size="icon"
                 className="h-7 w-7"
                 onClick={() => handleResend(inv.id, "resend")}
-                isPending={isResending}
+                isPending={isResendingRow}
                 disabled={isCancelling}
                 aria-label="Resend invitation"
               >
@@ -334,7 +367,7 @@ export function UserInvitationsPanel() {
                 size="sm"
                 className="h-7 px-2 text-xs"
                 onClick={() => handleResend(inv.id, "reinvite")}
-                isPending={isResending}
+                isPending={isResendingRow}
                 disabled={isCancelling}
                 aria-label="Re-invite"
               >
@@ -350,7 +383,7 @@ export function UserInvitationsPanel() {
                 size="icon"
                 className="h-7 w-7 text-destructive hover:text-destructive"
                 onClick={() => handleCancelRequest(inv.id)}
-                disabled={isResending || isCancelling}
+                disabled={isResendingRow || isCancelling}
                 aria-label="Cancel invitation"
               />
             )}
@@ -384,7 +417,7 @@ export function UserInvitationsPanel() {
     <>
       <PageWrapper
         title="Invitations"
-        subtitle="Manage and track team invitations."
+        subtitle="Manage and track organization invitations."
         actions={
           canInvite ? (
             <AnimatedIconButton

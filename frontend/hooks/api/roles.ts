@@ -31,15 +31,16 @@ export const useRole = (
   id: number,
   options?: Omit<
     UseQueryOptions<Role, Error>,
-    "queryKey" | "queryFn" | "enabled"
+    "queryKey" | "queryFn"
   >
 ) => {
+  const canManage = useCan("settings:rbac:manage");
   return useQuery<Role, Error>({
     queryKey: queryKeys.roles.detail(id),
     queryFn: () => apiClient.get<Role>(`/roles/${id}`),
-    enabled: id > 0,
     staleTime: 30 * 60_000,
     ...options,
+    enabled: canManage && id > 0 && (options?.enabled ?? true),
   });
 };
 
@@ -125,16 +126,17 @@ export const useRolePermissionGrants = (
   roleId: number,
   options?: Omit<
     UseQueryOptions<RolePermissionGrant[], Error>,
-    "queryKey" | "queryFn" | "enabled"
+    "queryKey" | "queryFn"
   >
 ) => {
+  const canManage = useCan("settings:rbac:manage");
   return useQuery<RolePermissionGrant[], Error>({
     queryKey: queryKeys.roles.permissions(roleId),
     queryFn: () =>
       apiClient.get<RolePermissionGrant[]>(`/roles/${roleId}/permissions`),
-    enabled: roleId > 0,
     staleTime: 5 * 60_000,
     ...options,
+    enabled: canManage && roleId > 0 && (options?.enabled ?? true),
   });
 };
 
@@ -163,15 +165,16 @@ export const useRoleMembers = (
   roleId: number,
   options?: Omit<
     UseQueryOptions<RoleMember[], Error>,
-    "queryKey" | "queryFn" | "enabled"
+    "queryKey" | "queryFn"
   >
 ) => {
+  const canManage = useCan("settings:rbac:manage");
   return useQuery<RoleMember[], Error>({
     queryKey: queryKeys.roles.members(roleId),
     queryFn: () => apiClient.get<RoleMember[]>(`/roles/${roleId}/members`),
-    enabled: roleId > 0,
     staleTime: 5 * 60_000,
     ...options,
+    enabled: canManage && roleId > 0 && (options?.enabled ?? true),
   });
 };
 
@@ -257,10 +260,12 @@ export interface AssignableDepartment {
 export function useAssignableDepartments(
   options?: Omit<UseQueryOptions<AssignableDepartment[], Error>, "queryKey" | "queryFn">
 ) {
+  const canManage = useCan("settings:rbac:manage");
   return useQuery<AssignableDepartment[], Error>({
     queryKey: queryKeys.roles.departments(),
     queryFn: () => apiClient.get<AssignableDepartment[]>("/roles/departments"),
     staleTime: 5 * 60_000,
     ...options,
+    enabled: canManage && (options?.enabled ?? true),
   });
 }

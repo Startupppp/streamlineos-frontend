@@ -5,7 +5,7 @@ import { PmPageShell, PM_PANEL } from "@/features/build/shared/pm-chrome";
 
 export default function PortalProjectLoading() {
   return (
-    <PageWrapper title="Project" backHref="/build/portal">
+    <PageWrapper title="Project" backHref="/portal">
       <PmPageShell>
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="space-y-2">

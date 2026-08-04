@@ -29,10 +29,12 @@ import {
 } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useHrEmployees } from "@/hooks/api/hr/employees";
-import { useSimulateAccess } from "@/hooks/api/access/simulate";
+import {
+  useSimulateAccess,
+  useSimulationCandidates,
+  type SimulationCandidate,
+} from "@/hooks/api/access/simulate";
 import { getInitials } from "@/lib/format-utils";
-import type { Employee } from "@/types/hr";
 import type { DataScope } from "@/types/access";
 import { MODULE_LABELS } from "@/components/rbac/permission-matrix-types";
 
@@ -63,19 +65,15 @@ export default function SimulatePage() {
 }
 
 function SimulateContent() {
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [selectedEmployee, setSelectedEmployee] = useState<SimulationCandidate | null>(null);
+  const [search, setSearch] = useState("");
   const [selectorOpen, setSelectorOpen] = useState(false);
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
 
-  const employeesQuery = useHrEmployees({ limit: 100 });
+  const employeesQuery = useSimulationCandidates(search);
   const simulateQuery = useSimulateAccess(selectedEmployee?.id);
 
-  const employees = useMemo<Employee[]>(() => {
-    const data = employeesQuery.data;
-    if (!data) return [];
-    if (Array.isArray(data)) return data;
-    return data.data ?? [];
-  }, [employeesQuery.data]);
+  const employees = useMemo(() => employeesQuery.data?.data ?? [], [employeesQuery.data]);
 
   const grouped = useMemo(() => {
     if (!simulateQuery.data) return new Map<string, Array<{ key: string; scope: DataScope }>>();
@@ -90,7 +88,7 @@ function SimulateContent() {
     return map;
   }, [simulateQuery.data]);
 
-  const handleSelectEmployee = useCallback((employee: Employee) => {
+  const handleSelectEmployee = useCallback((employee: SimulationCandidate) => {
     setSelectedEmployee(employee);
     setSelectorOpen(false);
     setExpandedModules(new Set());
@@ -100,6 +98,7 @@ function SimulateContent() {
     setSelectedEmployee(null);
     setExpandedModules(new Set());
   }, []);
+  const handleSearchChange = useCallback((value: string) => setSearch(value), []);
 
   const handleToggleModule = useCallback((mod: string) => {
     setExpandedModules((prev) => {
@@ -156,8 +155,12 @@ function SimulateContent() {
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-[320px] p-0" align="start">
-                  <Command>
-                    <CommandInput placeholder="Search employees…" />
+                  <Command shouldFilter={false}>
+                    <CommandInput
+                      value={search}
+                      onValueChange={handleSearchChange}
+                      placeholder="Search members…"
+                    />
                     <CommandList className="max-h-[240px]">
                       <CommandEmpty>No employees found.</CommandEmpty>
                       <CommandGroup>
@@ -215,8 +218,8 @@ function SimulateContent() {
 }
 
 interface EmployeeCommandItemProps {
-  employee: Employee;
-  onSelect: (employee: Employee) => void;
+  employee: SimulationCandidate;
+  onSelect: (employee: SimulationCandidate) => void;
 }
 
 function EmployeeCommandItem({ employee, onSelect }: EmployeeCommandItemProps) {

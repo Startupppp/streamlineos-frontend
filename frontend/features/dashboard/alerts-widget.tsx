@@ -11,7 +11,7 @@ import { EmptyInboxIllustration } from "@/components/illustrations";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import {
-  useNotifications,
+  useUnreadNotifications,
   useMarkNotificationRead,
 } from "@/hooks/api/notifications";
 import {
@@ -21,7 +21,6 @@ import {
 import { formatRelativeTime } from "@/features/notifications/format-relative-time";
 import type { Notification } from "@/types/notifications";
 
-const ALERT_FETCH_LIMIT = 20;
 const ALERT_DISPLAY_LIMIT = 5;
 const IMPORTANT_PRIORITIES: readonly NotificationPriority[] = ["CRITICAL", "HIGH"];
 
@@ -84,10 +83,9 @@ export function AlertsWidget() {
   const { data: session } = useSession();
   const markRead = useMarkNotificationRead();
 
-  const { data, isLoading, error } = useNotifications(
-    { section: "UNREAD", limit: ALERT_FETCH_LIMIT },
-    { enabled: !!session?.orgId },
-  );
+  const { data, isLoading, error } = useUnreadNotifications({
+    enabled: !!session?.orgId,
+  });
 
   const alerts = useMemo(() => {
     return (data ?? [])

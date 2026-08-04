@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import {
@@ -13,6 +11,7 @@ import {
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import type {
   Channel,
   ChatNotificationPreference,
@@ -38,12 +37,16 @@ import type {
 } from "@/types/chat";
 
 export function useChatChannels(enabled = true) {
+  const { data: session } = useSession();
+  const orgId = session?.orgId;
+  const canRead = useCan("chat:channels:read");
+  const chatEnabled = useModuleEnabled("chat");
   return useQuery({
-    queryKey: queryKeys.chat.myChannels(),
+    queryKey: queryKeys.chat.myChannels(orgId),
     queryFn: () => apiClient.get<Channel[]>("/chat/channels"),
     staleTime: 300_000,
     refetchOnWindowFocus: true,
-    enabled,
+    enabled: !!orgId && enabled && chatEnabled && canRead,
   });
 }
 
@@ -80,7 +83,7 @@ export function useChatMessages(channelId: number) {
     queryFn: ({ pageParam }) =>
       apiClient.get<MessagesPage>(
         `/chat/channels/${channelId}/messages`,
-        pageParam ? { cursor: pageParam } : undefined
+        pageParam ? { cursor: pageParam } : undefined,
       ),
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     initialPageParam: undefined as number | undefined,
@@ -88,14 +91,17 @@ export function useChatMessages(channelId: number) {
   });
 }
 
-export function useChatPoll(channelId: number, since: string, enabled: boolean) {
+export function useChatPoll(
+  channelId: number,
+  since: string,
+  enabled: boolean,
+) {
   return useQuery({
     queryKey: queryKeys.chat.poll(channelId, since),
     queryFn: () =>
-      apiClient.get<Message[]>(
-        `/chat/channels/${channelId}/messages/poll`,
-        { since }
-      ),
+      apiClient.get<Message[]>(`/chat/channels/${channelId}/messages/poll`, {
+        since,
+      }),
     staleTime: 2 * 60_000,
     enabled: enabled && channelId > 0,
     refetchInterval: enabled ? 30_000 : false,
@@ -105,12 +111,14 @@ export function useChatPoll(channelId: number, since: string, enabled: boolean) 
 export function useChatUnreadTotal(enabled = true) {
   const { data: session } = useSession();
   const orgId = session?.orgId;
+  const canRead = useCan("chat:channels:read");
+  const chatEnabled = useModuleEnabled("chat");
   return useQuery({
-    queryKey: queryKeys.chat.unreadTotal(),
+    queryKey: queryKeys.chat.unreadTotal(orgId),
     queryFn: () => apiClient.get<{ total: number }>("/chat/unread"),
     staleTime: 300_000,
     refetchOnWindowFocus: true,
-    enabled: !!orgId && enabled,
+    enabled: !!orgId && enabled && chatEnabled && canRead,
   });
 }
 
@@ -141,16 +149,15 @@ export function useSendMessage() {
     mutationFn: (input: SendMessageInput) =>
       apiClient.post<Message>(
         `/chat/channels/${input.channelId}/messages`,
-        input
+        input,
       ),
     onMutate: async (variables) => {
-
       await queryClient.cancelQueries({
         queryKey: queryKeys.chat.messages(variables.channelId),
       });
 
       const previousData = queryClient.getQueryData<InfiniteData<MessagesPage>>(
-        queryKeys.chat.messages(variables.channelId)
+        queryKeys.chat.messages(variables.channelId),
       );
 
       const optimisticMsg: Message = {
@@ -181,22 +188,21 @@ export function useSendMessage() {
         const pages = previousData.pages.map((page, i) =>
           i === 0
             ? { ...page, messages: [...page.messages, optimisticMsg] }
-            : page
+            : page,
         );
         queryClient.setQueryData<InfiniteData<MessagesPage>>(
           queryKeys.chat.messages(variables.channelId),
-          { ...previousData, pages }
+          { ...previousData, pages },
         );
       }
 
       return { previousData };
     },
     onError: (_, variables, context) => {
-
       if (context?.previousData) {
         queryClient.setQueryData(
           queryKeys.chat.messages(variables.channelId),
-          context.previousData
+          context.previousData,
         );
       }
     },
@@ -213,10 +219,14 @@ export function useEditMessage() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ["chat", "messages", "edit"],
-    mutationFn: ({ channelId, messageId, content }: EditMessageInput & { channelId: number }) =>
+    mutationFn: ({
+      channelId,
+      messageId,
+      content,
+    }: EditMessageInput & { channelId: number }) =>
       apiClient.patch<{ ok: boolean }>(
         `/chat/channels/${channelId}/messages/${messageId}`,
-        { content }
+        { content },
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.all });
@@ -228,9 +238,15 @@ export function useDeleteMessage() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ["chat", "messages", "delete"],
-    mutationFn: ({ channelId, messageId }: { channelId: number; messageId: number }) =>
+    mutationFn: ({
+      channelId,
+      messageId,
+    }: {
+      channelId: number;
+      messageId: number;
+    }) =>
       apiClient.delete<{ ok: boolean }>(
-        `/chat/channels/${channelId}/messages/${messageId}`
+        `/chat/channels/${channelId}/messages/${messageId}`,
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.all });
@@ -283,7 +299,9 @@ export function useCreatePublicChannel() {
       apiClient.post<Channel>("/chat/channels", { type: "PUBLIC", ...input }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.publicChannels() });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.chat.publicChannels(),
+      });
     },
   });
 }
@@ -308,7 +326,9 @@ export function useJoinChannel() {
       apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/join`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.publicChannels() });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.chat.publicChannels(),
+      });
     },
   });
 }
@@ -321,7 +341,9 @@ export function useLeaveChannel() {
       apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/leave`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.publicChannels() });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.chat.publicChannels(),
+      });
     },
   });
 }
@@ -330,10 +352,20 @@ export function useAddChannelMember() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ["chat", "channels", "add-member"],
-    mutationFn: ({ channelId, userId }: { channelId: number; userId: string }) =>
-      apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/members`, { userId }),
+    mutationFn: ({
+      channelId,
+      userId,
+    }: {
+      channelId: number;
+      userId: string;
+    }) =>
+      apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/members`, {
+        userId,
+      }),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.channel(variables.channelId) });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.chat.channel(variables.channelId),
+      });
     },
   });
 }
@@ -342,10 +374,20 @@ export function useRemoveChannelMember() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ["chat", "channels", "remove-member"],
-    mutationFn: ({ channelId, userId }: { channelId: number; userId: string }) =>
-      apiClient.delete<{ ok: boolean }>(`/chat/channels/${channelId}/members/${userId}`),
+    mutationFn: ({
+      channelId,
+      userId,
+    }: {
+      channelId: number;
+      userId: string;
+    }) =>
+      apiClient.delete<{ ok: boolean }>(
+        `/chat/channels/${channelId}/members/${userId}`,
+      ),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.channel(variables.channelId) });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.chat.channel(variables.channelId),
+      });
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
     },
   });
@@ -384,7 +426,7 @@ export function useToggleReaction(channelId: number) {
     mutationFn: ({ messageId, emoji }: { messageId: number; emoji: string }) =>
       apiClient.post<{ reactions: Record<string, string[]> }>(
         `/chat/channels/${channelId}/messages/${messageId}/reactions`,
-        { emoji }
+        { emoji },
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -397,7 +439,8 @@ export function useToggleReaction(channelId: number) {
 export function useChatPins(channelId: number) {
   return useQuery({
     queryKey: queryKeys.chat.pins(channelId),
-    queryFn: () => apiClient.get<PinnedMessage[]>(`/chat/channels/${channelId}/pins`),
+    queryFn: () =>
+      apiClient.get<PinnedMessage[]>(`/chat/channels/${channelId}/pins`),
     staleTime: 2 * 60_000,
     enabled: channelId > 0,
   });
@@ -407,10 +450,20 @@ export function usePinMessage() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ["chat", "messages", "pin"],
-    mutationFn: ({ channelId, messageId }: { channelId: number; messageId: number }) =>
-      apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/pins`, { messageId }),
+    mutationFn: ({
+      channelId,
+      messageId,
+    }: {
+      channelId: number;
+      messageId: number;
+    }) =>
+      apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/pins`, {
+        messageId,
+      }),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.pins(variables.channelId) });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.chat.pins(variables.channelId),
+      });
     },
   });
 }
@@ -419,10 +472,20 @@ export function useUnpinMessage() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ["chat", "messages", "unpin"],
-    mutationFn: ({ channelId, messageId }: { channelId: number; messageId: number }) =>
-      apiClient.delete<{ ok: boolean }>(`/chat/channels/${channelId}/pins/${messageId}`),
+    mutationFn: ({
+      channelId,
+      messageId,
+    }: {
+      channelId: number;
+      messageId: number;
+    }) =>
+      apiClient.delete<{ ok: boolean }>(
+        `/chat/channels/${channelId}/pins/${messageId}`,
+      ),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.pins(variables.channelId) });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.chat.pins(variables.channelId),
+      });
     },
   });
 }
@@ -461,7 +524,10 @@ export function useSendThreadReply(channelId: number, parentMessageId: number) {
 export function useSearchMessages(query: string, enabled: boolean) {
   return useQuery({
     queryKey: [...queryKeys.chat.all, "search", "messages", query] as const,
-    queryFn: () => apiClient.get<SearchMessagesResult>("/chat/search/messages", { q: query }),
+    queryFn: () =>
+      apiClient.get<SearchMessagesResult>("/chat/search/messages", {
+        q: query,
+      }),
     enabled: enabled && query.trim().length >= 2,
     staleTime: 30_000,
     placeholderData: keepPreviousData,
@@ -471,7 +537,10 @@ export function useSearchMessages(query: string, enabled: boolean) {
 export function useSearchChannels(query: string, enabled: boolean) {
   return useQuery({
     queryKey: [...queryKeys.chat.all, "search", "channels", query] as const,
-    queryFn: () => apiClient.get<SearchChannelResult[]>("/chat/search/channels", { q: query }),
+    queryFn: () =>
+      apiClient.get<SearchChannelResult[]>("/chat/search/channels", {
+        q: query,
+      }),
     enabled: enabled && query.trim().length >= 1,
     staleTime: 30_000,
     placeholderData: keepPreviousData,
@@ -481,7 +550,8 @@ export function useSearchChannels(query: string, enabled: boolean) {
 export function useSearchUsers(query: string, enabled: boolean) {
   return useQuery({
     queryKey: [...queryKeys.chat.all, "search", "users", query] as const,
-    queryFn: () => apiClient.get<SearchUserResult[]>("/chat/search/users", { q: query }),
+    queryFn: () =>
+      apiClient.get<SearchUserResult[]>("/chat/search/users", { q: query }),
     enabled: enabled && query.trim().length >= 1,
     staleTime: 30_000,
     placeholderData: keepPreviousData,
@@ -492,7 +562,10 @@ export function useSavedMessages() {
   return useInfiniteQuery({
     queryKey: queryKeys.chat.savedMessages(),
     queryFn: ({ pageParam }) =>
-      apiClient.get<SavedMessagesPage>("/chat/saved", pageParam ? { cursor: pageParam } : undefined),
+      apiClient.get<SavedMessagesPage>(
+        "/chat/saved",
+        pageParam ? { cursor: pageParam } : undefined,
+      ),
     getNextPageParam: (last) => last.nextCursor,
     initialPageParam: undefined as number | undefined,
     staleTime: 60_000,
@@ -503,8 +576,13 @@ export function useSaveMessage() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ["chat", "messages", "save"],
-    mutationFn: (messageId: number) => apiClient.post<{ ok: boolean }>(`/chat/saved/${messageId}`),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.chat.savedMessages() }); },
+    mutationFn: (messageId: number) =>
+      apiClient.post<{ ok: boolean }>(`/chat/saved/${messageId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.chat.savedMessages(),
+      });
+    },
   });
 }
 
@@ -512,8 +590,13 @@ export function useUnsaveMessage() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ["chat", "messages", "unsave"],
-    mutationFn: (messageId: number) => apiClient.delete<{ ok: boolean }>(`/chat/saved/${messageId}`),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.chat.savedMessages() }); },
+    mutationFn: (messageId: number) =>
+      apiClient.delete<{ ok: boolean }>(`/chat/saved/${messageId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.chat.savedMessages(),
+      });
+    },
   });
 }
 
@@ -521,10 +604,13 @@ export function useArchiveChannel() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ["chat", "channels", "archive"],
-    mutationFn: (channelId: number) => apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/archive`),
+    mutationFn: (channelId: number) =>
+      apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/archive`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.archivedChannels() });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.chat.archivedChannels(),
+      });
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.unreadTotal() });
     },
   });
@@ -534,10 +620,13 @@ export function useUnarchiveChannel() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ["chat", "channels", "unarchive"],
-    mutationFn: (channelId: number) => apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/unarchive`),
+    mutationFn: (channelId: number) =>
+      apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/unarchive`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.archivedChannels() });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.chat.archivedChannels(),
+      });
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.unreadTotal() });
     },
   });
@@ -555,7 +644,10 @@ export function useMarkChannelUnread() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ["chat", "channels", "mark-unread"],
-    mutationFn: (channelId: number) => apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/mark-unread`),
+    mutationFn: (channelId: number) =>
+      apiClient.post<{ ok: boolean }>(
+        `/chat/channels/${channelId}/mark-unread`,
+      ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.unreadTotal() });
@@ -563,10 +655,14 @@ export function useMarkChannelUnread() {
   });
 }
 
-export function useEntityChannel(entityType: string | null, entityId: string | null) {
+export function useEntityChannel(
+  entityType: string | null,
+  entityId: string | null,
+) {
   return useQuery({
     queryKey: [...queryKeys.chat.all, "entity", entityType, entityId] as const,
-    queryFn: () => apiClient.get<Channel>(`/chat/channels/entity/${entityType}/${entityId}`),
+    queryFn: () =>
+      apiClient.get<Channel>(`/chat/channels/entity/${entityType}/${entityId}`),
     enabled: Boolean(entityType && entityId),
     staleTime: 5 * 60_000,
   });
@@ -576,8 +672,17 @@ export function useMuteChannel() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ["chat", "channels", "mute"],
-    mutationFn: ({ channelId, duration }: { channelId: number; duration: string }) =>
-      apiClient.post<{ ok: boolean; mutedUntil: string }>(`/chat/channels/${channelId}/mute`, { duration }),
+    mutationFn: ({
+      channelId,
+      duration,
+    }: {
+      channelId: number;
+      duration: string;
+    }) =>
+      apiClient.post<{ ok: boolean; mutedUntil: string }>(
+        `/chat/channels/${channelId}/mute`,
+        { duration },
+      ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
     },
@@ -623,7 +728,10 @@ export function useUnfavoriteChannel() {
 export function useChannelInviteLink(channelId: number, enabled: boolean) {
   return useQuery({
     queryKey: queryKeys.chat.inviteLink(channelId),
-    queryFn: () => apiClient.post<{ token: string }>(`/chat/channels/${channelId}/invite-link`),
+    queryFn: () =>
+      apiClient.post<{ token: string }>(
+        `/chat/channels/${channelId}/invite-link`,
+      ),
     enabled: enabled && channelId > 0,
     staleTime: 60_000,
   });
@@ -634,9 +742,13 @@ export function useRegenerateInviteLink() {
   return useMutation({
     mutationKey: ["chat", "channels", "invite-link", "regenerate"],
     mutationFn: (channelId: number) =>
-      apiClient.post<{ token: string }>(`/chat/channels/${channelId}/invite-link/regenerate`),
+      apiClient.post<{ token: string }>(
+        `/chat/channels/${channelId}/invite-link/regenerate`,
+      ),
     onSuccess: (_, channelId) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.inviteLink(channelId) });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.chat.inviteLink(channelId),
+      });
     },
   });
 }
@@ -646,7 +758,9 @@ export function useJoinViaInviteLink() {
   return useMutation({
     mutationKey: ["chat", "invite-links", "join"],
     mutationFn: (token: string) =>
-      apiClient.post<{ ok: boolean; channelId: number }>(`/chat/invite-links/${token}/join`),
+      apiClient.post<{ ok: boolean; channelId: number }>(
+        `/chat/invite-links/${token}/join`,
+      ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
     },
@@ -664,10 +778,10 @@ export function useSetNotificationPreference() {
       channelId: number;
       preference: ChatNotificationPreference;
     }) =>
-      apiClient.post<{ ok: boolean; notificationPreference: ChatNotificationPreference }>(
-        `/chat/channels/${channelId}/notification-preference`,
-        { preference },
-      ),
+      apiClient.post<{
+        ok: boolean;
+        notificationPreference: ChatNotificationPreference;
+      }>(`/chat/channels/${channelId}/notification-preference`, { preference }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
     },

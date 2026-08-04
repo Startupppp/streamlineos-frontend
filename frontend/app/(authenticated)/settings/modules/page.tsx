@@ -105,6 +105,7 @@ function ModuleCard({
 function ModulesContent() {
   const { data: modules, isLoading, isError, refetch } = useOrgModules();
   const toggleModule = useToggleOrgModule();
+  const pendingModuleKey = toggleModule.variables?.moduleKey;
 
   const handleToggle = useCallback(
     (moduleKey: string, enabled: boolean) => {
@@ -158,7 +159,9 @@ function ModulesContent() {
               key={mod.moduleKey}
               moduleKey={mod.moduleKey}
               enabled={mod.enabled}
-              isPending={toggleModule.isPending}
+              isPending={
+                toggleModule.isPending && pendingModuleKey === mod.moduleKey
+              }
               core={mod.core}
               onToggle={handleToggle}
             />

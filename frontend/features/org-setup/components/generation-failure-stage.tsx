@@ -55,7 +55,7 @@ export function GenerationFailureStage({
     ? `${workspaceLabel} is ready`
     : `We couldn't finish setting up ${workspaceLabel}`;
   const subtitle = orgExists
-    ? "Your organization was created — some invitations didn't go through. Jump in now or invite teammates later from the Users area."
+    ? "Your organization was created — some invitations didn't go through. Jump in now or invite teammates later from People."
     : "Nothing was lost — your answers are saved. Retry to pick up where you left off.";
 
   return (
@@ -158,7 +158,7 @@ export function GenerationFailureStage({
                   disabled={isNavigating}
                   className="h-9 flex-1"
                 >
-                  Invite from Users
+                  Invite from People
                 </Button>
               )}
             </div>

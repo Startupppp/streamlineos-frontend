@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -14,20 +14,13 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { isApiError } from "@/lib/api-client";
+import { MemberCandidateSelect } from "./member-candidate-select";
 import {
   useAddModuleMember,
   useUpdateModuleMember,
   useRemoveModuleMember,
-  useModuleMemberCandidates,
   type ModuleMember,
   type ModuleMemberGroup,
 } from "@/hooks/api/module-access";
@@ -53,10 +46,13 @@ export function AddMemberDialog({
 }: AddMemberDialogProps) {
   const [selectedUserId, setSelectedUserId] = useState(defaultUserId ?? "");
   const [selectedGroupIds, setSelectedGroupIds] = useState<Set<number>>(new Set());
-  const candidatesQuery = useModuleMemberCandidates(moduleKey);
   const addMember = useAddModuleMember(moduleKey);
 
-  const candidates = candidatesQuery.data ?? [];
+  useEffect(() => {
+    if (!open) return;
+    setSelectedUserId(defaultUserId ?? "");
+    setSelectedGroupIds(new Set());
+  }, [defaultUserId, open]);
 
   const handleClose = useCallback(
     (nextOpen: boolean) => {
@@ -107,26 +103,13 @@ export function AddMemberDialog({
         <div className="space-y-4 py-1">
           <div className="space-y-1.5">
             <p className="text-sm font-medium">User</p>
-            <Select value={selectedUserId} onValueChange={handleUserChange}>
-              <SelectTrigger className="w-full h-9 text-sm">
-                <SelectValue placeholder="Select a user…" />
-              </SelectTrigger>
-              <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-                {candidatesQuery.isLoading ? (
-                  <div className="py-3 px-3 text-xs text-muted-foreground">Loading…</div>
-                ) : candidates.length === 0 ? (
-                  <div className="py-3 px-3 text-xs text-muted-foreground">
-                    All org members already have access
-                  </div>
-                ) : (
-                  candidates.map((c) => (
-                    <SelectItem key={c.userId} value={c.userId}>
-                      {c.displayName || c.email}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
+            <MemberCandidateSelect
+              moduleKey={moduleKey}
+              value={selectedUserId}
+              onValueChange={handleUserChange}
+              defaultUserId={defaultUserId}
+              enabled={open}
+            />
           </div>
 
           {allGroups.length > 0 ? (
@@ -204,6 +187,11 @@ export function EditGroupsDialog({
   const initialGroupIds = new Set(member?.groups.map((g) => g.id) ?? []);
   const [selectedGroupIds, setSelectedGroupIds] = useState<Set<number>>(initialGroupIds);
   const updateMember = useUpdateModuleMember(moduleKey);
+
+  useEffect(() => {
+    if (!open) return;
+    setSelectedGroupIds(new Set(member?.groups.map((group) => group.id) ?? []));
+  }, [member, open]);
 
   const handleOpenChange = useCallback(
     (nextOpen: boolean) => {

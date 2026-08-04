@@ -40,6 +40,7 @@ import { OrgSetupShell } from "@/features/org-setup/components/org-setup-shell";
 import { StepWelcome } from "@/features/org-setup/components/step-welcome";
 import { StepBasics } from "@/features/org-setup/components/step-basics";
 import { StepInviteLaunch } from "@/features/org-setup/components/step-invite-launch";
+import { ArchivedOrgsRestore } from "@/features/settings/organization/archived-orgs-restore";
 
 function syncAppsFromGoals(data: WizardData): WizardData {
   const derived = deriveAppsFromGoals(data.goals);
@@ -235,6 +236,7 @@ export default function OrgSetupPage() {
           onSkip={handleSkipToDashboard}
           isSkipping={isSkipping}
           firstName={firstName}
+          restoreSlot={<ArchivedOrgsRestore />}
         />
       )}
       {currentStepId === "basics" && (

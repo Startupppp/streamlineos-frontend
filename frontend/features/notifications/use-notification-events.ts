@@ -40,14 +40,15 @@ async function fetchStreamToken(): Promise<string | null> {
 
 export function useNotificationEvents() {
   const qc = useQueryClient();
-  const { status } = useSession();
+  const { data: session, status } = useSession();
+  const orgId = session?.orgId;
   const router = useRouter();
   const esRef = useRef<EventSource | null>(null);
   const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const activeRef = useRef(true);
 
   useEffect(() => {
-    if (status !== "authenticated") return;
+    if (status !== "authenticated" || !orgId) return;
     activeRef.current = true;
 
     function showIncoming(n: IncomingNotification) {
@@ -82,8 +83,14 @@ export function useNotificationEvents() {
       esRef.current = es;
 
       es.onmessage = (event) => {
-        void qc.invalidateQueries({ queryKey: queryKeys.notifications.unreadCount() });
-        void qc.invalidateQueries({ queryKey: queryKeys.notifications.list() });
+        void qc.invalidateQueries({
+          queryKey: queryKeys.notifications.unreadCount(orgId),
+          exact: true,
+        });
+        void qc.invalidateQueries({
+          queryKey: queryKeys.notifications.unreadList(orgId),
+          exact: true,
+        });
         try {
           const parsed = JSON.parse(event.data) as { type?: string; notification?: IncomingNotification };
           if (parsed.type === "notification" && parsed.notification) showIncoming(parsed.notification);
@@ -111,5 +118,5 @@ export function useNotificationEvents() {
       esRef.current?.close();
       esRef.current = null;
     };
-  }, [status, qc, router]);
+  }, [status, orgId, qc, router]);
 }

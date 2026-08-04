@@ -164,6 +164,11 @@ export async function proxy(req: NextRequest) {
     return redirectTo(req, "/build" + rest, req.nextUrl.search);
   }
 
+  if (matchesRoute(pathname, "/product-management")) {
+    const rest = pathname.slice("/product-management".length);
+    return redirectTo(req, "/build" + rest, req.nextUrl.search);
+  }
+
   if (pathname.startsWith("/api/")) return NextResponse.next();
 
   const secret = process.env.NEXTAUTH_SECRET;
@@ -255,6 +260,7 @@ export async function proxy(req: NextRequest) {
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set("x-nonce", nonce);
   requestHeaders.set("x-pathname", pathname);
+  requestHeaders.set("x-search", req.nextUrl.search.slice(1));
   const response = NextResponse.next({
     request: { headers: requestHeaders },
   });

@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
@@ -89,9 +90,10 @@ export interface AuditLogEntry {
   actorUserId: string;
   actorName: string;
   actorEmail: string;
-  targetId: string;
-  targetType: string;
-  metadata: Record<string, unknown>;
+  targetId: string | null;
+  targetType: string | null;
+  targetName: string | null;
+  metadata: Record<string, unknown> | null;
   ipAddress: string | null;
   createdAt: string;
 }
@@ -149,6 +151,7 @@ export function useCreateModuleRoleGroup(moduleKey: string) {
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: queryKeys.moduleAccess.roleGroups(moduleKey),
+        exact: true,
       });
     },
   });
@@ -166,6 +169,7 @@ export function useRenameModuleRoleGroup(moduleKey: string) {
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: queryKeys.moduleAccess.roleGroups(moduleKey),
+        exact: true,
       });
     },
   });
@@ -182,6 +186,7 @@ export function useDeleteModuleRoleGroup(moduleKey: string) {
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: queryKeys.moduleAccess.roleGroups(moduleKey),
+        exact: true,
       });
     },
   });
@@ -210,8 +215,12 @@ export function useSetModuleGroupPermissions(moduleKey: string) {
       );
       void queryClient.invalidateQueries({
         queryKey: queryKeys.moduleAccess.roleGroups(moduleKey),
+        exact: true,
       });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.access.me() });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.access.me(),
+        exact: true,
+      });
     },
   });
 }
@@ -234,6 +243,7 @@ export function useModuleGroupMembers(
 
 export function useAddModuleGroupMember(moduleKey: string) {
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
   return useMutation<{ success: true }, Error, { groupId: number; userId: string }>({
     mutationKey: ["moduleAccess", moduleKey, "add-member"],
     mutationFn: ({ groupId, userId }) =>
@@ -241,25 +251,33 @@ export function useAddModuleGroupMember(moduleKey: string) {
         `/module-access/${moduleKey}/groups/${groupId}/members`,
         { userId },
       ),
-    onSuccess: (_, { groupId }) => {
+    onSuccess: (_, { groupId, userId }) => {
       void queryClient.invalidateQueries({
         queryKey: queryKeys.moduleAccess.groupMembers(moduleKey, groupId),
       });
       void queryClient.invalidateQueries({
         queryKey: queryKeys.moduleAccess.roleGroups(moduleKey),
+        exact: true,
       });
       void queryClient.invalidateQueries({
         queryKey: [...queryKeys.moduleAccess.all, moduleKey, "members"],
       });
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.moduleAccess.memberCandidates(moduleKey),
+        queryKey: queryKeys.moduleAccess.memberCandidatesAll(moduleKey),
       });
+      if (userId === session?.user?.id) {
+        void queryClient.invalidateQueries({
+          queryKey: queryKeys.access.me(),
+          exact: true,
+        });
+      }
     },
   });
 }
 
 export function useRemoveModuleGroupMember(moduleKey: string) {
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
   return useMutation<
     { success: true },
     Error,
@@ -270,33 +288,63 @@ export function useRemoveModuleGroupMember(moduleKey: string) {
       apiClient.delete<{ success: true }>(
         `/module-access/${moduleKey}/groups/${groupId}/members/${userId}`,
       ),
-    onSuccess: (_, { groupId }) => {
+    onSuccess: (_, { groupId, userId }) => {
       void queryClient.invalidateQueries({
         queryKey: queryKeys.moduleAccess.groupMembers(moduleKey, groupId),
       });
       void queryClient.invalidateQueries({
         queryKey: queryKeys.moduleAccess.roleGroups(moduleKey),
+        exact: true,
       });
       void queryClient.invalidateQueries({
         queryKey: [...queryKeys.moduleAccess.all, moduleKey, "members"],
       });
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.moduleAccess.memberCandidates(moduleKey),
+        queryKey: queryKeys.moduleAccess.memberCandidatesAll(moduleKey),
       });
+      if (userId === session?.user?.id) {
+        void queryClient.invalidateQueries({
+          queryKey: queryKeys.access.me(),
+          exact: true,
+        });
+      }
     },
   });
 }
 
-export function useModuleMemberCandidates(moduleKey: string) {
+export function useModuleMemberCandidates(
+  moduleKey: string,
+  page: number,
+  pageSize: number,
+  search: string,
+  options?: { enabled?: boolean; userId?: string; excludeAssigned?: boolean },
+) {
   const canManage = useCan(manageKey(moduleKey));
-  return useQuery<ModuleMemberCandidate[], Error>({
-    queryKey: queryKeys.moduleAccess.memberCandidates(moduleKey),
-    queryFn: () =>
-      apiClient.get<ModuleMemberCandidate[]>(
-        `/module-access/${moduleKey}/member-candidates`,
-      ),
-    enabled: canManage,
+  const userId = options?.userId;
+  const excludeAssigned = options?.excludeAssigned ?? true;
+  return useQuery<PaginatedResult<ModuleMemberCandidate>, Error>({
+    queryKey: queryKeys.moduleAccess.memberCandidates(moduleKey, {
+      page,
+      pageSize,
+      search,
+      userId,
+      excludeAssigned,
+    }),
+    queryFn: () => {
+      const params = new URLSearchParams({
+        page: String(page),
+        pageSize: String(pageSize),
+      });
+      if (search) params.set("search", search);
+      if (userId) params.set("userId", userId);
+      params.set("excludeAssigned", String(excludeAssigned));
+      return apiClient.get<PaginatedResult<ModuleMemberCandidate>>(
+        `/module-access/${moduleKey}/member-candidates?${params.toString()}`,
+      );
+    },
+    enabled: canManage && (options?.enabled ?? true),
     staleTime: 5 * 60_000,
+    placeholderData: (previous) => previous,
   });
 }
 
@@ -385,6 +433,7 @@ export function useModuleMembers(
 
 export function useAddModuleMember(moduleKey: string) {
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
   return useMutation<{ success: true }, Error, { userId: string; groupIds: number[] }>({
     mutationKey: ["moduleAccess", moduleKey, "add-module-member"],
     mutationFn: (body) =>
@@ -392,22 +441,30 @@ export function useAddModuleMember(moduleKey: string) {
         `/module-access/${moduleKey}/members`,
         body,
       ),
-    onSuccess: () => {
+    onSuccess: (_, { userId }) => {
       void queryClient.invalidateQueries({
         queryKey: [...queryKeys.moduleAccess.all, moduleKey, "members"],
       });
       void queryClient.invalidateQueries({
         queryKey: queryKeys.moduleAccess.roleGroups(moduleKey),
+        exact: true,
       });
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.moduleAccess.memberCandidates(moduleKey),
+        queryKey: queryKeys.moduleAccess.memberCandidatesAll(moduleKey),
       });
+      if (userId === session?.user?.id) {
+        void queryClient.invalidateQueries({
+          queryKey: queryKeys.access.me(),
+          exact: true,
+        });
+      }
     },
   });
 }
 
 export function useUpdateModuleMember(moduleKey: string) {
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
   return useMutation<{ success: true }, Error, { userId: string; groupIds: number[] }>({
     mutationKey: ["moduleAccess", moduleKey, "update-module-member"],
     mutationFn: ({ userId, groupIds }) =>
@@ -415,38 +472,53 @@ export function useUpdateModuleMember(moduleKey: string) {
         `/module-access/${moduleKey}/members/${userId}`,
         { groupIds },
       ),
-    onSuccess: () => {
+    onSuccess: (_, { userId }) => {
       void queryClient.invalidateQueries({
         queryKey: [...queryKeys.moduleAccess.all, moduleKey, "members"],
       });
       void queryClient.invalidateQueries({
         queryKey: queryKeys.moduleAccess.roleGroups(moduleKey),
+        exact: true,
       });
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.moduleAccess.memberCandidates(moduleKey),
+        queryKey: queryKeys.moduleAccess.memberCandidatesAll(moduleKey),
       });
+      if (userId === session?.user?.id) {
+        void queryClient.invalidateQueries({
+          queryKey: queryKeys.access.me(),
+          exact: true,
+        });
+      }
     },
   });
 }
 
 export function useRemoveModuleMember(moduleKey: string) {
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
   return useMutation<{ success: true }, Error, { userId: string }>({
     mutationKey: ["moduleAccess", moduleKey, "remove-module-member"],
     mutationFn: ({ userId }) =>
       apiClient.delete<{ success: true }>(
         `/module-access/${moduleKey}/members/${userId}`,
       ),
-    onSuccess: () => {
+    onSuccess: (_, { userId }) => {
       void queryClient.invalidateQueries({
         queryKey: [...queryKeys.moduleAccess.all, moduleKey, "members"],
       });
       void queryClient.invalidateQueries({
         queryKey: queryKeys.moduleAccess.roleGroups(moduleKey),
+        exact: true,
       });
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.moduleAccess.memberCandidates(moduleKey),
+        queryKey: queryKeys.moduleAccess.memberCandidatesAll(moduleKey),
       });
+      if (userId === session?.user?.id) {
+        void queryClient.invalidateQueries({
+          queryKey: queryKeys.access.me(),
+          exact: true,
+        });
+      }
     },
   });
 }

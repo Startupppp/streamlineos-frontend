@@ -65,8 +65,14 @@ export function useChatGlobalNotifications(
           const payload = msg.data as NotificationPayload;
           if (!payload?.id || payload.senderId === currentUserIdRef.current) return;
 
-          queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
-          queryClient.invalidateQueries({ queryKey: queryKeys.chat.unreadTotal() });
+          queryClient.invalidateQueries({
+            queryKey: queryKeys.chat.myChannels(orgId),
+            exact: true,
+          });
+          queryClient.invalidateQueries({
+            queryKey: queryKeys.chat.unreadTotal(orgId),
+            exact: true,
+          });
 
           if (channelId === activeChannelIdRef.current) return;
 

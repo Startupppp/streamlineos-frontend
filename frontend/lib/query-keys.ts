@@ -8,7 +8,8 @@ export const queryKeys = {
     employees: (params?: Record<string, unknown>) =>
       [...base, "hr", "employees", params] as const,
     employee: (id: string) => [...base, "hr", "employees", id] as const,
-    attendanceStatus: () => [...base, "hr", "attendanceStatus"] as const,
+    attendanceStatus: (orgId: string | null | undefined = "") =>
+      [...base, "hr", orgId, "attendanceStatus"] as const,
     attendanceLogs: (params?: Record<string, unknown>) =>
       [...base, "hr", "attendanceLogs", params] as const,
     leaves: (params?: Record<string, unknown>) =>
@@ -547,7 +548,10 @@ export const queryKeys = {
 
   chat: {
     all: [...base, "chat"] as const,
-    myChannels: () => [...base, "chat", "myChannels"] as const,
+    myChannels: (orgId?: string | null) =>
+      orgId
+        ? ([...base, "chat", "myChannels", orgId] as const)
+        : ([...base, "chat", "myChannels"] as const),
     archivedChannels: () => [...base, "chat", "archivedChannels"] as const,
     publicChannels: () => [...base, "chat", "publicChannels"] as const,
     channel: (id: number) => [...base, "chat", "channel", id] as const,
@@ -555,7 +559,10 @@ export const queryKeys = {
       [...base, "chat", "messages", channelId, cursor] as const,
     poll: (channelId: number, since: string) =>
       [...base, "chat", "poll", channelId, since] as const,
-    unreadTotal: () => [...base, "chat", "unreadTotal"] as const,
+    unreadTotal: (orgId?: string | null) =>
+      orgId
+        ? ([...base, "chat", "unreadTotal", orgId] as const)
+        : ([...base, "chat", "unreadTotal"] as const),
     onlineUsers: () => [...base, "chat", "onlineUsers"] as const,
     orgUsers: () => [...base, "chat", "orgUsers"] as const,
     search: (query: string) => [...base, "chat", "search", query] as const,
@@ -594,8 +601,18 @@ export const queryKeys = {
     stats: (orgId: string) => [...base, "dashboard", "stats", orgId] as const,
     recentProjects: (orgId: string) =>
       [...base, "dashboard", "recentProjects", orgId] as const,
-    teamAvailability: (orgId: string) =>
-      [...base, "dashboard", "teamAvailability", orgId] as const,
+    teamAttendance: (orgId: string) =>
+      [...base, "dashboard", "teamAttendance", orgId] as const,
+    leavesToday: (orgId: string) =>
+      [...base, "dashboard", "leavesToday", orgId] as const,
+    upcomingHolidays: (orgId: string) =>
+      [...base, "dashboard", "upcomingHolidays", orgId] as const,
+    myLeaveBalance: (orgId: string) =>
+      [...base, "dashboard", "myLeaveBalance", orgId] as const,
+    birthdays: (orgId: string) =>
+      [...base, "dashboard", "birthdays", orgId] as const,
+    pendingApprovals: (orgId: string) =>
+      [...base, "dashboard", "pendingApprovals", orgId] as const,
     myIssues: () => [...base, "dashboard", "myIssues"] as const,
     activeSprintSummary: (orgId: string) =>
       [...base, "dashboard", "activeSprintSummary", orgId] as const,
@@ -624,9 +641,17 @@ export const queryKeys = {
 
   notifications: {
     all: [...base, "notifications"] as const,
-    list: (params?: Record<string, unknown>) =>
-      [...base, "notifications", "list", params] as const,
-    unreadCount: () => [...base, "notifications", "unreadCount"] as const,
+    lists: (orgId: string | null | undefined = "") =>
+      [...base, "notifications", orgId, "list"] as const,
+    list: (
+      params?: Record<string, unknown>,
+      orgId: string | null | undefined = "",
+    ) =>
+      [...base, "notifications", orgId, "list", params] as const,
+    unreadList: (orgId: string | null | undefined = "") =>
+      [...base, "notifications", orgId, "list", "unread"] as const,
+    unreadCount: (orgId: string | null | undefined = "") =>
+      [...base, "notifications", orgId, "unreadCount"] as const,
     preferences: () => [...base, "notifications", "preferences"] as const,
     templates: (params?: Record<string, unknown>) =>
       [...base, "notifications", "templates", params] as const,
@@ -659,6 +684,7 @@ export const queryKeys = {
 
   organization: {
     all: [...base, "organization"] as const,
+    archived: () => [...base, "organization", "archived"] as const,
     members: () => [...base, "organization", "members"] as const,
     settings: () => [...base, "organization", "settings"] as const,
   },
@@ -712,9 +738,21 @@ export const queryKeys = {
 
   access: {
     all: [...base, "access"] as const,
-    me: () => [...base, "access", "me"] as const,
-    simulate: (userId: string) =>
-      [...base, "access", "simulate", userId] as const,
+    me: (orgId?: string | null) =>
+      orgId
+        ? ([...base, "access", "me", orgId] as const)
+        : ([...base, "access", "me"] as const),
+    simulate: (orgId: string | null | undefined, userId: string) =>
+      orgId
+        ? ([...base, "access", "simulate", orgId, userId] as const)
+        : ([...base, "access", "simulate", userId] as const),
+    simulationCandidates: (
+      orgId: string | null | undefined,
+      params: { page: number; limit: number; search?: string },
+    ) =>
+      orgId
+        ? ([...base, "access", "simulate", orgId, "candidates", params] as const)
+        : ([...base, "access", "simulate", "candidates", params] as const),
     resourceGrants: (resourceType: string, resourceId: string) =>
       [...base, "access", "resource-grants", resourceType, resourceId] as const,
     orgModules: () => [...base, "access", "org-modules"] as const,
@@ -1698,6 +1736,7 @@ export const queryKeys = {
       [...base, "payroll", "employees", employeeUserId] as const,
     employeeHistory: (employeeUserId: string) =>
       [...base, "payroll", "employees", employeeUserId, "history"] as const,
+    worker: (workerId: string) => [...base, "payroll", "workers", workerId] as const,
     runEmployeesAll: (runId: number) =>
       [...base, "payroll", "run-employees", runId] as const,
     runEmployeesList: (runId: number, params?: Record<string, unknown>) =>
@@ -1972,8 +2011,19 @@ export const queryKeys = {
       [...base, "moduleAccess", moduleKey, "groups"] as const,
     groupMembers: (moduleKey: string, groupId: number) =>
       [...base, "moduleAccess", moduleKey, "groups", groupId, "members"] as const,
-    memberCandidates: (moduleKey: string) =>
+    memberCandidatesAll: (moduleKey: string) =>
       [...base, "moduleAccess", moduleKey, "member-candidates"] as const,
+    memberCandidates: (
+      moduleKey: string,
+      params: {
+        page: number;
+        pageSize: number;
+        search: string;
+        userId?: string;
+        excludeAssigned: boolean;
+      },
+    ) =>
+      [...base, "moduleAccess", moduleKey, "member-candidates", params] as const,
     ownership: (moduleKey: string) =>
       [...base, "moduleAccess", moduleKey, "ownership"] as const,
     members: (

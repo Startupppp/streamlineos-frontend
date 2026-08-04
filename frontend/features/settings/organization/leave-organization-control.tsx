@@ -17,16 +17,17 @@ import { cn } from "@/lib/utils";
 interface LeaveOrganizationMenuItemProps {
   layout: "dropdown" | "drawer";
   onRequestLeave: () => void;
+  canLeave: boolean;
   className?: string;
 }
 
 export function LeaveOrganizationMenuItem({
   layout,
   onRequestLeave,
+  canLeave,
   className,
 }: LeaveOrganizationMenuItemProps) {
-  const { data: access } = useAccess();
-  if (access?.isOrgOwner) return null;
+  if (!canLeave) return null;
 
   if (layout === "dropdown") {
     return (
@@ -97,7 +98,7 @@ export function LeaveOrganizationDialog({
     });
   }, [leaveMutation, onOpenChange, update, queryClient, router]);
 
-  if (access?.isOrgOwner) return null;
+  if (access?.isOrgOwner !== false) return null;
 
   return (
     <ConfirmDialog

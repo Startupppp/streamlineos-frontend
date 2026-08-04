@@ -1,7 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { Children, memo, type ComponentType, type ReactNode } from "react";
+import {
+  Children,
+  Fragment,
+  isValidElement,
+  memo,
+  type ComponentType,
+  type ReactNode,
+} from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Tooltip,
@@ -10,6 +17,19 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+
+function countGridChildren(node: ReactNode): number {
+  let count = 0;
+  Children.forEach(node, (child) => {
+    if (!isValidElement<{ children?: ReactNode }>(child)) return;
+    if (child.type === Fragment) {
+      count += countGridChildren(child.props.children);
+      return;
+    }
+    count += 1;
+  });
+  return count;
+}
 
 export type StatTone =
   | "default"
@@ -126,7 +146,7 @@ export function StatCardGrid({
   cols = 4,
   className,
 }: StatCardGridProps) {
-  const childCount = Children.toArray(children).length;
+  const childCount = countGridChildren(children);
   const columnCount = childCount > 0 ? childCount : cols;
 
   return (

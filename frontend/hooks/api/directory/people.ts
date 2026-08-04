@@ -17,6 +17,20 @@ export interface UsePeopleParams {
   search?: string;
 }
 
+export function usePerson(
+  organizationPersonId: string,
+  options?: { enabled?: boolean },
+) {
+  const canView = useCan("directory:people:view");
+  return useQuery({
+    queryKey: queryKeys.directory.person(organizationPersonId),
+    queryFn: () =>
+      apiClient.get<OrganizationPerson>(`/directory/people/${organizationPersonId}`),
+    staleTime: 60_000,
+    enabled: canView && !!organizationPersonId && (options?.enabled ?? true),
+  });
+}
+
 export function usePeople(params: UsePeopleParams = {}) {
   const canView = useCan("directory:people:view");
   const { page = 1, limit = 20, search } = params;

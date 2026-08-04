@@ -308,11 +308,23 @@ Permissions resolve from the DB on **every request** via `AccessService`. **CASL
 **Frontend gates** — `useCan("newmodule:resource:create")` for client checks; `<RequireModule module="newmodule">` / `useModuleEnabled` for module on/off; `requirePermission()` in server pages. New keys auto-appear in `/settings/roles` (reads `GET /rbac/permissions`).
 
 **Runtime notes**
-- Tables `user_roles`, `role_permission_grants`, `group_roles`, `access_versions` must exist; `AccessService` degrades pre-migration.
-- Org owners (`isOrgOwner`) and platform admins (`isPlatformAdmin`) bypass permission checks — **so an owner never exercises the non-owner path; probe with `isOrgOwner=false` before declaring a gate correct.** Module enablement is tenant config, not a permission: owners are **not** exempt from it.
-- Resolution cached per `(userId, orgId)` in Redis, busted by `bumpPermissionsVersion`.
-- `DataScope`: `all` · `team` (same dept) · `own` · `none`.
+- Canonical grant tables are `role_assignments`, `role_permission_grants`, `principal_group_members`, `group_role_assignments`, `module_ownerships`, and `access_versions`. Never reintroduce `user_roles`, `group_roles`, or another parallel grant source.
+- Structural organization roles are exactly `OWNER`, `ORG_ADMIN`, and `MEMBER`. `OWNER` and active `ORG_ADMIN` receive the same product permission catalog. Ownership transfer, organization deletion, and other ownership-lifecycle operations must still check `isOrgOwner` explicitly.
+- Every non-owner/non-admin is structurally `MEMBER`. Effective access is the union of direct roles, permission-group roles, unexpired delegations, and canonical module ownership, constrained by active tenant membership and module entitlement.
+- A module has one lifecycle owner in `module_ownerships`. Assignable roles must not create a second meaning of owner; synchronize `*_MODULE_OWNER` only through the ownership service or name assignable broad roles `*_MODULE_ADMIN`.
+- Resolution is cached per `(userId, orgId)` in Redis and busted by `bumpPermissionsVersion`. Cache TTL must not outlive the nearest role/delegation expiry. Cross-node revocation requires distributed invalidation; process-local callbacks are only a latency optimization.
+- `DataScope`: `all` · `team` (same dept) · `own` · `none`. Do not expose `team` as effective until canonical team membership feeds scope evaluation.
 - Guards run **before** interceptors, so a guard's own DB queries have no tenant GUC — wrap them explicitly (§20).
+
+**Membership, invitations, and tenant integrity**
+- Canonicalize email once (trim + lowercase under the documented policy) at every invite, import, direct-create, and HR-onboarding boundary, and enforce case-insensitive uniqueness in PostgreSQL.
+- Seat enforcement is a serialized write invariant: acquire the per-org `quota:${orgId}:members` transaction advisory lock and call `PlanLimitsService.assertWithinLimit(..., tx)` immediately before every membership insert. A check outside the transaction is insufficient.
+- Accept/resend/cancel/invitation-role transitions lock or conditionally update the invitation using current status, acceptance, and expiry predicates; check affected-row count. Never revive an accepted or revoked invitation via an ID-only update.
+- Invitation tokens are hash-only at rest. Delivery is asynchronous and durable through outbox/retry; delivery failure is observable without rolling back the invitation.
+- Global `users` stores identity only. Employee number, org placement, manager, designation, lifecycle, compensation, tax, and bank data belong to org-scoped employment/person tables.
+- Every RBAC edge with `org_id` has composite tenant FKs for membership, role, and principal group. Application predicates and RLS do not replace relational integrity.
+- Never delete historical invitations to free uniqueness. Pending uniqueness is on canonical email where `status = 'PENDING'`; retain terminal invitation/event history.
+- Bulk membership/invitation flows authorize and load policy once, deduplicate emails, batch reads/writes, reserve quota once, enqueue delivery, and invalidate once. Do not run N complete single-row workflows.
 
 **RBAC — NEVER**
 - Never `@CheckAbility`/`AbilityGuard`/`useAbility()`/`@casl/*`/`lib/abilities` (all deleted), never `requireAuthorize`/`hasRoleOrPrivileged`.
@@ -327,11 +339,16 @@ Permissions resolve from the DB on **every request** via `AccessService`. **CASL
 - **Backend:** Redis for read-heavy data with **explicit invalidation on every mutation**. Public read-only GETs set `Cache-Control` (`s-maxage` + `stale-while-revalidate`).
 - **Frontend:** Query `staleTime` per §11.
 - **Never cache user/permission-scoped data in a shared cache.**
-- **The cache key must include every filter that changes the result (living rule, 2026-08-03):** caching a filtered query under an unfiltered key serves one caller's scoped rows to the next, and defeats the filter in both directions. Key on the discriminators and invalidate with `invalidatePattern`. (Fixed 2026-08-03: `sales:commissions:${orgId}` / `sales:quotas:${orgId}` cached per-user-filtered rows under an org-wide key.)
+- Cache fills for the same key are single-flight in-process; high-scale/shared hot keys additionally need a short distributed fill lease, TTL jitter, and stale-while-revalidate where safe. Never let an expired popular key stampede the database.
+- Do not use Redis wildcard `SCAN` invalidation synchronously on request paths at scale. Prefer versioned tenant/resource namespaces; bounded batched deletion is only a compatibility fallback.
+- **The cache key must include every filter that changes the result (living rule, updated 2026-08-04):** caching a filtered query under an unfiltered key serves one caller's scoped rows to the next and defeats the filter in both directions. Put every result-changing discriminator in the key beneath an explicit tenant/resource namespace, read with `cachedVersioned`, and make every writer bump that namespace with `invalidateNamespace`. Do not add new request-path `invalidatePattern` calls; the `SCAN` implementation exists only as a temporary compatibility fallback while legacy families are migrated. (Fixed examples: sales commissions/quotas and organization/member caches.)
 
 ## 23. Performance
 
 Bundle size · lazy loading · dynamic imports · query optimization · cache efficiency · deduped requests · parallel fetching · granular Suspense streaming.
+
+- **Background refetches and ordinary mutations never replace the authenticated application with `AppLoadingScreen`.** Show the branded full-screen loader only when there is no verified session/access data on the true initial load. Preserve stale rendered data during refetch, use optimistic updates with rollback where safe, and show pending state only on the affected control/row.
+- Never refresh the NextAuth session merely to reconcile ordinary server state already owned by TanStack Query. Update/invalidate the narrow query keys in the background; refresh the session only when session-owned identity or organization context actually changes.
 
 - **Never render an unbounded collection — window it.** Rendering hundreds of rows freezes the tab. Two allowed strategies: (1) **server pagination** — the shared `DataTable` is already bounded (§19's 100/page cap); always pass a real `pagination` prop. (2) **Virtualization** for surfaces that can't paginate (long boards, infinite feeds) via **`react-window` v2** (`List` + `useDynamicRowHeight`); canonical: `features/build/views/kanban-virtual-ticket-list.tsx`. A `items.map(...)` over a collection with no pagination, `slice`, or windowing is a hang-risk bug.
   - With `@hello-pangea/dnd`, use `Droppable mode="virtual"` + `renderClone`. **react-window v2 gotcha:** its `List` stores the scroll container in `useState(null)`, so `api.element` is `null` on first render and dnd's validation trips "innerRef has not been provided with a HTMLElement". Fix: wrap `<List>` in a `display:contents` shell and point `provided.innerRef` at `shellRef.current.firstElementChild` in a `useLayoutEffect`. A virtualized column inside a horizontally-scrolling board still trips dnd's dev-only nested-scroll warning — accepted; drag/drop works.

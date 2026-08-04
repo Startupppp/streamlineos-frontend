@@ -31,6 +31,7 @@ interface AuditLogFilters {
   page?: number;
   pageSize?: number;
   action?: string;
+  actions?: readonly string[];
   targetType?: string;
   dateFrom?: string;
   dateTo?: string;
@@ -51,6 +52,7 @@ export const useAuditLogs = (
         ...(filters?.page ? { page: String(filters.page) } : {}),
         ...(filters?.pageSize ? { pageSize: String(filters.pageSize) } : {}),
         ...(filters?.action ? { action: filters.action } : {}),
+        ...(filters?.actions?.length ? { actions: filters.actions.join(",") } : {}),
         ...(filters?.targetType ? { targetType: filters.targetType } : {}),
         ...(filters?.dateFrom ? { dateFrom: filters.dateFrom } : {}),
         ...(filters?.dateTo ? { dateTo: filters.dateTo } : {}),

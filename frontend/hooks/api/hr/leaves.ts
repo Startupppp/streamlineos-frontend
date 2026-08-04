@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
@@ -57,8 +58,30 @@ interface LeaveApprovalsResult {
   all: unknown[];
 }
 
+function useInvalidateLeaveDashboard() {
+  const qc = useQueryClient();
+  const { data: session } = useSession();
+  const orgId = session?.orgId ?? "";
+
+  return function invalidateLeaveDashboard() {
+    void qc.invalidateQueries({
+      queryKey: queryKeys.dashboard.leavesToday(orgId),
+      exact: true,
+    });
+    void qc.invalidateQueries({
+      queryKey: queryKeys.dashboard.myLeaveBalance(orgId),
+      exact: true,
+    });
+    void qc.invalidateQueries({
+      queryKey: queryKeys.dashboard.pendingApprovals(orgId),
+      exact: true,
+    });
+  };
+}
+
 export function useRequestLeave() {
   const qc = useQueryClient();
+  const invalidateLeaveDashboard = useInvalidateLeaveDashboard();
   return useMutation({
     mutationKey: ["hr", "leaves", "request"],
     mutationFn: (data: RequestLeaveInput) =>
@@ -66,12 +89,14 @@ export function useRequestLeave() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() });
       qc.invalidateQueries({ queryKey: queryKeys.hr.leavesMyRequests() });
+      invalidateLeaveDashboard();
     },
   });
 }
 
 export function useApproveLeaveDedicated() {
   const qc = useQueryClient();
+  const invalidateLeaveDashboard = useInvalidateLeaveDashboard();
   return useMutation({
     mutationKey: ["hr", "leaves", "approve"],
     mutationFn: ({ leaveId, comment }: { leaveId: number; comment?: string }) =>
@@ -83,12 +108,14 @@ export function useApproveLeaveDedicated() {
       qc.invalidateQueries({ queryKey: queryKeys.hr.leavesTeam() });
       qc.invalidateQueries({ queryKey: queryKeys.hr.leavesMyRequests() });
       qc.invalidateQueries({ queryKey: queryKeys.hr.leavesThisWeek() });
+      invalidateLeaveDashboard();
     },
   });
 }
 
 export function useRejectLeaveDedicated() {
   const qc = useQueryClient();
+  const invalidateLeaveDashboard = useInvalidateLeaveDashboard();
   return useMutation({
     mutationKey: ["hr", "leaves", "reject"],
     mutationFn: ({
@@ -108,12 +135,14 @@ export function useRejectLeaveDedicated() {
       qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() });
       qc.invalidateQueries({ queryKey: queryKeys.hr.leavesTeam() });
       qc.invalidateQueries({ queryKey: queryKeys.hr.leavesMyRequests() });
+      invalidateLeaveDashboard();
     },
   });
 }
 
 export function useCancelLeave() {
   const qc = useQueryClient();
+  const invalidateLeaveDashboard = useInvalidateLeaveDashboard();
   return useMutation({
     mutationKey: ["hr", "leaves", "cancel"],
     mutationFn: (leaveId: number) =>
@@ -121,12 +150,14 @@ export function useCancelLeave() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() });
       qc.invalidateQueries({ queryKey: queryKeys.hr.leavesMyRequests() });
+      invalidateLeaveDashboard();
     },
   });
 }
 
 export function useRevertLeave() {
   const qc = useQueryClient();
+  const invalidateLeaveDashboard = useInvalidateLeaveDashboard();
   return useMutation({
     mutationKey: ["hr", "leaves", "revert"],
     mutationFn: (leaveId: number) =>
@@ -137,6 +168,7 @@ export function useRevertLeave() {
       qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() });
       qc.invalidateQueries({ queryKey: queryKeys.hr.leavesTeam() });
       qc.invalidateQueries({ queryKey: queryKeys.hr.leavesMyRequests() });
+      invalidateLeaveDashboard();
     },
   });
 }

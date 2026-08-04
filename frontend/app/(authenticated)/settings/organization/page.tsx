@@ -18,6 +18,7 @@ import { OrgConfigSection } from "@/features/settings/organization/org-config-se
 import { OrgDataPrivacySection } from "@/features/settings/organization/org-data-privacy-section";
 import { OrgDangerZoneSection } from "@/features/settings/organization/org-danger-zone-section";
 import { OrgIncomingTransferSection } from "@/features/settings/organization/org-incoming-transfer-section";
+import { OrgSecuritySection } from "@/features/settings/organization/org-security-section";
 
 const CURRENCY_CODES = ["USD", "EUR", "INR", "GBP", "AED"] as const;
 type CurrencyCode = (typeof CURRENCY_CODES)[number];
@@ -154,6 +155,8 @@ export default function OrganizationSettingsPage() {
         <OrgHolidayCalendarSection canEdit={canEdit} />
 
         <OrgDataPrivacySection canEdit={canEdit} />
+
+        <OrgSecuritySection org={org} canEdit={canEdit} />
 
         {canEdit && (
           <OrgConfigSection
