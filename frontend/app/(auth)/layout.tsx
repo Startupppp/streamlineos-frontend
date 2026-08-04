@@ -20,7 +20,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
       </a>
 
       <div className="relative flex flex-1 flex-col min-h-0 overflow-hidden">
-        <header className="shrink-0 flex items-center justify-between px-6 sm:px-10 py-5">
+        <header className="flex shrink-0 items-center justify-between px-5 py-4 sm:px-8 sm:py-5 xl:px-10 [@media(max-height:700px)]:py-3">
           <Link
             href="/"
             className="flex items-center gap-2.5 group"
@@ -44,12 +44,14 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           aria-label="Authentication"
           className="flex w-full flex-1 min-h-0 overflow-y-auto scrollbar-hide"
         >
-          <div className="flex w-full min-h-full flex-col items-center justify-center py-6 px-4 sm:px-6 lg:px-8">
-            {children}
+          <div className="flex min-h-full w-full flex-col px-4 py-5 sm:px-6 lg:px-8">
+            <div className="my-auto flex w-full justify-center py-1">
+              {children}
+            </div>
           </div>
         </main>
 
-        <footer className="shrink-0 px-6 sm:px-10 py-5 flex items-center justify-between text-[12px] font-medium text-slate-400">
+        <footer className="flex shrink-0 items-center justify-between px-5 py-4 text-[12px] font-medium text-slate-400 sm:px-8 sm:py-5 xl:px-10 ">
           <p>
             &copy; {new Date().getFullYear()} {BRAND_NAME}
           </p>

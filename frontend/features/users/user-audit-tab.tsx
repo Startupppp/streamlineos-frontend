@@ -52,9 +52,9 @@ export function UserAuditTab({ userId }: UserAuditTabProps) {
   if (error) {
     return (
       <EmptyState
-        compact
-        className="flex-1 w-full min-h-0"
+        className="min-h-full w-full flex-1 border-0 bg-transparent"
         illustrationPreset="alert"
+        illustrationSize="md"
         title="Couldn't load audit log"
         description={getErrorMessage(error)}
         action={{ label: "Retry", onClick: handleRetry }}
@@ -65,9 +65,9 @@ export function UserAuditTab({ userId }: UserAuditTabProps) {
   if (entries.length === 0) {
     return (
       <EmptyState
-        compact
-        className="flex-1 w-full min-h-0"
+        className="min-h-full w-full flex-1 border-0 bg-transparent"
         illustrationPreset="security"
+        illustrationSize="md"
         title="No audit events"
         description="No activity has been logged for this user yet."
       />

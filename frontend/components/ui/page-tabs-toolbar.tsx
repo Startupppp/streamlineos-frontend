@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/responsive-popover";
 
 export type PageTabsDensity = "labeled" | "icons";
+export type PageTabsCollapseBelow = "md" | "lg";
 
 type FiltersSlot = ReactNode | (() => ReactNode);
 
@@ -20,6 +21,7 @@ interface PageTabsToolbarProps {
   filters?: FiltersSlot;
   actions?: ReactNode;
   tabsDensity?: PageTabsDensity;
+  collapseBelow?: PageTabsCollapseBelow;
   className?: string;
 }
 
@@ -34,17 +36,21 @@ export function PageTabsToolbar({
   filters,
   actions,
   tabsDensity = "labeled",
+  collapseBelow = "md",
   className,
 }: PageTabsToolbarProps) {
   const hasFilters = filters !== undefined && filters !== null;
   const isLabeled = tabsDensity === "labeled";
+  const atLg = collapseBelow === "lg";
 
   return (
     <div
       className={cn(
         "flex w-full min-w-0 gap-2",
         isLabeled
-          ? "flex-col md:flex-row md:flex-nowrap md:items-center md:justify-between"
+          ? atLg
+            ? "flex-col lg:flex-row lg:flex-nowrap lg:items-center lg:justify-between"
+            : "flex-col md:flex-row md:flex-nowrap md:items-center md:justify-between"
           : "flex-row flex-nowrap items-center justify-between",
         className,
       )}
@@ -52,7 +58,11 @@ export function PageTabsToolbar({
       <div
         className={cn(
           "min-w-0 shrink-0 overflow-x-auto scrollbar-hide",
-          isLabeled ? "w-full md:w-auto" : "shrink-0",
+          isLabeled
+            ? atLg
+              ? "w-full lg:w-auto"
+              : "w-full md:w-auto"
+            : "shrink-0",
         )}
       >
         {tabs}
@@ -62,7 +72,9 @@ export function PageTabsToolbar({
         className={cn(
           "flex min-w-0 items-center gap-2",
           isLabeled
-            ? "w-full md:ml-auto md:w-auto md:max-w-full md:justify-end"
+            ? atLg
+              ? "w-full lg:ml-auto lg:w-auto lg:max-w-full lg:justify-end"
+              : "w-full md:ml-auto md:w-auto md:max-w-full md:justify-end"
             : "ml-auto min-w-0 shrink-0 justify-end",
         )}
       >
@@ -71,7 +83,9 @@ export function PageTabsToolbar({
             className={cn(
               "min-w-0",
               isLabeled
-                ? "flex-1 md:w-[240px] md:max-w-sm md:flex-none"
+                ? atLg
+                  ? "flex-1 lg:w-[240px] lg:max-w-sm lg:flex-none"
+                  : "flex-1 md:w-[240px] md:max-w-sm md:flex-none"
                 : "w-[200px] sm:w-[240px]",
             )}
           >
@@ -81,7 +95,12 @@ export function PageTabsToolbar({
 
         {hasFilters ? (
           <>
-            <div className="hidden min-w-0 max-w-full flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide md:flex [&>*]:shrink-0">
+            <div
+              className={cn(
+                "hidden min-w-0 max-w-full flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0",
+                atLg ? "lg:flex" : "md:flex",
+              )}
+            >
               {resolveSlot(filters)}
             </div>
             <ResponsivePopover>
@@ -90,7 +109,10 @@ export function PageTabsToolbar({
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="h-9 shrink-0 gap-1.5 px-2.5 md:hidden"
+                  className={cn(
+                    "h-9 shrink-0 gap-1.5 px-2.5",
+                    atLg ? "lg:hidden" : "md:hidden",
+                  )}
                   aria-label="Filters"
                 >
                   <ListFilter className="h-4 w-4" />

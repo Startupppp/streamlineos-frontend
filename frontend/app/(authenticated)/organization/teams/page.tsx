@@ -1,6 +1,13 @@
 "use client";
 
-import { useState, useCallback, type ChangeEvent } from "react";
+import {
+  useState,
+  useCallback,
+  useEffect,
+  useTransition,
+  type ChangeEvent,
+} from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -53,8 +60,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { UserCombobox } from "@/components/ui/user-combobox";
 import type { OrgTeam } from "@/types/org-hierarchy";
 import { RequireModule } from "@/components/auth/require-module";
-
-const NO_DEPARTMENT = "none";
+import { ErrorState } from "@/components/shared/error-state";
+import { useCan } from "@/hooks/api/access";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 
 const formSchema = z.object({
   name: z
@@ -69,7 +77,7 @@ const formSchema = z.object({
     .min(2)
     .max(20)
     .regex(/^[A-Za-z0-9]+$/, "Only alphanumeric characters"),
-  departmentId: z.string().optional(),
+  departmentId: z.string().min(1, "Department is required"),
   leadUserId: z.string().optional(),
   description: z.string().trim().max(500).optional(),
   capacity: z.string().optional(),
@@ -90,7 +98,7 @@ function TeamForm({
 }) {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { name: "", code: "", departmentId: NO_DEPARTMENT, leadUserId: "", description: "", capacity: "", ...defaultValues },
+    defaultValues: { name: "", code: "", departmentId: "", leadUserId: "", description: "", capacity: "", ...defaultValues },
   });
 
   return (
@@ -154,11 +162,10 @@ function TeamForm({
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="None" />
+                      <SelectValue placeholder="Select a department" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value={NO_DEPARTMENT}>None</SelectItem>
                     {departments.map((d) => (
                       <SelectItem key={d.id} value={d.id}>
                         {d.name}
@@ -202,33 +209,54 @@ function TeamForm({
 }
 
 export default function OrgTeamsPage() {
-  const { data: teams, isLoading } = useOrgTeams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [, startTransition] = useTransition();
+  const query = searchParams.get("search") ?? "";
+  const showArchived = searchParams.get("status") === "archived";
+  const requestedPage = Number(searchParams.get("page") ?? "1");
+  const page =
+    Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+  const [showCreate, setShowCreate] = useState(false);
+  const [editing, setEditing] = useState<OrgTeam | null>(null);
+  const [deleting, setDeleting] = useState<OrgTeam | null>(null);
+  const [search, setSearch] = useState(query);
+  const debouncedSearch = useDebouncedValue(search, 300);
+  const { data: teams, isLoading, isError, error, refetch } = useOrgTeams({
+    page,
+    limit: 20,
+    search: query || undefined,
+    status: showArchived ? "ARCHIVED" : "ACTIVE",
+  });
   const { data: deptsData } = useOrgDepartments();
   const create = useCreateOrgTeam();
   const update = useUpdateOrgTeam();
   const remove = useDeleteOrgTeam();
+  const canManage = useCan("settings:organization:manage");
 
-  const [showCreate, setShowCreate] = useState(false);
-  const [editing, setEditing] = useState<OrgTeam | null>(null);
-  const [deleting, setDeleting] = useState<OrgTeam | null>(null);
-  const [showArchived, setShowArchived] = useState(false);
-  const [search, setSearch] = useState("");
+  const updateParams = useCallback(
+    (updates: Record<string, string | null>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      for (const [key, value] of Object.entries(updates)) {
+        if (value === null) params.delete(key);
+        else params.set(key, value);
+      }
+      startTransition(() => {
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      });
+    },
+    [pathname, router, searchParams],
+  );
+
+  useEffect(() => {
+    if (debouncedSearch === query) return;
+    updateParams({ search: debouncedSearch || null, page: null });
+  }, [debouncedSearch, query, updateParams]);
 
   const departments = (deptsData?.data ?? []).map((d) => ({ id: d.id, name: d.name }));
   const deptMap = Object.fromEntries(departments.map((d) => [d.id, d.name]));
-  const allTeams = teams?.data ?? [];
-  const active = allTeams.filter((t) => t.status !== "ARCHIVED" && !t.deletedAt);
-  const archived = allTeams.filter((t) => t.status === "ARCHIVED" && !t.deletedAt);
-  const displayed = showArchived ? archived : active;
-  const filtered = search
-    ? displayed.filter((t) => {
-        const q = search.toLowerCase();
-        return (
-          t.name.toLowerCase().includes(q) ||
-          t.code.toLowerCase().includes(q)
-        );
-      })
-    : displayed;
+  const displayedTeams = teams?.data ?? [];
 
   const handleCreate = useCallback(
     (values: FormValues) => {
@@ -236,7 +264,7 @@ export default function OrgTeamsPage() {
         {
           name: values.name,
           code: values.code.toUpperCase(),
-          departmentId: values.departmentId === NO_DEPARTMENT ? undefined : values.departmentId,
+          departmentId: values.departmentId,
           leadUserId: values.leadUserId || undefined,
           description: values.description || undefined,
           capacity: values.capacity ? Number(values.capacity) : undefined,
@@ -261,7 +289,7 @@ export default function OrgTeamsPage() {
           id: editing.id,
           name: values.name,
           code: values.code.toUpperCase(),
-          departmentId: values.departmentId === NO_DEPARTMENT ? undefined : values.departmentId,
+          departmentId: values.departmentId,
           leadUserId: values.leadUserId || undefined,
           description: values.description || undefined,
           capacity: values.capacity ? Number(values.capacity) : undefined,
@@ -285,13 +313,13 @@ export default function OrgTeamsPage() {
         {
           onSuccess: () => {
             toast.success("Team archived");
-            setShowArchived(true);
+            updateParams({ status: "archived", page: null });
           },
           onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
-    [update],
+    [update, updateParams],
   );
 
   const handleRestore = useCallback(
@@ -301,13 +329,13 @@ export default function OrgTeamsPage() {
         {
           onSuccess: () => {
             toast.success("Team restored");
-            setShowArchived(false);
+            updateParams({ status: null, page: null });
           },
           onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
-    [update],
+    [update, updateParams],
   );
 
   const handleDelete = useCallback(() => {
@@ -322,8 +350,20 @@ export default function OrgTeamsPage() {
   }, [deleting, remove]);
 
   const handleOpenCreate = useCallback(() => setShowCreate(true), []);
-  const handleToggleArchived = useCallback(() => setShowArchived((v) => !v), []);
-  const handleSearchChange = useCallback((v: string) => setSearch(v), []);
+  const handleToggleArchived = useCallback(() => {
+    updateParams({ status: showArchived ? null : "archived", page: null });
+  }, [showArchived, updateParams]);
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
+  }, []);
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+  const handlePageChange = useCallback(
+    (nextPage: number) =>
+      updateParams({ page: nextPage <= 1 ? null : String(nextPage) }),
+    [updateParams],
+  );
 
   function handleSearchInputChange(value: string) { handleSearchChange(value); }
 
@@ -392,7 +432,7 @@ export default function OrgTeamsPage() {
       header: "",
       headerClassName: "w-28",
       cell: (t) => (
-        <div className="flex items-center gap-1">
+        canManage ? <div className="flex items-center gap-1">
           {t.status === "ARCHIVED" ? (
             <>
               <Button variant="ghost" size="sm" onClick={makeRestoreHandler(t)} title="Restore">
@@ -418,7 +458,7 @@ export default function OrgTeamsPage() {
               </Button>
             </>
           )}
-        </div>
+        </div> : null
       ),
     },
   ];
@@ -443,7 +483,7 @@ export default function OrgTeamsPage() {
       illustrationPreset="team"
       title="No teams yet"
       description="Create your first team to get started."
-      action={{ label: "Add Team", onClick: handleOpenCreate }}
+      action={canManage ? { label: "Add Team", onClick: handleOpenCreate } : undefined}
     />
   );
 
@@ -461,9 +501,9 @@ export default function OrgTeamsPage() {
             onClick={handleToggleArchived}
           >
             <Archive className="h-4 w-4 mr-1.5" />
-            {showArchived ? "Show Active" : `Archived (${archived.length})`}
+            {showArchived ? "Show Active" : "View archived"}
           </Button>
-          <AnimatedIconButton
+          {canManage ? <AnimatedIconButton
             icon={PlusIcon}
             iconSize={16}
             iconClassName="mr-1.5"
@@ -472,23 +512,39 @@ export default function OrgTeamsPage() {
             onClick={handleOpenCreate}
           >
             Add Team
-          </AnimatedIconButton>
+          </AnimatedIconButton> : null}
         </div>
       }
       filters={
         <SearchInput placeholder="Search teams…" value={search} onValueChange={handleSearchInputChange} />
       }
     >
-      <DataTable
-        data={filtered}
-        columns={columns}
-        getRowKey={(t) => t.id}
-        isLoading={isLoading}
-        emptyState={emptyState}
-        rowClassName={(t) => cn(t.status === "ARCHIVED" && "opacity-60")}
-        minWidth="620px"
-        className="flex-1 min-h-0"
-      />
+      {isError ? (
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load teams"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
+      ) : (
+        <DataTable
+          data={displayedTeams}
+          columns={columns}
+          getRowKey={(t) => t.id}
+          isLoading={isLoading}
+          emptyState={emptyState}
+          rowClassName={(t) => cn(t.status === "ARCHIVED" && "opacity-60")}
+          minWidth="620px"
+          className="flex-1 min-h-0"
+          pagination={{
+            mode: "server",
+            page,
+            pageSize: 20,
+            total: teams?.total ?? 0,
+            onPageChange: handlePageChange,
+          }}
+        />
+      )}
 
       <Sheet open={showCreate} onOpenChange={setShowCreate}>
         <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md">
@@ -520,7 +576,7 @@ export default function OrgTeamsPage() {
                 defaultValues={{
                   name: editing.name,
                   code: editing.code,
-                  departmentId: editing.departmentId ?? NO_DEPARTMENT,
+                  departmentId: editing.departmentId ?? "",
                   leadUserId: editing.leadUserId ?? "",
                   description: editing.description ?? "",
                   capacity: editing.capacity != null ? String(editing.capacity) : "",

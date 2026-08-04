@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -12,18 +12,19 @@ import {
   FormLabel,
   FormControl,
   FormMessage,
-  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AppDialog } from "@/components/shared/app-dialog";
+import { MemberPicker } from "@/components/members/member-picker";
 import { useCreateWorker } from "@/hooks/api/directory/workers";
+import { usePeople } from "@/hooks/api/directory/people";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 const workerSchema = z.object({
-  organizationPersonId: z.string().min(1, "Person ID is required"),
+  organizationPersonId: z.string().min(1, "Person is required"),
   workerNumber: z.string().max(50).optional(),
   isPayee: z.boolean(),
 });
@@ -48,6 +49,32 @@ export function WorkerFormDialog({
   defaultOrganizationPersonId,
 }: Props) {
   const createWorker = useCreateWorker();
+  const { data: peoplePage } = usePeople(
+    {
+      page: 1,
+      limit: 100,
+    },
+  );
+
+  const personIdByUserId = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const person of peoplePage?.data ?? []) {
+      if (person.userId) {
+        map.set(person.userId, person.organizationPersonId);
+      }
+    }
+    return map;
+  }, [peoplePage?.data]);
+
+  const userIdByPersonId = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const person of peoplePage?.data ?? []) {
+      if (person.userId) {
+        map.set(person.organizationPersonId, person.userId);
+      }
+    }
+    return map;
+  }, [peoplePage?.data]);
 
   const form = useForm<WorkerFormValues>({
     resolver: zodResolver(workerSchema),
@@ -128,18 +155,35 @@ export function WorkerFormDialog({
             <FormField
               control={form.control}
               name="organizationPersonId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Person ID</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="Organization person UUID" />
-                  </FormControl>
-                  <FormDescription className="text-xs text-muted-foreground">
-                    The ID of the organization person to link.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
+              render={({ field }) => {
+                function handleMemberChange(userId: string | null) {
+                  if (!userId) {
+                    field.onChange("");
+                    return;
+                  }
+                  const personId = personIdByUserId.get(userId);
+                  if (!personId) {
+                    toast.error("This member has no directory person record yet.");
+                    return;
+                  }
+                  field.onChange(personId);
+                }
+
+                return (
+                  <FormItem>
+                    <FormLabel>Person</FormLabel>
+                    <FormControl>
+                      <MemberPicker
+                        value={userIdByPersonId.get(field.value) ?? undefined}
+                        onChange={handleMemberChange}
+                        placeholder="Search and select a person…"
+                        disabled={createWorker.isPending}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
             />
           ) : null}
           <FormField

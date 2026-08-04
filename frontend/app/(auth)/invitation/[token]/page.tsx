@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { useSession } from "next-auth/react";
@@ -12,13 +12,16 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { apiClient, clearBackendTokenCache } from "@/lib/api-client";
-import { signInWithMagicToken, useAcceptInvitation } from "@/hooks/common/auth-hooks";
+import {
+  signInWithMagicToken,
+  useAcceptInvitation,
+} from "@/hooks/common/auth-hooks";
 import { motion } from "framer-motion";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { InvitationIllustration } from "@/components/illustrations";
-import { Mail, ArrowRight, Loader2 } from "lucide-react";
+import { ArrowRight, Mail, MailCheck, ShieldCheck } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatRoleLabel } from "@/features/users/user-invite-roles";
 
@@ -38,7 +41,7 @@ function InvitationCard({
 }) {
   return (
     <Card
-      className={`overflow-hidden rounded-2xl border border-border/80 bg-card shadow-sm ${className ?? ""}`}
+      className={`overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[0_24px_64px_-32px_rgba(15,23,42,0.28)] ring-1 ring-slate-950/[0.02] ${className ?? ""}`}
     >
       {children}
     </Card>
@@ -48,17 +51,40 @@ function InvitationCard({
 function InvitationHero({
   title,
   description,
+  verified = true,
 }: {
   title: string;
   description: React.ReactNode;
+  verified?: boolean;
 }) {
+  const HeroIcon = verified ? MailCheck : Mail;
   return (
-    <div className="border-b border-border/60 bg-muted/25 px-6 py-7 text-center">
-      <InvitationIllustration className="mx-auto mb-4 h-32 w-32" />
-      <h1 className="text-xl font-semibold tracking-tight text-foreground">{title}</h1>
-      <p className="mx-auto mt-1.5 max-w-sm text-sm leading-relaxed text-muted-foreground">
-        {description}
-      </p>
+    <div className="relative border-b border-slate-200/80 bg-slate-50/55 px-5 py-5 sm:px-6">
+      <span className="absolute inset-x-0 top-0 h-1 bg-blue-600" />
+      <div className="flex items-start gap-3.5 pt-1">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white shadow-[0_8px_20px_-10px_rgba(37,99,235,0.8)]">
+          <HeroIcon className="h-5 w-5" strokeWidth={2} />
+        </div>
+        <div className="min-w-0 flex-1 pt-0.5">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-600">
+              {verified ? "Workspace invitation" : "Invitation status"}
+            </p>
+            {verified ? (
+              <span className="hidden items-center gap-1 rounded-full border border-blue-200 bg-white px-2 py-0.5 text-[10px] font-semibold text-blue-700 min-[420px]:inline-flex">
+                <ShieldCheck className="h-3 w-3" />
+                Secure access
+              </span>
+            ) : null}
+          </div>
+          <h1 className="mt-1 font-display text-2xl font-bold tracking-[-0.025em] text-slate-950 sm:text-[28px]">
+            {title}
+          </h1>
+          <p className="mt-1 max-w-md text-sm leading-5 text-slate-600">
+            {description}
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
@@ -66,31 +92,51 @@ function InvitationHero({
 function InvitationDetails({
   organizationName,
   role,
+  invitedEmail,
   accountEmail,
 }: {
   organizationName: string;
   role: string;
+  invitedEmail: string;
   accountEmail?: string | null;
 }) {
   return (
-    <div className="space-y-2.5 rounded-xl border border-border/70 bg-muted/30 px-4 py-3.5">
-      <div className="flex items-center justify-between gap-4">
-        <span className="text-xs font-medium text-muted-foreground">Organization</span>
-        <span className="truncate text-sm font-semibold text-foreground">{organizationName}</span>
+    <dl className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
+      <div className="min-w-0 rounded-lg border border-slate-200/90 bg-slate-50/70 px-3.5 py-2.5">
+        <dt className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+          Workspace
+        </dt>
+        <dd className="mt-0.5 truncate text-sm font-semibold text-slate-950">
+          {organizationName}
+        </dd>
       </div>
-      <div className="flex items-center justify-between gap-4">
-        <span className="text-xs font-medium text-muted-foreground">Role</span>
-        <span className="rounded-md bg-blue-50 px-2 py-0.5 text-xs font-semibold tracking-wide text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
+      <div className="min-w-0 rounded-lg border border-slate-200/90 bg-slate-50/70 px-3.5 py-2.5">
+        <dt className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+          Access role
+        </dt>
+        <dd className="mt-0.5 truncate text-sm font-semibold text-blue-700">
           {formatRoleLabel(role)}
-        </span>
+        </dd>
+      </div>
+      <div className="min-w-0 rounded-lg border border-slate-200/90 bg-slate-50/70 px-3.5 py-2.5 min-[420px]:col-span-2">
+        <dt className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+          Invitation sent to
+        </dt>
+        <dd className="mt-0.5 truncate text-sm font-medium text-slate-700">
+          {invitedEmail}
+        </dd>
       </div>
       {accountEmail ? (
-        <div className="flex items-center justify-between gap-4 border-t border-border/60 pt-2.5">
-          <span className="text-xs font-medium text-muted-foreground">Signed in as</span>
-          <span className="truncate text-sm text-foreground">{accountEmail}</span>
+        <div className="min-w-0 rounded-lg border border-slate-200/90 bg-slate-50/70 px-3.5 py-2.5 min-[420px]:col-span-2">
+          <dt className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+            Signed in as
+          </dt>
+          <dd className="mt-0.5 truncate text-sm font-medium text-slate-700">
+            {accountEmail}
+          </dd>
         </div>
       ) : null}
-    </div>
+    </dl>
   );
 }
 
@@ -110,7 +156,11 @@ export default function InvitationPage() {
 
   const handleDecline = useCallback(() => router.push("/signin"), [router]);
 
-  const { data: invitation, error: invitationError } = useQuery({
+  const {
+    data: invitation,
+    error: invitationError,
+    isPending: isValidating,
+  } = useQuery({
     queryKey: ["invitation", token],
     queryFn: () =>
       apiClient.get<{
@@ -122,13 +172,6 @@ export default function InvitationPage() {
     enabled: !!token,
     retry: false,
   });
-
-  useEffect(() => {
-    if (invitationError) {
-      toast.error(getErrorMessage(invitationError));
-      router.push("/signin");
-    }
-  }, [invitationError, router]);
 
   const acceptInvitation = useAcceptInvitation();
 
@@ -200,15 +243,54 @@ export default function InvitationPage() {
         },
       },
     );
-  }, [token, session, router, acceptInvitation, invitation, update, autoLoginWithToken]);
+  }, [
+    token,
+    session,
+    router,
+    acceptInvitation,
+    invitation,
+    update,
+    autoLoginWithToken,
+  ]);
 
-  if (!invitation) {
+  if (isValidating) {
     return (
-      <div className="flex flex-col items-center justify-center gap-4">
-        <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
-        <p className="text-sm text-muted-foreground">
-          Verifying your invitation...
-        </p>
+      <InvitationCard className="w-full max-w-[480px]">
+        <div className="flex items-start gap-3.5 border-b border-slate-200/80 px-5 py-5 sm:px-6 sm:py-6">
+          <Skeleton className="h-11 w-11 shrink-0 rounded-xl" />
+          <div className="w-full space-y-2 pt-0.5">
+            <Skeleton className="h-3 w-36" />
+            <Skeleton className="h-7 w-56 max-w-full" />
+            <Skeleton className="h-4 w-72 max-w-full" />
+          </div>
+        </div>
+        <div className="space-y-4 px-6 py-5">
+          <Skeleton className="h-28 w-full rounded-xl" />
+          <Skeleton className="h-11 w-full rounded-md" />
+        </div>
+      </InvitationCard>
+    );
+  }
+
+  if (invitationError || !invitation) {
+    return (
+      <div className="w-full max-w-[480px]">
+        <InvitationCard>
+          <InvitationHero
+            title="Invitation unavailable"
+            description={getErrorMessage(invitationError)}
+            verified={false}
+          />
+          <CardContent className="px-6 py-5">
+            <p className="mb-4 text-center text-sm text-muted-foreground">
+              Ask an organization administrator to send a new invitation if this
+              link has expired or was replaced.
+            </p>
+            <Button className="w-full" onClick={handleDecline}>
+              Go to sign in
+            </Button>
+          </CardContent>
+        </InvitationCard>
       </div>
     );
   }
@@ -216,7 +298,7 @@ export default function InvitationPage() {
   if (invitation.userExists) {
     return (
       <motion.div
-        className="w-full max-w-md"
+        className="w-full max-w-[480px]"
         variants={staggerContainer}
         initial="hidden"
         animate="visible"
@@ -224,13 +306,14 @@ export default function InvitationPage() {
         <motion.div variants={fadeUp}>
           <InvitationCard>
             <InvitationHero
-              title="Join organization"
-              description="Use your existing StreamlineOS account to accept this invite."
+              title="You’re invited"
+              description={`Join ${invitation.organizationName} with your existing StreamlineOS account.`}
             />
             <CardContent className="space-y-5 px-6 pb-6 pt-5">
               <InvitationDetails
                 organizationName={invitation.organizationName}
                 role={invitation.role}
+                invitedEmail={invitation.email}
                 accountEmail={session?.user?.email}
               />
               <div className="space-y-2">
@@ -261,7 +344,7 @@ export default function InvitationPage() {
 
   return (
     <motion.div
-      className="w-full max-w-md"
+      className="w-full max-w-[480px]"
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
@@ -269,52 +352,34 @@ export default function InvitationPage() {
       <motion.div variants={fadeUp}>
         <InvitationCard>
           <InvitationHero
-            title="Join organization"
-            description={
-              <>
-                You&apos;ve been invited to join{" "}
-                <span className="font-medium text-foreground">{invitation.organizationName}</span>.
-              </>
-            }
+            title="You’re invited"
+            description={`Create your account to join ${invitation.organizationName}.`}
           />
-          <CardContent className="px-6 pb-6 pt-5">
+          <CardContent className="px-5 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5">
             <InvitationDetails
               organizationName={invitation.organizationName}
               role={invitation.role}
+              invitedEmail={invitation.email}
             />
 
             <form
               onSubmit={form.handleSubmit(onSubmit)}
-              className="mt-5 space-y-4"
+              className="mt-4 space-y-3.5"
               aria-busy={acceptInvitation.isPending}
             >
-              <div className="space-y-2">
-                <Label className="text-foreground text-xs font-medium">
-                  Email
-                </Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    value={invitation.email}
-                    disabled
-                    className="pl-10 bg-muted/30 cursor-not-allowed text-sm"
-                    aria-label="Invitation email address"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2">
                 <div className="space-y-2">
                   <Label
                     htmlFor="firstName"
                     className="text-foreground text-xs font-medium"
                   >
-                    First Name
+                    First name
                   </Label>
                   <Input
                     id="firstName"
                     type="text"
-                    placeholder="John"
+                    placeholder="Your first name"
+                    autoComplete="given-name"
                     {...form.register("firstName")}
                     disabled={acceptInvitation.isPending}
                     className="text-sm"
@@ -325,12 +390,13 @@ export default function InvitationPage() {
                     htmlFor="lastName"
                     className="text-foreground text-xs font-medium"
                   >
-                    Last Name
+                    Last name
                   </Label>
                   <Input
                     id="lastName"
                     type="text"
-                    placeholder="Doe"
+                    placeholder="Your last name"
+                    autoComplete="family-name"
                     {...form.register("lastName")}
                     disabled={acceptInvitation.isPending}
                     className="text-sm"
@@ -338,7 +404,7 @@ export default function InvitationPage() {
                 </div>
               </div>
 
-              <div className="space-y-2 pt-1">
+              <div className="space-y-1.5 pt-0.5">
                 <LoadingButton
                   type="submit"
                   className="h-11 w-full gap-2 font-medium"
@@ -359,11 +425,6 @@ export default function InvitationPage() {
                   Decline invitation
                 </Button>
               </div>
-
-              <p className="pt-1 text-center text-[11px] leading-relaxed text-muted-foreground">
-                By accepting, you&apos;ll join this organization and get access to
-                its projects, pipelines, and team tools.
-              </p>
             </form>
           </CardContent>
         </InvitationCard>

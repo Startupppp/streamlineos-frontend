@@ -202,7 +202,7 @@ function ThreePlContent() {
   );
 
   const actions = (
-    <Button size="sm" className="gap-1.5 text-xs" onClick={handleAddConnection} {...addHoverHandlers}>
+    <Button onClick={handleAddConnection} {...addHoverHandlers}>
       <PlusIcon ref={addIconRef} size={14} />
       Add Connection
     </Button>

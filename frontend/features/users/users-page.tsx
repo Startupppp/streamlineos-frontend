@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useState, useCallback, useMemo, useTransition, useEffect } from "react";
@@ -22,11 +22,6 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import {
-  ResponsivePopover,
-  ResponsivePopoverContent,
-  ResponsivePopoverTrigger,
-} from "@/components/ui/responsive-popover";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -61,7 +56,6 @@ import { Users,
   UserPlus,
   Download,
   Upload,
-  SlidersHorizontal,
 } from "lucide-react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -71,6 +65,8 @@ import { getUserDisplayName, getUserInitials } from "@/features/build/shared/res
 import { useCan } from "@/hooks/api/access";
 import { USER_STRUCTURAL_ROLES, formatRoleLabel } from "@/features/users/user-invite-roles";
 import { resolveOrgUnitName } from "./resolve-org-unit-name";
+import { PeopleSectionTabs } from "./people-section-tabs";
+import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 
 type BulkAction = "suspend" | "archive";
 
@@ -174,7 +170,7 @@ export function UsersPage() {
     [pushParams],
   );
 
-  const { data, isLoading, isError, refetch } = useUsers(
+  const { data, isLoading, isError, error, refetch } = useUsers(
     {
       page,
       limit: 20,
@@ -449,19 +445,10 @@ export function UsersPage() {
     />
   );
 
-  function renderFilterSelects(variant: "popover" | "toolbar" = "popover") {
-    const isToolbar = variant === "toolbar";
-    const selectTriggerClass = isToolbar
-      ? `h-9 w-0 min-w-0 flex-1 basis-0 ${FILTER_SELECT_TRIGGER}`
-      : `h-9 w-full ${FILTER_SELECT_TRIGGER}`;
+  function renderFilterSelects() {
+    const selectTriggerClass = `w-full lg:w-fit lg:min-w-32 ${FILTER_SELECT_TRIGGER}`;
     return (
-      <div
-        className={
-          isToolbar
-            ? "hidden min-w-0 flex-[2] basis-0 items-center gap-2 lg:flex"
-            : "flex w-full flex-col gap-2"
-        }
-      >
+      <>
         <Select value={status} onValueChange={handleStatusChange}>
           <SelectTrigger className={selectTriggerClass}>
             <SelectValue />
@@ -512,15 +499,15 @@ export function UsersPage() {
             ))}
           </SelectContent>
         </Select>
-      </div>
+      </>
     );
   }
 
   return (
     <>
       <PageWrapper
-        title="Members"
-        subtitle="Manage organization memberships, roles, and access."
+        title="People"
+        subtitle="Manage active members, roles, and organization access."
         actions={
           <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-nowrap sm:justify-end">
             {(canExport || canCreate) && (
@@ -570,36 +557,18 @@ export function UsersPage() {
           </div>
         }
         filters={
-          <div className="flex w-full min-w-0 items-center gap-2">
-            <div className="min-w-0 flex-1 basis-0">
+          <PageTabsToolbar
+            collapseBelow="lg"
+            tabs={<PeopleSectionTabs />}
+            search={
               <SearchInput
                 placeholder="Search users..."
                 value={search}
                 onValueChange={handleSearchChange}
               />
-            </div>
-            <ResponsivePopover>
-              <ResponsivePopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-9 shrink-0 gap-1.5 text-xs lg:hidden"
-                  aria-label="Filters"
-                >
-                  <SlidersHorizontal className="h-4 w-4" />
-                  <span className="hidden sm:inline">Filters</span>
-                </Button>
-              </ResponsivePopoverTrigger>
-              <ResponsivePopoverContent
-                title="Filters"
-                className="w-[min(22rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] p-3"
-                align="end"
-              >
-                {renderFilterSelects()}
-              </ResponsivePopoverContent>
-            </ResponsivePopover>
-            {renderFilterSelects("toolbar")}
-          </div>
+            }
+            filters={renderFilterSelects}
+          />
         }
       >
         <div className="flex flex-1 min-h-0 flex-col gap-3">
@@ -677,7 +646,7 @@ export function UsersPage() {
           {isError ? (
             <ErrorState
               title="Failed to load members"
-              description="An error occurred while loading users."
+              description={getErrorMessage(error)}
               onRetry={handleRetry}
             />
           ) : (

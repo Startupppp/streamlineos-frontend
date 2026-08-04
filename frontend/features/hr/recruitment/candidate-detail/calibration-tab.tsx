@@ -126,7 +126,7 @@ function CalibrationSessionCard({ session, onEdit, onMarkComplete }: Calibration
         )}
 
         <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-border">
-          <Button variant="ghost" size="sm" className="gap-1.5 text-xs" onClick={handleEdit}>
+          <Button variant="ghost" onClick={handleEdit}>
             <Pencil className="h-3 w-3" />
             Edit
           </Button>

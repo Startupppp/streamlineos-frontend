@@ -56,7 +56,7 @@ import { resolveImageUrl } from "@/lib/utils";
 function TeamActionsButton() {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
-    <Button variant="outline" size="sm" className="gap-1.5 text-xs" {...hoverHandlers}>
+    <Button variant="outline" {...hoverHandlers}>
       <EllipsisIcon ref={iconRef} size={14} /> Actions
     </Button>
   );

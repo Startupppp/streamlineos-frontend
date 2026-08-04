@@ -213,11 +213,11 @@ export default function CompanyDetailPage({
       actions={
         <>
           <AccountHealthBadge healthScore={displayScore} />
-          <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={handleOpenLinkParent}>
+          <Button variant="outline" onClick={handleOpenLinkParent}>
             <GitBranch className="h-3.5 w-3.5" />
             {org.parentId ? "Change Parent" : "Link Parent"}
           </Button>
-          <Button variant="default" size="sm" className="gap-1.5 text-xs" asChild>
+          <Button variant="default" asChild>
             <Link href={`/crm/companies/${id}/edit`}>
               <Pencil className="h-3.5 w-3.5" />
               Edit

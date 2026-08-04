@@ -224,7 +224,7 @@ export function StepGeneration({ data }: StepGenerationProps) {
   }
 
   function goToInvitations() {
-    void navigateToPostSetup("/users/invitations");
+    void navigateToPostSetup("/users?view=invitations");
   }
 
   async function retryGeneration() {

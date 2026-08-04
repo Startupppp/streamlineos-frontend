@@ -148,7 +148,7 @@ export default function RecruitmentCommandCenterPage() {
       actions={
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <AnimatedIconButton icon={PlusIcon} iconSize={14} size="sm" className="gap-1.5 text-xs">
+            <AnimatedIconButton icon={PlusIcon} iconSize={14}>
               Create
             </AnimatedIconButton>
           </DropdownMenuTrigger>

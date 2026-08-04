@@ -232,7 +232,7 @@ function ChannelsContent() {
   }
 
   const actions = (
-    <Button size="sm" className="gap-1.5 text-xs" onClick={handleNewChannel} {...addHoverHandlers}>
+    <Button onClick={handleNewChannel} {...addHoverHandlers}>
       <PlusIcon ref={addIconRef} size={14} />
       New Channel
     </Button>

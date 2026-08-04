@@ -33,10 +33,12 @@ interface ListQuery extends Record<string, unknown> {
 // ─── Overview & Tree ─────────────────────────────────────────────────────────
 
 export function useOrgTree() {
+  const canView = useCan("settings:view");
   return useQuery({
     queryKey: queryKeys.hierarchy.tree(),
     queryFn: () => apiClient.get<OrgTreeNode[]>("/org-hierarchy/tree"),
     staleTime: 30_000,
+    enabled: canView,
   });
 }
 
@@ -204,6 +206,7 @@ export function useDeleteOrgDepartment() {
 // ─── Teams ───────────────────────────────────────────────────────────────────
 
 export function useOrgTeams(query?: ListQuery) {
+  const canView = useCan("settings:view");
   return useQuery({
     queryKey: queryKeys.hierarchy.teams(query),
     queryFn: () =>
@@ -214,6 +217,7 @@ export function useOrgTeams(query?: ListQuery) {
         ...(query?.status ? { status: query.status } : {}),
       }),
     staleTime: 60_000,
+    enabled: canView,
   });
 }
 
@@ -221,9 +225,10 @@ export function useCreateOrgTeam() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["create", "org", "team"],
-    mutationFn: (data: { name: string; code: string; departmentId?: string; leadUserId?: string; description?: string; capacity?: number }) =>
+    mutationFn: (data: { name: string; code: string; departmentId: string; leadUserId?: string; description?: string; capacity?: number }) =>
       apiClient.post<OrgTeam>("/org-hierarchy/teams", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.teams() }),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: queryKeys.hierarchy.all }),
   });
 }
 
@@ -233,7 +238,8 @@ export function useUpdateOrgTeam() {
     mutationKey: ["update", "org", "team"],
     mutationFn: ({ id, ...data }: { id: string } & Record<string, unknown>) =>
       apiClient.patch<OrgTeam>(`/org-hierarchy/teams/${id}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.teams() }),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: queryKeys.hierarchy.all }),
   });
 }
 
@@ -243,7 +249,8 @@ export function useDeleteOrgTeam() {
     mutationKey: ["delete", "org", "team"],
     mutationFn: (id: string) =>
       apiClient.delete<{ message: string }>(`/org-hierarchy/teams/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.teams() }),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: queryKeys.hierarchy.all }),
   });
 }
 

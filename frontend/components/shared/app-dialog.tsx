@@ -77,14 +77,14 @@ export function AppDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className={cn(
-          "flex flex-col p-0 gap-0 max-w-md max-h-[90dvh]",
+          "flex flex-col gap-0 p-0 max-w-md max-h-[90dvh]",
           className,
         )}
       >
-        <DialogHeader className="shrink-0 px-6 py-4 border-b border-border/60">
+        <DialogHeader className="shrink-0 gap-1 px-6 py-4 border-b border-border/60">
           <DialogTitle className="text-base font-semibold">{title}</DialogTitle>
           {description && (
-            <DialogDescription className="text-sm text-muted-foreground mt-0.5">
+            <DialogDescription className="text-sm text-muted-foreground">
               {description}
             </DialogDescription>
           )}

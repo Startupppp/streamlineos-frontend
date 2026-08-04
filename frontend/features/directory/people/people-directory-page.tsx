@@ -61,7 +61,7 @@ function displayName(person: OrganizationPerson): string {
 function AddPersonButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
-    <Button size="sm" className="gap-1.5 text-xs" onClick={onClick} {...hoverHandlers}>
+    <Button onClick={onClick} {...hoverHandlers}>
       <PlusIcon ref={iconRef} size={14} /> Add Person
     </Button>
   );

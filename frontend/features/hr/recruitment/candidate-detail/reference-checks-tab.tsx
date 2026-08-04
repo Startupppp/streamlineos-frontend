@@ -140,7 +140,7 @@ export function ReferenceChecksTab({ candidateId }: Props) {
         </p>
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <SheetTrigger asChild>
-            <Button size="sm" variant="outline" className="gap-1.5 text-xs">
+            <Button variant="outline">
               <Plus className="h-3.5 w-3.5" />
               Add Reference
             </Button>

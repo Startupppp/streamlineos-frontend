@@ -30,7 +30,7 @@ export function ResumeTab({ resumeUrl, resumeText }: Props) {
         <div className="rounded-2xl border border-border bg-card overflow-hidden">
           <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/60 bg-muted/30">
             <span className="text-xs font-semibold text-foreground">Resume</span>
-            <Button variant="ghost" size="sm" className="gap-1.5 text-xs" asChild {...externalLinkHoverHandlers}>
+            <Button variant="ghost" asChild {...externalLinkHoverHandlers}>
               <a href={resumeUrl} target="_blank" rel="noopener noreferrer">
                 <ExternalLinkIcon ref={externalLinkIconRef} size={12} />
                 Open

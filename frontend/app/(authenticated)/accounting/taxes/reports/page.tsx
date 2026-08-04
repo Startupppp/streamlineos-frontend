@@ -324,12 +324,12 @@ export default function TaxReportsPage() {
       backHref="/accounting/taxes"
       actions={
         activeTab === "output" ? (
-          <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={handleExportOutput} {...outputDownloadHover}>
+          <Button variant="outline" onClick={handleExportOutput} {...outputDownloadHover}>
             <DownloadIcon ref={outputDownloadRef} size={14} className="shrink-0" />
             Export CSV
           </Button>
         ) : activeTab === "input" ? (
-          <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={handleExportInput} {...inputDownloadHover}>
+          <Button variant="outline" onClick={handleExportInput} {...inputDownloadHover}>
             <DownloadIcon ref={inputDownloadRef} size={14} className="shrink-0" />
             Export CSV
           </Button>

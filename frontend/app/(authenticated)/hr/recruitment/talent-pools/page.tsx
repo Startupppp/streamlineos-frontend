@@ -128,7 +128,7 @@ function AddMemberSheet({ poolId }: { poolId: number }) {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <AnimatedIconButton icon={UserPlusIcon} iconSize={14} size="sm" variant="outline" className="gap-1.5 text-xs">
+        <AnimatedIconButton icon={UserPlusIcon} iconSize={14} variant="outline">
           Add Candidate
         </AnimatedIconButton>
       </SheetTrigger>

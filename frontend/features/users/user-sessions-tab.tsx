@@ -164,8 +164,14 @@ export function UserSessionsTab({ userId }: UserSessionsTabProps) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col space-y-2">
-      {activeSessions.length > 0 && (
-        <div className="flex shrink-0 justify-end">
+      <div className="flex shrink-0 items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[13px] font-medium">Authenticated sessions</p>
+          <p className="text-[11px] text-muted-foreground">
+            Current browser access that can be revoked immediately.
+          </p>
+        </div>
+        {activeSessions.length > 0 ? (
           <AnimatedIconButton
             icon={Trash2Icon}
             iconSize={14}
@@ -178,8 +184,8 @@ export function UserSessionsTab({ userId }: UserSessionsTabProps) {
           >
             Revoke all ({activeSessions.length})
           </AnimatedIconButton>
-        </div>
-      )}
+        ) : null}
+      </div>
       <DataTable
         data={sessions}
         columns={columns}

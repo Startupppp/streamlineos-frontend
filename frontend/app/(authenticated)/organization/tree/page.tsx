@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useTransition } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Building2, GitBranch, Briefcase, Users } from "lucide-react";
 import { ChevronRightIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -8,6 +9,8 @@ import { SearchInput } from "@/components/ui/search-input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { useOrgTree } from "@/hooks/api/org-hierarchy";
 import type {
   OrgTreeNode,
@@ -16,6 +19,8 @@ import type {
   OrgTreeTeam,
 } from "@/types/org-hierarchy";
 import { RequireModule } from "@/components/auth/require-module";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 
 type NodeType = "business_unit" | "branch" | "department" | "team";
 
@@ -27,20 +32,6 @@ const NODE_ICONS: Record<
   branch: GitBranch,
   department: Briefcase,
   team: Users,
-};
-
-const NODE_COLORS: Record<NodeType, string> = {
-  business_unit: "text-blue-600 dark:text-blue-400",
-  branch: "text-emerald-600 dark:text-emerald-400",
-  department: "text-amber-600 dark:text-amber-400",
-  team: "text-rose-600 dark:text-rose-400",
-};
-
-const NODE_DOT_COLORS: Record<NodeType, string> = {
-  business_unit: "bg-blue-500",
-  branch: "bg-emerald-500",
-  department: "bg-amber-500",
-  team: "bg-rose-500",
 };
 
 const NODE_LABELS: Record<NodeType, string> = {
@@ -69,9 +60,8 @@ function TreeItem({
   depth,
   children,
 }: TreeItemProps) {
-  const [expanded, setExpanded] = useState(depth < 2);
+  const [expanded, setExpanded] = useState(depth < 1);
   const Icon = NODE_ICONS[type];
-  const colorClass = NODE_COLORS[type];
   const hasChildren = childCount > 0;
   const { iconRef, hoverHandlers } = useAnimatedIcon();
 
@@ -81,10 +71,12 @@ function TreeItem({
 
   return (
     <div>
-      <div
-        className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted/50 cursor-pointer group transition-colors"
+      <button
+        type="button"
+        className="group flex w-full items-center gap-2 rounded-md px-3 py-2 text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         style={{ paddingLeft: `${depth * 20 + 12}px` }}
         onClick={handleToggle}
+        aria-expanded={hasChildren ? expanded : undefined}
         {...hoverHandlers}
       >
         {hasChildren ? (
@@ -96,8 +88,11 @@ function TreeItem({
         ) : (
           <span className="w-4 shrink-0" />
         )}
-        <Icon className={`h-4 w-4 shrink-0 ${colorClass}`} />
+        <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
         <span className="font-medium text-sm truncate flex-1">{name}</span>
+        <Badge variant="outline" className="hidden h-5 px-2 text-[10px] sm:inline-flex">
+          {NODE_LABELS[type]}
+        </Badge>
         <span className="text-xs text-muted-foreground font-mono">{code}</span>
         {status !== "ACTIVE" && (
           <Badge variant="secondary" className="text-[10px] h-4 px-1.5">
@@ -109,8 +104,10 @@ function TreeItem({
             {childCount}
           </span>
         )}
-      </div>
-      {expanded && children}
+      </button>
+      {expanded && children ? (
+        <div className="ml-5 border-l border-border/60">{children}</div>
+      ) : null}
     </div>
   );
 }
@@ -230,28 +227,41 @@ function filterTree(nodes: OrgTreeNode[], q: string): OrgTreeNode[] {
 }
 
 export default function OrgTreePage() {
-  const { data, isLoading, isError } = useOrgTree();
-  const [search, setSearch] = useState("");
+  const { data, isLoading, isError, error, refetch } = useOrgTree();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [, startTransition] = useTransition();
+  const query = searchParams.get("search") ?? "";
+  const [search, setSearch] = useState(query);
+  const debouncedSearch = useDebouncedValue(search, 300);
 
-  const filtered = filterTree(data ?? [], search);
+  const filtered = filterTree(data ?? [], query);
+
+  useEffect(() => {
+    if (debouncedSearch === query) return;
+    const params = new URLSearchParams(searchParams.toString());
+    if (debouncedSearch) params.set("search", debouncedSearch);
+    else params.delete("search");
+    startTransition(() => {
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    });
+  }, [debouncedSearch, pathname, query, router, searchParams]);
 
   const handleSearchChange = useCallback(
     (value: string) => setSearch(value),
     [],
   );
 
-  const legend: { type: NodeType; label: string }[] = [
-    { type: "business_unit", label: NODE_LABELS.business_unit },
-    { type: "branch", label: NODE_LABELS.branch },
-    { type: "department", label: NODE_LABELS.department },
-    { type: "team", label: NODE_LABELS.team },
-  ];
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   return (
     <RequireModule module="hr">
       <PageWrapper
-        title="Organization Tree"
-        subtitle="Full hierarchy from business units down to teams"
+        title="Organization Chart"
+        subtitle="See how business units, branches, departments, and teams connect."
         filters={
           <SearchInput
             placeholder="Search nodes…"
@@ -260,29 +270,11 @@ export default function OrgTreePage() {
           />
         }
       >
-        <div className="space-y-3">
-          <div className="flex gap-4 flex-wrap">
-            {legend.map(({ type, label }) => {
-              const Icon = NODE_ICONS[type];
-              return (
-                <div
-                  key={type}
-                  className="flex items-center gap-1.5 text-xs text-muted-foreground"
-                >
-                  <span
-                    className={`h-2 w-2 rounded-full ${NODE_DOT_COLORS[type]}`}
-                  />
-                  <Icon className={`h-3 w-3 ${NODE_COLORS[type]}`} />
-                  <span>{label}</span>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="border border-border rounded-xl bg-card shadow-sm overflow-x-auto">
+        <div className="flex min-h-0 flex-1 flex-col">
+          <div className="flex min-h-0 flex-1 flex-col overflow-auto rounded-lg border border-border bg-card shadow-sm">
             {isLoading && (
               <div className="p-4 space-y-2">
-                {[...Array(6)].map((_, i) => (
+                {Array.from({ length: 10 }).map((_, i) => (
                   <Skeleton
                     key={i}
                     className="h-8 rounded-md"
@@ -292,29 +284,24 @@ export default function OrgTreePage() {
               </div>
             )}
             {isError && (
-              <div className="min-h-[260px] flex flex-col items-center justify-center gap-3 text-center px-6">
-                <p className="text-sm font-medium text-foreground">
-                  Failed to load organization tree
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Check your connection and try again.
-                </p>
-              </div>
+              <ErrorState
+                className="flex-1"
+                title="Couldn't load the organization chart"
+                description={getErrorMessage(error)}
+                onRetry={handleRetry}
+              />
             )}
             {!isLoading && !isError && filtered.length === 0 && (
-              <div className="min-h-[260px] flex flex-col items-center justify-center gap-3 text-center px-6">
-                <Building2 className="w-8 text-muted-foreground/40" />
-                <p className="text-sm font-medium text-foreground">
-                  {search
+              <EmptyState
+                className="flex-1 border-0 bg-transparent"
+                illustrationPreset="team"
+                title={query ? "No matching structure" : "No organization structure yet"}
+                description={
+                  query
                     ? "No results match your search."
-                    : "No business units found"}
-                </p>
-                {!search && (
-                  <p className="text-xs text-muted-foreground">
-                    Create a business unit to build your organization tree.
-                  </p>
-                )}
-              </div>
+                    : "Add a business unit, or finish workspace setup to generate a starter structure."
+                }
+              />
             )}
             {!isLoading && !isError && filtered.length > 0 && (
               <div className="py-2">

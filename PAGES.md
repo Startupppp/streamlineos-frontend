@@ -154,7 +154,7 @@ Full text of any pre-2026-08-03 entry is in git history.
 
 ## Route inventory
 
-> Verified against `frontend/app/**/page.tsx` on 2026-08-03 — every path below exists on disk, spelled in full so it is greppable.
+> Verified against `frontend/app/**/page.tsx` on 2026-08-04 — every path below exists on disk, spelled in full so it is greppable.
 
 ### Shell & Home
 - [x] `layout` — Activity Bar (48px icon rail) + sidebar (logo/workspace, `getNavGroupsForProduct` nav, search+bell, profile menu); `GlobalHeader` hidden below `md`
@@ -166,7 +166,7 @@ Full text of any pre-2026-08-03 entry is in git history.
 - [x] `/mail` — Unified Gmail+Outlook inbox via Composio live proxy; **zero mail tables**
 - [x] `/ai` · `/ai/executive-brief` · `/ask` — AI assistant surfaces
 - [x] `/notifications` · `/notifications/preferences` · `/notifications/broadcasts` · `/notifications/events` · `/notifications/policy` · `/notifications/providers` · `/notifications/templates`
-- [x] `/users` · `/users/invitations` — Administration → People (Members + Invitations); page title **Members** (not Users); status filtering on `/users`; invitations gated `settings:organization:manage`; org-scoped lifecycle SoT = `organization_members.status`
+- [x] `/users` — Administration → People workspace; Members and permission-gated Invitations share one route via `?view=invitations`; status filtering stays URL-backed; org-scoped lifecycle SoT = `organization_members.status`
 - [x] `/directory` · `/directory/[personId]` · `/directory/workers` · `/parties` — Administration → People (Directory, Workers, Business Parties); person detail tabs (Profile/Membership/Worker/Modules); `directory:people:*` gates; Person create does not require membership/worker; HRMS not required; `/parties` module-independent (no CRM/Inventory entitlement); offer-fulfillment API gated CRM+inventory (no FE UI yet)
 
 ### Build (delivery + product management)
@@ -311,7 +311,7 @@ Full text of any pre-2026-08-03 entry is in git history.
 - [x] `/surveys` · `/surveys/access` · `/surveys/new` · `/surveys/[surveyId]` · `/surveys/[surveyId]/participants` · `/surveys/live/[sessionId]/host`
 
 ### Organization & Settings
-- [x] `/organization` · `/organization/departments` · `/organization/teams` · `/organization/locations` · `/organization/branches` · `/organization/business-units` · `/organization/cost-centers` · `/organization/tree` — All with archive/restore
+- [x] `/organization` · `/organization/departments` · `/organization/teams` · `/organization/locations` · `/organization/branches` · `/organization/business-units` · `/organization/cost-centers` · `/organization/tree` — HR-gated organization structure; setup generates industry defaults plus teams for enabled modules; teams require departments; chart is a searchable read-only hierarchy
 - [x] `/settings/organization` — Org profile + security policies (MFA, email domain, concurrent sessions; absorbed `/settings/security` 2026-07-25)
 - [x] `/settings/roles` · `/settings/roles/[roleId]` · `/settings/roles/simulate` · `/settings/roles/audit` — Role editor with permission matrix + simulator
 - [x] `/settings/modules` · `/settings/module-access/[moduleKey]` — Module enablement (`settings:manage`) + per-module member access

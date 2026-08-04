@@ -2233,12 +2233,6 @@ export const NAV_GROUPS: NavGroup[] = [
         requiredPermission: "settings:view",
       },
       {
-        label: "Invitations",
-        icon: MailOpen,
-        href: "/users/invitations",
-        requiredPermission: "settings:organization:manage",
-      },
-      {
         label: "Workers",
         icon: Briefcase,
         href: "/directory/workers",

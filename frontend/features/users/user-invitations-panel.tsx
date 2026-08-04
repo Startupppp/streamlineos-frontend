@@ -37,6 +37,8 @@ import {
 import type { Invitation } from "@/hooks/api/users";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { PeopleSectionTabs } from "./people-section-tabs";
+import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 
 type InvStatus = "pending" | "accepted" | "expired" | "revoked";
 type StatusFilter = "all" | InvStatus;
@@ -129,7 +131,7 @@ export function UserInvitationsPanel() {
   const [localSearch, setLocalSearch] = useState(q);
   const debouncedLocalSearch = useDebouncedValue(localSearch, 300);
 
-  const { data, isLoading, isError, refetch } = useInvitations(
+  const { data, isLoading, isError, error, refetch } = useInvitations(
     {
       page,
       limit: 20,
@@ -416,8 +418,8 @@ export function UserInvitationsPanel() {
   return (
     <>
       <PageWrapper
-        title="Invitations"
-        subtitle="Manage and track organization invitations."
+        title="People"
+        subtitle="Track pending, accepted, expired, and revoked invitations."
         actions={
           canInvite ? (
             <AnimatedIconButton
@@ -433,15 +435,20 @@ export function UserInvitationsPanel() {
           ) : undefined
         }
         filters={
-          <>
-            <SearchInput
-              value={localSearch}
-              onValueChange={handleSearchChange}
-              placeholder="Search by email…"
-            />
-            <Select value={status} onValueChange={handleStatusChange}>
+          <PageTabsToolbar
+            collapseBelow="lg"
+            tabs={<PeopleSectionTabs />}
+            search={
+              <SearchInput
+                value={localSearch}
+                onValueChange={handleSearchChange}
+                placeholder="Search by email…"
+              />
+            }
+            filters={
+              <Select value={status} onValueChange={handleStatusChange}>
               <SelectTrigger
-                className={`w-[140px] shrink-0 ${FILTER_SELECT_TRIGGER}`}
+                className={`w-full lg:w-[140px] ${FILTER_SELECT_TRIGGER}`}
               >
                 <SelectValue />
               </SelectTrigger>
@@ -452,15 +459,16 @@ export function UserInvitationsPanel() {
                 <SelectItem value="expired">Expired</SelectItem>
                 <SelectItem value="revoked">Revoked</SelectItem>
               </SelectContent>
-            </Select>
-          </>
+              </Select>
+            }
+          />
         }
       >
         <div className="flex flex-1 min-h-0 flex-col gap-3">
           {isError ? (
             <ErrorState
               title="Failed to load invitations"
-              description="An error occurred while loading invitations."
+              description={getErrorMessage(error)}
               onRetry={handleRetry}
             />
           ) : (

@@ -108,7 +108,7 @@ export function TransfersClient() {
       backHref="/accounting/banking"
       actions={
         canManage ? (
-          <Button size="sm" className="gap-1.5 text-xs" onClick={handleDialogOpen} {...hoverHandlers}>
+          <Button onClick={handleDialogOpen} {...hoverHandlers}>
             <PlusIcon ref={iconRef} size={14} />
             New Transfer
           </Button>

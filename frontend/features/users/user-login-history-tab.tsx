@@ -82,6 +82,12 @@ export function UserLoginHistoryTab({ userId }: UserLoginHistoryTabProps) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col space-y-3">
+      <div className="shrink-0">
+        <p className="text-[13px] font-medium">Sign-in history</p>
+        <p className="text-[11px] text-muted-foreground">
+          Successful and failed authentication attempts for security review.
+        </p>
+      </div>
       <div className="flex shrink-0 items-center gap-2">
         <Button
           variant={successFilter === undefined ? "secondary" : "outline"}

@@ -245,7 +245,7 @@ function CrmTasksContent() {
       subtitle={data ? `${stats.total} tasks` : undefined}
       badge={data ? String(stats.total) : undefined}
       actions={
-        <Button onClick={handleCreateOpen} size="sm" className="gap-1.5 text-xs">
+        <Button onClick={handleCreateOpen}>
           <Plus className="h-3.5 w-3.5" />
           New Task
         </Button>

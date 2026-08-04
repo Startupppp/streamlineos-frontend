@@ -24,11 +24,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Separator } from "@/components/ui/separator";
+import { SheetBody, SheetFooter } from "@/components/ui/sheet";
 import { useUpdateUser } from "@/hooks/api/users";
 import type { User } from "@/hooks/api/users";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { ORG_OWNER_ROLE, USER_INVITE_ROLES } from "@/features/users/user-invite-roles";
+
+const USER_EDIT_FORM_ID = "user-edit-form";
 
 const editSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -112,7 +115,12 @@ export function UserEditForm({ user, onSuccess, onCancel }: UserEditFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <SheetBody className="space-y-4 px-6 py-5">
+        <form
+          id={USER_EDIT_FORM_ID}
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="space-y-4"
+        >
         <div className="grid grid-cols-2 gap-3">
           <FormField
             control={form.control}
@@ -293,16 +301,29 @@ export function UserEditForm({ user, onSuccess, onCancel }: UserEditFormProps) {
             )}
           />
         </div>
+        </form>
+      </SheetBody>
 
-        <div className="flex gap-2 justify-end pt-1">
-          <Button type="button" variant="outline" size="sm" onClick={onCancel} disabled={isPending}>
-            Cancel
-          </Button>
-          <LoadingButton type="submit" size="sm" isPending={isPending} loadingText="Saving…">
-            Save changes
-          </LoadingButton>
-        </div>
-      </form>
+      <SheetFooter className="shrink-0 gap-2 border-t border-border bg-muted/30 px-6 py-4">
+        <Button
+          type="button"
+          variant="outline"
+          className="flex-1"
+          onClick={onCancel}
+          disabled={isPending}
+        >
+          Cancel
+        </Button>
+        <LoadingButton
+          type="submit"
+          form={USER_EDIT_FORM_ID}
+          className="flex-1"
+          isPending={isPending}
+          loadingText="Saving…"
+        >
+          Save changes
+        </LoadingButton>
+      </SheetFooter>
     </Form>
   );
 }

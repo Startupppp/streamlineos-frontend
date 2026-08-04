@@ -27,7 +27,7 @@ export function RequestApprovalMenuButton({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button size="sm" className="gap-1.5 text-xs" {...hoverHandlers}>
+        <Button {...hoverHandlers}>
           <PlusIcon ref={iconRef} size={14} />
           Request approval
           <ChevronDownIcon size={12} className="ml-0.5 opacity-70" />

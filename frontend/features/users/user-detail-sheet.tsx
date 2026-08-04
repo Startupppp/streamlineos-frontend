@@ -19,7 +19,6 @@ import { useCan } from "@/hooks/api/access";
 import { UserStatusBadge } from "./user-status-badge";
 import { UserEditForm } from "./user-edit-form";
 import { UserSessionsTab } from "./user-sessions-tab";
-import { UserDevicesTab } from "./user-devices-tab";
 import { UserPreferencesTab } from "./user-preferences-tab";
 import { UserLoginHistoryTab } from "./user-login-history-tab";
 import { UserMembershipSection } from "./user-membership-section";
@@ -44,18 +43,17 @@ interface UserDetailSheetProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const PRIVILEGED_TABS = new Set(["sessions", "devices", "login-history", "audit"]);
+const PRIVILEGED_TABS = new Set(["sessions", "login-history", "audit"]);
 
 const TAB_ITEMS = [
-  { value: "profile", label: "Profile" },
+  { value: "profile", label: "Overview" },
   { value: "sessions", label: "Sessions" },
-  { value: "devices", label: "Devices" },
-  { value: "login-history", label: "Logins" },
-  { value: "audit", label: "Audit" },
-  { value: "preferences", label: "Prefs" },
+  { value: "login-history", label: "Sign-ins" },
+  { value: "audit", label: "Activity" },
+  { value: "preferences", label: "Preferences" },
 ] as const;
 
-const TAB_PANEL_CLASS = "mt-0 flex min-h-0 flex-1 flex-col pt-2";
+const TAB_PANEL_CLASS = "mt-0 flex min-h-full flex-1 flex-col";
 
 function getInitials(name: string | null, email: string): string {
   if (name) {
@@ -118,216 +116,218 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
           <SheetTitle className="text-base">User Details</SheetTitle>
         </SheetHeader>
 
-        <SheetBody className="flex min-h-0 flex-1 flex-col px-6 py-5">
-          {isLoading && <ProfileSkeleton />}
+        {isLoading && (
+          <SheetBody className="flex min-h-0 flex-1 flex-col px-6 py-5">
+            <ProfileSkeleton />
+          </SheetBody>
+        )}
 
-          {!isLoading && user && (
-            <>
-              {isEditing && canManage ? (
-                <UserEditForm
-                  user={user}
-                  onSuccess={handleEditSuccess}
-                  onCancel={handleCancelEditing}
-                />
-              ) : (
-                <Tabs defaultValue="profile" className="flex min-h-0 flex-1 flex-col gap-0">
-                  <TabsList className="w-full md:w-full shrink-0 gap-0.5 overflow-hidden rounded-md bg-muted/50 p-0.5">
-                    {visibleTabs.map(({ value, label }) => (
-                      <TabsTrigger
-                        key={value}
-                        value={value}
-                        className="min-w-0 flex-1 basis-0 px-1 text-xs font-normal truncate"
-                      >
-                        {label}
-                      </TabsTrigger>
-                    ))}
-                  </TabsList>
+        {!isLoading && user && isEditing && canManage && (
+          <UserEditForm
+            user={user}
+            onSuccess={handleEditSuccess}
+            onCancel={handleCancelEditing}
+          />
+        )}
 
-                  <TabsContent value="profile" className={TAB_PANEL_CLASS}>
-                    <div className="space-y-4">
-                      <div className="flex items-start gap-3">
-                        <Avatar className="h-14 w-14 shrink-0">
-                          <AvatarImage src={user.image ?? undefined} alt={user.name ?? user.email} />
-                          <AvatarFallback className="text-sm font-semibold">
-                            {getInitials(user.name, user.email)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="min-w-0">
-                              <p className="font-semibold text-sm leading-tight truncate">
-                                {user.name ?? user.email}
+        {!isLoading && user && !(isEditing && canManage) && (
+          <div className="flex min-h-0 flex-1 flex-col">
+            <Tabs defaultValue="profile" className="flex min-h-0 flex-1 flex-col gap-0">
+              <div className="shrink-0 px-6 pt-5">
+                <TabsList className="w-full md:w-full shrink-0 gap-0.5 overflow-hidden rounded-md bg-muted/50 p-0.5">
+                  {visibleTabs.map(({ value, label }) => (
+                    <TabsTrigger
+                      key={value}
+                      value={value}
+                      className="min-w-0 flex-1 basis-0 px-1 text-xs font-normal truncate"
+                    >
+                      {label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </div>
+
+              <SheetBody className="px-6 pb-5 pt-2">
+                <TabsContent value="profile" className={TAB_PANEL_CLASS}>
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-3">
+                      <Avatar className="h-14 w-14 shrink-0">
+                        <AvatarImage src={user.image ?? undefined} alt={user.name ?? user.email} />
+                        <AvatarFallback className="text-sm font-semibold">
+                          {getInitials(user.name, user.email)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="font-semibold text-sm leading-tight truncate">
+                              {user.name ?? user.email}
+                            </p>
+                            {user.designation && (
+                              <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                                {user.designation}
                               </p>
-                              {user.designation && (
-                                <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                                  {user.designation}
-                                </p>
-                              )}
-                            </div>
-                            {canManage && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-7 shrink-0 text-xs"
-                                onClick={handleStartEditing}
-                              >
-                                <Pencil className="h-3.5 w-3.5 mr-1" />
-                                Edit
-                              </Button>
                             )}
                           </div>
-                          <div className="flex flex-wrap gap-1.5 mt-2">
-                            <Badge variant="secondary" className="text-[10px] h-5 px-1.5">
-                              {formatRoleLabel(user.role)}
-                            </Badge>
-                            <UserStatusBadge
-                              isActive={user.userStatus ? user.userStatus === "active" : user.isActive}
-                              isDeleted={user.userStatus === "archived"}
-                            />
-                          </div>
+                          {canManage && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-7 shrink-0 text-xs"
+                              onClick={handleStartEditing}
+                            >
+                              <Pencil className="h-3.5 w-3.5 mr-1" />
+                              Edit
+                            </Button>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                          <Badge variant="secondary" className="text-[10px] h-5 px-1.5">
+                            {formatRoleLabel(user.role)}
+                          </Badge>
+                          <UserStatusBadge
+                            isActive={user.userStatus ? user.userStatus === "active" : user.isActive}
+                            isDeleted={user.userStatus === "archived"}
+                          />
                         </div>
                       </div>
-
-                      <Separator />
-
-                      <div className="space-y-2.5">
-                        <div className="flex items-center gap-2.5 text-xs">
-                          <Mail className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                          <span className="text-foreground truncate">{user.email}</span>
-                        </div>
-                        {user.phone && (
-                          <div className="flex items-center gap-2.5 text-xs">
-                            <Phone className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                            <span className="text-foreground">{user.phone}</span>
-                          </div>
-                        )}
-                        {user.designation && (
-                          <div className="flex items-center gap-2.5 text-xs">
-                            <Briefcase className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                            <span className="text-foreground">{user.designation}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {user.bio && (
-                        <>
-                          <Separator />
-                          <p className="text-xs text-muted-foreground leading-relaxed">{user.bio}</p>
-                        </>
-                      )}
-
-                      {(user.linkedinUrl || user.twitterUrl || user.githubUrl || user.websiteUrl) && (
-                        <>
-                          <Separator />
-                          <div className="flex flex-wrap gap-2">
-                            {user.linkedinUrl && (
-                              <a
-                                href={user.linkedinUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                              >
-                                <Linkedin className="h-3.5 w-3.5" />
-                                LinkedIn
-                              </a>
-                            )}
-                            {user.twitterUrl && (
-                              <a
-                                href={user.twitterUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                              >
-                                <Twitter className="h-3.5 w-3.5" />
-                                Twitter
-                              </a>
-                            )}
-                            {user.githubUrl && (
-                              <a
-                                href={user.githubUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                              >
-                                <Github className="h-3.5 w-3.5" />
-                                GitHub
-                              </a>
-                            )}
-                            {user.websiteUrl && (
-                              <a
-                                href={user.websiteUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                              >
-                                <Globe className="h-3.5 w-3.5" />
-                                Website
-                              </a>
-                            )}
-                          </div>
-                        </>
-                      )}
-
-                      {user.emergencyContact && (
-                        <>
-                          <Separator />
-                          <div className="space-y-2">
-                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Emergency Contact</p>
-                            <div className="space-y-1 text-xs">
-                              <p className="font-medium">{user.emergencyContact.name} <span className="font-normal text-muted-foreground">({user.emergencyContact.relation})</span></p>
-                              <p className="text-muted-foreground">{user.emergencyContact.phone}</p>
-                              {user.emergencyContact.email && <p className="text-muted-foreground">{user.emergencyContact.email}</p>}
-                            </div>
-                          </div>
-                        </>
-                      )}
-
-                      <Separator />
-                      <UserMembershipSection userId={user.id} />
-
-                      <Separator />
-                      <UserModuleAccessSection
-                        userId={user.id}
-                        isMemberActive={
-                          user.userStatus
-                            ? user.userStatus === "active"
-                            : user.isActive
-                        }
-                      />
-
-                      <Separator />
-                      <UserAccessLinksSection userId={user.id} />
                     </div>
-                  </TabsContent>
 
-                  {canManage && (
-                    <>
-                      <TabsContent value="sessions" className={TAB_PANEL_CLASS}>
-                        <UserSessionsTab userId={user.id} />
-                      </TabsContent>
+                    <Separator />
 
-                      <TabsContent value="devices" className={TAB_PANEL_CLASS}>
-                        <UserDevicesTab userId={user.id} />
-                      </TabsContent>
+                    <div className="space-y-2.5">
+                      <div className="flex items-center gap-2.5 text-xs">
+                        <Mail className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                        <span className="text-foreground truncate">{user.email}</span>
+                      </div>
+                      {user.phone && (
+                        <div className="flex items-center gap-2.5 text-xs">
+                          <Phone className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                          <span className="text-foreground">{user.phone}</span>
+                        </div>
+                      )}
+                      {user.designation && (
+                        <div className="flex items-center gap-2.5 text-xs">
+                          <Briefcase className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                          <span className="text-foreground">{user.designation}</span>
+                        </div>
+                      )}
+                    </div>
 
-                      <TabsContent value="login-history" className={TAB_PANEL_CLASS}>
-                        <UserLoginHistoryTab userId={user.id} />
-                      </TabsContent>
+                    {user.bio && (
+                      <>
+                        <Separator />
+                        <p className="text-xs text-muted-foreground leading-relaxed">{user.bio}</p>
+                      </>
+                    )}
 
-                      <TabsContent value="audit" className={TAB_PANEL_CLASS}>
-                        <UserAuditTab userId={user.id} />
-                      </TabsContent>
-                    </>
-                  )}
+                    {(user.linkedinUrl || user.twitterUrl || user.githubUrl || user.websiteUrl) && (
+                      <>
+                        <Separator />
+                        <div className="flex flex-wrap gap-2">
+                          {user.linkedinUrl && (
+                            <a
+                              href={user.linkedinUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              <Linkedin className="h-3.5 w-3.5" />
+                              LinkedIn
+                            </a>
+                          )}
+                          {user.twitterUrl && (
+                            <a
+                              href={user.twitterUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              <Twitter className="h-3.5 w-3.5" />
+                              Twitter
+                            </a>
+                          )}
+                          {user.githubUrl && (
+                            <a
+                              href={user.githubUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              <Github className="h-3.5 w-3.5" />
+                              GitHub
+                            </a>
+                          )}
+                          {user.websiteUrl && (
+                            <a
+                              href={user.websiteUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              <Globe className="h-3.5 w-3.5" />
+                              Website
+                            </a>
+                          )}
+                        </div>
+                      </>
+                    )}
 
-                  <TabsContent value="preferences" className={TAB_PANEL_CLASS}>
-                    <UserPreferencesTab userId={user.id} />
-                  </TabsContent>
-                </Tabs>
-              )}
-            </>
-          )}
-        </SheetBody>
+                    {user.emergencyContact && (
+                      <>
+                        <Separator />
+                        <div className="space-y-2">
+                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Emergency Contact</p>
+                          <div className="space-y-1 text-xs">
+                            <p className="font-medium">{user.emergencyContact.name} <span className="font-normal text-muted-foreground">({user.emergencyContact.relation})</span></p>
+                            <p className="text-muted-foreground">{user.emergencyContact.phone}</p>
+                            {user.emergencyContact.email && <p className="text-muted-foreground">{user.emergencyContact.email}</p>}
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    <Separator />
+                    <UserMembershipSection userId={user.id} />
+
+                    <Separator />
+                    <UserModuleAccessSection
+                      userId={user.id}
+                      isMemberActive={
+                        user.userStatus
+                          ? user.userStatus === "active"
+                          : user.isActive
+                      }
+                    />
+
+                    <Separator />
+                    <UserAccessLinksSection userId={user.id} />
+                  </div>
+                </TabsContent>
+
+                {canManage && (
+                  <>
+                    <TabsContent value="sessions" className={TAB_PANEL_CLASS}>
+                      <UserSessionsTab userId={user.id} />
+                    </TabsContent>
+
+                    <TabsContent value="login-history" className={TAB_PANEL_CLASS}>
+                      <UserLoginHistoryTab userId={user.id} />
+                    </TabsContent>
+
+                    <TabsContent value="audit" className={TAB_PANEL_CLASS}>
+                      <UserAuditTab userId={user.id} />
+                    </TabsContent>
+                  </>
+                )}
+
+                <TabsContent value="preferences" className={TAB_PANEL_CLASS}>
+                  <UserPreferencesTab userId={user.id} />
+                </TabsContent>
+              </SheetBody>
+            </Tabs>
+          </div>
+        )}
       </SheetContent>
     </Sheet>
   );

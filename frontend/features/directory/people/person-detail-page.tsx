@@ -426,7 +426,7 @@ export function PersonDetailPage({ organizationPersonId }: PersonDetailPageProps
       backHref="/directory"
       actions={
         canUpdate && person ? (
-          <Button size="sm" className="gap-1.5 text-xs" onClick={handleOpenEdit}>
+          <Button onClick={handleOpenEdit}>
             <Pencil className="h-3.5 w-3.5" />
             Edit profile
           </Button>

@@ -81,7 +81,7 @@ export function StepInviteLaunch({
       }
     >
       <p className="text-[13px] leading-relaxed text-muted-foreground">
-        Invite teammates now, or skip and invite them later from Users → Invitations.
+        Invite teammates now, or skip and invite them later from People → Invitations.
       </p>
 
       <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-stretch">

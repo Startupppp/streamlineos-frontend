@@ -93,7 +93,7 @@ export function HrChecklistItem({
           </Button>
         )}
         {item.actionHref && (
-          <Button variant={resolved ? "outline" : "default"} size="sm" className="gap-1.5 text-xs" asChild>
+          <Button variant={resolved ? "outline" : "default"} asChild>
             <Link href={item.actionHref}>
               {resolved ? "Review" : "Go to setup"}
               <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />

@@ -207,7 +207,7 @@ export function WorkLogFilterActions({
       />
 
       {canManageEmployees && (
-        <AnimatedIconButton icon={DownloadIcon} iconSize={12} iconClassName="mr-0" variant="outline" size="sm" className="gap-1.5 text-xs" onClick={onExport}>
+        <AnimatedIconButton icon={DownloadIcon} iconSize={12} iconClassName="mr-0" variant="outline" onClick={onExport}>
           <span className="hidden sm:inline">Export</span>
         </AnimatedIconButton>
       )}

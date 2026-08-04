@@ -106,7 +106,7 @@ export function ReferralsTab({ candidateId }: Props) {
         </p>
         <Sheet open={sheetOpen} onOpenChange={handleSheetOpenChange}>
           <SheetTrigger asChild>
-            <Button size="sm" variant="outline" className="gap-1.5 text-xs" {...plusHoverHandlers}>
+            <Button variant="outline" {...plusHoverHandlers}>
               <PlusIcon ref={plusIconRef} size={14} />
               Record Referral
             </Button>

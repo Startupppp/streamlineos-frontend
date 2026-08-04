@@ -12,7 +12,7 @@ type WelcomeCelebrationProps = {
 const HIGHLIGHTS = [
   { icon: LayoutDashboard, label: "Your dashboard is ready" },
   { icon: Sparkles, label: "Modules and defaults are in place" },
-  { icon: PartyPopper, label: "Invite teammates anytime from Users" },
+  { icon: PartyPopper, label: "Invite teammates anytime from People" },
 ];
 
 export function WelcomeCelebration({

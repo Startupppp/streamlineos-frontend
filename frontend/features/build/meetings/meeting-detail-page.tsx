@@ -130,7 +130,7 @@ export function MeetingDetailPage({ projectId, meetingId }: MeetingDetailPagePro
       actions={
         canManage ? (
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={handleOpenEdit}>
+            <Button variant="outline" onClick={handleOpenEdit}>
               <Pencil className="h-3.5 w-3.5" /> Edit
             </Button>
             <DeleteMeetingButton onClick={handleOpenDelete} />
