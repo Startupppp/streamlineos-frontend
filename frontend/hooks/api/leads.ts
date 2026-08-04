@@ -211,7 +211,7 @@ export function useBulkDeleteLeads() {
   return useMutation({
     mutationKey: ["leads", "bulkDelete"] as const,
     mutationFn: (input: BulkDeleteLeadsInput) =>
-      apiClient.delete<{ deleted: number }>("/leads/bulk", { data: input }),
+      apiClient.delete<{ deleted: number }>("/leads/bulk", input),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.leads.all });
     },

@@ -290,10 +290,17 @@ export const useLeaveOrg = () => {
 };
 
 export const useDeleteOrg = () => {
-  return useMutation<{ success: boolean }, Error, { confirmation: string }>({
+  return useMutation<
+    { success: true; nextOrgId: string | null },
+    Error,
+    { confirmation: string }
+  >({
     mutationKey: ["organization", "delete"],
     mutationFn: (data) =>
-      apiClient.delete<{ success: boolean }>("/organization", { data }),
+      apiClient.delete<{ success: true; nextOrgId: string | null }>(
+        "/organization",
+        data,
+      ),
     onMutate: () => {
       setAutoSignOutSuppressed(true);
     },

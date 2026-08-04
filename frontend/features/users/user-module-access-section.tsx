@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, type MouseEvent as ReactMouseEvent } from "react";
 import { toast } from "sonner";
+import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCan } from "@/hooks/api/access";
@@ -34,22 +35,35 @@ interface ModuleToggleRowProps {
 }
 
 function ModuleToggleRow({ module, disabled, onToggle }: ModuleToggleRowProps) {
+  const label = MODULE_LABELS[module.moduleKey] ?? module.moduleKey;
+  const switchId = `user-module-${module.moduleKey}`;
+
   const handleChange = useCallback(
     (checked: boolean) => onToggle(module.moduleKey, checked),
     [module.moduleKey, onToggle],
   );
 
+  function handleLabelClick(event: ReactMouseEvent<HTMLLabelElement>) {
+    if (disabled) return;
+    event.preventDefault();
+    onToggle(module.moduleKey, !module.enabled);
+  }
+
   return (
-    <div className="flex items-center justify-between gap-2 py-1">
-      <span className="text-xs text-foreground">
-        {MODULE_LABELS[module.moduleKey] ?? module.moduleKey}
-      </span>
+    <div className="flex h-9 items-center justify-between gap-3">
+      <Label
+        htmlFor={switchId}
+        onClick={handleLabelClick}
+        className="cursor-pointer text-[13px] font-normal text-foreground"
+      >
+        {label}
+      </Label>
       <Switch
+        id={switchId}
         checked={module.enabled}
         disabled={disabled}
         onCheckedChange={handleChange}
-        className="h-4 w-7 [&>span]:h-3 [&>span]:w-3"
-        aria-label={`${MODULE_LABELS[module.moduleKey] ?? module.moduleKey} access`}
+        aria-label={`${label} access`}
       />
     </div>
   );
@@ -91,13 +105,13 @@ export function UserModuleAccessSection({
           : "Module access can only be changed for active members."}
       </p>
       {isLoading ? (
-        <div className="space-y-2 pt-1">
+        <div className="space-y-1 pt-1">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-6 w-full" />
+            <Skeleton key={i} className="h-9 w-full" />
           ))}
         </div>
       ) : (
-        <div className="space-y-0.5 pt-1">
+        <div className="pt-1">
           {(modules ?? []).map((module) => (
             <ModuleToggleRow
               key={module.moduleKey}

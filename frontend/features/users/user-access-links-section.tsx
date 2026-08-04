@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ExternalLinkIcon } from "@animateicons/react/lucide";
+import { ChevronRightIcon } from "@animateicons/react/lucide";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import type { PermissionKey } from "@/lib/rbac/permissions";
@@ -24,45 +24,34 @@ interface ModuleLinkEntry {
   label: string;
 }
 
-interface ModuleAccessBadgeProps {
-  entry: ModuleLinkEntry;
-  focusUserId?: string;
+interface AccessNavRowProps {
+  href: string;
+  label: string;
+  description?: string;
 }
 
-function RbacRolesBlock() {
+function AccessNavRow({ href, label, description }: AccessNavRowProps) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <div className="rounded-md border border-border/50 bg-muted/20 px-3 py-2.5 space-y-2">
-      <p className="text-[11px] text-muted-foreground leading-relaxed">
-        Roles define what this person can see and do. A member invited as
-        &ldquo;Member&rdquo; gets resource-level access once assigned a module role
-        below, or an Org Admin / custom role here.
-      </p>
-      <Link
-        href="/settings/roles"
-        className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
-        {...hoverHandlers}
-      >
-        Roles &amp; Permissions
-        <ExternalLinkIcon ref={iconRef} size={11} />
-      </Link>
-    </div>
-  );
-}
 
-function ModuleAccessBadge({ entry, focusUserId }: ModuleAccessBadgeProps) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  const href = focusUserId
-    ? `/${entry.key}/access?userId=${encodeURIComponent(focusUserId)}`
-    : `/${entry.key}/access`;
   return (
     <Link
       href={href}
-      className="inline-flex items-center gap-1 rounded border border-border/60 bg-card px-2 py-1 text-[11px] text-foreground hover:bg-muted/40 transition-colors"
+      className="group flex min-h-9 items-center justify-between gap-3 py-1.5 text-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
       {...hoverHandlers}
     >
-      {entry.label}
-      <ExternalLinkIcon ref={iconRef} size={9} />
+      <span className="min-w-0">
+        <span className="block text-[13px] font-normal leading-tight">{label}</span>
+        {description ? (
+          <span className="mt-0.5 block truncate text-[11px] text-muted-foreground leading-tight">
+            {description}
+          </span>
+        ) : null}
+      </span>
+      <ChevronRightIcon
+        ref={iconRef}
+        size={14}
+        className="shrink-0 text-muted-foreground transition-colors group-hover:text-foreground"
+      />
     </Link>
   );
 }
@@ -115,22 +104,36 @@ export function UserAccessLinksSection({ userId }: UserAccessLinksSectionProps) 
   if (!canManageRbac && visibleModules.length === 0) return null;
 
   return (
-    <div className="space-y-2.5">
+    <div className="space-y-2">
       <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
         Access management
       </p>
+      <p className="text-[11px] text-muted-foreground">
+        Manage org-wide roles here, then assign module roles where this person works.
+      </p>
 
-      {canManageRbac && <RbacRolesBlock />}
+      {canManageRbac && (
+        <div className="pt-1">
+          <AccessNavRow
+            href="/settings/roles"
+            label="Roles & Permissions"
+            description="Org-wide roles and custom grants"
+          />
+        </div>
+      )}
 
       {visibleModules.length > 0 && (
-        <div className="space-y-1.5">
-          <p className="text-[11px] text-muted-foreground">
-            Assign module-level roles at:
-          </p>
-          <div className="flex flex-wrap gap-1.5">
-            {visibleModules.map((entry) => (
-              <ModuleAccessBadge key={entry.key} entry={entry} focusUserId={userId} />
-            ))}
+        <div className="space-y-1 pt-1">
+          <p className="text-[11px] text-muted-foreground">Module roles</p>
+          <div>
+            {visibleModules.map((entry) => {
+              const href = userId
+                ? `/${entry.key}/access?userId=${encodeURIComponent(userId)}`
+                : `/${entry.key}/access`;
+              return (
+                <AccessNavRow key={entry.key} href={href} label={entry.label} />
+              );
+            })}
           </div>
         </div>
       )}

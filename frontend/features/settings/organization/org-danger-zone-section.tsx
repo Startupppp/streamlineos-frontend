@@ -217,13 +217,17 @@ export function OrgDangerZoneSection({ org }: Props) {
     deleteMutation.mutate(
       { confirmation: deleteConfirmation },
       {
-        onSuccess: async () => {
-          toast.success("Organization deleted");
+        onSuccess: async (data) => {
+          toast.success(
+            data.nextOrgId
+              ? "Organization deleted. Switched to your remaining organization."
+              : "Organization deleted. Create or join an organization to continue.",
+          );
           setDeleteOpen(false);
           clearBackendTokenCache();
-          await update({ orgId: null });
+          await update({ orgId: data.nextOrgId });
           queryClient.clear();
-          router.replace("/org-setup");
+          router.replace(data.nextOrgId ? "/dashboard" : "/org-setup");
           router.refresh();
         },
         onError: (err) => toast.error(getErrorMessage(err)),
@@ -443,6 +447,10 @@ export function OrgDangerZoneSection({ org }: Props) {
                   be undone.
                 </DialogDescription>
               </DialogHeader>
+              <div className="rounded-md border border-destructive/20 bg-destructive/5 px-3 py-2 text-xs text-muted-foreground">
+                You will be switched to another organization you belong to. If
+                none remain, you will be taken to organization setup.
+              </div>
               <div className="space-y-2 py-2">
                 <Label className="text-sm">
                   Type{" "}

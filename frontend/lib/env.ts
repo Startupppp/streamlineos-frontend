@@ -24,14 +24,11 @@ const serverSchema = z.object({
 
   INTERNAL_API_SECRET: z
     .string()
-    .min(32, "INTERNAL_API_SECRET must be at least 32 characters (matching the backend)")
+    .min(
+      32,
+      "INTERNAL_API_SECRET must be at least 32 characters (matching the backend)",
+    )
     .optional(),
-
-  API_INTERNAL_URL: z.preprocess(
-    (value) =>
-      typeof value === "string" && value.trim() === "" ? undefined : value,
-    z.string().url().optional(),
-  ),
 
   NEXT_PUBLIC_API_URL: z.string().url(),
 
@@ -47,7 +44,6 @@ if (!result.success) {
     .join("\n");
   console.error(`[env] Validation failed:\n${issues}`);
 
-  if (process.env.NODE_ENV === "production") {
+  if (process.env.NODE_ENV === "production")
     throw new Error("Missing or invalid required environment variables");
-  }
 }

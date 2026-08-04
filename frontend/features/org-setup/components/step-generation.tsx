@@ -20,6 +20,7 @@ import { GenerationProgressStage } from "./generation-progress-stage";
 import { WelcomeCelebration } from "./welcome-celebration";
 
 const SETUP_DONE_KEY = "org-setup-complete";
+const MAX_BULK_INVITES = 500;
 
 type OrgCreatedResult = {
   autoLoginToken: string | null;
@@ -43,7 +44,13 @@ function groupInviteesByRole(invitees: Invitee[]): { role: string; emails: strin
     emails.push(invitee.email);
     byRole.set(invitee.role, emails);
   }
-  return Array.from(byRole.entries()).map(([role, emails]) => ({ role, emails }));
+  return Array.from(byRole.entries()).flatMap(([role, emails]) => {
+    const groups: { role: string; emails: string[] }[] = [];
+    for (let index = 0; index < emails.length; index += MAX_BULK_INVITES) {
+      groups.push({ role, emails: emails.slice(index, index + MAX_BULK_INVITES) });
+    }
+    return groups;
+  });
 }
 
 export function StepGeneration({ data }: StepGenerationProps) {
@@ -128,8 +135,44 @@ export function StepGeneration({ data }: StepGenerationProps) {
     }
     await completeOnboardingGate("org-setup-done", orgId, update);
 
-    await new Promise<void>((resolve) => setTimeout(resolve, 700));
     setShowWelcome(true);
+  }
+
+  async function runPostSetupTasks(payload: OrgSetupPayload, invitees: Invitee[]) {
+    const generation = generateWorkspaceRef.current
+      .mutateAsync({
+        industry: payload.industry,
+        enabledModules: payload.enabledModules,
+      })
+      .then(() => null)
+      .catch((error: unknown) => getErrorMessage(error));
+
+    const invitationRequests = groupInviteesByRole(invitees).map((group) =>
+      bulkInviteRef.current.mutateAsync(group),
+    );
+    const [generationFailure, inviteResults] = await Promise.all([
+      generation,
+      Promise.all(invitationRequests),
+    ]);
+
+    if (generationFailure) {
+      toast.warning(
+        `Your workspace is ready, but starter content could not be generated: ${generationFailure}`,
+      );
+    }
+
+    const failedInvites = inviteResults.flatMap((result) =>
+      result.results.filter((item) => !item.success),
+    );
+    if (failedInvites.length > 0) {
+      toast.warning(
+        `${failedInvites.length} invitation${failedInvites.length === 1 ? "" : "s"} could not be queued. You can retry them from People.`,
+      );
+    } else if (invitees.length > 0) {
+      toast.success(
+        `${invitees.length} invitation${invitees.length === 1 ? "" : "s"} queued in the background.`,
+      );
+    }
   }
 
   function handleSetupError(err: SetupError) {
@@ -235,58 +278,14 @@ export function StepGeneration({ data }: StepGenerationProps) {
       clearBackendTokenCache();
       setOrgCreatedResult({ autoLoginToken: res?.autoLoginToken ?? null, orgId: res.orgId });
 
-      let generationFailure: string | null = null;
-      await generateWorkspaceRef.current
-        .mutateAsync({
-          industry: payload.industry,
-          enabledModules: payload.enabledModules,
-        })
-        .catch((err: unknown) => {
-          generationFailure = getErrorMessage(err);
-          return null;
-        });
-
-      const inviteGroups = groupInviteesByRole(dataRef.current.invitees);
-      const inviteFailures: string[] = [];
-      for (const group of inviteGroups) {
-        try {
-          const inviteResult = await bulkInviteRef.current.mutateAsync({ ...group });
-          for (const item of inviteResult.results)
-            if (!item.success)
-              inviteFailures.push(item.error ? `${item.email}: ${item.error}` : item.email);
-        } catch (err) {
-          inviteFailures.push(getErrorMessage(err));
-        }
-      }
-
-      if (inviteFailures.length > 0) {
-        if (generationFailure) {
-          toast.warning(`Starter content was not generated: ${generationFailure}`);
-        }
-        const count = inviteFailures.length;
-        const detail = inviteFailures.join(" · ");
-        handleSetupError({
-          kind: "invites-failed",
-          message: `Your organization was created, but ${count} invitation${count > 1 ? "s" : ""} could not be sent: ${detail}. Fix the addresses and try again.`,
-        });
-        return;
-      }
-
-      if (generationFailure) {
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current);
-          intervalRef.current = null;
-        }
-        setCompletedSteps(total);
-        setGenerationPending({
-          industry: payload.industry,
-          enabledModules: payload.enabledModules,
-          failureMessage: generationFailure,
-        });
-        return;
-      }
-
       await handleSuccess(res?.autoLoginToken ?? null, res.orgId);
+      void runPostSetupTasks(payload, dataRef.current.invitees).catch(
+        (error: unknown) => {
+          toast.warning(
+            `Your workspace is ready, but some background setup work failed: ${getErrorMessage(error)}`,
+          );
+        },
+      );
     } catch (err) {
       handleSetupError({ kind: "setup-failed", message: getErrorMessage(err) });
     }

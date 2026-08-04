@@ -55,7 +55,7 @@ const TAB_ITEMS = [
   { value: "preferences", label: "Prefs" },
 ] as const;
 
-const TAB_PANEL_CLASS = "mt-2 flex min-h-0 flex-1 flex-col pt-4";
+const TAB_PANEL_CLASS = "mt-0 flex min-h-0 flex-1 flex-col pt-2";
 
 function getInitials(name: string | null, email: string): string {
   if (name) {
@@ -131,12 +131,12 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
                 />
               ) : (
                 <Tabs defaultValue="profile" className="flex min-h-0 flex-1 flex-col gap-0">
-                  <TabsList className="overflow-hidden bg-muted/50 rounded-md p-0.5 gap-0.5">
+                  <TabsList className="w-full md:w-full shrink-0 gap-0.5 overflow-hidden rounded-md bg-muted/50 p-0.5">
                     {visibleTabs.map(({ value, label }) => (
                       <TabsTrigger
                         key={value}
                         value={value}
-                        className="px-1 truncate"
+                        className="min-w-0 flex-1 basis-0 px-1 text-xs font-normal truncate"
                       >
                         {label}
                       </TabsTrigger>
