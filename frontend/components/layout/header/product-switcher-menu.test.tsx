@@ -74,7 +74,7 @@ describe("ProductSwitcherMenu", () => {
 
     fireEvent.mouseEnter(screen.getByRole("button", { name: "Switch module" }));
 
-    expect(screen.getByLabelText("Selected product")).toBeInTheDocument();
+    expect(screen.getByLabelText("Selected module")).toBeInTheDocument();
     expect(screen.getAllByRole("button")).toHaveLength(1);
   });
 });

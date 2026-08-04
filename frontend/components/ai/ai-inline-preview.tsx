@@ -1,5 +1,6 @@
 "use client";
 
+import DOMPurify from "isomorphic-dompurify";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -78,7 +79,7 @@ export function AiInlinePreview({
           ) : previewMode === "description" ? (
             <div
               className="max-h-32 overflow-y-auto text-[12px] leading-relaxed text-foreground [&_p]:mb-1 [&_ul]:list-disc [&_ul]:pl-4"
-              dangerouslySetInnerHTML={{ __html: session.result.text }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(session.result.text) }}
             />
           ) : (
             <p className="whitespace-pre-wrap text-[12px] leading-relaxed text-foreground">

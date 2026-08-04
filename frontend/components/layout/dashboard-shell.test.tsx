@@ -104,7 +104,7 @@ jest.mock("./header/product-switcher-menu", () => ({
   },
 }));
 
-jest.mock("./header/workspace-switcher", () => ({
+jest.mock("./header/org-switcher", () => ({
   WorkspaceSwitcher: ({ drawerOnly }: { drawerOnly?: boolean }) => {
     workspaceSwitcherCalls.push({ drawerOnly });
     return null;

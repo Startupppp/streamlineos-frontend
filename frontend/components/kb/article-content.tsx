@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import DOMPurify from "isomorphic-dompurify";
 import { extractToc } from "@/lib/blog-utils";
 
 interface Heading {
@@ -23,7 +24,10 @@ export function prepareArticle(content: string): PreparedArticle {
 }
 
 export function ArticleContent({ content }: { content: string }) {
-  const { html } = useMemo(() => prepareArticle(content), [content]);
+  const { html } = useMemo(() => {
+    const prepared = prepareArticle(content);
+    return { ...prepared, html: DOMPurify.sanitize(prepared.html) };
+  }, [content]);
 
   return (
     <div

@@ -13,10 +13,14 @@ const WEBSITE_ID = `${BRAND_URL}/#website`;
 type JsonLdProps<T> = { data: T };
 
 function JsonLd<T>({ data }: JsonLdProps<T>) {
+  const json = JSON.stringify(data)
+    .replace(/</g, "\\u003c")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+      dangerouslySetInnerHTML={{ __html: json }}
     />
   );
 }

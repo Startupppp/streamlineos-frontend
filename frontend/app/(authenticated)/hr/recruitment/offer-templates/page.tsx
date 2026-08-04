@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import DOMPurify from "isomorphic-dompurify";
 import { useOfferTemplates, useCreateOfferTemplate, useUpdateOfferTemplate, useDeleteOfferTemplate, useGenerateOfferPdf } from "@/hooks/api/hr/recruitment/offer-templates";
 import type { OfferLetterTemplate } from "@/hooks/api/hr/recruitment/offer-templates";
 import { Button } from "@/components/ui/button";
@@ -247,7 +248,7 @@ function PreviewSheet({ template, onClose }: PreviewSheetProps) {
         <SheetBody className="px-6 py-5">
           <div
             className="prose prose-sm max-w-none border rounded-lg p-4 bg-card text-foreground"
-            dangerouslySetInnerHTML={{ __html: preview }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(preview) }}
           />
         </SheetBody>
         <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">

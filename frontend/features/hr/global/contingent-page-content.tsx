@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import DOMPurify from "isomorphic-dompurify";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -72,7 +73,7 @@ function CertificateViewer({ contractId }: { contractId: number }) {
             </AlertDialogHeader>
             <div
               className="prose prose-sm max-h-96 overflow-y-auto rounded-lg border border-border p-4 bg-card"
-              dangerouslySetInnerHTML={{ __html: data.html }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(data.html) }}
             />
             <AlertDialogFooter>
               <AlertDialogCancel onClick={() => setEnabled(false)}>Close</AlertDialogCancel>

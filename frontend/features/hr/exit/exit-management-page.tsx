@@ -1,5 +1,7 @@
 "use client";
 
+import DOMPurify from "isomorphic-dompurify";
+
 import { useState, useCallback } from "react";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -76,7 +78,7 @@ export function ExitManagementPage() {
         return;
       }
       win.document.write(
-        `<!DOCTYPE html><html><head><title>Resignation Letter</title><style>body{margin:0;padding:20px 40px;}</style></head><body>${data.html}</body></html>`,
+        `<!DOCTYPE html><html><head><title>Resignation Letter</title><style>body{margin:0;padding:20px 40px;}</style></head><body>${DOMPurify.sanitize(data.html)}</body></html>`,
       );
       win.document.close();
     } catch {

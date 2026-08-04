@@ -19,6 +19,11 @@ jest.mock("@/lib/api-client", () => ({
   },
 }));
 
+jest.mock("@/hooks/api/access", () => ({
+  useCan: () => true,
+  useAccess: () => ({ data: { isOrgOwner: true, permissions: [] }, isLoading: false }),
+}));
+
 const mockedGet = apiClient.get as jest.Mock;
 const mockedPost = apiClient.post as jest.Mock;
 
