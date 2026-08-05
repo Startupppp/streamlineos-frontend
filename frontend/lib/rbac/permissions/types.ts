@@ -626,6 +626,7 @@ export type PermissionKey =
   | "sales:manage"
   | "sales:view"
   | "self:onboarding-docs"
+  | "self:recruitment"
   | "settings:api-tokens:read"
   | "settings:api-tokens:write"
   | "settings:custom-fields:manage"

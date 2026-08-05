@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   Wallet,
@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   useEssOverview,
   useEssFnf,
@@ -23,7 +24,6 @@ import {
   formatMonth,
 } from "@/features/payroll/shared/payroll-format";
 import {
-  EssSectionNav,
   EssPayslipsSection,
   EssSalarySection,
   EssReimbursementsSection,
@@ -35,7 +35,12 @@ import {
   EssDisciplinarySection,
 } from "@/features/payroll/ess";
 import type { EssSectionNavItem } from "@/features/payroll/ess/components/ess-section-nav";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
+import { cn } from "@/lib/utils";
 import { useModuleEnabled } from "@/hooks/api/access";
+
+const TAB_TRIGGER_CLASS =
+  "relative rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground pb-2.5 pt-1.5 px-3 text-sm";
 
 function getCurrentMonthLabel(): string {
   return new Date().toLocaleDateString("en-IN", {
@@ -78,6 +83,8 @@ export function MyPayrollPageContent() {
     return items;
   }, [toggles, overview?.activeLoanBalance, fnf]);
 
+  const [activeTab, setActiveTab] = useState("payslips");
+
   const showLoans =
     toggles?.essAllowLoanRequests ||
     (overview?.activeLoanBalance !== undefined &&
@@ -87,13 +94,22 @@ export function MyPayrollPageContent() {
     ? parseFloat(overview.activeLoanBalance)
     : 0;
 
+  const handleTabChange = useCallback((value: string) => {
+    setActiveTab(value);
+  }, []);
+
   return (
-    <PageWrapper title="My Payroll" subtitle={getCurrentMonthLabel()}>
-      <div className="space-y-4">
+    <PageWrapper
+      title="Pay"
+      subtitle={getCurrentMonthLabel()}
+      noInternalScroll
+      contentClassName="flex min-h-0 flex-1 flex-col"
+    >
+      <div className={cn(CONTENT_FILL_PANEL, "min-h-0 gap-3")}>
         {overview?.capabilities?.honestyNote && (
           <div
             role="status"
-            className="flex gap-2.5 rounded-lg border border-border bg-card px-3 py-2.5"
+            className="flex shrink-0 gap-2.5 rounded-lg border border-border bg-card px-3 py-2.5"
           >
             <Info className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
             <p className="text-[11px] text-muted-foreground leading-snug">
@@ -103,7 +119,7 @@ export function MyPayrollPageContent() {
         )}
 
         {actionRequired.length > 0 && (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 dark:border-amber-500/30 dark:bg-amber-500/10 space-y-1.5">
+          <div className="shrink-0 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 dark:border-amber-500/30 dark:bg-amber-500/10 space-y-1.5">
             <p className="text-[12px] font-medium text-amber-900 dark:text-amber-100 flex items-center gap-1.5">
               <AlertTriangle className="h-3.5 w-3.5" />
               Action required
@@ -126,7 +142,7 @@ export function MyPayrollPageContent() {
         {hasTeam && (
           <Link
             href="/payroll/team"
-            className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2.5 hover:bg-muted/40 transition-colors"
+            className="flex shrink-0 items-center gap-2 rounded-lg border border-border bg-card px-3 py-2.5 hover:bg-muted/40 transition-colors"
           >
             <Users className="h-4 w-4 text-muted-foreground" />
             <div className="min-w-0 flex-1">
@@ -142,7 +158,7 @@ export function MyPayrollPageContent() {
           </Link>
         )}
 
-        <StatCardGrid cols={activeLoanBalance > 0 ? 4 : 3}>
+        <StatCardGrid cols={activeLoanBalance > 0 ? 4 : 3} className="shrink-0">
           <StatCard
             label="Net Pay Last Month"
             value={
@@ -196,31 +212,65 @@ export function MyPayrollPageContent() {
           />
         </StatCardGrid>
 
-        <EssSectionNav items={sections} />
+        <Tabs
+          value={activeTab}
+          onValueChange={handleTabChange}
+          className="flex min-h-0 flex-1 flex-col gap-3"
+        >
+          <TabsList className="bg-transparent border-b rounded-none p-0 gap-0 h-auto w-full justify-start shrink-0 overflow-x-auto">
+            {sections.map((section) => (
+              <TabsTrigger
+                key={section.id}
+                value={section.id}
+                className={TAB_TRIGGER_CLASS}
+              >
+                {section.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
 
-        <div className="space-y-4">
-          <EssPayslipsSection />
-
-          <EssTotalRewardsSection />
-
-          <EssDisciplinarySection />
-
-          {toggles?.essShowSalaryStructure && <EssSalarySection />}
-
-          {toggles?.essAllowReimbursements && <EssReimbursementsSection />}
-
-          {toggles?.essAllowTaxDeclarations && <EssTaxSection />}
-
-          {showLoans && (
-            <EssLoansSection
-              allowRequests={toggles?.essAllowLoanRequests ?? false}
-            />
+          <TabsContent value="payslips" className="mt-0 min-h-0 flex-1 overflow-y-auto data-[state=inactive]:hidden">
+            <EssPayslipsSection />
+          </TabsContent>
+          <TabsContent value="total-rewards" className="mt-0 min-h-0 flex-1 overflow-y-auto data-[state=inactive]:hidden">
+            <EssTotalRewardsSection />
+          </TabsContent>
+          <TabsContent value="disciplinary" className="mt-0 min-h-0 flex-1 overflow-y-auto data-[state=inactive]:hidden">
+            <EssDisciplinarySection />
+          </TabsContent>
+          {toggles?.essShowSalaryStructure && (
+            <TabsContent value="salary" className="mt-0 min-h-0 flex-1 overflow-y-auto data-[state=inactive]:hidden">
+              <EssSalarySection />
+            </TabsContent>
           )}
-
-          {toggles?.essAllowBankUpdate && <EssBankSection />}
-
-          {fnf && <EssFnfSection />}
-        </div>
+          {toggles?.essAllowReimbursements && (
+            <TabsContent value="reimbursements" className="mt-0 min-h-0 flex-1 overflow-y-auto data-[state=inactive]:hidden">
+              <EssReimbursementsSection />
+            </TabsContent>
+          )}
+          {toggles?.essAllowTaxDeclarations && (
+            <TabsContent value="tax" className="mt-0 min-h-0 flex-1 overflow-y-auto data-[state=inactive]:hidden">
+              <EssTaxSection />
+            </TabsContent>
+          )}
+          {showLoans && (
+            <TabsContent value="loans" className="mt-0 min-h-0 flex-1 overflow-y-auto data-[state=inactive]:hidden">
+              <EssLoansSection
+                allowRequests={toggles?.essAllowLoanRequests ?? false}
+              />
+            </TabsContent>
+          )}
+          {toggles?.essAllowBankUpdate && (
+            <TabsContent value="bank" className="mt-0 min-h-0 flex-1 overflow-y-auto data-[state=inactive]:hidden">
+              <EssBankSection />
+            </TabsContent>
+          )}
+          {fnf && (
+            <TabsContent value="fnf" className="mt-0 min-h-0 flex-1 overflow-y-auto data-[state=inactive]:hidden">
+              <EssFnfSection />
+            </TabsContent>
+          )}
+        </Tabs>
       </div>
     </PageWrapper>
   );

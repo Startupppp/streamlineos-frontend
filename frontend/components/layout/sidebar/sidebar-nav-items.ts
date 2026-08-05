@@ -2773,6 +2773,12 @@ const HOME_NAV_GROUPS: NavGroup[] = [
         icon: FileText,
         requiredPermission: "self:onboarding-docs",
       },
+      {
+        label: "Recruitment",
+        href: "/me/recruitment",
+        icon: Video,
+        requiredPermission: "self:recruitment",
+      },
     ],
   },
   {

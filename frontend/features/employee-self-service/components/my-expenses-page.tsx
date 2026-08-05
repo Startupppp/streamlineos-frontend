@@ -98,7 +98,7 @@ export function MyExpensesPage() {
   }, []);
 
   const filters = (
-    <div className="flex min-w-0 flex-nowrap items-center gap-3 overflow-x-auto scrollbar-hide">
+    <>
       <SearchInput
         value={search}
         onValueChange={handleSearchChange}
@@ -115,7 +115,7 @@ export function MyExpensesPage() {
           <SelectItem value="REJECTED">Rejected</SelectItem>
         </SelectContent>
       </Select>
-    </div>
+    </>
   );
 
   const data = expenses.data;
@@ -133,6 +133,8 @@ export function MyExpensesPage() {
       title="My Expenses"
       subtitle="Submit and track your reimbursement claims."
       filters={filters}
+      noInternalScroll
+      contentClassName="flex min-h-0 flex-1 flex-col"
       actions={
         <AnimatedIconButton icon={PlusIcon} onClick={handleOpenCreate}>
           Submit Claim
@@ -156,7 +158,7 @@ export function MyExpensesPage() {
       ) : null}
 
       {data ? (
-        <div className="flex min-h-0 flex-1 flex-col gap-4">
+        <div className="flex min-h-0 flex-1 flex-col gap-3">
           <MemberExpenseStats stats={data.stats} />
           <MemberExpenseList
             expenses={data.expenses}

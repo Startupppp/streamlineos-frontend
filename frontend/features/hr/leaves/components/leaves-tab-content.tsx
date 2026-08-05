@@ -8,8 +8,7 @@ import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { EmptyLeaveIllustration } from "@/components/illustrations";
-import { Filter, Download, History } from "lucide-react";
+import { Download, History } from "lucide-react";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -33,12 +32,14 @@ interface LeavesTabContentProps {
   balances: LeaveBalance[];
   myLeaveRequests: LeaveRequest[];
   approvedLeavesThisWeek?: ApprovedLeave[];
+  compact?: boolean;
 }
 
 export function LeavesTabContent({
   balances,
   myLeaveRequests,
   approvedLeavesThisWeek = [],
+  compact = false,
 }: LeavesTabContentProps) {
   const isAdmin = useCan("hr:employees:manage");
   const { data: policy } = useLeavePolicy();
@@ -311,40 +312,44 @@ export function LeavesTabContent({
   );
 
   return (
-    <div className="space-y-4">
-      <div className="space-y-0.5">
-        <h2 className="text-sm font-semibold text-foreground">Overview</h2>
-        <p className="text-xs text-muted-foreground">
-          Your leave balances and history for {currentYear}.
-        </p>
-      </div>
+    <div className={compact ? "flex min-h-0 flex-1 flex-col gap-3" : "space-y-4"}>
+      {!compact && (
+        <>
+          <div className="space-y-0.5">
+            <h2 className="text-sm font-semibold text-foreground">Overview</h2>
+            <p className="text-xs text-muted-foreground">
+              Your leave balances and history for {currentYear}.
+            </p>
+          </div>
 
-      <div
-        className="grid gap-3 grid-cols-2 lg:grid-cols-3"
-        role="list"
-        aria-label="Leave balances"
-      >
-        {balances
-          .filter(
-            (bal) => bal.typeName && allowedLeaveTypeNames.has(bal.typeName),
-          )
-          .map((bal, index) => (
-            <BalanceCard
-              key={`${bal.leaveTypeId}-${index}`}
-              typeName={bal.typeName}
-              balance={bal.balance}
-              daysPerYear={bal.daysPerYear}
-            />
-          ))}
-      </div>
+          <div
+            className="grid gap-3 grid-cols-2 lg:grid-cols-3"
+            role="list"
+            aria-label="Leave balances"
+          >
+            {balances
+              .filter(
+                (bal) => bal.typeName && allowedLeaveTypeNames.has(bal.typeName),
+              )
+              .map((bal, index) => (
+                <BalanceCard
+                  key={`${bal.leaveTypeId}-${index}`}
+                  typeName={bal.typeName}
+                  balance={bal.balance}
+                  daysPerYear={bal.daysPerYear}
+                />
+              ))}
+          </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <LeaveBalanceDonut balances={balances} allowedNames={allowedLeaveTypeNames} />
-        <LeaveCalendarWidget approvedLeaves={approvedLeavesThisWeek} />
-      </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <LeaveBalanceDonut balances={balances} allowedNames={allowedLeaveTypeNames} />
+            <LeaveCalendarWidget approvedLeaves={approvedLeavesThisWeek} />
+          </div>
+        </>
+      )}
 
-      <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
-        <CardHeader className="pb-3">
+      <Card className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border">
+        <CardHeader className="shrink-0 border-b pb-3">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
               <div className="w-7 rounded-lg bg-muted flex items-center justify-center">
@@ -355,30 +360,19 @@ export function LeavesTabContent({
               </div>
               Request History
             </CardTitle>
-            <div className="flex items-center gap-1.5 shrink-0">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-1.5 text-xs text-muted-foreground"
-                aria-label="Filter requests"
-              >
-                <Filter className="h-3.5 w-3.5" />
-                Filter
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleExportExcel}
-                className="gap-1.5 text-xs text-muted-foreground"
-                aria-label="Export to Excel"
-              >
-                <Download className="h-3.5 w-3.5" />
-                Export
-              </Button>
-            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleExportExcel}
+              className="gap-1.5 text-xs text-muted-foreground shrink-0"
+              aria-label="Export to Excel"
+            >
+              <Download className="h-3.5 w-3.5" />
+              Export
+            </Button>
           </div>
         </CardHeader>
-        <CardContent className="pt-0" aria-live="polite">
+        <CardContent className="min-h-0 flex-1 overflow-auto pt-0" aria-live="polite">
           <DataTable
             data={myLeaveRequests}
             columns={columns}
@@ -386,10 +380,10 @@ export function LeavesTabContent({
             minWidth="600px"
             emptyState={
               <EmptyState
-                illustration={<EmptyLeaveIllustration />}
+                illustrationPreset="default"
                 title="No leave requests"
                 description="You haven't submitted any leave requests yet."
-                className="flex-1"
+                className="flex-1 border-0 bg-transparent"
               />
             }
           />

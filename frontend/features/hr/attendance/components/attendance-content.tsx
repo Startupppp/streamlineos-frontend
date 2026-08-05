@@ -10,26 +10,34 @@ import { DailyHistoryTable } from "@/features/hr/attendance/daily-history-table"
 import { TeamAttendanceCard } from "@/features/hr/attendance/team-attendance-card";
 import { AttendanceRegularizationDialog } from "@/features/hr/attendance/attendance-regularization-dialog";
 
-export function AttendanceContent({ isAdmin = false }: { isAdmin?: boolean }) {
+interface AttendanceContentProps {
+  isAdmin?: boolean;
+  selfService?: boolean;
+}
+
+export function AttendanceContent({
+  isAdmin = false,
+  selfService = false,
+}: AttendanceContentProps) {
   return (
     <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
-      <div className="overscroll-contain flex flex-col gap-4 min-w-0 min-h-full flex-1">
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-4">
-        <div className="space-y-4">
-          <TimerCard />
-          <WfhBalancesCard />
-          <AttendanceRegularizationDialog />
-          {isAdmin && <TeamAttendanceCard />}
+      <div className="flex min-h-full min-w-0 flex-1 flex-col gap-3 overscroll-contain">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+          <div className="space-y-3">
+            <TimerCard />
+            {!selfService && <WfhBalancesCard />}
+            <AttendanceRegularizationDialog />
+            {isAdmin && <TeamAttendanceCard />}
+          </div>
+
+          <div className="space-y-3">
+            <AttendanceCalendar />
+            <AttendanceHeatmap />
+            {isAdmin && <ManageHolidaysCard />}
+          </div>
         </div>
 
-        <div className="space-y-4">
-          <AttendanceCalendar />
-          <AttendanceHeatmap />
-          {isAdmin && <ManageHolidaysCard />}
-        </div>
-      </div>
-
-      <DailyHistoryTable />
+        <DailyHistoryTable />
       </div>
     </ScrollArea>
   );

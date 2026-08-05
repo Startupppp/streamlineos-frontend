@@ -8,7 +8,9 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PlusIcon, EyeIcon } from "@animateicons/react/lucide";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { AdminExpenseItem } from "./expense-item";
 import { cn } from "@/lib/utils";
 import { formatINR } from "@/lib/format-utils";
@@ -390,47 +392,26 @@ export function MemberExpenseList({
   ], [onEdit, onResubmit]);
 
   const emptyState = (
-    <div className="flex flex-col items-center justify-center flex-1 min-h-[220px] gap-3">
-      <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
-        <EmptyExpensesIllustration className="h-5 w-5 opacity-60" />
-      </div>
-      <div className="text-center">
-        <p className="text-sm font-medium text-foreground">
-          No expenses found
-        </p>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          {statusFilter !== "ALL" || activeFilterCount > 0
-            ? "Try adjusting your filters"
-            : "Submit your first expense claim to get started"}
-        </p>
-      </div>
-      {statusFilter !== "ALL" ? (
-        <Button
-          variant="outline"
-          size="sm"
-          className="text-xs gap-1.5 mt-1"
-          onClick={onShowAll}
-        >
-          Show All Claims
-        </Button>
-      ) : (
-        <AnimatedIconButton
-          icon={PlusIcon}
-          iconSize={14}
-          iconClassName="mr-1.5"
-          size="sm"
-          className="text-xs gap-1.5 mt-1"
-          onClick={onCreateNew}
-        >
-          Submit New Claim
-        </AnimatedIconButton>
-      )}
-    </div>
+    <EmptyState
+      illustration={<EmptyExpensesIllustration className="h-full w-full" />}
+      title="No expenses found"
+      description={
+        statusFilter !== "ALL" || activeFilterCount > 0
+          ? "Try adjusting your filters"
+          : "Submit your first expense claim to get started"
+      }
+      action={
+        statusFilter !== "ALL"
+          ? { label: "Show All Claims", onClick: onShowAll }
+          : { label: "Submit New Claim", onClick: onCreateNew }
+      }
+      className={`${CONTENT_FILL_PANEL} border-0 bg-transparent`}
+    />
   );
 
   return (
-    <Card className="rounded-lg border border-border overflow-hidden">
-      <CardContent className="p-0 flex flex-col" aria-live="polite">
+    <Card className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border">
+      <CardContent className="flex min-h-0 flex-1 flex-col p-0" aria-live="polite">
         <DataTable
           data={expenses}
           columns={columns}

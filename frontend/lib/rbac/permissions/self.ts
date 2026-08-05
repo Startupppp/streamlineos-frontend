@@ -8,4 +8,5 @@ export const SELF_PERMISSIONS: Permission[] = [
   { name: "self:onboarding-docs", resource: "self", action: "onboarding-docs", description: "Upload and view own onboarding documents" },
   { name: "self:payroll", resource: "self", action: "payroll", description: "Access the ESS payroll portal (salary breakdown, declarations, loan requests, bank details)" },
   { name: "self:payslips", resource: "self", action: "payslips", description: "View own payslips" },
+  { name: "self:recruitment", resource: "self", action: "recruitment", description: "View assigned interviews and submit own hiring feedback" },
 ];

@@ -279,8 +279,8 @@ export function PeopleDirectoryPage() {
 
   return (
     <PageWrapper
-      title="Person records"
-      subtitle="Profiles for workers, contractors, and payees—with or without application access."
+      title="Directory"
+      subtitle="People in your organization—with or without application access."
       filters={filtersBar}
       actions={canCreate ? <AddPersonButton onClick={handleOpenCreate} /> : undefined}
     >

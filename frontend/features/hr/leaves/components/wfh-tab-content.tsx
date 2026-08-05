@@ -14,7 +14,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { EmptyState } from "@/components/ui/empty-state";
-import { EmptyWfhIllustration } from "@/components/illustrations";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Home, TrendingUp, Clock } from "lucide-react";
@@ -52,7 +51,7 @@ const WfhStatsStrip = memo(function WfhStatsStrip({
   );
 });
 
-export function WfhTabContent() {
+export function WfhTabContent({ compact = false }: { compact?: boolean }) {
   const [wfhStatusFilter, setWfhStatusFilter] = useState<string>("ALL");
   const { data: myWfhRequests, isLoading: wfhLoading } = useHrWfhRequests();
 
@@ -87,20 +86,22 @@ export function WfhTabContent() {
   const currentMonth = format(new Date(), "MMMM yyyy");
 
   return (
-    <div className="space-y-4">
-      <WfhStatsStrip
-        thisMonth={wfhStats.thisMonth}
-        pending={wfhStats.pending}
-        currentMonth={currentMonth}
-      />
+    <div className={compact ? "flex min-h-0 flex-1 flex-col gap-3" : "space-y-4"}>
+      {!compact && (
+        <WfhStatsStrip
+          thisMonth={wfhStats.thisMonth}
+          pending={wfhStats.pending}
+          currentMonth={currentMonth}
+        />
+      )}
 
-      <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
-        <CardHeader className="pb-3 pt-4 px-4">
+      <Card className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border">
+        <CardHeader className="shrink-0 border-b pb-3 pt-3 px-4">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <div className="w-7 rounded-lg bg-blue-100 dark:bg-blue-500/10 flex items-center justify-center">
+              <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
                 <Home
-                  className="h-3.5 w-3.5 text-blue-600 dark:text-blue-300"
+                  className="h-3.5 w-3.5 text-primary"
                   aria-hidden="true"
                 />
               </div>
@@ -121,7 +122,7 @@ export function WfhTabContent() {
             </Select>
           </div>
         </CardHeader>
-        <CardContent className="pt-0 px-4 pb-4" aria-live="polite">
+        <CardContent className="min-h-0 flex-1 overflow-auto pt-3 px-4 pb-4" aria-live="polite">
           {wfhLoading ? (
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
@@ -130,13 +131,14 @@ export function WfhTabContent() {
             </div>
           ) : filteredWfhRequests.length === 0 ? (
             <EmptyState
-              illustration={<EmptyWfhIllustration />}
+              illustrationPreset="default"
               title={
                 wfhStatusFilter === "ALL"
                   ? "No WFH requests yet"
                   : `No ${wfhStatusFilter.toLowerCase()} requests`
               }
               description="Use the Request WFH button above to submit a new request."
+              className="flex-1 border-0 bg-transparent"
             />
           ) : (
             <motion.div
@@ -156,13 +158,6 @@ export function WfhTabContent() {
           )}
         </CardContent>
       </Card>
-
-      <div
-        role="status"
-        aria-live="polite"
-        aria-atomic="true"
-        className="sr-only"
-      />
     </div>
   );
 }

@@ -3,16 +3,16 @@
 import { useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { FilterPill, FilterPillGroup } from "@/components/ui/filter-pill";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
+import { ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyMailIllustration } from "@/components/illustrations";
 import { toast } from "sonner";
-import { AlertTriangle, RefreshCw } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { staggerContainer } from "@/lib/motion-variants";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -27,6 +27,99 @@ import { AnnouncementCard } from "@/features/hr/announcements/announcement-card"
 import { AnnouncementFormSheet } from "@/features/hr/announcements/announcement-form-sheet";
 
 type ActiveTab = "published" | "all";
+
+const TAB_TRIGGER_CLASS =
+  "relative rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground pb-2.5 pt-1.5 px-3 text-sm";
+
+function AnnouncementsBody({
+  isLoading,
+  isError,
+  list,
+  canManage,
+  onRetry,
+  onNew,
+  onEdit,
+  onDelete,
+  onMarkRead,
+}: {
+  isLoading: boolean;
+  isError: boolean;
+  list: HrAnnouncement[];
+  canManage: boolean;
+  onRetry: () => void;
+  onNew: () => void;
+  onEdit: (a: HrAnnouncement) => void;
+  onDelete: (id: number) => void;
+  onMarkRead: (id: number) => void;
+}) {
+  if (isLoading) {
+    return (
+      <div className="space-y-3">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="rounded-lg border border-border bg-card p-4">
+            <div className="flex items-start gap-3">
+              <Skeleton className="h-10 w-10 shrink-0 rounded-full" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-48" />
+                <Skeleton className="h-3 w-32" />
+                <Skeleton className="h-4 w-full" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        className="flex-1"
+        title="Failed to load announcements"
+        description="Something went wrong. Please try again."
+        onRetry={onRetry}
+      />
+    );
+  }
+
+  if (list.length === 0) {
+    return (
+      <EmptyState
+        illustration={<EmptyMailIllustration className="h-full w-full" />}
+        title="No announcements yet"
+        description={
+          canManage
+            ? "Create your first announcement to keep the team informed."
+            : "Check back later for company news and updates."
+        }
+        action={
+          canManage ? { label: "New Announcement", onClick: onNew } : undefined
+        }
+        className="flex-1"
+      />
+    );
+  }
+
+  return (
+    <motion.div
+      variants={staggerContainer}
+      initial="hidden"
+      animate="visible"
+      className="min-h-0 flex-1 space-y-3 overflow-y-auto"
+    >
+      {list.map((announcement) => (
+        <AnnouncementCard
+          key={announcement.id}
+          announcement={announcement}
+          canManage={canManage}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onMarkRead={onMarkRead}
+        />
+      ))}
+    </motion.div>
+  );
+}
 
 function AnnouncementsContent() {
   const hrModuleEnabled = useModuleEnabled("hr");
@@ -105,19 +198,35 @@ function AnnouncementsContent() {
     });
   }, [deleteId, remove]);
 
-  const handleTabPublished = useCallback(() => setActiveTab("published"), []);
-  const handleTabAll = useCallback(() => setActiveTab("all"), []);
+  const handleTabChange = useCallback((value: string) => {
+    if (value === "published" || value === "all") setActiveTab(value);
+  }, []);
 
   const handleRetry = useCallback(() => {
     void refetchPublished();
     void refetchAll();
   }, [refetchPublished, refetchAll]);
 
+  const body = (
+    <AnnouncementsBody
+      isLoading={isLoading}
+      isError={isError}
+      list={displayedList}
+      canManage={canManage}
+      onRetry={handleRetry}
+      onNew={handleNewClick}
+      onEdit={handleEdit}
+      onDelete={handleDelete}
+      onMarkRead={handleMarkRead}
+    />
+  );
+
   return (
     <PageWrapper
       title="Announcements"
       subtitle="Stay updated with company news and updates"
-      badge={undefined}
+      noInternalScroll
+      contentClassName="flex min-h-0 flex-1 flex-col"
       actions={
         canManage ? (
           <AnimatedIconButton
@@ -132,98 +241,31 @@ function AnnouncementsContent() {
         ) : undefined
       }
     >
-      <div className="space-y-4">
-        {canManage && (
-          <FilterPillGroup>
-            <FilterPill
-              active={activeTab === "published"}
-              onClick={handleTabPublished}
-            >
-              Published
-            </FilterPill>
-            <FilterPill active={activeTab === "all"} onClick={handleTabAll}>
-              All
-            </FilterPill>
-          </FilterPillGroup>
-        )}
-
-        {isLoading && (
-          <div className="space-y-4">
-            {Array.from({ length: 12 }).map((_, i) => (
-              <div
-                key={i}
-                className="bg-card border border-border rounded-lg shadow-sm p-5"
-              >
-                <div className="flex items-start gap-4">
-                  <Skeleton className="h-10 w-10 rounded-full shrink-0" />
-                  <div className="flex-1 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <Skeleton className="h-4 w-48" />
-                      <Skeleton className="h-5 w-20 rounded-full" />
-                    </div>
-                    <Skeleton className="h-3 w-32" />
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-3/4" />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {!isLoading && isError && (
-          <div className="flex flex-col items-center justify-center gap-4 py-20">
-            <AlertTriangle className="h-10 w-10 text-muted-foreground" />
-            <div className="text-center space-y-1">
-              <p className="text-sm font-medium text-foreground">
-                Failed to load announcements
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Something went wrong. Please try again.
-              </p>
-            </div>
-            <Button size="sm" variant="outline" onClick={handleRetry}>
-              <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
-              Retry
-            </Button>
-          </div>
-        )}
-
-        {!isLoading && !isError && displayedList.length === 0 && (
-          <EmptyState
-            illustration={<EmptyMailIllustration className="h-32 w-32" />}
-            title="No announcements yet"
-            description={
-              canManage
-                ? "Create your first announcement to keep the team informed."
-                : "Check back later for company news and updates."
-            }
-            action={
-              canManage
-                ? { label: "New Announcement", onClick: handleNewClick }
-                : undefined
-            }
-          />
-        )}
-
-        {!isLoading && !isError && displayedList.length > 0 && (
-          <motion.div
-            variants={staggerContainer}
-            initial="hidden"
-            animate="visible"
-            className="space-y-3"
+      <div className={`${CONTENT_FILL_PANEL} min-h-0 gap-3`}>
+        {canManage ? (
+          <Tabs
+            value={activeTab}
+            onValueChange={handleTabChange}
+            className="flex min-h-0 flex-1 flex-col gap-3"
           >
-            {displayedList.map((announcement) => (
-              <AnnouncementCard
-                key={announcement.id}
-                announcement={announcement}
-                canManage={canManage}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                onMarkRead={handleMarkRead}
-              />
-            ))}
-          </motion.div>
+            <TabsList className="h-auto w-full justify-start gap-0 rounded-none border-b bg-transparent p-0 shrink-0">
+              <TabsTrigger value="published" className={TAB_TRIGGER_CLASS}>
+                Published
+              </TabsTrigger>
+              <TabsTrigger value="all" className={TAB_TRIGGER_CLASS}>
+                All
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent
+              value={activeTab}
+              forceMount
+              className="mt-0 flex min-h-0 flex-1 flex-col data-[state=inactive]:hidden"
+            >
+              {body}
+            </TabsContent>
+          </Tabs>
+        ) : (
+          body
         )}
       </div>
 

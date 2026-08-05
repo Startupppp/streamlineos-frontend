@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { FileCheck2, FileClock, FileWarning } from "lucide-react";
+import { FileClock, FileWarning } from "lucide-react";
 import { UploadIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { ErrorState } from "@/components/shared";
@@ -56,6 +56,8 @@ export function MyDocumentsPage() {
     <PageWrapper
       title="My Documents"
       subtitle="Track the documents requested for your employment record."
+      noInternalScroll
+      contentClassName="flex min-h-0 flex-1 flex-col"
       actions={
         <AnimatedIconButton icon={UploadIcon} onClick={handleOpenUpload}>
           Upload Document
@@ -75,16 +77,16 @@ export function MyDocumentsPage() {
 
       {!documents.isLoading && !documents.isError && documents.data?.data.length === 0 ? (
         <EmptyState
-          illustration={<FileCheck2 className="h-12 w-12 text-muted-foreground/40" />}
-          illustrationSize="sm"
+          illustrationPreset="documents"
           title="No documents requested"
           description="Your organization has not requested any employment documents."
+          className="flex-1"
         />
       ) : null}
 
       {!documents.isLoading && !documents.isError && documents.data?.data.length ? (
-        <Card className="overflow-hidden py-0">
-          <CardContent className="divide-y p-0">
+        <Card className="flex min-h-0 flex-1 flex-col overflow-hidden py-0">
+          <CardContent className="min-h-0 flex-1 divide-y overflow-y-auto p-0">
             {documents.data.data.map((document) => {
               const needsAttention =
                 document.status === "PENDING" ||

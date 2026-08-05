@@ -265,13 +265,13 @@ export function useHrLeaveApprovals(options?: { enabled?: boolean }) {
   });
 }
 
-export function useHrLeavesThisWeek() {
+export function useHrLeavesThisWeek(options?: { enabled?: boolean }) {
   const canSelf = useCan("self:leaves");
   return useQuery({
     queryKey: queryKeys.hr.leavesThisWeek(),
     queryFn: () => apiClient.get<unknown[]>("/me/time-off/team-calendar"),
     staleTime: 2 * 60_000,
-    enabled: canSelf,
+    enabled: canSelf && (options?.enabled ?? true),
   });
 }
 

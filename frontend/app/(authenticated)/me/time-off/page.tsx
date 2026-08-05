@@ -6,7 +6,7 @@ export default async function MyTimeOffPage() {
   await requirePermission("self:leaves");
   return (
     <Suspense>
-      <LeavesWfhContent />
+      <LeavesWfhContent selfService />
     </Suspense>
   );
 }

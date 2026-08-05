@@ -14,6 +14,7 @@ const EMPLOYEE_PERMISSIONS = [
   "self:payroll",
   "self:payslips",
   "self:onboarding-docs",
+  "self:recruitment",
   "directory:people:view",
 ];
 
@@ -35,6 +36,7 @@ describe("Home employee navigation", () => {
         "/me/expenses",
         "/me/pay",
         "/me/documents",
+        "/me/recruitment",
       ]),
     );
     expect(hrefs).not.toContain("/hr/recruitment/interviews");
@@ -47,5 +49,6 @@ describe("Home employee navigation", () => {
     expect(getProductFromPathname("/me/expenses")).toBe("home");
     expect(getProductFromPathname("/me/pay")).toBe("home");
     expect(getProductFromPathname("/me/documents")).toBe("home");
+    expect(getProductFromPathname("/me/recruitment")).toBe("home");
   });
 });

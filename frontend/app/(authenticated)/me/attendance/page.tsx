@@ -9,9 +9,9 @@ export default async function MyAttendancePage() {
       title="Attendance"
       subtitle="Track your work hours and manage check-ins."
       noInternalScroll
-      contentClassName="flex flex-col"
+      contentClassName="flex min-h-0 flex-1 flex-col"
     >
-      <AttendanceContent />
+      <AttendanceContent selfService />
     </PageWrapper>
   );
 }

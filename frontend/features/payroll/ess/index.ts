@@ -1,4 +1,4 @@
-export { EssSectionNav } from "./components/ess-section-nav";
+export type { EssSectionNavItem } from "./components/ess-section-nav";
 export { EssPayslipsSection } from "./components/ess-payslips-section";
 export { EssSalarySection } from "./components/ess-salary-section";
 export { EssReimbursementsSection } from "./components/ess-reimbursements-section";
