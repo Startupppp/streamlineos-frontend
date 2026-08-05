@@ -17,7 +17,11 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
+import {
+  StatCard,
+  StatCardGrid,
+  StatCardGridSkeleton,
+} from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Users, CalendarCheck, Clock3, BadgeCheck } from "lucide-react";
 import { HouseIcon, PlusIcon } from "@animateicons/react/lucide";
@@ -27,7 +31,11 @@ import { LeaveRequestSheet } from "@/features/hr/leaves/leave-request-sheet";
 import { WfhRequestSheet } from "@/features/hr/leaves/wfh-request-sheet";
 
 import type {
-  LeaveBalance, LeaveType, Approver, LeaveRequest, ApprovedLeave,
+  LeaveBalance,
+  LeaveType,
+  Approver,
+  LeaveRequest,
+  ApprovedLeave,
 } from "./leaves-shared";
 
 const LeavesSummaryStrip = React.memo(function LeavesSummaryStrip({
@@ -41,29 +49,49 @@ const LeavesSummaryStrip = React.memo(function LeavesSummaryStrip({
 }) {
   return (
     <StatCardGrid cols={3}>
-      <StatCard label="Available Days" value={totalAvailable} icon={CalendarCheck} color="green" />
-      <StatCard label="Pending Requests" value={pendingCount} icon={Clock3} tone="amber" />
-      <StatCard label="Approved (YTD)" value={approvedCount} icon={BadgeCheck} color="blue" />
+      <StatCard
+        label="Available Days"
+        value={totalAvailable}
+        icon={CalendarCheck}
+        color="green"
+      />
+      <StatCard
+        label="Pending Requests"
+        value={pendingCount}
+        icon={Clock3}
+        tone="amber"
+      />
+      <StatCard
+        label="Approved (YTD)"
+        value={approvedCount}
+        icon={BadgeCheck}
+        color="blue"
+      />
     </StatCardGrid>
   );
 });
+
 import { LeavesTabContent } from "./leaves-tab-content";
 import { WfhTabContent } from "./wfh-tab-content";
 import { LeaveApprovalsContent } from "./leave-approvals";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 export function LeavesWfhContent() {
   const { data: session } = useSession();
-  const isAdmin = useCan("hr:employees:manage");
+  const hrModuleEnabled = useModuleEnabled("hr");
+  const isAdmin = useCan("hr:employees:manage") && hrModuleEnabled;
 
   const { data: contextData, isLoading: contextLoading } = useHrLeaveContext();
   const { data: myData, isLoading: myLoading } = useHrMyLeaveRequests();
-  const { data: approvalsData, isLoading: approvalsLoading } = useHrLeaveApprovals({
+  const { data: approvalsData, isLoading: approvalsLoading } =
+    useHrLeaveApprovals({
+      enabled: isAdmin,
+    });
+  const { data: thisWeekData } = useHrLeavesThisWeek();
+  const { data: pendingWfhRequests } = useHrPendingWfhRequests({
     enabled: isAdmin,
   });
-  const { data: thisWeekData } = useHrLeavesThisWeek();
-  const { data: pendingWfhRequests } = useHrPendingWfhRequests({ enabled: isAdmin });
 
   const {
     open: leaveSheetOpen,
@@ -76,7 +104,10 @@ export function LeavesWfhContent() {
     setOpen: openWfhSheet,
   } = useQueryParamOpen("wfh");
 
-  const handleOpenLeaveSheet = useCallback(() => openLeaveSheet(), [openLeaveSheet]);
+  const handleOpenLeaveSheet = useCallback(
+    () => openLeaveSheet(),
+    [openLeaveSheet],
+  );
   const handleOpenWfhSheet = useCallback(() => openWfhSheet(), [openWfhSheet]);
 
   const balances = (contextData?.balances ?? []) as LeaveBalance[];
@@ -84,17 +115,25 @@ export function LeavesWfhContent() {
   const approvers = (contextData?.approvers ?? []) as Approver[];
   const joiningDate = contextData?.joiningDate ?? null;
 
-  const myLeaveRequests = ((myData?.requests ?? []) as LeaveRequest[]);
-  const incomingLeaveRequests = ((approvalsData?.pending ?? []) as LeaveRequest[]);
-  const allIncomingLeaveRequests = ((approvalsData?.all ?? []) as LeaveRequest[]);
-  const approvedLeavesThisWeek = ((thisWeekData ?? []) as ApprovedLeave[]);
+  const myLeaveRequests = (myData?.requests ?? []) as LeaveRequest[];
+  const incomingLeaveRequests = (approvalsData?.pending ??
+    []) as LeaveRequest[];
+  const allIncomingLeaveRequests = (approvalsData?.all ?? []) as LeaveRequest[];
+  const approvedLeavesThisWeek = (thisWeekData ?? []) as ApprovedLeave[];
 
   const totalPendingApprovals =
     incomingLeaveRequests.length + (pendingWfhRequests?.length || 0);
 
-  const totalAvailable = balances.reduce((sum, b) => sum + Number(b.balance ?? 0), 0);
-  const pendingCount = myLeaveRequests.filter((r) => r.status ==="PENDING").length;
-  const approvedCount = myLeaveRequests.filter((r) => r.status ==="APPROVED").length;
+  const totalAvailable = balances.reduce(
+    (sum, b) => sum + Number(b.balance ?? 0),
+    0,
+  );
+  const pendingCount = myLeaveRequests.filter(
+    (r) => r.status === "PENDING",
+  ).length;
+  const approvedCount = myLeaveRequests.filter(
+    (r) => r.status === "APPROVED",
+  ).length;
 
   if (contextLoading || myLoading) {
     return (
@@ -178,10 +217,13 @@ export function LeavesWfhContent() {
                         </AvatarFallback>
                       </Avatar>
                       <div className="min-w-0">
-                        <TruncatedText text={`${leave.user?.firstName ?? ""} ${leave.user?.lastName ?? ""}`.trim()} className="text-xs font-medium text-foreground" />
+                        <TruncatedText
+                          text={`${leave.user?.firstName ?? ""} ${leave.user?.lastName ?? ""}`.trim()}
+                          className="text-xs font-medium text-foreground"
+                        />
                         <p className="text-[10px] text-muted-foreground">
-                          {format(new Date(leave.startDate),"MMM dd")} –{" "}
-                          {format(new Date(leave.endDate),"MMM dd")}
+                          {format(new Date(leave.startDate), "MMM dd")} –{" "}
+                          {format(new Date(leave.endDate), "MMM dd")}
                           {leave.leaveType && (
                             <span className="ml-1 text-amber-600 dark:text-amber-300">
                               · {leave.leaveType.name}
@@ -198,38 +240,38 @@ export function LeavesWfhContent() {
 
           <Tabs defaultValue="my-leaves">
             <div className="overflow-x-auto">
-            <TabsList className="bg-transparent border-b rounded-none p-0 gap-0">
-              <TabsTrigger
-                value="my-leaves"
-                className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground pb-3 pt-2.5 px-4 duration-200"
-              >
-                My Leaves
-                {myLeaveRequests.length > 0 && (
-                  <span className="ml-1.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-muted text-[10px] font-semibold text-muted-foreground">
-                    {myLeaveRequests.length}
-                  </span>
-                )}
-              </TabsTrigger>
-              <TabsTrigger
-                value="wfh"
-                className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground pb-3 pt-2.5 px-4 duration-200"
-              >
-                Work From Home
-              </TabsTrigger>
-              {isAdmin && (
+              <TabsList className="bg-transparent border-b rounded-none p-0 gap-0">
                 <TabsTrigger
-                  value="approvals"
+                  value="my-leaves"
                   className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground pb-3 pt-2.5 px-4 duration-200"
                 >
-                  Approvals
-                  {totalPendingApprovals > 0 && (
-                    <span className="ml-1.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-rose-500 text-[10px] font-bold text-white">
-                      {totalPendingApprovals}
+                  My Leaves
+                  {myLeaveRequests.length > 0 && (
+                    <span className="ml-1.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-muted text-[10px] font-semibold text-muted-foreground">
+                      {myLeaveRequests.length}
                     </span>
                   )}
                 </TabsTrigger>
-              )}
-            </TabsList>
+                <TabsTrigger
+                  value="wfh"
+                  className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground pb-3 pt-2.5 px-4 duration-200"
+                >
+                  Work From Home
+                </TabsTrigger>
+                {isAdmin && (
+                  <TabsTrigger
+                    value="approvals"
+                    className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground pb-3 pt-2.5 px-4 duration-200"
+                  >
+                    Approvals
+                    {totalPendingApprovals > 0 && (
+                      <span className="ml-1.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-rose-500 text-[10px] font-bold text-white">
+                        {totalPendingApprovals}
+                      </span>
+                    )}
+                  </TabsTrigger>
+                )}
+              </TabsList>
             </div>
 
             <TabsContent value="my-leaves" className="mt-5">

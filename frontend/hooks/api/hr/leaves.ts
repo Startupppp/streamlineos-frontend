@@ -85,7 +85,7 @@ export function useRequestLeave() {
   return useMutation({
     mutationKey: ["hr", "leaves", "request"],
     mutationFn: (data: RequestLeaveInput) =>
-      apiClient.post<{ success: boolean }>("/hr/leaves", data),
+      apiClient.post<{ success: boolean }>("/me/time-off", data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() });
       qc.invalidateQueries({ queryKey: queryKeys.hr.leavesMyRequests() });
@@ -146,7 +146,7 @@ export function useCancelLeave() {
   return useMutation({
     mutationKey: ["hr", "leaves", "cancel"],
     mutationFn: (leaveId: number) =>
-      apiClient.patch<{ success: boolean }>(`/hr/leaves/${leaveId}/cancel`, {}),
+      apiClient.patch<{ success: boolean }>(`/me/time-off/${leaveId}/cancel`, {}),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() });
       qc.invalidateQueries({ queryKey: queryKeys.hr.leavesMyRequests() });
@@ -246,10 +246,12 @@ export function useCreateLeaveType() {
 }
 
 export function useHrLeaveContext() {
+  const canSelf = useCan("self:leaves");
   return useQuery({
     queryKey: queryKeys.hr.leaves(),
-    queryFn: () => apiClient.get<LeaveContextResult>("/hr/leaves"),
+    queryFn: () => apiClient.get<LeaveContextResult>("/me/time-off"),
     staleTime: 2 * 60_000,
+    enabled: canSelf,
   });
 }
 
@@ -264,22 +266,25 @@ export function useHrLeaveApprovals(options?: { enabled?: boolean }) {
 }
 
 export function useHrLeavesThisWeek() {
+  const canSelf = useCan("self:leaves");
   return useQuery({
     queryKey: queryKeys.hr.leavesThisWeek(),
-    queryFn: () => apiClient.get<unknown[]>("/hr/leaves/this-week"),
+    queryFn: () => apiClient.get<unknown[]>("/me/time-off/team-calendar"),
     staleTime: 2 * 60_000,
+    enabled: canSelf,
   });
 }
 
 export function useHrMyLeaveRequests(enabled = true) {
+  const canSelf = useCan("self:leaves");
   return useQuery({
     queryKey: queryKeys.hr.leavesMyRequests(),
     queryFn: () =>
       apiClient.get<{ requests: unknown[]; balances: unknown[] }>(
-        "/hr/leaves/my",
+        "/me/time-off/requests",
       ),
     staleTime: 2 * 60_000,
-    enabled,
+    enabled: canSelf && enabled,
   });
 }
 

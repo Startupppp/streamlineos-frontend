@@ -19,19 +19,51 @@ import type {
 } from "@/types/hr";
 import { activeAttendancePollInterval } from "@/lib/query-request-policies";
 
+export interface AttendanceRegularization {
+  id: number;
+  orgId: string;
+  userId: string;
+  attendanceDate: string;
+  requestedCheckIn: string | null;
+  requestedCheckOut: string | null;
+  reason: string;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  workflowInstanceId: string | null;
+  approvedBy: string | null;
+  approvedAt: string | null;
+  rejectedBy: string | null;
+  rejectedAt: string | null;
+  rejectionReason: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateRegularizationInput {
+  attendanceDate: string;
+  requestedCheckIn?: string;
+  requestedCheckOut?: string;
+  reason: string;
+}
+
 export function useHrAttendanceStatus(
-  options?: Omit<import("@tanstack/react-query").UseQueryOptions<AttendanceStatusResult, Error>, "queryKey" | "queryFn">
+  options?: Omit<
+    import("@tanstack/react-query").UseQueryOptions<
+      AttendanceStatusResult,
+      Error
+    >,
+    "queryKey" | "queryFn"
+  >,
 ) {
   const { data: session } = useSession();
   const orgId = session?.orgId;
-  const canAttendance = useCan("hr:attendance:view");
+  const canAttendance = useCan("self:attendance");
   const { enabled: optEnabled, ...restOptions } = options ?? {};
   return useQuery({
     queryKey: queryKeys.hr.attendanceStatus(orgId),
-    queryFn: () => apiClient.get<AttendanceStatusResult>("/hr/attendance/status"),
+    queryFn: () =>
+      apiClient.get<AttendanceStatusResult>("/me/attendance/status"),
     staleTime: 2 * 60_000,
-    refetchInterval: (query) =>
-      activeAttendancePollInterval(query.state.data),
+    refetchInterval: (query) => activeAttendancePollInterval(query.state.data),
     refetchIntervalInBackground: false,
     ...restOptions,
     enabled: !!orgId && canAttendance && (optEnabled ?? true),
@@ -39,7 +71,10 @@ export function useHrAttendanceStatus(
 }
 
 export function useHrCheckIn(
-  options?: Omit<UseMutationOptions<{ success: boolean }, Error, CheckInInput>, "mutationFn">
+  options?: Omit<
+    UseMutationOptions<{ success: boolean }, Error, CheckInInput>,
+    "mutationFn"
+  >,
 ) {
   const qc = useQueryClient();
   const { data: session } = useSession();
@@ -48,7 +83,7 @@ export function useHrCheckIn(
   return useMutation({
     mutationKey: ["hr", "attendance", "check-in"],
     mutationFn: (data: CheckInInput) =>
-      apiClient.post<{ success: boolean }>("/hr/attendance/check-in", data),
+      apiClient.post<{ success: boolean }>("/me/attendance/check-in", data),
     onMutate: async () => {
       await qc.cancelQueries({ queryKey: statusKey, exact: true });
       const previous = qc.getQueryData<AttendanceStatusResult>(statusKey);
@@ -95,8 +130,12 @@ export function useHrCheckIn(
     onSettled: () => {
       void qc.invalidateQueries({ queryKey: statusKey, exact: true });
       void qc.invalidateQueries({ queryKey: queryKeys.hr.attendanceLogs() });
-      void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "monthlyAttendance"] });
-      void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "attendanceHeatmap"] });
+      void qc.invalidateQueries({
+        queryKey: [...queryKeys.hr.all, "monthlyAttendance"],
+      });
+      void qc.invalidateQueries({
+        queryKey: [...queryKeys.hr.all, "attendanceHeatmap"],
+      });
       void qc.invalidateQueries({
         queryKey: queryKeys.dashboard.teamAttendance(orgId),
         exact: true,
@@ -107,7 +146,10 @@ export function useHrCheckIn(
 }
 
 export function useHrCheckOut(
-  options?: Omit<UseMutationOptions<{ success: boolean }, Error, { localDate?: string }>, "mutationFn">
+  options?: Omit<
+    UseMutationOptions<{ success: boolean }, Error, { localDate?: string }>,
+    "mutationFn"
+  >,
 ) {
   const qc = useQueryClient();
   const { data: session } = useSession();
@@ -116,7 +158,7 @@ export function useHrCheckOut(
   return useMutation({
     mutationKey: ["hr", "attendance", "check-out"],
     mutationFn: (data: { localDate?: string }) =>
-      apiClient.post<{ success: boolean }>("/hr/attendance/check-out", data),
+      apiClient.post<{ success: boolean }>("/me/attendance/check-out", data),
     onMutate: async () => {
       await qc.cancelQueries({ queryKey: statusKey, exact: true });
       const previous = qc.getQueryData<AttendanceStatusResult>(statusKey);
@@ -145,8 +187,12 @@ export function useHrCheckOut(
     onSettled: () => {
       void qc.invalidateQueries({ queryKey: statusKey, exact: true });
       void qc.invalidateQueries({ queryKey: queryKeys.hr.attendanceLogs() });
-      void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "monthlyAttendance"] });
-      void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "attendanceHeatmap"] });
+      void qc.invalidateQueries({
+        queryKey: [...queryKeys.hr.all, "monthlyAttendance"],
+      });
+      void qc.invalidateQueries({
+        queryKey: [...queryKeys.hr.all, "attendanceHeatmap"],
+      });
       void qc.invalidateQueries({
         queryKey: queryKeys.dashboard.teamAttendance(orgId),
         exact: true,
@@ -157,7 +203,10 @@ export function useHrCheckOut(
 }
 
 export function useHrToggleBreak(
-  options?: Omit<UseMutationOptions<{ success: boolean }, Error, void>, "mutationFn">
+  options?: Omit<
+    UseMutationOptions<{ success: boolean }, Error, void>,
+    "mutationFn"
+  >,
 ) {
   const qc = useQueryClient();
   const { data: session } = useSession();
@@ -165,7 +214,7 @@ export function useHrToggleBreak(
   return useMutation({
     mutationKey: ["hr", "attendance", "toggle-break"],
     mutationFn: () =>
-      apiClient.post<{ success: boolean }>("/hr/attendance/break"),
+      apiClient.post<{ success: boolean }>("/me/attendance/break"),
     onMutate: async () => {
       await qc.cancelQueries({ queryKey: statusKey, exact: true });
       const previous = qc.getQueryData<AttendanceStatusResult>(statusKey);
@@ -185,31 +234,46 @@ export function useHrToggleBreak(
 }
 
 export function useHrMonthlyAttendance(params: GetMonthlyAttendanceInput) {
-  const canAttendance = useCan("hr:attendance:view");
+  const canSelf = useCan("self:attendance");
+  const canManage = useCan("hr:attendance:view");
+  const isOtherUser = params.userId !== undefined;
   return useQuery({
     queryKey: queryKeys.hr.monthlyAttendance(params),
     queryFn: () =>
-      apiClient.get<AttendanceLog[]>("/hr/attendance/monthly", {
-        year: params.year,
-        month: params.month,
-        ...(params.userId ? { userId: params.userId } : {}),
-      }),
+      apiClient.get<AttendanceLog[]>(
+        isOtherUser ? "/hr/attendance/monthly" : "/me/attendance/monthly",
+        {
+          year: params.year,
+          month: params.month,
+          ...(params.userId ? { userId: params.userId } : {}),
+        },
+      ),
     staleTime: 2 * 60_000,
-    enabled: canAttendance,
+    enabled: isOtherUser ? canManage : canSelf,
   });
 }
 
 export function useAttendanceHeatmap(params: { year: number }) {
-  const canAttendance = useCan("hr:attendance:view");
+  const canAttendance = useCan("self:attendance");
   return useQuery({
     queryKey: queryKeys.hr.attendanceHeatmap(params),
     queryFn: () =>
       apiClient.get<{
         year: number;
         userId: string;
-        heatmap: { date: string; hours: number; sessions: number; intensity: number }[];
-        summary: { totalDays: number; totalHours: string; avgHoursPerDay: string; longestStreak: number };
-      }>("/hr/attendance/heatmap", { year: params.year }),
+        heatmap: {
+          date: string;
+          hours: number;
+          sessions: number;
+          intensity: number;
+        }[];
+        summary: {
+          totalDays: number;
+          totalHours: string;
+          avgHoursPerDay: string;
+          longestStreak: number;
+        };
+      }>("/me/attendance/heatmap", { year: params.year }),
     staleTime: 2 * 60_000,
     enabled: canAttendance,
   });
@@ -235,7 +299,10 @@ export function useGetWorkLogs(input: GetWorkLogsInput) {
 }
 
 export function useUpsertWorkLog(
-  options?: Omit<UseMutationOptions<WorkLog, Error, UpsertWorkLogInput>, "mutationFn">
+  options?: Omit<
+    UseMutationOptions<WorkLog, Error, UpsertWorkLogInput>,
+    "mutationFn"
+  >,
 ) {
   const qc = useQueryClient();
   return useMutation({
@@ -275,42 +342,28 @@ export function useHrTeamAttendanceStatus(params?: TeamAttendanceStatusQuery) {
   });
 }
 
-export interface AttendanceRegularization {
-  id: number;
-  orgId: string;
-  userId: string;
-  attendanceDate: string;
-  requestedCheckIn: string | null;
-  requestedCheckOut: string | null;
-  reason: string;
-  status: "PENDING" | "APPROVED" | "REJECTED";
-  workflowInstanceId: string | null;
-  approvedBy: string | null;
-  approvedAt: string | null;
-  rejectedBy: string | null;
-  rejectedAt: string | null;
-  rejectionReason: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateRegularizationInput {
-  attendanceDate: string;
-  requestedCheckIn?: string;
-  requestedCheckOut?: string;
-  reason: string;
-}
-
 export function useCreateRegularization(
-  options?: Omit<UseMutationOptions<AttendanceRegularization, Error, CreateRegularizationInput>, "mutationFn">
+  options?: Omit<
+    UseMutationOptions<
+      AttendanceRegularization,
+      Error,
+      CreateRegularizationInput
+    >,
+    "mutationFn"
+  >,
 ) {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["hr", "regularization", "create"],
     mutationFn: (data: CreateRegularizationInput) =>
-      apiClient.post<AttendanceRegularization>("/hr/attendance/regularizations", data),
+      apiClient.post<AttendanceRegularization>(
+        "/me/attendance/regularizations",
+        data,
+      ),
     onSuccess: (...args) => {
-      qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "regularizations"] });
+      qc.invalidateQueries({
+        queryKey: [...queryKeys.hr.all, "regularizations"],
+      });
       options?.onSuccess?.(...args);
     },
     onError: options?.onError,

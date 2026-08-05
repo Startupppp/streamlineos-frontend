@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { staggerContainer } from "@/lib/motion-variants";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useHrAnnouncements,
@@ -29,7 +29,8 @@ import { AnnouncementFormSheet } from "@/features/hr/announcements/announcement-
 type ActiveTab = "published" | "all";
 
 function AnnouncementsContent() {
-  const canManage = useCan("hr:announcements:manage");
+  const hrModuleEnabled = useModuleEnabled("hr");
+  const canManage = useCan("hr:announcements:manage") && hrModuleEnabled;
 
   const {
     data: published,

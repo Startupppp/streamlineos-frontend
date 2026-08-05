@@ -2708,66 +2708,91 @@ const PRODUCT_NAV_GROUP_LABELS: Record<ProductKey, string[]> = {
   sign: ["SignOS"],
 };
 
-const HOME_OVERVIEW_GROUP: NavGroup = {
-  label: "Overview",
-  routes: [
-    { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { label: "Mail", href: "/mail", icon: Inbox },
-    { label: "Calendar", href: "/calendar", icon: CalendarDays },
-    { label: "Chat", href: "/chat", icon: MessageSquareText },
-    { label: "Notifications", href: "/notifications", icon: Bell },
-    {
-      label: "Leave",
-      href: "/hr/leaves",
-      icon: CalendarCheck,
-      badge: "leaves" as const,
-      requiredPermission: "hr:leaves:view",
-      module: "hrms",
-    },
-    {
-      label: "Attendance",
-      href: "/hr/attendance",
-      icon: Clock,
-      requiredPermission: "hr:attendance:view",
-      module: "hrms",
-    },
-    {
-      label: "My Payroll",
-      href: "/payroll/me",
-      icon: Wallet,
-      requiredPermission: ["self:payroll", "self:payslips"],
-      module: "payroll",
-    },
-    {
-      label: "Expenses",
-      href: "/hr/expenses",
-      icon: Receipt,
-      requiredPermission: "hr:expenses:view",
-      module: "finance",
-    },
-    {
-      label: "Documents",
-      href: "/hr/documents",
-      icon: FileText,
-      requiredPermission: "hr:documents:view",
-      module: "hrms",
-    },
-    {
-      label: "Interviews",
-      href: "/hr/recruitment/interviews",
-      icon: Video,
-      requiredPermission: "hr:interviews:view",
-      module: "hrms",
-    },
-    {
-      label: "Announcements",
-      href: "/hr/announcements",
-      icon: Megaphone,
-      requiredPermission: "hr:employees:view",
-      module: "hrms",
-    },
-  ],
-};
+const HOME_NAV_GROUPS: NavGroup[] = [
+  {
+    label: "Overview",
+    routes: [
+      { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    ],
+  },
+  {
+    label: "Communication",
+    routes: [
+      {
+        label: "Mail",
+        href: "/mail",
+        icon: Inbox,
+        requiredPermission: "mail:inbox:view",
+      },
+      {
+        label: "Calendar",
+        href: "/calendar",
+        icon: CalendarDays,
+        requiredPermission: "calendar:read",
+      },
+      {
+        label: "Chat",
+        href: "/chat",
+        icon: MessageSquareText,
+        requiredPermission: "chat:channels:read",
+      },
+      { label: "Notifications", href: "/notifications", icon: Bell },
+    ],
+  },
+  {
+    label: "For Me",
+    routes: [
+      {
+        label: "Time Off",
+        href: "/me/time-off",
+        icon: CalendarCheck,
+        badge: "leaves" as const,
+        requiredPermission: "self:leaves",
+      },
+      {
+        label: "Attendance",
+        href: "/me/attendance",
+        icon: Clock,
+        requiredPermission: "self:attendance",
+      },
+      {
+        label: "Expenses",
+        href: "/me/expenses",
+        icon: Receipt,
+        requiredPermission: "self:expenses",
+      },
+      {
+        label: "Pay",
+        href: "/me/pay",
+        icon: Wallet,
+        requiredPermission: ["self:payroll", "self:payslips"],
+      },
+      {
+        label: "My Documents",
+        href: "/me/documents",
+        icon: FileText,
+        requiredPermission: "self:onboarding-docs",
+      },
+    ],
+  },
+  {
+    label: "Company",
+    routes: [
+      {
+        label: "Announcements",
+        href: "/hr/announcements",
+        icon: Megaphone,
+      },
+      {
+        label: "People",
+        href: "/directory",
+        icon: Contact2,
+        requiredPermission: "directory:people:view",
+        exact: true,
+      },
+    ],
+  },
+];
 
 function getHomeNavGroups(
   role: string | undefined,
@@ -2777,11 +2802,12 @@ function getHomeNavGroups(
   const isOwner = role === ROLES.OWNER;
   const granted = new Set(permissions ?? []);
 
-  const routes = HOME_OVERVIEW_GROUP.routes
-    .map((r) => filterRoute(r, isOwner, granted, enabledModules))
-    .filter((r): r is NavRoute => r !== null);
-
-  return [{ ...HOME_OVERVIEW_GROUP, routes }];
+  return HOME_NAV_GROUPS.map((group) => ({
+    ...group,
+    routes: group.routes
+      .map((route) => filterRoute(route, isOwner, granted, enabledModules))
+      .filter((route): route is NavRoute => route !== null),
+  })).filter((group) => group.routes.length > 0);
 }
 
 export function getNavGroupsForProduct(
@@ -2823,6 +2849,10 @@ export function isModuleEnabled(
 
 export function getProductFromPathname(pathname: string): ProductKey {
   if (
+    pathname === "/me" ||
+    pathname.startsWith("/me/") ||
+    pathname === "/hr/announcements" ||
+    pathname === "/directory" ||
     pathname === "/dashboard" ||
     pathname === "/" ||
     pathname.startsWith("/mail") ||

@@ -601,3 +601,11 @@ h-dvh flex flex-col overflow-hidden
 
 Mobile: [Sheet — left, w-[17rem]] for nav · [MobileModuleBottomNav — fixed bottom, z-40, pb-safe] · [MobileShellFab]
 ```
+
+### Navigation ownership
+
+- Home is the universal employee workspace. Group it as Overview, Communication, For Me, and Company; groups may collapse, but their destinations remain permission-filtered and keyboard accessible.
+- `For Me` uses canonical `/me/*` routes and remains visible independently of paid-module enablement. It includes only the signed-in person's time off, attendance, expenses, pay, and employment documents.
+- Announcements and the people directory are company-wide reading surfaces. Their creation or administration controls may still require an owning-module permission.
+- Module-specific administration never appears in Home. Recruitment/interviews, HR employee administration, payroll operations, accounting operations, and product delivery remain inside their owning module sidebar.
+- Desktop sidebar, mobile drawer, mobile module bottom navigation, product switcher, and command palette all consume the same filtered navigation model; never maintain parallel hard-coded destination lists.

@@ -86,8 +86,8 @@ export function MfaSettings() {
   return (
     <>
       <Card>
-        <CardHeader className="px-4 py-3">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+        <CardHeader className="grid-rows-1 gap-0 px-4 pt-3 pb-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
             <div className="min-w-0 space-y-1">
               <div className="flex items-center gap-2">
                 {isEnabled ? (
@@ -107,7 +107,7 @@ export function MfaSettings() {
               </CardDescription>
             </div>
             {step === "idle" && (
-              <div className="shrink-0 sm:pt-0.5 [&_button]:w-full sm:[&_button]:w-auto">
+              <div className="shrink-0 [&_button]:w-full sm:[&_button]:w-auto">
                 {isEnabled ? (
                   <Button
                     variant="outline"

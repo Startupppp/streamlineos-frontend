@@ -51,6 +51,7 @@ interface CreateExpenseDialogProps {
   categories: string[];
   paymentMethods: string[];
   editExpense?: ExpenseToEdit | null;
+  selfService?: boolean;
 }
 
 export function CreateExpenseDialog({
@@ -60,6 +61,7 @@ export function CreateExpenseDialog({
   categories,
   paymentMethods,
   editExpense,
+  selfService = false,
 }: CreateExpenseDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [existingReceipts, setExistingReceipts] = useState<ExpenseReceipt[]>([]);
@@ -67,7 +69,7 @@ export function CreateExpenseDialog({
   const [uploading, setUploading] = useState(false);
 
   const createExpenseMutation = useCreateExpense();
-  const updateExpenseMutation = useUpdateExpense();
+  const updateExpenseMutation = useUpdateExpense({ selfService });
   const uploadFileMutation = useUploadFile();
   const isEditMode = !!editExpense;
 

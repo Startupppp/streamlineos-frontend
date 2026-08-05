@@ -21,7 +21,7 @@ interface CreateHolidayInput {
 export function useHolidays() {
   return useQuery<Holiday[]>({
     queryKey: queryKeys.hr.holidays(),
-    queryFn: () => apiClient.get<Holiday[]>("/hr/attendance/holidays"),
+    queryFn: () => apiClient.get<Holiday[]>("/me/attendance/holidays"),
     staleTime: 300_000,
   });
 }

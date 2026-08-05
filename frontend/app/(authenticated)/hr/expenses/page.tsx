@@ -52,7 +52,7 @@ export default function ExpensesPage() {
   const [rejectionReason, setRejectionReason] = useState("");
   const [isImportOpen, setIsImportOpen] = useState(false);
 
-  const isAdmin = useCan("hr:employees:manage");
+  const isAdmin = useCan("hr:expenses:approve");
 
   const { filters, setFilter, setDatePreset, datePreset, activeFilterCount } =
     useExpenseFilters({
@@ -96,7 +96,7 @@ export default function ExpensesPage() {
     paymentMethod: filters.paymentMethod,
     minAmount: filters.minAmount,
     maxAmount: filters.maxAmount,
-  });
+  }, { selfService: !isAdmin });
 
   const updateStatusMutation = useUpdateExpenseStatus();
 
@@ -433,6 +433,8 @@ export default function ExpensesPage() {
         onSuccess={handleMemberCreateSuccess}
         categories={EXPENSE_CATEGORIES}
         paymentMethods={PAYMENT_METHODS}
+        editExpense={editingExpense}
+        selfService
       />
     </PageWrapper>
   );

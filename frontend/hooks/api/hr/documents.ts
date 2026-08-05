@@ -4,6 +4,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { Document, DocumentType } from "@/types/hr";
+import { useCan } from "@/hooks/api/access";
 
 export interface HrDocumentListParams {
   page?: number;
@@ -75,13 +76,14 @@ interface MyOnboardingDocsResponse {
 const MY_DOCS_LIMIT = 100;
 
 export function useMyOnboardingDocs(options?: { enabled?: boolean }) {
+  const canView = useCan("self:onboarding-docs");
   const params = { page: 1, limit: MY_DOCS_LIMIT };
   return useQuery({
     queryKey: queryKeys.hr.onboardingDocs(params),
     queryFn: () =>
       apiClient.get<MyOnboardingDocsResponse>("/hr/onboarding-docs/me", params),
     staleTime: 60_000,
-    enabled: options?.enabled ?? true,
+    enabled: canView && (options?.enabled ?? true),
   });
 }
 

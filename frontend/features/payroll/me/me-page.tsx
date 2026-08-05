@@ -2,11 +2,26 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
-import { Wallet, TrendingUp, Coins, Receipt, Info, AlertTriangle, Users } from "lucide-react";
+import {
+  Wallet,
+  TrendingUp,
+  Coins,
+  Receipt,
+  Info,
+  AlertTriangle,
+  Users,
+} from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { useEssOverview, useEssFnf, useManagerInbox } from "@/hooks/api/payroll/ess";
-import { formatMoney, formatMonth } from "@/features/payroll/shared/payroll-format";
+import {
+  useEssOverview,
+  useEssFnf,
+  useManagerInbox,
+} from "@/hooks/api/payroll/ess";
+import {
+  formatMoney,
+  formatMonth,
+} from "@/features/payroll/shared/payroll-format";
 import {
   EssSectionNav,
   EssPayslipsSection,
@@ -20,15 +35,20 @@ import {
   EssDisciplinarySection,
 } from "@/features/payroll/ess";
 import type { EssSectionNavItem } from "@/features/payroll/ess/components/ess-section-nav";
+import { useModuleEnabled } from "@/hooks/api/access";
 
 function getCurrentMonthLabel(): string {
-  return new Date().toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+  return new Date().toLocaleDateString("en-IN", {
+    month: "long",
+    year: "numeric",
+  });
 }
 
 export function MyPayrollPageContent() {
+  const payrollModuleEnabled = useModuleEnabled("payroll");
   const { data: overview, isLoading: overviewLoading } = useEssOverview();
   const { data: fnf } = useEssFnf();
-  const { data: managerInbox } = useManagerInbox();
+  const { data: managerInbox } = useManagerInbox(payrollModuleEnabled);
 
   const toggles = overview?.toggles;
   const actionRequired = overview?.actionRequired ?? [];
@@ -40,28 +60,35 @@ export function MyPayrollPageContent() {
       { id: "total-rewards", label: "Total Rewards" },
       { id: "disciplinary", label: "Notices" },
     ];
-    if (toggles?.essShowSalaryStructure) items.push({ id: "salary", label: "Salary Structure" });
-    if (toggles?.essAllowReimbursements) items.push({ id: "reimbursements", label: "Reimbursements" });
-    if (toggles?.essAllowTaxDeclarations) items.push({ id: "tax", label: "Tax Declaration" });
-    if (toggles?.essAllowLoanRequests || parseFloat(overview?.activeLoanBalance ?? "0") > 0) {
+    if (toggles?.essShowSalaryStructure)
+      items.push({ id: "salary", label: "Salary Structure" });
+    if (toggles?.essAllowReimbursements)
+      items.push({ id: "reimbursements", label: "Reimbursements" });
+    if (toggles?.essAllowTaxDeclarations)
+      items.push({ id: "tax", label: "Tax Declaration" });
+    if (
+      toggles?.essAllowLoanRequests ||
+      parseFloat(overview?.activeLoanBalance ?? "0") > 0
+    ) {
       items.push({ id: "loans", label: "Loans" });
     }
-    if (toggles?.essAllowBankUpdate) items.push({ id: "bank", label: "Bank Details" });
+    if (toggles?.essAllowBankUpdate)
+      items.push({ id: "bank", label: "Bank Details" });
     if (fnf) items.push({ id: "fnf", label: "FNF Settlement" });
     return items;
   }, [toggles, overview?.activeLoanBalance, fnf]);
 
   const showLoans =
     toggles?.essAllowLoanRequests ||
-    (overview?.activeLoanBalance !== undefined && parseFloat(overview.activeLoanBalance) > 0);
+    (overview?.activeLoanBalance !== undefined &&
+      parseFloat(overview.activeLoanBalance) > 0);
 
-  const activeLoanBalance = overview?.activeLoanBalance ? parseFloat(overview.activeLoanBalance) : 0;
+  const activeLoanBalance = overview?.activeLoanBalance
+    ? parseFloat(overview.activeLoanBalance)
+    : 0;
 
   return (
-    <PageWrapper
-      title="My Payroll"
-      subtitle={getCurrentMonthLabel()}
-    >
+    <PageWrapper title="My Payroll" subtitle={getCurrentMonthLabel()}>
       <div className="space-y-4">
         {overview?.capabilities?.honestyNote && (
           <div
@@ -103,7 +130,9 @@ export function MyPayrollPageContent() {
           >
             <Users className="h-4 w-4 text-muted-foreground" />
             <div className="min-w-0 flex-1">
-              <p className="text-[12px] font-medium text-foreground">Team payroll inbox</p>
+              <p className="text-[12px] font-medium text-foreground">
+                Team payroll inbox
+              </p>
               <p className="text-[11px] text-muted-foreground">
                 {managerInbox?.totals.membersNeedingAction ?? 0} of{" "}
                 {managerInbox?.reportCount ?? 0} direct report(s) need attention
@@ -116,15 +145,25 @@ export function MyPayrollPageContent() {
         <StatCardGrid cols={activeLoanBalance > 0 ? 4 : 3}>
           <StatCard
             label="Net Pay Last Month"
-            value={overviewLoading ? "—" : formatMoney(overview?.latestPayslip?.net ?? null)}
+            value={
+              overviewLoading
+                ? "—"
+                : formatMoney(overview?.latestPayslip?.net ?? null)
+            }
             icon={Wallet}
             tone="blue"
             isLoading={overviewLoading}
-            hint={overview?.latestPayslip ? formatMonth(overview.latestPayslip.month) : undefined}
+            hint={
+              overview?.latestPayslip
+                ? formatMonth(overview.latestPayslip.month)
+                : undefined
+            }
           />
           <StatCard
             label="YTD Earnings"
-            value={overviewLoading ? "—" : formatMoney(overview?.ytd?.gross ?? null)}
+            value={
+              overviewLoading ? "—" : formatMoney(overview?.ytd?.gross ?? null)
+            }
             icon={TrendingUp}
             tone="emerald"
             isLoading={overviewLoading}
@@ -133,7 +172,11 @@ export function MyPayrollPageContent() {
           {activeLoanBalance > 0 && (
             <StatCard
               label="Active Loan Balance"
-              value={overviewLoading ? "—" : formatMoney(overview?.activeLoanBalance ?? null)}
+              value={
+                overviewLoading
+                  ? "—"
+                  : formatMoney(overview?.activeLoanBalance ?? null)
+              }
               icon={Coins}
               tone="amber"
               isLoading={overviewLoading}
@@ -141,7 +184,11 @@ export function MyPayrollPageContent() {
           )}
           <StatCard
             label="Pending Claims"
-            value={overviewLoading ? "—" : String(overview?.pendingReimbursementsCount ?? 0)}
+            value={
+              overviewLoading
+                ? "—"
+                : String(overview?.pendingReimbursementsCount ?? 0)
+            }
             icon={Receipt}
             tone="default"
             isLoading={overviewLoading}
@@ -164,7 +211,11 @@ export function MyPayrollPageContent() {
 
           {toggles?.essAllowTaxDeclarations && <EssTaxSection />}
 
-          {showLoans && <EssLoansSection allowRequests={toggles?.essAllowLoanRequests ?? false} />}
+          {showLoans && (
+            <EssLoansSection
+              allowRequests={toggles?.essAllowLoanRequests ?? false}
+            />
+          )}
 
           {toggles?.essAllowBankUpdate && <EssBankSection />}
 

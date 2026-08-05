@@ -34,7 +34,7 @@ interface ExpensePageFilters {
 
 export function useExpensePageData(
   filters: ExpensePageFilters = {},
-  options?: { enabled?: boolean },
+  options?: { enabled?: boolean; selfService?: boolean },
 ) {
   const params: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(filters)) {
@@ -57,7 +57,7 @@ export function useExpensePageData(
         };
         isAdmin: boolean;
       }>(
-        "/hr/expenses/page-data",
+        options?.selfService ? "/me/expenses" : "/hr/expenses/page-data",
         Object.keys(params).length ? params : undefined,
       ),
     staleTime: 30_000,
@@ -70,7 +70,7 @@ export function useCreateExpense() {
   return useMutation({
     mutationKey: ["hr", "expenses", "create"],
     mutationFn: (data: CreateExpenseInput) =>
-      apiClient.post<Expense>("/hr/expenses", data),
+      apiClient.post<Expense>("/me/expenses", data),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: queryKeys.hr.expenses() }),
   });
@@ -87,7 +87,7 @@ export function useUpdateExpenseStatus() {
   });
 }
 
-export function useUpdateExpense() {
+export function useUpdateExpense(options?: { selfService?: boolean }) {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["hr", "expenses", "update"],
@@ -105,7 +105,10 @@ export function useUpdateExpense() {
       receiptUrl?: string;
       receiptFileName?: string;
     }) =>
-      apiClient.patch<{ success: boolean }>(`/hr/expenses/${expenseId}`, data),
+      apiClient.patch<{ success: boolean }>(
+        `${options?.selfService ? "/me/expenses" : "/hr/expenses"}/${expenseId}`,
+        data,
+      ),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: queryKeys.hr.expenses() }),
   });

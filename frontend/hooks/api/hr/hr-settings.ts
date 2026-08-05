@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   Asset,
   Document,
@@ -114,10 +115,12 @@ export function useCreateGoal() {
 }
 
 export function useHrWfhRequests() {
+  const canSelf = useCan("self:attendance");
   return useQuery({
     queryKey: queryKeys.hr.wfhRequests(),
-    queryFn: () => apiClient.get<WfhRequest[]>("/hr/wfh"),
+    queryFn: () => apiClient.get<WfhRequest[]>("/me/time-off/wfh"),
     staleTime: 2 * 60_000,
+    enabled: canSelf,
   });
 }
 
@@ -135,7 +138,7 @@ export function useCreateWfhRequest() {
   return useMutation({
     mutationKey: ["hr", "wfh", "create"],
     mutationFn: (data: CreateWfhRequestInput) =>
-      apiClient.post<{ success: boolean }>("/hr/wfh", data),
+      apiClient.post<{ success: boolean }>("/me/time-off/wfh", data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.wfhRequests() });
       qc.invalidateQueries({ queryKey: queryKeys.hr.pendingWfhRequests() });

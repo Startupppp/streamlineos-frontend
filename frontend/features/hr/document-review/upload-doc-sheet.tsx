@@ -37,17 +37,18 @@ interface UploadDocSheetProps {
   selfUpload?: boolean;
 }
 
-function useUploadOnboardingDoc() {
+function useUploadOnboardingDoc(selfUpload: boolean) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["hr", "onboarding-documents", selfUpload ? "self-upload" : "admin-upload"],
     mutationFn: (data: {
       documentTypeId: number;
       fileUrl: string;
       fileName: string;
       fileSize?: number;
       mimeType?: string;
-      targetUserId: string;
-    }) => apiClient.post("/hr/onboarding-docs", data),
+      targetUserId?: string;
+    }) => apiClient.post(selfUpload ? "/hr/onboarding-docs/me" : "/hr/onboarding-docs", data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.onboardingDocsAll });
     },
@@ -63,7 +64,7 @@ export function UploadDocSheet({
 }: UploadDocSheetProps) {
   const { data: documentTypes } = useHrDocumentTypes();
   const uploadFileMutation = useUploadFile();
-  const uploadDocMutation = useUploadOnboardingDoc();
+  const uploadDocMutation = useUploadOnboardingDoc(selfUpload);
 
   const [uploadDocTypeId, setUploadDocTypeId] = useState("");
   const [uploadFile, setUploadFile] = useState<File | null>(null);
@@ -103,7 +104,7 @@ export function UploadDocSheet({
   }, []);
 
   const handleUploadSubmit = useCallback(async () => {
-    if (!userId) return;
+    if (!selfUpload && !userId) return;
     if (!uploadDocTypeId) {
       toast.error("Please select a document type");
       return;
@@ -124,7 +125,7 @@ export function UploadDocSheet({
         fileName: uploadFile.name,
         fileSize: uploaded.size,
         mimeType: uploaded.mimeType,
-        targetUserId: userId,
+        ...(userId ? { targetUserId: userId } : {}),
       });
       toast.success(
         selfUpload ? "Document uploaded" : "Document uploaded on behalf of employee",
@@ -137,18 +138,18 @@ export function UploadDocSheet({
     }
   }, [
     userId,
+    selfUpload,
     uploadDocTypeId,
     uploadFile,
     uploadFileMutation,
     uploadDocMutation,
     handleCloseSheet,
-    selfUpload,
   ]);
 
   return (
     <Sheet open={open} onOpenChange={handleCloseSheet}>
       <SheetContent side="right" className="flex flex-col p-0 gap-0">
-        <SheetHeader className="shrink-0 px-5 pt-4 pb-3 border-b">
+        <SheetHeader className="shrink-0 border-b px-6 py-4">
           <SheetTitle className="text-base font-semibold">Upload Document</SheetTitle>
           <SheetDescription className="text-xs">
             {selfUpload ? (
@@ -162,7 +163,7 @@ export function UploadDocSheet({
           </SheetDescription>
         </SheetHeader>
 
-        <div className="flex-1 px-5 py-4 space-y-4">
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-6 py-4">
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
               Document Type <span className="text-destructive">*</span>
@@ -231,7 +232,7 @@ export function UploadDocSheet({
           </div>
         </div>
 
-        <div className="shrink-0 px-5 py-3 border-t flex gap-2">
+        <div className="grid shrink-0 grid-cols-2 gap-2 border-t px-6 py-4">
           <Button
             variant="outline"
             className="flex-1"
