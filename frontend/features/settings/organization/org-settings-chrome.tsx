@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface OrgSettingsCardProps {
-  title: string;
+  title?: string;
   description?: string;
   icon?: ReactNode;
   titleExtra?: ReactNode;
@@ -38,35 +38,47 @@ export function OrgSettingsCard({
   headerClassName,
   titleClassName,
 }: OrgSettingsCardProps) {
+  const showHeader = title != null || action != null;
+
   return (
     <Card className={cn("rounded-lg shadow-sm", className)}>
-      <CardHeader
+      {showHeader ? (
+        <CardHeader
+          className={cn(
+            "gap-1 px-4 pt-3.5 pb-2",
+            action && "grid-cols-[1fr_auto]",
+            headerClassName,
+          )}
+        >
+          <div className="min-w-0 space-y-0.5">
+            {title != null ? (
+              <CardTitle
+                className={cn(
+                  "text-sm font-semibold flex items-center gap-2",
+                  titleClassName,
+                )}
+              >
+                {icon}
+                <span className="truncate">{title}</span>
+                {titleExtra}
+              </CardTitle>
+            ) : null}
+            {description ? (
+              <CardDescription className="text-xs leading-relaxed">
+                {description}
+              </CardDescription>
+            ) : null}
+          </div>
+          {action ? <CardAction className="self-start">{action}</CardAction> : null}
+        </CardHeader>
+      ) : null}
+      <CardContent
         className={cn(
-          "gap-1 px-4 pt-3.5 pb-2",
-          action && "grid-cols-[1fr_auto]",
-          headerClassName,
+          "px-4 pb-3.5",
+          showHeader ? "pt-0" : "pt-3.5",
+          contentClassName,
         )}
       >
-        <div className="min-w-0 space-y-0.5">
-          <CardTitle
-            className={cn(
-              "text-sm font-semibold flex items-center gap-2",
-              titleClassName,
-            )}
-          >
-            {icon}
-            <span className="truncate">{title}</span>
-            {titleExtra}
-          </CardTitle>
-          {description ? (
-            <CardDescription className="text-xs leading-relaxed">
-              {description}
-            </CardDescription>
-          ) : null}
-        </div>
-        {action ? <CardAction className="self-start">{action}</CardAction> : null}
-      </CardHeader>
-      <CardContent className={cn("px-4 pb-3.5 pt-0", contentClassName)}>
         {children}
       </CardContent>
     </Card>

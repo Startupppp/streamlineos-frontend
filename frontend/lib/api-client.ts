@@ -19,6 +19,7 @@ const PUBLIC_AUTH_PATHS = new Set([
   "/auth/email-otp/verify",
   "/organization/invitations/validate",
   "/organization/invitations/accept",
+  "/organization/invitations/decline",
 ]);
 
 function isPublicPath(path: string): boolean {

@@ -44,7 +44,6 @@
   Zap,
   ListChecks,
   History,
-  LogIn,
   BarChart2,
   LifeBuoy,
   Inbox,
@@ -2360,24 +2359,6 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "Security",
     requiredPermission: "settings:manage",
     routes: [
-      {
-        label: "Session Policy",
-        icon: Clock,
-        href: "/settings/sessions",
-        requiredPermission: "settings:manage",
-      },
-      {
-        label: "Trusted Devices",
-        icon: Smartphone,
-        href: "/settings/devices",
-        requiredPermission: "settings:manage",
-      },
-      {
-        label: "Login History",
-        icon: LogIn,
-        href: "/settings/login-history",
-        requiredPermission: "settings:manage",
-      },
       {
         label: "Audit Logs",
         icon: History,

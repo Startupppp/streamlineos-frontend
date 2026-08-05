@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { useSession } from "next-auth/react";
@@ -18,7 +18,18 @@ import { apiClient, clearBackendTokenCache } from "@/lib/api-client";
 import {
   signInWithMagicToken,
   useAcceptInvitation,
+  useDeclineInvitation,
 } from "@/hooks/common/auth-hooks";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { motion } from "framer-motion";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { ArrowRight, Mail, MailCheck, ShieldCheck } from "lucide-react";
@@ -140,6 +151,46 @@ function InvitationDetails({
   );
 }
 
+function DeclineInvitationDialog({
+  open,
+  onOpenChange,
+  organizationName,
+  isPending,
+  onConfirm,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  organizationName: string;
+  isPending: boolean;
+  onConfirm: () => void;
+}) {
+  return (
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Decline this invitation?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This link stops working and {organizationName} is notified that you
+            declined. An administrator would have to send you a new invitation.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isPending}>Keep it</AlertDialogCancel>
+          <AlertDialogAction asChild>
+            <LoadingButton
+              isPending={isPending}
+              loadingText="Declining..."
+              onClick={onConfirm}
+            >
+              Decline invitation
+            </LoadingButton>
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
 export default function InvitationPage() {
   const router = useRouter();
   const params = useParams();
@@ -154,7 +205,9 @@ export default function InvitationPage() {
     },
   });
 
-  const handleDecline = useCallback(() => router.push("/signin"), [router]);
+  const [declineOpen, setDeclineOpen] = useState(false);
+
+  const goToSignIn = useCallback(() => router.push("/signin"), [router]);
 
   const {
     data: invitation,
@@ -174,6 +227,27 @@ export default function InvitationPage() {
   });
 
   const acceptInvitation = useAcceptInvitation();
+  const declineInvitation = useDeclineInvitation();
+
+  const openDecline = useCallback(() => setDeclineOpen(true), []);
+
+  const confirmDecline = useCallback(() => {
+    if (!token) return;
+    declineInvitation.mutate(
+      { token },
+      {
+        onSuccess: () => {
+          setDeclineOpen(false);
+          toast.success("Invitation declined. We let the sender know.");
+          router.push("/signin");
+        },
+        onError: (error) => {
+          toast.error(getErrorMessage(error));
+        },
+      },
+    );
+  }, [token, declineInvitation, router]);
+
 
   const autoLoginWithToken = useCallback(
     async (autoLoginToken: string): Promise<void> => {
@@ -286,7 +360,7 @@ export default function InvitationPage() {
               Ask an organization administrator to send a new invitation if this
               link has expired or was replaced.
             </p>
-            <Button className="w-full" onClick={handleDecline}>
+            <Button className="w-full" onClick={goToSignIn}>
               Go to sign in
             </Button>
           </CardContent>
@@ -329,8 +403,8 @@ export default function InvitationPage() {
                   type="button"
                   variant="ghost"
                   className="h-10 w-full text-muted-foreground hover:text-foreground"
-                  onClick={handleDecline}
-                  disabled={acceptInvitation.isPending}
+                  onClick={openDecline}
+                  disabled={acceptInvitation.isPending || declineInvitation.isPending}
                 >
                   Decline invitation
                 </Button>
@@ -338,6 +412,13 @@ export default function InvitationPage() {
             </CardContent>
           </InvitationCard>
         </motion.div>
+        <DeclineInvitationDialog
+          open={declineOpen}
+          onOpenChange={setDeclineOpen}
+          organizationName={invitation.organizationName}
+          isPending={declineInvitation.isPending}
+          onConfirm={confirmDecline}
+        />
       </motion.div>
     );
   }
@@ -419,8 +500,8 @@ export default function InvitationPage() {
                   type="button"
                   variant="ghost"
                   className="h-10 w-full text-muted-foreground hover:text-foreground"
-                  onClick={handleDecline}
-                  disabled={acceptInvitation.isPending}
+                  onClick={openDecline}
+                  disabled={acceptInvitation.isPending || declineInvitation.isPending}
                 >
                   Decline invitation
                 </Button>
@@ -429,6 +510,13 @@ export default function InvitationPage() {
           </CardContent>
         </InvitationCard>
       </motion.div>
+      <DeclineInvitationDialog
+        open={declineOpen}
+        onOpenChange={setDeclineOpen}
+        organizationName={invitation.organizationName}
+        isPending={declineInvitation.isPending}
+        onConfirm={confirmDecline}
+      />
     </motion.div>
   );
 }

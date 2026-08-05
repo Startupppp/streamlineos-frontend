@@ -43,7 +43,7 @@ export default function IncomingTransferPage() {
           className="flex-1 border-0 bg-transparent"
         />
       ) : hasPendingTransfer ? (
-        <OrgIncomingTransferSection />
+        <OrgIncomingTransferSection showTitle={false} />
       ) : (
         <Card className="flex min-h-0 flex-1 flex-col">
           <CardContent className="flex flex-1 flex-col p-0">

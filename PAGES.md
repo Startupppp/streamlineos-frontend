@@ -22,6 +22,13 @@ Full text of any pre-2026-08-03 entry is in git history.
 
 ## Changelog
 
+**2026-08-05**
+- Org/access notifications wired: 11 new `SECURITY` catalog events (`ownership.transfer.*`, `ownership.module_owner.changed`, `organization.invitation.*`, `organization.member.reactivated|left`) — the whole ownership/invitation/membership domain previously emitted nothing. Email only where access changes or the recipient is unreachable in-app (`filterOrgMemberIds` is ACTIVE-only, so removed/suspended members get a direct email, not dispatch). `notification-events.catalog.ts` · `org-admin-recipients.ts` · `templates/organization.ts` · `email-senders.base.ts` · tsc frontend + backend typecheck · 11 focused specs.
+- Invitation decline built — the `DECLINED` enum value, `invitations.declined_at`, and the `DECLINED` invitation event were all unreachable, and the UI's "Decline invitation" button only did `router.push("/signin")`. `POST /organization/invitations/decline` (`@Public()`, status-predicated update + affected-row check) + a confirm dialog on `/invitation/[token]`. `invitation-acceptance.service.ts` · `organization.controller.ts` · `organization.schemas.ts` · `invitation/[token]/page.tsx` · `auth-hooks.ts` · `api-client.ts` · 5 decline specs.
+- §9 splits: `ownership.service.ts` 892 → 222/399/469 (records · transfers · transfer responses) + `ownership-members.helper.ts`; `invitations.service.ts` 1133 → 419/152/217/426 (send · read · lifecycle · acceptance) + `invitations.helpers.ts`. Controllers/module wiring/specs follow. **`org-membership.service.ts` is 732 and still over the line** — pre-existing 620 plus this pass's notices; split not attempted (10 consumers).
+- `CronOrganizationService.expireStaleInvitations` now records the `EXPIRED` invitation event and notifies the inviter; deleted the never-called duplicate that lived on `InvitationsService`. `cron-organization.service.ts`.
+- `expireStaleTransfers` had **no caller** — pending ownership transfers never expired (only lazily, when a recipient tried to accept a stale one). Added `GET|POST /cron/ownership-transfer-expiry` beside the invitation-expiry job. `cron-platform.controller.ts` · `cron.module.ts`.
+
 **2026-08-04**
 - Platform domain redesign slice 7: module-boundaries close-out — offer-fulfillment API requires CRM+inventory (`ModuleGuard` fix + array `@RequireModule`); party/inventory-vendor/payroll-without-HRMS contracts documented; schema-inventory expanded (composite-FK + RLS key spine, compatibility-authorities, module table counts); forward-repair runbook expanded (0392/0393 repair + telemetry). `offer-fulfillment.controller.ts` · `module.guard.ts` · `module-boundaries-contracts.md` · `compatibility-authorities.md` · tsc frontend + backend typecheck + focused specs.
 - Platform domain redesign slice 6: access-convergence close-out — payroll period-summary scope gate (`timesheets:payroll:view` scopable); onboarding-views admin widener gates (`hr:onboarding:manage` scopable); portal grant create validates ACTIVE membership + project/workspace alignment; portal JWT blocked on internal API (spec); forward-repair runbook stub + portal/PM matrix rows. `payroll-summary.service.ts` · `onboarding-views.service.ts` · `portal-access.service.ts` · `forward-repair-runbook.md` · tsc frontend + backend typecheck + focused scope specs.
@@ -315,9 +322,9 @@ Full text of any pre-2026-08-03 entry is in git history.
 - [x] `/settings/organization` — Org profile + security policies (MFA, email domain, concurrent sessions; absorbed `/settings/security` 2026-07-25)
 - [x] `/settings/roles` · `/settings/roles/[roleId]` · `/settings/roles/simulate` · `/settings/roles/audit` — Role editor with permission matrix + simulator
 - [x] `/settings/modules` · `/settings/module-access/[moduleKey]` — Module enablement (`settings:manage`) + per-module member access
-- [x] `/settings/[[...rest]]` — Catch-all: account profile + security, and the redirect targets for retired settings pages
+- [x] `/settings/[[...rest]]` — Account profile, MFA, active-session controls, and recent sign-ins; also catches retired settings URLs
 - [x] `/settings/api-tokens` — List/create/revoke/delete, one-time copy dialog, scope selector
-- [x] `/settings/devices` · `/settings/login-history` · `/settings/sessions` — Browser/OS via shared `parse-user-agent`
+- [x] `/settings/devices` · `/settings/login-history` · `/settings/sessions` — Retired 2026-08-05; security tools consolidated into Account Settings, and unused trusted-device controls removed
 - [x] `/settings/audit-log` · `/settings/webhooks` · `/settings/payments` · `/settings/connected-accounts` · `/settings/delegations` · `/settings/incoming-transfer`
 - [x] `/settings/subscription` — Redirects to `/billing?tab=plan`
 

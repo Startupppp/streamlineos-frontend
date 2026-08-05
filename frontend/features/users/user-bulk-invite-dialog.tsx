@@ -7,6 +7,7 @@ import { z } from "zod";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -33,8 +34,9 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { useBulkInviteUsers } from "@/hooks/api/users";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 import { USER_INVITE_ROLES } from "./user-invite-roles";
+import { cn } from "@/lib/utils";
 
 const bulkInviteSchema = z.object({
   emailsRaw: z
@@ -111,45 +113,102 @@ export function UserBulkInviteDialog({ open, onOpenChange }: UserBulkInviteDialo
     );
   }
 
+  const isSuccessView = result !== null;
+  const hasFailures = (result?.failed.length ?? 0) > 0;
+  const allFailed = isSuccessView && result.invited === 0 && hasFailures;
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Bulk Invite Users</DialogTitle>
+          <DialogTitle>
+            {isSuccessView
+              ? allFailed
+                ? "Invitations failed"
+                : hasFailures
+                  ? "Invitations partially sent"
+                  : "Invitations sent"
+              : "Bulk Invite Users"}
+          </DialogTitle>
+          {isSuccessView ? (
+            <DialogDescription className="sr-only">
+              Bulk invite result summary
+            </DialogDescription>
+          ) : null}
         </DialogHeader>
 
         {result ? (
-          <div className="space-y-4 py-2">
-            <div className="flex items-center gap-3 rounded-lg border border-green-200 dark:border-green-500/30 bg-green-50 dark:bg-green-500/10 px-4 py-3">
-              <CheckCircle2 className="h-5 w-5 shrink-0 text-green-600 dark:text-green-400" />
-              <p className="text-sm font-medium text-green-800 dark:text-green-300">
-                {result.invited} invitation{result.invited !== 1 ? "s" : ""} sent successfully
+          <div className="flex flex-col items-center gap-5 py-2">
+            <div
+              className={cn(
+                "flex size-14 items-center justify-center rounded-full",
+                allFailed
+                  ? "bg-destructive/10"
+                  : hasFailures
+                    ? "bg-amber-50 dark:bg-amber-500/10"
+                    : "bg-emerald-50 dark:bg-emerald-500/10",
+              )}
+            >
+              {allFailed ? (
+                <XCircle className="size-7 text-destructive" />
+              ) : hasFailures ? (
+                <AlertTriangle className="size-7 text-amber-600 dark:text-amber-400" />
+              ) : (
+                <CheckCircle2 className="size-7 text-emerald-600 dark:text-emerald-400" />
+              )}
+            </div>
+
+            <div className="w-full space-y-1.5 text-center">
+              <p className="text-base font-semibold text-foreground tabular-nums">
+                {result.invited > 0
+                  ? `${result.invited} invitation${result.invited !== 1 ? "s" : ""} sent`
+                  : "No invitations sent"}
+              </p>
+              <p className="text-sm text-muted-foreground text-pretty leading-relaxed">
+                {allFailed
+                  ? "None of the addresses could be invited. Review the failures below and try again."
+                  : hasFailures
+                    ? "Some invitations were sent. Review the addresses that could not be invited below."
+                    : "Each invitee will get an email with instructions to join your organization."}
               </p>
             </div>
-            {result.failed.length > 0 && (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <XCircle className="h-4 w-4 text-red-500" />
-                  <p className="text-sm font-medium text-red-700">
-                    {result.failed.length} failed to send:
-                  </p>
-                </div>
+
+            {hasFailures ? (
+              <div className="w-full rounded-lg border border-border bg-muted/40 px-3.5 py-3 text-left space-y-2">
+                <p className="text-xs font-medium text-foreground">
+                  {result.failed.length} could not be invited
+                </p>
                 <div className="flex flex-wrap gap-1.5">
                   {result.failed.map((email) => (
-                    <Badge key={email} variant="outline" className="text-red-600 dark:text-red-400 border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10 text-xs">
+                    <Badge
+                      key={email}
+                      variant="outline"
+                      className="text-xs text-destructive border-destructive/30 bg-destructive/5"
+                    >
                       {email}
                     </Badge>
                   ))}
                 </div>
               </div>
-            )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleResetResult}
-            >
-              Invite more
-            </Button>
+            ) : null}
+
+            <div className="flex w-full flex-col gap-2">
+              <Button
+                type="button"
+                className="h-10 w-full"
+                onClick={handleCloseDialog}
+              >
+                Done
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-10 w-full"
+                onClick={handleResetResult}
+              >
+                Invite more
+              </Button>
+            </div>
           </div>
         ) : (
           <Form {...form}>

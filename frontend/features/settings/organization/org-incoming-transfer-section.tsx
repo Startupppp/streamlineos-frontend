@@ -113,9 +113,9 @@ function TransferItemRow({
   }
 
   return (
-    <div className="flex flex-col gap-3 py-1 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-      <div className="min-w-0 space-y-1">
-        <p className="text-sm font-medium">{copy.heading}</p>
+    <div className="flex flex-col gap-4 py-1 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+      <div className="min-w-0 space-y-1.5">
+        <p className="text-sm font-medium leading-snug">{copy.heading}</p>
         <p className="text-xs text-muted-foreground leading-relaxed">
           {copy.consequence}
         </p>
@@ -127,18 +127,16 @@ function TransferItemRow({
             <Clock className="h-3 w-3" />
             Expires {expiresLabel}
           </Badge>
-          {transfer.reason && (
+          {transfer.reason ? (
             <span className="text-xs text-muted-foreground">
               Reason: {transfer.reason}
             </span>
-          )}
+          ) : null}
         </div>
       </div>
       <div className="flex items-center gap-2 shrink-0 [&_button]:flex-1 sm:[&_button]:flex-none">
         <LoadingButton
           variant="outline"
-          size="sm"
-          className="h-7 text-xs"
           isPending={isDeclinePending}
           onClick={handleDecline}
         >
@@ -146,8 +144,6 @@ function TransferItemRow({
         </LoadingButton>
         <LoadingButton
           variant="default"
-          size="sm"
-          className="h-7 text-xs"
           isPending={isAcceptPending}
           onClick={handleAccept}
         >
@@ -163,7 +159,13 @@ interface PendingAction {
   transfer: TransferRow;
 }
 
-export function OrgIncomingTransferSection() {
+interface OrgIncomingTransferSectionProps {
+  showTitle?: boolean;
+}
+
+export function OrgIncomingTransferSection({
+  showTitle = true,
+}: OrgIncomingTransferSectionProps) {
   const { data: incomingData } = useIncomingOrgTransfers();
 
   const transfers = (incomingData?.data ?? [])
@@ -241,8 +243,12 @@ export function OrgIncomingTransferSection() {
   return (
     <>
       <OrgSettingsCard
-        title="Incoming Ownership Transfer"
-        icon={<ArrowRightLeft className="h-3.5 w-3.5 shrink-0" />}
+        title={showTitle ? "Incoming Ownership Transfer" : undefined}
+        icon={
+          showTitle ? (
+            <ArrowRightLeft className="h-3.5 w-3.5 shrink-0" />
+          ) : undefined
+        }
         className="border-amber-300/60 dark:border-amber-700/50"
         titleClassName="text-amber-800 dark:text-amber-400"
         contentClassName="space-y-0 divide-y divide-border"

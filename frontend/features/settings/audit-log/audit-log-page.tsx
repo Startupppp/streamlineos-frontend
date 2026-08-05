@@ -5,7 +5,6 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ErrorState } from "@/components/shared/error-state";
-import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import {
@@ -35,7 +34,6 @@ export function AuditLogPage() {
   const router = useRouter();
   const pathname = usePathname();
   const [, startTransition] = useTransition();
-  const [goToPage, setGoToPage] = useState("");
   const [selectedLog, setSelectedLog] = useState<AuditLogRow | null>(null);
   const [userSearch, setUserSearch] = useState("");
 
@@ -73,7 +71,6 @@ export function AuditLogPage() {
   const { data: actions } = useAuditLogActions();
   const { data: targetTypes } = useAuditLogTargetTypes();
 
-  const totalPages = data?.totalPages ?? 1;
   const total = data?.total ?? 0;
 
   const filteredLogs = useMemo(() => {
@@ -112,25 +109,11 @@ export function AuditLogPage() {
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
   const handleRowClick = useCallback((log: AuditLogRow) => setSelectedLog(log), []);
   const handlePageSizeChange = useCallback(
-    (v: string) => updateParams({ size: v === "10" ? null : v, page: null }),
+    (size: number) =>
+      updateParams({ size: size === 15 ? null : String(size), page: null }),
     [updateParams],
   );
   const handleUserSearchChange = useCallback((value: string) => setUserSearch(value), []);
-  const handleGoToPageChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setGoToPage(e.target.value);
-  }, []);
-  const handleGoToPageKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "Enter") {
-        const num = parseInt(goToPage);
-        if (!isNaN(num) && num >= 1 && num <= totalPages) {
-          updateParams({ page: num === 1 ? null : String(num) });
-          setGoToPage("");
-        }
-      }
-    },
-    [goToPage, totalPages, updateParams],
-  );
   const handlePageChange = useCallback(
     (p: number) => updateParams({ page: p <= 1 ? null : String(p) }),
     [updateParams],
@@ -176,38 +159,6 @@ export function AuditLogPage() {
       </div>
     );
   }
-
-  const toolbar = (
-    <div className="flex items-center gap-3">
-      <div className="flex items-center gap-2">
-        <span className="text-[12px] text-muted-foreground">Rows per page</span>
-        <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
-          <SelectTrigger className={`w-[64px] text-xs ${FILTER_SELECT_TRIGGER}`}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-            {PAGE_SIZE_OPTIONS.map((s) => (
-              <SelectItem key={s} value={String(s)} className="text-xs">{s}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="hidden md:flex items-center gap-1.5">
-        <span className="text-[12px] text-muted-foreground">Go to</span>
-        <Input
-          type="number"
-          min={1}
-          max={totalPages}
-          value={goToPage}
-          onChange={handleGoToPageChange}
-          onKeyDown={handleGoToPageKeyDown}
-          placeholder="—"
-          className="w-14 text-xs text-center"
-          aria-label="Go to page"
-        />
-      </div>
-    </div>
-  );
 
   const emptyState = (
     <EmptyState
@@ -274,13 +225,14 @@ export function AuditLogPage() {
             getRowKey={(log) => log.id}
             onRowClick={handleRowClick}
             minWidth="700px"
-            toolbar={toolbar}
             pagination={{
               mode: "server",
               page,
               pageSize,
               total,
               onPageChange: handlePageChange,
+              onPageSizeChange: handlePageSizeChange,
+              pageSizeOptions: PAGE_SIZE_OPTIONS,
             }}
             emptyState={emptyState}
           />

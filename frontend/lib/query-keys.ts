@@ -1344,7 +1344,6 @@ export const queryKeys = {
   auth: {
     all: [...base, "auth"] as const,
     sessions: () => [...base, "auth", "sessions"] as const,
-    devices: () => [...base, "auth", "devices"] as const,
     loginHistory: (params?: Record<string, unknown>) =>
       [...base, "auth", "loginHistory", params] as const,
   },
@@ -1572,7 +1571,6 @@ export const queryKeys = {
     detail: (id: string) => [...base, "users", "detail", id] as const,
     sessions: (userId: string) =>
       [...base, "users", "sessions", userId] as const,
-    devices: (userId: string) => [...base, "users", "devices", userId] as const,
     preferences: (userId: string) =>
       [...base, "users", "preferences", userId] as const,
     stats: () => [...base, "users", "stats"] as const,

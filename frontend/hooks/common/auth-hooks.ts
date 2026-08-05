@@ -69,6 +69,17 @@ export function useAcceptInvitation() {
   });
 }
 
+export function useDeclineInvitation() {
+  return useMutation({
+    mutationKey: ["auth", "decline-invitation"],
+    mutationFn: (variables: { token: string }) =>
+      apiClient.post<{ ok: true }>(
+        "/organization/invitations/decline",
+        variables,
+      ),
+  });
+}
+
 export function useResendVerificationEmail() {
   return useMutation({
     mutationKey: ["auth", "resend-verification"],

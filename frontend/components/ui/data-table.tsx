@@ -59,6 +59,7 @@ type ServerPagination = {
   total: number;
   onPageChange: (page: number) => void;
   onPageSizeChange?: (pageSize: number) => void;
+  pageSizeOptions?: readonly number[];
 };
 
 export interface DataTableProps<T> {
@@ -271,7 +272,11 @@ export function DataTable<T>({
     : table.getPageCount();
   const totalItems = isServerPagination ? serverPag!.total : data.length;
   const pSize = isServerPagination ? serverPag!.pageSize : clientPageSize;
-  const showPagination = pagination !== undefined && totalPages > 1;
+  const hasPageSizeControl = !!(serverPag?.onPageSizeChange ?? clientPag?.onPageSizeChange);
+  const showPagination =
+    pagination !== undefined &&
+    totalItems > 0 &&
+    (totalPages > 1 || hasPageSizeControl);
 
   function handleSearchChange(value: string) {
     search?.onChange(value);
@@ -509,6 +514,7 @@ export function DataTable<T>({
             limit={pSize}
             onPageChange={handlePageChange}
             onLimitChange={serverPag?.onPageSizeChange ?? clientPag?.onPageSizeChange}
+            pageSizeOptions={serverPag?.pageSizeOptions}
           />
         </div>
       )}

@@ -35,18 +35,6 @@ interface UserSession {
   createdAt: string;
 }
 
-interface UserDevice {
-  id: string;
-  userId: string;
-  fingerprint: string;
-  browser: string | null;
-  os: string | null;
-  platform: string | null;
-  trusted: boolean;
-  lastSeenAt: string;
-  createdAt: string;
-}
-
 interface UserPreferences {
   userId: string;
   theme: string;
@@ -171,20 +159,6 @@ export const useUserSessions = (
   });
 };
 
-export const useUserDevices = (
-  userId: string,
-  options?: Omit<UseQueryOptions<UserDevice[], Error>, "queryKey" | "queryFn">
-) => {
-  const canManage = useCan("settings:organization:manage");
-  return useQuery<UserDevice[], Error>({
-    queryKey: queryKeys.users.devices(userId),
-    queryFn: () => apiClient.get<UserDevice[]>(`/users/${userId}/devices`),
-    staleTime: 30_000,
-    ...options,
-    enabled: !!userId && canManage && (options?.enabled ?? true),
-  });
-};
-
 export const useUserPreferences = (
   userId: string,
   options?: Omit<UseQueryOptions<UserPreferences, Error>, "queryKey" | "queryFn">
@@ -280,22 +254,6 @@ export const useRevokeAllSessions = () => {
       apiClient.delete<{ success: boolean }>(`/users/${userId}/sessions`),
     onSuccess: (_, userId) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.sessions(userId) });
-    },
-  });
-};
-
-export const useRemoveDevice = () => {
-  const queryClient = useQueryClient();
-  return useMutation<
-    { success: boolean },
-    Error,
-    { userId: string; deviceId: string }
-  >({
-    mutationKey: ["users", "remove-device"],
-    mutationFn: ({ userId, deviceId }) =>
-      apiClient.delete<{ success: boolean }>(`/users/${userId}/devices/${deviceId}`),
-    onSuccess: (_, { userId }) => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.users.devices(userId) });
     },
   });
 };
@@ -673,7 +631,6 @@ export type {
   UsersResponse,
   EmergencyContact,
   UserSession,
-  UserDevice,
   UserPreferences,
   UserStats,
   InvitationsResponse,

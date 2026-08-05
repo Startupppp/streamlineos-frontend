@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Monitor, Smartphone } from "lucide-react";
+import { LogIn, Monitor, Smartphone } from "lucide-react";
 import { Trash2Icon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useSessions, useRevokeSession, useRevokeAllSessions } from "@/hooks/api/hr";
@@ -13,6 +13,8 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Badge } from "@/components/ui/badge";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { formatClientDeviceLabel } from "@/lib/format-utils";
+import { useLoginHistory } from "@/hooks/api/auth";
+import { Skeleton } from "@/components/ui/skeleton";
 
 function getDeviceIcon(session: { os: string | null; platform: string | null }) {
   const label = `${session.os ?? ""} ${session.platform ?? ""}`.toLowerCase();
@@ -164,10 +166,84 @@ function SessionsSection() {
   );
 }
 
+type LoginEntry = NonNullable<ReturnType<typeof useLoginHistory>["data"]>["data"][number];
+
+function SignInRow({ entry }: { entry: LoginEntry }) {
+  const client = [entry.browser, entry.os].filter(Boolean).join(" on ");
+
+  return (
+    <div className="flex items-center gap-3 border-b border-border/60 py-3 last:border-0">
+      <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted">
+        <LogIn className="size-4 text-muted-foreground" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex min-w-0 items-center gap-2">
+          <p className="truncate text-[13px] font-medium text-foreground">
+            {client || "Unknown client"}
+          </p>
+          <Badge
+            variant="outline"
+            className={entry.success
+              ? "h-5 shrink-0 border-emerald-500/30 bg-emerald-500/10 px-2 text-[10px] text-emerald-700 dark:text-emerald-300"
+              : "h-5 shrink-0 border-destructive/30 bg-destructive/10 px-2 text-[10px] text-destructive"}
+          >
+            {entry.success ? "Successful" : "Failed"}
+          </Badge>
+        </div>
+        <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+          {entry.ipAddress ?? "IP unavailable"} · {formatDistanceToNow(new Date(entry.createdAt), { addSuffix: true })}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function RecentSignInsSection() {
+  const { data, isLoading, isError } = useLoginHistory({ page: 1, limit: 5 });
+  const entries = data?.data ?? [];
+
+  return (
+    <div className="space-y-4 rounded-lg border border-border bg-card p-5">
+      <div className="flex items-center gap-2.5">
+        <div className="flex size-8 items-center justify-center rounded-lg bg-muted">
+          <LogIn className="size-4 text-muted-foreground" />
+        </div>
+        <div>
+          <p className="text-[13px] font-semibold text-foreground">Recent sign-ins</p>
+          <p className="text-[11px] text-muted-foreground">
+            Review the latest successful and failed access attempts.
+          </p>
+        </div>
+      </div>
+
+      <div className="border-t border-border">
+        {isLoading ? (
+          <div className="space-y-3 pt-3">
+            {[1, 2, 3].map((row) => (
+              <Skeleton key={row} className="h-10 w-full" />
+            ))}
+          </div>
+        ) : isError ? (
+          <p className="py-4 text-center text-xs text-muted-foreground">
+            Recent sign-ins could not be loaded.
+          </p>
+        ) : entries.length === 0 ? (
+          <p className="py-4 text-center text-xs text-muted-foreground">
+            No sign-in activity has been recorded yet.
+          </p>
+        ) : (
+          entries.map((entry) => <SignInRow key={entry.id} entry={entry} />)
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function SettingsSecurity() {
   return (
     <div className="space-y-4">
       <SessionsSection />
+      <RecentSignInsSection />
     </div>
   );
 }

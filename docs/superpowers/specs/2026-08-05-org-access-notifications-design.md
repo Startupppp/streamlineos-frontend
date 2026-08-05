@@ -31,6 +31,17 @@ Invitation decline does not exist. The only decline routes in the backend are `s
 
 **Emails are free for members.** `NotificationEmailProvider.buildHtml` renders title/message/link through the shared branded base template. Any event with `EMAIL` in `defaultChannels` gets a proper mail with no new template file.
 
+## Email policy
+
+An event carries `EMAIL` only when it meets one of two tests. Everything else is in-app only — inbox noise devalues the mails that matter.
+
+1. **The recipient's access or rights change**, so they need a durable out-of-app record. This is the line the catalog already draws: `security.role.changed` is `IN_APP + EMAIL`, mandatory, `always_bypass`.
+2. **The recipient cannot be reached in-app at all** — not a member, or no longer an active one.
+
+Emails: transfer requested, transfer accepted, module owner changed, member reactivated, and the three direct sends (removed, suspended, invitation revoked).
+
+In-app only: transfer declined / cancelled / expired, invitation accepted / declined / expired, member joined / left. These are status updates to people already working in the product; none of them changes anyone's rights.
+
 **`filterOrgMemberIds` requires `status = 'ACTIVE'`** (`common/tenant/org-membership.ts:24`). A removed or suspended member is silently dropped by `dispatch.emit`. Their access-loss notice must be a direct email sent post-commit, not an engine event. Reactivation goes through the engine — the member is ACTIVE by then.
 
 **`sourceModule` is free text**, rendered as a badge; `category` drives icon/label with a `?? SYSTEM` fallback (`notification-card.tsx:106`). No frontend change is needed for new events to render.
@@ -45,8 +56,8 @@ Twelve entries in `notification-events.catalog.ts`, all `category: "SECURITY"`.
 |---|---|---|---|
 | `ownership.transfer.requested` | recipient | IN_APP + EMAIL | HIGH, mandatory, `always_bypass` |
 | `ownership.transfer.accepted` | initiator + org owner | IN_APP + EMAIL | HIGH, SUCCESS, mandatory |
-| `ownership.transfer.declined` | initiator | IN_APP + EMAIL | HIGH, WARNING |
-| `ownership.transfer.cancelled` | recipient | IN_APP + EMAIL | NORMAL, WARNING |
+| `ownership.transfer.declined` | initiator | IN_APP | HIGH, WARNING |
+| `ownership.transfer.cancelled` | recipient | IN_APP | NORMAL, WARNING |
 | `ownership.transfer.expired` | initiator + recipient | IN_APP | NORMAL, WARNING |
 | `ownership.module_owner.changed` | new owner + previous owner | IN_APP + EMAIL | HIGH |
 
@@ -54,17 +65,16 @@ Twelve entries in `notification-events.catalog.ts`, all `category: "SECURITY"`.
 
 | eventKey | recipients | channels |
 |---|---|---|
-| `organization.invitation.accepted` | inviter + org admins | IN_APP + EMAIL |
-| `organization.invitation.declined` | inviter + org admins | IN_APP + EMAIL |
+| `organization.invitation.accepted` | inviter + org admins | IN_APP |
+| `organization.invitation.declined` | inviter + org admins | IN_APP |
 | `organization.invitation.expired` | inviter | IN_APP |
 
 ### Membership — `sourceModule: "organization"`
 
 | eventKey | recipients | channels | flags |
 |---|---|---|---|
-| `organization.member.joined` | org admins | IN_APP | LOW |
 | `organization.member.reactivated` | affected member | IN_APP + EMAIL | HIGH, mandatory, `always_bypass` |
-| `organization.member.left` | org admins | IN_APP + EMAIL | NORMAL |
+| `organization.member.left` | org admins | IN_APP | NORMAL |
 
 Structural role changes reuse `security.role.changed` rather than adding a parallel key, so a role change notifies the member exactly once.
 
@@ -119,7 +129,7 @@ All other notification emails render through the engine.
 | `OwnershipTransfersService` | `requested` on both initiate paths; `expired` in `expireStaleTransfers` |
 | `OwnershipTransferResponseService` | `accepted`, `declined`, `cancelled` |
 | `OwnershipService` | `module_owner.changed` on `forceSetModuleOwner` |
-| `InvitationAcceptanceService` | `invitation.accepted` + `member.joined` on both accept branches; `invitation.declined` |
+| `InvitationAcceptanceService` | `invitation.accepted` on both accept branches; `invitation.declined` |
 | `InvitationsService` | direct revoked-email on `cancel`; `invitation.expired` in `expireStaleInvitations` |
 | `OrgMembershipService` | `member.reactivated` on reactivate; `security.role.changed` on `updateMemberRole`; `member.left` on `leaveOrg`; direct email on remove and suspend |
 

@@ -4,18 +4,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
-interface DeviceData {
-  id: string;
-  userId: string;
-  fingerprint: string;
-  browser: string | null;
-  os: string | null;
-  platform: string | null;
-  trusted: boolean;
-  lastSeenAt: string;
-  createdAt: string;
-}
-
 interface LoginHistoryEntry {
   id: string;
   userId: string;
@@ -47,34 +35,6 @@ export function useUpdateMyProfile() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.hr.employees() });
     },
-  });
-}
-
-export function useDevices() {
-  return useQuery({
-    queryKey: queryKeys.auth.devices(),
-    queryFn: () => apiClient.get<DeviceData[]>("/me/devices"),
-    staleTime: 60_000,
-  });
-}
-
-export function useTrustDevice() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["trust", "device"],
-    mutationFn: (deviceId: string) =>
-      apiClient.post<{ message: string }>(`/me/devices/${deviceId}/trust`, {}),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.auth.devices() }),
-  });
-}
-
-export function useRemoveDevice() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["remove", "device"],
-    mutationFn: (deviceId: string) =>
-      apiClient.delete<{ message: string }>(`/me/devices/${deviceId}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.auth.devices() }),
   });
 }
 
