@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   usePaymentCatalog,
@@ -16,7 +17,15 @@ import { ProviderDetail } from "@/features/payments/components/provider-detail";
 import { ReadinessRail } from "@/features/payments/components/readiness-rail";
 import { ManualMethodsPanel } from "@/features/payments/components/manual-methods-panel";
 
-export default function PaymentsSettingsPage() {
+export default function PaymentProvidersSettingsPage() {
+  return (
+    <DashboardGate permission="payments:providers:view">
+      <PaymentProvidersContent />
+    </DashboardGate>
+  );
+}
+
+function PaymentProvidersContent() {
   const { data: catalog, isLoading: catalogLoading } = usePaymentCatalog();
   const { data: providers, isLoading: providersLoading } = usePaymentProviders();
   const createProvider = useCreatePaymentProvider();
@@ -25,7 +34,7 @@ export default function PaymentsSettingsPage() {
   const [environment, setEnvironment] = useState<PaymentEnvironment>("test");
 
   const selectedProvider = useMemo(
-    () => providers?.find((p) => p.providerKey === selectedKey),
+    () => providers?.find((provider) => provider.providerKey === selectedKey),
     [providers, selectedKey],
   );
 
@@ -35,7 +44,7 @@ export default function PaymentsSettingsPage() {
         setSelectedKey(providerKey);
         toast.success("Provider connected — add test credentials to get started");
       },
-      onError: (err) => toast.error(getErrorMessage(err)),
+      onError: (error) => toast.error(getErrorMessage(error)),
     });
   }
 
@@ -43,15 +52,15 @@ export default function PaymentsSettingsPage() {
 
   return (
     <PageWrapper
-      title="Payments"
-      subtitle="Accept online payments, record offline payments, and keep invoices/subscriptions in sync."
+      title="Payment Providers"
+      subtitle="Configure how your organization accepts and records payments."
       actions={
         <div className="flex items-center rounded-lg border border-border bg-muted/40 p-0.5">
           <button
             type="button"
             onClick={() => setEnvironment("test")}
-            className={`h-7 px-3 rounded-md text-xs font-medium transition-colors ${
-              environment === "test" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"
+            className={`h-7 rounded-md px-3 text-xs font-medium transition-colors ${
+              environment === "test" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
             }`}
           >
             Test
@@ -59,8 +68,8 @@ export default function PaymentsSettingsPage() {
           <button
             type="button"
             onClick={() => setEnvironment("live")}
-            className={`h-7 px-3 rounded-md text-xs font-medium transition-colors ${
-              environment === "live" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"
+            className={`h-7 rounded-md px-3 text-xs font-medium transition-colors ${
+              environment === "live" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
             }`}
           >
             Live
@@ -68,18 +77,18 @@ export default function PaymentsSettingsPage() {
         </div>
       }
     >
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_280px]">
         <div className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             {isLoading
-              ? Array.from({ length: 12 }).map((_, i) => (
-                  <Skeleton key={i} className="h-28 rounded-xl border border-border bg-card" />
+              ? Array.from({ length: 12 }).map((_, index) => (
+                  <Skeleton key={index} className="h-28 rounded-xl border border-border bg-card" />
                 ))
               : catalog?.map((entry) => (
                   <ProviderCard
                     key={entry.key}
                     catalogEntry={entry}
-                    provider={providers?.find((p) => p.providerKey === entry.key)}
+                    provider={providers?.find((provider) => provider.providerKey === entry.key)}
                     selected={selectedKey === entry.key}
                     onSelect={() => setSelectedKey(entry.key)}
                     onConnect={() => handleConnect(entry.key)}
@@ -97,7 +106,7 @@ export default function PaymentsSettingsPage() {
           ) : (
             <div className="rounded-xl border border-dashed border-border p-8 text-center">
               <p className="text-sm text-muted-foreground">
-                Connect a provider above to configure credentials, webhooks, and test payments.
+                Select a configured provider or connect a new provider to continue.
               </p>
             </div>
           )}

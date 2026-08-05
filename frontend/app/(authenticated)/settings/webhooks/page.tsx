@@ -192,6 +192,8 @@ export default function WebhooksPage() {
     <PageWrapper
       title="Webhooks"
       subtitle="Send real-time events to external systems when actions occur in your organization."
+      noInternalScroll
+      contentClassName="pb-0"
       actions={
         <AnimatedIconButton icon={PlusIcon} iconSize={16} iconClassName="mr-2" onClick={handleOpenCreate}>
           Add Webhook
@@ -209,28 +211,30 @@ export default function WebhooksPage() {
           onRetry={handleRetry}
           className="flex-1"
         />
+      ) : !webhooks || webhooks.length === 0 ? (
+        <EmptyState
+          illustration={<EmptyDevicesIllustration />}
+          title="No webhooks configured"
+          description="Webhooks let external services receive real-time notifications when events happen in your organization."
+          action={{ label: "Add Webhook", onClick: handleOpenCreate }}
+          className="min-h-0 flex-1"
+        />
       ) : (
-        <motion.div className="space-y-4" variants={staggerContainer} initial="hidden" animate="visible">
-          {(!webhooks || webhooks.length === 0) ? (
-            <motion.div variants={fadeUp} className="flex flex-1">
-              <EmptyState
-                illustration={<EmptyDevicesIllustration />}
-                title="No webhooks configured"
-                description="Webhooks let external services receive real-time notifications when events happen in your organization."
-                action={{ label: "Add Webhook", onClick: handleOpenCreate }}
-              />
-            </motion.div>
-          ) : (
-            webhooks.map((wh) => (
-              <WebhookCard
-                key={wh.id}
-                webhook={wh}
-                onCopyUrl={copyUrl}
-                onToggle={handleToggle}
-                onDelete={setDeleteId}
-              />
-            ))
-          )}
+        <motion.div
+          className="min-h-0 flex-1 space-y-4 overflow-y-auto"
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
+        >
+          {webhooks.map((wh) => (
+            <WebhookCard
+              key={wh.id}
+              webhook={wh}
+              onCopyUrl={copyUrl}
+              onToggle={handleToggle}
+              onDelete={setDeleteId}
+            />
+          ))}
         </motion.div>
       )}
 

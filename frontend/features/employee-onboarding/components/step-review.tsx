@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, type ReactNode } from "react";
 import {
-  Check,
   ClipboardCheck,
   LayoutDashboard,
   Send,
@@ -21,12 +20,19 @@ import {
 } from "@/lib/api/hooks/onboarding";
 import { personalInfoSchema } from "@/lib/location/personal-info-validation";
 import { CompletionCelebration } from "@/components/celebration/completion-celebration";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { useOnboardingRequirements } from "../hooks/use-onboarding-requirements";
 import { buildBankDetailsSchema } from "../lib/bank-details-schema";
 import { countryNameToCode } from "../lib/onboarding-requirements-schema";
-import { DATA_STEP_IDS, STEP_TITLES, type StepId } from "../lib/constants";
+import { DATA_STEP_IDS } from "../lib/constants";
 import type { WizardDraft } from "../lib/wizard-draft-schema";
+import {
+  formatAddressBlock,
+  formatPreviewDate,
+  formatPreviewGender,
+  maskAccountNumber,
+  toPreviewSnapshot,
+} from "../lib/preview-snapshot";
 import { NavButtons } from "./nav-buttons";
 import { StepBody } from "./step-body";
 
@@ -65,9 +71,54 @@ type StepReviewProps = {
   completedSteps: ReadonlySet<string>;
   draft: WizardDraft;
   onBack: () => void;
+  onEditPersonal: () => void;
+  onEditBank: () => void;
 };
 
-export function StepReview({ completedSteps, draft, onBack }: StepReviewProps) {
+function ReviewRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="grid gap-0.5 py-2 sm:grid-cols-[9rem_minmax(0,1fr)] sm:gap-3">
+      <dt className="text-xs text-muted-foreground">{label}</dt>
+      <dd className="break-words text-sm text-foreground">{value || "Not provided"}</dd>
+    </div>
+  );
+}
+
+function ReviewSection({
+  title,
+  onEdit,
+  children,
+}: {
+  title: string;
+  onEdit: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <section className="overflow-hidden rounded-lg border border-border bg-card">
+      <div className="flex items-center justify-between gap-3 border-b border-border bg-muted/20 px-4 py-2.5">
+        <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+        <Button type="button" variant="outline" size="sm" onClick={onEdit}>
+          Edit
+        </Button>
+      </div>
+      <dl className="divide-y divide-border/60 px-4">{children}</dl>
+    </section>
+  );
+}
+
+function maskSensitiveValue(value: string): string {
+  const compact = value.replace(/\s+/g, "");
+  if (compact.length <= 4) return compact;
+  return `•••• ${compact.slice(-4)}`;
+}
+
+export function StepReview({
+  completedSteps,
+  draft,
+  onBack,
+  onEditPersonal,
+  onEditBank,
+}: StepReviewProps) {
   const { data: session, update } = useSession();
   const countryCode =
     draft.bank.countryCode || countryNameToCode(draft.personal.addressCountry);
@@ -84,6 +135,26 @@ export function StepReview({ completedSteps, draft, onBack }: StepReviewProps) {
   const allDataStepsComplete = DATA_STEP_IDS.every((id) =>
     completedSteps.has(id),
   );
+  const snapshot = toPreviewSnapshot(draft, {
+    displayName: session?.user?.name ?? "",
+    email: session?.user?.email ?? "",
+    roleLabel,
+  });
+  const address = formatAddressBlock(snapshot);
+  const emergencyContact = [
+    draft.personal.emergencyName,
+    draft.personal.emergencyRelation,
+    draft.personal.emergencyPhone,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  const bankCode = draft.bank.iban || draft.bank.routingCode || draft.bank.swift;
+  const statutoryRows = requirements?.statutoryFields
+    .map((field) => ({
+      label: field.label,
+      value: maskSensitiveValue(draft.bank.statutory[field.key] ?? ""),
+    }))
+    .filter((row) => row.value) ?? [];
 
   const goToDashboard = useCallback(() => {
     if (isContinuing) return;
@@ -155,7 +226,7 @@ export function StepReview({ completedSteps, draft, onBack }: StepReviewProps) {
           <NavButtons
             onBack={onBack}
             onNext={handleSubmit}
-            nextLabel="Submit to HR"
+            nextLabel="Confirm & submit"
             nextIcon={SendIcon}
             nextDisabled={!allDataStepsComplete}
             isPending={isSubmitting}
@@ -181,64 +252,42 @@ export function StepReview({ completedSteps, draft, onBack }: StepReviewProps) {
             </div>
           </div>
 
-          <ul className="space-y-2">
-            {DATA_STEP_IDS.map((stepId: StepId) => {
-              const isCompleted = completedSteps.has(stepId);
-              return (
-                <li
-                  key={stepId}
-                  className={cn(
-                    "flex items-center gap-3 rounded-xl border px-3 py-2.5",
-                    isCompleted
-                      ? "border-emerald-500/25 bg-emerald-500/10 dark:border-emerald-500/30 dark:bg-emerald-500/10"
-                      : "border-border/70 bg-muted/30",
-                  )}
-                >
-                  {isCompleted ? (
-                    <Check
-                      className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400"
-                      aria-hidden
-                    />
-                  ) : (
-                    <span
-                      className="h-4 w-4 shrink-0 rounded-full border border-border"
-                      aria-hidden
-                    />
-                  )}
-                  <span
-                    className={cn(
-                      "text-sm font-medium",
-                      isCompleted
-                        ? "text-emerald-700 dark:text-emerald-300"
-                        : "text-muted-foreground",
-                    )}
-                  >
-                    {STEP_TITLES[stepId]}
-                  </span>
-                  <span
-                    className={cn(
-                      "ml-auto text-xs",
-                      isCompleted
-                        ? "text-emerald-600 dark:text-emerald-400"
-                        : "text-muted-foreground",
-                    )}
-                  >
-                    {isCompleted ? "Completed" : "Pending"}
-                  </span>
-                </li>
-              );
-            })}
+          <ReviewSection title="Personal details" onEdit={onEditPersonal}>
+            <ReviewRow label="Phone" value={draft.personal.phone} />
+            <ReviewRow
+              label="Date of birth"
+              value={formatPreviewDate(draft.personal.dateOfBirth)}
+            />
+            <ReviewRow
+              label="Gender"
+              value={formatPreviewGender(draft.personal.gender)}
+            />
+            <ReviewRow label="Home address" value={address} />
+            <ReviewRow label="Emergency contact" value={emergencyContact} />
+          </ReviewSection>
 
-            <li className="flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2.5">
-              <Shield className="h-4 w-4 shrink-0 text-primary" aria-hidden />
-              <span className="text-sm font-medium text-foreground">
-                Role: {roleLabel}
-              </span>
-              <span className="ml-auto text-xs text-muted-foreground">
-                Assigned
-              </span>
-            </li>
-          </ul>
+          <ReviewSection title="Bank and statutory details" onEdit={onEditBank}>
+            <ReviewRow label="Account holder" value={draft.bank.accountHolder} />
+            <ReviewRow label="Bank" value={draft.bank.bankName} />
+            <ReviewRow
+              label="Account number"
+              value={maskAccountNumber(draft.bank.accountNumber)}
+            />
+            <ReviewRow
+              label={snapshot.bankCodeLabel}
+              value={bankCode}
+            />
+            {statutoryRows.map((row) => (
+              <ReviewRow key={row.label} label={row.label} value={row.value} />
+            ))}
+          </ReviewSection>
+
+          <div className="flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2.5">
+            <Shield className="h-4 w-4 shrink-0 text-primary" aria-hidden />
+            <span className="text-sm font-medium text-foreground">
+              Assigned role: {roleLabel}
+            </span>
+          </div>
 
           {!allDataStepsComplete ? (
             <p id="review-hint" className="text-xs text-muted-foreground">

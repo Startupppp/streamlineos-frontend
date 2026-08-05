@@ -11,6 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { SearchInput } from "@/components/ui/search-input";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Sheet,
   SheetBody,
@@ -45,6 +46,16 @@ interface GrantDelegationSheetProps {
   members: Member[];
 }
 
+function toDatePart(value: string): string {
+  if (!value) return "";
+  return value.slice(0, 10);
+}
+
+function withDefaultTime(date: string, time: string): string {
+  if (!date) return "";
+  return `${date}T${time}`;
+}
+
 export function GrantDelegationSheet({
   open,
   onOpenChange,
@@ -73,6 +84,8 @@ export function GrantDelegationSheet({
 
   const delegateeId = watch("delegateeId");
   const selectedPerms = watch("permissions");
+  const startsAt = watch("startsAt");
+  const endsAt = watch("endsAt");
 
   const mutation = useMutation({
     mutationFn: (values: DelegationFormValues) =>
@@ -94,6 +107,24 @@ export function GrantDelegationSheet({
 
   const handleDelegateeChange = useCallback(
     (v: string) => setValue("delegateeId", v, { shouldValidate: true }),
+    [setValue],
+  );
+
+  const handleStartsAtChange = useCallback(
+    (date: string) => {
+      setValue("startsAt", withDefaultTime(date, "00:00"), {
+        shouldValidate: true,
+      });
+    },
+    [setValue],
+  );
+
+  const handleEndsAtChange = useCallback(
+    (date: string) => {
+      setValue("endsAt", withDefaultTime(date, "23:59"), {
+        shouldValidate: true,
+      });
+    },
     [setValue],
   );
 
@@ -142,7 +173,10 @@ export function GrantDelegationSheet({
     [permissionCatalog, permSearch],
   );
 
-  const today = new Date().toISOString().slice(0, 16);
+  const endsFromDate = useMemo(() => {
+    const start = toDatePart(startsAt);
+    return start ? new Date(`${start}T00:00:00`) : undefined;
+  }, [startsAt]);
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
@@ -226,16 +260,18 @@ export function GrantDelegationSheet({
             </div>
 
             <div className="grid grid-cols-2 gap-3 shrink-0">
-              <div className="space-y-1.5">
+              <div className="min-w-0 space-y-1.5">
                 <Label htmlFor="del-start" className="text-xs">
                   Starts at
                 </Label>
-                <Input
+                <DatePicker
                   id="del-start"
-                  type="datetime-local"
-                  min={today}
-                  aria-invalid={Boolean(errors.startsAt)}
-                  {...register("startsAt")}
+                  value={toDatePart(startsAt)}
+                  onChange={handleStartsAtChange}
+                  placeholder="Start date"
+                  disablePast
+                  dateFormat="MMM d, yyyy"
+                  className="w-full text-xs"
                 />
                 {errors.startsAt && (
                   <p className="text-xs text-destructive">
@@ -243,16 +279,19 @@ export function GrantDelegationSheet({
                   </p>
                 )}
               </div>
-              <div className="space-y-1.5">
+              <div className="min-w-0 space-y-1.5">
                 <Label htmlFor="del-end" className="text-xs">
                   Ends at
                 </Label>
-                <Input
+                <DatePicker
                   id="del-end"
-                  type="datetime-local"
-                  min={today}
-                  aria-invalid={Boolean(errors.endsAt)}
-                  {...register("endsAt")}
+                  value={toDatePart(endsAt)}
+                  onChange={handleEndsAtChange}
+                  placeholder="End date"
+                  disablePast
+                  fromDate={endsFromDate}
+                  dateFormat="MMM d, yyyy"
+                  className="w-full text-xs"
                 />
                 {errors.endsAt && (
                   <p className="text-xs text-destructive">

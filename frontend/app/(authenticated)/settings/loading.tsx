@@ -1,0 +1,38 @@
+import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+
+export default function SettingsLoading() {
+  return (
+    <PageWrapper title="Account Settings" subtitle="Manage your profile and security.">
+      <div className="space-y-8">
+        <section>
+          <div className="mb-4 space-y-1">
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-3 w-64" />
+          </div>
+          <div className="space-y-4">
+            <div className="flex items-center gap-4">
+              <Skeleton className="h-16 w-16 shrink-0 rounded-full" />
+              <div className="space-y-2">
+                <Skeleton className="h-8 w-32 rounded-md" />
+                <Skeleton className="h-3 w-40" />
+              </div>
+            </div>
+            <Skeleton className="h-9 w-full rounded-md" />
+            <Skeleton className="h-9 w-32 rounded-md" />
+          </div>
+        </section>
+
+        <Separator />
+
+        <section className="space-y-4">
+          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-9 w-full rounded-md" />
+          <Skeleton className="h-9 w-full rounded-md" />
+          <Skeleton className="h-9 w-36 rounded-md" />
+        </section>
+      </div>
+    </PageWrapper>
+  );
+}

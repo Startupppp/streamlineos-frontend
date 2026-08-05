@@ -6,15 +6,12 @@ import { usePathname } from "next/navigation";
 import { usePermissions } from "@/lib/rbac/hooks";
 import { useAccess } from "@/hooks/api/access";
 import { useEnabledModules } from "@/hooks/api/access/org-modules";
-import { useCan } from "@/hooks/api/access";
-import { useModuleChecklist } from "@/hooks/api/onboarding-flow";
 import {
   getNavGroupsForProduct,
   shouldHideProductSidebar,
   getProductFromPathname,
   isKnowledgeWikiPath,
   isPortalChromelessPath,
-  withoutHrSetupRoute,
   type NavGroup,
   type ProductKey,
 } from "./sidebar-nav-items";
@@ -30,8 +27,6 @@ export function useProductSidebarVisibility(): {
   const { permissions } = usePermissions();
   const { data: access } = useAccess();
   const enabledModules = useEnabledModules();
-  const canViewHr = useCan("hr:employees:view");
-  const { data: hrChecklist } = useModuleChecklist("HR", canViewHr);
 
   const isOrgOwner =
     access?.isOrgOwner === true;
@@ -39,18 +34,14 @@ export function useProductSidebarVisibility(): {
 
   const activeProduct = getProductFromPathname(pathname);
 
-  const hideHrSetup =
-    hrChecklist?.status === "completed" || Boolean(hrChecklist?.dismissedAt);
-
   const navGroups = useMemo(() => {
-    const groups = getNavGroupsForProduct(
+    return getNavGroupsForProduct(
       activeProduct,
       effectiveRole,
       permissions,
       enabledModules,
     );
-    return hideHrSetup ? withoutHrSetupRoute(groups) : groups;
-  }, [activeProduct, effectiveRole, permissions, enabledModules, hideHrSetup]);
+  }, [activeProduct, effectiveRole, permissions, enabledModules]);
 
   const hideSidebar =
     status !== "loading" &&

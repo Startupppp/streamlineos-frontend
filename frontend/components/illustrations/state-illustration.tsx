@@ -84,7 +84,7 @@ const PRESET_TO_ILLUSTRATION: Record<StateIllustrationPreset, IllustrationName> 
 
 export function StateIllustration({
   preset = "default",
-  className = "h-28 w-28",
+  className = "h-40 w-40",
 }: {
   preset?: StateIllustrationPreset;
   className?: string;

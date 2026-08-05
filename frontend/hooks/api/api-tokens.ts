@@ -30,8 +30,7 @@ interface ApiTokenPage {
 export interface CreateApiTokenInput {
   name: string;
   description?: string;
-  scopes?: string[];
-  expiresAt?: string;
+  expiresAt: string;
 }
 
 export interface CreateApiTokenResponse {
@@ -66,18 +65,6 @@ export function useRevokeApiToken() {
     mutationKey: ["revoke", "api", "token"],
     mutationFn: (tokenId: string) =>
       apiClient.patch<{ success: boolean }>(`/api-tokens/${tokenId}/revoke`),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.apiTokens.all });
-    },
-  });
-}
-
-export function useDeleteApiToken() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["delete", "api", "token"],
-    mutationFn: (tokenId: string) =>
-      apiClient.delete<void>(`/api-tokens/${tokenId}`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.apiTokens.all });
     },

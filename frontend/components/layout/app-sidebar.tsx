@@ -15,7 +15,6 @@ import {
   getProductFromPathname,
   flattenNavRoutes,
   isModuleEnabled,
-  withoutHrSetupRoute,
   MODULE_ACCENTS,
   type ModuleAccent,
 } from "./sidebar/sidebar-nav-items";
@@ -26,7 +25,6 @@ import { ProductSwitcherMenu } from "./header/product-switcher-menu";
 import { usePermissions } from "@/lib/rbac/hooks";
 import { useAccess, useCan } from "@/hooks/api/access";
 import { useEnabledModules } from "@/hooks/api/access/org-modules";
-import { useModuleChecklist } from "@/hooks/api/onboarding-flow";
 
 interface AppSidebarProps {
   isCollapsed?: boolean;
@@ -98,23 +96,18 @@ export function AppSidebar({
 
   const { permissions } = usePermissions();
   const canApproveLeaves = useCan("hr:leaves:approve");
-  const canViewHr = useCan("hr:employees:view");
   const canReadChat = useCan("chat:channels:read");
   const enabledModules = useEnabledModules();
   const isHrModuleEnabled = isModuleEnabled("hrms", enabledModules);
-  const { data: hrChecklist } = useModuleChecklist("HR", canViewHr);
-  const hideHrSetup =
-    hrChecklist?.status === "completed" || Boolean(hrChecklist?.dismissedAt);
 
   const navGroups = useMemo(() => {
-    const groups = getNavGroupsForProduct(
+    return getNavGroupsForProduct(
       activeProduct,
       effectiveRole,
       permissions,
       enabledModules,
     );
-    return hideHrSetup ? withoutHrSetupRoute(groups) : groups;
-  }, [activeProduct, effectiveRole, permissions, enabledModules, hideHrSetup]);
+  }, [activeProduct, effectiveRole, permissions, enabledModules]);
 
   const activeGroupLabel = useMemo(() => {
     for (const group of navGroups) {

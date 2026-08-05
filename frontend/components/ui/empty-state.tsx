@@ -57,8 +57,8 @@ function ActionButton({
 }
 
 const ILLUSTRATION_BOX_CLASS: Record<"sm" | "md", string> = {
-  sm: "mb-2 h-20 w-20",
-  md: "mb-5 h-28 w-28",
+  sm: "mb-2 h-24 w-24",
+  md: "mb-5 h-40 w-40",
 };
 
 export function EmptyState({

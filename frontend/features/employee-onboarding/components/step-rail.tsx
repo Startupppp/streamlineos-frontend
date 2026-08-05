@@ -14,7 +14,7 @@ type StepRailProps = {
   sequence: readonly StepId[];
   currentIndex: number;
   completedSteps: ReadonlySet<string>;
-  saveState: "idle" | "saved";
+  saveState: "idle" | "saving" | "saved" | "error";
   reachableSteps: ReadonlySet<string>;
   onStepSelect?: (index: number) => void;
 };
@@ -110,10 +110,20 @@ function StepRailInner({
           className="flex min-h-4 items-center gap-1.5 text-[11px] text-muted-foreground"
           aria-live="polite"
         >
-          {saveState === "saved" ? (
+          {saveState === "saving" ? (
+            <>
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-muted-foreground" />
+              Saving…
+            </>
+          ) : saveState === "saved" ? (
             <>
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
               Saved
+            </>
+          ) : saveState === "error" ? (
+            <>
+              <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
+              Not saved
             </>
           ) : null}
         </motion.p>

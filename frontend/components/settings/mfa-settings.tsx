@@ -87,45 +87,49 @@ export function MfaSettings() {
     <>
       <Card>
         <CardHeader className="px-4 py-3">
-          <div className="flex items-center gap-2">
-            {isEnabled ? (
-              <ShieldCheck className="h-4 w-4 text-green-500 dark:text-green-400" />
-            ) : (
-              <Shield className="h-4 w-4 text-muted-foreground" />
-            )}
-            <CardTitle className="text-sm font-semibold">Two-Factor Authentication</CardTitle>
-            {isEnabled && (
-              <Badge variant="secondary" className="ml-auto text-xs bg-green-500/10 text-green-600 border-green-500/20">
-                Enabled
-              </Badge>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+            <div className="min-w-0 space-y-1">
+              <div className="flex items-center gap-2">
+                {isEnabled ? (
+                  <ShieldCheck className="h-4 w-4 shrink-0 text-green-500 dark:text-green-400" />
+                ) : (
+                  <Shield className="h-4 w-4 shrink-0 text-muted-foreground" />
+                )}
+                <CardTitle className="text-sm font-semibold">Two-Factor Authentication</CardTitle>
+                {isEnabled && (
+                  <Badge variant="secondary" className="text-xs bg-green-500/10 text-green-600 border-green-500/20">
+                    Enabled
+                  </Badge>
+                )}
+              </div>
+              <CardDescription className="text-xs">
+                Add an extra layer of security using a TOTP authenticator app like Google Authenticator.
+              </CardDescription>
+            </div>
+            {step === "idle" && (
+              <div className="shrink-0 sm:pt-0.5 [&_button]:w-full sm:[&_button]:w-auto">
+                {isEnabled ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => { setStep("disable"); setToken(""); }}
+                    className="text-destructive border-destructive/30 hover:bg-destructive/10"
+                  >
+                    <ShieldOff className="h-3.5 w-3.5 mr-1.5" />
+                    Disable MFA
+                  </Button>
+                ) : (
+                  <Button size="sm" onClick={handleSetup} disabled={setup.isPending}>
+                    <Shield className="h-3.5 w-3.5 mr-1.5" />
+                    Enable MFA
+                  </Button>
+                )}
+              </div>
             )}
           </div>
-          <CardDescription className="text-xs">
-            Add an extra layer of security using a TOTP authenticator app like Google Authenticator.
-          </CardDescription>
         </CardHeader>
+        {step !== "idle" && (
         <CardContent className="px-4 pb-4 space-y-4">
-          {step === "idle" && (
-            <div className="flex gap-2">
-              {isEnabled ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => { setStep("disable"); setToken(""); }}
-                  className="text-destructive border-destructive/30 hover:bg-destructive/10"
-                >
-                  <ShieldOff className="h-3.5 w-3.5 mr-1.5" />
-                  Disable MFA
-                </Button>
-              ) : (
-                <Button size="sm" onClick={handleSetup} disabled={setup.isPending}>
-                  <Shield className="h-3.5 w-3.5 mr-1.5" />
-                  Enable MFA
-                </Button>
-              )}
-            </div>
-          )}
-
           {step === "setup" && qrData && (
             <div className="space-y-4">
               <div>
@@ -191,6 +195,7 @@ export function MfaSettings() {
             </div>
           )}
         </CardContent>
+        )}
       </Card>
 
       <Dialog open={showBackupModal} onOpenChange={setShowBackupModal}>

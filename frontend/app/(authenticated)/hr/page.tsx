@@ -49,7 +49,6 @@ import {
 import { HrEmployeeTable } from "@/features/hr/employees/hr-employee-table";
 import { SearchInput } from "@/components/ui/search-input";
 import { HrDashboardOverview, HrDashboardWidgets } from "@/features/hr/hr-dashboard-overview";
-import { HrSetupProgressCard } from "@/features/hr/setup/hr-setup-progress-card";
 import {
   HrHero,
   HrPageContent,
@@ -380,8 +379,6 @@ export default function HRDashboardPage() {
         </div>
 
         <HrDashboardWidgets />
-
-        <HrSetupProgressCard />
       </HrPageContent>
     </PageWrapper>
   );

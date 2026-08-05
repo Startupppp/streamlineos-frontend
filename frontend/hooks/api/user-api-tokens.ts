@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import type { Permission } from "@/lib/rbac/permissions";
 
 export interface UserApiToken {
   id: string;
@@ -18,7 +19,7 @@ export interface UserApiToken {
 export interface CreateUserApiTokenInput {
   name: string;
   scopes: string[];
-  expiresAt?: string;
+  expiresAt: string;
 }
 
 export interface CreateUserApiTokenResponse extends UserApiToken {
@@ -30,6 +31,15 @@ export function useUserApiTokens() {
     queryKey: queryKeys.userApiTokens.list(),
     queryFn: () => apiClient.get<UserApiToken[]>("/me/api-tokens"),
     staleTime: 30_000,
+  });
+}
+
+export function useGrantableUserApiTokenPermissions() {
+  return useQuery({
+    queryKey: queryKeys.userApiTokens.permissions(),
+    queryFn: () =>
+      apiClient.get<Permission[]>("/me/api-tokens/permissions"),
+    staleTime: 5 * 60_000,
   });
 }
 

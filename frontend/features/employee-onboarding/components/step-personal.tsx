@@ -4,6 +4,7 @@ import { useEffect, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { isSupportedCountry } from "react-phone-number-input";
+import { Info } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PhoneInput } from "@/components/ui/phone-input";
@@ -15,7 +16,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "sonner";
 import {
   ALL_COUNTRIES,
   EMERGENCY_RELATIONSHIPS,
@@ -43,6 +43,7 @@ type StepPersonalProps = {
   onDraftChange?: (values: PersonalDraft) => void;
   onClear?: () => void;
   defaultValues?: PersonalDraft;
+  hasPrefilledData?: boolean;
 };
 
 function toPersonalDraft(values: PersonalInfoFormValues): PersonalDraft {
@@ -66,6 +67,7 @@ export function StepPersonal({
   onDraftChange,
   onClear,
   defaultValues,
+  hasPrefilledData = false,
 }: StepPersonalProps) {
   const formDefaults = personalDraftToFormDefaults(
     defaultValues ?? EMPTY_PERSONAL_DRAFT,
@@ -162,7 +164,6 @@ export function StepPersonal({
   }
 
   function handleFormSubmit(values: PersonalInfoFormValues) {
-    toast.success("Personal details saved");
     onComplete(toPersonalDraft(values));
   }
 
@@ -186,6 +187,18 @@ export function StepPersonal({
           />
         }
       >
+        {hasPrefilledData ? (
+          <div className="flex items-start gap-2.5 rounded-lg border border-border bg-muted/30 p-3">
+            <Info className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
+            <div>
+              <p className="text-sm font-medium text-foreground">Details provided by HR</p>
+              <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
+                Review the prefilled information, complete any missing fields, and change anything that is incorrect.
+              </p>
+            </div>
+          </div>
+        ) : null}
+
         <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label htmlFor="phone">Phone number</Label>

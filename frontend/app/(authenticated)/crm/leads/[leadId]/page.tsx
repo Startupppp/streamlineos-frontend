@@ -4,8 +4,6 @@ import { use, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Mail } from "lucide-react";
-import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -344,23 +342,6 @@ export default function LeadDetailPage({
               timeline={timeline}
               timelineLoading={timelineLoading}
             />
-            <Card className="bg-amber-50/80 dark:bg-amber-500/10 border-amber-200/60 dark:border-amber-500/30 shadow-sm">
-              <CardContent className="flex items-start gap-3 p-4">
-                <Mail className="h-4 w-4 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-amber-800 dark:text-amber-300">Connect your email</p>
-                  <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-0.5">
-                    Connect your email to view email threads with this lead.
-                  </p>
-                  <Link
-                    href="/settings/connected-accounts"
-                    className="text-[11px] font-medium text-amber-700 dark:text-amber-300 underline underline-offset-2 hover:text-amber-900 dark:hover:text-amber-200 mt-1 inline-block"
-                  >
-                    Go to Settings →
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
             <Card className="shadow-sm">
               <CardContent className="p-4">
                 <LeadAttachmentsSection leadId={leadId} />

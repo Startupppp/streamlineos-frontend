@@ -3,11 +3,13 @@
 import { useCallback, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "sonner";
+import { Info } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/shared/error-state";
 import { WizardSectionHeading } from "@/components/wizard-shell";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useOnboardingRequirements } from "../hooks/use-onboarding-requirements";
 import type { OnboardingRequirements } from "../lib/onboarding-requirements-schema";
 import {
@@ -26,6 +28,7 @@ type StepBankProps = {
   onClear?: () => void;
   onBack: () => void;
   defaultValues?: BankDraft;
+  hasPrefilledData?: boolean;
 };
 
 function draftToForm(draft: BankDraft | undefined): BankDetailsFormValues {
@@ -74,6 +77,7 @@ function StepBankForm({
   onClear,
   onBack,
   defaultValues,
+  hasPrefilledData = false,
 }: {
   requirements: OnboardingRequirements;
 } & Omit<StepBankProps, "countryCode">) {
@@ -100,7 +104,6 @@ function StepBankForm({
 
   const handleFormSubmit = useCallback(
     (values: BankDetailsFormValues) => {
-      toast.success("Bank details saved");
       onComplete(formToBankDraft(values, requirements));
     },
     [onComplete, requirements],
@@ -132,6 +135,18 @@ function StepBankForm({
           />
         }
       >
+        {hasPrefilledData ? (
+          <div className="flex items-start gap-2.5 rounded-lg border border-border bg-muted/30 p-3">
+            <Info className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
+            <div>
+              <p className="text-sm font-medium text-foreground">Bank details provided by HR</p>
+              <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
+                Confirm the prefilled account and statutory information before continuing. You can edit any incorrect value.
+              </p>
+            </div>
+          </div>
+        ) : null}
+
         <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
           {requirements.bankFields.map((field) => (
             <div key={field.key} className="space-y-1.5">
@@ -197,7 +212,35 @@ function StepBankForm({
 }
 
 export function StepBank({ countryCode, ...rest }: StepBankProps) {
-  const { data: requirements, isLoading } = useOnboardingRequirements(countryCode);
+  const {
+    data: requirements,
+    error,
+    isError,
+    isLoading,
+    refetch,
+  } = useOnboardingRequirements(countryCode);
+
+  if (isError) {
+    return (
+      <StepBody
+        footer={
+          <NavButtons
+            onBack={rest.onBack}
+            onNext={rest.onBack}
+            nextLabel="Save & continue"
+            nextDisabled
+          />
+        }
+      >
+        <ErrorState
+          compact
+          title="Payroll fields couldn’t be loaded"
+          description={getErrorMessage(error)}
+          onRetry={() => void refetch()}
+        />
+      </StepBody>
+    );
+  }
 
   if (isLoading || !requirements) {
     return (

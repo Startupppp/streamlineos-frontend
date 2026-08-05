@@ -99,7 +99,7 @@ export function PageWrapper({
           className={cn(
             "shrink-0",
             PAGE_CHROME_X,
-            actionsInline ? "pt-3.5 pb-2" : "pt-4 pb-3 sm:pt-6 sm:pb-3",
+            actionsInline ? "pt-3.5 pb-2" : "pt-2 pb-3 sm:pt-3 sm:pb-3",
           )}
         >
           <div

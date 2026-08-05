@@ -12,6 +12,7 @@ import {
 } from "@/hooks/api/api-tokens";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -31,14 +32,31 @@ import {
   FormMessage,
   FormDescription,
 } from "@/components/ui/form";
-import { ScopeSelector } from "./scope-selector";
+import { TokenExpiresAtField } from "./token-expires-at-field";
 
 const orgTokenFormSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100),
   description: z.string().trim().max(500).optional(),
-  scopes: z.array(z.string()).min(1, "Select at least one scope"),
-  expiresAt: z.string().optional(),
+  expiresAt: z
+    .string()
+    .min(1, "Expiration is required")
+    .refine((value) => new Date(value).getTime() > Date.now(), {
+      message: "Expiration must be in the future",
+    })
+    .refine(
+      (value) =>
+        new Date(value).getTime() <=
+        Date.now() + 90 * 24 * 60 * 60 * 1000,
+      { message: "CRM API keys cannot exceed 90 days" },
+    ),
 });
+
+function defaultExpiry(days: number): string {
+  const value = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+  return new Date(value.getTime() - value.getTimezoneOffset() * 60_000)
+    .toISOString()
+    .slice(0, 16);
+}
 
 type OrgTokenFormValues = z.infer<typeof orgTokenFormSchema>;
 
@@ -57,7 +75,11 @@ export function CreateOrgTokenSheet({
 
   const form = useForm<OrgTokenFormValues>({
     resolver: zodResolver(orgTokenFormSchema),
-    defaultValues: { name: "", description: "", scopes: [], expiresAt: "" },
+    defaultValues: {
+      name: "",
+      description: "",
+      expiresAt: defaultExpiry(30),
+    },
   });
 
   const handleSubmit = useCallback(
@@ -65,8 +87,7 @@ export function CreateOrgTokenSheet({
       const input: CreateApiTokenInput = {
         name: values.name,
         description: values.description || undefined,
-        scopes: values.scopes,
-        expiresAt: values.expiresAt || undefined,
+        expiresAt: values.expiresAt,
       };
       create.mutate(input, {
         onSuccess: (result) => {
@@ -79,11 +100,18 @@ export function CreateOrgTokenSheet({
     [create, form, onCreated],
   );
 
+  const handleCancel = useCallback(() => {
+    onOpenChange(false);
+  }, [onOpenChange]);
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="flex flex-col gap-0 overflow-hidden p-0">
+      <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-md sm:w-full">
         <SheetHeader className="shrink-0 gap-1 border-b border-border px-6 py-4 text-left">
-          <SheetTitle>New Organization Token</SheetTitle>
+          <SheetTitle>New CRM API Key</SheetTitle>
+          <p className="text-sm text-muted-foreground">
+            Create a credential for securely sending leads into this CRM workspace.
+          </p>
         </SheetHeader>
         <SheetBody className="px-6 py-5">
           <Form {...form}>
@@ -127,43 +155,53 @@ export function CreateOrgTokenSheet({
                 name="expiresAt"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Expires At</FormLabel>
+                    <FormLabel>Expires At <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
-                      <Input type="datetime-local" {...field} />
+                      <TokenExpiresAtField
+                        value={field.value}
+                        onChange={field.onChange}
+                        maxDays={90}
+                      />
                     </FormControl>
                     <FormDescription>
-                      Leave blank for a non-expiring token.
+                      Required for safety. CRM API keys can be valid for up to 90 days.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="scopes"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Scopes</FormLabel>
-                    <ScopeSelector
-                      value={field.value}
-                      onChange={field.onChange}
-                    />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="rounded-lg border border-border bg-muted/30 p-3">
+                <p className="text-sm font-medium text-foreground">
+                  Lead ingestion only
+                </p>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                  This key can create CRM leads through the ingestion API. It cannot read CRM data or access other modules.
+                </p>
+              </div>
             </form>
           </Form>
         </SheetBody>
-        <SheetFooter className="shrink-0 flex-row justify-end gap-2 border-t border-border bg-muted/30 px-6 py-4">
-          <LoadingButton
-            type="submit"
-            form="org-token-form"
-            isPending={create.isPending}
-            loadingText="Creating…"
-          >
-            Create Token
-          </LoadingButton>
+        <SheetFooter className="shrink-0 border-border bg-muted/30 px-6 py-4">
+          <div className="grid w-full grid-cols-2 gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={handleCancel}
+              disabled={create.isPending}
+            >
+              Cancel
+            </Button>
+            <LoadingButton
+              type="submit"
+              form="org-token-form"
+              className="w-full"
+              isPending={create.isPending}
+              loadingText="Creating…"
+            >
+              Create API Key
+            </LoadingButton>
+          </div>
         </SheetFooter>
       </SheetContent>
     </Sheet>

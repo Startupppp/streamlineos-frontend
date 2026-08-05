@@ -4,12 +4,18 @@ export const dynamic = "force-dynamic";
 
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
+import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useOnboardingSessionQuery,
   usePatchOnboardingSessionMutation,
 } from "@/hooks/api/onboarding-flow";
-import { usePersonalDetailsQuery } from "@/lib/api/hooks/onboarding";
+import {
+  useBankDetailsQuery,
+  usePersonalDetailsQuery,
+} from "@/lib/api/hooks/onboarding";
 import { EmployeeOnboardingShell } from "@/features/employee-onboarding/components/employee-onboarding-shell";
 import { StepPersonal } from "@/features/employee-onboarding/components/step-personal";
 import { StepBank } from "@/features/employee-onboarding/components/step-bank";
@@ -29,7 +35,11 @@ import {
   EMPTY_BANK_DRAFT,
   EMPTY_PERSONAL_DRAFT,
   EMPTY_WIZARD_DRAFT,
+  bankDraftHasPrefill,
+  mergeBankDraft,
+  mergePersonalDraft,
   parseWizardDraft,
+  personalDraftHasPrefill,
   type BankDraft,
   type PersonalDraft,
   type WizardDraft,
@@ -60,16 +70,6 @@ function draftPayload(draft: WizardDraft): Record<string, unknown> {
   };
 }
 
-function personalHasValues(personal: PersonalDraft): boolean {
-  return Boolean(
-    personal.phone.trim() ||
-    personal.gender.trim() ||
-    personal.dateOfBirth.trim() ||
-    personal.emergencyName.trim() ||
-    personal.emergencyPhone.trim(),
-  );
-}
-
 function resolveStepFromSession(
   currentStep: string | null | undefined,
 ): StepId {
@@ -85,13 +85,30 @@ export default function EmployeeOnboardingPage() {
   const [localStep, setLocalStep] = useState<StepId | null>(null);
   const [localCompleted, setLocalCompleted] =
     useState<ReadonlySet<string> | null>(null);
-  const [saveState, setSaveState] = useState<"idle" | "saved">("idle");
+  const [saveState, setSaveState] =
+    useState<"idle" | "saving" | "saved" | "error">("idle");
   const persistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const persistSequenceRef = useRef(0);
 
-  const { data: session, isLoading: sessionLoading } =
-    useOnboardingSessionQuery();
-  const { mutate: patchSession } = usePatchOnboardingSessionMutation();
-  const { data: personalDetails } = usePersonalDetailsQuery();
+  const {
+    data: session,
+    error: sessionError,
+    isLoading: sessionLoading,
+    refetch: refetchSession,
+  } = useOnboardingSessionQuery();
+  const { mutateAsync: patchSession } = usePatchOnboardingSessionMutation();
+  const {
+    data: personalDetails,
+    error: personalDetailsError,
+    isLoading: personalDetailsLoading,
+    refetch: refetchPersonalDetails,
+  } = usePersonalDetailsQuery();
+  const {
+    data: bankDetails,
+    error: bankDetailsError,
+    isLoading: bankDetailsLoading,
+    refetch: refetchBankDetails,
+  } = useBankDetailsQuery();
 
   const sessionDraft = useMemo(
     () => (session ? parseWizardDraft(session.data) : EMPTY_WIZARD_DRAFT),
@@ -108,26 +125,49 @@ export default function EmployeeOnboardingPage() {
     [session],
   );
 
-  const profileSeed = useMemo((): PersonalDraft | null => {
-    if (localDraft !== null || !personalDetails) return null;
-    if (personalHasValues(sessionDraft.personal)) return null;
-    const seeded: PersonalDraft = {
+  const personalPrefill = useMemo((): PersonalDraft => {
+    if (!personalDetails) return EMPTY_PERSONAL_DRAFT;
+    return {
       ...EMPTY_PERSONAL_DRAFT,
       phone: personalDetails.phone ?? "",
       gender: personalDetails.gender ?? "",
       dateOfBirth: personalDetails.dateOfBirth ?? "",
+      addressLine1: personalDetails.addressLine1 ?? "",
+      addressCity: personalDetails.addressCity ?? "",
+      addressState: personalDetails.addressState ?? "",
+      addressPostalCode: personalDetails.addressPostalCode ?? "",
+      addressCountry:
+        personalDetails.addressCountry ?? EMPTY_PERSONAL_DRAFT.addressCountry,
       emergencyName: personalDetails.emergencyName ?? "",
       emergencyRelation: personalDetails.emergencyRelation ?? "",
       emergencyPhone: personalDetails.emergencyPhone ?? "",
     };
-    return personalHasValues(seeded) ? seeded : null;
-  }, [personalDetails, localDraft, sessionDraft]);
+  }, [personalDetails]);
+
+  const bankPrefill = useMemo((): BankDraft => {
+    if (!bankDetails) return EMPTY_BANK_DRAFT;
+    return {
+      countryCode: bankDetails.countryCode,
+      accountHolder: bankDetails.accountHolder,
+      bankName: bankDetails.bankName,
+      accountNumber: bankDetails.accountNumber,
+      routingCode: bankDetails.routingCode,
+      iban: bankDetails.iban,
+      swift: bankDetails.swift,
+      statutory: bankDetails.statutory,
+    };
+  }, [bankDetails]);
 
   const wizardDraft = useMemo(() => {
-    const base = localDraft ?? sessionDraft;
-    if (!profileSeed) return base;
-    return { ...base, personal: profileSeed };
-  }, [localDraft, sessionDraft, profileSeed]);
+    if (localDraft) return localDraft;
+    return {
+      personal: mergePersonalDraft(sessionDraft.personal, personalPrefill),
+      bank: mergeBankDraft(sessionDraft.bank, bankPrefill),
+    };
+  }, [localDraft, sessionDraft, personalPrefill, bankPrefill]);
+
+  const hasPersonalPrefill = personalDraftHasPrefill(personalPrefill);
+  const hasBankPrefill = bankDraftHasPrefill(bankPrefill);
 
   const completedSteps = localCompleted ?? sessionCompleted;
   const activeTab = localStep ?? sessionStep;
@@ -137,38 +177,55 @@ export default function EmployeeOnboardingPage() {
     draftRef.current = wizardDraft;
   }, [wizardDraft]);
 
-  const markSaved = useCallback(() => {
-    setSaveState("saved");
-  }, []);
-
-  const flushPersist = useCallback(
-    (
+  const persistDraft = useCallback(
+    async (
       next: WizardDraft,
       extras?: { currentStep?: string; completedSteps?: string[] },
-    ) => {
+      notifyOnError = false,
+    ): Promise<boolean> => {
+      const sequence = ++persistSequenceRef.current;
+      setSaveState("saving");
+      try {
+        await patchSession({ data: draftPayload(next), ...extras });
+        if (sequence === persistSequenceRef.current) setSaveState("saved");
+        return true;
+      } catch (error) {
+        if (sequence === persistSequenceRef.current) setSaveState("error");
+        if (notifyOnError) {
+          toast.error("Your changes were not saved", {
+            id: "onboarding-save-error",
+            description: getErrorMessage(error),
+          });
+        }
+        return false;
+      }
+    },
+    [patchSession],
+  );
+
+  const flushPersist = useCallback(
+    async (
+      next: WizardDraft,
+      extras?: { currentStep?: string; completedSteps?: string[] },
+    ): Promise<boolean> => {
       if (persistTimerRef.current) {
         clearTimeout(persistTimerRef.current);
         persistTimerRef.current = null;
       }
-      patchSession({
-        data: draftPayload(next),
-        ...extras,
-      });
-      markSaved();
+      return persistDraft(next, extras, true);
     },
-    [patchSession, markSaved],
+    [persistDraft],
   );
 
   const schedulePersist = useCallback(
     (next: WizardDraft) => {
       if (persistTimerRef.current) clearTimeout(persistTimerRef.current);
       persistTimerRef.current = setTimeout(() => {
-        patchSession({ data: draftPayload(next) });
-        markSaved();
         persistTimerRef.current = null;
+        void persistDraft(next, undefined, true);
       }, DRAFT_PERSIST_MS);
     },
-    [patchSession, markSaved],
+    [persistDraft],
   );
 
   useEffect(() => {
@@ -209,10 +266,13 @@ export default function EmployeeOnboardingPage() {
   const currentStepIndex = stepIndexOf(activeTab);
 
   const navigateTo = useCallback(
-    (id: StepId) => {
+    async (id: StepId) => {
+      const persisted = await flushPersist(draftRef.current, {
+        currentStep: id,
+      });
+      if (!persisted) return;
       setDirection(stepIndexOf(id) >= stepIndexOf(activeTab) ? 1 : -1);
       setLocalStep(id);
-      flushPersist(draftRef.current, { currentStep: id });
     },
     [activeTab, flushPersist],
   );
@@ -244,37 +304,41 @@ export default function EmployeeOnboardingPage() {
   );
 
   const handlePersonalComplete = useCallback(
-    (personal: PersonalDraft) => {
+    async (personal: PersonalDraft) => {
       const nextDraft = { ...draftRef.current, personal };
       draftRef.current = nextDraft;
       setLocalDraft(nextDraft);
       const nextCompleted = new Set(localCompleted ?? sessionCompleted);
       nextCompleted.add(STEP_IDS.PERSONAL);
-      setLocalCompleted(nextCompleted);
-      flushPersist(nextDraft, {
+      const persisted = await flushPersist(nextDraft, {
         currentStep: STEP_IDS.BANK,
         completedSteps: Array.from(nextCompleted),
       });
+      if (!persisted) return;
+      setLocalCompleted(nextCompleted);
       setDirection(1);
       setLocalStep(STEP_IDS.BANK);
+      toast.success("Personal details saved");
     },
     [flushPersist, localCompleted, sessionCompleted],
   );
 
   const handleBankComplete = useCallback(
-    (bank: BankDraft) => {
+    async (bank: BankDraft) => {
       const nextDraft = { ...draftRef.current, bank };
       draftRef.current = nextDraft;
       setLocalDraft(nextDraft);
       const nextCompleted = new Set(localCompleted ?? sessionCompleted);
       nextCompleted.add(STEP_IDS.BANK);
-      setLocalCompleted(nextCompleted);
-      flushPersist(nextDraft, {
+      const persisted = await flushPersist(nextDraft, {
         currentStep: STEP_IDS.REVIEW,
         completedSteps: Array.from(nextCompleted),
       });
+      if (!persisted) return;
+      setLocalCompleted(nextCompleted);
       setDirection(1);
       setLocalStep(STEP_IDS.REVIEW);
+      toast.success("Bank details saved");
     },
     [flushPersist, localCompleted, sessionCompleted],
   );
@@ -312,11 +376,11 @@ export default function EmployeeOnboardingPage() {
   }, [flushPersist, localCompleted, sessionCompleted]);
 
   const handleGoToPersonal = useCallback(
-    () => navigateTo(STEP_IDS.PERSONAL),
+    () => void navigateTo(STEP_IDS.PERSONAL),
     [navigateTo],
   );
   const handleGoToBank = useCallback(
-    () => navigateTo(STEP_IDS.BANK),
+    () => void navigateTo(STEP_IDS.BANK),
     [navigateTo],
   );
 
@@ -336,12 +400,16 @@ export default function EmployeeOnboardingPage() {
     (index: number) => {
       const stepId = ONBOARDING_SEQUENCE[index];
       if (!stepId || !reachableSteps.has(stepId)) return;
-      navigateTo(stepId);
+      void navigateTo(stepId);
     },
     [navigateTo, reachableSteps],
   );
 
-  if (sessionLoading && !session) {
+  if (
+    (sessionLoading && !session) ||
+    personalDetailsLoading ||
+    bankDetailsLoading
+  ) {
     return (
       <div className="flex h-full min-h-0 w-full min-w-0 flex-1 overflow-hidden">
         <div className="mx-auto flex w-full min-w-0 max-w-lg flex-1 flex-col gap-4 px-4 py-6 sm:px-8 md:max-w-none md:w-1/2 md:px-8">
@@ -357,6 +425,27 @@ export default function EmployeeOnboardingPage() {
           <Skeleton className="h-4 w-64" />
           <Skeleton className="mt-4 h-72 w-full max-w-[440px] rounded-2xl" />
         </div>
+      </div>
+    );
+  }
+
+  const loadError = sessionError ?? personalDetailsError ?? bankDetailsError;
+  if (loadError) {
+    const retryLoad = () => {
+      void Promise.all([
+        refetchSession(),
+        refetchPersonalDetails(),
+        refetchBankDetails(),
+      ]);
+    };
+    return (
+      <div className="flex h-full min-h-0 w-full flex-1 items-center justify-center p-4 sm:p-8">
+        <ErrorState
+          className="max-w-xl"
+          title="Onboarding couldn’t be loaded"
+          description={getErrorMessage(loadError)}
+          onRetry={retryLoad}
+        />
       </div>
     );
   }
@@ -387,6 +476,7 @@ export default function EmployeeOnboardingPage() {
           onDraftChange={handlePersonalDraftChange}
           onClear={handlePersonalClear}
           defaultValues={wizardDraft.personal}
+          hasPrefilledData={hasPersonalPrefill}
         />
       ) : null}
       {activeTab === STEP_IDS.BANK ? (
@@ -397,6 +487,7 @@ export default function EmployeeOnboardingPage() {
           onClear={handleBankClear}
           onBack={handleGoToPersonal}
           defaultValues={wizardDraft.bank}
+          hasPrefilledData={hasBankPrefill}
         />
       ) : null}
       {activeTab === STEP_IDS.REVIEW ? (
@@ -404,6 +495,8 @@ export default function EmployeeOnboardingPage() {
           completedSteps={completedSteps}
           draft={wizardDraft}
           onBack={handleGoToBank}
+          onEditPersonal={handleGoToPersonal}
+          onEditBank={handleGoToBank}
         />
       ) : null}
     </EmployeeOnboardingShell>

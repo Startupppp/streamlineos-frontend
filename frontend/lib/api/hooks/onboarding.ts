@@ -22,6 +22,11 @@ export interface PersonalDetails {
   phone: string | null;
   gender: "MALE" | "FEMALE" | "OTHER" | null;
   dateOfBirth: string | null;
+  addressLine1: string | null;
+  addressCity: string | null;
+  addressState: string | null;
+  addressPostalCode: string | null;
+  addressCountry: string | null;
   emergencyName: string | null;
   emergencyRelation: string | null;
   emergencyPhone: string | null;
@@ -62,11 +67,28 @@ export interface BankDetailsPayload {
   statutory: Record<string, string>;
 }
 
+export type BankDetails = BankDetailsPayload;
+
+export function useBankDetailsQuery() {
+  return useQuery({
+    queryKey: queryKeys.onboardingFlow.bankDetails(),
+    queryFn: () => apiClient.get<BankDetails>("/onboarding/bank-details"),
+    staleTime: 30_000,
+  });
+}
+
 export function useBankDetailsMutation() {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationKey: ["onboarding", "bank-details"],
     mutationFn: (payload: BankDetailsPayload) =>
       apiClient.patch<void>("/onboarding/bank-details", payload),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.onboardingFlow.bankDetails(),
+      });
+    },
   });
 }
 

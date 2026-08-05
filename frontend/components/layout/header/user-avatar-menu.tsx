@@ -14,7 +14,6 @@ import {
   CreditCard,
   Key,
   LayoutGrid,
-  Link2,
   LogOut,
   Shield,
   ShieldCheck,
@@ -63,6 +62,7 @@ type MenuEntry =
 
 function buildMenuEntries(opts: {
   canManageSettings: boolean;
+  canManagePersonalTokens: boolean;
   canViewAiCredits: boolean;
   canSeeOrgPeople: boolean;
   canManageRbac: boolean;
@@ -70,6 +70,7 @@ function buildMenuEntries(opts: {
 }): MenuEntry[] {
   const {
     canManageSettings,
+    canManagePersonalTokens,
     canViewAiCredits,
     canSeeOrgPeople,
     canManageRbac,
@@ -78,7 +79,6 @@ function buildMenuEntries(opts: {
 
   const accountLinks: MenuLink[] = [
     { href: "/settings", label: "My Account", icon: CircleUser },
-    { href: "/settings/connected-accounts", label: "Connected Accounts", icon: Link2 },
   ];
   if (canManageSettings) {
     accountLinks.push({
@@ -143,10 +143,10 @@ function buildMenuEntries(opts: {
       icon: Bell,
     },
   ];
-  if (canManageSettings) {
+  if (canManagePersonalTokens) {
     prefsLinks.push({
       href: "/settings/api-tokens",
-      label: "API Keys",
+      label: "Personal Access Tokens",
       icon: Key,
     });
   }
@@ -261,6 +261,7 @@ export function UserAvatarMenu({
   const { mutate: handleSignOut, isPending: isSigningOut } = useSignOut();
   const canViewSettings = useCan("settings:view");
   const canManageSettings = useCan("settings:manage");
+  const canManagePersonalTokens = useCan("settings:api-tokens:read");
   const canManageRbac = useCan("settings:rbac:manage");
   const canViewAiCredits = useCan("billing:ai-credits:view");
 
@@ -293,6 +294,7 @@ export function UserAvatarMenu({
 
   const entries = buildMenuEntries({
     canManageSettings,
+    canManagePersonalTokens,
     canViewAiCredits,
     canSeeOrgPeople,
     canManageRbac,

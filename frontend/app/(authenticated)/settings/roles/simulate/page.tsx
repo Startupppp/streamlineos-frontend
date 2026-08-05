@@ -121,75 +121,72 @@ function SimulateContent() {
       title="Permission Simulator"
       subtitle="View what a specific employee can do in the system"
       backHref="/settings/roles"
+      noInternalScroll
     >
       <div className="flex flex-col gap-4 flex-1 min-h-0">
-        <Card>
-          <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-3">
-              <Popover open={selectorOpen} onOpenChange={setSelectorOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full sm:w-[320px] justify-between"
-                    aria-label="Select employee"
-                  >
-                    {selectedEmployee ? (
-                      <span className="flex items-center gap-2 min-w-0">
-                        <Avatar className="h-5 w-5 shrink-0">
-                          <AvatarImage src={selectedEmployee.image ?? undefined} />
-                          <AvatarFallback className="text-[9px]">
-                            {getInitials(selectedEmployee.name ?? selectedEmployee.email)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="truncate text-sm">
-                          {selectedEmployee.name ?? selectedEmployee.email}
-                        </span>
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-2 text-muted-foreground">
-                        <Search className="h-4 w-4" />
-                        <span className="text-sm">Select an employee…</span>
-                      </span>
-                    )}
-                    <ChevronDown className="h-4 w-4 shrink-0 opacity-50 ml-2" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[320px] p-0" align="start">
-                  <Command shouldFilter={false}>
-                    <CommandInput
-                      value={search}
-                      onValueChange={handleSearchChange}
-                      placeholder="Search members…"
-                    />
-                    <CommandList className="max-h-[240px]">
-                      <CommandEmpty>No employees found.</CommandEmpty>
-                      <CommandGroup>
-                        {employees.map((employee) => (
-                          <EmployeeCommandItem
-                            key={employee.id}
-                            employee={employee}
-                            onSelect={handleSelectEmployee}
-                          />
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-
-              {selectedEmployee && (
-                <AnimatedIconButton
-                  icon={XIcon}
-                  iconSize={16}
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleClearEmployee}
-                  aria-label="Clear selection"
+        <div className="flex items-center gap-3">
+          <Popover open={selectorOpen} onOpenChange={setSelectorOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-full sm:w-[320px] justify-between"
+                aria-label="Select employee"
+              >
+                {selectedEmployee ? (
+                  <span className="flex items-center gap-2 min-w-0">
+                    <Avatar className="h-5 w-5 shrink-0">
+                      <AvatarImage src={selectedEmployee.image ?? undefined} />
+                      <AvatarFallback className="text-[9px]">
+                        {getInitials(selectedEmployee.name ?? selectedEmployee.email)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="truncate text-sm">
+                      {selectedEmployee.name ?? selectedEmployee.email}
+                    </span>
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2 text-muted-foreground">
+                    <Search className="h-4 w-4" />
+                    <span className="text-sm">Select an employee…</span>
+                  </span>
+                )}
+                <ChevronDown className="h-4 w-4 shrink-0 opacity-50 ml-2" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[320px] p-0" align="start">
+              <Command shouldFilter={false}>
+                <CommandInput
+                  value={search}
+                  onValueChange={handleSearchChange}
+                  placeholder="Search members…"
                 />
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                <CommandList className="max-h-[240px]">
+                  <CommandEmpty>No employees found.</CommandEmpty>
+                  <CommandGroup>
+                    {employees.map((employee) => (
+                      <EmployeeCommandItem
+                        key={employee.id}
+                        employee={employee}
+                        onSelect={handleSelectEmployee}
+                      />
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+
+          {selectedEmployee && (
+            <AnimatedIconButton
+              icon={XIcon}
+              iconSize={16}
+              variant="ghost"
+              size="icon"
+              onClick={handleClearEmployee}
+              aria-label="Clear selection"
+            />
+          )}
+        </div>
 
         {!selectedEmployee && (
           <EmptySelectionState />
@@ -245,7 +242,7 @@ function EmployeeCommandItem({ employee, onSelect }: EmployeeCommandItemProps) {
 
 function EmptySelectionState() {
   return (
-    <div className="flex flex-col items-center justify-center text-center rounded-xl border border-dashed border-border/60 bg-muted/20 py-14 px-6 min-h-[260px]">
+    <div className="flex flex-1 min-h-0 flex-col items-center justify-center text-center rounded-xl border border-dashed border-border/60 bg-muted/20 py-14 px-6">
       <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
         <User className="h-6 w-6 text-muted-foreground" />
       </div>

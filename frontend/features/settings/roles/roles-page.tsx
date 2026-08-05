@@ -353,7 +353,7 @@ function RolesListPanel({
 
   return (
     <Card className="flex max-h-[min(420px,50dvh)] min-h-0 flex-col overflow-hidden lg:h-full lg:max-h-none">
-      <CardHeader className="shrink-0 pb-3">
+      <CardHeader className="shrink-0 border-b pb-3">
         <CardTitle className="flex items-center gap-2 text-sm font-semibold">
           <Shield className="h-4 w-4" /> Roles
         </CardTitle>
@@ -427,8 +427,8 @@ function RoleListItem({ role, isSelected, onSelect, onDelete, onRename, permCoun
       onClick={handleSelect}
       onKeyDown={handleKeyDown}
       className={cn(
-        "w-full text-left px-4 py-3 hover:bg-muted/30 transition-colors flex items-center justify-between cursor-pointer",
-        isSelected && "bg-muted/50 border-l-2 border-primary",
+        "w-full text-left border-l-2 border-transparent px-4 py-3 hover:bg-muted/30 transition-colors flex items-center justify-between cursor-pointer",
+        isSelected && "bg-primary/5 border-primary",
       )}
     >
       <div className="min-w-0">

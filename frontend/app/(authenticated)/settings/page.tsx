@@ -13,11 +13,10 @@ export default function SettingsPage() {
       subtitle="Manage your profile and security."
     >
       <div className="space-y-4">
-
         <section>
           <div className="mb-3">
             <h2 className="text-[0.9375rem] font-semibold text-foreground">Profile</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <p className="mt-0.5 text-xs text-muted-foreground">
               Update your display name and profile photo.
             </p>
           </div>
@@ -29,7 +28,7 @@ export default function SettingsPage() {
         <section>
           <div className="mb-3">
             <h2 className="text-[0.9375rem] font-semibold text-foreground">Security</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <p className="mt-0.5 text-xs text-muted-foreground">
               Change your password and manage account security.
             </p>
           </div>

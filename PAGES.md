@@ -23,6 +23,7 @@ Full text of any pre-2026-08-03 entry is in git history.
 ## Changelog
 
 **2026-08-05**
+- Employee onboarding now preloads HR-provided personal/address/emergency, encrypted bank, and statutory data; employee drafts win, each step explains the prefill, and the final review shows masked values with Edit actions before confirmation. Self-only endpoints use authenticated active membership plus tenant/user-scoped queries instead of HR task permissions; draft navigation/success UI waits for confirmed persistence with explicit load/save failure states. Writes synchronize member + canonical HR records under tenant membership scope. `onboarding-details.service.ts` · `onboarding.controller.ts` · `employee-onboarding/page.tsx` · `step-review.tsx` · frontend + backend typecheck.
 - Org/access notifications wired: 11 new `SECURITY` catalog events (`ownership.transfer.*`, `ownership.module_owner.changed`, `organization.invitation.*`, `organization.member.reactivated|left`) — the whole ownership/invitation/membership domain previously emitted nothing. Email only where access changes or the recipient is unreachable in-app (`filterOrgMemberIds` is ACTIVE-only, so removed/suspended members get a direct email, not dispatch). `notification-events.catalog.ts` · `org-admin-recipients.ts` · `templates/organization.ts` · `email-senders.base.ts` · tsc frontend + backend typecheck · 11 focused specs.
 - Invitation decline built — the `DECLINED` enum value, `invitations.declined_at`, and the `DECLINED` invitation event were all unreachable, and the UI's "Decline invitation" button only did `router.push("/signin")`. `POST /organization/invitations/decline` (`@Public()`, status-predicated update + affected-row check) + a confirm dialog on `/invitation/[token]`. `invitation-acceptance.service.ts` · `organization.controller.ts` · `organization.schemas.ts` · `invitation/[token]/page.tsx` · `auth-hooks.ts` · `api-client.ts` · 5 decline specs.
 - §9 splits: `ownership.service.ts` 892 → 222/399/469 (records · transfers · transfer responses) + `ownership-members.helper.ts`; `invitations.service.ts` 1133 → 419/152/217/426 (send · read · lifecycle · acceptance) + `invitations.helpers.ts`. Controllers/module wiring/specs follow. **`org-membership.service.ts` is 732 and still over the line** — pre-existing 620 plus this pass's notices; split not attempted (10 consumers).
@@ -219,7 +220,7 @@ Full text of any pre-2026-08-03 entry is in git history.
 - [x] `/crm/settings/ai` · `/crm/settings/audit-log` · `/crm/settings/import-export`
 
 ### HR
-- [x] `/hr` · `/hr/access` · `/hr/setup` · `/hr/approvals` · `/hr/analytics` · `/hr/workforce` · `/hr/event-stream` · `/hr/service-delivery` · `/hr/simulator`
+- [x] `/hr` · `/hr/access` · `/hr/approvals` · `/hr/analytics` · `/hr/workforce` · `/hr/event-stream` · `/hr/service-delivery` · `/hr/simulator`
 - [x] `/hr/employees` · `/hr/employees/[employeeId]` · `/hr/employees/find-expert` · `/hr/employees/skills-matrix` — 360 profile (timeline, gated sensitive tab, change governance)
 - [x] `/hr/org` · `/hr/org-chart` · `/hr/identity` · `/hr/positions`
 - [x] `/hr/attendance` · `/hr/shifts` · `/hr/rosters` · `/hr/overtime` · `/hr/comp-off` · `/hr/biometric` · `/hr/geofencing` · `/hr/work-logs`
@@ -321,11 +322,14 @@ Full text of any pre-2026-08-03 entry is in git history.
 - [x] `/organization` · `/organization/departments` · `/organization/teams` · `/organization/locations` · `/organization/branches` · `/organization/business-units` · `/organization/cost-centers` · `/organization/tree` — HR-gated organization structure; setup generates industry defaults plus teams for enabled modules; teams require departments; chart is a searchable read-only hierarchy
 - [x] `/settings/organization` — Org profile + security policies (MFA, email domain, concurrent sessions; absorbed `/settings/security` 2026-07-25)
 - [x] `/settings/roles` · `/settings/roles/[roleId]` · `/settings/roles/simulate` · `/settings/roles/audit` — Role editor with permission matrix + simulator
-- [x] `/settings/modules` · `/settings/module-access/[moduleKey]` — Module enablement (`settings:manage`) + per-module member access
-- [x] `/settings/[[...rest]]` — Account profile, MFA, active-session controls, and recent sign-ins; also catches retired settings URLs
-- [x] `/settings/api-tokens` — List/create/revoke/delete, one-time copy dialog, scope selector
+- [x] `/settings/modules` — Organization module enablement (`settings:manage`); each enabled product exposes access management in its own visible module sidebar
+- [x] `/settings` — Exact account profile, MFA, active-session controls, and recent sign-ins route; unknown Settings URLs no longer fall through to this page
+- [x] `/settings/api-tokens` — Personal access tokens only; grantable scopes are limited by live user permissions and enabled modules, administrative scopes are non-delegable, expiration is mandatory, and revocation retains the audit record
+- [x] `/crm/api-keys` — CRM-scoped, time-limited lead-ingestion keys; available only with CRM enabled and `crm:settings:manage`
 - [x] `/settings/devices` · `/settings/login-history` · `/settings/sessions` — Retired 2026-08-05; security tools consolidated into Account Settings, and unused trusted-device controls removed
-- [x] `/settings/audit-log` · `/settings/webhooks` · `/settings/payments` · `/settings/connected-accounts` · `/settings/delegations` · `/settings/incoming-transfer`
+- [x] `/settings/audit-log` · `/settings/webhooks` · `/settings/delegations` · `/settings/incoming-transfer`
+- [x] `/accounting/settings/payment-providers` — Finance-module payment provider and credential setup, visible only with payment-provider access
+- [x] `/settings/connected-accounts` · `/settings/module-access/[moduleKey]` — Retired 2026-08-05; unused sign-in-provider management and duplicate generic module-access routes removed
 - [x] `/settings/subscription` — Redirects to `/billing?tab=plan`
 
 ### Workflows & Automation
@@ -335,9 +339,9 @@ Full text of any pre-2026-08-03 entry is in git history.
 
 ### Onboarding & Auth
 - [x] `/org-setup` — Welcome → Basics (goals + modules merged) → Launch; draft + step resume; ceremonial generation with dedicated failure recovery
-- [x] `/employee-onboarding` — Shell-free wizard; never shown to owners/platform admins; per-step draft; country-driven documents/bank/payroll
+- [x] `/employee-onboarding` — Shell-free wizard; never shown to owners/platform admins; HR-prefilled personal/bank data with employee-overridable drafts; value-level review/edit; country-driven documents/bank/payroll
 - [x] `/signin` — The only account entry (`/signup` retired) · `/magic-link` · `/verify-email` · `/accept-invitation` · `/invitation/[token]`
-- [x] `/access-denied` · `/client-access`
+- [x] `/access-denied` · `/build/client-access`
 
 ### Public (no auth)
 - [x] `/` · `/about` · `/pricing` · `/contact` · `/legal/privacy` · `/legal/terms` · `/legal/security`

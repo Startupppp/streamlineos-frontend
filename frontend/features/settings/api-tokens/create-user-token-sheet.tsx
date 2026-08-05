@@ -12,6 +12,7 @@ import {
 } from "@/hooks/api/user-api-tokens";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Sheet,
@@ -31,12 +32,31 @@ import {
   FormDescription,
 } from "@/components/ui/form";
 import { PermissionScopeSelector } from "./permission-scope-selector";
+import { TokenExpiresAtField } from "./token-expires-at-field";
 
 const userTokenFormSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100),
   scopes: z.array(z.string()).min(1, "Select at least one permission"),
-  expiresAt: z.string().optional(),
+  expiresAt: z
+    .string()
+    .min(1, "Expiration is required")
+    .refine((value) => new Date(value).getTime() > Date.now(), {
+      message: "Expiration must be in the future",
+    })
+    .refine(
+      (value) =>
+        new Date(value).getTime() <=
+        Date.now() + 366 * 24 * 60 * 60 * 1000,
+      { message: "Personal tokens cannot exceed one year" },
+    ),
 });
+
+function defaultExpiry(days: number): string {
+  const value = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+  return new Date(value.getTime() - value.getTimezoneOffset() * 60_000)
+    .toISOString()
+    .slice(0, 16);
+}
 
 type UserTokenFormValues = z.infer<typeof userTokenFormSchema>;
 
@@ -55,7 +75,7 @@ export function CreateUserTokenSheet({
 
   const form = useForm<UserTokenFormValues>({
     resolver: zodResolver(userTokenFormSchema),
-    defaultValues: { name: "", scopes: [], expiresAt: "" },
+    defaultValues: { name: "", scopes: [], expiresAt: defaultExpiry(30) },
   });
 
   const handleSubmit = useCallback(
@@ -63,7 +83,7 @@ export function CreateUserTokenSheet({
       const input: CreateUserApiTokenInput = {
         name: values.name,
         scopes: values.scopes,
-        expiresAt: values.expiresAt || undefined,
+        expiresAt: values.expiresAt,
       };
       create.mutate(input, {
         onSuccess: (result) => {
@@ -76,9 +96,13 @@ export function CreateUserTokenSheet({
     [create, form, onCreated],
   );
 
+  const handleCancel = useCallback(() => {
+    onOpenChange(false);
+  }, [onOpenChange]);
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="flex flex-col gap-0 overflow-hidden p-0">
+      <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-md sm:w-full">
         <SheetHeader className="shrink-0 gap-1 border-b border-border px-6 py-4 text-left">
           <SheetTitle>New Personal Access Token</SheetTitle>
         </SheetHeader>
@@ -87,7 +111,7 @@ export function CreateUserTokenSheet({
             <form
               id="user-token-form"
               onSubmit={form.handleSubmit(handleSubmit)}
-              className="space-y-4"
+              className="min-w-0 space-y-4"
             >
               <FormField
                 control={form.control}
@@ -107,12 +131,16 @@ export function CreateUserTokenSheet({
                 name="expiresAt"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Expires At</FormLabel>
+                    <FormLabel>Expires At <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
-                      <Input type="datetime-local" {...field} />
+                      <TokenExpiresAtField
+                        value={field.value}
+                        onChange={field.onChange}
+                        maxDays={366}
+                      />
                     </FormControl>
                     <FormDescription>
-                      Leave blank for a non-expiring token.
+                      Required for safety. Personal tokens can be valid for up to one year.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -122,7 +150,7 @@ export function CreateUserTokenSheet({
                 control={form.control}
                 name="scopes"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="min-w-0">
                     <FormLabel>
                       Permissions <span className="text-destructive">*</span>
                     </FormLabel>
@@ -141,15 +169,27 @@ export function CreateUserTokenSheet({
             </form>
           </Form>
         </SheetBody>
-        <SheetFooter className="shrink-0 flex-row justify-end gap-2 border-t border-border bg-muted/30 px-6 py-4">
-          <LoadingButton
-            type="submit"
-            form="user-token-form"
-            isPending={create.isPending}
-            loadingText="Creating…"
-          >
-            Create Token
-          </LoadingButton>
+        <SheetFooter className="shrink-0 border-border bg-muted/30 px-6 py-4">
+          <div className="grid w-full grid-cols-2 gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={handleCancel}
+              disabled={create.isPending}
+            >
+              Cancel
+            </Button>
+            <LoadingButton
+              type="submit"
+              form="user-token-form"
+              className="w-full"
+              isPending={create.isPending}
+              loadingText="Creating…"
+            >
+              Create Token
+            </LoadingButton>
+          </div>
         </SheetFooter>
       </SheetContent>
     </Sheet>

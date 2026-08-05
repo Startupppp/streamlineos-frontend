@@ -699,6 +699,8 @@ export const queryKeys = {
     session: () => [...base, "onboarding-flow", "session"] as const,
     personalDetails: () =>
       [...base, "onboarding-flow", "personal-details"] as const,
+    bankDetails: () =>
+      [...base, "onboarding-flow", "bank-details"] as const,
     requirements: (country: string) =>
       [...base, "onboarding-flow", "requirements", country] as const,
     moduleChecklists: () =>
@@ -1562,6 +1564,7 @@ export const queryKeys = {
   userApiTokens: {
     all: [...base, "userApiTokens"] as const,
     list: () => [...base, "userApiTokens", "list"] as const,
+    permissions: () => [...base, "userApiTokens", "permissions"] as const,
   },
 
   users: {

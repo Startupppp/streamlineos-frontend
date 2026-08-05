@@ -17,7 +17,7 @@ type EmployeeOnboardingShellProps = {
   currentIndex: number;
   title: string;
   direction: number;
-  saveState: "idle" | "saved";
+  saveState: "idle" | "saving" | "saved" | "error";
   completedSteps: ReadonlySet<string>;
   reachableSteps: ReadonlySet<string>;
   snapshot: EmployeePreviewSnapshot;

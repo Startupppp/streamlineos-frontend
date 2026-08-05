@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { toast } from "sonner";
 import { Check } from "lucide-react";
 import { CopyIcon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
@@ -36,12 +37,16 @@ export function TokenCreatedDialog({
 }: TokenCreatedDialogProps) {
   const [copied, setCopied] = useState(false);
 
-  const handleCopy = useCallback(() => {
+  const handleCopy = useCallback(async () => {
     if (!rawToken) return;
-    navigator.clipboard.writeText(rawToken).then(() => {
+    try {
+      await navigator.clipboard.writeText(rawToken);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    });
+      toast.success("Copied to clipboard");
+    } catch {
+      toast.error("Couldn’t copy automatically. Select and copy the credential manually.");
+    }
   }, [rawToken]);
 
   function handleOpenChange(isOpen: boolean) {
@@ -59,7 +64,13 @@ export function TokenCreatedDialog({
             Copy this token now. You won&apos;t be able to see it again.
           </div>
           <div className="flex items-center gap-2">
-            <Input readOnly value={rawToken ?? ""} className="font-mono text-xs" />
+            <Input
+              readOnly
+              value={rawToken ?? ""}
+              className="font-mono text-xs"
+              aria-label="New credential"
+              onFocus={(event) => event.currentTarget.select()}
+            />
             <CopyTokenButton copied={copied} onCopy={handleCopy} />
           </div>
         </div>

@@ -19,6 +19,7 @@
   Shield,
   ShieldCheck,
   CreditCard,
+  CircleUser,
   Wallet,
   Star,
   TrendingUp,
@@ -186,12 +187,6 @@ export const NAV_GROUPS: NavGroup[] = [
       "hr:leaves:view",
     ],
     routes: [
-      {
-        label: "HR Setup",
-        icon: Sparkles,
-        href: "/hr/setup",
-        requiredPermission: "hr:employees:view",
-      },
       {
         label: "Approvals Inbox",
         icon: ClipboardCheck,
@@ -970,7 +965,11 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: "CRM",
     module: "crm",
-    requiredPermission: ["crm:leads:view", "crm:reports:view"],
+    requiredPermission: [
+      "crm:leads:view",
+      "crm:reports:view",
+      "crm:settings:manage",
+    ],
     routes: [
       {
         label: "Overview",
@@ -1104,6 +1103,12 @@ export const NAV_GROUPS: NavGroup[] = [
         requiredPermission: "crm:access:view",
       },
       {
+        label: "API Keys",
+        icon: Key,
+        href: "/crm/api-keys",
+        requiredPermission: "crm:settings:manage",
+      },
+      {
         label: "Settings",
         icon: SlidersHorizontal,
         href: "/crm/settings/assignment-rules",
@@ -1168,7 +1173,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: "Accounting & Finance",
     module: "finance",
-    requiredPermission: ["accounting:view"],
+    requiredPermission: ["accounting:view", "payments:providers:view"],
     routes: [
       {
         label: "Overview",
@@ -1520,7 +1525,22 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Settings",
         icon: SlidersHorizontal,
         href: "/accounting/settings",
-        requiredPermission: "accounting:manage",
+        requiredPermission: ["accounting:manage", "payments:providers:view"],
+        children: [
+          {
+            label: "Finance Settings",
+            icon: SlidersHorizontal,
+            href: "/accounting/settings",
+            exact: true,
+            requiredPermission: "accounting:manage",
+          },
+          {
+            label: "Payment Providers",
+            icon: CreditCard,
+            href: "/accounting/settings/payment-providers",
+            requiredPermission: "payments:providers:view",
+          },
+        ],
       },
     ],
   },
@@ -1865,7 +1885,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: "Product Management",
     module: "build",
-    requiredPermission: ["build:view", "build:tickets:view"],
+    requiredPermission: ["build:view", "build:tickets:view", "build:portal:view"],
     routes: [
       {
         label: "Home",
@@ -1903,6 +1923,12 @@ export const NAV_GROUPS: NavGroup[] = [
         href: "/build",
         exact: true,
         requiredPermission: "build:view",
+      },
+      {
+        label: "Client Access",
+        icon: ShieldCheck,
+        href: "/build/client-access",
+        requiredPermission: "build:portal:view",
       },
       {
         label: "Delivery Teams",
@@ -2189,6 +2215,17 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    label: "Account",
+    routes: [
+      {
+        label: "My Account",
+        icon: CircleUser,
+        href: "/settings",
+        exact: true,
+      },
+    ],
+  },
+  {
     label: "Organization",
     requiredPermission: ["settings:manage", "ownership:transfer:respond"],
     routes: [
@@ -2214,7 +2251,6 @@ export const NAV_GROUPS: NavGroup[] = [
       "settings:organization:manage",
       "workforce:workers:view",
       "party:parties:view",
-      "build:portal:view",
     ],
     routes: [
       {
@@ -2242,12 +2278,6 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: Building2,
         href: "/parties",
         requiredPermission: "party:parties:view",
-      },
-      {
-        label: "Portal Access",
-        icon: ShieldCheck,
-        href: "/client-access",
-        requiredPermission: "build:portal:view",
       },
     ],
   },
@@ -2369,18 +2399,18 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     label: "Developer",
-    requiredPermission: "settings:manage",
+    requiredPermission: ["settings:manage", "settings:api-tokens:read"],
     routes: [
+      {
+        label: "Personal Access Tokens",
+        icon: Key,
+        href: "/settings/api-tokens",
+        requiredPermission: "settings:api-tokens:read",
+      },
       {
         label: "Webhooks",
         icon: Zap,
         href: "/settings/webhooks",
-        requiredPermission: "settings:manage",
-      },
-      {
-        label: "API Tokens",
-        icon: Key,
-        href: "/settings/api-tokens",
         requiredPermission: "settings:manage",
       },
     ],
@@ -2664,6 +2694,7 @@ const PRODUCT_NAV_GROUP_LABELS: Record<ProductKey, string[]> = {
   documents: ["Knowledge"],
   surveys: ["Surveys"],
   administration: [
+    "Account",
     "Organization",
     "People",
     "Access",
@@ -2676,15 +2707,6 @@ const PRODUCT_NAV_GROUP_LABELS: Record<ProductKey, string[]> = {
   payroll: ["Payroll"],
   sign: ["SignOS"],
 };
-
-export function withoutHrSetupRoute(groups: NavGroup[]): NavGroup[] {
-  return groups
-    .map((group) => ({
-      ...group,
-      routes: group.routes.filter((route) => route.href !== "/hr/setup"),
-    }))
-    .filter((group) => group.routes.length > 0);
-}
 
 const HOME_OVERVIEW_GROUP: NavGroup = {
   label: "Overview",
@@ -2799,24 +2821,7 @@ export function isModuleEnabled(
   return matchesOrgModule(enabledModules, moduleKey);
 }
 
-const MODULE_KEY_TO_PRODUCT: Record<string, ProductKey> = {
-  hr: "hrms",
-  crm: "crm",
-  build: "build",
-  inventory: "inventory",
-  payroll: "payroll",
-  timesheets: "timesheets",
-  support: "helpdesk",
-  sign: "sign",
-};
-
 export function getProductFromPathname(pathname: string): ProductKey {
-  if (pathname.startsWith("/settings/module-access/")) {
-    const moduleKey = pathname.split("/")[3];
-    const product = moduleKey ? MODULE_KEY_TO_PRODUCT[moduleKey] : undefined;
-    if (product) return product;
-  }
-
   if (
     pathname === "/dashboard" ||
     pathname === "/" ||
@@ -2854,8 +2859,7 @@ export function getProductFromPathname(pathname: string): ProductKey {
     pathname.startsWith("/settings") ||
     pathname.startsWith("/billing") ||
     pathname.startsWith("/directory") ||
-    pathname.startsWith("/parties") ||
-    pathname.startsWith("/client-access")
+    pathname.startsWith("/parties")
   )
     return "administration";
   return "home";

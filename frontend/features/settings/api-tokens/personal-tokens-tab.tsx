@@ -14,10 +14,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { TokenCreatedDialog } from "./token-created-dialog";
 import { CreateUserTokenSheet } from "./create-user-token-sheet";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 
 function RevokeTokenButton({
   token,
@@ -47,12 +49,17 @@ function isExpired(expiresAt: string | null) {
 }
 
 type PersonalTokensTabProps = {
+  canCreate: boolean;
   showCreate: boolean;
   onShowCreateChange: (open: boolean) => void;
 };
 
-export function PersonalTokensTab({ showCreate, onShowCreateChange }: PersonalTokensTabProps) {
-  const { data, isLoading } = useUserApiTokens();
+export function PersonalTokensTab({
+  canCreate,
+  showCreate,
+  onShowCreateChange,
+}: PersonalTokensTabProps) {
+  const { data, error, isError, isLoading, refetch } = useUserApiTokens();
   const revoke = useRevokeUserApiToken();
 
   const [createdRawToken, setCreatedRawToken] = useState<string | null>(null);
@@ -125,6 +132,13 @@ export function PersonalTokensTab({ showCreate, onShowCreateChange }: PersonalTo
       header: "Expires",
       className: "text-muted-foreground",
       cell: (t) => {
+        if (!t.expiresAt) {
+          return (
+            <Badge variant="secondary" className="h-5 px-2 text-[10px] text-amber-700">
+              Disabled · rotate
+            </Badge>
+          );
+        }
         const expired = isExpired(t.expiresAt);
         return (
           <div className="flex items-center gap-1">
@@ -145,7 +159,10 @@ export function PersonalTokensTab({ showCreate, onShowCreateChange }: PersonalTo
       header: "",
       headerClassName: "w-8",
       className: "w-8",
-      cell: (t) => <RevokeTokenButton token={t} onRevoke={setRevoking} />,
+      cell: (t) =>
+        canCreate ? (
+          <RevokeTokenButton token={t} onRevoke={setRevoking} />
+        ) : null,
     },
   ];
 
@@ -157,12 +174,22 @@ export function PersonalTokensTab({ showCreate, onShowCreateChange }: PersonalTo
             <Skeleton key={i} className="h-8 w-full rounded-md" />
           ))}
         </div>
+      ) : isError ? (
+        <ErrorState
+          className={CONTENT_FILL_PANEL}
+          title="Personal tokens couldn’t be loaded"
+          description={getErrorMessage(error)}
+          onRetry={() => void refetch()}
+        />
       ) : tokens.length === 0 ? (
         <EmptyState
+          className={CONTENT_FILL_PANEL}
           illustrationPreset="security"
           title="No personal access tokens yet"
-          description="Personal tokens act on your behalf and are only visible to you."
-          action={{ label: "New Token", onClick: handleOpenCreate }}
+          description="Create a time-limited token for scripts and developer tools. It can never exceed your current access."
+          action={
+            canCreate ? { label: "New Token", onClick: handleOpenCreate } : undefined
+          }
         />
       ) : (
         <DataTable
@@ -173,11 +200,13 @@ export function PersonalTokensTab({ showCreate, onShowCreateChange }: PersonalTo
         />
       )}
 
-      <CreateUserTokenSheet
-        open={showCreate}
-        onOpenChange={onShowCreateChange}
-        onCreated={handleCreated}
-      />
+      {canCreate ? (
+        <CreateUserTokenSheet
+          open={showCreate}
+          onOpenChange={onShowCreateChange}
+          onCreated={handleCreated}
+        />
+      ) : null}
       <TokenCreatedDialog
         open={!!createdRawToken}
         rawToken={createdRawToken}

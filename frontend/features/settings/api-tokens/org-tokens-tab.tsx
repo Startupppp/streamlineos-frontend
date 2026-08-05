@@ -2,26 +2,25 @@
 
 import { useState, useCallback } from "react";
 import { Shield, ShieldOff, Clock } from "lucide-react";
-import { Trash2Icon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import {
   useApiTokens,
   useRevokeApiToken,
-  useDeleteApiToken,
   type ApiToken,
   type CreateApiTokenResponse,
 } from "@/hooks/api/api-tokens";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Button } from "@/components/ui/button";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { TokenCreatedDialog } from "./token-created-dialog";
 import { CreateOrgTokenSheet } from "./create-org-token-sheet";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 
 function RevokeTokenButton({
   token,
@@ -46,29 +45,6 @@ function RevokeTokenButton({
   );
 }
 
-function DeleteTokenButton({
-  token,
-  onDelete,
-}: {
-  token: ApiToken;
-  onDelete: (t: ApiToken) => void;
-}) {
-  function handleClick() {
-    onDelete(token);
-  }
-  return (
-    <AnimatedIconButton
-      icon={Trash2Icon}
-      iconSize={16}
-      variant="ghost"
-      size="icon"
-      className="h-7 w-7 text-destructive hover:text-destructive"
-      onClick={handleClick}
-      aria-label="Delete token"
-    />
-  );
-}
-
 function formatDate(iso: string | null) {
   if (!iso) return "—";
   return new Date(iso).toLocaleDateString(undefined, { dateStyle: "medium" });
@@ -85,13 +61,11 @@ type OrgTokensTabProps = {
 };
 
 export function OrgTokensTab({ showCreate, onShowCreateChange }: OrgTokensTabProps) {
-  const { data, isLoading } = useApiTokens();
+  const { data, error, isError, isLoading, refetch } = useApiTokens();
   const revoke = useRevokeApiToken();
-  const del = useDeleteApiToken();
 
   const [createdResult, setCreatedResult] = useState<CreateApiTokenResponse | null>(null);
   const [revoking, setRevoking] = useState<ApiToken | null>(null);
-  const [deleting, setDeleting] = useState<ApiToken | null>(null);
 
   const tokens = data?.data ?? [];
 
@@ -113,17 +87,6 @@ export function OrgTokensTab({ showCreate, onShowCreateChange }: OrgTokensTabPro
       onError: (err) => toast.error(getErrorMessage(err)),
     });
   }, [revoking, revoke]);
-
-  const handleDelete = useCallback(() => {
-    if (!deleting) return;
-    del.mutate(deleting.id, {
-      onSuccess: () => {
-        toast.success("Token deleted");
-        setDeleting(null);
-      },
-      onError: (err) => toast.error(getErrorMessage(err)),
-    });
-  }, [deleting, del]);
 
   const handleOpenCreate = useCallback(() => onShowCreateChange(true), [onShowCreateChange]);
   const handleCloseCreated = useCallback(() => setCreatedResult(null), []);
@@ -152,20 +115,11 @@ export function OrgTokensTab({ showCreate, onShowCreateChange }: OrgTokensTabPro
     },
     {
       key: "scopes",
-      header: "Scopes",
+      header: "Capability",
       cell: (t) => (
-        <div className="flex flex-wrap gap-1 max-w-[200px]">
-          {t.scopes.slice(0, 3).map((s) => (
-            <Badge key={s} variant="outline" className="h-4 text-[9px] px-1.5 py-0">
-              {s}
-            </Badge>
-          ))}
-          {t.scopes.length > 3 && (
-            <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0">
-              +{t.scopes.length - 3}
-            </Badge>
-          )}
-        </div>
+        <Badge variant="outline" className="h-5 px-2 text-[10px]">
+          {t.scopes.includes("leads:write") ? "Lead ingestion" : "Legacy CRM access"}
+        </Badge>
       ),
     },
     {
@@ -193,6 +147,8 @@ export function OrgTokensTab({ showCreate, onShowCreateChange }: OrgTokensTabPro
       header: "Status",
       cell: (t) => {
         const expired = isExpired(t.expiresAt);
+        const hasCurrentCapability = t.scopes.includes("leads:write");
+        const requiresRotation = !t.expiresAt || !hasCurrentCapability;
         if (t.isRevoked) {
           return (
             <Badge variant="secondary" className="h-4 text-[9px] px-1.5 py-0 text-destructive border-destructive/20 bg-destructive/10">
@@ -207,6 +163,13 @@ export function OrgTokensTab({ showCreate, onShowCreateChange }: OrgTokensTabPro
             </Badge>
           );
         }
+        if (requiresRotation) {
+          return (
+            <Badge variant="secondary" className="h-4 border-amber-200 bg-amber-50 px-1.5 py-0 text-[9px] text-amber-700 dark:bg-amber-900/20 dark:text-amber-400">
+              Rotate required
+            </Badge>
+          );
+        }
         return (
           <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 text-emerald-700 border-emerald-200 bg-emerald-50 dark:bg-emerald-900/20 dark:text-emerald-400">
             <Shield className="h-2.5 w-2.5 mr-0.5" />
@@ -218,14 +181,13 @@ export function OrgTokensTab({ showCreate, onShowCreateChange }: OrgTokensTabPro
     {
       key: "actions",
       header: "",
-      headerClassName: "w-20",
-      className: "w-20",
+      headerClassName: "w-10",
+      className: "w-10",
       cell: (t) => (
         <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
           {!t.isRevoked && (
             <RevokeTokenButton token={t} onRevoke={setRevoking} />
           )}
-          <DeleteTokenButton token={t} onDelete={setDeleting} />
         </div>
       ),
     },
@@ -239,12 +201,20 @@ export function OrgTokensTab({ showCreate, onShowCreateChange }: OrgTokensTabPro
             <Skeleton key={i} className="h-8 w-full rounded-md" />
           ))}
         </div>
+      ) : isError ? (
+        <ErrorState
+          className={CONTENT_FILL_PANEL}
+          title="CRM API keys couldn’t be loaded"
+          description={getErrorMessage(error)}
+          onRetry={() => void refetch()}
+        />
       ) : tokens.length === 0 ? (
         <EmptyState
+          className={CONTENT_FILL_PANEL}
           illustrationPreset="security"
-          title="No organization tokens yet"
-          description="Organization tokens provide access to shared resources and are visible to administrators."
-          action={{ label: "New Token", onClick: handleOpenCreate }}
+          title="No CRM API keys yet"
+          description="Create a time-limited key when an external system needs to send leads into CRM."
+          action={{ label: "New API Key", onClick: handleOpenCreate }}
         />
       ) : (
         <DataTable
@@ -269,19 +239,10 @@ export function OrgTokensTab({ showCreate, onShowCreateChange }: OrgTokensTabPro
       <ConfirmDialog
         open={!!revoking}
         onOpenChange={(o) => !o && setRevoking(null)}
-        title="Revoke Token"
-        description={`Revoke "${revoking?.name}"? API calls using this token will immediately fail.`}
+        title="Revoke API Key"
+        description={`Revoke "${revoking?.name}"? Lead ingestion using this key will stop immediately. The audit record will be retained.`}
         onConfirm={handleRevoke}
         isPending={revoke.isPending}
-        destructive
-      />
-      <ConfirmDialog
-        open={!!deleting}
-        onOpenChange={(o) => !o && setDeleting(null)}
-        title="Delete Token"
-        description={`Permanently delete "${deleting?.name}"? This cannot be undone.`}
-        onConfirm={handleDelete}
-        isPending={del.isPending}
         destructive
       />
     </>
