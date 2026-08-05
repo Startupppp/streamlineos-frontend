@@ -418,8 +418,8 @@ export function UserInvitationsPanel() {
   return (
     <>
       <PageWrapper
-        title="People"
-        subtitle="Track pending, accepted, expired, and revoked invitations."
+        title="Members & access"
+        subtitle="Invite people to sign in and track invitation status."
         actions={
           canInvite ? (
             <AnimatedIconButton

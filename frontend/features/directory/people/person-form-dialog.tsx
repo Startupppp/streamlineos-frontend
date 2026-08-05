@@ -102,7 +102,7 @@ export function PersonFormDialog({ open, onOpenChange, mode, defaultValues }: Pr
         },
         {
           onSuccess: () => {
-            toast.success("Person added");
+            toast.success("Person record added");
             onOpenChange(false);
           },
           onError: (e) => toast.error(getErrorMessage(e)),
@@ -154,7 +154,7 @@ export function PersonFormDialog({ open, onOpenChange, mode, defaultValues }: Pr
         isPending={isPending}
         loadingText="Saving…"
       >
-        {mode === "edit" ? "Save Changes" : "Add Person"}
+        {mode === "edit" ? "Save Changes" : "Add person record"}
       </LoadingButton>
     </>
   );
@@ -163,11 +163,11 @@ export function PersonFormDialog({ open, onOpenChange, mode, defaultValues }: Pr
     <AppDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={mode === "edit" ? "Edit Person" : "Add Person"}
+      title={mode === "edit" ? "Edit person record" : "Add person record"}
       description={
         mode === "edit"
-          ? "Update this person's details."
-          : "Add someone to your organization directory."
+          ? "Update this person's directory profile."
+          : "Create a profile for a worker, contractor, consultant, intern, or payee."
       }
       footer={footer}
     >
@@ -178,6 +178,12 @@ export function PersonFormDialog({ open, onOpenChange, mode, defaultValues }: Pr
           className="space-y-4"
           noValidate
         >
+          {mode === "create" ? (
+            <div className="rounded-lg border border-border bg-muted/40 px-3 py-2.5 text-xs leading-relaxed text-muted-foreground">
+              This creates a directory record only. It does not send an
+              invitation, create a login, or grant application access.
+            </div>
+          ) : null}
           <div className="grid grid-cols-2 gap-3">
             <FormField
               control={form.control}

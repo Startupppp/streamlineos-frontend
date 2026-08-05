@@ -84,14 +84,16 @@ export function usePendingOrgTransfers() {
 }
 
 export function useIncomingOrgTransfers() {
+  const { isPending: accessPending } = useAccess();
   const canRespond = useCan("ownership:transfer:respond");
 
   return useQuery<IncomingTransfersResponse, Error>({
     queryKey: queryKeys.ownership.incomingTransfers(),
     queryFn: () =>
       apiClient.get<IncomingTransfersResponse>("/ownership/transfers/incoming"),
-    enabled: canRespond,
-    staleTime: 30_000,
+    enabled: !accessPending && canRespond,
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 }
 

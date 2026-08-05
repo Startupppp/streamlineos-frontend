@@ -166,8 +166,8 @@ Full text of any pre-2026-08-03 entry is in git history.
 - [x] `/mail` — Unified Gmail+Outlook inbox via Composio live proxy; **zero mail tables**
 - [x] `/ai` · `/ai/executive-brief` · `/ask` — AI assistant surfaces
 - [x] `/notifications` · `/notifications/preferences` · `/notifications/broadcasts` · `/notifications/events` · `/notifications/policy` · `/notifications/providers` · `/notifications/templates`
-- [x] `/users` — Administration → People workspace; Members and permission-gated Invitations share one route via `?view=invitations`; status filtering stays URL-backed; org-scoped lifecycle SoT = `organization_members.status`
-- [x] `/directory` · `/directory/[personId]` · `/directory/workers` · `/parties` — Administration → People (Directory, Workers, Business Parties); person detail tabs (Profile/Membership/Worker/Modules); `directory:people:*` gates; Person create does not require membership/worker; HRMS not required; `/parties` module-independent (no CRM/Inventory entitlement); offer-fulfillment API gated CRM+inventory (no FE UI yet)
+- [x] `/users` — **Members & access** workspace; authenticated organization members and permission-gated Invitations share one route via `?view=invitations`; status filtering stays URL-backed; org-scoped lifecycle SoT = `organization_members.status`
+- [x] `/directory` · `/directory/[personId]` · `/directory/workers` · `/parties` — **Person records**, Workers, and Business Parties; directory profiles support workers/contractors/payees without login access and explicitly do not invite users; person detail tabs (Profile/Membership/Worker/Modules); `directory:people:*` gates; HRMS not required; `/parties` module-independent (no CRM/Inventory entitlement); offer-fulfillment API gated CRM+inventory (no FE UI yet)
 
 ### Build (delivery + product management)
 

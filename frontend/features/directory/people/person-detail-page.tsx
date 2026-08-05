@@ -1,10 +1,18 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, type ComponentType } from "react";
 import Link from "next/link";
-import { Mail, Phone, Pencil, UserPlus } from "lucide-react";
+import {
+  Boxes,
+  BriefcaseBusiness,
+  LockKeyhole,
+  Mail,
+  Phone,
+  Pencil,
+  UserPlus,
+} from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger, TABS_CONTENT_PAGE_BODY_CLASS } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -57,6 +65,49 @@ function formatDate(iso: string): string {
     month: "short",
     year: "numeric",
   }).format(new Date(iso));
+}
+
+interface PersonTabStateProps {
+  icon: ComponentType<{ className?: string }>;
+  title: string;
+  description: string;
+  action?:
+    | { label: string; href: string; onClick?: never }
+    | { label: string; onClick: () => void; href?: never };
+}
+
+function PersonTabState({
+  icon: Icon,
+  title,
+  description,
+  action,
+}: PersonTabStateProps) {
+  const actionButton = action?.href ? (
+    <Button size="sm" asChild>
+      <Link href={action.href}>{action.label}</Link>
+    </Button>
+  ) : action?.onClick ? (
+    <Button size="sm" onClick={action.onClick}>
+      {action.label}
+    </Button>
+  ) : null;
+
+  return (
+    <div className="rounded-lg border border-border bg-muted/20 p-4 sm:p-5">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground shadow-sm">
+          <Icon className="size-4" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+          <p className="mt-1 max-w-2xl text-sm leading-5 text-muted-foreground">
+            {description}
+          </p>
+        </div>
+        {actionButton ? <div className="shrink-0">{actionButton}</div> : null}
+      </div>
+    </div>
+  );
 }
 
 function DetailSkeleton() {
@@ -115,26 +166,25 @@ function PersonMembershipTab({ person }: { person: OrganizationPerson }) {
 
   if (!canViewMembers) {
     return (
-      <EmptyState
+      <PersonTabState
+        icon={LockKeyhole}
         title="Membership details unavailable"
         description="You need organization settings access to view login and role information."
-        className="flex-1"
       />
     );
   }
 
   if (!linkedUserId) {
     return (
-      <EmptyState
-        illustrationPreset="team"
-        title="No login linked"
-        description="This person exists in the directory only. Invite them as a member to grant sign-in, roles, and module access."
-        className="flex-1"
+      <PersonTabState
+        icon={UserPlus}
+        title="Directory-only person"
+        description="No application account is linked. That is valid for contractors, payees, and other people who do not need StreamlineOS access. Invite them only when they need to sign in."
         action={
           canInvite
             ? {
-                label: "Invite to organization",
-                href: "/users",
+                label: "Invite as member",
+                href: "/users?view=invitations&create=1",
               }
             : undefined
         }
@@ -148,10 +198,10 @@ function PersonMembershipTab({ person }: { person: OrganizationPerson }) {
 
   if (!user) {
     return (
-      <EmptyState
+      <PersonTabState
+        icon={LockKeyhole}
         title="Membership not found"
         description="The linked account could not be loaded. It may have been removed."
-        className="flex-1"
       />
     );
   }
@@ -159,7 +209,7 @@ function PersonMembershipTab({ person }: { person: OrganizationPerson }) {
   const isActive = user.userStatus ? user.userStatus === "active" : user.isActive;
 
   return (
-    <div className="space-y-4">
+    <div className="min-h-0 flex-1 space-y-4 overflow-y-auto">
       <div className="flex flex-wrap items-center gap-2">
         <Badge variant="secondary" className="text-[10px] h-5 px-1.5">
           {formatRoleLabel(user.role)}
@@ -262,10 +312,10 @@ function PersonWorkerTab({ person }: { person: OrganizationPerson }) {
 
   if (!canViewWorkers) {
     return (
-      <EmptyState
+      <PersonTabState
+        icon={LockKeyhole}
         title="Workforce access required"
         description="You need workforce permissions to view worker records and engagements."
-        className="flex-1"
       />
     );
   }
@@ -276,12 +326,11 @@ function PersonWorkerTab({ person }: { person: OrganizationPerson }) {
 
   if (!worker) {
     return (
-      <>
-        <EmptyState
-          illustrationPreset="team"
+      <div className="flex min-h-0 flex-1 flex-col">
+        <PersonTabState
+          icon={BriefcaseBusiness}
           title="No worker record"
-          description="Add a worker profile when this person participates in payroll, HRMS, or other workforce programs. Directory membership stays independent."
-          className="flex-1"
+          description="Create a worker record only when this person participates in payroll, HR, attendance, or another workforce process. Their directory record remains independent."
           action={
             canManageWorkers
               ? { label: "Add worker", onClick: handleOpenCreateWorker }
@@ -295,12 +344,12 @@ function PersonWorkerTab({ person }: { person: OrganizationPerson }) {
             defaultOrganizationPersonId={person.organizationPersonId}
           />
         ) : null}
-      </>
+      </div>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className="min-h-0 flex-1 space-y-4 overflow-y-auto">
       <WorkerSummary worker={worker} />
       <Separator />
       <div className="space-y-2">
@@ -342,6 +391,7 @@ function WorkerSummary({ worker }: { worker: Worker }) {
 
 function PersonModulesTab({ person }: { person: OrganizationPerson }) {
   const canViewMembers = useCan("settings:view");
+  const canInvite = useCan("settings:organization:manage");
   const linkedUserId = person.userId;
   const { data: user, isLoading } = useUser(linkedUserId ?? "", {
     enabled: !!linkedUserId && canViewMembers,
@@ -349,21 +399,28 @@ function PersonModulesTab({ person }: { person: OrganizationPerson }) {
 
   if (!canViewMembers) {
     return (
-      <EmptyState
+      <PersonTabState
+        icon={LockKeyhole}
         title="Module assignments unavailable"
         description="Organization settings access is required to manage module assignments."
-        className="flex-1"
       />
     );
   }
 
   if (!linkedUserId) {
     return (
-      <EmptyState
-        illustrationPreset="team"
-        title="Link a member first"
-        description="Module assignments apply to organization members with a login. Invite or link this person from the Membership tab."
-        className="flex-1"
+      <PersonTabState
+        icon={Boxes}
+        title="No module access"
+        description="Modules can only be assigned to members who can sign in. If this person needs application access, invite them as a member first."
+        action={
+          canInvite
+            ? {
+                label: "Invite as member",
+                href: "/users?view=invitations&create=1",
+              }
+            : undefined
+        }
       />
     );
   }
@@ -374,10 +431,10 @@ function PersonModulesTab({ person }: { person: OrganizationPerson }) {
 
   if (!user) {
     return (
-      <EmptyState
+      <PersonTabState
+        icon={Boxes}
         title="Member not found"
         description="The linked account could not be loaded."
-        className="flex-1"
       />
     );
   }
@@ -385,7 +442,9 @@ function PersonModulesTab({ person }: { person: OrganizationPerson }) {
   const isActive = user.userStatus ? user.userStatus === "active" : user.isActive;
 
   return (
-    <UserModuleAccessSection userId={user.id} isMemberActive={isActive} />
+    <div className="min-h-0 flex-1 overflow-y-auto">
+      <UserModuleAccessSection userId={user.id} isMemberActive={isActive} />
+    </div>
   );
 }
 
@@ -422,8 +481,10 @@ export function PersonDetailPage({ organizationPersonId }: PersonDetailPageProps
   return (
     <PageWrapper
       title={title}
-      subtitle={person?.workEmail ?? "Organization person"}
+      subtitle={person?.workEmail ?? "Person record"}
+      badge={person ? (person.userId ? "Member linked" : "Directory only") : undefined}
       backHref="/directory"
+      noInternalScroll
       actions={
         canUpdate && person ? (
           <Button onClick={handleOpenEdit}>
@@ -445,18 +506,26 @@ export function PersonDetailPage({ organizationPersonId }: PersonDetailPageProps
           className="flex-1"
         />
       ) : (
-        <Tabs defaultValue="profile" className="flex min-h-0 flex-1 flex-col gap-4">
-          <TabsList className="w-full md:w-fit overflow-x-auto">
-            {tabs.map(({ value, label }) => (
-              <TabsTrigger key={value} value={value} className="min-w-fit">
-                {label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+        <Tabs
+          defaultValue="profile"
+          className="flex min-h-0 flex-1 flex-col gap-0 overflow-hidden rounded-lg border border-border bg-card"
+        >
+          <div className="shrink-0 overflow-x-auto border-b border-border bg-muted/20 p-2">
+            <TabsList className="w-max min-w-full justify-start border-0 bg-transparent p-0 shadow-none sm:min-w-0">
+              {tabs.map(({ value, label }) => (
+                <TabsTrigger key={value} value={value} className="min-w-fit">
+                  {label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
 
-          <TabsContent value="profile" className="mt-0 flex-1">
-            <div className="rounded-xl border border-border bg-card p-4 shadow-sm space-y-4">
-              <div className="flex items-start gap-3">
+          <TabsContent
+            value="profile"
+            className={cn(TABS_CONTENT_PAGE_BODY_CLASS, "overflow-y-auto p-4 sm:p-5")}
+          >
+            <div className="flex min-h-0 flex-1 flex-col">
+              <div className="flex items-start gap-3 shrink-0">
                 <Avatar className="h-14 w-14 shrink-0">
                   <AvatarImage src={person.avatarUrl ?? undefined} alt={title} />
                   <AvatarFallback className="text-sm font-semibold">
@@ -482,32 +551,38 @@ export function PersonDetailPage({ organizationPersonId }: PersonDetailPageProps
                   </div>
                 </div>
               </div>
-              <Separator />
-              <ProfileFields person={person} />
+              <Separator className="my-5 shrink-0" />
+              <div className="min-h-0 flex-1 overflow-y-auto">
+                <ProfileFields person={person} />
+              </div>
             </div>
           </TabsContent>
 
           {canViewMembers ? (
-            <TabsContent value="membership" id="membership" className="mt-0 flex-1">
-              <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
-                <PersonMembershipTab person={person} />
-              </div>
+            <TabsContent
+              value="membership"
+              id="membership"
+              className={cn(TABS_CONTENT_PAGE_BODY_CLASS, "overflow-y-auto p-4 sm:p-5")}
+            >
+              <PersonMembershipTab person={person} />
             </TabsContent>
           ) : null}
 
           {canViewWorkers ? (
-            <TabsContent value="worker" className="mt-0 flex-1">
-              <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
-                <PersonWorkerTab person={person} />
-              </div>
+            <TabsContent
+              value="worker"
+              className={cn(TABS_CONTENT_PAGE_BODY_CLASS, "overflow-y-auto p-4 sm:p-5")}
+            >
+              <PersonWorkerTab person={person} />
             </TabsContent>
           ) : null}
 
           {canViewMembers ? (
-            <TabsContent value="modules" className="mt-0 flex-1">
-              <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
-                <PersonModulesTab person={person} />
-              </div>
+            <TabsContent
+              value="modules"
+              className={cn(TABS_CONTENT_PAGE_BODY_CLASS, "overflow-y-auto p-4 sm:p-5")}
+            >
+              <PersonModulesTab person={person} />
             </TabsContent>
           ) : null}
         </Tabs>

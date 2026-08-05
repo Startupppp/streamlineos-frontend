@@ -1,16 +1,25 @@
 "use client";
 
+import { useCallback } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTransferIllustration } from "@/components/illustrations";
 import { OrgIncomingTransferSection } from "@/features/settings/organization/org-incoming-transfer-section";
 import { useIncomingOrgTransfers } from "@/hooks/api/ownership";
+import { useAccess } from "@/hooks/api/access";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 export default function IncomingTransferPage() {
-  const { data, isLoading } = useIncomingOrgTransfers();
+  const { isPending: accessPending } = useAccess();
+  const { data, isPending, isError, error, refetch } = useIncomingOrgTransfers();
+  const isLoading = accessPending || isPending;
   const hasPendingTransfer = (data?.data.length ?? 0) > 0;
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   return (
     <PageWrapper
@@ -25,6 +34,14 @@ export default function IncomingTransferPage() {
             <Skeleton className="h-4 w-3/4" />
           </CardContent>
         </Card>
+      ) : isError ? (
+        <EmptyState
+          illustrationPreset="alert"
+          title="Couldn't load transfers"
+          description={getErrorMessage(error)}
+          action={{ label: "Retry", onClick: handleRetry }}
+          className="flex-1 border-0 bg-transparent"
+        />
       ) : hasPendingTransfer ? (
         <OrgIncomingTransferSection />
       ) : (

@@ -506,8 +506,8 @@ export function UsersPage() {
   return (
     <>
       <PageWrapper
-        title="People"
-        subtitle="Manage active members, roles, and organization access."
+        title="Members & access"
+        subtitle="Manage people who can sign in, their roles, and organization access."
         actions={
           <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-nowrap sm:justify-end">
             {(canExport || canCreate) && (

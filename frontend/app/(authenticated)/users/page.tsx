@@ -4,7 +4,7 @@ import { PeoplePage } from "@/features/users/people-page";
 import { requirePermission } from "@/lib/rbac/require-permission";
 
 export const metadata: Metadata = {
-  title: "People | StreamlineOS",
+  title: "Members & Access | StreamlineOS",
 };
 
 export default async function Page() {

@@ -16,7 +16,7 @@ interface PageWrapperProps {
   backHref?: string;
   /** Labeled Back button on the left (click handler). Ignored when `leading` is set. */
   onBack?: () => void;
-  /** Visible label for `backHref` / `onBack`. Defaults to "Back". */
+  /** Accessible label for `backHref` / `onBack`. Defaults to "Back". */
   backLabel?: string;
   /** Custom left control; takes precedence over `backHref` / `onBack`. */
   leading?: React.ReactNode;
@@ -31,7 +31,7 @@ interface PageWrapperProps {
   variant?: "default" | "display";
 }
 
-const backButtonClassName = "-ml-2 h-9 shrink-0 gap-1.5 px-2.5 sm:h-8";
+const backButtonClassName = "-ml-2 size-9 shrink-0 sm:size-8";
 
 export function PageWrapper({
   title,
@@ -62,18 +62,22 @@ export function PageWrapper({
       <Button
         type="button"
         variant="ghost"
-        size="sm"
+        size="icon-sm"
         className={backButtonClassName}
         onClick={onBack}
+        aria-label={backLabel}
       >
-        <ArrowLeft className="h-3.5 w-3.5" />
-        {backLabel}
+        <ArrowLeft className="h-4 w-4" />
       </Button>
     ) : backHref ? (
-      <Button variant="ghost" size="sm" className={backButtonClassName} asChild>
-        <Link href={backHref}>
-          <ArrowLeft className="h-3.5 w-3.5" />
-          {backLabel}
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        className={backButtonClassName}
+        asChild
+      >
+        <Link href={backHref} aria-label={backLabel}>
+          <ArrowLeft className="h-4 w-4" />
         </Link>
       </Button>
     ) : null);
@@ -183,17 +187,13 @@ export function PageWrapper({
           {children}
         </div>
       ) : (
-        <div
-          className={cn(
-            "min-h-0 flex-1 overflow-y-auto scrollbar-hide",
-            contentClassName,
-          )}
-        >
+        <div className="min-h-0 flex-1 overflow-y-auto scrollbar-hide">
           <div
             className={cn(
               "flex min-h-full w-full flex-col overscroll-contain",
               PAGE_CHROME_X,
               PAGE_CHROME_BOTTOM,
+              contentClassName,
             )}
           >
             {children}

@@ -20,6 +20,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -62,7 +63,7 @@ function AddPersonButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
     <Button onClick={onClick} {...hoverHandlers}>
-      <PlusIcon ref={iconRef} size={14} /> Add Person
+      <PlusIcon ref={iconRef} size={14} /> Add person record
     </Button>
   );
 }
@@ -211,6 +212,21 @@ export function PeopleDirectoryPage() {
       ),
     },
     {
+      key: "access",
+      header: "App access",
+      className: "w-28",
+      cell: (row) =>
+        row.organizationMembershipId || row.userId ? (
+          <Badge variant="secondary" className="h-5 px-2 text-[10px]">
+            Member
+          </Badge>
+        ) : (
+          <Badge variant="outline" className="h-5 px-2 text-[10px] font-normal text-muted-foreground">
+            No login
+          </Badge>
+        ),
+    },
+    {
       key: "phone",
       header: "Phone",
       className: "min-w-[120px]",
@@ -263,8 +279,8 @@ export function PeopleDirectoryPage() {
 
   return (
     <PageWrapper
-      title="People"
-      subtitle="Everyone in your organization"
+      title="Person records"
+      subtitle="Profiles for workers, contractors, and payees—with or without application access."
       filters={filtersBar}
       actions={canCreate ? <AddPersonButton onClick={handleOpenCreate} /> : undefined}
     >
@@ -278,17 +294,17 @@ export function PeopleDirectoryPage() {
             <EmptyState
               className={CONTENT_FILL_PANEL}
               illustrationPreset="team"
-              title={isFiltered ? "No matching people" : "No people yet"}
+              title={isFiltered ? "No matching records" : "No person records yet"}
               description={
                 isFiltered
                   ? "Try adjusting your search."
-                  : "Add people to build your organization directory."
+                  : "Create a person record before linking someone as a worker or payee."
               }
               action={
                 isFiltered
                   ? undefined
                   : canCreate
-                    ? { label: "Add Person", onClick: handleOpenCreate }
+                    ? { label: "Add person record", onClick: handleOpenCreate }
                     : undefined
               }
             />
@@ -298,7 +314,7 @@ export function PeopleDirectoryPage() {
                 data={rows}
                 columns={columns}
                 getRowKey={(row) => row.organizationPersonId}
-                minWidth="640px"
+                minWidth="760px"
                 className={CONTENT_FILL_PANEL}
               />
               {pagination && pagination.totalPages > 1 ? (
@@ -335,11 +351,12 @@ export function PeopleDirectoryPage() {
       <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteDialogChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete this person?</AlertDialogTitle>
+            <AlertDialogTitle>Delete this person record?</AlertDialogTitle>
             <AlertDialogDescription>
               This will permanently remove{" "}
               {deleteTarget ? displayName(deleteTarget) : "this person"} from the
-              directory. This action cannot be undone.
+              directory. Their application account is not deleted. This action
+              cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
