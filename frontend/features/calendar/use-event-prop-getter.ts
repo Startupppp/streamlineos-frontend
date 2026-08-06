@@ -27,7 +27,8 @@ export function useEventPropGetter() {
     if (event.resource?.source === "attendance") {
       return {
         style: {
-          backgroundColor: "#0f766e",
+          backgroundColor:
+            EVENT_COLORS[event.resource.color ?? "green"] ?? EVENT_COLORS.green,
           opacity: 0.85,
           border: "none",
           borderRadius: "4px",

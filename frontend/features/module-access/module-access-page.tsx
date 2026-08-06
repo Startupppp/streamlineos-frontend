@@ -2,8 +2,10 @@
 
 import { useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
-import { ClipboardList } from "lucide-react";
+import { ClipboardList, UserPlus } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { useModuleMyPermissions } from "@/hooks/api/module-access";
@@ -25,7 +27,6 @@ export function ModuleAccessPage({ moduleKey, title }: ModuleAccessPageProps) {
   const rawUserId = searchParams.get("userId");
   const focusUserId =
     rawUserId !== null && UUID_RE.test(rawUserId) ? rawUserId : undefined;
-  const defaultTab = focusUserId ? "members" : "roles";
 
   const myPermissionsQuery = useModuleMyPermissions(moduleKey);
   const myPerms = myPermissionsQuery.data;
@@ -38,58 +39,112 @@ export function ModuleAccessPage({ moduleKey, title }: ModuleAccessPageProps) {
   const canTransferOwnership =
     myPerms?.isOrgOwner === true || myPerms?.isModuleOwner === true;
 
+  const [tab, setTab] = useState(focusUserId ? "members" : "roles");
+  const [createGroupOpen, setCreateGroupOpen] = useState(false);
+  const [addMemberOpen, setAddMemberOpen] = useState(false);
   const [auditLogOpen, setAuditLogOpen] = useState(false);
+
+  const handleTabChange = useCallback((value: string) => setTab(value), []);
   const handleOpenAuditLog = useCallback(() => setAuditLogOpen(true), []);
   const handleAuditLogOpenChange = useCallback(
     (open: boolean) => setAuditLogOpen(open),
     [],
   );
+  const handleOpenCreateGroup = useCallback(() => setCreateGroupOpen(true), []);
+  const handleOpenAddMember = useCallback(() => setAddMemberOpen(true), []);
 
   return (
-    <PageWrapper
-      title={title}
-      subtitle="Manage role groups, members, and permissions for this module."
-      noInternalScroll
-      actions={
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleOpenAuditLog}
-        >
-          <ClipboardList className="h-4 w-4 mr-1.5" />
-          Audit log
-        </Button>
-      }
+    <Tabs
+      value={tab}
+      onValueChange={handleTabChange}
+      className="flex min-h-0 flex-1 flex-col gap-0"
     >
-      <Tabs defaultValue={defaultTab} className="flex flex-col flex-1 min-h-0 gap-0">
-        <TabsList className="mb-4 self-start">
-          <TabsTrigger value="roles">Roles</TabsTrigger>
-          <TabsTrigger value="members">Members</TabsTrigger>
-          <TabsTrigger value="ownership">Ownership</TabsTrigger>
-        </TabsList>
+      <PageWrapper
+        title={title}
+        subtitle="Manage role groups, members, and permissions for this module."
+        noInternalScroll
+        contentClassName="flex min-h-0 flex-1 flex-col"
+        actions={
+          <Button variant="outline" size="sm" onClick={handleOpenAuditLog}>
+            <ClipboardList className="mr-1.5 h-4 w-4" />
+            Audit log
+          </Button>
+        }
+        filtersClassName="justify-between"
+        filters={
+          <>
+            <TabsList className="w-full shrink-0 md:w-auto">
+              <TabsTrigger value="roles">Roles</TabsTrigger>
+              <TabsTrigger value="members">Members</TabsTrigger>
+              <TabsTrigger value="ownership">Ownership</TabsTrigger>
+            </TabsList>
 
-        <TabsContent value="roles" className="flex flex-col flex-1 min-h-0 mt-0">
-          <RolesTab moduleKey={moduleKey} canManage={canManage} />
-        </TabsContent>
+            <div className="ml-auto flex shrink-0 items-center gap-2">
+              {tab === "roles" && canManage ? (
+                <AnimatedIconButton
+                  icon={PlusIcon}
+                  iconSize={14}
+                  iconClassName="mr-1.5"
+                  size="sm"
+                  className="h-8"
+                  onClick={handleOpenCreateGroup}
+                >
+                  New group
+                </AnimatedIconButton>
+              ) : null}
 
-        <TabsContent value="members" className="flex flex-col flex-1 min-h-0 mt-0">
-          <ModuleMembersTab
-            moduleKey={moduleKey}
-            canManage={canManage}
-            focusUserId={focusUserId}
-          />
-        </TabsContent>
+              {tab === "members" && canManage ? (
+                <Button size="sm" className="h-8 gap-1.5" onClick={handleOpenAddMember}>
+                  <UserPlus className="h-3.5 w-3.5" />
+                  Add member
+                </Button>
+              ) : null}
+            </div>
+          </>
+        }
+      >
+        <div className="flex min-h-0 flex-1 flex-col">
+          <TabsContent
+            value="roles"
+            className="mt-0 flex min-h-0 w-full flex-1 flex-col"
+          >
+            <RolesTab
+              moduleKey={moduleKey}
+              canManage={canManage}
+              createOpen={createGroupOpen}
+              onCreateOpenChange={setCreateGroupOpen}
+              hideToolbar
+            />
+          </TabsContent>
 
-        <TabsContent value="ownership" className="mt-0">
-          <OwnershipSection moduleKey={moduleKey} canManage={canTransferOwnership} />
-        </TabsContent>
-      </Tabs>
+          <TabsContent
+            value="members"
+            className="mt-0 flex min-h-0 w-full flex-1 flex-col"
+          >
+            <ModuleMembersTab
+              moduleKey={moduleKey}
+              canManage={canManage}
+              focusUserId={focusUserId}
+              addOpen={addMemberOpen}
+              onAddOpenChange={setAddMemberOpen}
+              hideToolbar
+            />
+          </TabsContent>
+
+          <TabsContent value="ownership" className="mt-0">
+            <OwnershipSection
+              moduleKey={moduleKey}
+              canManage={canTransferOwnership}
+            />
+          </TabsContent>
+        </div>
+      </PageWrapper>
 
       <AuditLogDrawer
         moduleKey={moduleKey}
         open={auditLogOpen}
         onOpenChange={handleAuditLogOpenChange}
       />
-    </PageWrapper>
+    </Tabs>
   );
 }

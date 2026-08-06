@@ -117,13 +117,26 @@ interface ModuleMembersTabProps {
   moduleKey: string;
   canManage: boolean;
   focusUserId?: string;
+  addOpen?: boolean;
+  onAddOpenChange?: (open: boolean) => void;
+  hideToolbar?: boolean;
 }
 
-export function ModuleMembersTab({ moduleKey, canManage, focusUserId }: ModuleMembersTabProps) {
+export function ModuleMembersTab({
+  moduleKey,
+  canManage,
+  focusUserId,
+  addOpen: addOpenProp,
+  onAddOpenChange,
+  hideToolbar = false,
+}: ModuleMembersTabProps) {
   const [page, setPage] = useState(1);
-  const [addOpen, setAddOpen] = useState(false);
+  const [internalAddOpen, setInternalAddOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<ModuleMember | null>(null);
   const [removeTarget, setRemoveTarget] = useState<ModuleMember | null>(null);
+
+  const addOpen = onAddOpenChange ? (addOpenProp ?? false) : internalAddOpen;
+  const setAddOpen = onAddOpenChange ?? setInternalAddOpen;
 
   const membersQuery = useModuleMembers(moduleKey, page, PAGE_SIZE);
   const groupsQuery = useModuleRoleGroups(moduleKey);
@@ -169,7 +182,7 @@ export function ModuleMembersTab({ moduleKey, canManage, focusUserId }: ModuleMe
     canManage,
   ]);
 
-  const handleOpenAdd = useCallback(() => setAddOpen(true), []);
+  const handleOpenAdd = useCallback(() => setAddOpen(true), [setAddOpen]);
   const handleEditMember = useCallback(
     (member: ModuleMember) => setEditTarget(member),
     [],
@@ -187,17 +200,17 @@ export function ModuleMembersTab({ moduleKey, canManage, focusUserId }: ModuleMe
   const handlePageChange = useCallback((p: number) => setPage(p), []);
 
   return (
-    <div className="flex flex-col gap-4 flex-1 min-h-0">
-      {canManage && (
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
+      {canManage && !hideToolbar ? (
         <div className="flex justify-end">
           <Button size="sm" onClick={handleOpenAdd}>
-            <UserPlus className="h-4 w-4 mr-1.5" />
+            <UserPlus className="mr-1.5 h-4 w-4" />
             Add member
           </Button>
         </div>
-      )}
+      ) : null}
 
-      <div className="flex flex-col flex-1 min-h-0 rounded-xl border border-border bg-card overflow-hidden">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border bg-card">
         {membersQuery.isLoading ? (
           <div className="divide-y divide-border/60">
             {Array.from({ length: 5 }).map((_, i) => (

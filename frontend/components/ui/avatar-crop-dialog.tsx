@@ -28,7 +28,7 @@ interface AvatarCropDialogProps {
 
 async function getCroppedImage(
   imageSrc: string,
-  pixelCrop: Area
+  pixelCrop: Area,
 ): Promise<Blob> {
   const image = new Image();
   image.crossOrigin = "anonymous";
@@ -55,7 +55,7 @@ async function getCroppedImage(
     0,
     0,
     pixelCrop.width,
-    pixelCrop.height
+    pixelCrop.height,
   );
 
   return new Promise((resolve, reject) => {
@@ -65,7 +65,7 @@ async function getCroppedImage(
         else reject(new Error("Failed to create blob"));
       },
       "image/jpeg",
-      0.92
+      0.92,
     );
   });
 }
@@ -100,17 +100,28 @@ export function AvatarCropDialog({
     setZoom(1);
   }, []);
 
+  const handleZoomChange = useCallback((val: number[]) => {
+    const next = val[0];
+    if (next !== undefined) setZoom(next);
+  }, []);
+
+  const handleCancel = useCallback(() => {
+    onOpenChange(false);
+  }, [onOpenChange]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md max-h-[90dvh] overflow-y-auto p-0">
-        <div className="px-6 pt-6">
-          <DialogHeader>
-            <DialogTitle>{title}</DialogTitle>
-            <DialogDescription>{description}</DialogDescription>
+      <DialogContent
+        className="max-h-[90dvh] gap-0 overflow-hidden p-0 max-md:pb-0 sm:max-w-sm [&>[aria-hidden=true]]:hidden"
+      >
+        <div className="px-4 pb-2 pr-10 pt-3.5">
+          <DialogHeader className="gap-0.5">
+            <DialogTitle className="text-base">{title}</DialogTitle>
+            <DialogDescription className="text-xs">{description}</DialogDescription>
           </DialogHeader>
         </div>
 
-        <div className="relative w-full aspect-square max-h-[50dvh] bg-muted overflow-hidden">
+        <div className="relative h-[min(32dvh,220px)] w-full overflow-hidden bg-black/40">
           <Cropper
             image={imageSrc}
             crop={crop}
@@ -118,48 +129,48 @@ export function AvatarCropDialog({
             aspect={aspectRatio}
             cropShape={cropShape}
             showGrid={false}
+            objectFit="contain"
             onCropChange={setCrop}
             onZoomChange={setZoom}
             onCropComplete={handleCropComplete}
           />
         </div>
 
-        <div className="px-6 pb-2">
-          <div className="flex items-center gap-3">
-            <ZoomOut className="h-4 w-4 text-muted-foreground shrink-0" />
-            <Slider
-              value={[zoom]}
-              min={1}
-              max={3}
-              step={0.05}
-              onValueChange={(val) => setZoom(val[0])}
-            />
-            <ZoomIn className="h-4 w-4 text-muted-foreground shrink-0" />
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleReset}
-              className="shrink-0"
-              aria-label="Reset zoom"
-            >
-              <RotateCcw className="h-4 w-4" />
-            </Button>
-          </div>
+        <div className="flex items-center gap-2 px-4 py-2">
+          <ZoomOut className="size-3.5 shrink-0 text-muted-foreground" />
+          <Slider
+            value={[zoom]}
+            min={1}
+            max={3}
+            step={0.05}
+            onValueChange={handleZoomChange}
+          />
+          <ZoomIn className="size-3.5 shrink-0 text-muted-foreground" />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleReset}
+            className="size-8 shrink-0"
+            aria-label="Reset zoom"
+          >
+            <RotateCcw className="size-3.5" />
+          </Button>
         </div>
 
-        <DialogFooter className="px-6 pb-6">
+        <DialogFooter className="gap-2 border-t border-border px-4 py-3 sm:justify-end">
           <Button
             variant="outline"
-            onClick={() => onOpenChange(false)}
+            size="sm"
+            onClick={handleCancel}
             disabled={loading}
           >
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={loading}>
+          <Button size="sm" onClick={handleSave} disabled={loading}>
             {loading ? (
               <>
-                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                Saving...
+                <Loader2 className="mr-1 size-3.5 animate-spin" />
+                Saving…
               </>
             ) : (
               "Save Photo"

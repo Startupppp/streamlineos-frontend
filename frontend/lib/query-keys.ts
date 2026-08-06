@@ -12,6 +12,8 @@ export const queryKeys = {
       [...base, "hr", orgId, "attendanceStatus"] as const,
     attendanceLogs: (params?: Record<string, unknown>) =>
       [...base, "hr", "attendanceLogs", params] as const,
+    attendanceHistory: (params: { page: number; limit: number }) =>
+      [...base, "hr", "attendanceHistory", params] as const,
     leaves: (params?: Record<string, unknown>) =>
       [...base, "hr", "leaves", params] as const,
     leaveBalance: (userId?: string) =>

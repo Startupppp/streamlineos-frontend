@@ -13,8 +13,8 @@ export default function SettingsPage() {
       subtitle="Manage your profile and security."
     >
       <div className="space-y-4">
-        <section>
-          <div className="mb-3">
+        <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
+          <div className="mb-4">
             <h2 className="text-[0.9375rem] font-semibold text-foreground">Profile</h2>
             <p className="mt-0.5 text-xs text-muted-foreground">
               Update your display name and profile photo.

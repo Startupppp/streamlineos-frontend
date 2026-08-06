@@ -36,10 +36,13 @@ export function useHrDocumentTypes(options?: { enabled?: boolean }) {
     enabled: options?.enabled ?? true,
     queryKey: [...queryKeys.hr.documentTypes(), "all"] as const,
     queryFn: async () => {
-      const res = await apiClient.get<PaginatedDocumentTypes>("/hr/document-types", {
-        page: 1,
-        limit: 100,
-      });
+      const res = await apiClient.get<PaginatedDocumentTypes | HrDocumentType[]>(
+        "/hr/document-types",
+        {
+          page: 1,
+          limit: 100,
+        },
+      );
       return unwrapDocumentTypes(res);
     },
     staleTime: 5 * 60_000,

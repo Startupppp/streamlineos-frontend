@@ -1,6 +1,11 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import type { UseMutationOptions } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
@@ -45,6 +50,16 @@ export interface CreateRegularizationInput {
   reason: string;
 }
 
+export interface AttendanceHistoryResponse {
+  data: AttendanceLog[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
 export function useHrAttendanceStatus(
   options?: Omit<
     import("@tanstack/react-query").UseQueryOptions<
@@ -67,6 +82,42 @@ export function useHrAttendanceStatus(
     refetchIntervalInBackground: false,
     ...restOptions,
     enabled: !!orgId && canAttendance && (optEnabled ?? true),
+  });
+}
+
+export function useHrAttendanceHistory(page: number, limit: number) {
+  const { data: session } = useSession();
+  const orgId = session?.orgId;
+  const canAttendance = useCan("self:attendance");
+  const params = { page, limit };
+  return useQuery({
+    queryKey: queryKeys.hr.attendanceHistory(params),
+    queryFn: async () => {
+      try {
+        return await apiClient.get<AttendanceHistoryResponse>(
+          "/me/attendance/history",
+          params,
+        );
+      } catch (error) {
+        if ((error as { status?: number }).status !== 404) throw error;
+        const legacyData = await apiClient.get<AttendanceLog[]>(
+          "/me/attendance/logs",
+        );
+        const offset = (page - 1) * limit;
+        return {
+          data: legacyData.slice(offset, offset + limit),
+          pagination: {
+            page,
+            limit,
+            total: legacyData.length,
+            totalPages: Math.ceil(legacyData.length / limit),
+          },
+        };
+      }
+    },
+    staleTime: 60_000,
+    placeholderData: keepPreviousData,
+    enabled: !!orgId && canAttendance,
   });
 }
 
@@ -131,6 +182,9 @@ export function useHrCheckIn(
       void qc.invalidateQueries({ queryKey: statusKey, exact: true });
       void qc.invalidateQueries({ queryKey: queryKeys.hr.attendanceLogs() });
       void qc.invalidateQueries({
+        queryKey: [...queryKeys.hr.all, "attendanceHistory"],
+      });
+      void qc.invalidateQueries({
         queryKey: [...queryKeys.hr.all, "monthlyAttendance"],
       });
       void qc.invalidateQueries({
@@ -187,6 +241,9 @@ export function useHrCheckOut(
     onSettled: () => {
       void qc.invalidateQueries({ queryKey: statusKey, exact: true });
       void qc.invalidateQueries({ queryKey: queryKeys.hr.attendanceLogs() });
+      void qc.invalidateQueries({
+        queryKey: [...queryKeys.hr.all, "attendanceHistory"],
+      });
       void qc.invalidateQueries({
         queryKey: [...queryKeys.hr.all, "monthlyAttendance"],
       });

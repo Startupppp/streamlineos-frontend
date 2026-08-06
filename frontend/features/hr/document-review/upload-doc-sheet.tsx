@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { FileText } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { useUploadFile } from "@/hooks/api/use-upload-file";
 import { useHrDocumentTypes } from "@/hooks/api/hr/document-types";
+import { useMyOnboardingDocs } from "@/hooks/api/hr/documents";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
@@ -33,8 +34,12 @@ interface UploadDocSheetProps {
   userId: string | null;
   userName: string | null;
   onOpenChange: (open: boolean) => void;
-  /** Uploading for yourself rather than on behalf of an employee. */
   selfUpload?: boolean;
+}
+
+interface DocTypeOption {
+  id: number;
+  name: string;
 }
 
 function useUploadOnboardingDoc(selfUpload: boolean) {
@@ -62,19 +67,42 @@ export function UploadDocSheet({
   onOpenChange,
   selfUpload = false,
 }: UploadDocSheetProps) {
-  const { data: documentTypes } = useHrDocumentTypes();
+  const {
+    data: documentTypes,
+    isLoading: typesLoading,
+    isError: typesError,
+    refetch: refetchTypes,
+  } = useHrDocumentTypes({ enabled: open });
+  const { data: myDocs } = useMyOnboardingDocs({ enabled: open && selfUpload });
   const uploadFileMutation = useUploadFile();
   const uploadDocMutation = useUploadOnboardingDoc(selfUpload);
 
-  const [uploadDocTypeId, setUploadDocTypeId] = useState("");
+  const [uploadDocTypeId, setUploadDocTypeId] = useState<string | undefined>(undefined);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const typeOptions = useMemo((): DocTypeOption[] => {
+    const fromCatalog = (documentTypes ?? [])
+      .filter((dt) => dt.isActive !== false)
+      .map((dt) => ({ id: dt.id, name: dt.name }));
+    if (fromCatalog.length > 0) return fromCatalog;
+
+    if (!selfUpload) return [];
+
+    const byId = new Map<number, string>();
+    for (const doc of myDocs?.data ?? []) {
+      if (!byId.has(doc.documentTypeId)) {
+        byId.set(doc.documentTypeId, doc.documentTypeName);
+      }
+    }
+    return Array.from(byId, ([id, name]) => ({ id, name }));
+  }, [documentTypes, myDocs?.data, selfUpload]);
+
   const handleCloseSheet = useCallback(
     (nextOpen: boolean) => {
       if (!nextOpen) {
-        setUploadDocTypeId("");
+        setUploadDocTypeId(undefined);
         setUploadFile(null);
         if (fileInputRef.current) fileInputRef.current.value = "";
       }
@@ -102,6 +130,10 @@ export function UploadDocSheet({
   const handleChooseFile = useCallback(() => {
     fileInputRef.current?.click();
   }, []);
+
+  const handleRetryTypes = useCallback(() => {
+    void refetchTypes();
+  }, [refetchTypes]);
 
   const handleUploadSubmit = useCallback(async () => {
     if (!selfUpload && !userId) return;
@@ -148,7 +180,7 @@ export function UploadDocSheet({
 
   return (
     <Sheet open={open} onOpenChange={handleCloseSheet}>
-      <SheetContent side="right" className="flex flex-col p-0 gap-0">
+      <SheetContent side="right" className="flex flex-col gap-0 p-0">
         <SheetHeader className="shrink-0 border-b px-6 py-4">
           <SheetTitle className="text-base font-semibold">Upload Document</SheetTitle>
           <SheetDescription className="text-xs">
@@ -165,40 +197,74 @@ export function UploadDocSheet({
 
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-6 py-4">
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+            <Label className="text-xs font-semibold uppercase tracking-wider text-foreground/80">
               Document Type <span className="text-destructive">*</span>
             </Label>
-            <Select value={uploadDocTypeId} onValueChange={setUploadDocTypeId}>
-              <SelectTrigger className="">
-                <SelectValue placeholder="Select document type" />
+            <Select
+              value={uploadDocTypeId}
+              onValueChange={setUploadDocTypeId}
+              disabled={typeOptions.length === 0}
+            >
+              <SelectTrigger>
+                <SelectValue
+                  placeholder={
+                    typesLoading
+                      ? "Loading document types…"
+                      : typesError && typeOptions.length === 0
+                        ? "Document types unavailable"
+                        : typeOptions.length === 0
+                          ? "No document types available"
+                          : "Select document type"
+                  }
+                />
               </SelectTrigger>
               <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-                {(documentTypes ?? [])
-                  .filter((dt) => dt.isActive !== false)
-                  .map((dt) => (
-                    <SelectItem key={dt.id} value={String(dt.id)}>
-                      {dt.name}
-                    </SelectItem>
-                  ))}
+                {typeOptions.map((dt) => (
+                  <SelectItem key={dt.id} value={String(dt.id)}>
+                    {dt.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
+            {typesError && typeOptions.length === 0 ? (
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-[11px] text-muted-foreground">
+                  Couldn’t load document types.
+                </p>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-xs"
+                  onClick={handleRetryTypes}
+                >
+                  Retry
+                </Button>
+              </div>
+            ) : null}
+            {!typesLoading && !typesError && typeOptions.length === 0 ? (
+              <p className="text-[11px] text-muted-foreground">
+                No document types configured. Ask HR to add them under Document
+                Types.
+              </p>
+            ) : null}
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+            <Label className="text-xs font-semibold uppercase tracking-wider text-foreground/80">
               File <span className="text-destructive">*</span>
             </Label>
             {uploadFile ? (
               <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2">
-                <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
-                <span className="text-xs truncate text-foreground flex-1 min-w-0">
+                <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                <span className="min-w-0 flex-1 truncate text-xs text-foreground">
                   {uploadFile.name}
                 </span>
                 <AnimatedIconButton
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="h-5 w-5 shrink-0 hover:text-destructive transition-colors duration-200"
+                  className="h-5 w-5 shrink-0 transition-colors duration-200 hover:text-destructive"
                   onClick={handleClearFile}
                   aria-label="Remove file"
                   icon={XIcon}
@@ -209,7 +275,7 @@ export function UploadDocSheet({
               <AnimatedIconButton
                 type="button"
                 variant="outline"
-                className="h-9 w-full gap-1.5 text-xs border-dashed"
+                className="h-9 w-full gap-1.5 border-dashed text-xs"
                 onClick={handleChooseFile}
                 disabled={isUploading}
                 icon={UploadIcon}
@@ -244,7 +310,7 @@ export function UploadDocSheet({
           <Button
             className="flex-1"
             onClick={handleUploadSubmit}
-            disabled={isUploading || !uploadDocTypeId || !uploadFile}
+            disabled={isUploading || !uploadDocTypeId || !uploadFile || typeOptions.length === 0}
           >
             {isUploading ? "Uploading..." : "Upload"}
           </Button>

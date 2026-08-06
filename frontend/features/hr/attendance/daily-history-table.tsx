@@ -1,13 +1,13 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { PAGE_BODY_EMPTY_CLASS } from "@/components/ui/content-fill-panel";
-import { useHrAttendanceStatus } from "@/hooks/api/hr";
+import { useHrAttendanceHistory } from "@/hooks/api/hr";
 import { toast } from "sonner";
 import { ClipboardList } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -25,12 +25,14 @@ const statusBadgeClasses: Record<string, string> = {
   WFH: "bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-500/30",
   ON_BREAK: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
   CHECKED_OUT: "bg-muted text-muted-foreground border-border",
+  MISSING_CHECKOUT: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
 };
 
 function getStatusLabel(statusKey: string): string {
   if (statusKey === "CHECKED_OUT") return "Checked Out";
   if (statusKey === "ON_BREAK") return "On Break";
   if (statusKey === "HALF_DAY") return "Half Day";
+  if (statusKey === "MISSING_CHECKOUT") return "Missing Checkout";
   return statusKey.charAt(0) + statusKey.slice(1).toLowerCase();
 }
 
@@ -81,10 +83,22 @@ const columns: DataTableColumn<AttendanceLog>[] = [
     key: "status",
     header: "Status",
     cell: (log) => {
+      const recordedStatus = log.status?.toUpperCase();
+      const isClassifiedStatus =
+        recordedStatus === "ABSENT" ||
+        recordedStatus === "HALF_DAY" ||
+        recordedStatus === "LATE" ||
+        recordedStatus === "WFH";
       const statusKey =
-        log.checkOut && log.status !== "ON_BREAK"
-          ? "CHECKED_OUT"
-          : log.status || "PRESENT";
+        isClassifiedStatus && recordedStatus
+          ? recordedStatus
+          : !log.checkOut &&
+              log.date < format(new Date(), "yyyy-MM-dd") &&
+              (log.status === "PRESENT" || !log.status)
+            ? "MISSING_CHECKOUT"
+            : log.checkOut && log.status !== "ON_BREAK"
+              ? "CHECKED_OUT"
+              : log.status || "PRESENT";
       const badgeClass = statusBadgeClasses[statusKey] ?? statusBadgeClasses.PRESENT;
       return (
         <Badge
@@ -150,8 +164,34 @@ export const DailyHistoryTable = memo(function DailyHistoryTable({
   fill?: boolean;
   chrome?: boolean;
 }) {
-  const { data, isLoading } = useHrAttendanceStatus();
-  const logs = data?.logs || [];
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const { data, isLoading } = useHrAttendanceHistory(page, pageSize);
+  const logs = data?.data ?? [];
+  const total = data?.pagination.total ?? 0;
+  const totalPages = Math.max(1, data?.pagination.totalPages ?? 1);
+
+  useEffect(() => {
+    if (!isLoading && page > totalPages) setPage(totalPages);
+  }, [isLoading, page, totalPages]);
+
+  const handlePageChange = useCallback((nextPage: number) => {
+    setPage(nextPage);
+  }, []);
+
+  const handlePageSizeChange = useCallback((nextPageSize: number) => {
+    setPageSize(nextPageSize);
+    setPage(1);
+  }, []);
+
+  const pagination = {
+    page,
+    pageSize,
+    total,
+    onPageChange: handlePageChange,
+    onPageSizeChange: handlePageSizeChange,
+    pageSizeOptions: [10, 20, 50] as const,
+  };
 
   function handleDownloadClick() {
     void handleDownloadReport(logs);
@@ -186,6 +226,7 @@ export const DailyHistoryTable = memo(function DailyHistoryTable({
           minWidth="640px"
           className="min-h-0 flex-1"
           emptyState={emptyState}
+          pagination={pagination}
         />
       </div>
     );
@@ -216,7 +257,7 @@ export const DailyHistoryTable = memo(function DailyHistoryTable({
               iconSize={14}
               iconClassName="mr-1.5"
             >
-              Download
+              Download page
             </AnimatedIconButton>
           </div>
         </div>
@@ -233,6 +274,7 @@ export const DailyHistoryTable = memo(function DailyHistoryTable({
           isLoading={isLoading}
           minWidth="640px"
           emptyState={emptyState}
+          pagination={pagination}
         />
       </CardContent>
     </Card>

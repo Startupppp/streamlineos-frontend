@@ -189,7 +189,7 @@ export function SettingsProfile() {
   return (
     <>
 
-      <div className="flex items-center gap-4 mb-6">
+      <div className="mb-4 flex items-center gap-4">
         <div className="relative group shrink-0">
           <Avatar className="h-16 w-16 ring-2 ring-border">
             <AvatarImage src={displayImage} />

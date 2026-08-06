@@ -44,9 +44,10 @@ export function useAttendanceCalendarEvents(
   });
 
   return useMemo(() => {
-    const latestByDate = new Map<string, AttendanceLog>();
+    const logsByDate = new Map<string, AttendanceLog[]>();
     const from = format(rangeStart, "yyyy-MM-dd");
     const to = format(rangeEnd, "yyyy-MM-dd");
+    const today = format(new Date(), "yyyy-MM-dd");
     const approvedWfhByDate = new Map(
       wfhRequests
         .filter((request) => request.status === "APPROVED")
@@ -61,62 +62,116 @@ export function useAttendanceCalendarEvents(
     );
     for (const query of queries) {
       for (const log of query.data ?? []) {
-        const current = latestByDate.get(log.date);
-        if (
-          !current ||
-          toTimestamp(log.createdAt) > toTimestamp(current.createdAt)
-        ) {
-          latestByDate.set(log.date, log);
-        }
+        const logs = logsByDate.get(log.date) ?? [];
+        logs.push(log);
+        logsByDate.set(log.date, logs);
       }
     }
 
-    return [...latestByDate.values()]
-      .map((log) => {
-        const hours = log.workHours ? Number.parseFloat(log.workHours) : 0;
-        const isWfh = approvedWfhByDate.has(log.date);
-        const day = new Date(`${log.date}T12:00:00`);
+    return [...logsByDate.entries()]
+      .map(([date, logs]) => {
+        const latest = logs.reduce((current, log) =>
+          toTimestamp(log.createdAt) > toTimestamp(current.createdAt)
+            ? log
+            : current,
+        );
+        const hours = logs.reduce(
+          (total, log) =>
+            total +
+            Math.max(
+              0,
+              Number(log.workHours ?? 0) - Number(log.breakHours ?? 0),
+            ),
+          0,
+        );
+        const statuses = new Set(
+          logs.map((log) => log.status?.toUpperCase()).filter(Boolean),
+        );
+        const hasOpenSession = logs.some((log) => !log.checkOut);
+        const firstCheckIn = logs
+          .map((log) => log.checkIn)
+          .filter((value): value is Date | string => value !== null)
+          .reduce<Date | string | null>(
+            (earliest, value) =>
+              !earliest || new Date(value) < new Date(earliest)
+                ? value
+                : earliest,
+            null,
+          );
+        const lastCheckOut = logs
+          .map((log) => log.checkOut)
+          .filter((value): value is Date | string => value !== null)
+          .reduce<Date | string | null>(
+            (latestValue, value) =>
+              !latestValue || new Date(value) > new Date(latestValue)
+                ? value
+                : latestValue,
+            null,
+          );
+        const isPast = date < today;
+        const status = statuses.has("ABSENT")
+          ? "Absent"
+          : statuses.has("HALF_DAY")
+            ? "Half day"
+            : statuses.has("LATE")
+              ? "Late"
+              : hasOpenSession && isPast
+                ? "Missing checkout"
+                : "Present";
+        const isWfh = approvedWfhByDate.has(date) || statuses.has("WFH");
+        const day = new Date(`${date}T12:00:00`);
         const details = [
           isWfh ? "Work from home" : null,
-          log.status === "ON_BREAK" ? "On break" : null,
+          statuses.has("ON_BREAK") ? "Currently on break" : null,
           hours > 0 ? `${hours.toFixed(1)} hours recorded` : null,
-          log.checkIn ? `Check-in ${format(new Date(log.checkIn), "p")}` : null,
-          log.checkOut
-            ? `Check-out ${format(new Date(log.checkOut), "p")}`
+          firstCheckIn
+            ? `Check-in ${format(new Date(firstCheckIn), "p")}`
+            : null,
+          lastCheckOut
+            ? `Check-out ${format(new Date(lastCheckOut), "p")}`
             : null,
         ].filter((value): value is string => Boolean(value));
 
         return {
-          id: `attendance-self-${log.id}`,
-          title: `Attendance${isWfh ? " - WFH" : ""}${
+          id: `attendance-self-${latest.id}`,
+          title: `${isWfh ? "WFH" : "Attendance"} - ${status}${
             hours > 0 ? ` - ${hours.toFixed(1)}h` : ""
           }`,
           start: day.toISOString(),
           end: day.toISOString(),
           allDay: true,
-          color: "green",
+          color:
+            status === "Absent"
+              ? "red"
+              : status === "Half day" ||
+                  status === "Late" ||
+                  status === "Missing checkout"
+                ? "yellow"
+                : isWfh
+                  ? "blue"
+                  : "green",
           category: "attendance",
           source: "attendance" as const,
           description: details.join(" - ") || null,
         };
       })
       .concat(
-      [...approvedWfhByDate.entries()]
-        .filter(([date]) => !latestByDate.has(date))
-        .map(([date, request]) => {
-          const day = new Date(`${date}T12:00:00`);
-          return {
-            id: `attendance-self-wfh-${request.id}`,
-            title: "Attendance - WFH",
-            start: day.toISOString(),
-            end: day.toISOString(),
-            allDay: true,
-            color: "green",
-            category: "attendance",
-            source: "attendance" as const,
-            description: "Approved work-from-home day",
-          };
-        }),
+        [...approvedWfhByDate.entries()]
+          .filter(([date]) => !logsByDate.has(date))
+          .map(([date, request]) => {
+            const day = new Date(`${date}T12:00:00`);
+            return {
+              id: `attendance-self-wfh-${request.id}`,
+              title: "WFH approved",
+              start: day.toISOString(),
+              end: day.toISOString(),
+              allDay: true,
+              color: "blue",
+              category: "attendance",
+              source: "attendance" as const,
+              description: "Approved work-from-home day",
+            };
+          }),
       );
   }, [queries, rangeEnd, rangeStart, wfhRequests]);
 }

@@ -136,26 +136,38 @@ function GroupListItem({
 interface RolesTabProps {
   moduleKey: string;
   canManage: boolean;
+  createOpen?: boolean;
+  onCreateOpenChange?: (open: boolean) => void;
+  hideToolbar?: boolean;
 }
 
-export function RolesTab({ moduleKey, canManage }: RolesTabProps) {
+export function RolesTab({
+  moduleKey,
+  canManage,
+  createOpen: createOpenProp,
+  onCreateOpenChange,
+  hideToolbar = false,
+}: RolesTabProps) {
   const catalogQuery = useModuleAccessCatalog(moduleKey);
   const groupsQuery = useModuleRoleGroups(moduleKey);
   const renameGroup = useRenameModuleRoleGroup(moduleKey);
   const deleteGroup = useDeleteModuleRoleGroup(moduleKey);
 
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
-  const [createOpen, setCreateOpen] = useState(false);
+  const [internalCreateOpen, setInternalCreateOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<ModuleRoleGroup | null>(null);
   const [renameTarget, setRenameTarget] = useState<ModuleRoleGroup | null>(null);
   const [renameName, setRenameName] = useState("");
+
+  const createOpen = onCreateOpenChange ? (createOpenProp ?? false) : internalCreateOpen;
+  const setCreateOpen = onCreateOpenChange ?? setInternalCreateOpen;
 
   const groups = groupsQuery.data ?? [];
   const catalog = catalogQuery.data ?? [];
   const selectedGroup = groups.find((g) => g.id === selectedGroupId) ?? null;
 
   const handleSelectGroup = useCallback((id: number) => setSelectedGroupId(id), []);
-  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
+  const handleOpenCreate = useCallback(() => setCreateOpen(true), [setCreateOpen]);
   const handleGroupCreated = useCallback((id: number) => setSelectedGroupId(id), []);
   const handleDeleteDialogOpenChange = useCallback(
     (open: boolean) => {
@@ -218,8 +230,8 @@ export function RolesTab({ moduleKey, canManage }: RolesTabProps) {
   const isError = catalogQuery.isError || groupsQuery.isError;
 
   return (
-    <div className="flex flex-col gap-4 flex-1 min-h-0">
-      {canManage && (
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
+      {canManage && !hideToolbar ? (
         <div className="flex justify-end">
           <AnimatedIconButton
             icon={PlusIcon}
@@ -231,7 +243,7 @@ export function RolesTab({ moduleKey, canManage }: RolesTabProps) {
             New group
           </AnimatedIconButton>
         </div>
-      )}
+      ) : null}
 
       {isLoading ? (
         <GroupDetailSkeleton />
