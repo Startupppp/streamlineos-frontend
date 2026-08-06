@@ -23,6 +23,9 @@ Full text of any pre-2026-08-03 entry is in git history.
 ## Changelog
 
 **2026-08-06**
+- `/dashboard` card rows regain vertical gap: deferred widget stack uses `flex flex-col gap-4`, in-row grids use `gap-4`. `deferred-dashboard-content.tsx` · `dashboard-client.tsx` · frontend typecheck.
+- `/me/attendance` Today timer redesigned: status chip, clearer digit clock, one primary CTA per state (check-in / check-out / resume), quieter secondary break action; Work/Break totals as twin metric tiles with icons and active-state tint. `check-in-button.tsx` · `my-attendance-page.tsx` · frontend typecheck.
+- Organization switcher now eagerly loads memberships with the authenticated shell instead of waiting for interaction; `/calendar` supplements its aggregate feed from the deployed self-attendance monthly API and deduplicates by date for rollout-safe attendance visibility. `org-switcher.tsx` · `use-attendance-calendar-events.ts` · `calendar-view.tsx` · frontend typecheck.
 - `/me/pay` tab panels (bank empty + all ESS skeletons/empties) fill remaining height via `h-full` tab chain and `PAGE_BODY_*` surfaces; attendance/announcements tab panels match. `me-page.tsx` · `ess-*-section.tsx` · `content-fill-panel.tsx` · frontend typecheck.
 - ESS/HR page bodies keep a full-width `bg-card` surface for empty, skeleton, and list states (`PAGE_BODY_EMPTY_CLASS` / `PAGE_BODY_SKELETON_CLASS`): `/me/attendance` · `/me/expenses` · `/me/pay` · `/me/documents` · `/me/time-off` · `/hr/announcements` · `/directory`. `content-fill-panel.tsx` · page components · frontend typecheck.
 - `/calendar` list/history empty: full-height centered EmptyState with calendar illustration. `calendar-events-panel.tsx` · frontend typecheck.

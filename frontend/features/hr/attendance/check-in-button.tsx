@@ -4,7 +4,6 @@ import { useState, useEffect, useMemo, useCallback, useRef, memo } from "react";
 import { format, getDay } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Tooltip,
@@ -21,16 +20,95 @@ import {
 } from "@/hooks/api/hr";
 import { toast } from "sonner";
 import {
+  Briefcase,
   Clock,
   Coffee,
   LogIn,
   LogOut,
-  Play,
   Pause,
+  Play,
+  type LucideIcon,
 } from "lucide-react";
 import { formatDuration, formatTimerSegment } from "./attendance-utils";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
+
+function TimerDigit({ value, label }: { value: number; label: string }) {
+  return (
+    <div className="flex min-w-0 flex-1 flex-col items-center gap-1.5">
+      <div className="flex h-16 w-full items-center justify-center rounded-xl border border-border bg-muted/40">
+        <span className="font-mono text-3xl font-semibold tracking-tight tabular-nums text-foreground sm:text-4xl">
+          {formatTimerSegment(value)}
+        </span>
+      </div>
+      <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+        {label}
+      </span>
+    </div>
+  );
+}
+
+function TimerSeparator() {
+  return (
+    <span
+      className="mb-5 select-none text-xl font-semibold text-muted-foreground/50"
+      aria-hidden
+    >
+      :
+    </span>
+  );
+}
+
+function SessionMetric({
+  label,
+  value,
+  icon: Icon,
+  tone,
+  emphasized,
+}: {
+  label: string;
+  value: string;
+  icon: LucideIcon;
+  tone: "work" | "break";
+  emphasized: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "flex min-w-0 flex-1 flex-col items-center gap-1.5 rounded-xl border px-3 py-3 transition-colors",
+        emphasized &&
+          tone === "work" &&
+          "border-emerald-200 bg-emerald-50/70 dark:border-emerald-500/30 dark:bg-emerald-500/10",
+        emphasized &&
+          tone === "break" &&
+          "border-amber-200 bg-amber-50/70 dark:border-amber-500/30 dark:bg-amber-500/10",
+        !emphasized && "border-border/80 bg-muted/30",
+      )}
+    >
+      <div
+        className={cn(
+          "flex items-center gap-1.5",
+          emphasized && tone === "work" && "text-emerald-700 dark:text-emerald-300",
+          emphasized && tone === "break" && "text-amber-700 dark:text-amber-300",
+          !emphasized && "text-muted-foreground",
+        )}
+      >
+        <Icon className="size-3.5 shrink-0 text-current" aria-hidden />
+        <span className="text-[11px] font-medium uppercase tracking-[0.12em]">
+          {label}
+        </span>
+      </div>
+      <p
+        className={cn(
+          "font-mono text-lg font-semibold tabular-nums tracking-tight",
+          emphasized ? "text-foreground" : "text-muted-foreground",
+        )}
+      >
+        {value}
+      </p>
+    </div>
+  );
+}
 
 export const TimerCard = memo(function TimerCard({
   chrome = true,
@@ -158,9 +236,7 @@ export const TimerCard = memo(function TimerCard({
       (Number(statusData.todayLog.breakHours) || 0) * 3600000;
     const totalBreakMs = serverBreakMs + localExtraBreakMs;
     const currentBreakMs =
-      isOnBreak && breakStart
-        ? now.getTime() - breakStart
-        : 0;
+      isOnBreak && breakStart ? now.getTime() - breakStart : 0;
     const allBreakMs = totalBreakMs + currentBreakMs;
     const diffMs = Math.max(
       0,
@@ -180,14 +256,9 @@ export const TimerCard = memo(function TimerCard({
     });
   }, [checkInMutation]);
 
-  const handleClockAction = useCallback(() => {
-    const localDate = format(new Date(), "yyyy-MM-dd");
-    if (isActive) {
-      checkOutMutation.mutate({ localDate });
-    } else if (!isInCooldown) {
-      checkInMutation.mutate({ location: undefined, localDate });
-    }
-  }, [isActive, isInCooldown, checkInMutation, checkOutMutation]);
+  const handleCheckOut = useCallback(() => {
+    checkOutMutation.mutate({ localDate: format(new Date(), "yyyy-MM-dd") });
+  }, [checkOutMutation]);
 
   const handleBreakToggle = useCallback(() => {
     const goingOnBreak = !isOnBreak;
@@ -200,193 +271,172 @@ export const TimerCard = memo(function TimerCard({
 
   const dailyStats = statusData?.dailyStats;
   const checkInTime = statusData?.todayLog?.checkIn;
+  const cooldownLabel = `${Math.floor(localCooldown / 60)}:${String(localCooldown % 60).padStart(2, "0")}`;
+
+  const statusLabel = isBlockedDay
+    ? isSundayToday
+      ? "Sunday — check-in unavailable"
+      : `Holiday · ${todayHolidayName}`
+    : isOnBreak
+      ? "On break"
+      : isCheckedIn && checkInTime
+        ? `Checked in · ${format(new Date(checkInTime), "h:mm a")}`
+        : isInCooldown
+          ? `Cooldown · ${cooldownLabel}`
+          : "Not clocked in";
 
   if (isLoading) {
     return (
       <div
         className={cn(
-          "space-y-4 p-4",
-          chrome && "overflow-hidden rounded-xl border border-border bg-card",
+          "space-y-5 p-1",
+          chrome && "overflow-hidden rounded-xl border border-border bg-card p-4",
         )}
       >
-        <div className="flex flex-col items-center gap-3">
-          <div className="flex items-center gap-2">
-            <Skeleton className="h-14 w-14 rounded-lg" />
-            <Skeleton className="h-5 w-3" />
-            <Skeleton className="h-14 w-14 rounded-lg" />
-            <Skeleton className="h-5 w-3" />
-            <Skeleton className="h-14 w-14 rounded-lg" />
-          </div>
-          <Skeleton className="h-4 w-40" />
-          <Skeleton className="h-9 w-full rounded-lg" />
+        <Skeleton className="mx-auto h-6 w-36 rounded-full" />
+        <div className="flex items-end gap-2">
+          <Skeleton className="h-16 flex-1 rounded-xl" />
+          <Skeleton className="mb-5 h-5 w-2" />
+          <Skeleton className="h-16 flex-1 rounded-xl" />
+          <Skeleton className="mb-5 h-5 w-2" />
+          <Skeleton className="h-16 flex-1 rounded-xl" />
         </div>
+        <Skeleton className="h-10 w-full rounded-lg" />
+        <Skeleton className="h-10 w-full rounded-lg" />
       </div>
     );
   }
 
   const body = (
-    <div className="space-y-4">
-        <div
-          className="flex items-center justify-center gap-2"
-          aria-label={`Session time: ${sessionTimer.hours} hours, ${sessionTimer.minutes} minutes, ${sessionTimer.seconds} seconds`}
-        >
-          <div className="flex flex-col items-center">
-            <div className="min-w-[56px] rounded-lg bg-muted px-3 py-2.5 text-center">
-              <span className="font-mono text-2xl font-bold tabular-nums text-foreground">
-                {formatTimerSegment(sessionTimer.hours)}
-              </span>
-            </div>
-            <span className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Hrs
-            </span>
-          </div>
-
-          <span className="mb-4 text-xl font-bold text-muted-foreground">:</span>
-
-          <div className="flex flex-col items-center">
-            <div className="min-w-[56px] rounded-lg bg-muted px-3 py-2.5 text-center">
-              <span className="font-mono text-2xl font-bold tabular-nums text-foreground">
-                {formatTimerSegment(sessionTimer.minutes)}
-              </span>
-            </div>
-            <span className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Min
-            </span>
-          </div>
-
-          <span className="mb-4 text-xl font-bold text-muted-foreground">:</span>
-
-          <div className="flex flex-col items-center">
-            <div className="min-w-[56px] rounded-lg bg-muted px-3 py-2.5 text-center">
-              <span className="font-mono text-2xl font-bold tabular-nums text-foreground">
-                {formatTimerSegment(sessionTimer.seconds)}
-              </span>
-            </div>
-            <span className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Sec
-            </span>
-          </div>
-        </div>
-
-        <p
+    <div className="flex flex-col gap-5">
+      <div className="flex justify-center">
+        <span
           className={cn(
-            "text-center text-sm",
-            isOnBreak && "font-medium text-amber-600 dark:text-amber-300",
+            "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium",
+            isOnBreak &&
+              "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200",
             isCheckedIn &&
               !isOnBreak &&
-              "font-medium text-emerald-600 dark:text-emerald-300",
+              "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200",
             !isActive &&
-              !isInCooldown &&
               !isBlockedDay &&
-              "italic text-muted-foreground",
-            !isActive && isInCooldown && "font-medium text-muted-foreground",
-            isBlockedDay && "font-medium text-amber-600 dark:text-amber-300",
+              "border-border bg-muted/50 text-muted-foreground",
+            isBlockedDay &&
+              "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200",
           )}
         >
-          {isOnBreak && "On break"}
-          {isCheckedIn &&
-            !isOnBreak &&
-            checkInTime &&
-            `Checked in at ${format(new Date(checkInTime), "hh:mm a")}`}
-          {!isActive && !isInCooldown && !isBlockedDay && "Not clocked in"}
-          {!isActive &&
-            isInCooldown &&
-            `Cooldown: ${Math.floor(localCooldown / 60)}:${String(localCooldown % 60).padStart(2, "0")}`}
-          {isBlockedDay &&
-            (isSundayToday
-              ? "Sunday — no check-in"
-              : `Holiday: ${todayHolidayName}`)}
-        </p>
+          {isOnBreak ? <Coffee className="h-3 w-3 text-current" /> : null}
+          {isCheckedIn && !isOnBreak ? (
+            <span className="size-1.5 rounded-full bg-emerald-500" aria-hidden />
+          ) : null}
+          {statusLabel}
+        </span>
+      </div>
 
-        {isOnBreak && (
-          <div className="flex justify-center">
-            <Badge
-              variant="outline"
-              className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300"
-            >
-              <Coffee className="h-3 w-3" /> On Break
-            </Badge>
-          </div>
-        )}
+      <div
+        className="flex items-end gap-2"
+        aria-label={`Session time: ${sessionTimer.hours} hours, ${sessionTimer.minutes} minutes, ${sessionTimer.seconds} seconds`}
+      >
+        <TimerDigit value={sessionTimer.hours} label="Hrs" />
+        <TimerSeparator />
+        <TimerDigit value={sessionTimer.minutes} label="Min" />
+        <TimerSeparator />
+        <TimerDigit value={sessionTimer.seconds} label="Sec" />
+      </div>
 
-        <TooltipProvider>
-          <div className={isActive ? "grid grid-cols-2 gap-2" : "flex"}>
+      <TooltipProvider>
+        <div className="flex flex-col gap-2">
+          {!isActive ? (
             <Tooltip>
               <TooltipTrigger asChild>
                 <LoadingButton
                   onClick={handleCheckIn}
-                  disabled={isActive || isInCooldown || isBlockedDay || checkOutMutation.isPending}
+                  disabled={isInCooldown || isBlockedDay || checkOutMutation.isPending}
                   isPending={checkInMutation.isPending}
-                  variant={isActive ? "secondary" : "default"}
-                  className={cn(
-                    "h-9 flex-1 gap-1.5 font-semibold",
-                    !isActive &&
-                      !isInCooldown &&
-                      !isBlockedDay &&
-                      "bg-emerald-600 text-white hover:bg-emerald-700",
-                  )}
+                  className="h-10 w-full gap-1.5 font-semibold"
                 >
-                  <LogIn className="h-4 w-4" />
-                  {isInCooldown
-                    ? `Wait ${Math.floor(localCooldown / 60)}:${String(localCooldown % 60).padStart(2, "0")}`
-                    : "Check In"}
+                  <LogIn className="h-4 w-4 text-current" />
+                  {isInCooldown ? `Wait ${cooldownLabel}` : "Check In"}
                 </LoadingButton>
               </TooltipTrigger>
-              {isBlockedDay && <TooltipContent>{blockedReason}</TooltipContent>}
+              {isBlockedDay ? (
+                <TooltipContent>{blockedReason}</TooltipContent>
+              ) : null}
             </Tooltip>
+          ) : null}
 
-            {isActive && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <LoadingButton
-                    onClick={handleClockAction}
-                    disabled={isBlockedDay || checkInMutation.isPending}
-                    isPending={checkOutMutation.isPending}
-                    className="h-9 gap-1.5 bg-rose-600 font-semibold text-white hover:bg-rose-700"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    Check Out
-                  </LoadingButton>
-                </TooltipTrigger>
-                {isBlockedDay && <TooltipContent>{blockedReason}</TooltipContent>}
-              </Tooltip>
-            )}
-          </div>
-        </TooltipProvider>
+          {isActive && !isOnBreak ? (
+            <>
+              <LoadingButton
+                onClick={handleCheckOut}
+                disabled={isBlockedDay || checkInMutation.isPending}
+                isPending={checkOutMutation.isPending}
+                className="h-10 w-full gap-1.5 bg-rose-600 font-semibold text-white hover:bg-rose-700"
+              >
+                <LogOut className="h-4 w-4 text-current" />
+                Check Out
+              </LoadingButton>
+              <LoadingButton
+                variant="outline"
+                onClick={handleBreakToggle}
+                disabled={isBlockedDay}
+                isPending={breakMutation.isPending}
+                className="h-10 w-full gap-1.5 border-amber-200 text-amber-700 hover:bg-amber-50 hover:text-amber-800 dark:border-amber-500/30 dark:text-amber-300 dark:hover:bg-amber-500/10 dark:hover:text-amber-200"
+              >
+                <Pause className="h-4 w-4 text-current" />
+                Take Break
+              </LoadingButton>
+            </>
+          ) : null}
 
-        {isActive && (
-          <LoadingButton
-            variant="outline"
-            onClick={handleBreakToggle}
-            disabled={isBlockedDay}
-            isPending={breakMutation.isPending}
-            className="h-9 w-full gap-1.5 border-amber-200 text-amber-700 hover:bg-amber-50 dark:border-amber-500/30 dark:text-amber-300 dark:hover:bg-amber-500/10"
-          >
-            {isOnBreak ? (
-              <Play className="h-4 w-4" />
-            ) : (
-              <Pause className="h-4 w-4" />
-            )}
-            {isOnBreak ? "Resume Work" : "Take Break"}
-          </LoadingButton>
-        )}
+          {isOnBreak ? (
+            <>
+              <LoadingButton
+                onClick={handleBreakToggle}
+                disabled={isBlockedDay}
+                isPending={breakMutation.isPending}
+                className="h-10 w-full gap-1.5 bg-amber-600 font-semibold text-white hover:bg-amber-700"
+              >
+                <Play className="h-4 w-4 text-current" />
+                Resume Work
+              </LoadingButton>
+              <LoadingButton
+                variant="outline"
+                onClick={handleCheckOut}
+                disabled={isBlockedDay || checkInMutation.isPending}
+                isPending={checkOutMutation.isPending}
+                className="h-10 w-full gap-1.5"
+              >
+                <LogOut className="h-4 w-4 text-current" />
+                Check Out
+              </LoadingButton>
+            </>
+          ) : null}
+        </div>
+      </TooltipProvider>
 
-        {dailyStats && (
-          <div className="grid grid-cols-2 gap-3 border-t border-border pt-3">
-            <div>
-              <p className="text-[11px] text-muted-foreground">Work</p>
-              <p className="text-sm font-semibold tabular-nums">
-                {formatDuration(dailyStats.workHours)}
-              </p>
-            </div>
-            <div>
-              <p className="text-[11px] text-muted-foreground">Break</p>
-              <p className="text-sm font-semibold tabular-nums">
-                {formatDuration(dailyStats.breakHours)}
-              </p>
-            </div>
-          </div>
-        )}
+      {dailyStats ? (
+        <div
+          className="flex gap-2"
+          role="group"
+          aria-label="Today's work and break totals"
+        >
+          <SessionMetric
+            label="Work"
+            value={formatDuration(dailyStats.workHours)}
+            icon={Briefcase}
+            tone="work"
+            emphasized={isActive && !isOnBreak}
+          />
+          <SessionMetric
+            label="Break"
+            value={formatDuration(dailyStats.breakHours)}
+            icon={Coffee}
+            tone="break"
+            emphasized={isOnBreak}
+          />
+        </div>
+      ) : null}
     </div>
   );
 

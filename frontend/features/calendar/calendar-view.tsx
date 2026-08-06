@@ -43,6 +43,7 @@ import { useCalendarAccountFilters } from "./use-calendar-account-filters";
 import { useHrCalendarEventsMapped, useHrEventsVisible } from "./use-hr-calendar-events";
 import { useCrmEventsVisible } from "./use-crm-calendar-events";
 import { useCalendarSourceVisibility } from "./use-calendar-source-visibility";
+import { useAttendanceCalendarEvents } from "./use-attendance-calendar-events";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useFinalizeIntegrationConnection } from "@/hooks/api/integrations";
 import { useCalendarConnections } from "./use-calendar-connections";
@@ -142,6 +143,23 @@ export function CalendarView() {
     toggle: toggleAttendanceEvents,
   } = useCalendarSourceVisibility("attendance", true);
   const { hrCalEvents } = useHrCalendarEventsMapped(rangeStart, rangeEnd);
+  const selfAttendanceEvents = useAttendanceCalendarEvents(rangeStart, rangeEnd);
+  const calendarEvents = useMemo(() => {
+    const aggregateAttendanceDates = new Set(
+      events
+        .filter((event) => event.source === "attendance")
+        .map((event) => format(new Date(event.start), "yyyy-MM-dd")),
+    );
+    return [
+      ...events,
+      ...selfAttendanceEvents.filter(
+        (event) =>
+          !aggregateAttendanceDates.has(
+            format(new Date(event.start), "yyyy-MM-dd"),
+          ),
+      ),
+    ];
+  }, [events, selfAttendanceEvents]);
   const { data: externalData } = useExternalCalendarEvents(
     rangeStart,
     rangeEnd,
@@ -151,13 +169,13 @@ export function CalendarView() {
   const selectedEvent = useMemo<CalendarListItem | null>(
     () =>
       selectedEventId !== null
-        ? (events.find((e) => e.id === selectedEventId) ?? null)
+        ? (calendarEvents.find((e) => e.id === selectedEventId) ?? null)
         : null,
-    [selectedEventId, events],
+    [selectedEventId, calendarEvents],
   );
 
   const { allCalEvents, visibleEvents, visibleRange } = useCalendarComputed({
-    events,
+    events: calendarEvents,
     externalData,
     hiddenIds,
     connections,

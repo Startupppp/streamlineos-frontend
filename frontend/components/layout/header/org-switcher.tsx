@@ -217,7 +217,9 @@ function OrganizationSwitcher({
 
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : internalOpen;
-  const { data: organizations } = useGetOrganizations(open);
+  // Load memberships with the application shell so the active organization is
+  // available on first paint. Opening the switcher should never be the fetch trigger.
+  const { data: organizations } = useGetOrganizations();
 
   const activeOrgId = session?.orgId as string | null | undefined;
   const activeOrg =

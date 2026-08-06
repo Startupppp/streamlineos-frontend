@@ -245,13 +245,13 @@ export function DashboardClient() {
     return (
       <PageWrapper title={pageTitle} subtitle="Loading your organization…">
         <div
-          className="space-y-4"
+          className="flex flex-col gap-4"
           role="status"
           aria-live="polite"
           aria-label="Loading dashboard"
         >
           <DashboardStatsSkeleton />
-          <div className="grid gap-3 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             <WidgetSkeleton rows={4} />
             <WidgetSkeleton rows={3} />
             <WidgetSkeleton rows={4} />
@@ -308,7 +308,7 @@ export function DashboardClient() {
       subtitle={pageSubtitle}
       actions={hrEnabled ? <ClockInWidget /> : undefined}
     >
-      <div className="space-y-4">
+      <div className="flex flex-col gap-4">
         {statCards.length > 0 && (
           <motion.div variants={fadeUp} initial="hidden" animate="visible">
             <StatCardGrid
@@ -342,7 +342,7 @@ export function DashboardClient() {
         <DeferredDashboardContent
           onVisible={handleDeferredVisible}
           fallback={
-            <div className="grid gap-3 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
               <WidgetSkeleton rows={3} />
               <WidgetSkeleton rows={3} />
               <WidgetSkeleton rows={3} />
@@ -354,7 +354,7 @@ export function DashboardClient() {
               variants={fadeUp}
               initial="hidden"
               animate="visible"
-              className="grid gap-3 grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
+              className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"
             >
               {projectsEnabled && <MyTasksWidget />}
               {projectsEnabled && <TimesheetWidget />}
@@ -374,7 +374,7 @@ export function DashboardClient() {
             variants={fadeUp}
             initial="hidden"
             animate="visible"
-            className="grid gap-3 grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
+            className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"
           >
             {canViewLeaves && <LeavesTodayWidget />}
             {canViewAttendance && (
@@ -392,7 +392,7 @@ export function DashboardClient() {
             variants={fadeUp}
             initial="hidden"
             animate="visible"
-            className="grid gap-3 grid-cols-1 md:grid-cols-2"
+            className="grid grid-cols-1 gap-4 md:grid-cols-2"
           >
             <BirthdaysWidget />
             <UpcomingHolidaysWidget />
@@ -410,16 +410,16 @@ export function DashboardClient() {
             variants={fadeUp}
             initial="hidden"
             animate="visible"
-            className="grid gap-3 grid-cols-1 lg:grid-cols-7 md:auto-rows-[22rem]"
+            className="grid grid-cols-1 gap-4 md:auto-rows-[22rem] lg:grid-cols-7"
           >
-            <div className="lg:col-span-4 min-h-0">
+            <div className="min-h-0 lg:col-span-4">
               <MyIssuesCard
                 tickets={sortedMyTickets}
                 isLoading={ticketsLoading}
                 error={ticketsError}
               />
             </div>
-            <div className="lg:col-span-3 min-h-0">
+            <div className="min-h-0 lg:col-span-3">
               <SprintCard
                 summary={sprintSummary ?? undefined}
                 isLoading={sprintLoading}
@@ -433,7 +433,7 @@ export function DashboardClient() {
             variants={fadeUp}
             initial="hidden"
             animate="visible"
-            className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 md:auto-rows-[22rem]"
+            className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:auto-rows-[22rem] lg:grid-cols-3"
           >
             {projectsEnabled && canViewTickets && (
               <div className="min-h-0">

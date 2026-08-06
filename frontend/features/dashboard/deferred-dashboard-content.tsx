@@ -35,5 +35,9 @@ export function DeferredDashboardContent({
     return () => observer.disconnect();
   }, [onVisible]);
 
-  return <div ref={containerRef}>{isVisible ? children : fallback}</div>;
+  return (
+    <div ref={containerRef} className="flex flex-col gap-4">
+      {isVisible ? children : fallback}
+    </div>
+  );
 }

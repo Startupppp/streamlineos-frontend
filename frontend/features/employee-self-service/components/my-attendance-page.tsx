@@ -150,8 +150,8 @@ export function MyAttendancePage() {
         >
           <div className="flex min-h-0 flex-1 flex-col">
             <TabsContent value="today" className={TAB_PANEL_CLASS}>
-              <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-center rounded-xl border border-border bg-card">
-                <div className="w-full max-w-md px-4 py-6">
+              <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-center rounded-xl border border-border bg-card px-4 py-8 sm:px-6">
+                <div className="w-full max-w-sm">
                   <TimerCard chrome={false} />
                 </div>
               </div>

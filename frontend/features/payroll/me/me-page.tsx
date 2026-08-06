@@ -9,13 +9,13 @@ import {
   Receipt,
   AlertTriangle,
   Users,
-  Edit,
+  FilePen,
 } from "lucide-react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
-import { PlusIcon, DownloadIcon } from "@animateicons/react/lucide";
+import { PlusIcon, DownloadIcon, WalletIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   Select,
@@ -299,11 +299,10 @@ export function MyPayrollPageContent() {
                 {activeTab === "tax" && taxWindowOpen ? (
                   <Button
                     size="sm"
-                    variant="outline"
                     className="h-8 gap-1.5 text-xs"
                     onClick={handleOpenTaxSheet}
                   >
-                    <Edit className="h-3 w-3" />
+                    <FilePen className="h-3.5 w-3.5" />
                     {taxData?.declaration ? "Edit" : "Submit"} Declaration
                   </Button>
                 ) : null}
@@ -321,14 +320,15 @@ export function MyPayrollPageContent() {
                 ) : null}
 
                 {activeTab === "bank" ? (
-                  <Button
+                  <AnimatedIconButton
+                    icon={WalletIcon}
+                    iconClassName="mr-1.5"
                     size="sm"
-                    variant="outline"
                     className="h-8 text-xs"
                     onClick={handleOpenBankSheet}
                   >
                     Update
-                  </Button>
+                  </AnimatedIconButton>
                 ) : null}
 
                 {activeTab === "fnf" && fnf?.statementPublishedAt ? (

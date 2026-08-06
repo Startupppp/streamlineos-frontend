@@ -226,7 +226,10 @@ export function useHrToggleBreak(
       }
     },
     onSettled: () => {
-      qc.invalidateQueries({ queryKey: statusKey, exact: true });
+      void qc.invalidateQueries({ queryKey: statusKey, exact: true });
+      void qc.invalidateQueries({
+        queryKey: [...queryKeys.hr.all, "monthlyAttendance"],
+      });
     },
     onSuccess: options?.onSuccess,
     onError: options?.onError,
