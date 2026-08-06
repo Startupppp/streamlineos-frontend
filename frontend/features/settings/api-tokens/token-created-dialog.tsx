@@ -55,12 +55,12 @@ export function TokenCreatedDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="gap-3 p-4 sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Token Created</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
-          <div className="rounded-md bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-3 text-sm text-amber-800 dark:text-amber-300">
+        <div className="space-y-3">
+          <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
             Copy this token now. You won&apos;t be able to see it again.
           </div>
           <div className="flex items-center gap-2">
@@ -75,7 +75,9 @@ export function TokenCreatedDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={onClose}>Done</Button>
+          <Button size="sm" onClick={onClose}>
+            Done
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

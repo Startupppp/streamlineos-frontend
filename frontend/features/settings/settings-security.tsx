@@ -108,10 +108,10 @@ function SessionsSection() {
   const handleOpenRevokeAll = useCallback(() => setRevokeAllOpen(true), []);
 
   return (
-    <div className="rounded-lg border border-border bg-card p-5 space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="space-y-3 rounded-lg border border-border p-4">
+      <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
-          <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
             <Monitor className="h-4 w-4 text-muted-foreground" />
           </div>
           <div>
@@ -203,7 +203,7 @@ function RecentSignInsSection() {
   const entries = data?.data ?? [];
 
   return (
-    <div className="space-y-4 rounded-lg border border-border bg-card p-5">
+    <div className="space-y-3 rounded-lg border border-border p-4">
       <div className="flex items-center gap-2.5">
         <div className="flex size-8 items-center justify-center rounded-lg bg-muted">
           <LogIn className="size-4 text-muted-foreground" />

@@ -38,16 +38,16 @@ export function CreatedSecretDialog({
   return (
     <Dialog open onOpenChange={handleOpenChange}>
       <DialogContent className="flex max-h-[90dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
-        <DialogHeader className="shrink-0 px-6 pt-6 pb-4">
+        <DialogHeader className="shrink-0 px-4 pb-2 pt-3.5">
           <DialogTitle className="flex items-center gap-2">
-            <ShieldCheck className="h-4.5 w-4.5 text-emerald-500" />
+            <ShieldCheck className="h-4 w-4 text-emerald-500" />
             Connection created
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-xs">
             Copy the webhook secret now. It will not be shown again.
           </DialogDescription>
         </DialogHeader>
-        <DialogBody className="space-y-4 px-6 py-2">
+        <DialogBody className="space-y-3 px-4 py-2">
           <div className="space-y-1.5">
             <Label className="text-xs text-muted-foreground">Webhook URL</Label>
             <div className="flex items-center gap-2 rounded-md border border-border bg-muted/40 px-2.5 py-1.5">
@@ -75,8 +75,10 @@ export function CreatedSecretDialog({
             />
           ) : null}
         </DialogBody>
-        <DialogFooter className="shrink-0 border-t border-border/60 px-6 py-4">
-          <Button onClick={onClose}>Done</Button>
+        <DialogFooter className="shrink-0 border-t border-border/60 px-4 py-3">
+          <Button size="sm" onClick={onClose}>
+            Done
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -52,7 +52,7 @@ export function AppDialog({
           )}
         >
           <div className="mx-auto mt-2 h-1.5 w-10 rounded-full bg-muted-foreground/25 shrink-0" />
-          <SheetHeader className="shrink-0 px-5 pt-2 pb-3 border-b border-border/60 text-left gap-1">
+          <SheetHeader className="shrink-0 px-4 pt-2 pb-3 border-b border-border/60 text-left gap-1">
             <SheetTitle className="text-base font-semibold">{title}</SheetTitle>
             {description && (
               <SheetDescription className="text-sm text-muted-foreground">
@@ -61,10 +61,10 @@ export function AppDialog({
             )}
           </SheetHeader>
 
-          <SheetBody className="px-5 py-4">{children}</SheetBody>
+          <SheetBody className="px-4 py-3">{children}</SheetBody>
 
           {footer && (
-            <div className="shrink-0 flex items-center justify-end gap-2 px-5 py-3 border-t border-border/60 bg-muted/30">
+            <div className="shrink-0 flex items-center justify-end gap-2 px-4 py-3 border-t border-border/60 bg-muted/30">
               {footer}
             </div>
           )}
@@ -81,19 +81,19 @@ export function AppDialog({
           className,
         )}
       >
-        <DialogHeader className="shrink-0 gap-1 px-6 py-4 border-b border-border/60">
+        <DialogHeader className="shrink-0 gap-1 border-b border-border/60 px-4 py-3">
           <DialogTitle className="text-base font-semibold">{title}</DialogTitle>
           {description && (
-            <DialogDescription className="text-sm text-muted-foreground">
+            <DialogDescription className="text-xs text-muted-foreground">
               {description}
             </DialogDescription>
           )}
         </DialogHeader>
 
-        <DialogBody className="px-6 py-4">{children}</DialogBody>
+        <DialogBody className="px-4 py-3">{children}</DialogBody>
 
         {footer && (
-          <div className="shrink-0 flex items-center justify-end gap-2 px-6 py-4 border-t border-border/60 bg-muted/30">
+          <div className="flex shrink-0 items-center justify-end gap-2 border-t border-border/60 bg-muted/30 px-4 py-3">
             {footer}
           </div>
         )}

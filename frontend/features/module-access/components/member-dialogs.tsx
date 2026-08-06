@@ -94,13 +94,13 @@ export function AddMemberDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-sm">
+      <DialogContent className="gap-3 p-4 sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>Add member</DialogTitle>
           <DialogDescription>Grant a user access to this module.</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-1">
+        <div className="space-y-3">
           <div className="space-y-1.5">
             <p className="text-sm font-medium">User</p>
             <MemberCandidateSelect
@@ -149,12 +149,14 @@ export function AddMemberDialog({
           <Button
             type="button"
             variant="outline"
+            size="sm"
             onClick={() => handleClose(false)}
             disabled={addMember.isPending}
           >
             Cancel
           </Button>
           <LoadingButton
+            size="sm"
             isPending={addMember.isPending}
             loadingText="Adding…"
             onClick={handleAdd}
@@ -230,7 +232,7 @@ export function EditGroupsDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-sm">
+      <DialogContent className="gap-3 p-4 sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>Edit groups</DialogTitle>
           <DialogDescription>
@@ -239,7 +241,7 @@ export function EditGroupsDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-1 py-1 max-h-52 overflow-y-auto">
+        <div className="space-y-1 max-h-52 overflow-y-auto">
           {allGroups.length === 0 ? (
             <p className="text-sm text-muted-foreground py-2">
               No groups defined for this module.
@@ -273,12 +275,14 @@ export function EditGroupsDialog({
           <Button
             type="button"
             variant="outline"
+            size="sm"
             onClick={() => handleOpenChange(false)}
             disabled={updateMember.isPending}
           >
             Cancel
           </Button>
           <LoadingButton
+            size="sm"
             isPending={updateMember.isPending}
             loadingText="Saving…"
             onClick={handleSave}
@@ -342,7 +346,7 @@ export function ConfirmRemoveDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-sm">
+      <DialogContent className="gap-3 p-4 sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>Remove member</DialogTitle>
           <DialogDescription>
@@ -362,12 +366,14 @@ export function ConfirmRemoveDialog({
           <Button
             type="button"
             variant="outline"
+            size="sm"
             onClick={() => handleClose(false)}
             disabled={removeMember.isPending}
           >
             Cancel
           </Button>
           <LoadingButton
+            size="sm"
             variant="destructive"
             isPending={removeMember.isPending}
             loadingText="Removing…"

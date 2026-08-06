@@ -2179,19 +2179,16 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: "Knowledge",
     module: "documents",
-    requiredPermission: ["kb:pages:view"],
     routes: [
       {
         label: "Ask KB",
         icon: Library,
         href: "/knowledge/chat",
-        requiredPermission: "kb:pages:view",
       },
       {
         label: "Wiki",
         icon: NotebookPen,
         href: "/knowledge/wiki",
-        requiredPermission: "kb:pages:view",
       },
     ],
   },
@@ -2771,7 +2768,6 @@ const HOME_NAV_GROUPS: NavGroup[] = [
         label: "My Documents",
         href: "/me/documents",
         icon: FileText,
-        requiredPermission: "self:onboarding-docs",
       },
       {
         label: "Recruitment",

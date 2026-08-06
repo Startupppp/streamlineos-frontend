@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
@@ -92,21 +92,23 @@ export function SignaturePadDialog({ token, assetType, open, onOpenChange, onAdo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="gap-3 p-4 sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{assetType === "initials" ? "Add your initials" : "Adopt your signature"}</DialogTitle>
+          <DialogTitle>
+            {assetType === "initials" ? "Add your initials" : "Adopt your signature"}
+          </DialogTitle>
         </DialogHeader>
-        <Tabs defaultValue="draw">
+        <Tabs defaultValue="draw" className="gap-3">
           <TabsList>
             <TabsTrigger value="draw">Draw</TabsTrigger>
             <TabsTrigger value="type">Type</TabsTrigger>
           </TabsList>
-          <TabsContent value="draw" className="space-y-3">
+          <TabsContent value="draw" className="mt-0 space-y-2">
             <canvas
               ref={canvasRef}
               width={400}
               height={160}
-              className="w-full rounded-lg border border-border bg-white touch-none"
+              className="w-full touch-none rounded-lg border border-border bg-white"
               onPointerDown={handlePointerDown}
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
@@ -116,24 +118,34 @@ export function SignaturePadDialog({ token, assetType, open, onOpenChange, onAdo
               <Button variant="outline" size="sm" onClick={handleClear}>
                 Clear
               </Button>
-              <LoadingButton size="sm" onClick={handleSaveDrawn} isPending={adopt.isPending} loadingText="Saving…">
+              <LoadingButton
+                size="sm"
+                onClick={handleSaveDrawn}
+                isPending={adopt.isPending}
+                loadingText="Saving…"
+              >
                 Use this signature
               </LoadingButton>
             </div>
           </TabsContent>
-          <TabsContent value="type" className="space-y-3">
+          <TabsContent value="type" className="mt-0 space-y-2">
             <Input
               value={typedText}
               onChange={(e) => setTypedText(e.target.value)}
               placeholder="Type your full name"
-              className="text-2xl font-serif h-16 text-center italic"
+              className="h-14 text-center font-serif text-2xl italic"
             />
-            <LoadingButton className="w-full" onClick={handleSaveTyped} isPending={adopt.isPending} loadingText="Saving…">
+            <LoadingButton
+              className="w-full"
+              size="sm"
+              onClick={handleSaveTyped}
+              isPending={adopt.isPending}
+              loadingText="Saving…"
+            >
               Use this signature
             </LoadingButton>
           </TabsContent>
         </Tabs>
-        <DialogFooter />
       </DialogContent>
     </Dialog>
   );

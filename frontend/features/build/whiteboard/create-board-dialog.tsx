@@ -57,12 +57,12 @@ export function CreateBoardDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-sm">
+      <DialogContent className="gap-3 p-4 sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>New Board</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 py-1">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3">
             <FormField
               control={form.control}
               name="name"
@@ -77,10 +77,10 @@ export function CreateBoardDialog({
               )}
             />
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
+              <Button type="button" variant="outline" size="sm" onClick={() => handleOpenChange(false)}>
                 Cancel
               </Button>
-              <LoadingButton type="submit" isPending={isPending} loadingText="Creating…">
+              <LoadingButton type="submit" size="sm" isPending={isPending} loadingText="Creating…">
                 Create
               </LoadingButton>
             </DialogFooter>

@@ -19,6 +19,24 @@ const EMPLOYEE_PERMISSIONS = [
 ];
 
 describe("Home employee navigation", () => {
+  it("always exposes Home documents and Knowledge to an active member", () => {
+    const homeRoutes = getNavGroupsForProduct("home", "MEMBER", [], ["build"])
+      .flatMap((group) => flattenNavRoutes(group.routes));
+    const knowledgeRoutes = getNavGroupsForProduct(
+      "documents",
+      "MEMBER",
+      [],
+      ["build"],
+    ).flatMap((group) => flattenNavRoutes(group.routes));
+
+    expect(homeRoutes.map((route) => route.href)).toEqual(
+      expect.arrayContaining(["/dashboard", "/me/documents"]),
+    );
+    expect(knowledgeRoutes.map((route) => route.href)).toEqual(
+      expect.arrayContaining(["/knowledge/chat", "/knowledge/wiki"]),
+    );
+  });
+
   it("keeps self-service available when only Build is enabled", () => {
     const groups = getNavGroupsForProduct(
       "home",

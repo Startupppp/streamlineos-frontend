@@ -93,7 +93,7 @@ export function RenameRoleDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-sm">
+      <DialogContent className="gap-3 p-4 sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>Rename role</DialogTitle>
           <DialogDescription className="text-xs">
@@ -104,7 +104,7 @@ export function RenameRoleDialog({
           <form
             onSubmit={handleSubmit(onSubmit)}
             noValidate
-            className="space-y-4"
+            className="space-y-3"
           >
             <FormField
               control={form.control}
@@ -122,10 +122,11 @@ export function RenameRoleDialog({
               )}
             />
 
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="flex justify-end gap-2">
               <Button
                 type="button"
                 variant="outline"
+                size="sm"
                 onClick={handleClose}
                 disabled={updateRole.isPending || isSubmitting}
               >
@@ -133,9 +134,10 @@ export function RenameRoleDialog({
               </Button>
               <LoadingButton
                 type="submit"
+                size="sm"
                 isPending={updateRole.isPending || isSubmitting}
                 loadingText="Saving…"
-                className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
               >
                 Save
               </LoadingButton>

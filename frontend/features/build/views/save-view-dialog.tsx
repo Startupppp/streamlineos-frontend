@@ -69,11 +69,11 @@ export function SaveViewDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-sm">
+      <DialogContent className="gap-3 p-4 sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>Save current view</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 pt-1">
+        <div className="space-y-3">
           <div>
             <Label htmlFor="save-view-name" className="text-sm">View name</Label>
             <Input

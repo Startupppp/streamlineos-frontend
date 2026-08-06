@@ -23,6 +23,7 @@ Full text of any pre-2026-08-03 entry is in git history.
 ## Changelog
 
 **2026-08-06**
+- Dialog density pass (shared): AlertDialog `p-4 gap-3`, Dialog title `text-base` / header `gap-1`, AppDialog zones `px-4`, compact simple dialogs (create-group, rename-role, tokens, signature pad, member dialogs, workspace/board/save-view/decide/decline/exception, etc.). Account `/settings` Profile+Security card chrome; MFA nested subsection. `dialog.tsx` · `alert-dialog.tsx` · `app-dialog.tsx` · `settings/page.tsx` · `mfa-settings.tsx` · `settings-security.tsx` · dialog call sites · frontend typecheck.
 - Module Access (`/hr/access`, `/crm/access`, `/build/access`, …): Roles/Members actions (New group / Add member) sit inline on the tabs row via shared `ModuleAccessPage`. `module-access-page.tsx` · `roles-tab.tsx` · `module-members-tab.tsx` · frontend typecheck.
 - Unified calendar attendance is policy-aware: canonical holidays, employment start, roster/weekly-off rules, approved leave/WFH precedence, multi-session net hours, stored/derived Present · Half day · Late · Absent states, and past-day missing-attendance exceptions; `/me/attendance` History now uses server pagination (10/20/50) instead of the ten-record status payload. `calendar-events-aggregate.service.ts` · `attendance-policy.service.ts` · `daily-history-table.tsx` · attendance history API · frontend + backend typecheck.
 - Upload Document sheet: document-type select restores options (controlled value, sheet pointer-events, loading/empty/error + self-upload fallback from my docs). `upload-doc-sheet.tsx` · `select.tsx` · frontend typecheck.
@@ -325,6 +326,7 @@ Full text of any pre-2026-08-03 entry is in git history.
 - [x] `/support/settings/sla` · `/support/settings/business-hours` · `/support/settings/channels` · `/support/settings/automations` · `/support/settings/agent-routing` · `/support/settings/custom-fields` · `/support/settings/audit-log`
 
 ### Knowledge Base
+- **Core access:** Home, `/me/documents`, and the Knowledge Base read experience are available to every active organization member. Roles still control authoring, administration, analytics, and settings.
 - [x] `/knowledge/wiki` — Home (recents, favorites, root pages, templates) with collapsible page-tree panel
 - [x] `/knowledge/chat` — Ask KB
 - [x] `/knowledge/wiki/pages/[pageId]` · `/knowledge/wiki/pages/[pageId]/history` — Plate document editor (slash commands, tables, R2 media) + two-pane version history with restore

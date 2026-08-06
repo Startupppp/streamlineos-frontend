@@ -94,12 +94,12 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: CreateWorkspaceDia
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[400px]">
+      <DialogContent className="gap-3 p-4 sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Create organization</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form id={formId} onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 py-2">
+          <form id={formId} onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3">
             <FormField
               control={form.control}
               name="name"
@@ -139,6 +139,7 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: CreateWorkspaceDia
           <Button
             type="button"
             variant="outline"
+            size="sm"
             className="flex-1"
             onClick={() => handleOpenChange(false)}
             disabled={isPending}
@@ -148,6 +149,7 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: CreateWorkspaceDia
           <LoadingButton
             type="submit"
             form={formId}
+            size="sm"
             className="flex-1"
             isPending={isPending}
             loadingText="Creating…"

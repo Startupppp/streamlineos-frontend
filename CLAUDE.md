@@ -29,6 +29,8 @@ Enterprise-grade **multi-tenant** SaaS (StreamlineOS): scalable, secure, reliabl
 
 ## 2. Core Principles
 
+- **Universal member surfaces (living rule, 2026-08-06):** Home, My Documents, and Knowledge Base reading are platform capabilities for every active organization member, irrespective of role or purchased functional modules. Own-document access and Knowledge Base audience/space rules still apply. Authoring, administration, analytics, and settings remain permission-gated. Enforce this in backend effective access and frontend navigation; a visible-only navigation exception is insufficient.
+
 Never hallucinate · Inspect before changing · Reuse before creating · Simplicity over cleverness · Normalize data · SOLID · DRY · KISS · YAGNI · Secure-by-default · Deny-by-default authz · Fail fast at boundaries. Think CTO + Principal Engineer + PM + Security Engineer + DB Architect: improve the architecture, not just the code.
 
 ---

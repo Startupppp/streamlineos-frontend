@@ -41,12 +41,12 @@ export function DeclineDialog({ token, open, onOpenChange }: { token: string; op
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-sm">
+      <DialogContent className="gap-3 p-4 sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>Decline to sign</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleConfirm)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(handleConfirm)} className="space-y-3">
             <FormField
               control={form.control}
               name="reason"
@@ -63,11 +63,12 @@ export function DeclineDialog({ token, open, onOpenChange }: { token: string; op
               )}
             />
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
+              <Button type="button" variant="outline" size="sm" onClick={() => handleOpenChange(false)}>
                 Cancel
               </Button>
               <LoadingButton
                 type="submit"
+                size="sm"
                 variant="destructive"
                 isPending={decline.isPending}
                 loadingText="Declining…"

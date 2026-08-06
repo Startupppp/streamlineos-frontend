@@ -72,7 +72,7 @@ export function DecideDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="gap-3 p-4 sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Make Decision</DialogTitle>
           {approvalTitle && (
@@ -80,7 +80,7 @@ export function DecideDialog({
           )}
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3">
             <FormField
               control={form.control}
               name="decision"

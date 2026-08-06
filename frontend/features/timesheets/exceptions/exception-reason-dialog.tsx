@@ -90,7 +90,7 @@ export function ExceptionReasonDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="gap-3 p-4 sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{copy.title}</DialogTitle>
           <DialogDescription>{copy.description}</DialogDescription>
@@ -108,7 +108,7 @@ export function ExceptionReasonDialog({
         )}
 
         <Form {...form}>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-3">
             <FormField
               control={form.control}
               name="reason"
@@ -137,6 +137,7 @@ export function ExceptionReasonDialog({
               <Button
                 type="button"
                 variant="outline"
+                size="sm"
                 onClick={handleCancel}
                 disabled={isPending}
               >
@@ -144,6 +145,7 @@ export function ExceptionReasonDialog({
               </Button>
               <LoadingButton
                 type="submit"
+                size="sm"
                 isPending={isPending}
                 loadingText={copy.pending}
                 variant={action === "dismiss" ? "destructive" : "default"}

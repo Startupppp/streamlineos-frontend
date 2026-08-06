@@ -72,18 +72,18 @@ export function CreateGroupDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-sm">
+      <DialogContent className="gap-3 p-4 sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>Create role group</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3">
             <FormField
               control={form.control}
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Group name</FormLabel>
+                  <FormLabel className="text-xs">Group name</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="e.g. Read-only viewers"
@@ -95,10 +95,11 @@ export function CreateGroupDialog({
                 </FormItem>
               )}
             />
-            <DialogFooter>
+            <DialogFooter className="gap-2 sm:justify-end">
               <Button
                 type="button"
                 variant="outline"
+                size="sm"
                 onClick={() => handleOpenChange(false)}
                 disabled={mutation.isPending}
               >
@@ -106,6 +107,7 @@ export function CreateGroupDialog({
               </Button>
               <LoadingButton
                 type="submit"
+                size="sm"
                 isPending={mutation.isPending}
                 loadingText="Creating…"
               >
