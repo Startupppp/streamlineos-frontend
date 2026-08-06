@@ -605,6 +605,7 @@ Mobile: [Sheet — left, w-[17rem]] for nav · [MobileModuleBottomNav — fixed 
 ### Navigation ownership
 
 - Home is the universal employee workspace. Group it as Overview, Communication, For Me, and Company; groups may collapse, but their destinations remain permission-filtered and keyboard accessible.
+- Home and Documents are always available products for active organization members. Documents owns Knowledge Base reading (`/knowledge/*`); Home owns personal employment documents (`/me/documents`). Show core products and permissions as disabled “Included” controls in administration rather than editable toggles.
 - `For Me` uses canonical `/me/*` routes and remains visible independently of paid-module enablement. It includes only the signed-in person's time off, attendance, expenses, pay, and employment documents.
 - Announcements and the people directory are company-wide reading surfaces. Their creation or administration controls may still require an owning-module permission.
 - Module-specific administration never appears in Home. Recruitment/interviews, HR employee administration, payroll operations, accounting operations, and product delivery remain inside their owning module sidebar.

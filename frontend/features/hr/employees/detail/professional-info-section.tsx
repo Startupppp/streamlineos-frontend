@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { DepartmentCombobox } from "@/components/hr/department-combobox";
 import { Briefcase } from "lucide-react";
-import type { EmployeeFormValues } from "@/features/hr/employees/detail/edit-employee-form";
+import type { EmployeeFormValues } from "@/features/hr/employees/detail/employee-form-schema";
 
 interface ProfessionalInfoSectionProps {
   assignableRoles: Array<{ slug: string; name: string }>;

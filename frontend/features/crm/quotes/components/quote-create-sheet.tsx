@@ -34,29 +34,11 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import type { Quote, QuoteLineItem } from "@/types/crm/quotes";
 import { QuoteLineItemsEditor } from "./quote-line-items-editor";
+import {
+  quoteFormSchema,
+  type QuoteCreateFormValues,
+} from "./quote-create-schema";
 import { QuoteSheetTotals } from "./quote-sheet-totals";
-
-const lineItemSchema = z.object({
-  description: z.string().min(1, "Required"),
-  quantity: z.string().min(1, "Required"),
-  unitPrice: z.string().min(1, "Required"),
-  taxRate: z.string().optional(),
-});
-
-const quoteFormSchema = z.object({
-  subject: z.string().min(1, "Subject required"),
-  description: z.string().optional(),
-  currency: z.string(),
-  validUntil: z.string().optional(),
-  termsAndConditions: z.string().optional(),
-  notes: z.string().optional(),
-  pricebookId: z.string().optional(),
-  templateId: z.string().optional(),
-  discountPercent: z.string().optional(),
-  lineItems: z.array(lineItemSchema).min(1, "At least one line item required"),
-});
-
-export type QuoteCreateFormValues = z.infer<typeof quoteFormSchema>;
 
 export interface QuoteSubmitValues {
   subject: string;

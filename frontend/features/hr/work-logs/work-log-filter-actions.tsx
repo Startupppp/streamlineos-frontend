@@ -15,43 +15,18 @@ import { Users, Check, ChevronDown } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { DownloadIcon } from "@animateicons/react/lucide";
 import { WorkLogAdvancedFiltersSheet } from "./work-log-advanced-filters-sheet";
-
-export interface WorkLogFilters {
-  year: number;
-  quarter: number;
-  selectedUserId?: string;
-  departmentId?: string;
-  month?: number;
-  dateFrom?: string;
-  dateTo?: string;
-}
-
-export interface WorkLogFilterEmployee {
-  id: string;
-  firstName: string | null;
-  lastName: string | null;
-  departmentId?: number | null;
-  joiningDate?: string | Date | null;
-}
-
-export interface WorkLogFilterDepartment {
-  id: number;
-  name: string;
-}
-
-export interface SharedFilterProps {
-  filters: WorkLogFilters;
-  setFilters: React.Dispatch<React.SetStateAction<WorkLogFilters>>;
-  draftFilters: WorkLogFilters;
-  setDraftFilters: React.Dispatch<React.SetStateAction<WorkLogFilters>>;
-  activeFilterCount: number;
-  availableYears: number[];
-  currentYear: number;
-  currentQuarter: number;
-  employees: WorkLogFilterEmployee[] | undefined;
-  departments: WorkLogFilterDepartment[] | undefined;
-  canManageEmployees: boolean;
-}
+import type {
+  SharedFilterProps,
+  WorkLogFilterDepartment,
+  WorkLogFilterEmployee,
+  WorkLogFilters,
+} from "./work-log-filter-types";
+export type {
+  SharedFilterProps,
+  WorkLogFilterDepartment,
+  WorkLogFilterEmployee,
+  WorkLogFilters,
+};
 
 interface WorkLogFilterActionsProps extends SharedFilterProps {
   onExport: () => void;

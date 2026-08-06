@@ -23,7 +23,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
-import type { QuestionFormState } from "./question-form-dialog";
+import type { QuestionFormState } from "./question-form-types";
 
 export const CATEGORIES = [
   "GENERAL",

@@ -30,6 +30,7 @@ export interface PermissionRowProps {
   scopable: boolean;
   disabled: boolean;
   readOnly: boolean;
+  included: boolean;
   onToggle: (permName: string) => void;
   onSetScope: (permName: string, scope: EditableScope) => void;
 }
@@ -41,6 +42,7 @@ export function PermissionRow({
   scopable,
   disabled,
   readOnly,
+  included,
   onToggle,
   onSetScope,
 }: PermissionRowProps) {
@@ -57,7 +59,13 @@ export function PermissionRow({
 
   return (
     <div className="flex items-center justify-between gap-3 px-4 pl-9 py-2 hover:bg-muted/20 transition-colors">
-      <label className="flex items-start gap-2.5 min-w-0 cursor-pointer">
+      <label
+        className={
+          disabled
+            ? "flex min-w-0 cursor-default items-start gap-2.5"
+            : "flex min-w-0 cursor-pointer items-start gap-2.5"
+        }
+      >
         <Checkbox
           checked={enabled}
           onCheckedChange={handleToggle}
@@ -66,14 +74,27 @@ export function PermissionRow({
           aria-label={perm.description}
         />
         <span className="min-w-0">
-          <TruncatedText text={perm.description} className="block text-[13px] leading-tight" />
+          <span className="flex min-w-0 items-center gap-2">
+            <TruncatedText
+              text={perm.description}
+              className="block text-[13px] leading-tight"
+            />
+            {included ? (
+              <Badge
+                variant="outline"
+                className="h-5 shrink-0 px-2 py-0.5 text-[10px]"
+              >
+                Included
+              </Badge>
+            ) : null}
+          </span>
           <span className="block text-[10px] text-muted-foreground font-mono truncate">
             {perm.name}
           </span>
         </span>
       </label>
       {scopable && enabled ? (
-        readOnly ? (
+        readOnly || included ? (
           <Badge variant="outline" className="text-[10px] shrink-0">
             {SCOPE_LABELS[scope]}
           </Badge>
@@ -184,6 +205,7 @@ export function ModuleSection({
               </p>
               {resource.perms.map((perm) => {
                 const scope = effective[perm.name];
+                const included = Boolean(perm.baselineScope);
                 return (
                   <PermissionRow
                     key={perm.name}
@@ -191,8 +213,9 @@ export function ModuleSection({
                     enabled={Boolean(scope)}
                     scope={scope ?? "all"}
                     scopable={isScopable(perm)}
-                    disabled={controlsDisabled}
+                    disabled={controlsDisabled || included}
                     readOnly={readOnly}
+                    included={included}
                     onToggle={onTogglePermission}
                     onSetScope={onSetScope}
                   />

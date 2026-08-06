@@ -7,6 +7,7 @@ import { apiClient } from "@/lib/api-client";
 export interface UserModuleAccess {
   moduleKey: string;
   enabled: boolean;
+  core: boolean;
 }
 
 const userModuleAccessKey = (userId: string) =>

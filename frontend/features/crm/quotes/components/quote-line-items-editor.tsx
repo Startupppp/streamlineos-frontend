@@ -12,7 +12,7 @@ import {
 import { FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import type { QuoteCreateFormValues } from "./quote-create-sheet";
+import type { QuoteCreateFormValues } from "./quote-create-schema";
 
 const EMPTY_LINE_ITEM = { description: "", quantity: "1", unitPrice: "0", taxRate: "0" };
 

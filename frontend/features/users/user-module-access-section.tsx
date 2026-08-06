@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/shared/error-state";
+import { Badge } from "@/components/ui/badge";
 import { useCan } from "@/hooks/api/access";
 import {
   useUserModuleAccess,
@@ -31,10 +33,16 @@ const MODULE_LABELS: Record<string, string> = {
 interface ModuleToggleRowProps {
   module: UserModuleAccess;
   disabled: boolean;
+  core: boolean;
   onToggle: (moduleKey: string, enabled: boolean) => void;
 }
 
-function ModuleToggleRow({ module, disabled, onToggle }: ModuleToggleRowProps) {
+function ModuleToggleRow({
+  module,
+  disabled,
+  core,
+  onToggle,
+}: ModuleToggleRowProps) {
   const label = MODULE_LABELS[module.moduleKey] ?? module.moduleKey;
   const switchId = `user-module-${module.moduleKey}`;
 
@@ -51,13 +59,27 @@ function ModuleToggleRow({ module, disabled, onToggle }: ModuleToggleRowProps) {
 
   return (
     <div className="flex h-9 items-center justify-between gap-3">
-      <Label
-        htmlFor={switchId}
-        onClick={handleLabelClick}
-        className="cursor-pointer text-[13px] font-normal text-foreground"
-      >
-        {label}
-      </Label>
+      <div className="flex min-w-0 items-center gap-2">
+        <Label
+          htmlFor={switchId}
+          onClick={handleLabelClick}
+          className={
+            disabled
+              ? "cursor-default text-[13px] font-normal text-foreground"
+              : "cursor-pointer text-[13px] font-normal text-foreground"
+          }
+        >
+          {label}
+        </Label>
+        {core ? (
+          <Badge
+            variant="outline"
+            className="h-5 px-2 py-0.5 text-[10px]"
+          >
+            Included
+          </Badge>
+        ) : null}
+      </div>
       <Switch
         id={switchId}
         checked={module.enabled}
@@ -79,7 +101,13 @@ export function UserModuleAccessSection({
   isMemberActive,
 }: UserModuleAccessSectionProps) {
   const canManage = useCan("settings:organization:manage");
-  const { data: modules, isLoading } = useUserModuleAccess(userId);
+  const {
+    data: modules,
+    error: modulesError,
+    isError: isModulesError,
+    isPending: isModulesPending,
+    refetch: refetchModules,
+  } = useUserModuleAccess(userId);
   const setAccess = useSetUserModuleAccess(userId);
   const togglesDisabled = !canManage || !isMemberActive || setAccess.isPending;
 
@@ -94,6 +122,10 @@ export function UserModuleAccessSection({
     [isMemberActive, setAccess],
   );
 
+  const handleRetry = useCallback(() => {
+    void refetchModules();
+  }, [refetchModules]);
+
   return (
     <div className="space-y-2">
       <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
@@ -101,22 +133,30 @@ export function UserModuleAccessSection({
       </p>
       <p className="text-[11px] text-muted-foreground">
         {isMemberActive
-          ? "Turn a module off to hide it from this person and block its access."
+          ? "Optional modules can be turned off per person. Included modules are available to every active member."
           : "Module access can only be changed for active members."}
       </p>
-      {isLoading ? (
+      {isModulesPending && !modules ? (
         <div className="space-y-1 pt-1">
           {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-9 w-full" />
           ))}
         </div>
+      ) : isModulesError ? (
+        <ErrorState
+          compact
+          title="Couldn’t load module access"
+          description={getErrorMessage(modulesError)}
+          onRetry={handleRetry}
+        />
       ) : (
         <div className="pt-1">
           {(modules ?? []).map((module) => (
             <ModuleToggleRow
               key={module.moduleKey}
               module={module}
-              disabled={togglesDisabled}
+              core={module.core}
+              disabled={togglesDisabled || module.core}
               onToggle={handleToggle}
             />
           ))}

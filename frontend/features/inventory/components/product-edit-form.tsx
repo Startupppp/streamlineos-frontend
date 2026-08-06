@@ -41,6 +41,10 @@ import {
   SKU_MAX,
   DESCRIPTION_MAX,
 } from "@/features/inventory/lib/new-product-schema";
+import {
+  productEditSchema,
+  type EditFormValues,
+} from "@/features/inventory/components/product-edit-schema";
 
 interface ProductForEdit {
   name: string;
@@ -63,54 +67,6 @@ interface ProductForEdit {
   barcode?: string | null;
 }
 
-const DECIMAL_PATTERN = /^\d+(\.\d{1,4})?$/;
-
-const editSchema = z.object({
-  name: productNameSchema,
-  sku: productSkuSchema,
-  description: productDescriptionSchema,
-  categoryId: z.string().optional(),
-  uomId: z.string().optional(),
-  purchaseUomId: z.string().optional(),
-  salesUomId: z.string().optional(),
-  costPrice: z
-    .string()
-    .optional()
-    .refine(
-      (v) => !v || (Number.isFinite(Number(v)) && Number(v) >= 0),
-      "Must be a non-negative number",
-    ),
-  sellingPrice: z
-    .string()
-    .optional()
-    .refine(
-      (v) => !v || (Number.isFinite(Number(v)) && Number(v) >= 0),
-      "Must be a non-negative number",
-    ),
-  reorderPoint: z
-    .string()
-    .optional()
-    .refine(
-      (v) => !v || (Number.isFinite(Number(v)) && Number(v) >= 0),
-      "Must be a non-negative number",
-    ),
-  standardCost: z
-    .string()
-    .optional()
-    .refine(
-      (v) => !v || DECIMAL_PATTERN.test(v),
-      "Enter a number with up to 4 decimal places",
-    ),
-  isActive: z.string(),
-  productType: z.enum(["STOCKABLE", "CONSUMABLE", "SERVICE"]).optional(),
-  trackingMethod: z.enum(["NONE", "LOT", "SERIAL"]).optional(),
-  costingMethod: z.enum(["STANDARD", "WEIGHTED_AVERAGE", "FIFO"]).optional(),
-  reorderEnabled: z.boolean().optional(),
-  barcode: z.string().max(100, "Barcode must be 100 characters or fewer").optional(),
-});
-
-export type EditFormValues = z.infer<typeof editSchema>;
-
 interface ProductEditFormProps {
   product: ProductForEdit;
   productId: number;
@@ -121,7 +77,7 @@ export function ProductEditForm({ product, productId, onDone }: ProductEditFormP
   const updateMutation = useUpdateProduct();
 
   const form = useForm<EditFormValues>({
-    resolver: zodResolver(editSchema),
+    resolver: zodResolver(productEditSchema),
     defaultValues: {
       name: product.name,
       sku: product.sku,

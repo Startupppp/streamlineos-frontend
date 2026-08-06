@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { CreditCard } from "lucide-react";
-import type { EmployeeFormValues } from "@/features/hr/employees/detail/edit-employee-form";
+import type { EmployeeFormValues } from "@/features/hr/employees/detail/employee-form-schema";
 
 export function BankDetailsSection() {
   const { control } = useFormContext<EmployeeFormValues>();

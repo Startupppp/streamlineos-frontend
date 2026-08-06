@@ -111,6 +111,8 @@ export interface NavRoute {
   requiredPermission?: string | string[];
   children?: NavRoute[];
   module?: ProductKey;
+  /** Show the route when at least one of these products is enabled. */
+  modulesAny?: ProductKey[];
   exact?: boolean;
 }
 
@@ -969,6 +971,7 @@ export const NAV_GROUPS: NavGroup[] = [
       "crm:leads:view",
       "crm:reports:view",
       "crm:settings:manage",
+      "party:parties:view",
     ],
     routes: [
       {
@@ -1023,6 +1026,12 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: Building2,
         href: "/crm/companies",
         requiredPermission: "crm:leads:view",
+      },
+      {
+        label: "Business Parties",
+        icon: Building2,
+        href: "/parties",
+        requiredPermission: "party:parties:view",
       },
       {
         label: "Clients",
@@ -2223,7 +2232,7 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    label: "Organization",
+    label: "Workspace",
     requiredPermission: ["settings:manage", "ownership:transfer:respond"],
     routes: [
       {
@@ -2247,7 +2256,6 @@ export const NAV_GROUPS: NavGroup[] = [
       "settings:view",
       "settings:organization:manage",
       "workforce:workers:view",
-      "party:parties:view",
     ],
     routes: [
       {
@@ -2258,7 +2266,7 @@ export const NAV_GROUPS: NavGroup[] = [
         requiredPermission: "directory:people:view",
       },
       {
-        label: "Members",
+        label: "Members & Access",
         icon: UserCog,
         href: "/users",
         exact: true,
@@ -2269,12 +2277,7 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: Briefcase,
         href: "/directory/workers",
         requiredPermission: "workforce:workers:view",
-      },
-      {
-        label: "Business Parties",
-        icon: Building2,
-        href: "/parties",
-        requiredPermission: "party:parties:view",
+        modulesAny: ["hrms", "payroll"],
       },
     ],
   },
@@ -2287,6 +2290,20 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: Shield,
         href: "/settings/roles",
         requiredPermission: "settings:rbac:manage",
+        children: [
+          {
+            label: "Permission Simulator",
+            icon: FileSearch,
+            href: "/settings/roles/simulate",
+            requiredPermission: "settings:rbac:manage",
+          },
+          {
+            label: "Access Audit",
+            icon: History,
+            href: "/settings/roles/audit",
+            requiredPermission: "audit-log:read",
+          },
+        ],
       },
       {
         label: "Access Policies",
@@ -2297,8 +2314,9 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    label: "Structure",
+    label: "Organization",
     requiredPermission: ["settings:manage", "settings:view"],
+    module: "hrms",
     routes: [
       {
         label: "Overview",
@@ -2308,46 +2326,54 @@ export const NAV_GROUPS: NavGroup[] = [
         requiredPermission: "settings:view",
       },
       {
-        label: "Business Units",
+        label: "Structure",
         icon: Network,
-        href: "/organization/business-units",
+        href: "/organization/structure",
         requiredPermission: "settings:view",
-      },
-      {
-        label: "Departments",
-        icon: Briefcase,
-        href: "/organization/departments",
-        requiredPermission: "settings:view",
-      },
-      {
-        label: "Organization Teams",
-        icon: Users,
-        href: "/organization/teams",
-        requiredPermission: "settings:view",
-      },
-      {
-        label: "Branches",
-        icon: GitBranch,
-        href: "/organization/branches",
-        requiredPermission: "settings:view",
-      },
-      {
-        label: "Locations",
-        icon: Map,
-        href: "/organization/locations",
-        requiredPermission: "settings:view",
-      },
-      {
-        label: "Cost Centers",
-        icon: Coins,
-        href: "/organization/cost-centers",
-        requiredPermission: "settings:view",
-      },
-      {
-        label: "Organization Chart",
-        icon: Network,
-        href: "/organization/tree",
-        requiredPermission: "settings:view",
+        children: [
+          {
+            label: "Business Units",
+            icon: Building2,
+            href: "/organization/business-units",
+            requiredPermission: "settings:view",
+          },
+          {
+            label: "Branches",
+            icon: GitBranch,
+            href: "/organization/branches",
+            requiredPermission: "settings:view",
+          },
+          {
+            label: "Departments",
+            icon: Briefcase,
+            href: "/organization/departments",
+            requiredPermission: "settings:view",
+          },
+          {
+            label: "Teams",
+            icon: Users,
+            href: "/organization/teams",
+            requiredPermission: "settings:view",
+          },
+          {
+            label: "Locations",
+            icon: Map,
+            href: "/organization/locations",
+            requiredPermission: "settings:view",
+          },
+          {
+            label: "Cost Centers",
+            icon: Coins,
+            href: "/organization/cost-centers",
+            requiredPermission: "settings:view",
+          },
+          {
+            label: "Organization Chart",
+            icon: Network,
+            href: "/organization/tree",
+            requiredPermission: "settings:view",
+          },
+        ],
       },
     ],
   },
@@ -2431,6 +2457,11 @@ function filterRoute(
   enabledModules: string[],
 ): NavRoute | null {
   if (route.module && !isModuleEnabled(route.module, enabledModules))
+    return null;
+  if (
+    route.modulesAny &&
+    !route.modulesAny.some((module) => isModuleEnabled(module, enabledModules))
+  )
     return null;
   if (!isOwner && !matchesPermission(route.requiredPermission, granted))
     return null;
@@ -2692,10 +2723,10 @@ const PRODUCT_NAV_GROUP_LABELS: Record<ProductKey, string[]> = {
   surveys: ["Surveys"],
   administration: [
     "Account",
-    "Organization",
+    "Workspace",
     "People",
     "Access",
-    "Structure",
+    "Organization",
     "Modules",
     "Billing",
     "Security",
@@ -2865,6 +2896,7 @@ export function getProductFromPathname(pathname: string): ProductKey {
     return "home";
   if (
     pathname.startsWith("/crm") ||
+    pathname.startsWith("/parties") ||
     pathname.startsWith("/sales") ||
     pathname.startsWith("/customer-executive")
   )
@@ -2890,8 +2922,7 @@ export function getProductFromPathname(pathname: string): ProductKey {
     pathname.startsWith("/users") ||
     pathname.startsWith("/settings") ||
     pathname.startsWith("/billing") ||
-    pathname.startsWith("/directory") ||
-    pathname.startsWith("/parties")
+    pathname.startsWith("/directory")
   )
     return "administration";
   return "home";

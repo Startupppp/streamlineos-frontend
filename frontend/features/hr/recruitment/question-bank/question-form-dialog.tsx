@@ -33,30 +33,11 @@ import {
   KEYWORDS_MAX_COUNT,
   countCommaSeparatedItems,
 } from "./question-form-body";
+import { EMPTY_FORM, type QuestionFormState } from "./question-form-types";
+export { EMPTY_FORM };
+export type { QuestionFormState };
 
 export { CATEGORIES, DIFFICULTIES };
-
-export interface QuestionFormState {
-  question: string;
-  category: string;
-  difficulty: "EASY" | "MEDIUM" | "HARD";
-  role: string;
-  roleInput: string;
-  tags: string;
-  sampleAnswer: string;
-  keywords: string;
-}
-
-export const EMPTY_FORM: QuestionFormState = {
-  question: "",
-  category: "GENERAL",
-  difficulty: "MEDIUM",
-  role: "",
-  roleInput: "",
-  tags: "",
-  sampleAnswer: "",
-  keywords: "",
-};
 
 function validateForm(form: QuestionFormState): string | null {
   const trimmedQ = form.question.trim();

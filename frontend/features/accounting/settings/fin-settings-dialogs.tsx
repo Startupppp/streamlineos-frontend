@@ -35,7 +35,7 @@ import {
 import { useAccounts } from "@/hooks/api/accounting";
 import type { NumberSequence, SystemAccountMapping, PaymentTerm } from "@/types/accounting/fin-settings";
 import type { ApprovalPolicy, ApprovalRecordType } from "@/types/accounting/taxes";
-import { PURPOSE_LABELS } from "./fin-settings-sections";
+import { PURPOSE_LABELS } from "./fin-settings-labels";
 
 const RECORD_TYPES: ReadonlyArray<string> = [
   "MANUAL_JOURNAL", "PURCHASE_BILL", "VENDOR_PAYMENT",

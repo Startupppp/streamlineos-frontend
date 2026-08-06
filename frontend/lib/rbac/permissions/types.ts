@@ -3,6 +3,7 @@
   resource: string;
   action: string;
   description: string;
+  baselineScope?: "own" | "all";
 };
 
 export type PermissionKey =

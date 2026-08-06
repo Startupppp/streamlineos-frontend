@@ -72,3 +72,70 @@ describe("Home employee navigation", () => {
     expect(getProductFromPathname("/me/recruitment")).toBe("home");
   });
 });
+
+describe("Administration information architecture", () => {
+  it("consolidates organization entities below Structure", () => {
+    const groups = getNavGroupsForProduct(
+      "administration",
+      "OWNER",
+      [],
+      ["hr"],
+    );
+    const organization = groups.find((group) => group.label === "Organization");
+    const structure = organization?.routes.find((route) => route.href === "/organization/structure");
+
+    expect(organization?.routes.map((route) => route.href)).toEqual([
+      "/organization",
+      "/organization/structure",
+    ]);
+    expect(structure?.children?.map((route) => route.href)).toEqual([
+      "/organization/business-units",
+      "/organization/branches",
+      "/organization/departments",
+      "/organization/teams",
+      "/organization/locations",
+      "/organization/cost-centers",
+      "/organization/tree",
+    ]);
+  });
+
+  it("hides HR organization structure and workers when neither HR nor payroll is enabled", () => {
+    const groups = getNavGroupsForProduct(
+      "administration",
+      "OWNER",
+      [],
+      ["build"],
+    );
+    const hrefs = groups.flatMap((group) => flattenNavRoutes(group.routes)).map((route) => route.href);
+
+    expect(groups.some((group) => group.label === "Organization")).toBe(false);
+    expect(hrefs).not.toContain("/directory/workers");
+    expect(hrefs).toContain("/directory");
+    expect(hrefs).toContain("/users");
+  });
+
+  it("shows workers when payroll is enabled without HR", () => {
+    const groups = getNavGroupsForProduct(
+      "administration",
+      "OWNER",
+      [],
+      ["payroll"],
+    );
+    const hrefs = groups.flatMap((group) => flattenNavRoutes(group.routes)).map((route) => route.href);
+
+    expect(hrefs).toContain("/directory/workers");
+  });
+
+  it("places business parties in CRM and classifies the route as CRM", () => {
+    const groups = getNavGroupsForProduct(
+      "crm",
+      "MEMBER",
+      ["party:parties:view"],
+      ["crm"],
+    );
+    const hrefs = groups.flatMap((group) => flattenNavRoutes(group.routes)).map((route) => route.href);
+
+    expect(hrefs).toContain("/parties");
+    expect(getProductFromPathname("/parties")).toBe("crm");
+  });
+});

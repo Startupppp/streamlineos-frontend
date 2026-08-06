@@ -72,7 +72,7 @@ const QUICK_ACTIONS = [
   { label: "Add Branch", icon: GitBranch, href: "/organization/branches" },
   { label: "Add Department", icon: Users, href: "/organization/departments" },
   { label: "Add Team", icon: UsersRound, href: "/organization/teams" },
-  { label: "View Tree", icon: Network, href: "/organization/tree" },
+  { label: "Manage Structure", icon: Network, href: "/organization/structure" },
   { label: "Org Settings", icon: Settings, href: "/settings/organization" },
 ];
 

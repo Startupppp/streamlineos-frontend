@@ -18,7 +18,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { UomSelect } from "@/features/inventory/components/product-field-selects";
-import type { EditFormValues } from "@/features/inventory/components/product-edit-form";
+import type { EditFormValues } from "@/features/inventory/components/product-edit-schema";
 
 interface ProductCostingFieldsProps {
   control: Control<EditFormValues>;

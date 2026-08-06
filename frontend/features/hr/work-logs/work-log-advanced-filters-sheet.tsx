@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 import { Users, Check, ChevronDown, CalendarDays } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { SlidersHorizontalIcon } from "@animateicons/react/lucide";
-import type { SharedFilterProps, WorkLogFilters, WorkLogFilterEmployee } from "./work-log-filter-actions";
+import type { SharedFilterProps, WorkLogFilters, WorkLogFilterEmployee } from "./work-log-filter-types";
 
 interface WorkLogAdvancedFiltersSheetProps extends SharedFilterProps {
   onApply: (draft: WorkLogFilters) => void;

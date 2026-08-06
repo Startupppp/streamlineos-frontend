@@ -57,15 +57,30 @@ export function PermissionMatrix({
   const catalogQuery = usePermissionCatalog();
   const permissions = useMemo(() => catalogQuery.data ?? [], [catalogQuery.data]);
   const catalog = useMemo(() => buildCatalog(permissions), [permissions]);
+  const includedPermissions = useMemo(
+    () =>
+      new Set(
+        permissions
+          .filter((permission) => permission.baselineScope)
+          .map((permission) => permission.name),
+      ),
+    [permissions],
+  );
 
   const baseline = useMemo<ScopeMap>(() => {
     const map: ScopeMap = {};
+    for (const permission of permissions) {
+      if (permission.baselineScope) {
+        map[permission.name] = permission.baselineScope;
+      }
+    }
     for (const grant of grantsQuery.data ?? []) {
+      if (includedPermissions.has(grant.permissionKey)) continue;
       if (grant.scope === "none") continue;
       map[grant.permissionKey] = toEditableScope(grant.scope);
     }
     return map;
-  }, [grantsQuery.data]);
+  }, [grantsQuery.data, includedPermissions, permissions]);
 
   const effective = draft && draft.roleId === role.id ? draft.map : baseline;
   const dirty =
@@ -95,21 +110,21 @@ export function PermissionMatrix({
 
   const handleTogglePermission = useCallback(
     (permName: string) => {
-      if (isReadOnly) return;
+      if (isReadOnly || includedPermissions.has(permName)) return;
       const next = { ...effective };
       if (next[permName]) delete next[permName];
       else next[permName] = "all";
       setEffective(next);
     },
-    [effective, isReadOnly, setEffective],
+    [effective, includedPermissions, isReadOnly, setEffective],
   );
 
   const handleSetScope = useCallback(
     (permName: string, scope: EditableScope) => {
-      if (isReadOnly) return;
+      if (isReadOnly || includedPermissions.has(permName)) return;
       setEffective({ ...effective, [permName]: scope });
     },
-    [effective, isReadOnly, setEffective],
+    [effective, includedPermissions, isReadOnly, setEffective],
   );
 
   const handleToggleModule = useCallback(
@@ -122,7 +137,11 @@ export function PermissionMatrix({
       const next = { ...effective };
       for (const perm of catalogModule.perms) {
         if (enable) {
-          if (!next[perm.name]) next[perm.name] = "all";
+          if (!next[perm.name]) {
+            next[perm.name] = perm.baselineScope ?? "all";
+          }
+        } else if (perm.baselineScope) {
+          next[perm.name] = perm.baselineScope;
         } else {
           delete next[perm.name];
         }
@@ -135,8 +154,11 @@ export function PermissionMatrix({
   const handleReset = useCallback(() => setDraft(null), []);
 
   const handleSave = useCallback(() => {
-    const items = Object.entries(effective).flatMap(([permissionKey, scope]) =>
-      scope ? [{ permissionKey, scope }] : [],
+    const items = Object.entries(effective).flatMap(
+      ([permissionKey, scope]) =>
+        scope && !includedPermissions.has(permissionKey)
+          ? [{ permissionKey, scope }]
+          : [],
     );
     setRolePermissions.mutate(
       { roleId: role.id, version: role.version, items },
@@ -156,7 +178,14 @@ export function PermissionMatrix({
         },
       },
     );
-  }, [effective, role.id, role.version, setRolePermissions, grantsQuery]);
+  }, [
+    effective,
+    grantsQuery,
+    includedPermissions,
+    role.id,
+    role.version,
+    setRolePermissions,
+  ]);
 
   const handleRetry = useCallback(() => {
     void grantsQuery.refetch();
