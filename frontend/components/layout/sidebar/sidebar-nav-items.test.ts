@@ -74,7 +74,7 @@ describe("Home employee navigation", () => {
 });
 
 describe("Administration information architecture", () => {
-  it("consolidates organization entities below Structure", () => {
+  it("lists organization structure as the base route with flat entity links", () => {
     const groups = getNavGroupsForProduct(
       "administration",
       "OWNER",
@@ -82,13 +82,9 @@ describe("Administration information architecture", () => {
       ["hr"],
     );
     const organization = groups.find((group) => group.label === "Organization");
-    const structure = organization?.routes.find((route) => route.href === "/organization/structure");
 
     expect(organization?.routes.map((route) => route.href)).toEqual([
       "/organization",
-      "/organization/structure",
-    ]);
-    expect(structure?.children?.map((route) => route.href)).toEqual([
       "/organization/business-units",
       "/organization/branches",
       "/organization/departments",

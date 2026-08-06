@@ -6,6 +6,7 @@ import type { Session } from "next-auth";
 import { getServerAuth } from "@/lib/get-server-auth";
 import { signInPathForMissingSession } from "@/lib/auth-session-cookies";
 import { getServerAccess } from "@/lib/rbac/get-server-access";
+import { resolveRequestPath } from "@/lib/rbac/request-path";
 import type { AccessResponse } from "@/types/access";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 
@@ -17,17 +18,7 @@ interface RequirePermissionResult {
 async function getCurrentPath(): Promise<string | null> {
   try {
     const h = await headers();
-    const referer = h.get("referer");
-    const nextUrl = h.get("next-url") ?? h.get("x-invoke-path");
-    if (nextUrl) return nextUrl;
-    if (referer) {
-      try {
-        return new URL(referer).pathname;
-      } catch {
-        return null;
-      }
-    }
-    return null;
+    return resolveRequestPath(h);
   } catch {
     return null;
   }

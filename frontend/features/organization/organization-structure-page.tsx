@@ -1,0 +1,382 @@
+"use client";
+
+import Link from "next/link";
+import {
+  AlertCircle,
+  ArrowRight,
+  Briefcase,
+  Building2,
+  CheckCircle2,
+  Coins,
+  GitBranch,
+  MapPin,
+  Network,
+  Settings,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
+import { RequireModule } from "@/components/auth/require-module";
+import { AccessDenied } from "@/components/shared/access-denied";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { useAccess, useCan } from "@/hooks/api/access";
+import { useOrgHierarchyOverview } from "@/hooks/api/org-hierarchy";
+import { useOrgSettings } from "@/hooks/api/organization";
+import { cn } from "@/lib/utils";
+import type { OrgHierarchyOverview } from "@/types/org-hierarchy";
+
+interface StructureLink {
+  title: string;
+  description: string;
+  href: string;
+  countKey: keyof OrgHierarchyOverview;
+  icon: LucideIcon;
+}
+
+const HIERARCHY_ITEMS: StructureLink[] = [
+  {
+    title: "Business Units",
+    description: "Divisions, brands, or lines of business",
+    href: "/organization/business-units",
+    countKey: "businessUnits",
+    icon: Building2,
+  },
+  {
+    title: "Branches",
+    description: "Regional or operational units",
+    href: "/organization/branches",
+    countKey: "branches",
+    icon: GitBranch,
+  },
+  {
+    title: "Departments",
+    description: "Functional groups like Sales or Finance",
+    href: "/organization/departments",
+    countKey: "departments",
+    icon: Briefcase,
+  },
+  {
+    title: "Teams",
+    description: "Delivery groups with leads and capacity",
+    href: "/organization/teams",
+    countKey: "teams",
+    icon: Users,
+  },
+];
+
+const SUPPORTING_ITEMS: StructureLink[] = [
+  {
+    title: "Locations",
+    description: "Where people work — not a reporting unit",
+    href: "/organization/locations",
+    countKey: "locations",
+    icon: MapPin,
+  },
+  {
+    title: "Cost Centers",
+    description: "Financial codes across the hierarchy",
+    href: "/organization/cost-centers",
+    countKey: "costCenters",
+    icon: Coins,
+  },
+];
+
+const STAT_ITEMS = [...HIERARCHY_ITEMS, ...SUPPORTING_ITEMS];
+
+function StructureRow({
+  item,
+  count,
+  isLoading,
+  showConnector,
+}: {
+  item: StructureLink;
+  count: number;
+  isLoading: boolean;
+  showConnector?: boolean;
+}) {
+  const Icon = item.icon;
+
+  return (
+    <div className="relative">
+      {showConnector ? (
+        <div
+          className="absolute -top-2 left-[1.375rem] hidden h-2 w-px bg-border sm:block"
+          aria-hidden
+        />
+      ) : null}
+      <Link
+        href={item.href}
+        className={cn(
+          "group flex items-center gap-3 rounded-lg px-2.5 py-2 transition-colors",
+          "hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        )}
+      >
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-muted/40">
+          <Icon className="size-3.5 text-muted-foreground" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <p className="truncate text-[13px] font-semibold text-foreground">
+              {item.title}
+            </p>
+            {isLoading ? (
+              <Skeleton className="h-4 w-6" />
+            ) : (
+              <Badge
+                variant="secondary"
+                className="h-5 px-1.5 text-[10px] tabular-nums"
+              >
+                {count}
+              </Badge>
+            )}
+          </div>
+          <p className="truncate text-[11px] text-muted-foreground">
+            {item.description}
+          </p>
+        </div>
+        <ArrowRight className="size-3.5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground" />
+      </Link>
+    </div>
+  );
+}
+
+function HealthRow({
+  label,
+  count,
+  ok,
+  isLoading,
+}: {
+  label: string;
+  count: number;
+  ok: boolean;
+  isLoading: boolean;
+}) {
+  return (
+    <div className="flex items-center gap-2 py-1.5">
+      {isLoading ? (
+        <Skeleton className="size-4 rounded-full" />
+      ) : ok ? (
+        <CheckCircle2 className="size-3.5 shrink-0 text-emerald-500" />
+      ) : (
+        <AlertCircle className="size-3.5 shrink-0 text-amber-500" />
+      )}
+      <span className="min-w-0 flex-1 truncate text-[12px] text-muted-foreground">
+        {label}
+      </span>
+      {isLoading ? (
+        <Skeleton className="h-4 w-6" />
+      ) : (
+        <span className="text-[12px] font-medium tabular-nums text-foreground">
+          {count}
+        </span>
+      )}
+    </div>
+  );
+}
+
+export function OrganizationStructurePage() {
+  const { data: accessData } = useAccess();
+  const canView = useCan("settings:view");
+  const { data: overview, isLoading } = useOrgHierarchyOverview({
+    enabled: canView,
+  });
+  const { data: org } = useOrgSettings({ enabled: canView });
+
+  const totalEntities =
+    (overview?.businessUnits ?? 0) +
+    (overview?.branches ?? 0) +
+    (overview?.departments ?? 0) +
+    (overview?.teams ?? 0) +
+    (overview?.locations ?? 0) +
+    (overview?.costCenters ?? 0);
+
+  const isSetupComplete = Boolean(
+    org?.industry && org?.timezone && (overview?.businessUnits ?? 0) > 0,
+  );
+
+  if (accessData && !canView) {
+    return (
+      <RequireModule module="hr">
+        <PageWrapper
+          title="Organization Structure"
+          subtitle="Set up reporting units once, then reuse them across people, access, payroll, and reporting."
+        >
+          <AccessDenied message="You don't have permission to view organization settings." />
+        </PageWrapper>
+      </RequireModule>
+    );
+  }
+
+  return (
+    <RequireModule module="hr">
+      <PageWrapper
+        title="Organization Structure"
+        subtitle={
+          overview
+            ? `${totalEntities} configured · Business Unit → Branch → Department → Team`
+            : "Set up reporting units once, then reuse them across people, access, payroll, and reporting."
+        }
+        actions={
+          <div className="flex items-center gap-2">
+            <Button asChild variant="outline" size="sm" className="h-8 gap-1.5">
+              <Link href="/settings/organization">
+                <Settings className="size-3.5" />
+                <span className="hidden sm:inline">Org settings</span>
+              </Link>
+            </Button>
+            <Button asChild size="sm" className="h-8 gap-1.5">
+              <Link href="/organization/tree">
+                <Network className="size-3.5" />
+                Chart
+              </Link>
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          <StatCardGrid cols={6}>
+            {STAT_ITEMS.map((item) => (
+              <StatCard
+                key={item.href}
+                label={item.title}
+                value={overview?.[item.countKey] ?? 0}
+                icon={item.icon}
+                href={item.href}
+                isLoading={isLoading}
+              />
+            ))}
+          </StatCardGrid>
+
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.4fr_1fr]">
+            <section className="rounded-xl border border-border bg-card shadow-sm">
+              <div className="border-b border-border px-4 py-3">
+                <h2 className="text-[13px] font-semibold text-foreground">
+                  Reporting hierarchy
+                </h2>
+                <p className="mt-0.5 text-[11px] text-muted-foreground">
+                  Use only the levels your organization needs.
+                </p>
+              </div>
+              <div className="divide-y divide-border/60 p-1.5">
+                {HIERARCHY_ITEMS.map((item, index) => (
+                  <StructureRow
+                    key={item.href}
+                    item={item}
+                    count={overview?.[item.countKey] ?? 0}
+                    isLoading={isLoading}
+                    showConnector={index > 0}
+                  />
+                ))}
+              </div>
+            </section>
+
+            <div className="flex flex-col gap-4">
+              <section className="rounded-xl border border-border bg-card shadow-sm">
+                <div className="border-b border-border px-4 py-3">
+                  <h2 className="text-[13px] font-semibold text-foreground">
+                    Places & finance
+                  </h2>
+                  <p className="mt-0.5 text-[11px] text-muted-foreground">
+                    Support dimensions outside the reporting chain.
+                  </p>
+                </div>
+                <div className="divide-y divide-border/60 p-1.5">
+                  {SUPPORTING_ITEMS.map((item) => (
+                    <StructureRow
+                      key={item.href}
+                      item={item}
+                      count={overview?.[item.countKey] ?? 0}
+                      isLoading={isLoading}
+                    />
+                  ))}
+                </div>
+              </section>
+
+              <section className="rounded-xl border border-border bg-card p-4 shadow-sm">
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <h2 className="text-[13px] font-semibold text-foreground">
+                    Setup health
+                  </h2>
+                  {isLoading ? (
+                    <Skeleton className="h-5 w-24" />
+                  ) : (
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        "h-5 px-1.5 text-[10px]",
+                        isSetupComplete
+                          ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                          : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+                      )}
+                    >
+                      {isSetupComplete ? "Ready" : "Incomplete"}
+                    </Badge>
+                  )}
+                </div>
+                <div className="space-y-0.5">
+                  <HealthRow
+                    label="Business units"
+                    count={overview?.businessUnits ?? 0}
+                    ok={(overview?.businessUnits ?? 0) > 0}
+                    isLoading={isLoading}
+                  />
+                  <HealthRow
+                    label="Branches"
+                    count={overview?.branches ?? 0}
+                    ok={(overview?.branches ?? 0) > 0}
+                    isLoading={isLoading}
+                  />
+                  <HealthRow
+                    label="Departments"
+                    count={overview?.departments ?? 0}
+                    ok={(overview?.departments ?? 0) > 0}
+                    isLoading={isLoading}
+                  />
+                  <HealthRow
+                    label="Locations"
+                    count={overview?.locations ?? 0}
+                    ok={(overview?.locations ?? 0) > 0}
+                    isLoading={isLoading}
+                  />
+                </div>
+                {!isLoading && !isSetupComplete ? (
+                  <Link
+                    href="/settings/organization"
+                    className="mt-3 inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:underline"
+                  >
+                    Complete org profile
+                    <ArrowRight className="size-3" />
+                  </Link>
+                ) : null}
+              </section>
+            </div>
+          </div>
+
+          <Link
+            href="/organization/tree"
+            className="group flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 shadow-sm transition-colors hover:border-primary/30 hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/40">
+              <Network className="size-4 text-muted-foreground" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[13px] font-semibold text-foreground">
+                Organization chart
+              </p>
+              <p className="truncate text-[11px] text-muted-foreground">
+                Visual tree generated from the hierarchy above.
+              </p>
+            </div>
+            <span className="inline-flex items-center gap-1 text-[12px] font-medium text-foreground">
+              Open
+              <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+            </span>
+          </Link>
+        </div>
+      </PageWrapper>
+    </RequireModule>
+  );
+}
