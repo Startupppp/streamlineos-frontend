@@ -2,8 +2,8 @@
 
 import { useMemo } from "react";
 import { format, isWithinInterval } from "date-fns";
-import { CalendarDays, History } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { EmptyState } from "@/components/ui/empty-state";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { CalendarListItem } from "@/hooks/api/calendar";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -67,72 +67,75 @@ export function CalendarEventsPanel({
   const grouped = useMemo(() => groupByDate(filteredEvents), [filteredEvents]);
 
   const isEmpty = filteredEvents.length === 0;
-  const EmptyIcon = mode === "history" ? History : CalendarDays;
 
   return (
     <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
-      <div className="overscroll-contain p-4">
-      {isEmpty ? (
-        <div className="flex flex-col items-center justify-center h-full min-h-[16rem] text-center px-4">
-          <EmptyIcon className="h-10 w-10 text-muted-foreground/40 mb-3" />
-          <p className="text-sm font-medium text-foreground">
-            {mode === "history" ? "No past events" : "No events in this period"}
-          </p>
-          <p className="text-xs text-muted-foreground mt-1 max-w-xs">
-            {mode === "history"
-              ? "Events that have ended will appear here."
-              : "Try a different date range or add a new event."}
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-5 max-w-3xl">
-          {[...grouped.entries()].map(([dateKey, dayEvents]) => (
-            <section key={dateKey}>
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 sticky top-0 bg-card py-1 z-10">
-                {format(new Date(dateKey), "EEEE, MMMM d, yyyy")}
-              </h3>
-              <ul className="space-y-2">
-                {dayEvents.map((event) => {
-                  const color =
-                    EVENT_COLORS[event.color ?? "blue"] ?? EVENT_COLORS.blue;
-                  const start = new Date(event.start);
-                  const end = new Date(event.end);
-                  return (
-                    <li key={event.id}>
-                      <button
-                        type="button"
-                        onClick={() => onSelectEvent(event.id)}
-                        className={cn(
-                          "w-full text-left rounded-lg border bg-card p-3 hover:bg-muted/40 transition-colors",
-                          "border-l-4 shadow-xs",
-                        )}
-                        style={{ borderLeftColor: color }}
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0 flex-1">
-                            <TruncatedText text={event.title} className="text-sm font-semibold text-foreground" />
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              {event.allDay
-                                ? "All day"
-                                : `${format(start, "h:mm a")} – ${format(end, "h:mm a")}`}
-                            </p>
-                            {event.location && (
-                              <TruncatedText text={event.location} className="text-[11px] text-muted-foreground mt-1" />
-                            )}
+      <div className="flex min-h-full w-full flex-1 flex-col overscroll-contain p-4">
+        {isEmpty ? (
+          <EmptyState
+            illustrationPreset="calendar"
+            title={mode === "history" ? "No past events" : "No events in this period"}
+            description={
+              mode === "history"
+                ? "Events that have ended will appear here."
+                : "Try a different date range or add a new event."
+            }
+            className="h-full min-h-0 flex-1 border-0 bg-transparent shadow-none"
+          />
+        ) : (
+          <div className="max-w-3xl space-y-5">
+            {[...grouped.entries()].map(([dateKey, dayEvents]) => (
+              <section key={dateKey}>
+                <h3 className="sticky top-0 z-10 mb-2 bg-card py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  {format(new Date(dateKey), "EEEE, MMMM d, yyyy")}
+                </h3>
+                <ul className="space-y-2">
+                  {dayEvents.map((event) => {
+                    const color =
+                      EVENT_COLORS[event.color ?? "blue"] ?? EVENT_COLORS.blue;
+                    const start = new Date(event.start);
+                    const end = new Date(event.end);
+                    return (
+                      <li key={event.id}>
+                        <button
+                          type="button"
+                          onClick={() => onSelectEvent(event.id)}
+                          className={cn(
+                            "w-full rounded-lg border border-l-4 bg-card p-3 text-left shadow-xs transition-colors hover:bg-muted/40",
+                          )}
+                          style={{ borderLeftColor: color }}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0 flex-1">
+                              <TruncatedText
+                                text={event.title}
+                                className="text-sm font-semibold text-foreground"
+                              />
+                              <p className="mt-0.5 text-xs text-muted-foreground">
+                                {event.allDay
+                                  ? "All day"
+                                  : `${format(start, "h:mm a")} – ${format(end, "h:mm a")}`}
+                              </p>
+                              {event.location ? (
+                                <TruncatedText
+                                  text={event.location}
+                                  className="mt-1 text-[11px] text-muted-foreground"
+                                />
+                              ) : null}
+                            </div>
+                            <span className="shrink-0 text-[10px] uppercase tracking-wide text-muted-foreground">
+                              {event.category}
+                            </span>
                           </div>
-                          <span className="text-[10px] uppercase tracking-wide text-muted-foreground shrink-0">
-                            {event.category}
-                          </span>
-                        </div>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            </section>
-          ))}
-        </div>
-      )}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            ))}
+          </div>
+        )}
       </div>
     </ScrollArea>
   );

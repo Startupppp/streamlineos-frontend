@@ -5,12 +5,10 @@ import dynamic from "next/dynamic";
 import { format, differenceInCalendarDays } from "date-fns";
 import { toast } from "sonner";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Download, History } from "lucide-react";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PAGE_BODY_EMPTY_CLASS } from "@/components/ui/content-fill-panel";
 
 const LeaveBalanceDonut = dynamic(
   () => import("./leave-balance-donut").then((m) => ({ default: m.LeaveBalanceDonut })),
@@ -33,6 +31,7 @@ interface LeavesTabContentProps {
   myLeaveRequests: LeaveRequest[];
   approvedLeavesThisWeek?: ApprovedLeave[];
   compact?: boolean;
+  onRequestLeave?: () => void;
 }
 
 export function LeavesTabContent({
@@ -40,6 +39,7 @@ export function LeavesTabContent({
   myLeaveRequests,
   approvedLeavesThisWeek = [],
   compact = false,
+  onRequestLeave,
 }: LeavesTabContentProps) {
   const isAdmin = useCan("hr:employees:manage");
   const { data: policy } = useLeavePolicy();
@@ -101,54 +101,6 @@ export function LeavesTabContent({
     [cancelMutation],
   );
 
-  const handleExportExcel = useCallback(async () => {
-    if (myLeaveRequests.length === 0) {
-      toast.error("No leave requests to export");
-      return;
-    }
-    try {
-      const ExcelJS = (await import("exceljs")).default;
-      const workbook = new ExcelJS.Workbook();
-      const ws = workbook.addWorksheet("Leave Requests");
-      ws.columns = [
-        { header: "Type", width: 15 },
-        { header: "From", width: 14 },
-        { header: "To", width: 14 },
-        { header: "Priority", width: 10 },
-        { header: "Status", width: 12 },
-        { header: "Reason", width: 30 },
-        { header: "Requested On", width: 14 },
-      ];
-      ws.getRow(1).font = { bold: true };
-      for (const req of myLeaveRequests) {
-        ws.addRow([
-          req.leaveType?.name || "-",
-          req.startDate,
-          req.endDate,
-          req.priority || "Medium",
-          req.status,
-          req.reason || "-",
-          req.createdAt ? format(new Date(req.createdAt), "yyyy-MM-dd") : "-",
-        ]);
-      }
-      const buffer = await workbook.xlsx.writeBuffer();
-      const blob = new Blob([buffer], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `leave-requests-${format(new Date(), "yyyy-MM-dd")}.xlsx`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      toast.success("Leave requests exported!");
-    } catch {
-      toast.error("Failed to export");
-    }
-  }, [myLeaveRequests]);
-
   const columns = useMemo<DataTableColumn<LeaveRequest>[]>(
     () => [
       {
@@ -162,7 +114,7 @@ export function LeavesTabContent({
             <div className="flex items-center gap-2.5">
               <div
                 className={cn(
-                  "h-8 w-7 rounded-lg flex items-center justify-center",
+                  "flex h-8 w-7 items-center justify-center rounded-lg",
                   config.iconBg,
                 )}
               >
@@ -172,7 +124,10 @@ export function LeavesTabContent({
                 />
               </div>
               <div className="min-w-0">
-                <TruncatedText text={typeName.replace(" Leave", "")} className="text-sm font-semibold text-foreground leading-tight" />
+                <TruncatedText
+                  text={typeName.replace(" Leave", "")}
+                  className="text-sm font-semibold leading-tight text-foreground"
+                />
                 <p className="text-[10px] text-muted-foreground">Leave</p>
               </div>
             </div>
@@ -187,7 +142,7 @@ export function LeavesTabContent({
             ? new Date(row.createdAt)
             : new Date(row.startDate);
           return (
-            <span className="text-xs text-muted-foreground tabular-nums">
+            <span className="text-xs tabular-nums text-muted-foreground">
               {format(createdAt, "MMM d, yyyy")}
             </span>
           );
@@ -207,9 +162,7 @@ export function LeavesTabContent({
               ? format(start, "MMM d")
               : `${format(start, "MMM d")} – ${format(end, "MMM d")}`;
           return (
-            <span className="text-xs text-foreground font-medium">
-              {periodStr}
-            </span>
+            <span className="text-xs font-medium text-foreground">{periodStr}</span>
           );
         },
       },
@@ -221,7 +174,7 @@ export function LeavesTabContent({
           const end = new Date(row.endDate);
           const days = differenceInCalendarDays(end, start) + 1;
           return (
-            <span className="text-xs text-center font-semibold tabular-nums text-foreground">
+            <span className="text-center text-xs font-semibold tabular-nums text-foreground">
               {days}
             </span>
           );
@@ -268,18 +221,21 @@ export function LeavesTabContent({
             <div className="flex flex-col gap-0.5">
               <span
                 className={cn(
-                  "inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border w-fit",
+                  "inline-flex w-fit items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold",
                   statusBadgeClass,
                 )}
               >
                 {status.charAt(0) + status.slice(1).toLowerCase()}
               </span>
               {row.managerComment && (
-                <TruncatedText text={`"${row.managerComment}"`} className="text-[10px] text-muted-foreground max-w-[120px]" />
+                <TruncatedText
+                  text={`"${row.managerComment}"`}
+                  className="max-w-[120px] text-[10px] text-muted-foreground"
+                />
               )}
               {status === "REJECTED" && row.rejectionReason && (
                 <span
-                  className="text-[10px] text-rose-500 dark:text-rose-300 truncate max-w-[120px]"
+                  className="max-w-[120px] truncate text-[10px] text-rose-500 dark:text-rose-300"
                   title={row.rejectionReason}
                 >
                   {row.rejectionReason}
@@ -312,7 +268,13 @@ export function LeavesTabContent({
   );
 
   return (
-    <div className={compact ? "flex min-h-0 flex-1 flex-col gap-3" : "space-y-4"}>
+    <div
+      className={
+        compact
+          ? "flex h-full min-h-0 w-full flex-1 flex-col"
+          : "w-full space-y-4"
+      }
+    >
       {!compact && (
         <>
           <div className="space-y-0.5">
@@ -323,7 +285,7 @@ export function LeavesTabContent({
           </div>
 
           <div
-            className="grid gap-3 grid-cols-2 lg:grid-cols-3"
+            className="grid grid-cols-2 gap-3 lg:grid-cols-3"
             role="list"
             aria-label="Leave balances"
           >
@@ -348,47 +310,29 @@ export function LeavesTabContent({
         </>
       )}
 
-      <Card className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border">
-        <CardHeader className="shrink-0 border-b pb-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <div className="w-7 rounded-lg bg-muted flex items-center justify-center">
-                <History
-                  className="h-3.5 w-3.5 text-muted-foreground"
-                  aria-hidden="true"
-                />
-              </div>
-              Request History
-            </CardTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleExportExcel}
-              className="gap-1.5 text-xs text-muted-foreground shrink-0"
-              aria-label="Export to Excel"
-            >
-              <Download className="h-3.5 w-3.5" />
-              Export
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="min-h-0 flex-1 overflow-auto pt-0" aria-live="polite">
+      {myLeaveRequests.length === 0 ? (
+        <EmptyState
+          illustrationPreset="calendar"
+          title="No leave requests"
+          description="You haven't submitted any leave requests yet."
+          action={
+            onRequestLeave
+              ? { label: "Request Leave", onClick: onRequestLeave }
+              : undefined
+          }
+          className={PAGE_BODY_EMPTY_CLASS}
+        />
+      ) : (
+        <div className="flex h-full min-h-0 w-full flex-1 flex-col" aria-live="polite">
           <DataTable
             data={myLeaveRequests}
             columns={columns}
             getRowKey={(row) => row.id}
             minWidth="600px"
-            emptyState={
-              <EmptyState
-                illustrationPreset="default"
-                title="No leave requests"
-                description="You haven't submitted any leave requests yet."
-                className="flex-1 border-0 bg-transparent"
-              />
-            }
+            className="min-h-0 w-full flex-1"
           />
-        </CardContent>
-      </Card>
+        </div>
+      )}
     </div>
   );
 }

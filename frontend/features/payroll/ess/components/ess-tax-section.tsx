@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion } from "framer-motion";
-import { Scale, AlertCircle, CheckCircle, Lock, Edit } from "lucide-react";
+import { AlertCircle, CheckCircle, Lock, Edit } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PAGE_BODY_SKELETON_CLASS } from "@/components/ui/content-fill-panel";
 import { EssStatusBadge } from "./ess-status-badge";
 import { useEssTaxDeclaration, useSubmitTaxDeclaration } from "@/hooks/api/payroll/ess";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
@@ -172,10 +173,10 @@ function TaxDeclarationSheet({ open, onClose, financialYear, currentRegime, curr
 
 function TaxSkeleton() {
   return (
-    <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+    <div className={PAGE_BODY_SKELETON_CLASS}>
       <Skeleton className="h-9 w-full rounded-md" />
-      <div className="space-y-2 mt-2">
-        {Array.from({ length: 4 }).map((_, i) => (
+      <div className="mt-2 space-y-2">
+        {Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className="flex items-center justify-between">
             <Skeleton className="h-3.5 w-36" />
             <Skeleton className="h-3.5 w-20" />
@@ -186,20 +187,26 @@ function TaxSkeleton() {
   );
 }
 
-export function EssTaxSection() {
+export function EssTaxSection({
+  hideToolbar = false,
+  sheetOpen: sheetOpenProp,
+  onSheetOpenChange,
+}: {
+  hideToolbar?: boolean;
+  sheetOpen?: boolean;
+  onSheetOpenChange?: (open: boolean) => void;
+}) {
   const { data, isLoading } = useEssTaxDeclaration();
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const sheetOpen = sheetOpenProp ?? uncontrolledOpen;
+  const setSheetOpen = onSheetOpenChange ?? setUncontrolledOpen;
 
   const handleOpen = () => setSheetOpen(true);
   const handleClose = () => setSheetOpen(false);
 
   if (isLoading) {
     return (
-      <section id="tax" className="scroll-mt-20">
-        <h2 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
-          <Scale className="h-4 w-4 text-muted-foreground" />
-          Tax Declaration
-        </h2>
+      <section id="tax" className="flex min-h-0 w-full flex-1 flex-col">
         <TaxSkeleton />
       </section>
     );
@@ -209,25 +216,21 @@ export function EssTaxSection() {
   const declaration = data?.declaration;
 
   return (
-    <section id="tax" className="scroll-mt-20">
-      <div className="flex items-center justify-between gap-3 mb-3">
-        <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
-          <Scale className="h-4 w-4 text-muted-foreground" />
-          Tax Declaration
-        </h2>
-        {windowOpen && (
-          <Button size="sm" variant="outline" className="text-xs gap-1.5" onClick={handleOpen}>
+    <section id="tax" className="flex min-h-0 w-full flex-1 flex-col gap-3">
+      {windowOpen && !hideToolbar ? (
+        <div className="flex shrink-0 items-center justify-end gap-3">
+          <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={handleOpen}>
             <Edit className="h-3 w-3" />
             {declaration ? "Edit" : "Submit"} Declaration
           </Button>
-        )}
-      </div>
+        </div>
+      ) : null}
 
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.18, ease: "easeOut" }}
-        className="rounded-xl border border-border bg-card overflow-hidden"
+        className="min-h-0 w-full flex-1 overflow-hidden rounded-xl border border-border bg-card"
       >
         <div className={cn(
           "px-4 py-3 flex items-center gap-2 border-b border-border",

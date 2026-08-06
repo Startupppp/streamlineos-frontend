@@ -86,17 +86,22 @@ function SendReportButton({ isSending, disabled, onClick }: { isSending: boolean
   );
 }
 
-function MailTriggerButton() {
+function MailTriggerButton({ toolbar = false }: { toolbar?: boolean }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
     <Button
       type="button"
-      variant="ghost"
-      className="h-auto px-0 py-0 gap-1.5 text-xs font-semibold text-primary hover:bg-transparent hover:text-primary/80"
+      variant={toolbar ? "outline" : "ghost"}
+      size={toolbar ? "sm" : "default"}
+      className={
+        toolbar
+          ? "h-8 gap-1.5"
+          : "h-auto gap-1.5 px-0 py-0 text-xs font-semibold text-primary hover:bg-transparent hover:text-primary/80"
+      }
       {...hoverHandlers}
     >
-      <MailIcon ref={iconRef} size={14} />
-      Email Report
+      <MailIcon ref={iconRef} size={14} className={toolbar ? "mr-0" : undefined} />
+      {toolbar ? "Email" : "Email Report"}
     </Button>
   );
 }
@@ -199,7 +204,7 @@ function MultiSelectField({
   );
 }
 
-export function AttendanceEmailDialog() {
+export function AttendanceEmailDialog({ toolbar = false }: { toolbar?: boolean }) {
   const [open, setOpen] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [toEmails, setToEmails] = useState<string[]>([]);
@@ -309,7 +314,7 @@ export function AttendanceEmailDialog() {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <MailTriggerButton />
+        <MailTriggerButton toolbar={toolbar} />
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-md">

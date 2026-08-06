@@ -7,9 +7,9 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PAGE_BODY_EMPTY_CLASS, PAGE_BODY_SKELETON_CLASS } from "@/components/ui/content-fill-panel";
 import { useMyOnboardingDocs } from "@/hooks/api/hr/documents";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { MyOnboardingDocStatus } from "@/hooks/api/hr/documents";
@@ -38,7 +38,7 @@ const STATUS_CLASSES: Record<MyOnboardingDocStatus, string> = {
 
 function DocumentsSkeleton() {
   return (
-    <div className="space-y-2">
+    <div className={PAGE_BODY_SKELETON_CLASS}>
       {Array.from({ length: 8 }, (_, index) => (
         <Skeleton key={index} className="h-14 w-full rounded-lg" />
       ))}
@@ -68,7 +68,7 @@ export function MyDocumentsPage() {
 
       {documents.isError ? (
         <ErrorState
-          className="flex-1"
+          className={PAGE_BODY_EMPTY_CLASS}
           title="Documents unavailable"
           description={getErrorMessage(documents.error)}
           onRetry={documents.refetch}
@@ -80,48 +80,46 @@ export function MyDocumentsPage() {
           illustrationPreset="documents"
           title="No documents requested"
           description="Your organization has not requested any employment documents."
-          className="flex-1"
+          className={PAGE_BODY_EMPTY_CLASS}
         />
       ) : null}
 
       {!documents.isLoading && !documents.isError && documents.data?.data.length ? (
-        <Card className="flex min-h-0 flex-1 flex-col overflow-hidden py-0">
-          <CardContent className="min-h-0 flex-1 divide-y overflow-y-auto p-0">
-            {documents.data.data.map((document) => {
-              const needsAttention =
-                document.status === "PENDING" ||
-                document.status === "REJECTED" ||
-                document.status === "RE_UPLOAD_REQUESTED";
-              const StatusIcon = needsAttention ? FileWarning : FileClock;
+        <div className="min-h-0 flex-1 divide-y overflow-y-auto rounded-xl border border-border bg-card">
+          {documents.data.data.map((document) => {
+            const needsAttention =
+              document.status === "PENDING" ||
+              document.status === "REJECTED" ||
+              document.status === "RE_UPLOAD_REQUESTED";
+            const StatusIcon = needsAttention ? FileWarning : FileClock;
 
-              return (
-                <div
-                  key={document.id}
-                  className="flex min-w-0 items-center gap-3 px-4 py-3"
-                >
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted">
-                    <StatusIcon className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13px] font-medium text-foreground">
-                      {document.documentTypeName}
-                    </p>
-                    <p className="truncate text-[11px] text-muted-foreground">
-                      {document.remarks ??
-                        (document.isMandatory ? "Required document" : "Optional document")}
-                    </p>
-                  </div>
-                  <Badge
-                    variant="outline"
-                    className={`h-5 shrink-0 px-2 py-0.5 text-[10px] ${STATUS_CLASSES[document.status]}`}
-                  >
-                    {STATUS_LABELS[document.status]}
-                  </Badge>
+            return (
+              <div
+                key={document.id}
+                className="flex min-w-0 items-center gap-3 px-4 py-3"
+              >
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted">
+                  <StatusIcon className="h-4 w-4 text-muted-foreground" />
                 </div>
-              );
-            })}
-          </CardContent>
-        </Card>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[13px] font-medium text-foreground">
+                    {document.documentTypeName}
+                  </p>
+                  <p className="truncate text-[11px] text-muted-foreground">
+                    {document.remarks ??
+                      (document.isMandatory ? "Required document" : "Optional document")}
+                  </p>
+                </div>
+                <Badge
+                  variant="outline"
+                  className={`h-5 shrink-0 px-2 py-0.5 text-[10px] ${STATUS_CLASSES[document.status]}`}
+                >
+                  {STATUS_LABELS[document.status]}
+                </Badge>
+              </div>
+            );
+          })}
+        </div>
       ) : null}
 
       <UploadDocSheet

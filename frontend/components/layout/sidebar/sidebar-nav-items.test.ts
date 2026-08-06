@@ -40,6 +40,8 @@ describe("Home employee navigation", () => {
       ]),
     );
     expect(hrefs).not.toContain("/hr/recruitment/interviews");
+    expect(hrefs).not.toContain("/build/my-work");
+    expect(hrefs).not.toContain("/build");
     expect(routes.every((route) => route.module === undefined)).toBe(true);
   });
 

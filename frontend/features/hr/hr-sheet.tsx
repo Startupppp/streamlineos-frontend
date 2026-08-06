@@ -106,23 +106,23 @@ export function HrSheet({
           <SheetBody className="space-y-5 px-5 py-5">{children}</SheetBody>
 
           {showSubmit && (
-            <SheetFooter className="shrink-0 flex-col gap-2 border-t border-border bg-muted/30 px-5 py-4">
+            <SheetFooter className="shrink-0 flex-row gap-2 border-t border-border bg-muted/30 px-5 py-4">
+              <Button
+                variant="outline"
+                className="h-9 flex-1 transition-colors duration-200"
+                onClick={handleCancel}
+                disabled={isPending}
+              >
+                {cancelLabel}
+              </Button>
               <LoadingButton
-                className="h-9 w-full gap-1.5 transition-colors duration-200"
+                className="h-9 flex-1 gap-1.5 transition-colors duration-200"
                 onClick={handleSubmit}
                 disabled={!onSubmit || submitDisabled}
                 isPending={isPending}
               >
                 {submitLabel}
               </LoadingButton>
-              <Button
-                variant="outline"
-                className="h-9 w-full transition-colors duration-200"
-                onClick={handleCancel}
-                disabled={isPending}
-              >
-                {cancelLabel}
-              </Button>
             </SheetFooter>
           )}
         </SheetContent>

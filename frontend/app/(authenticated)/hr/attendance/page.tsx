@@ -14,17 +14,13 @@ export default function AttendancePage() {
     return (
       <PageWrapper
         title="Attendance"
-        subtitle="Track your work hours and manage check-ins"
- variant="display">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
-          <div className="lg:col-span-4 space-y-3">
-            <Skeleton className="h-64 rounded-xl" />
-            <Skeleton className="h-40 rounded-xl" />
-          </div>
-          <div className="lg:col-span-8 space-y-3">
-            <Skeleton className="h-72 rounded-xl" />
-            <Skeleton className="h-56 rounded-xl" />
-          </div>
+        subtitle="Track your work hours and manage check-ins."
+        noInternalScroll
+        contentClassName="flex min-h-0 flex-1 flex-col"
+      >
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
+          <Skeleton className="h-64 rounded-xl" />
+          <Skeleton className="h-72 rounded-xl" />
         </div>
       </PageWrapper>
     );
@@ -33,10 +29,10 @@ export default function AttendancePage() {
   return (
     <PageWrapper
       title="Attendance"
-      subtitle="Track your work hours and manage check-ins"
+      subtitle="Track your work hours and manage check-ins."
       noInternalScroll
-      contentClassName="flex flex-col"
- variant="display">
+      contentClassName="flex min-h-0 flex-1 flex-col"
+    >
       <AttendanceContent isAdmin={isAdmin} />
     </PageWrapper>
   );

@@ -21,6 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
+import { PAGE_BODY_EMPTY_CLASS, PAGE_BODY_SKELETON_CLASS } from "@/components/ui/content-fill-panel";
 import { MonthPicker } from "@/features/payroll/shared/month-picker";
 import { EssStatusBadge } from "./ess-status-badge";
 import { useEssReimbursements, useSubmitReimbursement } from "@/hooks/api/payroll/ess";
@@ -248,60 +249,79 @@ function SubmitSheet({ open, onClose }: { open: boolean; onClose: () => void }) 
   );
 }
 
-export function EssReimbursementsSection() {
+export function EssReimbursementsSection({
+  hideToolbar = false,
+  sheetOpen: sheetOpenProp,
+  onSheetOpenChange,
+}: {
+  hideToolbar?: boolean;
+  sheetOpen?: boolean;
+  onSheetOpenChange?: (open: boolean) => void;
+}) {
   const { data: reimbursements, isLoading } = useEssReimbursements();
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const sheetOpen = sheetOpenProp ?? uncontrolledOpen;
+  const setSheetOpen = onSheetOpenChange ?? setUncontrolledOpen;
 
   const handleOpenSheet = () => setSheetOpen(true);
   const handleCloseSheet = () => setSheetOpen(false);
 
   return (
-    <section id="reimbursements" className="scroll-mt-20">
-      <div className="flex items-center justify-between gap-3 mb-3">
-        <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
-          <Receipt className="h-4 w-4 text-muted-foreground" />
-          Reimbursements
-        </h2>
-        <AnimatedIconButton icon={PlusIcon} iconClassName="mr-1.5" size="sm" className="text-xs" onClick={handleOpenSheet}>
-          Submit Claim
-        </AnimatedIconButton>
-      </div>
+    <section id="reimbursements" className="flex min-h-0 w-full flex-1 flex-col gap-3">
+      {!hideToolbar ? (
+        <div className="flex shrink-0 items-center justify-end gap-3">
+          <AnimatedIconButton
+            icon={PlusIcon}
+            iconClassName="mr-1.5"
+            size="sm"
+            className="h-8 text-xs"
+            onClick={handleOpenSheet}
+          >
+            Submit Claim
+          </AnimatedIconButton>
+        </div>
+      ) : null}
 
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
+      <div className="flex min-h-0 flex-1 flex-col">
         {isLoading ? (
-          <div>{Array.from({ length: 8 }).map((_, i) => <RowSkeleton key={i} />)}</div>
+          <div className={PAGE_BODY_SKELETON_CLASS}>
+            {Array.from({ length: 8 }).map((_, i) => (
+              <RowSkeleton key={i} />
+            ))}
+          </div>
         ) : !reimbursements || reimbursements.length === 0 ? (
           <EmptyState
             illustration={<EmptyExpensesIllustration />}
             title="No claims yet"
             description="Submit a reimbursement claim and track its approval status here."
             action={{ label: "Submit Claim", onClick: handleOpenSheet }}
+            className={PAGE_BODY_EMPTY_CLASS}
           />
         ) : (
-          <div>
+          <div className="min-h-0 w-full flex-1 overflow-y-auto rounded-xl border border-border bg-card">
             {reimbursements.map((r, idx) => (
               <motion.div
                 key={r.id}
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.16, delay: idx * 0.04, ease: "easeOut" }}
-                className="flex items-center justify-between py-3 px-4 border-b border-border last:border-0 hover:bg-muted/30 transition-colors"
+                className="flex items-center justify-between border-b border-border px-4 py-3 last:border-0 transition-colors hover:bg-muted/30"
               >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-8 rounded-md bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center shrink-0">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="flex w-8 shrink-0 items-center justify-center rounded-md bg-emerald-50 dark:bg-emerald-500/10">
                     <Receipt className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                   </div>
                   <div className="min-w-0">
                     <TruncatedText text={r.category} className="text-sm font-medium text-foreground" />
-                    <TruncatedText text={r.description || formatDate(r.createdAt)} className="text-xs text-muted-foreground mt-0.5" />
+                    <TruncatedText text={r.description || formatDate(r.createdAt)} className="mt-0.5 text-xs text-muted-foreground" />
                   </div>
                 </div>
-                <div className="flex items-center gap-3 shrink-0">
+                <div className="flex shrink-0 items-center gap-3">
                   <EssStatusBadge status={r.status} />
-                  <span className="text-sm font-semibold tabular-nums text-foreground hidden sm:block">
+                  <span className="hidden text-sm font-semibold tabular-nums text-foreground sm:block">
                     {formatMoney(r.amount)}
                   </span>
-                  {r.receiptUrl && <Paperclip className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
+                  {r.receiptUrl && <Paperclip className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
                 </div>
               </motion.div>
             ))}

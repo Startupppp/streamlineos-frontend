@@ -27,15 +27,16 @@ import {
   LogOut,
   Play,
   Pause,
-  Timer,
-  Utensils,
 } from "lucide-react";
-import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { formatDuration, formatTimerSegment } from "./attendance-utils";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 
-export const TimerCard = memo(function TimerCard() {
+export const TimerCard = memo(function TimerCard({
+  chrome = true,
+}: {
+  chrome?: boolean;
+}) {
   const [now, setNow] = useState(new Date());
   const [localCooldown, setLocalCooldown] = useState(0);
 
@@ -202,96 +203,84 @@ export const TimerCard = memo(function TimerCard() {
 
   if (isLoading) {
     return (
-      <Card className="rounded-2xl border border-border border-l-4 border-l-primary bg-card shadow-sm overflow-hidden">
-        <CardContent className="p-6 space-y-6">
-          <div className="flex flex-col items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Skeleton className="h-16 w-16 rounded-xl" />
-              <Skeleton className="h-6 w-4" />
-              <Skeleton className="h-16 w-16 rounded-xl" />
-              <Skeleton className="h-6 w-4" />
-              <Skeleton className="h-16 w-16 rounded-xl" />
-            </div>
-            <Skeleton className="h-4 w-40" />
-            <Skeleton className="h-9 w-full rounded-lg" />
+      <div
+        className={cn(
+          "space-y-4 p-4",
+          chrome && "overflow-hidden rounded-xl border border-border bg-card",
+        )}
+      >
+        <div className="flex flex-col items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-14 w-14 rounded-lg" />
+            <Skeleton className="h-5 w-3" />
+            <Skeleton className="h-14 w-14 rounded-lg" />
+            <Skeleton className="h-5 w-3" />
+            <Skeleton className="h-14 w-14 rounded-lg" />
           </div>
-        </CardContent>
-      </Card>
+          <Skeleton className="h-4 w-40" />
+          <Skeleton className="h-9 w-full rounded-lg" />
+        </div>
+      </div>
     );
   }
 
-  return (
-    <Card className="rounded-2xl border border-border border-l-4 border-l-primary bg-card shadow-sm overflow-hidden">
-      <CardHeader className="pb-3 pt-5">
-        <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-          <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Clock className="h-4 w-4 text-primary" />
-          </div>
-          Time Tracker
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-5 pb-5">
+  const body = (
+    <div className="space-y-4">
         <div
           className="flex items-center justify-center gap-2"
           aria-label={`Session time: ${sessionTimer.hours} hours, ${sessionTimer.minutes} minutes, ${sessionTimer.seconds} seconds`}
         >
           <div className="flex flex-col items-center">
-            <div className="bg-muted rounded-xl px-4 py-3 min-w-[64px] text-center">
-              <span className="font-mono text-3xl font-bold tabular-nums text-foreground">
+            <div className="min-w-[56px] rounded-lg bg-muted px-3 py-2.5 text-center">
+              <span className="font-mono text-2xl font-bold tabular-nums text-foreground">
                 {formatTimerSegment(sessionTimer.hours)}
               </span>
             </div>
-            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mt-1.5">
-              HRS
+            <span className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Hrs
             </span>
           </div>
 
-          <span className="text-2xl font-bold text-primary animate-pulse mb-5">
-            :
-          </span>
+          <span className="mb-4 text-xl font-bold text-muted-foreground">:</span>
 
           <div className="flex flex-col items-center">
-            <div className="bg-muted rounded-xl px-4 py-3 min-w-[64px] text-center">
-              <span className="font-mono text-3xl font-bold tabular-nums text-foreground">
+            <div className="min-w-[56px] rounded-lg bg-muted px-3 py-2.5 text-center">
+              <span className="font-mono text-2xl font-bold tabular-nums text-foreground">
                 {formatTimerSegment(sessionTimer.minutes)}
               </span>
             </div>
-            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mt-1.5">
-              MIN
+            <span className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Min
             </span>
           </div>
 
-          <span className="text-2xl font-bold text-primary animate-pulse mb-5">
-            :
-          </span>
+          <span className="mb-4 text-xl font-bold text-muted-foreground">:</span>
 
           <div className="flex flex-col items-center">
-            <div className="bg-muted rounded-xl px-4 py-3 min-w-[64px] text-center">
-              <span className="font-mono text-3xl font-bold tabular-nums text-foreground">
+            <div className="min-w-[56px] rounded-lg bg-muted px-3 py-2.5 text-center">
+              <span className="font-mono text-2xl font-bold tabular-nums text-foreground">
                 {formatTimerSegment(sessionTimer.seconds)}
               </span>
             </div>
-            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mt-1.5">
-              SEC
+            <span className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Sec
             </span>
           </div>
         </div>
 
         <p
           className={cn(
-            "text-sm text-center",
-            isOnBreak && "text-amber-600 dark:text-amber-300 font-medium",
+            "text-center text-sm",
+            isOnBreak && "font-medium text-amber-600 dark:text-amber-300",
             isCheckedIn &&
               !isOnBreak &&
-              "text-emerald-600 dark:text-emerald-300 font-medium",
+              "font-medium text-emerald-600 dark:text-emerald-300",
             !isActive &&
               !isInCooldown &&
               !isBlockedDay &&
-              "text-muted-foreground italic",
-            !isActive &&
-              isInCooldown &&
-              "text-muted-foreground font-medium",
-            isBlockedDay && "text-amber-600 dark:text-amber-300 font-medium",
+              "italic text-muted-foreground",
+            !isActive && isInCooldown && "font-medium text-muted-foreground",
+            isBlockedDay && "font-medium text-amber-600 dark:text-amber-300",
           )}
         >
           {isOnBreak && "On break"}
@@ -313,7 +302,7 @@ export const TimerCard = memo(function TimerCard() {
           <div className="flex justify-center">
             <Badge
               variant="outline"
-              className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-800"
+              className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300"
             >
               <Coffee className="h-3 w-3" /> On Break
             </Badge>
@@ -321,7 +310,7 @@ export const TimerCard = memo(function TimerCard() {
         )}
 
         <TooltipProvider>
-          <div className={isActive ? "grid grid-cols-2 gap-3" : "flex"}>
+          <div className={isActive ? "grid grid-cols-2 gap-2" : "flex"}>
             <Tooltip>
               <TooltipTrigger asChild>
                 <LoadingButton
@@ -330,11 +319,11 @@ export const TimerCard = memo(function TimerCard() {
                   isPending={checkInMutation.isPending}
                   variant={isActive ? "secondary" : "default"}
                   className={cn(
-                    "font-semibold flex-1 gap-1.5 h-9 duration-200",
+                    "h-9 flex-1 gap-1.5 font-semibold",
                     !isActive &&
                       !isInCooldown &&
                       !isBlockedDay &&
-                      "bg-emerald-600 hover:bg-emerald-700 text-white",
+                      "bg-emerald-600 text-white hover:bg-emerald-700",
                   )}
                 >
                   <LogIn className="h-4 w-4" />
@@ -353,7 +342,7 @@ export const TimerCard = memo(function TimerCard() {
                     onClick={handleClockAction}
                     disabled={isBlockedDay || checkInMutation.isPending}
                     isPending={checkOutMutation.isPending}
-                    className="font-semibold gap-1.5 h-9 bg-rose-600 hover:bg-rose-700 text-white duration-200"
+                    className="h-9 gap-1.5 bg-rose-600 font-semibold text-white hover:bg-rose-700"
                   >
                     <LogOut className="h-4 w-4" />
                     Check Out
@@ -371,7 +360,7 @@ export const TimerCard = memo(function TimerCard() {
             onClick={handleBreakToggle}
             disabled={isBlockedDay}
             isPending={breakMutation.isPending}
-            className="w-full gap-1.5 h-9 border-amber-200 text-amber-700 hover:bg-amber-50 dark:border-amber-800 dark:text-amber-300 dark:hover:bg-amber-950/20 duration-200"
+            className="h-9 w-full gap-1.5 border-amber-200 text-amber-700 hover:bg-amber-50 dark:border-amber-500/30 dark:text-amber-300 dark:hover:bg-amber-500/10"
           >
             {isOnBreak ? (
               <Play className="h-4 w-4" />
@@ -383,14 +372,37 @@ export const TimerCard = memo(function TimerCard() {
         )}
 
         {dailyStats && (
-          <div className="pt-3 border-t border-border">
-            <StatCardGrid cols={2}>
-              <StatCard label="Work" value={formatDuration(dailyStats.workHours)} icon={Timer} tone="emerald" />
-              <StatCard label="Break" value={formatDuration(dailyStats.breakHours)} icon={Utensils} tone="amber" />
-            </StatCardGrid>
+          <div className="grid grid-cols-2 gap-3 border-t border-border pt-3">
+            <div>
+              <p className="text-[11px] text-muted-foreground">Work</p>
+              <p className="text-sm font-semibold tabular-nums">
+                {formatDuration(dailyStats.workHours)}
+              </p>
+            </div>
+            <div>
+              <p className="text-[11px] text-muted-foreground">Break</p>
+              <p className="text-sm font-semibold tabular-nums">
+                {formatDuration(dailyStats.breakHours)}
+              </p>
+            </div>
           </div>
         )}
-      </CardContent>
+    </div>
+  );
+
+  if (!chrome) {
+    return body;
+  }
+
+  return (
+    <Card className="overflow-hidden">
+      <CardHeader className="shrink-0 border-b px-4 pb-3 pt-3">
+        <CardTitle className="flex items-center gap-2 text-sm font-semibold text-foreground">
+          <Clock className="h-4 w-4 text-muted-foreground" />
+          Time Tracker
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="px-4 pb-4 pt-4">{body}</CardContent>
     </Card>
   );
 });

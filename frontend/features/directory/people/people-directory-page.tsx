@@ -40,7 +40,7 @@ import {
 import { PersonFormDialog } from "./person-form-dialog";
 import type { OrganizationPerson } from "@/types/directory/people";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { CONTENT_FILL_PANEL, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import { CONTENT_FILL_PANEL, PAGE_BODY_EMPTY_CLASS } from "@/components/ui/content-fill-panel";
 import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
 
@@ -268,13 +268,11 @@ export function PeopleDirectoryPage() {
   const isFiltered = !!debouncedSearch.trim();
 
   const filtersBar = (
-    <div className={FILTER_TOOLBAR_ROW}>
-      <SearchInput
-        placeholder="Search people…"
-        value={search}
-        onValueChange={handleSearchChange}
-      />
-    </div>
+    <SearchInput
+      placeholder="Search people…"
+      value={search}
+      onValueChange={handleSearchChange}
+    />
   );
 
   return (
@@ -282,17 +280,19 @@ export function PeopleDirectoryPage() {
       title="Directory"
       subtitle="People in your organization—with or without application access."
       filters={filtersBar}
+      noInternalScroll
+      contentClassName="flex min-h-0 flex-1 flex-col"
       actions={canCreate ? <AddPersonButton onClick={handleOpenCreate} /> : undefined}
     >
-      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-hidden">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-hidden">
         <div className="flex min-h-0 flex-1 flex-col">
           {isLoading ? (
-            <DataTableSkeleton rows={12} columns={5} className="flex-1" />
+            <DataTableSkeleton rows={12} columns={5} className="min-h-0 w-full flex-1" />
           ) : isError ? (
-            <ErrorState className={CONTENT_FILL_PANEL} onRetry={handleRetry} />
+            <ErrorState className={cn(CONTENT_FILL_PANEL, PAGE_BODY_EMPTY_CLASS)} onRetry={handleRetry} />
           ) : rows.length === 0 ? (
             <EmptyState
-              className={CONTENT_FILL_PANEL}
+              className={cn(CONTENT_FILL_PANEL, PAGE_BODY_EMPTY_CLASS)}
               illustrationPreset="team"
               title={isFiltered ? "No matching records" : "No person records yet"}
               description={

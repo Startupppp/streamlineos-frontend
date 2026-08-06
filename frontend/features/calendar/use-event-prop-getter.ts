@@ -24,6 +24,19 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 export function useEventPropGetter() {
   return useCallback((event: BigCalEvent) => {
+    if (event.resource?.source === "attendance") {
+      return {
+        style: {
+          backgroundColor: "#0f766e",
+          opacity: 0.85,
+          border: "none",
+          borderRadius: "4px",
+          color: "#fff",
+          fontSize: "11px",
+          padding: "1px 6px",
+        },
+      };
+    }
     if (event.resource?.source === "hr") {
       return {
         style: {

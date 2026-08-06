@@ -3,6 +3,8 @@
 import { toast } from "sonner";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PAGE_BODY_EMPTY_CLASS, PAGE_BODY_SKELETON_CLASS } from "@/components/ui/content-fill-panel";
 import {
   useMyDisciplinaryActions,
   useAcknowledgeDisciplinaryAction,
@@ -23,27 +25,48 @@ export function EssDisciplinarySection() {
 
   if (isLoading) {
     return (
-      <div id="disciplinary" className="space-y-2">
-        <Skeleton className="h-8 w-40" />
-        <Skeleton className="h-20 w-full" />
-      </div>
+      <section id="disciplinary" className="flex min-h-0 w-full flex-1 flex-col">
+        <div className={PAGE_BODY_SKELETON_CLASS}>
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-16 w-full rounded-lg" />
+          ))}
+        </div>
+      </section>
     );
   }
 
-  if (isError) return null;
+  if (isError) {
+    return (
+      <section id="disciplinary" className="flex min-h-0 w-full flex-1 flex-col">
+        <EmptyState
+          title="Unable to load notices"
+          description="Try again in a moment."
+          className={PAGE_BODY_EMPTY_CLASS}
+        />
+      </section>
+    );
+  }
 
   const rows = data ?? [];
-  if (rows.length === 0) return null;
+  if (rows.length === 0) {
+    return (
+      <section id="disciplinary" className="flex min-h-0 w-full flex-1 flex-col">
+        <EmptyState
+          illustrationPreset="alert"
+          title="No notices"
+          description="Disciplinary notices that need your acknowledgment will appear here."
+          className={PAGE_BODY_EMPTY_CLASS}
+        />
+      </section>
+    );
+  }
 
   return (
-    <section id="disciplinary" className="space-y-2">
-      <div>
-        <h2 className="text-sm font-semibold text-foreground">Disciplinary notices</h2>
-        <p className="text-[11px] text-muted-foreground">
-          Acknowledgment confirms receipt only — not agreement. Contact HR with questions.
-        </p>
-      </div>
-      <ul className="rounded-lg border border-border bg-card divide-y divide-border overflow-hidden">
+    <section id="disciplinary" className="flex min-h-0 w-full flex-1 flex-col gap-3">
+      <p className="shrink-0 text-[11px] text-muted-foreground">
+        Acknowledgment confirms receipt only — not agreement. Contact HR with questions.
+      </p>
+      <ul className="min-h-0 w-full flex-1 divide-y divide-border overflow-y-auto rounded-xl border border-border bg-card">
         {rows.map((row) => (
           <li
             key={row.id}

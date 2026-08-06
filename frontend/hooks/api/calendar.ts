@@ -84,7 +84,13 @@ export interface CalendarListItem {
   allDay?: boolean;
   color?: string | null;
   category: string;
-  source: "event" | "leave" | "interview" | "task" | "holiday";
+  source:
+    | "event"
+    | "leave"
+    | "interview"
+    | "task"
+    | "holiday"
+    | "attendance";
   location?: string | null;
   meetingUrl?: string | null;
   description?: string | null;

@@ -9,10 +9,19 @@ import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyMailIllustration } from "@/components/illustrations";
+import {
+  PAGE_BODY_EMPTY_CLASS,
+  PAGE_BODY_SKELETON_CLASS,
+} from "@/components/ui/content-fill-panel";
 import { toast } from "sonner";
 import { PlusIcon } from "@animateicons/react/lucide";
-import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  TABS_CONTENT_PAGE_BODY_CLASS,
+} from "@/components/ui/tabs";
 import { staggerContainer } from "@/lib/motion-variants";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -28,8 +37,7 @@ import { AnnouncementFormSheet } from "@/features/hr/announcements/announcement-
 
 type ActiveTab = "published" | "all";
 
-const TAB_TRIGGER_CLASS =
-  "relative rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground pb-2.5 pt-1.5 px-3 text-sm";
+const TAB_PANEL_CLASS = `${TABS_CONTENT_PAGE_BODY_CLASS} mt-0 h-full min-h-0 w-full flex-1`;
 
 function AnnouncementsBody({
   isLoading,
@@ -54,16 +62,14 @@ function AnnouncementsBody({
 }) {
   if (isLoading) {
     return (
-      <div className="space-y-3">
+      <div className={PAGE_BODY_SKELETON_CLASS}>
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="rounded-lg border border-border bg-card p-4">
-            <div className="flex items-start gap-3">
-              <Skeleton className="h-10 w-10 shrink-0 rounded-full" />
-              <div className="flex-1 space-y-2">
-                <Skeleton className="h-4 w-48" />
-                <Skeleton className="h-3 w-32" />
-                <Skeleton className="h-4 w-full" />
-              </div>
+          <div key={i} className="flex items-start gap-3">
+            <Skeleton className="h-10 w-10 shrink-0 rounded-full" />
+            <div className="min-w-0 flex-1 space-y-2">
+              <Skeleton className="h-4 w-48 max-w-full" />
+              <Skeleton className="h-3 w-32 max-w-full" />
+              <Skeleton className="h-4 w-full" />
             </div>
           </div>
         ))}
@@ -74,7 +80,7 @@ function AnnouncementsBody({
   if (isError) {
     return (
       <ErrorState
-        className="flex-1"
+        className={PAGE_BODY_EMPTY_CLASS}
         title="Failed to load announcements"
         description="Something went wrong. Please try again."
         onRetry={onRetry}
@@ -95,7 +101,7 @@ function AnnouncementsBody({
         action={
           canManage ? { label: "New Announcement", onClick: onNew } : undefined
         }
-        className="flex-1"
+        className={PAGE_BODY_EMPTY_CLASS}
       />
     );
   }
@@ -221,14 +227,41 @@ function AnnouncementsContent() {
     />
   );
 
+  if (!canManage) {
+    return (
+      <PageWrapper
+        title="Announcements"
+        subtitle="Stay updated with company news and updates"
+        noInternalScroll
+        contentClassName="flex min-h-0 flex-1 flex-col"
+      >
+        <div className="flex min-h-0 flex-1 flex-col gap-3">{body}</div>
+      </PageWrapper>
+    );
+  }
+
   return (
-    <PageWrapper
-      title="Announcements"
-      subtitle="Stay updated with company news and updates"
-      noInternalScroll
-      contentClassName="flex min-h-0 flex-1 flex-col"
-      actions={
-        canManage ? (
+    <Tabs
+      value={activeTab}
+      onValueChange={handleTabChange}
+      className="flex min-h-0 flex-1 flex-col"
+    >
+      <PageWrapper
+        title="Announcements"
+        subtitle="Stay updated with company news and updates"
+        noInternalScroll
+        contentClassName="flex min-h-0 flex-1 flex-col"
+        filters={
+          <TabsList className="w-full shrink-0 md:w-auto">
+            <TabsTrigger value="published" className="gap-1.5 truncate">
+              Published
+            </TabsTrigger>
+            <TabsTrigger value="all" className="gap-1.5 truncate">
+              All
+            </TabsTrigger>
+          </TabsList>
+        }
+        actions={
           <AnimatedIconButton
             icon={PlusIcon}
             iconSize={14}
@@ -238,36 +271,17 @@ function AnnouncementsContent() {
           >
             New Announcement
           </AnimatedIconButton>
-        ) : undefined
-      }
-    >
-      <div className={`${CONTENT_FILL_PANEL} min-h-0 gap-3`}>
-        {canManage ? (
-          <Tabs
-            value={activeTab}
-            onValueChange={handleTabChange}
-            className="flex min-h-0 flex-1 flex-col gap-3"
-          >
-            <TabsList className="h-auto w-full justify-start gap-0 rounded-none border-b bg-transparent p-0 shrink-0">
-              <TabsTrigger value="published" className={TAB_TRIGGER_CLASS}>
-                Published
-              </TabsTrigger>
-              <TabsTrigger value="all" className={TAB_TRIGGER_CLASS}>
-                All
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent
-              value={activeTab}
-              forceMount
-              className="mt-0 flex min-h-0 flex-1 flex-col data-[state=inactive]:hidden"
-            >
-              {body}
-            </TabsContent>
-          </Tabs>
-        ) : (
-          body
-        )}
-      </div>
+        }
+      >
+        <div className="flex min-h-0 flex-1 flex-col gap-3">
+          <TabsContent value="published" className={TAB_PANEL_CLASS}>
+            {body}
+          </TabsContent>
+          <TabsContent value="all" className={TAB_PANEL_CLASS}>
+            {body}
+          </TabsContent>
+        </div>
+      </PageWrapper>
 
       <AnnouncementFormSheet
         key={editTarget?.id ?? "new"}
@@ -287,7 +301,7 @@ function AnnouncementsContent() {
         onConfirm={handleConfirmDelete}
         isPending={remove.isPending}
       />
-    </PageWrapper>
+    </Tabs>
   );
 }
 

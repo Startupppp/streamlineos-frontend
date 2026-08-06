@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { PAGE_BODY_EMPTY_CLASS } from "@/components/ui/content-fill-panel";
 import { useHrAttendanceStatus } from "@/hooks/api/hr";
 import { toast } from "sonner";
 import { ClipboardList } from "lucide-react";
@@ -38,7 +39,7 @@ const columns: DataTableColumn<AttendanceLog>[] = [
     key: "date",
     header: "Date",
     cell: (log) => (
-      <span className="font-medium text-sm">
+      <span className="text-sm font-medium">
         {format(new Date(log.date), "EEE, MMM dd")}
       </span>
     ),
@@ -49,7 +50,7 @@ const columns: DataTableColumn<AttendanceLog>[] = [
     headerClassName: "hidden md:table-cell",
     className: "hidden md:table-cell font-mono text-sm tabular-nums text-muted-foreground",
     cell: (log) => (
-      <span className="hidden md:inline font-mono text-sm tabular-nums text-muted-foreground">
+      <span className="hidden font-mono text-sm tabular-nums text-muted-foreground md:inline">
         {log.checkIn ? format(new Date(log.checkIn), "hh:mm a") : "--"}
       </span>
     ),
@@ -60,7 +61,7 @@ const columns: DataTableColumn<AttendanceLog>[] = [
     headerClassName: "hidden md:table-cell",
     className: "hidden md:table-cell font-mono text-sm tabular-nums text-muted-foreground",
     cell: (log) => (
-      <span className="hidden md:inline font-mono text-sm tabular-nums text-muted-foreground">
+      <span className="hidden font-mono text-sm tabular-nums text-muted-foreground md:inline">
         {log.checkOut ? format(new Date(log.checkOut), "hh:mm a") : "--"}
       </span>
     ),
@@ -71,7 +72,7 @@ const columns: DataTableColumn<AttendanceLog>[] = [
     headerClassName: "hidden md:table-cell",
     className: "hidden md:table-cell font-mono text-sm tabular-nums",
     cell: (log) => (
-      <span className="hidden md:inline font-mono text-sm tabular-nums">
+      <span className="hidden font-mono text-sm tabular-nums md:inline">
         {log.workHours ? formatDuration(log.workHours) : "--"}
       </span>
     ),
@@ -88,8 +89,8 @@ const columns: DataTableColumn<AttendanceLog>[] = [
       return (
         <Badge
           className={cn(
-            "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
-            badgeClass
+            "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold",
+            badgeClass,
           )}
         >
           {getStatusLabel(statusKey)}
@@ -138,27 +139,69 @@ function getRowKey(log: AttendanceLog) {
 function getRowClassName(_: AttendanceLog, index: number) {
   return cn(
     "hover:bg-muted/30 transition-colors duration-200",
-    index % 2 === 0 ? "bg-background" : "bg-muted/20"
+    index % 2 === 0 ? "bg-background" : "bg-muted/20",
   );
 }
 
-export const DailyHistoryTable = memo(function DailyHistoryTable() {
+export const DailyHistoryTable = memo(function DailyHistoryTable({
+  fill = false,
+  chrome = true,
+}: {
+  fill?: boolean;
+  chrome?: boolean;
+}) {
   const { data, isLoading } = useHrAttendanceStatus();
-
   const logs = data?.logs || [];
 
   function handleDownloadClick() {
     void handleDownloadReport(logs);
   }
 
+  const emptyState = (
+    <EmptyState
+      illustrationPreset="calendar"
+      title="No attendance records"
+      description="Your attendance history will appear here."
+      className={cn(PAGE_BODY_EMPTY_CLASS, !fill && "py-10")}
+    />
+  );
+
+  if (!chrome) {
+    if (!isLoading && logs.length === 0) {
+      return (
+        <div className="flex min-h-0 flex-1 flex-col" aria-live="polite">
+          {emptyState}
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex min-h-0 flex-1 flex-col" aria-live="polite">
+        <DataTable
+          data={logs}
+          columns={columns}
+          getRowKey={getRowKey}
+          rowClassName={getRowClassName}
+          isLoading={isLoading}
+          minWidth="640px"
+          className="min-h-0 flex-1"
+          emptyState={emptyState}
+        />
+      </div>
+    );
+  }
+
   return (
-    <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
-      <CardHeader className="pb-3 pt-5 px-5">
-        <div className="flex items-center justify-between gap-2 flex-wrap">
-          <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <div className="w-7 rounded-lg bg-muted flex items-center justify-center shrink-0">
-              <ClipboardList className="h-3.5 w-3.5 text-muted-foreground" />
-            </div>
+    <Card
+      className={cn(
+        "overflow-hidden",
+        fill && "flex min-h-0 flex-1 flex-col",
+      )}
+    >
+      <CardHeader className="shrink-0 border-b px-4 pb-3 pt-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <CardTitle className="flex items-center gap-2 text-sm font-semibold text-foreground">
+            <ClipboardList className="h-4 w-4 text-muted-foreground" />
             Daily History
           </CardTitle>
           <div className="flex items-center gap-2">
@@ -178,7 +221,10 @@ export const DailyHistoryTable = memo(function DailyHistoryTable() {
           </div>
         </div>
       </CardHeader>
-      <CardContent className="p-0 px-5 pb-5">
+      <CardContent
+        className={cn("p-0", fill && "min-h-0 flex-1 overflow-auto")}
+        aria-live="polite"
+      >
         <DataTable
           data={logs}
           columns={columns}
@@ -186,16 +232,7 @@ export const DailyHistoryTable = memo(function DailyHistoryTable() {
           rowClassName={getRowClassName}
           isLoading={isLoading}
           minWidth="640px"
-          emptyState={
-            <EmptyState
-              illustration={
-                <ClipboardList className="w-8 text-muted-foreground" />
-              }
-              title="No attendance records"
-              description="Your attendance history will appear here."
-              compact
-            />
-          }
+          emptyState={emptyState}
         />
       </CardContent>
     </Card>

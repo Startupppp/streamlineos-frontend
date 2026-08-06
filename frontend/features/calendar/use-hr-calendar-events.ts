@@ -1,41 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useSyncExternalStore, useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { apiClient } from "@/lib/api-client";
 import type { HrCalendarEvent } from "@/hooks/api/hr/hr-calendar";
 import type { BigCalEvent } from "./big-calendar-wrapper";
-
-const STORAGE_KEY = "streamlineos.calendar.hrEventsVisible";
-const listeners = new Set<() => void>();
-let cache: boolean = true;
-let cacheRaw: string | null = null;
-
-function readSnapshot(): boolean {
-  if (typeof window === "undefined") return cache;
-  const raw = window.localStorage.getItem(STORAGE_KEY);
-  if (raw === cacheRaw) return cache;
-  cacheRaw = raw;
-  cache = raw === null ? true : raw !== "false";
-  return cache;
-}
-
-function write(visible: boolean) {
-  window.localStorage.setItem(STORAGE_KEY, String(visible));
-  cacheRaw = null;
-  listeners.forEach((l) => l());
-}
-
-function subscribe(listener: () => void) {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
+import { useCalendarSourceVisibility } from "./use-calendar-source-visibility";
 
 export function useHrEventsVisible() {
-  const visible = useSyncExternalStore(subscribe, readSnapshot, () => cache);
-  const toggle = useCallback(() => write(!readSnapshot()), []);
-  return { visible, toggle };
+  return useCalendarSourceVisibility("hrEvents", true);
 }
 
 const HR_TYPE_COLORS: Record<string, string> = {
@@ -58,9 +32,13 @@ export function useHrCalendarEventsMapped(
   const to = format(rangeEnd, "yyyy-MM-dd");
 
   const { data, isError, error } = useQuery({
-    queryKey: ["hr", "calendar", from, to],
+    queryKey: ["hr", "calendar", from, to, "supplemental"],
     queryFn: () =>
-      apiClient.get<HrCalendarEvent[]>("/hr/calendar", { from, to }),
+      apiClient.get<HrCalendarEvent[]>("/hr/calendar", {
+        from,
+        to,
+        types: "BIRTHDAY,ANNIVERSARY,REVIEW_CYCLE,TRAVEL",
+      }),
     staleTime: 5 * 60_000,
     retry: false,
     enabled: !forbidden,

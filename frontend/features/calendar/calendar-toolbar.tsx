@@ -10,6 +10,7 @@ import {
   Ticket,
   Building2,
   Handshake,
+  Clock3,
 } from "lucide-react";
 import {
   ChevronLeftIcon,
@@ -140,6 +141,7 @@ interface CalendarToolbarProps {
   viewMode: ViewMode;
   hrEventsVisible: boolean;
   crmEventsVisible: boolean;
+  attendanceEventsVisible: boolean;
   onPrev: () => void;
   onNext: () => void;
   onToday: () => void;
@@ -149,6 +151,7 @@ interface CalendarToolbarProps {
   onOpenCreateTicket: () => void;
   onToggleHrEvents: () => void;
   onToggleCrmEvents: () => void;
+  onToggleAttendanceEvents: () => void;
   hidePrimaryActions?: boolean;
 }
 
@@ -157,6 +160,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
   viewMode,
   hrEventsVisible,
   crmEventsVisible,
+  attendanceEventsVisible,
   onPrev,
   onNext,
   onToday,
@@ -166,6 +170,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
   onOpenCreateTicket,
   onToggleHrEvents,
   onToggleCrmEvents,
+  onToggleAttendanceEvents,
   hidePrimaryActions = false,
 }: CalendarToolbarProps) {
   const handleViewChange = useCallback(
@@ -251,6 +256,21 @@ export const CalendarToolbar = memo(function CalendarToolbar({
           ) : null}
 
           <Button
+            variant={attendanceEventsVisible ? "secondary" : "outline"}
+            size="sm"
+            className="gap-1 px-2.5 text-xs font-medium xl:px-3"
+            aria-label={
+              attendanceEventsVisible
+                ? "Hide attendance events"
+                : "Show attendance events"
+            }
+            onClick={onToggleAttendanceEvents}
+          >
+            <Clock3 className="h-3.5 w-3.5" />
+            <span className="hidden xl:inline">Attendance</span>
+          </Button>
+
+          <Button
             variant={hrEventsVisible ? "secondary" : "outline"}
             size="sm"
             className="gap-1 px-2.5 text-xs font-medium xl:px-3"
@@ -300,6 +320,13 @@ export const CalendarToolbar = memo(function CalendarToolbar({
                 </DropdownMenuSub>
               ) : null}
               <DropdownMenuSeparator />
+              <DropdownMenuCheckboxItem
+                className="text-xs"
+                checked={attendanceEventsVisible}
+                onCheckedChange={onToggleAttendanceEvents}
+              >
+                Attendance
+              </DropdownMenuCheckboxItem>
               <DropdownMenuCheckboxItem
                 className="text-xs"
                 checked={hrEventsVisible}

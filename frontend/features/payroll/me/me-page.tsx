@@ -7,18 +7,39 @@ import {
   TrendingUp,
   Coins,
   Receipt,
-  Info,
   AlertTriangle,
   Users,
+  Edit,
 } from "lucide-react";
+import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { PlusIcon, DownloadIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  TABS_CONTENT_PAGE_BODY_CLASS,
+} from "@/components/ui/tabs";
 import {
   useEssOverview,
   useEssFnf,
+  useEssPayslips,
+  useEssTaxDeclaration,
   useManagerInbox,
 } from "@/hooks/api/payroll/ess";
+import { downloadFnfStatement } from "@/hooks/api/payroll/fnf";
 import {
   formatMoney,
   formatMonth,
@@ -34,13 +55,14 @@ import {
   EssTotalRewardsSection,
   EssDisciplinarySection,
 } from "@/features/payroll/ess";
-import type { EssSectionNavItem } from "@/features/payroll/ess/components/ess-section-nav";
-import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 import { useModuleEnabled } from "@/hooks/api/access";
+import type { EssSectionNavItem } from "@/features/payroll/ess/components/ess-section-nav";
 
-const TAB_TRIGGER_CLASS =
-  "relative rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground pb-2.5 pt-1.5 px-3 text-sm";
+const TAB_PANEL_CLASS = cn(
+  TABS_CONTENT_PAGE_BODY_CLASS,
+  "mt-0 h-full min-h-0 w-full flex-1",
+);
 
 function getCurrentMonthLabel(): string {
   return new Date().toLocaleDateString("en-IN", {
@@ -49,14 +71,37 @@ function getCurrentMonthLabel(): string {
   });
 }
 
+function getYear(month: string): string {
+  return month.split("-")[0] ?? "";
+}
+
 export function MyPayrollPageContent() {
   const payrollModuleEnabled = useModuleEnabled("payroll");
-  const { data: overview, isLoading: overviewLoading } = useEssOverview();
   const { data: fnf } = useEssFnf();
+  const { data: payslips } = useEssPayslips();
   const { data: managerInbox } = useManagerInbox(payrollModuleEnabled);
+  const { data: overview, isLoading: overviewLoading } = useEssOverview();
+
+  const [activeTab, setActiveTab] = useState("payslips");
+  const [yearFilter, setYearFilter] = useState("all");
+  const [bankSheetOpen, setBankSheetOpen] = useState(false);
+  const [reimbSheetOpen, setReimbSheetOpen] = useState(false);
+  const [taxSheetOpen, setTaxSheetOpen] = useState(false);
+  const [loanDialogOpen, setLoanDialogOpen] = useState(false);
+  const [fnfDownloading, setFnfDownloading] = useState(false);
 
   const toggles = overview?.toggles;
-  const actionRequired = overview?.actionRequired ?? [];
+  const { data: taxData } = useEssTaxDeclaration({
+    enabled: !!toggles?.essAllowTaxDeclarations,
+  });
+
+  const actionRequired = useMemo(
+    () =>
+      (overview?.actionRequired ?? []).filter(
+        (item) => item.severity === "warning",
+      ),
+    [overview?.actionRequired],
+  );
   const hasTeam = (managerInbox?.reportCount ?? 0) > 0;
 
   const sections = useMemo<EssSectionNavItem[]>(() => {
@@ -83,8 +128,6 @@ export function MyPayrollPageContent() {
     return items;
   }, [toggles, overview?.activeLoanBalance, fnf]);
 
-  const [activeTab, setActiveTab] = useState("payslips");
-
   const showLoans =
     toggles?.essAllowLoanRequests ||
     (overview?.activeLoanBalance !== undefined &&
@@ -94,184 +137,308 @@ export function MyPayrollPageContent() {
     ? parseFloat(overview.activeLoanBalance)
     : 0;
 
+  const years = useMemo(
+    () =>
+      payslips
+        ? [...new Set(payslips.map((p) => getYear(p.month)))]
+            .filter(Boolean)
+            .sort((a, b) => Number(b) - Number(a))
+        : [],
+    [payslips],
+  );
+
+  const taxWindowOpen = taxData?.windowStatus === "OPEN";
+
   const handleTabChange = useCallback((value: string) => {
     setActiveTab(value);
   }, []);
 
+  const handleOpenBankSheet = useCallback(() => {
+    setBankSheetOpen(true);
+  }, []);
+
+  const handleOpenReimbSheet = useCallback(() => {
+    setReimbSheetOpen(true);
+  }, []);
+
+  const handleOpenTaxSheet = useCallback(() => {
+    setTaxSheetOpen(true);
+  }, []);
+
+  const handleOpenLoanDialog = useCallback(() => {
+    setLoanDialogOpen(true);
+  }, []);
+
+  const handleDownloadFnf = useCallback(async () => {
+    if (!fnf || fnfDownloading) return;
+    setFnfDownloading(true);
+    try {
+      await downloadFnfStatement(fnf.id);
+      toast.success("Statement downloaded");
+    } catch {
+      toast.error("Failed to download statement");
+    } finally {
+      setFnfDownloading(false);
+    }
+  }, [fnf, fnfDownloading]);
+
   return (
-    <PageWrapper
-      title="Pay"
-      subtitle={getCurrentMonthLabel()}
-      noInternalScroll
-      contentClassName="flex min-h-0 flex-1 flex-col"
+    <Tabs
+      value={activeTab}
+      onValueChange={handleTabChange}
+      className="flex min-h-0 flex-1 flex-col gap-0"
     >
-      <div className={cn(CONTENT_FILL_PANEL, "min-h-0 gap-3")}>
-        {overview?.capabilities?.honestyNote && (
-          <div
-            role="status"
-            className="flex shrink-0 gap-2.5 rounded-lg border border-border bg-card px-3 py-2.5"
-          >
-            <Info className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-            <p className="text-[11px] text-muted-foreground leading-snug">
-              {overview.capabilities.honestyNote}
-            </p>
-          </div>
-        )}
+      <PageWrapper
+        title="Pay"
+        subtitle={`${getCurrentMonthLabel()} · Your payroll data only`}
+        noInternalScroll
+        contentClassName="flex min-h-0 flex-1 flex-col"
+        filtersClassName="flex-col items-stretch gap-3 overflow-visible pb-3 [&>*]:w-full"
+        filters={
+          <>
+            <StatCardGrid cols={activeLoanBalance > 0 ? 4 : 3}>
+              <StatCard
+                label="Net Pay Last Month"
+                value={
+                  overviewLoading
+                    ? "—"
+                    : formatMoney(overview?.latestPayslip?.net ?? null)
+                }
+                icon={Wallet}
+                tone="blue"
+                isLoading={overviewLoading}
+                hint={
+                  overview?.latestPayslip
+                    ? formatMonth(overview.latestPayslip.month)
+                    : undefined
+                }
+              />
+              <StatCard
+                label="YTD Earnings"
+                value={
+                  overviewLoading
+                    ? "—"
+                    : formatMoney(overview?.ytd?.gross ?? null)
+                }
+                icon={TrendingUp}
+                tone="emerald"
+                isLoading={overviewLoading}
+                hint="Financial year to date"
+              />
+              {activeLoanBalance > 0 && (
+                <StatCard
+                  label="Active Loan Balance"
+                  value={
+                    overviewLoading
+                      ? "—"
+                      : formatMoney(overview?.activeLoanBalance ?? null)
+                  }
+                  icon={Coins}
+                  tone="amber"
+                  isLoading={overviewLoading}
+                />
+              )}
+              <StatCard
+                label="Pending Claims"
+                value={
+                  overviewLoading
+                    ? "—"
+                    : String(overview?.pendingReimbursementsCount ?? 0)
+                }
+                icon={Receipt}
+                tone="default"
+                isLoading={overviewLoading}
+                hint="Awaiting approval"
+              />
+            </StatCardGrid>
 
-        {actionRequired.length > 0 && (
-          <div className="shrink-0 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 dark:border-amber-500/30 dark:bg-amber-500/10 space-y-1.5">
-            <p className="text-[12px] font-medium text-amber-900 dark:text-amber-100 flex items-center gap-1.5">
-              <AlertTriangle className="h-3.5 w-3.5" />
-              Action required
-            </p>
-            <ul className="space-y-1">
-              {actionRequired.map((a) => (
-                <li key={a.key}>
-                  <Link
-                    href={a.href}
-                    className="text-[11px] text-amber-800 underline underline-offset-2 dark:text-amber-200 hover:opacity-80"
+            <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide">
+              <TabsList className="w-full shrink-0 md:w-auto">
+                {sections.map((section) => (
+                  <TabsTrigger
+                    key={section.id}
+                    value={section.id}
+                    className="gap-1.5 truncate"
                   >
-                    {a.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+                    {section.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
 
-        {hasTeam && (
-          <Link
-            href="/payroll/team"
-            className="flex shrink-0 items-center gap-2 rounded-lg border border-border bg-card px-3 py-2.5 hover:bg-muted/40 transition-colors"
-          >
-            <Users className="h-4 w-4 text-muted-foreground" />
-            <div className="min-w-0 flex-1">
-              <p className="text-[12px] font-medium text-foreground">
-                Team payroll inbox
-              </p>
-              <p className="text-[11px] text-muted-foreground">
-                {managerInbox?.totals.membersNeedingAction ?? 0} of{" "}
-                {managerInbox?.reportCount ?? 0} direct report(s) need attention
-              </p>
+              <div className="ml-auto flex shrink-0 items-center gap-2">
+                {activeTab === "payslips" && years.length > 0 ? (
+                  <Select value={yearFilter} onValueChange={setYearFilter}>
+                    <SelectTrigger
+                      className={`${FILTER_SELECT_TRIGGER} w-28`}
+                    >
+                      <SelectValue placeholder="All years" />
+                    </SelectTrigger>
+                    <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+                      <SelectItem value="all">All years</SelectItem>
+                      {years.map((y) => (
+                        <SelectItem key={y} value={y}>
+                          {y}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : null}
+
+                {activeTab === "reimbursements" ? (
+                  <AnimatedIconButton
+                    icon={PlusIcon}
+                    iconClassName="mr-1.5"
+                    size="sm"
+                    className="h-8 text-xs"
+                    onClick={handleOpenReimbSheet}
+                  >
+                    Submit Claim
+                  </AnimatedIconButton>
+                ) : null}
+
+                {activeTab === "tax" && taxWindowOpen ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 gap-1.5 text-xs"
+                    onClick={handleOpenTaxSheet}
+                  >
+                    <Edit className="h-3 w-3" />
+                    {taxData?.declaration ? "Edit" : "Submit"} Declaration
+                  </Button>
+                ) : null}
+
+                {activeTab === "loans" && toggles?.essAllowLoanRequests ? (
+                  <AnimatedIconButton
+                    icon={PlusIcon}
+                    iconClassName="mr-1.5"
+                    size="sm"
+                    className="h-8 text-xs"
+                    onClick={handleOpenLoanDialog}
+                  >
+                    Request Loan
+                  </AnimatedIconButton>
+                ) : null}
+
+                {activeTab === "bank" ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 text-xs"
+                    onClick={handleOpenBankSheet}
+                  >
+                    Update
+                  </Button>
+                ) : null}
+
+                {activeTab === "fnf" && fnf?.statementPublishedAt ? (
+                  <AnimatedIconButton
+                    icon={DownloadIcon}
+                    iconClassName="mr-1.5"
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-xs"
+                    onClick={handleDownloadFnf}
+                    disabled={fnfDownloading}
+                  >
+                    {fnfDownloading ? "Downloading…" : "Download statement"}
+                  </AnimatedIconButton>
+                ) : null}
+              </div>
             </div>
-            <span className="text-[11px] text-primary font-medium">Open</span>
-          </Link>
-        )}
+          </>
+        }
+      >
+        <div className="flex min-h-0 flex-1 flex-col gap-3">
+          {(actionRequired.length > 0 || hasTeam) && (
+            <div className="flex shrink-0 flex-wrap items-center gap-2">
+              {actionRequired.map((a) => (
+                <Link
+                  key={a.key}
+                  href={a.href}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-medium text-amber-900 transition-colors hover:bg-amber-100 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200 dark:hover:bg-amber-500/15"
+                >
+                  <AlertTriangle className="h-3 w-3 shrink-0" />
+                  {a.label}
+                </Link>
+              ))}
 
-        <StatCardGrid cols={activeLoanBalance > 0 ? 4 : 3} className="shrink-0">
-          <StatCard
-            label="Net Pay Last Month"
-            value={
-              overviewLoading
-                ? "—"
-                : formatMoney(overview?.latestPayslip?.net ?? null)
-            }
-            icon={Wallet}
-            tone="blue"
-            isLoading={overviewLoading}
-            hint={
-              overview?.latestPayslip
-                ? formatMonth(overview.latestPayslip.month)
-                : undefined
-            }
-          />
-          <StatCard
-            label="YTD Earnings"
-            value={
-              overviewLoading ? "—" : formatMoney(overview?.ytd?.gross ?? null)
-            }
-            icon={TrendingUp}
-            tone="emerald"
-            isLoading={overviewLoading}
-            hint="Financial year to date"
-          />
-          {activeLoanBalance > 0 && (
-            <StatCard
-              label="Active Loan Balance"
-              value={
-                overviewLoading
-                  ? "—"
-                  : formatMoney(overview?.activeLoanBalance ?? null)
-              }
-              icon={Coins}
-              tone="amber"
-              isLoading={overviewLoading}
-            />
+              {hasTeam ? (
+                <Link
+                  href="/payroll/team"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-[11px] font-medium text-foreground transition-colors hover:bg-muted/50"
+                >
+                  <Users className="h-3 w-3 shrink-0 text-muted-foreground" />
+                  Team inbox · {managerInbox?.totals.membersNeedingAction ?? 0}/
+                  {managerInbox?.reportCount ?? 0}
+                </Link>
+              ) : null}
+            </div>
           )}
-          <StatCard
-            label="Pending Claims"
-            value={
-              overviewLoading
-                ? "—"
-                : String(overview?.pendingReimbursementsCount ?? 0)
-            }
-            icon={Receipt}
-            tone="default"
-            isLoading={overviewLoading}
-            hint="Awaiting approval"
-          />
-        </StatCardGrid>
 
-        <Tabs
-          value={activeTab}
-          onValueChange={handleTabChange}
-          className="flex min-h-0 flex-1 flex-col gap-3"
-        >
-          <TabsList className="bg-transparent border-b rounded-none p-0 gap-0 h-auto w-full justify-start shrink-0 overflow-x-auto">
-            {sections.map((section) => (
-              <TabsTrigger
-                key={section.id}
-                value={section.id}
-                className={TAB_TRIGGER_CLASS}
-              >
-                {section.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-
-          <TabsContent value="payslips" className="mt-0 min-h-0 flex-1 overflow-y-auto data-[state=inactive]:hidden">
-            <EssPayslipsSection />
+          <TabsContent value="payslips" className={TAB_PANEL_CLASS}>
+            <EssPayslipsSection
+              yearFilter={yearFilter}
+              onYearFilterChange={setYearFilter}
+              hideYearFilter
+            />
           </TabsContent>
-          <TabsContent value="total-rewards" className="mt-0 min-h-0 flex-1 overflow-y-auto data-[state=inactive]:hidden">
+
+          <TabsContent value="total-rewards" className={TAB_PANEL_CLASS}>
             <EssTotalRewardsSection />
           </TabsContent>
-          <TabsContent value="disciplinary" className="mt-0 min-h-0 flex-1 overflow-y-auto data-[state=inactive]:hidden">
+          <TabsContent value="disciplinary" className={TAB_PANEL_CLASS}>
             <EssDisciplinarySection />
           </TabsContent>
           {toggles?.essShowSalaryStructure && (
-            <TabsContent value="salary" className="mt-0 min-h-0 flex-1 overflow-y-auto data-[state=inactive]:hidden">
+            <TabsContent value="salary" className={TAB_PANEL_CLASS}>
               <EssSalarySection />
             </TabsContent>
           )}
           {toggles?.essAllowReimbursements && (
-            <TabsContent value="reimbursements" className="mt-0 min-h-0 flex-1 overflow-y-auto data-[state=inactive]:hidden">
-              <EssReimbursementsSection />
+            <TabsContent value="reimbursements" className={TAB_PANEL_CLASS}>
+              <EssReimbursementsSection
+                hideToolbar
+                sheetOpen={reimbSheetOpen}
+                onSheetOpenChange={setReimbSheetOpen}
+              />
             </TabsContent>
           )}
           {toggles?.essAllowTaxDeclarations && (
-            <TabsContent value="tax" className="mt-0 min-h-0 flex-1 overflow-y-auto data-[state=inactive]:hidden">
-              <EssTaxSection />
+            <TabsContent value="tax" className={TAB_PANEL_CLASS}>
+              <EssTaxSection
+                hideToolbar
+                sheetOpen={taxSheetOpen}
+                onSheetOpenChange={setTaxSheetOpen}
+              />
             </TabsContent>
           )}
           {showLoans && (
-            <TabsContent value="loans" className="mt-0 min-h-0 flex-1 overflow-y-auto data-[state=inactive]:hidden">
+            <TabsContent value="loans" className={TAB_PANEL_CLASS}>
               <EssLoansSection
                 allowRequests={toggles?.essAllowLoanRequests ?? false}
+                hideToolbar
+                dialogOpen={loanDialogOpen}
+                onDialogOpenChange={setLoanDialogOpen}
               />
             </TabsContent>
           )}
           {toggles?.essAllowBankUpdate && (
-            <TabsContent value="bank" className="mt-0 min-h-0 flex-1 overflow-y-auto data-[state=inactive]:hidden">
-              <EssBankSection />
+            <TabsContent value="bank" className={TAB_PANEL_CLASS}>
+              <EssBankSection
+                hideToolbar
+                sheetOpen={bankSheetOpen}
+                onSheetOpenChange={setBankSheetOpen}
+              />
             </TabsContent>
           )}
           {fnf && (
-            <TabsContent value="fnf" className="mt-0 min-h-0 flex-1 overflow-y-auto data-[state=inactive]:hidden">
-              <EssFnfSection />
+            <TabsContent value="fnf" className={TAB_PANEL_CLASS}>
+              <EssFnfSection hideToolbar />
             </TabsContent>
           )}
-        </Tabs>
-      </div>
-    </PageWrapper>
+        </div>
+      </PageWrapper>
+    </Tabs>
   );
 }

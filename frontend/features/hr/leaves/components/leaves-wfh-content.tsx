@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import { format } from "date-fns";
 import { useSession } from "next-auth/react";
+import { toast } from "sonner";
 import {
   useHrPendingWfhRequests,
   useHrLeaveContext,
@@ -14,7 +15,21 @@ import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  TABS_CONTENT_PAGE_BODY_CLASS,
+} from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import {
@@ -24,12 +39,11 @@ import {
 } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Users, CalendarCheck, Clock3, BadgeCheck } from "lucide-react";
-import { HouseIcon, PlusIcon } from "@animateicons/react/lucide";
-import { resolveImageUrl, cn } from "@/lib/utils";
+import { HouseIcon, PlusIcon, DownloadIcon } from "@animateicons/react/lucide";
+import { resolveImageUrl } from "@/lib/utils";
 
 import { LeaveRequestSheet } from "@/features/hr/leaves/leave-request-sheet";
 import { WfhRequestSheet } from "@/features/hr/leaves/wfh-request-sheet";
-import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 
 import type {
   LeaveBalance,
@@ -78,8 +92,7 @@ import { LeaveApprovalsContent } from "./leave-approvals";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
-const TAB_TRIGGER_CLASS =
-  "relative rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground pb-2.5 pt-1.5 px-3 text-sm";
+const TAB_PANEL_CLASS = `${TABS_CONTENT_PAGE_BODY_CLASS} mt-0 h-full min-h-0 w-full flex-1`;
 
 interface LeavesWfhContentProps {
   selfService?: boolean;
@@ -90,6 +103,9 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
   const hrModuleEnabled = useModuleEnabled("hr");
   const canManageHr = useCan("hr:employees:manage");
   const isAdmin = !selfService && canManageHr && hrModuleEnabled;
+
+  const [activeTab, setActiveTab] = useState("my-leaves");
+  const [wfhStatusFilter, setWfhStatusFilter] = useState("ALL");
 
   const { data: contextData, isLoading: contextLoading } = useHrLeaveContext();
   const { data: myData, isLoading: myLoading } = useHrMyLeaveRequests();
@@ -120,6 +136,9 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
     [openLeaveSheet],
   );
   const handleOpenWfhSheet = useCallback(() => openWfhSheet(), [openWfhSheet]);
+  const handleTabChange = useCallback((value: string) => {
+    setActiveTab(value);
+  }, []);
 
   const balances = (contextData?.balances ?? []) as LeaveBalance[];
   const leaveTypes = (contextData?.types ?? []) as LeaveType[];
@@ -146,6 +165,54 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
     (r) => r.status === "APPROVED",
   ).length;
 
+  const handleExportExcel = useCallback(async () => {
+    if (myLeaveRequests.length === 0) {
+      toast.error("No leave requests to export");
+      return;
+    }
+    try {
+      const ExcelJS = (await import("exceljs")).default;
+      const workbook = new ExcelJS.Workbook();
+      const ws = workbook.addWorksheet("Leave Requests");
+      ws.columns = [
+        { header: "Type", width: 15 },
+        { header: "From", width: 14 },
+        { header: "To", width: 14 },
+        { header: "Priority", width: 10 },
+        { header: "Status", width: 12 },
+        { header: "Reason", width: 30 },
+        { header: "Requested On", width: 14 },
+      ];
+      ws.getRow(1).font = { bold: true };
+      for (const req of myLeaveRequests) {
+        ws.addRow([
+          req.leaveType?.name || "-",
+          req.startDate,
+          req.endDate,
+          req.priority || "Medium",
+          req.status,
+          req.reason || "-",
+          req.createdAt ? format(new Date(req.createdAt), "yyyy-MM-dd") : "-",
+        ]);
+      }
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `leave-requests-${format(new Date(), "yyyy-MM-dd")}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast.success("Leave requests exported!");
+    } catch {
+      toast.error("Failed to export");
+    }
+  }, [myLeaveRequests]);
+
   const title = selfService ? "Time Off" : "Leaves & Time Off";
   const subtitle = selfService
     ? "Request leave and work from home."
@@ -153,143 +220,192 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
 
   if (contextLoading || myLoading) {
     return (
-      <PageWrapper title={title} subtitle={subtitle} noInternalScroll={selfService}>
-        <div className="space-y-3">
+      <PageWrapper
+        title={title}
+        subtitle={subtitle}
+        noInternalScroll
+        contentClassName="flex min-h-0 flex-1 flex-col"
+      >
+        <div className="flex min-h-0 flex-1 flex-col gap-3">
           <StatCardGridSkeleton cols={3} count={3} />
-          <Skeleton className="h-64 rounded-xl" />
+          <Skeleton className="min-h-0 w-full flex-1 rounded-xl" />
         </div>
       </PageWrapper>
     );
   }
 
   return (
-    <>
-      <PageWrapper
-        title={title}
-        subtitle={subtitle}
-        noInternalScroll={selfService}
-        actions={
-          <>
-            <AnimatedIconButton
-              icon={HouseIcon}
-              iconSize={14}
-              iconClassName="mr-1.5"
-              variant="outline"
-              size="sm"
-              onClick={handleOpenWfhSheet}
-              className="gap-1.5 h-8"
-            >
-              Request WFH
-            </AnimatedIconButton>
-            <AnimatedIconButton
-              icon={PlusIcon}
-              iconSize={14}
-              iconClassName="mr-1.5"
-              size="sm"
-              onClick={handleOpenLeaveSheet}
-              className="gap-1.5 h-8"
-            >
-              Request Leave
-            </AnimatedIconButton>
-          </>
-        }
+    <div className="flex min-h-0 flex-1 flex-col">
+      <Tabs
+        value={activeTab}
+        onValueChange={handleTabChange}
+        className="flex min-h-0 flex-1 flex-col gap-0"
       >
-        <div className={cn(selfService ? CONTENT_FILL_PANEL : undefined, selfService ? "min-h-0 gap-3" : "space-y-4")}>
-          <LeavesSummaryStrip
-            totalAvailable={totalAvailable}
-            pendingCount={pendingCount}
-            approvedCount={approvedCount}
-          />
+        <PageWrapper
+          title={title}
+          subtitle={subtitle}
+          noInternalScroll
+          contentClassName="flex min-h-0 flex-1 flex-col"
+          filtersClassName="flex-col items-stretch gap-3 overflow-visible pb-3 [&>*]:w-full"
+          filters={
+            <>
+              <LeavesSummaryStrip
+                totalAvailable={totalAvailable}
+                pendingCount={pendingCount}
+                approvedCount={approvedCount}
+              />
 
-          {!selfService && approvedLeavesThisWeek.length > 0 && (
-            <Card className="rounded-xl border border-amber-200/50 dark:border-amber-500/30 bg-amber-50/50 dark:bg-amber-500/10 shadow-sm overflow-hidden">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold flex items-center gap-2 text-amber-800 dark:text-amber-300">
-                  <div className="w-7 rounded-lg bg-amber-100 dark:bg-amber-500/10 flex items-center justify-center">
-                    <Users className="h-3.5 w-3.5 text-amber-600 dark:text-amber-300" />
-                  </div>
-                  Who&apos;s Out This Week
-                  <span className="ml-1 inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-amber-100 dark:bg-amber-500/10 text-[10px] font-semibold text-amber-700 dark:text-amber-300">
-                    {approvedLeavesThisWeek.length}
-                  </span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="flex flex-wrap gap-3">
-                  {approvedLeavesThisWeek.map((leave) => (
-                    <div
-                      key={leave.id}
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-card border border-amber-200/50 dark:border-amber-500/30/20"
+              <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide">
+                <TabsList className="w-full shrink-0 md:w-auto">
+                  <TabsTrigger value="my-leaves" className="gap-1.5 truncate">
+                    My Leaves
+                    {myLeaveRequests.length > 0 ? (
+                      <span className="tabular-nums text-xs opacity-70">
+                        {myLeaveRequests.length}
+                      </span>
+                    ) : null}
+                  </TabsTrigger>
+                  <TabsTrigger value="wfh" className="gap-1.5 truncate">
+                    Work From Home
+                  </TabsTrigger>
+                  {isAdmin ? (
+                    <TabsTrigger value="approvals" className="gap-1.5 truncate">
+                      Approvals
+                      {totalPendingApprovals > 0 ? (
+                        <span className="tabular-nums text-xs opacity-70">
+                          {totalPendingApprovals}
+                        </span>
+                      ) : null}
+                    </TabsTrigger>
+                  ) : null}
+                </TabsList>
+
+                <div className="ml-auto flex shrink-0 items-center gap-2">
+                  {activeTab === "my-leaves" ? (
+                    <AnimatedIconButton
+                      icon={DownloadIcon}
+                      iconSize={14}
+                      iconClassName="mr-1.5"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleExportExcel}
+                      className="h-8 gap-1.5"
+                      aria-label="Export to Excel"
                     >
-                      <Avatar className="w-7">
-                        <AvatarImage src={resolveImageUrl(leave.user?.image)} />
-                        <AvatarFallback className="text-[10px] bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
-                          {leave.user?.firstName?.[0]}
-                          {leave.user?.lastName?.[0]}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="min-w-0">
-                        <TruncatedText
-                          text={`${leave.user?.firstName ?? ""} ${leave.user?.lastName ?? ""}`.trim()}
-                          className="text-xs font-medium text-foreground"
-                        />
-                        <p className="text-[10px] text-muted-foreground">
-                          {format(new Date(leave.startDate), "MMM dd")} –{" "}
-                          {format(new Date(leave.endDate), "MMM dd")}
-                          {leave.leaveType && (
-                            <span className="ml-1 text-amber-600 dark:text-amber-300">
-                              · {leave.leaveType.name}
-                            </span>
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                      Export
+                    </AnimatedIconButton>
+                  ) : null}
+                  {activeTab === "wfh" ? (
+                    <Select value={wfhStatusFilter} onValueChange={setWfhStatusFilter}>
+                      <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-[130px]`}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+                        <SelectItem value="ALL">All Status</SelectItem>
+                        <SelectItem value="PENDING">Pending</SelectItem>
+                        <SelectItem value="APPROVED">Approved</SelectItem>
+                        <SelectItem value="REJECTED">Rejected</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : null}
                 </div>
-              </CardContent>
-            </Card>
-          )}
-
-          <Tabs defaultValue="my-leaves" className="flex min-h-0 flex-1 flex-col gap-3">
-            <TabsList className="bg-transparent border-b rounded-none p-0 gap-0 h-auto w-full justify-start shrink-0">
-              <TabsTrigger value="my-leaves" className={TAB_TRIGGER_CLASS}>
-                My Leaves
-                {myLeaveRequests.length > 0 && (
-                  <span className="ml-1.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-muted text-[10px] font-semibold text-muted-foreground">
-                    {myLeaveRequests.length}
-                  </span>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="wfh" className={TAB_TRIGGER_CLASS}>
-                Work From Home
-              </TabsTrigger>
-              {isAdmin && (
-                <TabsTrigger value="approvals" className={TAB_TRIGGER_CLASS}>
-                  Approvals
-                  {totalPendingApprovals > 0 && (
-                    <span className="ml-1.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-rose-500 text-[10px] font-bold text-white">
-                      {totalPendingApprovals}
+              </div>
+            </>
+          }
+          actions={
+            <>
+              <AnimatedIconButton
+                icon={HouseIcon}
+                iconSize={14}
+                iconClassName="mr-1.5"
+                variant="outline"
+                size="sm"
+                onClick={handleOpenWfhSheet}
+                className="h-8 gap-1.5"
+              >
+                Request WFH
+              </AnimatedIconButton>
+              <AnimatedIconButton
+                icon={PlusIcon}
+                iconSize={14}
+                iconClassName="mr-1.5"
+                size="sm"
+                onClick={handleOpenLeaveSheet}
+                className="h-8 gap-1.5"
+              >
+                Request Leave
+              </AnimatedIconButton>
+            </>
+          }
+        >
+          <div className="flex min-h-0 w-full flex-1 flex-col gap-3 overflow-hidden">
+            {!selfService && approvedLeavesThisWeek.length > 0 && (
+              <Card className="overflow-hidden border-amber-200/50 bg-amber-50/50 dark:border-amber-500/30 dark:bg-amber-500/10">
+                <CardHeader className="border-b px-4 pb-3 pt-3">
+                  <CardTitle className="flex items-center gap-2 text-sm font-semibold text-amber-800 dark:text-amber-300">
+                    <Users className="h-4 w-4" />
+                    Who&apos;s Out This Week
+                    <span className="ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-100 px-1.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
+                      {approvedLeavesThisWeek.length}
                     </span>
-                  )}
-                </TabsTrigger>
-              )}
-            </TabsList>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="px-4 pb-3 pt-3">
+                  <div className="flex flex-wrap gap-2">
+                    {approvedLeavesThisWeek.map((leave) => (
+                      <div
+                        key={leave.id}
+                        className="flex items-center gap-2 rounded-lg border border-amber-200/50 bg-card px-3 py-2 dark:border-amber-500/30"
+                      >
+                        <Avatar className="w-7">
+                          <AvatarImage src={resolveImageUrl(leave.user?.image)} />
+                          <AvatarFallback className="bg-amber-100 text-[10px] text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
+                            {leave.user?.firstName?.[0]}
+                            {leave.user?.lastName?.[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0">
+                          <TruncatedText
+                            text={`${leave.user?.firstName ?? ""} ${leave.user?.lastName ?? ""}`.trim()}
+                            className="text-xs font-medium text-foreground"
+                          />
+                          <p className="text-[10px] text-muted-foreground">
+                            {format(new Date(leave.startDate), "MMM dd")} –{" "}
+                            {format(new Date(leave.endDate), "MMM dd")}
+                            {leave.leaveType && (
+                              <span className="ml-1 text-amber-600 dark:text-amber-300">
+                                · {leave.leaveType.name}
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
-            <TabsContent value="my-leaves" className="mt-0 min-h-0 flex-1 data-[state=inactive]:hidden">
+            <TabsContent value="my-leaves" className={TAB_PANEL_CLASS}>
               <LeavesTabContent
                 balances={balances}
                 myLeaveRequests={myLeaveRequests}
                 approvedLeavesThisWeek={selfService ? [] : approvedLeavesThisWeek}
                 compact={selfService}
+                onRequestLeave={handleOpenLeaveSheet}
               />
             </TabsContent>
 
-            <TabsContent value="wfh" className="mt-0 min-h-0 flex-1 data-[state=inactive]:hidden">
-              <WfhTabContent compact={selfService} />
+            <TabsContent value="wfh" className={TAB_PANEL_CLASS}>
+              <WfhTabContent
+                compact={selfService}
+                statusFilter={wfhStatusFilter}
+                onRequestWfh={handleOpenWfhSheet}
+              />
             </TabsContent>
 
-            {isAdmin && (
-              <TabsContent value="approvals" className="mt-0 min-h-0 flex-1 data-[state=inactive]:hidden">
+            {isAdmin ? (
+              <TabsContent value="approvals" className={TAB_PANEL_CLASS}>
                 <LeaveApprovalsContent
                   incomingLeaveRequests={incomingLeaveRequests}
                   allIncomingLeaveRequests={allIncomingLeaveRequests}
@@ -297,10 +413,10 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
                   isLoading={approvalsLoading}
                 />
               </TabsContent>
-            )}
-          </Tabs>
-        </div>
-      </PageWrapper>
+            ) : null}
+          </div>
+        </PageWrapper>
+      </Tabs>
 
       <LeaveRequestSheet
         open={leaveSheetOpen}
@@ -315,6 +431,6 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
         onOpenChange={setWfhSheetOpen}
         approvers={approvers}
       />
-    </>
+    </div>
   );
 }

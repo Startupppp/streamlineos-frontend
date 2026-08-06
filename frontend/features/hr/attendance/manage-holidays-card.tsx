@@ -184,13 +184,11 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
   }, [editState, holidaysList, updateMutation]);
 
   return (
-    <Card className="rounded-2xl border border-border border-l-4 border-l-amber-500 bg-card shadow-sm overflow-hidden">
-      <CardHeader className="pb-3 pt-5">
+    <Card className="overflow-hidden">
+      <CardHeader className="shrink-0 border-b px-4 pb-3 pt-3">
         <div className="flex items-center justify-between gap-3">
-          <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <div className="w-7 rounded-lg bg-amber-100 dark:bg-amber-500/10 flex items-center justify-center shrink-0">
-              <PartyPopper className="h-4 w-4 text-amber-600 dark:text-amber-300" />
-            </div>
+          <CardTitle className="flex items-center gap-2 text-sm font-semibold text-foreground">
+            <PartyPopper className="h-4 w-4 text-muted-foreground" />
             Company Holidays
           </CardTitle>
           <Select value={String(selectedYear)} onValueChange={handleYearChange}>

@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion } from "framer-motion";
-import { Coins } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Button } from "@/components/ui/button";
@@ -18,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { PAGE_BODY_EMPTY_CLASS, PAGE_BODY_SKELETON_CLASS } from "@/components/ui/content-fill-panel";
 import { EssStatusBadge } from "./ess-status-badge";
 import { useEssLoans, useCreateLoan } from "@/hooks/api/payroll/ess";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
@@ -171,11 +171,21 @@ function RequestLoanDialog({ open, onClose }: LoanDialogProps) {
 
 interface EssLoansSectionProps {
   allowRequests: boolean;
+  hideToolbar?: boolean;
+  dialogOpen?: boolean;
+  onDialogOpenChange?: (open: boolean) => void;
 }
 
-export function EssLoansSection({ allowRequests }: EssLoansSectionProps) {
+export function EssLoansSection({
+  allowRequests,
+  hideToolbar = false,
+  dialogOpen: dialogOpenProp,
+  onDialogOpenChange,
+}: EssLoansSectionProps) {
   const { data: loans, isLoading } = useEssLoans();
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const dialogOpen = dialogOpenProp ?? uncontrolledOpen;
+  const setDialogOpen = onDialogOpenChange ?? setUncontrolledOpen;
 
   const handleOpenDialog = () => setDialogOpen(true);
   const handleCloseDialog = () => setDialogOpen(false);
@@ -184,39 +194,46 @@ export function EssLoansSection({ allowRequests }: EssLoansSectionProps) {
   const pastLoans = loans?.filter((l) => l.status !== "ACTIVE" && l.status !== "APPROVED") ?? [];
 
   return (
-    <section id="loans" className="scroll-mt-20">
-      <div className="flex items-center justify-between gap-3 mb-3">
-        <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
-          <Coins className="h-4 w-4 text-muted-foreground" />
-          Loans & Advances
-        </h2>
-        {allowRequests && (
-          <AnimatedIconButton icon={PlusIcon} iconClassName="mr-1.5" size="sm" className="text-xs" onClick={handleOpenDialog}>
+    <section id="loans" className="flex min-h-0 w-full flex-1 flex-col gap-3">
+      {allowRequests && !hideToolbar ? (
+        <div className="flex shrink-0 items-center justify-end gap-3">
+          <AnimatedIconButton
+            icon={PlusIcon}
+            iconClassName="mr-1.5"
+            size="sm"
+            className="h-8 text-xs"
+            onClick={handleOpenDialog}
+          >
             Request Loan
           </AnimatedIconButton>
-        )}
-      </div>
+        </div>
+      ) : null}
 
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.18, ease: "easeOut" }}
-        className="rounded-xl border border-border bg-card overflow-hidden"
+        className="flex min-h-0 flex-1 flex-col"
       >
         {isLoading ? (
-          <div>{Array.from({ length: 2 }).map((_, i) => <LoanSkeleton key={i} />)}</div>
+          <div className={PAGE_BODY_SKELETON_CLASS}>
+            {Array.from({ length: 2 }).map((_, i) => (
+              <LoanSkeleton key={i} />
+            ))}
+          </div>
         ) : !loans || loans.length === 0 ? (
           <EmptyState
+            illustrationPreset="payroll"
             title="No loans or advances"
             description={allowRequests ? "Request a salary advance or loan and track repayment here." : "No active loans."}
             action={allowRequests ? { label: "Request Loan", onClick: handleOpenDialog } : undefined}
-            compact
+            className={PAGE_BODY_EMPTY_CLASS}
           />
         ) : (
-          <div>
+          <div className="overflow-hidden rounded-xl border border-border bg-card">
             {activeLoans.length > 0 && (
               <div>
-                <p className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide border-b border-border">Active</p>
+                <p className="border-b border-border px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Active</p>
                 {activeLoans.map((loan) => (
                   <LoanCard key={loan.id} loan={loan} />
                 ))}
@@ -224,7 +241,7 @@ export function EssLoansSection({ allowRequests }: EssLoansSectionProps) {
             )}
             {pastLoans.length > 0 && (
               <div className={cn(activeLoans.length > 0 && "border-t border-border")}>
-                <p className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide border-b border-border">History</p>
+                <p className="border-b border-border px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">History</p>
                 {pastLoans.map((loan) => (
                   <LoanCard key={loan.id} loan={loan} />
                 ))}

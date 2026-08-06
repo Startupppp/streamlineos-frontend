@@ -161,13 +161,13 @@ export function useEssLoans() {
   });
 }
 
-export function useEssTaxDeclaration() {
+export function useEssTaxDeclaration(options?: { enabled?: boolean }) {
   const canSelf = useCan("self:payroll");
   return useQuery({
     queryKey: queryKeys.payroll.essTaxDeclaration(),
     queryFn: () => apiClient.get<EssTaxDeclarationResponse>("/payroll/me/tax-declaration"),
     staleTime: 60_000,
-    enabled: canSelf,
+    enabled: canSelf && (options?.enabled ?? true),
   });
 }
 

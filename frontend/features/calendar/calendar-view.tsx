@@ -42,6 +42,7 @@ import { HrEventDetailSheet } from "./hr-event-detail-sheet";
 import { useCalendarAccountFilters } from "./use-calendar-account-filters";
 import { useHrCalendarEventsMapped, useHrEventsVisible } from "./use-hr-calendar-events";
 import { useCrmEventsVisible } from "./use-crm-calendar-events";
+import { useCalendarSourceVisibility } from "./use-calendar-source-visibility";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useFinalizeIntegrationConnection } from "@/hooks/api/integrations";
 import { useCalendarConnections } from "./use-calendar-connections";
@@ -136,6 +137,10 @@ export function CalendarView() {
   const { hiddenIds } = useCalendarAccountFilters();
   const { visible: hrEventsVisible, toggle: toggleHrEvents } = useHrEventsVisible();
   const { visible: crmEventsVisible, toggle: toggleCrmEvents } = useCrmEventsVisible();
+  const {
+    visible: attendanceEventsVisible,
+    toggle: toggleAttendanceEvents,
+  } = useCalendarSourceVisibility("attendance", true);
   const { hrCalEvents } = useHrCalendarEventsMapped(rangeStart, rangeEnd);
   const { data: externalData } = useExternalCalendarEvents(
     rangeStart,
@@ -151,7 +156,7 @@ export function CalendarView() {
     [selectedEventId, events],
   );
 
-  const { allCalEvents, visibleRange } = useCalendarComputed({
+  const { allCalEvents, visibleEvents, visibleRange } = useCalendarComputed({
     events,
     externalData,
     hiddenIds,
@@ -161,6 +166,7 @@ export function CalendarView() {
     hrCalEvents,
     hrVisible: hrEventsVisible,
     crmVisible: crmEventsVisible,
+    attendanceVisible: attendanceEventsVisible,
   });
 
   const handleSelectSlot = useCallback((slotInfo: SlotInfo) => {
@@ -318,6 +324,7 @@ export function CalendarView() {
           viewMode={viewMode}
           hrEventsVisible={hrEventsVisible}
           crmEventsVisible={crmEventsVisible}
+          attendanceEventsVisible={attendanceEventsVisible}
           onPrev={handlePrev}
           onNext={handleNext}
           onToday={handleToday}
@@ -327,6 +334,7 @@ export function CalendarView() {
           onOpenCreateTicket={handleOpenCreateTicket}
           onToggleHrEvents={toggleHrEvents}
           onToggleCrmEvents={toggleCrmEvents}
+          onToggleAttendanceEvents={toggleAttendanceEvents}
           hidePrimaryActions
         />
 
@@ -375,7 +383,7 @@ export function CalendarView() {
               ) : (
                 <CalendarEventsPanel
                   mode={viewMode}
-                  events={events}
+                  events={visibleEvents}
                   range={viewMode === "list" ? visibleRange : undefined}
                   onSelectEvent={handleSelectEventById}
                 />

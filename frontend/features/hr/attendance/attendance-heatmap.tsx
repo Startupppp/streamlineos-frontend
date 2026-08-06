@@ -152,8 +152,8 @@ export function AttendanceHeatmap() {
   }, [year, data]);
 
   return (
-    <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
-      <CardHeader className="pb-3 pt-5">
+    <Card className="overflow-hidden">
+      <CardHeader className="shrink-0 border-b px-4 pb-3 pt-3">
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
             <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">

@@ -5,12 +5,12 @@ import { format } from "date-fns";
 import { CheckCircle2, XCircle, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { PlusIcon, EyeIcon } from "@animateicons/react/lucide";
+import { EyeIcon } from "@animateicons/react/lucide";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
-import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
+import { PAGE_BODY_EMPTY_CLASS } from "@/components/ui/content-fill-panel";
 import { AdminExpenseItem } from "./expense-item";
 import { cn } from "@/lib/utils";
 import { formatINR } from "@/lib/format-utils";
@@ -391,42 +391,39 @@ export function MemberExpenseList({
     },
   ], [onEdit, onResubmit]);
 
-  const emptyState = (
-    <EmptyState
-      illustration={<EmptyExpensesIllustration className="h-full w-full" />}
-      title="No expenses found"
-      description={
-        statusFilter !== "ALL" || activeFilterCount > 0
-          ? "Try adjusting your filters"
-          : "Submit your first expense claim to get started"
-      }
-      action={
-        statusFilter !== "ALL"
-          ? { label: "Show All Claims", onClick: onShowAll }
-          : { label: "Submit New Claim", onClick: onCreateNew }
-      }
-      className={`${CONTENT_FILL_PANEL} border-0 bg-transparent`}
-    />
-  );
-
   return (
-    <Card className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border">
-      <CardContent className="flex min-h-0 flex-1 flex-col p-0" aria-live="polite">
-        <DataTable
-          data={expenses}
-          columns={columns}
-          getRowKey={(expense) => expense.id}
-          pagination={{
-            mode: "server",
-            page: pagination.page,
-            pageSize: pagination.pageSize,
-            total: pagination.total,
-            onPageChange,
-          }}
-          emptyState={emptyState}
-          minWidth="640px"
-        />
-      </CardContent>
-    </Card>
+    <div className="flex min-h-0 flex-1 flex-col" aria-live="polite">
+      <DataTable
+        data={expenses}
+        columns={columns}
+        getRowKey={(expense) => expense.id}
+        className="min-h-0 flex-1"
+        pagination={{
+          mode: "server",
+          page: pagination.page,
+          pageSize: pagination.pageSize,
+          total: pagination.total,
+          onPageChange,
+        }}
+        emptyState={
+          <EmptyState
+            illustration={<EmptyExpensesIllustration className="h-full w-full" />}
+            title="No expenses found"
+            description={
+              statusFilter !== "ALL" || activeFilterCount > 0
+                ? "Try adjusting your filters"
+                : "Submit your first expense claim to get started"
+            }
+            action={
+              statusFilter !== "ALL"
+                ? { label: "Show All Claims", onClick: onShowAll }
+                : { label: "Submit New Claim", onClick: onCreateNew }
+            }
+            className={PAGE_BODY_EMPTY_CLASS}
+          />
+        }
+        minWidth="640px"
+      />
+    </div>
   );
 }

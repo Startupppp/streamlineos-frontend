@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion } from "framer-motion";
-import { Landmark, Eye, EyeOff, AlertTriangle } from "lucide-react";
+import { Eye, EyeOff, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -15,6 +15,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PAGE_BODY_EMPTY_CLASS, PAGE_BODY_SKELETON_CLASS } from "@/components/ui/content-fill-panel";
 import { useEssBank, useUpdateBank } from "@/hooks/api/payroll/ess";
 import { cn } from "@/lib/utils";
 
@@ -305,41 +307,49 @@ function BankSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   );
 }
 
-export function EssBankSection() {
+export function EssBankSection({
+  hideToolbar = false,
+  sheetOpen: sheetOpenProp,
+  onSheetOpenChange,
+}: {
+  hideToolbar?: boolean;
+  sheetOpen?: boolean;
+  onSheetOpenChange?: (open: boolean) => void;
+}) {
   const { data, isLoading } = useEssBank();
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const sheetOpen = sheetOpenProp ?? uncontrolledOpen;
+  const setSheetOpen = onSheetOpenChange ?? setUncontrolledOpen;
 
   const handleOpen = () => setSheetOpen(true);
   const handleClose = () => setSheetOpen(false);
 
   return (
-    <section id="bank" className="scroll-mt-20">
-      <div className="flex items-center justify-between gap-3 mb-3">
-        <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
-          <Landmark className="h-4 w-4 text-muted-foreground" />
-          Bank Details
-        </h2>
-        <Button size="sm" variant="outline" className="text-xs" onClick={handleOpen}>
-          Update
-        </Button>
-      </div>
+    <section id="bank" className="flex min-h-0 w-full flex-1 flex-col gap-3">
+      {!hideToolbar ? (
+        <div className="flex shrink-0 items-center justify-end gap-3">
+          <Button size="sm" variant="outline" className="h-8 text-xs" onClick={handleOpen}>
+            Update
+          </Button>
+        </div>
+      ) : null}
 
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.18, ease: "easeOut" }}
-        className="rounded-xl border border-border bg-card overflow-hidden"
-      >
-        {isLoading ? (
-          <div className="p-4 space-y-3">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="flex items-center justify-between">
-                <Skeleton className="h-3.5 w-24" />
-                <Skeleton className="h-3.5 w-32" />
-              </div>
-            ))}
-          </div>
-        ) : data?.hasBank && data.masked ? (
+      {isLoading ? (
+        <div className={PAGE_BODY_SKELETON_CLASS}>
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="flex items-center justify-between">
+              <Skeleton className="h-3.5 w-24" />
+              <Skeleton className="h-3.5 w-32" />
+            </div>
+          ))}
+        </div>
+      ) : data?.hasBank && data.masked ? (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.18, ease: "easeOut" }}
+          className="min-h-0 w-full flex-1 overflow-hidden rounded-xl border border-border bg-card"
+        >
           <div className="divide-y divide-border">
             <MaskedField label="Account Number" value={data.masked.accountNumber} />
             <MaskedField label="Account Holder" value={data.masked.accountHolder} />
@@ -348,14 +358,16 @@ export function EssBankSection() {
             <MaskedField label="IFSC" value={data.masked.ifsc ?? null} />
             <MaskedField label="Branch" value={data.masked.branch ?? null} />
           </div>
-        ) : (
-          <div className="px-4 py-6 text-center">
-            <Landmark className="w-8 text-muted-foreground/50 mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">No bank details on file</p>
-            <Button size="sm" className="mt-3" onClick={handleOpen}>Add Bank Details</Button>
-          </div>
-        )}
-      </motion.div>
+        </motion.div>
+      ) : (
+        <EmptyState
+          illustrationPreset="payroll"
+          title="No bank details on file"
+          description="Add your bank account so payroll can deposit your salary."
+          action={{ label: "Add Bank Details", onClick: handleOpen }}
+          className={PAGE_BODY_EMPTY_CLASS}
+        />
+      )}
 
       <BankSheet open={sheetOpen} onClose={handleClose} />
     </section>

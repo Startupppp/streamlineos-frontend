@@ -4,8 +4,14 @@ import { useCallback, useState } from "react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { ErrorState } from "@/components/shared";
+import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { SearchInput } from "@/components/ui/search-input";
+import {
+  PAGE_BODY_EMPTY_CLASS,
+  PAGE_BODY_SKELETON_CLASS,
+} from "@/components/ui/content-fill-panel";
 import {
   Select,
   SelectContent,
@@ -18,7 +24,6 @@ import { CreateExpenseDialog } from "@/features/hr/expenses/components/create-ex
 import { EXPENSE_CATEGORIES, PAYMENT_METHODS } from "@/features/hr/expenses/expense-constants";
 import type { StatusFilter } from "@/features/hr/expenses/expense-constants";
 import { MemberExpenseList } from "@/features/hr/expenses/expense-list";
-import { MemberExpenseStats } from "@/features/hr/expenses/expense-stats";
 import { useExpensePageData } from "@/hooks/api/hr/expenses";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -119,6 +124,7 @@ export function MyExpensesPage() {
   );
 
   const data = expenses.data;
+  const list = data?.expenses ?? [];
   const pagination = data?.pagination ?? {
     page: 1,
     pageSize: PAGE_SIZE,
@@ -127,6 +133,8 @@ export function MyExpensesPage() {
   };
   const startItem = pagination.total === 0 ? 0 : (pagination.page - 1) * pagination.pageSize + 1;
   const endItem = Math.min(pagination.page * pagination.pageSize, pagination.total);
+  const activeFilterCount = Number(Boolean(search)) + Number(status !== "ALL");
+  const isEmpty = Boolean(data) && list.length === 0;
 
   return (
     <PageWrapper
@@ -142,39 +150,55 @@ export function MyExpensesPage() {
       }
     >
       {expenses.isLoading && !data ? (
-        <div className="space-y-3">
-          <Skeleton className="h-16 w-full rounded-lg" />
-          <Skeleton className="h-80 w-full rounded-lg" />
+        <div className={PAGE_BODY_SKELETON_CLASS}>
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Skeleton key={i} className="h-14 w-full rounded-lg" />
+          ))}
         </div>
       ) : null}
 
       {expenses.isError && !data ? (
         <ErrorState
-          className="flex-1"
+          className={PAGE_BODY_EMPTY_CLASS}
           title="Expenses unavailable"
           description={getErrorMessage(expenses.error)}
           onRetry={expenses.refetch}
         />
       ) : null}
 
-      {data ? (
-        <div className="flex min-h-0 flex-1 flex-col gap-3">
-          <MemberExpenseStats stats={data.stats} />
-          <MemberExpenseList
-            expenses={data.expenses}
-            pagination={pagination}
-            startItem={startItem}
-            endItem={endItem}
-            totalPages={Math.max(1, pagination.totalPages)}
-            statusFilter={status}
-            activeFilterCount={Number(Boolean(search)) + Number(status !== "ALL")}
-            onEdit={handleEdit}
-            onResubmit={handleResubmit}
-            onShowAll={handleShowAll}
-            onCreateNew={handleOpenCreate}
-            onPageChange={setPage}
-          />
-        </div>
+      {isEmpty ? (
+        <EmptyState
+          illustration={<EmptyExpensesIllustration className="h-full w-full" />}
+          title="No expenses found"
+          description={
+            status !== "ALL" || activeFilterCount > 0
+              ? "Try adjusting your filters"
+              : "Submit your first expense claim to get started"
+          }
+          action={
+            status !== "ALL"
+              ? { label: "Show All Claims", onClick: handleShowAll }
+              : { label: "Submit New Claim", onClick: handleOpenCreate }
+          }
+          className={PAGE_BODY_EMPTY_CLASS}
+        />
+      ) : null}
+
+      {data && list.length > 0 ? (
+        <MemberExpenseList
+          expenses={list}
+          pagination={pagination}
+          startItem={startItem}
+          endItem={endItem}
+          totalPages={Math.max(1, pagination.totalPages)}
+          statusFilter={status}
+          activeFilterCount={activeFilterCount}
+          onEdit={handleEdit}
+          onResubmit={handleResubmit}
+          onShowAll={handleShowAll}
+          onCreateNew={handleOpenCreate}
+          onPageChange={setPage}
+        />
       ) : null}
 
       <CreateExpenseDialog

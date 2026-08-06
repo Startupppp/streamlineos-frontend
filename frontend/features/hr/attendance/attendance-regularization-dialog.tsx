@@ -63,10 +63,18 @@ function toIsoOnDate(date: string, time: string): string {
 
 export function AttendanceRegularizationDialog({
   children,
+  open: openProp,
+  onOpenChange,
+  hideTrigger = false,
 }: {
   children?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const open = openProp ?? uncontrolledOpen;
+  const setOpen = onOpenChange ?? setUncontrolledOpen;
   const mutation = useCreateRegularization();
 
   const defaultValues = useMemo<RegularizationFormValues>(
@@ -101,21 +109,27 @@ export function AttendanceRegularizationDialog({
     }
   }
 
+  function handleOpen() {
+    setOpen(true);
+  }
+
   return (
     <>
-      <Button
-        type="button"
-        variant="ghost"
-        className="justify-start gap-1.5 px-0 h-auto py-0 font-normal text-sm text-muted-foreground hover:bg-transparent hover:text-foreground"
-        onClick={() => setOpen(true)}
-      >
-        {children ?? (
-          <>
-            <FilePen className="h-4 w-4" />
-            Request Correction
-          </>
-        )}
-      </Button>
+      {!hideTrigger ? (
+        <Button
+          type="button"
+          variant="ghost"
+          className="h-auto justify-start gap-1.5 px-0 py-0 text-sm font-normal text-muted-foreground hover:bg-transparent hover:text-foreground"
+          onClick={handleOpen}
+        >
+          {children ?? (
+            <>
+              <FilePen className="h-4 w-4" />
+              Request Correction
+            </>
+          )}
+        </Button>
+      ) : null}
 
       <EntityFormSheet<RegularizationFormValues>
         open={open}

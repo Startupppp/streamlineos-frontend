@@ -19,6 +19,8 @@ import { useExpenseFilters } from "@/hooks/common/use-expense-filters";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useSession } from "next-auth/react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import {
   EXPENSE_CATEGORIES,
@@ -27,7 +29,6 @@ import {
 } from "@/features/hr/expenses/expense-constants";
 import {
   AdminExpenseStats,
-  MemberExpenseStats,
 } from "@/features/hr/expenses/expense-stats";
 import {
   AdminExpenseFilters,
@@ -379,6 +380,8 @@ export default function ExpensesPage() {
     <PageWrapper
       title="My Expenses"
       subtitle="Track, manage, and submit your expense claims for reimbursement."
+      noInternalScroll
+      contentClassName="flex min-h-0 flex-1 flex-col"
       actions={
         <Button
           size="sm"
@@ -389,43 +392,49 @@ export default function ExpensesPage() {
           Submit New Claim
         </Button>
       }
+      filters={
+        <MemberExpenseFilters
+          statusFilter={statusFilter}
+          datePreset={datePreset}
+          filters={filters}
+          categories={expenseCategories}
+          onStatusChange={setStatusFilter}
+          onDatePresetChange={setDatePreset}
+        />
+      }
     >
-      <motion.div
-        variants={staggerContainer}
-        initial="hidden"
-        animate="visible"
-        className="flex flex-1 min-h-0 flex-col gap-4"
-      >
-        <motion.div variants={fadeUp}>
-          <MemberExpenseStats stats={stats} />
-        </motion.div>
-        <motion.div variants={fadeUp}>
-          <MemberExpenseFilters
-            statusFilter={statusFilter}
-            datePreset={datePreset}
-            filters={filters}
-            categories={expenseCategories}
-            onStatusChange={setStatusFilter}
-            onDatePresetChange={setDatePreset}
-          />
-        </motion.div>
-        <motion.div variants={fadeUp}>
-          <MemberExpenseList
-            expenses={filteredExpenses}
-            pagination={pagination}
-            startItem={startItem}
-            endItem={endItem}
-            totalPages={totalPages}
-            statusFilter={statusFilter}
-            activeFilterCount={activeFilterCount}
-            onEdit={handleEdit}
-            onResubmit={handleResubmit}
-            onShowAll={handleShowAll}
-            onCreateNew={handleOpenMemberCreate}
-            onPageChange={handlePageChange}
-          />
-        </motion.div>
-      </motion.div>
+      {filteredExpenses.length === 0 ? (
+        <EmptyState
+          illustration={<EmptyExpensesIllustration className="h-full w-full" />}
+          title="No expenses found"
+          description={
+            statusFilter !== "ALL" || activeFilterCount > 0
+              ? "Try adjusting your filters"
+              : "Submit your first expense claim to get started"
+          }
+          action={
+            statusFilter !== "ALL"
+              ? { label: "Show All Claims", onClick: handleShowAll }
+              : { label: "Submit New Claim", onClick: handleOpenMemberCreate }
+          }
+          className="min-h-0 flex-1 border-0 bg-transparent shadow-none"
+        />
+      ) : (
+        <MemberExpenseList
+          expenses={filteredExpenses}
+          pagination={pagination}
+          startItem={startItem}
+          endItem={endItem}
+          totalPages={totalPages}
+          statusFilter={statusFilter}
+          activeFilterCount={activeFilterCount}
+          onEdit={handleEdit}
+          onResubmit={handleResubmit}
+          onShowAll={handleShowAll}
+          onCreateNew={handleOpenMemberCreate}
+          onPageChange={handlePageChange}
+        />
+      )}
 
       <CreateExpenseDialog
         open={isCreateOpen}

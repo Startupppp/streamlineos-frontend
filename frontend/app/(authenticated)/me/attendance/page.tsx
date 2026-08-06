@@ -1,17 +1,7 @@
-import { AttendanceContent } from "@/features/hr/attendance/components/attendance-content";
-import { PageWrapper } from "@/components/ui/page-wrapper";
+import { MyAttendancePage } from "@/features/employee-self-service/components/my-attendance-page";
 import { requirePermission } from "@/lib/rbac/require-permission";
 
-export default async function MyAttendancePage() {
+export default async function MyAttendanceRoute() {
   await requirePermission("self:attendance");
-  return (
-    <PageWrapper
-      title="Attendance"
-      subtitle="Track your work hours and manage check-ins."
-      noInternalScroll
-      contentClassName="flex min-h-0 flex-1 flex-col"
-    >
-      <AttendanceContent selfService />
-    </PageWrapper>
-  );
+  return <MyAttendancePage />;
 }

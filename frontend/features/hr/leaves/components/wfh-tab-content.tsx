@@ -1,22 +1,15 @@
 "use client";
 
-import { useState, useMemo, memo } from "react";
+import { useMemo, memo } from "react";
 import { isBefore, isAfter, format } from "date-fns";
 import { motion } from "framer-motion";
 import { useHrWfhRequests } from "@/hooks/api/hr";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { EmptyState } from "@/components/ui/empty-state";
+import { PAGE_BODY_EMPTY_CLASS, PAGE_BODY_SKELETON_CLASS } from "@/components/ui/content-fill-panel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { Home, TrendingUp, Clock } from "lucide-react";
+import { TrendingUp, Clock } from "lucide-react";
 
 import { staggerContainer, fadeIn } from "@/lib/motion-variants";
 import type { WfhRequest } from "./leaves-shared";
@@ -51,17 +44,26 @@ const WfhStatsStrip = memo(function WfhStatsStrip({
   );
 });
 
-export function WfhTabContent({ compact = false }: { compact?: boolean }) {
-  const [wfhStatusFilter, setWfhStatusFilter] = useState<string>("ALL");
+interface WfhTabContentProps {
+  compact?: boolean;
+  statusFilter?: string;
+  onRequestWfh?: () => void;
+}
+
+export function WfhTabContent({
+  compact = false,
+  statusFilter = "ALL",
+  onRequestWfh,
+}: WfhTabContentProps) {
   const { data: myWfhRequests, isLoading: wfhLoading } = useHrWfhRequests();
 
   const filteredWfhRequests = useMemo(() => {
     if (!myWfhRequests) return [];
-    if (wfhStatusFilter === "ALL") return myWfhRequests;
+    if (statusFilter === "ALL") return myWfhRequests;
     return myWfhRequests.filter(
-      (r) => (r.status || "PENDING") === wfhStatusFilter,
+      (r) => (r.status || "PENDING") === statusFilter,
     );
-  }, [myWfhRequests, wfhStatusFilter]);
+  }, [myWfhRequests, statusFilter]);
 
   const wfhStats = useMemo(() => {
     if (!myWfhRequests) return { thisMonth: 0, pending: 0 };
@@ -86,7 +88,13 @@ export function WfhTabContent({ compact = false }: { compact?: boolean }) {
   const currentMonth = format(new Date(), "MMMM yyyy");
 
   return (
-    <div className={compact ? "flex min-h-0 flex-1 flex-col gap-3" : "space-y-4"}>
+    <div
+      className={
+        compact
+          ? "flex h-full min-h-0 w-full flex-1 flex-col"
+          : "w-full space-y-4"
+      }
+    >
       {!compact && (
         <WfhStatsStrip
           thisMonth={wfhStats.thisMonth}
@@ -95,52 +103,34 @@ export function WfhTabContent({ compact = false }: { compact?: boolean }) {
         />
       )}
 
-      <Card className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border">
-        <CardHeader className="shrink-0 border-b pb-3 pt-3 px-4">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Home
-                  className="h-3.5 w-3.5 text-primary"
-                  aria-hidden="true"
-                />
-              </div>
-              <CardTitle className="text-sm font-semibold text-foreground">
-                My WFH Requests
-              </CardTitle>
-            </div>
-            <Select value={wfhStatusFilter} onValueChange={setWfhStatusFilter}>
-              <SelectTrigger className="w-[130px] text-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-                <SelectItem value="ALL">All Status</SelectItem>
-                <SelectItem value="PENDING">Pending</SelectItem>
-                <SelectItem value="APPROVED">Approved</SelectItem>
-                <SelectItem value="REJECTED">Rejected</SelectItem>
-              </SelectContent>
-            </Select>
+      <div
+        className="flex h-full min-h-0 w-full flex-1 flex-col"
+        aria-live="polite"
+      >
+        {wfhLoading ? (
+          <div className={PAGE_BODY_SKELETON_CLASS}>
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-16 w-full rounded-xl" />
+            ))}
           </div>
-        </CardHeader>
-        <CardContent className="min-h-0 flex-1 overflow-auto pt-3 px-4 pb-4" aria-live="polite">
-          {wfhLoading ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <Skeleton key={i} className="h-16 w-full rounded-xl" />
-              ))}
-            </div>
-          ) : filteredWfhRequests.length === 0 ? (
-            <EmptyState
-              illustrationPreset="default"
-              title={
-                wfhStatusFilter === "ALL"
-                  ? "No WFH requests yet"
-                  : `No ${wfhStatusFilter.toLowerCase()} requests`
-              }
-              description="Use the Request WFH button above to submit a new request."
-              className="flex-1 border-0 bg-transparent"
-            />
-          ) : (
+        ) : filteredWfhRequests.length === 0 ? (
+          <EmptyState
+            illustrationPreset="calendar"
+            title={
+              statusFilter === "ALL"
+                ? "No WFH requests yet"
+                : `No ${statusFilter.toLowerCase()} requests`
+            }
+            description="Submit a work-from-home request to see it here."
+            action={
+              onRequestWfh
+                ? { label: "Request WFH", onClick: onRequestWfh }
+                : undefined
+            }
+            className={PAGE_BODY_EMPTY_CLASS}
+          />
+        ) : (
+          <div className="min-h-0 w-full flex-1 overflow-y-auto rounded-xl border border-border bg-card p-3">
             <motion.div
               className="space-y-2"
               role="list"
@@ -155,9 +145,9 @@ export function WfhTabContent({ compact = false }: { compact?: boolean }) {
                 </motion.div>
               ))}
             </motion.div>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

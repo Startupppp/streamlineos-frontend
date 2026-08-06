@@ -1,9 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { IndianRupee, TrendingUp, TrendingDown } from "lucide-react";
+import { TrendingUp, TrendingDown } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { PAGE_BODY_EMPTY_CLASS, PAGE_BODY_SKELETON_CLASS } from "@/components/ui/content-fill-panel";
 import { useEssSalaryStructure } from "@/hooks/api/payroll/ess";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
 import { cn } from "@/lib/utils";
@@ -16,14 +17,14 @@ function formatDate(iso: string | null): string {
 
 function SalaryStructureSkeleton() {
   return (
-    <div className="rounded-xl border border-border bg-card overflow-hidden p-4 space-y-4">
+    <div className={PAGE_BODY_SKELETON_CLASS}>
       <div className="flex items-center justify-between">
         <Skeleton className="h-5 w-32" />
         <Skeleton className="h-4 w-20" />
       </div>
       <div className="space-y-2">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={i} className="flex items-center justify-between border-b border-border py-2 last:border-0">
             <Skeleton className="h-3.5 w-32" />
             <Skeleton className="h-3.5 w-20" />
           </div>
@@ -38,11 +39,7 @@ export function EssSalarySection() {
 
   if (isLoading) {
     return (
-      <section id="salary" className="scroll-mt-20">
-        <h2 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
-          <IndianRupee className="h-4 w-4 text-muted-foreground" />
-          Salary Structure
-        </h2>
+      <section id="salary" className="flex min-h-0 w-full flex-1 flex-col">
         <SalaryStructureSkeleton />
       </section>
     );
@@ -50,15 +47,12 @@ export function EssSalarySection() {
 
   if (isError || !data) {
     return (
-      <section id="salary" className="scroll-mt-20">
-        <h2 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
-          <IndianRupee className="h-4 w-4 text-muted-foreground" />
-          Salary Structure
-        </h2>
+      <section id="salary" className="flex min-h-0 w-full flex-1 flex-col">
         <EmptyState
-          title="Not available"
+          illustrationPreset="payroll"
+          title="Salary structure unavailable"
           description="Your salary structure is not visible yet or has not been configured."
-          compact
+          className={PAGE_BODY_EMPTY_CLASS}
         />
       </section>
     );
@@ -68,17 +62,12 @@ export function EssSalarySection() {
   const deductions = data.components.filter((c) => c.type === "DEDUCTION" || c.type === "EMPLOYER_CONTRIBUTION");
 
   return (
-    <section id="salary" className="scroll-mt-20">
-      <h2 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
-        <IndianRupee className="h-4 w-4 text-muted-foreground" />
-        Salary Structure
-      </h2>
-
+    <section id="salary" className="flex min-h-0 w-full flex-1 flex-col">
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2, ease: "easeOut" }}
-        className="rounded-xl border border-border bg-card overflow-hidden"
+        className="min-h-0 w-full flex-1 overflow-hidden rounded-xl border border-border bg-card"
       >
         <div className="px-4 py-3 border-b border-border bg-muted/30 flex items-center justify-between flex-wrap gap-2">
           <div>

@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { format } from "date-fns";
-import { CalendarClock, CheckCircle2, ExternalLink, MessageSquareText } from "lucide-react";
+import { CheckCircle2, ExternalLink, MessageSquareText } from "lucide-react";
 import { toast } from "sonner";
 import { ErrorState } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
@@ -35,6 +35,18 @@ import {
 import { getErrorMessage } from "@/lib/get-error-message";
 
 type Recommendation = "HIRE" | "NO_HIRE" | "MAYBE";
+
+function safeMeetingLink(value: string | null): string | null {
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" || url.protocol === "http:"
+      ? url.toString()
+      : null;
+  } catch {
+    return null;
+  }
+}
 
 function FeedbackSheet({
   interview,
@@ -174,10 +186,10 @@ export function MyRecruitmentPage() {
 
       {data && data.items.length === 0 ? (
         <EmptyState
-          illustration={<CalendarClock className="h-12 w-12 text-muted-foreground/40" />}
-          illustrationSize="sm"
+          illustrationPreset="calendar"
           title="No assigned interviews"
           description="Interviews assigned to you will appear here."
+          className="flex-1"
         />
       ) : null}
 
@@ -188,6 +200,7 @@ export function MyRecruitmentPage() {
           </p>
           {data.items.map((interview) => {
             const submitted = Boolean(interview.scorecardSubmittedAt);
+            const meetingLink = safeMeetingLink(interview.meetingLink);
             return (
               <Card key={interview.id}>
                 <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
@@ -216,9 +229,9 @@ export function MyRecruitmentPage() {
                     ) : null}
                   </div>
                   <div className="flex shrink-0 gap-2">
-                    {interview.meetingLink ? (
+                    {meetingLink ? (
                       <Button variant="outline" size="sm" asChild>
-                        <a href={interview.meetingLink} target="_blank" rel="noreferrer">
+                        <a href={meetingLink} target="_blank" rel="noreferrer">
                           <ExternalLink className="h-3.5 w-3.5" /> Join
                         </a>
                       </Button>

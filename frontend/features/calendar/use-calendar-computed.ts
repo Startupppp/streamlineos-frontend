@@ -26,6 +26,7 @@ interface UseCalendarComputedParams {
   hrCalEvents?: BigCalEvent[];
   hrVisible?: boolean;
   crmVisible?: boolean;
+  attendanceVisible?: boolean;
 }
 
 export function useCalendarComputed({
@@ -38,10 +39,28 @@ export function useCalendarComputed({
   hrCalEvents = [],
   hrVisible = true,
   crmVisible = true,
+  attendanceVisible = true,
 }: UseCalendarComputedParams) {
+  const visibleEvents = useMemo(
+    () =>
+      events.filter((event) => {
+        if (!attendanceVisible && event.source === "attendance") return false;
+        if (
+          !crmVisible &&
+          (event.entityType === "LEAD" ||
+            event.entityType === "DEAL" ||
+            event.entityType === "CONTACT")
+        ) {
+          return false;
+        }
+        return true;
+      }),
+    [attendanceVisible, crmVisible, events],
+  );
+
   const calEvents = useMemo<BigCalEvent[]>(
     () =>
-      events.map((e) => ({
+      visibleEvents.map((e) => ({
         id: e.id,
         title: e.title,
         start: new Date(e.start),
@@ -59,7 +78,7 @@ export function useCalendarComputed({
           projectId: e.projectId,
         },
       })),
-    [events],
+    [visibleEvents],
   );
 
   const externalCalEvents = useMemo<BigCalEvent[]>(
@@ -94,22 +113,9 @@ export function useCalendarComputed({
     [hrCalEvents, hrVisible],
   );
 
-  const visibleCalEvents = useMemo(
-    () =>
-      crmVisible
-        ? calEvents
-        : calEvents.filter(
-            (e) =>
-              e.resource?.entityType !== "LEAD" &&
-              e.resource?.entityType !== "DEAL" &&
-              e.resource?.entityType !== "CONTACT",
-          ),
-    [calEvents, crmVisible],
-  );
-
   const allCalEvents = useMemo(
-    () => [...visibleCalEvents, ...externalCalEvents, ...visibleHrCalEvents],
-    [visibleCalEvents, externalCalEvents, visibleHrCalEvents],
+    () => [...calEvents, ...externalCalEvents, ...visibleHrCalEvents],
+    [calEvents, externalCalEvents, visibleHrCalEvents],
   );
 
   const todayActivities = useMemo(
@@ -151,6 +157,7 @@ export function useCalendarComputed({
     calEvents,
     externalCalEvents,
     allCalEvents,
+    visibleEvents,
     todayActivities,
     formattedRange,
     visibleRange,
