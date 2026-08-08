@@ -75,11 +75,14 @@ export interface WorkersPage {
   pagination: WorkerPagination;
 }
 
-export interface CreateWorkerInput {
-  organizationPersonId: string;
+type CreateWorkerSubject =
+  | { organizationPersonId: string; memberUserId?: never }
+  | { memberUserId: string; organizationPersonId?: never };
+
+export type CreateWorkerInput = CreateWorkerSubject & {
   workerNumber?: string;
   isPayee?: boolean;
-}
+};
 
 export interface CreateEngagementInput {
   workerId: string;

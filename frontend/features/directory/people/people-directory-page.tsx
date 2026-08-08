@@ -20,17 +20,8 @@ import { ErrorState } from "@/components/shared/error-state";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { SemanticBadge } from "@/components/ui/semantic-badge";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,6 +34,10 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { CONTENT_FILL_PANEL, PAGE_BODY_EMPTY_CLASS } from "@/components/ui/content-fill-panel";
 import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
+import {
+  getPersonAccessBadge,
+  getPersonAccessBadgeTone,
+} from "./person-account-access";
 
 const PAGE_SIZE = 20;
 
@@ -105,7 +100,7 @@ function PersonRowActions({
         )}
         {canDelete && (
           <DropdownMenuItem variant="destructive" onClick={handleDelete}>
-            Delete
+            Remove from directory
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>
@@ -180,7 +175,7 @@ export function PeopleDirectoryPage({
     if (!deleteTarget) return;
     deletePerson.mutate(deleteTarget.organizationPersonId, {
       onSuccess: () => {
-        toast.success("Person deleted");
+        toast.success("Person removed from the directory");
         setDeleteTarget(null);
       },
       onError: (e) => toast.error(getErrorMessage(e)),
@@ -220,17 +215,14 @@ export function PeopleDirectoryPage({
     {
       key: "access",
       header: "App access",
-      className: "w-28",
-      cell: (row) =>
-        row.organizationMembershipId || row.userId ? (
-          <Badge variant="secondary" className="h-5 px-2 text-[10px]">
-            Member
-          </Badge>
-        ) : (
-          <Badge variant="outline" className="h-5 px-2 text-[10px] font-normal text-muted-foreground">
-            No login
-          </Badge>
-        ),
+      className: "min-w-[9rem]",
+      cell: (row) => (
+        <SemanticBadge
+          tone={getPersonAccessBadgeTone(row)}
+          label={getPersonAccessBadge(row)}
+          size="xs"
+        />
+      ),
     },
     {
       key: "phone",
@@ -354,28 +346,23 @@ export function PeopleDirectoryPage({
         />
       )}
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteDialogChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete this person record?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently remove{" "}
-              {deleteTarget ? displayName(deleteTarget) : "this person"} from the
-              directory. Their application account is not deleted. This action
-              cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground"
-              onClick={handleDeleteConfirm}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={handleDeleteDialogChange}
+        title="Remove this person from the directory?"
+        description={
+          <>
+            {deleteTarget ? displayName(deleteTarget) : "This person"} will
+            leave the active directory. Their application account, worker
+            record, and history remain intact.
+          </>
+        }
+        confirmLabel="Remove from directory"
+        destructive
+        keepOpenOnConfirm
+        isPending={deletePerson.isPending}
+        onConfirm={handleDeleteConfirm}
+      />
     </PageWrapper>
   );
 }

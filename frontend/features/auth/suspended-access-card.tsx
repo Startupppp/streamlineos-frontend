@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import { ArrowRight, Building2, RefreshCw, ShieldAlert } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import {
   useGetOrganizations,
   useSignOut,
@@ -15,6 +15,56 @@ import { clearBackendTokenCache } from "@/lib/api-client";
 type SuspendedAccessCardProps = {
   organizationName: string | null;
 };
+
+type OrganizationRowProps = {
+  organization: { id: string; name: string; role: string };
+  disabled: boolean;
+  isSwitching: boolean;
+  onSelect: (organizationId: string) => void;
+};
+
+function OrganizationRow({
+  organization,
+  disabled,
+  isSwitching,
+  onSelect,
+}: OrganizationRowProps) {
+  const handleSelect = useCallback(() => {
+    onSelect(organization.id);
+  }, [onSelect, organization.id]);
+
+  return (
+    <button
+      type="button"
+      className="group flex w-full items-center gap-3 rounded-lg border border-transparent bg-white px-3 py-2.5 text-left shadow-sm transition-colors hover:border-slate-300 disabled:cursor-not-allowed disabled:opacity-60"
+      onClick={handleSelect}
+      disabled={disabled}
+    >
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
+        <Building2 className="size-4" aria-hidden="true" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-sm font-medium text-slate-900">
+          {organization.name}
+        </span>
+        <span className="block text-xs text-slate-500">
+          {formatOrganizationRole(organization.role)}
+        </span>
+      </span>
+      {isSwitching ? (
+        <RefreshCw
+          className="size-4 shrink-0 animate-spin text-slate-500"
+          aria-hidden="true"
+        />
+      ) : (
+        <ArrowRight
+          className="size-4 shrink-0 text-slate-400 transition-transform group-hover:translate-x-0.5"
+          aria-hidden="true"
+        />
+      )}
+    </button>
+  );
+}
 
 function formatOrganizationRole(role: string): string {
   return role
@@ -39,6 +89,21 @@ export function SuspendedAccessCard({
   } = useGetOrganizations();
   const [isChecking, setIsChecking] = useState(false);
   const isBusy = isChecking || signOut.isPending || switchOrg.isPending;
+
+  const handleRetryOrganizations = useCallback(() => {
+    void refetchOrganizations();
+  }, [refetchOrganizations]);
+
+  const handleSwitchOrganization = useCallback(
+    (organizationId: string) => {
+      switchOrg.mutate(organizationId);
+    },
+    [switchOrg],
+  );
+
+  const handleSignOut = useCallback(() => {
+    signOut.mutate();
+  }, [signOut]);
 
   const handleCheckAgain = useCallback(async () => {
     if (isChecking) return;
@@ -113,20 +178,19 @@ export function SuspendedAccessCard({
               Your access data is unchanged. Check your connection and try
               again.
             </p>
-            <Button
+            <LoadingButton
               type="button"
               variant="outline"
               size="sm"
               className="mt-3"
-              disabled={isBusy || isFetchingOrganizations}
-              onClick={() => void refetchOrganizations()}
+              isPending={isFetchingOrganizations}
+              loadingText="Retrying…"
+              disabled={isBusy}
+              onClick={handleRetryOrganizations}
             >
-              <RefreshCw
-                className={`size-3.5 ${isFetchingOrganizations ? "animate-spin" : ""}`}
-                aria-hidden="true"
-              />
+              <RefreshCw className="size-3.5" aria-hidden="true" />
               Retry
-            </Button>
+            </LoadingButton>
           </div>
         ) : availableOrganizations.length > 0 ? (
           <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-2">
@@ -140,37 +204,16 @@ export function SuspendedAccessCard({
             </div>
             <div className="space-y-1">
               {availableOrganizations.map((organization) => (
-                <button
+                <OrganizationRow
                   key={organization.id}
-                  type="button"
-                  className="group flex w-full items-center gap-3 rounded-lg border border-transparent bg-white px-3 py-2.5 text-left shadow-sm transition-colors hover:border-slate-300 disabled:cursor-not-allowed disabled:opacity-60"
-                  onClick={() => switchOrg.mutate(organization.id)}
+                  organization={organization}
                   disabled={isBusy}
-                >
-                  <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
-                    <Building2 className="size-4" aria-hidden="true" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium text-slate-900">
-                      {organization.name}
-                    </span>
-                    <span className="block text-xs text-slate-500">
-                      {formatOrganizationRole(organization.role)}
-                    </span>
-                  </span>
-                  {switchOrg.isPending &&
-                  switchOrg.variables === organization.id ? (
-                    <RefreshCw
-                      className="size-4 shrink-0 animate-spin text-slate-500"
-                      aria-hidden="true"
-                    />
-                  ) : (
-                    <ArrowRight
-                      className="size-4 shrink-0 text-slate-400 transition-transform group-hover:translate-x-0.5"
-                      aria-hidden="true"
-                    />
-                  )}
-                </button>
+                  isSwitching={
+                    switchOrg.isPending &&
+                    switchOrg.variables === organization.id
+                  }
+                  onSelect={handleSwitchOrganization}
+                />
               ))}
             </div>
           </div>
@@ -188,27 +231,28 @@ export function SuspendedAccessCard({
         )}
 
         <div className="mt-6 flex flex-col gap-2 sm:flex-row">
-          <Button
+          <LoadingButton
             type="button"
             className="flex-1"
-            onClick={() => void handleCheckAgain()}
+            isPending={isChecking}
+            loadingText="Checking access…"
+            onClick={handleCheckAgain}
             disabled={isBusy}
           >
-            <RefreshCw
-              className={`size-4 ${isChecking ? "animate-spin" : ""}`}
-              aria-hidden="true"
-            />
-            {isChecking ? "Checking access…" : "Check access again"}
-          </Button>
-          <Button
+            <RefreshCw className="size-4" aria-hidden="true" />
+            Check access again
+          </LoadingButton>
+          <LoadingButton
             type="button"
             variant="outline"
             className="flex-1"
-            onClick={() => signOut.mutate()}
+            isPending={signOut.isPending}
+            loadingText="Signing out…"
+            onClick={handleSignOut}
             disabled={isBusy}
           >
-            {signOut.isPending ? "Signing out…" : "Use another account"}
-          </Button>
+            Use another account
+          </LoadingButton>
         </div>
       </div>
     </section>

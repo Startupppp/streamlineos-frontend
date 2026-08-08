@@ -75,7 +75,7 @@ export function useCreateBusinessUnit() {
     mutationKey: ["create", "business", "unit"],
     mutationFn: (data: { name: string; code: string; description?: string }) =>
       apiClient.post<OrgBusinessUnit>("/org-hierarchy/business-units", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.businessUnits() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.all }),
   });
 }
 
@@ -85,7 +85,7 @@ export function useUpdateBusinessUnit() {
     mutationKey: ["update", "business", "unit"],
     mutationFn: ({ id, ...data }: { id: string; name?: string; code?: string; description?: string; status?: string }) =>
       apiClient.patch<OrgBusinessUnit>(`/org-hierarchy/business-units/${id}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.businessUnits() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.all }),
   });
 }
 
@@ -95,7 +95,7 @@ export function useDeleteBusinessUnit() {
     mutationKey: ["delete", "business", "unit"],
     mutationFn: (id: string) =>
       apiClient.delete<{ message: string }>(`/org-hierarchy/business-units/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.businessUnits() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.all }),
   });
 }
 
@@ -127,7 +127,7 @@ export function useCreateOrgBranch() {
     mutationKey: ["create", "org", "branch"],
     mutationFn: (data: Record<string, unknown>) =>
       apiClient.post<OrgBranch>("/org-hierarchy/branches", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.orgBranches() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.all }),
   });
 }
 
@@ -137,7 +137,7 @@ export function useUpdateOrgBranch() {
     mutationKey: ["update", "org", "branch"],
     mutationFn: ({ id, ...data }: { id: string } & Record<string, unknown>) =>
       apiClient.patch<OrgBranch>(`/org-hierarchy/branches/${id}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.orgBranches() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.all }),
   });
 }
 
@@ -147,7 +147,7 @@ export function useDeleteOrgBranch() {
     mutationKey: ["delete", "org", "branch"],
     mutationFn: (id: string) =>
       apiClient.delete<{ message: string }>(`/org-hierarchy/branches/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.orgBranches() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.all }),
   });
 }
 
@@ -179,7 +179,7 @@ export function useCreateOrgDepartment() {
     mutationKey: ["create", "org", "department"],
     mutationFn: (data: { name: string; code: string; branchId?: string; headUserId?: string; description?: string }) =>
       apiClient.post<OrgDepartment>("/org-hierarchy/departments", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.departments() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.all }),
   });
 }
 
@@ -189,7 +189,7 @@ export function useUpdateOrgDepartment() {
     mutationKey: ["update", "org", "department"],
     mutationFn: ({ id, ...data }: { id: string } & Record<string, unknown>) =>
       apiClient.patch<OrgDepartment>(`/org-hierarchy/departments/${id}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.departments() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.all }),
   });
 }
 
@@ -199,7 +199,7 @@ export function useDeleteOrgDepartment() {
     mutationKey: ["delete", "org", "department"],
     mutationFn: (id: string) =>
       apiClient.delete<{ message: string }>(`/org-hierarchy/departments/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.departments() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.all }),
   });
 }
 
@@ -270,7 +270,7 @@ export function useCreateOrgLocation() {
     mutationKey: ["create", "org", "location"],
     mutationFn: (data: { name: string; type?: string; address?: string; latitude?: number; longitude?: number }) =>
       apiClient.post<OrgLocation>("/org-hierarchy/locations", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.locations() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.all }),
   });
 }
 
@@ -280,7 +280,7 @@ export function useUpdateOrgLocation() {
     mutationKey: ["update", "org", "location"],
     mutationFn: ({ id, ...data }: { id: string } & Record<string, unknown>) =>
       apiClient.patch<OrgLocation>(`/org-hierarchy/locations/${id}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.locations() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.all }),
   });
 }
 
@@ -290,7 +290,7 @@ export function useDeleteOrgLocation() {
     mutationKey: ["delete", "org", "location"],
     mutationFn: (id: string) =>
       apiClient.delete<{ message: string }>(`/org-hierarchy/locations/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.locations() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.all }),
   });
 }
 
@@ -310,7 +310,7 @@ export function useCreateOrgCostCenter() {
     mutationKey: ["create", "org", "cost", "center"],
     mutationFn: (data: { code: string; name: string; description?: string }) =>
       apiClient.post<OrgCostCenter>("/org-hierarchy/cost-centers", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.costCenters() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.all }),
   });
 }
 
@@ -320,7 +320,7 @@ export function useUpdateOrgCostCenter() {
     mutationKey: ["update", "org", "cost", "center"],
     mutationFn: ({ id, ...data }: { id: string } & Record<string, unknown>) =>
       apiClient.patch<OrgCostCenter>(`/org-hierarchy/cost-centers/${id}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.costCenters() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.all }),
   });
 }
 
@@ -330,6 +330,6 @@ export function useDeleteOrgCostCenter() {
     mutationKey: ["delete", "org", "cost", "center"],
     mutationFn: (id: string) =>
       apiClient.delete<{ message: string }>(`/org-hierarchy/cost-centers/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.costCenters() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.all }),
   });
 }

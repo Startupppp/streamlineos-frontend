@@ -1345,6 +1345,12 @@ export const queryKeys = {
     status: () => [...base, "mfa", "status"] as const,
   },
 
+  delegations: {
+    all: [...base, "delegations"] as const,
+    received: () => [...base, "delegations", "received"] as const,
+    given: () => [...base, "delegations", "given"] as const,
+  },
+
   auth: {
     all: [...base, "auth"] as const,
     sessions: () => [...base, "auth", "sessions"] as const,
@@ -1404,17 +1410,29 @@ export const queryKeys = {
   hierarchy: {
     all: [...base, "hierarchy"] as const,
     businessUnits: (params?: Record<string, unknown>) =>
-      [...base, "hierarchy", "businessUnits", params] as const,
+      params !== undefined
+        ? ([...base, "hierarchy", "businessUnits", params] as const)
+        : ([...base, "hierarchy", "businessUnits"] as const),
     orgBranches: (params?: Record<string, unknown>) =>
-      [...base, "hierarchy", "orgBranches", params] as const,
+      params !== undefined
+        ? ([...base, "hierarchy", "orgBranches", params] as const)
+        : ([...base, "hierarchy", "orgBranches"] as const),
     departments: (params?: Record<string, unknown>) =>
-      [...base, "hierarchy", "departments", params] as const,
+      params !== undefined
+        ? ([...base, "hierarchy", "departments", params] as const)
+        : ([...base, "hierarchy", "departments"] as const),
     teams: (params?: Record<string, unknown>) =>
-      [...base, "hierarchy", "teams", params] as const,
+      params !== undefined
+        ? ([...base, "hierarchy", "teams", params] as const)
+        : ([...base, "hierarchy", "teams"] as const),
     locations: (params?: Record<string, unknown>) =>
-      [...base, "hierarchy", "locations", params] as const,
+      params !== undefined
+        ? ([...base, "hierarchy", "locations", params] as const)
+        : ([...base, "hierarchy", "locations"] as const),
     costCenters: (params?: Record<string, unknown>) =>
-      [...base, "hierarchy", "costCenters", params] as const,
+      params !== undefined
+        ? ([...base, "hierarchy", "costCenters", params] as const)
+        : ([...base, "hierarchy", "costCenters"] as const),
     tree: () => [...base, "hierarchy", "tree"] as const,
   },
 
@@ -1971,10 +1989,12 @@ export const queryKeys = {
 
   directory: {
     all: [...base, "directory"] as const,
+    peopleAll: [...base, "directory", "people"] as const,
     people: (params?: Record<string, unknown>) =>
       [...base, "directory", "people", params] as const,
     person: (organizationPersonId: string) =>
       [...base, "directory", "people", organizationPersonId] as const,
+    workersAll: [...base, "directory", "workers"] as const,
     workers: (params?: Record<string, unknown>) =>
       [...base, "directory", "workers", params] as const,
     worker: (workerId: string) =>

@@ -10,7 +10,6 @@ import {
   useOrgLocations,
   useCreateOrgLocation,
   useUpdateOrgLocation,
-  useDeleteOrgLocation,
 } from "@/hooks/api/org-hierarchy";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
@@ -18,7 +17,6 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   Sheet,
@@ -47,9 +45,12 @@ import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { PlusIcon } from "@animateicons/react/lucide";
 import type { OrgLocation, LocationType } from "@/types/org-hierarchy";
+import { HierarchyArchiveDialog } from "./hierarchy-archive-dialog";
+import { useHierarchyArchive } from "./use-hierarchy-archive";
 import { RequireModule } from "@/components/auth/require-module";
+import { useCan } from "@/hooks/api/access";
 
 const LOCATION_TYPE_ENUM = ["OFFICE", "WAREHOUSE", "STORE", "FACTORY", "REMOTE"] as const;
 
@@ -157,13 +158,18 @@ export function OrgLocationsPage() {
   const { data: locations, isLoading } = useOrgLocations();
   const create = useCreateOrgLocation();
   const update = useUpdateOrgLocation();
-  const remove = useDeleteOrgLocation();
+  const canManage = useCan("settings:organization:manage");
 
   const [showCreate, setShowCreate] = useState(false);
   const [editing, setEditing] = useState<OrgLocation | null>(null);
-  const [deleting, setDeleting] = useState<OrgLocation | null>(null);
   const [showArchived, setShowArchived] = useState(false);
   const [search, setSearch] = useState("");
+  const archiveFlow = useHierarchyArchive<OrgLocation>({
+    archive: (location, callbacks) =>
+      update.mutate({ id: location.id, status: "ARCHIVED" }, callbacks),
+    successMessage: "Location archived",
+    onArchived: () => setShowArchived(true),
+  });
 
   const allLocations = locations ?? [];
   const active = allLocations.filter((l) => l.status !== "ARCHIVED");
@@ -199,7 +205,7 @@ export function OrgLocationsPage() {
     (values: FormValues) => {
       if (!editing) return;
       update.mutate(
-        { id: editing.id, name: values.name, type: values.type, address: values.address || undefined },
+        { id: editing.id, name: values.name, type: values.type, address: values.address || null },
         {
           onSuccess: () => {
             toast.success("Location updated");
@@ -210,22 +216,6 @@ export function OrgLocationsPage() {
       );
     },
     [editing, update],
-  );
-
-  const handleArchive = useCallback(
-    (l: OrgLocation) => {
-      update.mutate(
-        { id: l.id, status: "ARCHIVED" },
-        {
-          onSuccess: () => {
-            toast.success("Location archived");
-            setShowArchived(true);
-          },
-          onError: (err) => toast.error(getErrorMessage(err)),
-        },
-      );
-    },
-    [update],
   );
 
   const handleRestore = useCallback(
@@ -244,17 +234,6 @@ export function OrgLocationsPage() {
     [update],
   );
 
-  const handleDelete = useCallback(() => {
-    if (!deleting) return;
-    remove.mutate(deleting.id, {
-      onSuccess: () => {
-        toast.success("Location deleted");
-        setDeleting(null);
-      },
-      onError: (err) => toast.error(getErrorMessage(err)),
-    });
-  }, [deleting, remove]);
-
   const handleOpenCreate = useCallback(() => setShowCreate(true), []);
   const handleToggleArchived = useCallback(() => setShowArchived((v) => !v), []);
   const handleSearchChange = useCallback((v: string) => setSearch(v), []);
@@ -262,11 +241,9 @@ export function OrgLocationsPage() {
   function handleSearchInputChange(value: string) { handleSearchChange(value); }
 
   function makeRestoreHandler(loc: OrgLocation) { return () => handleRestore(loc); }
-  function makeArchiveHandler(loc: OrgLocation) { return () => handleArchive(loc); }
+  function makeArchiveHandler(loc: OrgLocation) { return () => archiveFlow.requestArchive(loc); }
   function makeSetEditingHandler(loc: OrgLocation) { return () => setEditing(loc); }
-  function makeSetDeletingHandler(loc: OrgLocation) { return () => setDeleting(loc); }
   function handleEditSheetOpenChange(open: boolean) { if (!open) setEditing(null); }
-  function handleDeleteDialogOpenChange(open: boolean) { if (!open) setDeleting(null); }
 
   const columns: DataTableColumn<OrgLocation>[] = [
     {
@@ -314,23 +291,12 @@ export function OrgLocationsPage() {
       key: "actions",
       header: "",
       headerClassName: "w-28",
-      cell: (l) => (
-        <div className="flex items-center gap-1">
+      cell: (l) =>
+        canManage ? <div className="flex items-center gap-1">
           {l.status === "ARCHIVED" ? (
-            <>
-              <Button variant="ghost" size="sm" onClick={makeRestoreHandler(l)} title="Restore">
-                <RotateCcw className="h-4 w-4 text-primary" />
-              </Button>
-              <AnimatedIconButton
-                icon={Trash2Icon}
-                iconSize={16}
-                variant="ghost"
-                size="sm"
-                onClick={makeSetDeletingHandler(l)}
-                title="Delete permanently"
-                className="text-destructive"
-              />
-            </>
+            <Button variant="ghost" size="sm" onClick={makeRestoreHandler(l)} title="Restore">
+              <RotateCcw className="h-4 w-4 text-primary" />
+            </Button>
           ) : (
             <>
               <Button variant="ghost" size="sm" onClick={makeSetEditingHandler(l)} title="Edit">
@@ -341,8 +307,7 @@ export function OrgLocationsPage() {
               </Button>
             </>
           )}
-        </div>
-      ),
+        </div> : null,
     },
   ];
 
@@ -366,7 +331,7 @@ export function OrgLocationsPage() {
       illustrationPreset="companies"
       title="No locations yet"
       description="Create your first location to get started."
-      action={{ label: "Add Location", onClick: handleOpenCreate }}
+      action={canManage ? { label: "Add Location", onClick: handleOpenCreate } : undefined}
     />
   );
 
@@ -386,7 +351,7 @@ export function OrgLocationsPage() {
             <Archive className="h-4 w-4 mr-1.5" />
             {showArchived ? "Show Active" : `Archived (${archived.length})`}
           </Button>
-          <AnimatedIconButton
+          {canManage ? <AnimatedIconButton
             icon={PlusIcon}
             iconSize={16}
             iconClassName="mr-1.5"
@@ -395,7 +360,7 @@ export function OrgLocationsPage() {
             onClick={handleOpenCreate}
           >
             Add Location
-          </AnimatedIconButton>
+          </AnimatedIconButton> : null}
         </div>
       }
       filters={
@@ -419,7 +384,9 @@ export function OrgLocationsPage() {
             <SheetTitle>New Location</SheetTitle>
           </SheetHeader>
           <SheetBody className="px-6 py-5">
-            <LocationForm onSubmit={handleCreate} isPending={create.isPending} />
+            {showCreate && (
+              <LocationForm onSubmit={handleCreate} isPending={create.isPending} />
+            )}
           </SheetBody>
           <div className="shrink-0 px-6 py-4 border-t">
             <div className="grid grid-cols-2 gap-2">
@@ -461,14 +428,14 @@ export function OrgLocationsPage() {
         </SheetContent>
       </Sheet>
 
-      <ConfirmDialog
-        open={!!deleting}
-        onOpenChange={handleDeleteDialogOpenChange}
-        title="Delete Location"
-        description={`Permanently delete "${deleting?.name}"? This cannot be undone.`}
-        onConfirm={handleDelete}
-        isPending={remove.isPending}
-        destructive
+      <HierarchyArchiveDialog
+        open={!!archiveFlow.target}
+        unitName={archiveFlow.target?.name ?? ""}
+        unitLabel="location"
+        isPending={update.isPending}
+        error={archiveFlow.error}
+        onConfirm={archiveFlow.confirmArchive}
+        onOpenChange={archiveFlow.handleOpenChange}
       />
     </PageWrapper>
     </RequireModule>

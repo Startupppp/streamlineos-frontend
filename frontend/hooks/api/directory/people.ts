@@ -17,6 +17,16 @@ export interface UsePeopleParams {
   search?: string;
 }
 
+function isPeoplePage(value: unknown): value is PeoplePage {
+  if (typeof value !== "object" || value === null) return false;
+  if (!("data" in value) || !("pagination" in value)) return false;
+  return (
+    Array.isArray(value.data) &&
+    typeof value.pagination === "object" &&
+    value.pagination !== null
+  );
+}
+
 export function usePerson(
   organizationPersonId: string,
   options?: { enabled?: boolean },
@@ -58,8 +68,12 @@ export function useCreatePerson() {
     mutationKey: ["directory", "people", "create"],
     mutationFn: (input: CreatePersonInput) =>
       apiClient.post<OrganizationPerson>("/directory/people", input),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.directory.all });
+    onSuccess: (created) => {
+      qc.setQueryData(
+        queryKeys.directory.person(created.organizationPersonId),
+        created,
+      );
+      qc.invalidateQueries({ queryKey: queryKeys.directory.peopleAll });
     },
   });
 }
@@ -76,11 +90,31 @@ export function useUpdatePerson() {
         `/directory/people/${organizationPersonId}`,
         input,
       ),
-    onSuccess: (_, variables) => {
-      qc.invalidateQueries({
-        queryKey: queryKeys.directory.person(variables.organizationPersonId),
-      });
-      qc.invalidateQueries({ queryKey: queryKeys.directory.people() });
+    onSuccess: (updated, variables) => {
+      qc.setQueryData<OrganizationPerson>(
+        queryKeys.directory.person(variables.organizationPersonId),
+        (old) => (old ? { ...old, ...updated } : updated),
+      );
+      qc.setQueriesData(
+        { queryKey: queryKeys.directory.peopleAll },
+        (old: unknown) => {
+          if (!isPeoplePage(old)) return old;
+          if (
+            !old.data.some(
+              (p) => p.organizationPersonId === variables.organizationPersonId,
+            )
+          )
+            return old;
+          return {
+            ...old,
+            data: old.data.map((p) =>
+              p.organizationPersonId === variables.organizationPersonId
+                ? { ...p, ...updated }
+                : p,
+            ),
+          };
+        },
+      );
     },
   });
 }
@@ -91,8 +125,38 @@ export function useDeletePerson() {
     mutationKey: ["directory", "people", "delete"],
     mutationFn: (organizationPersonId: string) =>
       apiClient.delete(`/directory/people/${organizationPersonId}`),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.directory.people() });
+    onSuccess: (_, organizationPersonId) => {
+      qc.setQueriesData(
+        { queryKey: queryKeys.directory.peopleAll },
+        (old: unknown) => {
+          if (!isPeoplePage(old)) return old;
+          if (
+            !old.data.some(
+              (p) => p.organizationPersonId === organizationPersonId,
+            )
+          )
+            return old;
+          const total = Math.max(0, old.pagination.total - 1);
+          return {
+            ...old,
+            data: old.data.filter(
+              (p) => p.organizationPersonId !== organizationPersonId,
+            ),
+            pagination: {
+              ...old.pagination,
+              total,
+              totalPages: Math.max(1, Math.ceil(total / old.pagination.limit)),
+            },
+          };
+        },
+      );
+      qc.removeQueries({
+        queryKey: queryKeys.directory.person(organizationPersonId),
+      });
+      qc.invalidateQueries({
+        queryKey: queryKeys.directory.peopleAll,
+        refetchType: "none",
+      });
     },
   });
 }

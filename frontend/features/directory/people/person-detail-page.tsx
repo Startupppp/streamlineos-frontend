@@ -32,14 +32,24 @@ import { useUser } from "@/hooks/api/users";
 import { useCan } from "@/hooks/api/access";
 import { PersonFormDialog } from "./person-form-dialog";
 import { WorkerFormDialog } from "../workers/worker-form-dialog";
+import { UserInviteDialog } from "@/features/users/user-invite-dialog";
 import { UserMembershipSection } from "@/features/users/user-membership-section";
 import { UserModuleAccessSection } from "@/features/users/user-module-access-section";
 import { UserStatusBadge } from "@/features/users/user-status-badge";
 import { formatRoleLabel } from "@/features/users/user-invite-roles";
-import type { OrganizationPerson } from "@/types/directory/people";
+import type {
+  OrganizationPerson,
+  PersonAccountAccess,
+} from "@/types/directory/people";
 import type { Worker, WorkerEngagement } from "@/types/directory/workers";
 import { cn } from "@/lib/utils";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
+import {
+  getInvitationManagementHref,
+  getPersonAccessBadge,
+  getPersonAccessBadgeTone,
+  getPersonAccountAccess,
+} from "./person-account-access";
 
 interface PersonDetailPageProps {
   organizationPersonId: string;
@@ -108,6 +118,46 @@ function PersonTabState({
         {actionButton ? <div className="shrink-0">{actionButton}</div> : null}
       </div>
     </div>
+  );
+}
+
+type InvitedAccountAccess = Extract<
+  PersonAccountAccess,
+  { state: "INVITED" }
+>;
+
+function PersonInvitationTabState({
+  access,
+  surface,
+  canManage,
+}: {
+  access: InvitedAccountAccess;
+  surface: "membership" | "modules";
+  canManage: boolean;
+}) {
+  const expired = access.invitationStatus === "EXPIRED";
+  const role = formatRoleLabel(access.role);
+  const manageHref = getInvitationManagementHref(access);
+  const description =
+    surface === "membership"
+      ? expired
+        ? `The invitation for ${role} access sent to ${access.email} expired on ${formatDate(access.expiresAt)}. Resend or cancel it before sending another invitation.`
+        : `An invitation for ${role} access is awaiting acceptance from ${access.email} and expires on ${formatDate(access.expiresAt)}. They are not a member until they accept.`
+      : expired
+        ? `The invitation for ${access.email} has expired. Resend it before assigning modules. Worker setup remains available separately.`
+        : `Module access can be assigned after ${access.email} accepts the pending invitation. Worker setup remains available separately.`;
+
+  return (
+    <PersonTabState
+      icon={surface === "membership" ? Mail : Boxes}
+      title={expired ? "Invitation expired" : "Invitation pending"}
+      description={description}
+      action={
+        canManage && manageHref
+          ? { label: "Manage invitation", href: manageHref }
+          : undefined
+      }
+    />
   );
 }
 
@@ -188,13 +238,30 @@ function ProfileFields({ person }: { person: OrganizationPerson }) {
   );
 }
 
-function PersonMembershipTab({ person }: { person: OrganizationPerson }) {
+function PersonMembershipTab({
+  person,
+  onRefresh,
+}: {
+  person: OrganizationPerson;
+  onRefresh: () => void;
+}) {
   const canViewMembers = useCan("settings:view");
   const canInvite = useCan("settings:organization:manage");
-  const linkedUserId = person.userId;
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const accountAccess = getPersonAccountAccess(person);
+  const linkedUserId =
+    accountAccess.state === "MEMBER" ? person.userId : null;
   const { data: user, isLoading } = useUser(linkedUserId ?? "", {
     enabled: !!linkedUserId && canViewMembers,
   });
+
+  const handleOpenInvite = useCallback(() => {
+    setInviteOpen(true);
+  }, []);
+
+  const handleInviteOpenChange = useCallback((open: boolean) => {
+    setInviteOpen(open);
+  }, []);
 
   if (!canViewMembers) {
     return (
@@ -206,20 +273,47 @@ function PersonMembershipTab({ person }: { person: OrganizationPerson }) {
     );
   }
 
+  if (accountAccess.state === "INVITED") {
+    return (
+      <PersonInvitationTabState
+        access={accountAccess}
+        surface="membership"
+        canManage={canInvite}
+      />
+    );
+  }
+
+  if (accountAccess.state === "NONE") {
+    return (
+      <>
+        <PersonTabState
+          icon={UserPlus}
+          title="Directory-only person"
+          description="No application account is linked. That is valid for contractors, payees, and other people who do not need StreamlineOS access. Invite them only when they need to sign in."
+          action={
+            canInvite
+              ? { label: "Invite as member", onClick: handleOpenInvite }
+              : undefined
+          }
+        />
+        {inviteOpen ? (
+          <UserInviteDialog
+            open={inviteOpen}
+            onOpenChange={handleInviteOpenChange}
+            defaultEmail={person.workEmail ?? person.personalEmail ?? undefined}
+          />
+        ) : null}
+      </>
+    );
+  }
+
   if (!linkedUserId) {
     return (
       <PersonTabState
-        icon={UserPlus}
-        title="Directory-only person"
-        description="No application account is linked. That is valid for contractors, payees, and other people who do not need StreamlineOS access. Invite them only when they need to sign in."
-        action={
-          canInvite
-            ? {
-                label: "Invite as member",
-                href: "/settings/users?view=invitations&create=1",
-              }
-            : undefined
-        }
+        icon={LockKeyhole}
+        title="Linked account unavailable"
+        description="This person already has an organization membership, so another invitation cannot be sent. Refresh to load the linked account."
+        action={{ label: "Refresh person", onClick: onRefresh }}
       />
     );
   }
@@ -232,8 +326,9 @@ function PersonMembershipTab({ person }: { person: OrganizationPerson }) {
     return (
       <PersonTabState
         icon={LockKeyhole}
-        title="Membership not found"
-        description="The linked account could not be loaded. It may have been removed."
+        title="Linked account unavailable"
+        description="The linked account could not be loaded. Refresh before making any access changes."
+        action={{ label: "Refresh person", onClick: onRefresh }}
       />
     );
   }
@@ -421,13 +516,30 @@ function WorkerSummary({ worker }: { worker: Worker }) {
   );
 }
 
-function PersonModulesTab({ person }: { person: OrganizationPerson }) {
+function PersonModulesTab({
+  person,
+  onRefresh,
+}: {
+  person: OrganizationPerson;
+  onRefresh: () => void;
+}) {
   const canViewMembers = useCan("settings:view");
   const canInvite = useCan("settings:organization:manage");
-  const linkedUserId = person.userId;
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const accountAccess = getPersonAccountAccess(person);
+  const linkedUserId =
+    accountAccess.state === "MEMBER" ? person.userId : null;
   const { data: user, isLoading } = useUser(linkedUserId ?? "", {
     enabled: !!linkedUserId && canViewMembers,
   });
+
+  const handleOpenInvite = useCallback(() => {
+    setInviteOpen(true);
+  }, []);
+
+  const handleInviteOpenChange = useCallback((open: boolean) => {
+    setInviteOpen(open);
+  }, []);
 
   if (!canViewMembers) {
     return (
@@ -439,20 +551,47 @@ function PersonModulesTab({ person }: { person: OrganizationPerson }) {
     );
   }
 
+  if (accountAccess.state === "INVITED") {
+    return (
+      <PersonInvitationTabState
+        access={accountAccess}
+        surface="modules"
+        canManage={canInvite}
+      />
+    );
+  }
+
+  if (accountAccess.state === "NONE") {
+    return (
+      <>
+        <PersonTabState
+          icon={Boxes}
+          title="No module access"
+          description="Modules can only be assigned to members who can sign in. If this person needs application access, invite them as a member first."
+          action={
+            canInvite
+              ? { label: "Invite as member", onClick: handleOpenInvite }
+              : undefined
+          }
+        />
+        {inviteOpen ? (
+          <UserInviteDialog
+            open={inviteOpen}
+            onOpenChange={handleInviteOpenChange}
+            defaultEmail={person.workEmail ?? person.personalEmail ?? undefined}
+          />
+        ) : null}
+      </>
+    );
+  }
+
   if (!linkedUserId) {
     return (
       <PersonTabState
-        icon={Boxes}
-        title="No module access"
-        description="Modules can only be assigned to members who can sign in. If this person needs application access, invite them as a member first."
-        action={
-          canInvite
-            ? {
-                label: "Invite as member",
-                href: "/settings/users?view=invitations&create=1",
-              }
-            : undefined
-        }
+        icon={LockKeyhole}
+        title="Linked account unavailable"
+        description="This person already has an organization membership, so another invitation cannot be sent. Refresh to load the linked account before assigning modules."
+        action={{ label: "Refresh person", onClick: onRefresh }}
       />
     );
   }
@@ -465,8 +604,9 @@ function PersonModulesTab({ person }: { person: OrganizationPerson }) {
     return (
       <PersonTabState
         icon={Boxes}
-        title="Member not found"
-        description="The linked account could not be loaded."
+        title="Linked account unavailable"
+        description="The linked account could not be loaded. Refresh before assigning modules."
+        action={{ label: "Refresh person", onClick: onRefresh }}
       />
     );
   }
@@ -517,7 +657,7 @@ export function PersonDetailPage({
     <PageWrapper
       title={title}
       subtitle={person?.workEmail ?? "Person record"}
-      badge={person ? (person.userId ? "Member linked" : "Directory only") : undefined}
+      badge={person ? getPersonAccessBadge(person) : undefined}
       backHref={directoryBasePath}
       noInternalScroll
       actions={
@@ -573,16 +713,11 @@ export function PersonDetailPage({
                     Added {formatDate(person.createdAt)}
                   </p>
                   <div className="flex flex-wrap gap-1.5 mt-2">
-                    {person.userId ? (
-                      <Badge variant="secondary" className="text-[10px] h-5">
-                        Member linked
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="text-[10px] h-5 gap-1">
-                        <UserPlus className="h-3 w-3" />
-                        Directory only
-                      </Badge>
-                    )}
+                    <SemanticBadge
+                      tone={getPersonAccessBadgeTone(person)}
+                      label={getPersonAccessBadge(person)}
+                      size="xs"
+                    />
                   </div>
                 </div>
               </div>
@@ -599,7 +734,7 @@ export function PersonDetailPage({
               id="membership"
               className={cn(TABS_CONTENT_PAGE_BODY_CLASS, "overflow-y-auto p-4 sm:p-5")}
             >
-              <PersonMembershipTab person={person} />
+              <PersonMembershipTab person={person} onRefresh={handleRetry} />
             </TabsContent>
           ) : null}
 
@@ -617,7 +752,7 @@ export function PersonDetailPage({
               value="modules"
               className={cn(TABS_CONTENT_PAGE_BODY_CLASS, "overflow-y-auto p-4 sm:p-5")}
             >
-              <PersonModulesTab person={person} />
+              <PersonModulesTab person={person} onRefresh={handleRetry} />
             </TabsContent>
           ) : null}
         </Tabs>

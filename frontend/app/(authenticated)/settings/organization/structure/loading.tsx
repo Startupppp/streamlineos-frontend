@@ -33,8 +33,8 @@ export default function OrganizationStructureLoading() {
       subtitle="Set up reporting units once, then reuse them across people, access, payroll, and reporting."
       actions={
         <div className="flex items-center gap-2">
-          <Skeleton className="h-9 w-28" />
-          <Skeleton className="h-9 w-20" />
+          <Skeleton className="h-8 w-28" />
+          <Skeleton className="h-8 w-20" />
         </div>
       }
     >

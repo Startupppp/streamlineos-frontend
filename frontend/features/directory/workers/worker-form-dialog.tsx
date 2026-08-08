@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -20,19 +20,25 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { AppDialog } from "@/components/shared/app-dialog";
 import { MemberPicker } from "@/components/members/member-picker";
 import { useCreateWorker } from "@/hooks/api/directory/workers";
-import { usePeople } from "@/hooks/api/directory/people";
 import { getErrorMessage } from "@/lib/get-error-message";
 
-const workerSchema = z.object({
-  organizationPersonId: z.string().min(1, "Person is required"),
-  workerNumber: z.string().max(50).optional(),
-  isPayee: z.boolean(),
-});
+const workerSchema = z
+  .object({
+    organizationPersonId: z.string().optional(),
+    memberUserId: z.string().optional(),
+    workerNumber: z.string().max(50).optional(),
+    isPayee: z.boolean(),
+  })
+  .refine(
+    (value) => Boolean(value.organizationPersonId || value.memberUserId),
+    { message: "Member is required", path: ["memberUserId"] },
+  );
 
 type WorkerFormValues = z.infer<typeof workerSchema>;
 
 const EMPTY_DEFAULTS: WorkerFormValues = {
   organizationPersonId: "",
+  memberUserId: "",
   workerNumber: "",
   isPayee: false,
 };
@@ -49,32 +55,6 @@ export function WorkerFormDialog({
   defaultOrganizationPersonId,
 }: Props) {
   const createWorker = useCreateWorker();
-  const { data: peoplePage } = usePeople(
-    {
-      page: 1,
-      limit: 100,
-    },
-  );
-
-  const personIdByUserId = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const person of peoplePage?.data ?? []) {
-      if (person.userId) {
-        map.set(person.userId, person.organizationPersonId);
-      }
-    }
-    return map;
-  }, [peoplePage?.data]);
-
-  const userIdByPersonId = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const person of peoplePage?.data ?? []) {
-      if (person.userId) {
-        map.set(person.organizationPersonId, person.userId);
-      }
-    }
-    return map;
-  }, [peoplePage?.data]);
 
   const form = useForm<WorkerFormValues>({
     resolver: zodResolver(workerSchema),
@@ -85,15 +65,19 @@ export function WorkerFormDialog({
     if (!open) return;
     form.reset({
       organizationPersonId: defaultOrganizationPersonId ?? "",
+      memberUserId: "",
       workerNumber: "",
       isPayee: false,
     });
   }, [open, form, defaultOrganizationPersonId]);
 
   function handleSubmit(values: WorkerFormValues) {
+    const subject = values.organizationPersonId
+      ? { organizationPersonId: values.organizationPersonId }
+      : { memberUserId: values.memberUserId! };
     createWorker.mutate(
       {
-        organizationPersonId: values.organizationPersonId,
+        ...subject,
         workerNumber: values.workerNumber || undefined,
         isPayee: values.isPayee,
       },
@@ -141,7 +125,11 @@ export function WorkerFormDialog({
       open={open}
       onOpenChange={onOpenChange}
       title="Add Worker"
-      description="Link an organization person as a worker."
+      description={
+        defaultOrganizationPersonId
+          ? "Add this directory person to workforce processes."
+          : "Select an organization member to create their worker record."
+      }
       footer={footer}
     >
       <Form {...form}>
@@ -154,32 +142,27 @@ export function WorkerFormDialog({
           {!defaultOrganizationPersonId ? (
             <FormField
               control={form.control}
-              name="organizationPersonId"
+              name="memberUserId"
               render={({ field }) => {
                 function handleMemberChange(userId: string | null) {
-                  if (!userId) {
-                    field.onChange("");
-                    return;
-                  }
-                  const personId = personIdByUserId.get(userId);
-                  if (!personId) {
-                    toast.error("This member has no directory person record yet.");
-                    return;
-                  }
-                  field.onChange(personId);
+                  field.onChange(userId ?? "");
                 }
 
                 return (
                   <FormItem>
-                    <FormLabel>Person</FormLabel>
+                    <FormLabel>Organization member</FormLabel>
                     <FormControl>
                       <MemberPicker
-                        value={userIdByPersonId.get(field.value) ?? undefined}
+                        value={field.value || undefined}
                         onChange={handleMemberChange}
-                        placeholder="Search and select a person…"
+                        placeholder="Search and select a member…"
                         disabled={createWorker.isPending}
                       />
                     </FormControl>
+                    <p className="text-xs leading-5 text-muted-foreground">
+                      If this member has no person record yet, StreamlineOS
+                      creates and links it automatically.
+                    </p>
                     <FormMessage />
                   </FormItem>
                 );

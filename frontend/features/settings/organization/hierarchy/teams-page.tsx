@@ -18,7 +18,6 @@ import {
   useOrgDepartments,
   useCreateOrgTeam,
   useUpdateOrgTeam,
-  useDeleteOrgTeam,
 } from "@/hooks/api/org-hierarchy";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
@@ -26,7 +25,6 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   Sheet,
@@ -55,13 +53,17 @@ import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { Textarea } from "@/components/ui/textarea";
 import { UserCombobox } from "@/components/ui/user-combobox";
+import { useOrgMembers } from "@/hooks/api/organization";
 import type { OrgTeam } from "@/types/org-hierarchy";
 import { RequireModule } from "@/components/auth/require-module";
 import { ErrorState } from "@/components/shared/error-state";
 import { useCan } from "@/hooks/api/access";
+import { HierarchyArchiveDialog } from "./hierarchy-archive-dialog";
+import { isAssignableHierarchyParent } from "./hierarchy-option";
+import { useHierarchyArchive } from "./use-hierarchy-archive";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 
 const formSchema = z.object({
@@ -74,9 +76,9 @@ const formSchema = z.object({
   code: z
     .string()
     .trim()
-    .min(2)
-    .max(20)
-    .regex(/^[A-Za-z0-9]+$/, "Only alphanumeric characters"),
+    .min(2, "At least 2 characters")
+    .max(20, "Max 20 characters")
+    .regex(/^[A-Za-z0-9]+$/, "Letters and numbers only"),
   departmentId: z.string().min(1, "Department is required"),
   leadUserId: z.string().optional(),
   description: z.string().trim().max(500).optional(),
@@ -98,12 +100,13 @@ function TeamForm({
 }) {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
+    reValidateMode: "onChange",
     defaultValues: { name: "", code: "", departmentId: "", leadUserId: "", description: "", capacity: "", ...defaultValues },
   });
 
   return (
     <Form {...form}>
-      <form id="team-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form id="team-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
         <FormField
           control={form.control}
           name="name"
@@ -117,7 +120,7 @@ function TeamForm({
             </FormItem>
           )}
         />
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 items-start gap-3">
           <FormField
             control={form.control}
             name="code"
@@ -126,7 +129,7 @@ function TeamForm({
                 field.onChange(e.target.value.toUpperCase());
               }
               return (
-                <FormItem>
+                <FormItem className="min-w-0">
                   <FormLabel>Code</FormLabel>
                   <FormControl>
                     <Input placeholder="FE" {...field} onChange={handleCodeChange} />
@@ -140,7 +143,7 @@ function TeamForm({
             control={form.control}
             name="capacity"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="min-w-0">
                 <FormLabel>Capacity</FormLabel>
                 <FormControl>
                   <Input type="number" min={1} placeholder="Optional" {...field} />
@@ -220,7 +223,6 @@ export function OrgTeamsPage() {
     Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
   const [showCreate, setShowCreate] = useState(false);
   const [editing, setEditing] = useState<OrgTeam | null>(null);
-  const [deleting, setDeleting] = useState<OrgTeam | null>(null);
   const [search, setSearch] = useState(query);
   const debouncedSearch = useDebouncedValue(search, 300);
   const { data: teams, isLoading, isError, error, refetch } = useOrgTeams({
@@ -232,7 +234,6 @@ export function OrgTeamsPage() {
   const { data: deptsData } = useOrgDepartments();
   const create = useCreateOrgTeam();
   const update = useUpdateOrgTeam();
-  const remove = useDeleteOrgTeam();
   const canManage = useCan("settings:organization:manage");
 
   const updateParams = useCallback(
@@ -248,14 +249,26 @@ export function OrgTeamsPage() {
     },
     [pathname, router, searchParams],
   );
+  const archiveFlow = useHierarchyArchive<OrgTeam>({
+    archive: (team, callbacks) =>
+      update.mutate({ id: team.id, status: "ARCHIVED" }, callbacks),
+    successMessage: "Team archived",
+    onArchived: () => updateParams({ status: "archived", page: null }),
+  });
 
   useEffect(() => {
     if (debouncedSearch === query) return;
     updateParams({ search: debouncedSearch || null, page: null });
   }, [debouncedSearch, query, updateParams]);
 
-  const departments = (deptsData?.data ?? []).map((d) => ({ id: d.id, name: d.name }));
+  const { data: membersData } = useOrgMembers(1, 100);
+  const departments = (deptsData?.data ?? [])
+    .filter(isAssignableHierarchyParent)
+    .map((department) => ({ id: department.id, name: department.name }));
   const deptMap = Object.fromEntries(departments.map((d) => [d.id, d.name]));
+  const memberMap = Object.fromEntries(
+    (membersData?.data ?? []).map((m) => [m.userId, m.name ?? m.email]),
+  );
   const displayedTeams = teams?.data ?? [];
 
   const handleCreate = useCallback(
@@ -290,9 +303,9 @@ export function OrgTeamsPage() {
           name: values.name,
           code: values.code.toUpperCase(),
           departmentId: values.departmentId,
-          leadUserId: values.leadUserId || undefined,
-          description: values.description || undefined,
-          capacity: values.capacity ? Number(values.capacity) : undefined,
+          leadUserId: values.leadUserId || null,
+          description: values.description || null,
+          capacity: values.capacity ? Number(values.capacity) : null,
         },
         {
           onSuccess: () => {
@@ -304,22 +317,6 @@ export function OrgTeamsPage() {
       );
     },
     [editing, update],
-  );
-
-  const handleArchive = useCallback(
-    (t: OrgTeam) => {
-      update.mutate(
-        { id: t.id, status: "ARCHIVED" },
-        {
-          onSuccess: () => {
-            toast.success("Team archived");
-            updateParams({ status: "archived", page: null });
-          },
-          onError: (err) => toast.error(getErrorMessage(err)),
-        },
-      );
-    },
-    [update, updateParams],
   );
 
   const handleRestore = useCallback(
@@ -337,17 +334,6 @@ export function OrgTeamsPage() {
     },
     [update, updateParams],
   );
-
-  const handleDelete = useCallback(() => {
-    if (!deleting) return;
-    remove.mutate(deleting.id, {
-      onSuccess: () => {
-        toast.success("Team deleted");
-        setDeleting(null);
-      },
-      onError: (err) => toast.error(getErrorMessage(err)),
-    });
-  }, [deleting, remove]);
 
   const handleOpenCreate = useCallback(() => setShowCreate(true), []);
   const handleToggleArchived = useCallback(() => {
@@ -368,11 +354,9 @@ export function OrgTeamsPage() {
   function handleSearchInputChange(value: string) { handleSearchChange(value); }
 
   function makeRestoreHandler(team: OrgTeam) { return () => handleRestore(team); }
-  function makeArchiveHandler(team: OrgTeam) { return () => handleArchive(team); }
+  function makeArchiveHandler(team: OrgTeam) { return () => archiveFlow.requestArchive(team); }
   function makeSetEditingHandler(team: OrgTeam) { return () => setEditing(team); }
-  function makeSetDeletingHandler(team: OrgTeam) { return () => setDeleting(team); }
   function handleEditSheetOpenChange(open: boolean) { if (!open) setEditing(null); }
-  function handleDeleteDialogOpenChange(open: boolean) { if (!open) setDeleting(null); }
 
   const columns: DataTableColumn<OrgTeam>[] = [
     {
@@ -397,6 +381,25 @@ export function OrgTeamsPage() {
           {t.departmentId ? (deptMap[t.departmentId] ?? "—") : "—"}
         </span>
       ),
+    },
+    {
+      key: "lead",
+      header: "Team Lead",
+      cell: (t) => (
+        <span className="text-muted-foreground">
+          {t.leadUserId ? (memberMap[t.leadUserId] ?? "—") : "—"}
+        </span>
+      ),
+    },
+    {
+      key: "description",
+      header: "Description",
+      cell: (t) => (
+        <span className="text-muted-foreground truncate block max-w-[180px]">
+          {t.description ?? "—"}
+        </span>
+      ),
+      className: "max-w-[180px]",
     },
     {
       key: "capacity",
@@ -434,20 +437,9 @@ export function OrgTeamsPage() {
       cell: (t) => (
         canManage ? <div className="flex items-center gap-1">
           {t.status === "ARCHIVED" ? (
-            <>
-              <Button variant="ghost" size="sm" onClick={makeRestoreHandler(t)} title="Restore">
-                <RotateCcw className="h-4 w-4 text-primary" />
-              </Button>
-              <AnimatedIconButton
-                icon={Trash2Icon}
-                iconSize={16}
-                variant="ghost"
-                size="sm"
-                onClick={makeSetDeletingHandler(t)}
-                title="Delete permanently"
-                className="text-destructive"
-              />
-            </>
+            <Button variant="ghost" size="sm" onClick={makeRestoreHandler(t)} title="Restore">
+              <RotateCcw className="h-4 w-4 text-primary" />
+            </Button>
           ) : (
             <>
               <Button variant="ghost" size="sm" onClick={makeSetEditingHandler(t)} title="Edit">
@@ -534,7 +526,7 @@ export function OrgTeamsPage() {
           isLoading={isLoading}
           emptyState={emptyState}
           rowClassName={(t) => cn(t.status === "ARCHIVED" && "opacity-60")}
-          minWidth="620px"
+          minWidth="900px"
           className="flex-1 min-h-0"
           pagination={{
             mode: "server",
@@ -552,7 +544,9 @@ export function OrgTeamsPage() {
             <SheetTitle>New Team</SheetTitle>
           </SheetHeader>
           <SheetBody className="px-6 py-5">
-            <TeamForm departments={departments} onSubmit={handleCreate} isPending={create.isPending} />
+            {showCreate && (
+              <TeamForm departments={departments} onSubmit={handleCreate} isPending={create.isPending} />
+            )}
           </SheetBody>
           <div className="shrink-0 px-6 py-4 border-t">
             <div className="grid grid-cols-2 gap-2">
@@ -598,14 +592,14 @@ export function OrgTeamsPage() {
         </SheetContent>
       </Sheet>
 
-      <ConfirmDialog
-        open={!!deleting}
-        onOpenChange={handleDeleteDialogOpenChange}
-        title="Delete Team"
-        description={`Permanently delete "${deleting?.name}"? This cannot be undone.`}
-        onConfirm={handleDelete}
-        isPending={remove.isPending}
-        destructive
+      <HierarchyArchiveDialog
+        open={!!archiveFlow.target}
+        unitName={archiveFlow.target?.name ?? ""}
+        unitLabel="team"
+        isPending={update.isPending}
+        error={archiveFlow.error}
+        onConfirm={archiveFlow.confirmArchive}
+        onOpenChange={archiveFlow.handleOpenChange}
       />
     </PageWrapper>
     </RequireModule>

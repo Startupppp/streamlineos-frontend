@@ -1,8 +1,21 @@
+export type PersonAccountAccess =
+  | { state: "MEMBER" }
+  | {
+      state: "INVITED";
+      invitationId: string;
+      invitationStatus: "PENDING" | "EXPIRED";
+      email: string;
+      role: string;
+      expiresAt: string;
+    }
+  | { state: "NONE" };
+
 export interface OrganizationPerson {
   organizationPersonId: string;
   organizationId: string;
   userId: string | null;
   organizationMembershipId: number | null;
+  accountAccess?: PersonAccountAccess;
   firstName: string;
   lastName: string;
   displayName: string | null;

@@ -23,6 +23,7 @@ import { NOTIFICATIONS_PERMISSIONS } from "./notifications";
 import { ACCOUNTING_PERMISSIONS } from "./accounting";
 import { PAYROLL_PERMISSIONS } from "./payroll";
 import { OWNERSHIP_PERMISSIONS } from "./ownership";
+import { DIRECTORY_PERMISSIONS } from "./directory";
 
 const permissionEntries = [
   ...HR_PERMISSIONS,
@@ -37,6 +38,7 @@ const permissionEntries = [
   ...ACCOUNTING_PERMISSIONS,
   ...PAYROLL_PERMISSIONS,
   ...OWNERSHIP_PERMISSIONS,
+  ...DIRECTORY_PERMISSIONS,
   ...AUDIT_LOG_PERMISSIONS,
   ...BILLING_PERMISSIONS,
   ...BRANCH_PERMISSIONS,

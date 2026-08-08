@@ -164,7 +164,7 @@ function RevokeGrantAction({
 
   return (
     <AlertDialogAction
-      className="bg-destructive text-destructive-foreground"
+      variant="destructive"
       onClick={handleConfirm}
     >
       Revoke

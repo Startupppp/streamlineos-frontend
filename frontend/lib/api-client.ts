@@ -232,8 +232,19 @@ async function parseResponse<T>(res: Response): Promise<T> {
       } else if (typeof body?.error === "string" && body.error)
         message = body.error;
       if (typeof body?.code === "string") code = body.code;
-      const { message: _m, error: _e, code: _c, statusCode: _s, success: _su, ...rest } = body;
-      if (Object.keys(rest).length > 0) details = rest;
+      if ("details" in body) {
+        details = body.details;
+      } else {
+        const {
+          message: _m,
+          error: _e,
+          code: _c,
+          statusCode: _s,
+          success: _su,
+          ...rest
+        } = body;
+        if (Object.keys(rest).length > 0) details = rest;
+      }
     } catch {}
     throw new ApiError(message, res.status, code, details);
   }

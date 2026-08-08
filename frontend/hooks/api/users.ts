@@ -1,10 +1,16 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { UseQueryOptions } from "@tanstack/react-query";
+import type { QueryClient, UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+
+function invalidatePersonAccountAccess(queryClient: QueryClient): void {
+  void queryClient.invalidateQueries({
+    queryKey: queryKeys.directory.peopleAll,
+  });
+}
 
 interface UserListParams {
   page?: number;
@@ -293,6 +299,7 @@ export const useInviteUser = () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.invitations() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.stats() });
+      invalidatePersonAccountAccess(queryClient);
     },
   });
 };
@@ -314,6 +321,7 @@ export const useBulkInviteUsers = () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.invitations() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.stats() });
+      invalidatePersonAccountAccess(queryClient);
     },
   });
 };
@@ -421,6 +429,7 @@ export const useResendInvite = () => {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.invitations() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.stats() });
+      invalidatePersonAccountAccess(queryClient);
     },
   });
 };
@@ -436,6 +445,7 @@ export const useChangeInvitationRole = () => {
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.invitations() });
+      invalidatePersonAccountAccess(queryClient);
     },
   });
 };
@@ -449,6 +459,7 @@ export const useCancelInvitation = () => {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.invitations() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.stats() });
+      invalidatePersonAccountAccess(queryClient);
     },
   });
 };

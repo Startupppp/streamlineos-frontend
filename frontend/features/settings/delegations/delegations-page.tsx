@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/tabs";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { toast } from "sonner";
@@ -43,23 +44,23 @@ export function DelegationsPage() {
   );
 
   const { data: received, isLoading: loadingReceived } = useQuery<Delegation[]>({
-    queryKey: ["delegations", "received"],
+    queryKey: queryKeys.delegations.received(),
     queryFn: () => apiClient.get<Delegation[]>("/access/delegations"),
     staleTime: 60_000,
   });
 
   const { data: given, isLoading: loadingGiven } = useQuery<Delegation[]>({
-    queryKey: ["delegations", "given"],
+    queryKey: queryKeys.delegations.given(),
     queryFn: () => apiClient.get<Delegation[]>("/access/delegations/given"),
     staleTime: 60_000,
   });
 
   const revokeMutation = useMutation({
-    mutationKey: ["delegations", "revoke"],
+    mutationKey: [...queryKeys.delegations.all, "revoke"],
     mutationFn: (id: string) => apiClient.delete(`/access/delegations/${id}`),
     onSuccess: () => {
       toast.success("Delegation revoked");
-      void queryClient.invalidateQueries({ queryKey: ["delegations"] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.delegations.all });
       setRevoking(null);
     },
     onError: (error) => {
@@ -81,7 +82,7 @@ export function DelegationsPage() {
 
   const handleGrantSuccess = useCallback(() => {
     setSheetOpen(false);
-    void queryClient.invalidateQueries({ queryKey: ["delegations"] });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.delegations.all });
   }, [queryClient]);
 
   const matchesSearch = useCallback(

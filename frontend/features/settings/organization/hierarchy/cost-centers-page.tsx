@@ -10,14 +10,12 @@ import {
   useOrgCostCenters,
   useCreateOrgCostCenter,
   useUpdateOrgCostCenter,
-  useDeleteOrgCostCenter,
 } from "@/hooks/api/org-hierarchy";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   Sheet,
@@ -39,11 +37,14 @@ import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { Textarea } from "@/components/ui/textarea";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import type { OrgCostCenter } from "@/types/org-hierarchy";
+import { HierarchyArchiveDialog } from "./hierarchy-archive-dialog";
+import { useHierarchyArchive } from "./use-hierarchy-archive";
 import { RequireModule } from "@/components/auth/require-module";
+import { useCan } from "@/hooks/api/access";
 
 const formSchema = z.object({
   code: z
@@ -135,13 +136,18 @@ export function OrgCostCentersPage() {
   const { data: costCenters, isLoading } = useOrgCostCenters();
   const create = useCreateOrgCostCenter();
   const update = useUpdateOrgCostCenter();
-  const remove = useDeleteOrgCostCenter();
+  const canManage = useCan("settings:organization:manage");
 
   const [showCreate, setShowCreate] = useState(false);
   const [editing, setEditing] = useState<OrgCostCenter | null>(null);
-  const [deleting, setDeleting] = useState<OrgCostCenter | null>(null);
   const [showArchived, setShowArchived] = useState(false);
   const [search, setSearch] = useState("");
+  const archiveFlow = useHierarchyArchive<OrgCostCenter>({
+    archive: (costCenter, callbacks) =>
+      update.mutate({ id: costCenter.id, status: "ARCHIVED" }, callbacks),
+    successMessage: "Cost center archived",
+    onArchived: () => setShowArchived(true),
+  });
 
   const allCostCenters = costCenters ?? [];
   const active = allCostCenters.filter((c) => c.status !== "ARCHIVED");
@@ -190,22 +196,6 @@ export function OrgCostCentersPage() {
     [editing, update],
   );
 
-  const handleArchive = useCallback(
-    (c: OrgCostCenter) => {
-      update.mutate(
-        { id: c.id, status: "ARCHIVED" },
-        {
-          onSuccess: () => {
-            toast.success("Cost center archived");
-            setShowArchived(true);
-          },
-          onError: (err) => toast.error(getErrorMessage(err)),
-        },
-      );
-    },
-    [update],
-  );
-
   const handleRestore = useCallback(
     (c: OrgCostCenter) => {
       update.mutate(
@@ -222,17 +212,6 @@ export function OrgCostCentersPage() {
     [update],
   );
 
-  const handleDelete = useCallback(() => {
-    if (!deleting) return;
-    remove.mutate(deleting.id, {
-      onSuccess: () => {
-        toast.success("Cost center deleted");
-        setDeleting(null);
-      },
-      onError: (err) => toast.error(getErrorMessage(err)),
-    });
-  }, [deleting, remove]);
-
   const handleOpenCreate = useCallback(() => setShowCreate(true), []);
   const handleToggleArchived = useCallback(() => setShowArchived((v) => !v), []);
   const handleSearchChange = useCallback((v: string) => setSearch(v), []);
@@ -240,11 +219,9 @@ export function OrgCostCentersPage() {
   function handleSearchInputChange(value: string) { handleSearchChange(value); }
 
   function makeRestoreHandler(cc: OrgCostCenter) { return () => handleRestore(cc); }
-  function makeArchiveHandler(cc: OrgCostCenter) { return () => handleArchive(cc); }
+  function makeArchiveHandler(cc: OrgCostCenter) { return () => archiveFlow.requestArchive(cc); }
   function makeSetEditingHandler(cc: OrgCostCenter) { return () => setEditing(cc); }
-  function makeSetDeletingHandler(cc: OrgCostCenter) { return () => setDeleting(cc); }
   function handleEditSheetOpenChange(open: boolean) { if (!open) setEditing(null); }
-  function handleDeleteDialogOpenChange(open: boolean) { if (!open) setDeleting(null); }
 
   const columns: DataTableColumn<OrgCostCenter>[] = [
     {
@@ -294,23 +271,12 @@ export function OrgCostCentersPage() {
       key: "actions",
       header: "",
       headerClassName: "w-28",
-      cell: (c) => (
-        <div className="flex items-center gap-1">
+      cell: (c) =>
+        canManage ? <div className="flex items-center gap-1">
           {c.status === "ARCHIVED" ? (
-            <>
-              <Button variant="ghost" size="sm" onClick={makeRestoreHandler(c)} title="Restore">
-                <RotateCcw className="h-4 w-4 text-primary" />
-              </Button>
-              <AnimatedIconButton
-                icon={Trash2Icon}
-                iconSize={16}
-                variant="ghost"
-                size="sm"
-                onClick={makeSetDeletingHandler(c)}
-                title="Delete permanently"
-                className="text-destructive"
-              />
-            </>
+            <Button variant="ghost" size="sm" onClick={makeRestoreHandler(c)} title="Restore">
+              <RotateCcw className="h-4 w-4 text-primary" />
+            </Button>
           ) : (
             <>
               <Button variant="ghost" size="sm" onClick={makeSetEditingHandler(c)} title="Edit">
@@ -321,8 +287,7 @@ export function OrgCostCentersPage() {
               </Button>
             </>
           )}
-        </div>
-      ),
+        </div> : null,
     },
   ];
 
@@ -346,7 +311,7 @@ export function OrgCostCentersPage() {
       illustrationPreset="payroll"
       title="No cost centers yet"
       description="Create your first cost center to get started."
-      action={{ label: "Add Cost Center", onClick: handleOpenCreate }}
+      action={canManage ? { label: "Add Cost Center", onClick: handleOpenCreate } : undefined}
     />
   );
 
@@ -366,7 +331,7 @@ export function OrgCostCentersPage() {
             <Archive className="h-4 w-4 mr-1.5" />
             {showArchived ? "Show Active" : `Archived (${archived.length})`}
           </Button>
-          <AnimatedIconButton
+          {canManage ? <AnimatedIconButton
             icon={PlusIcon}
             iconSize={16}
             iconClassName="mr-1.5"
@@ -375,7 +340,7 @@ export function OrgCostCentersPage() {
             onClick={handleOpenCreate}
           >
             Add Cost Center
-          </AnimatedIconButton>
+          </AnimatedIconButton> : null}
         </div>
       }
       filters={
@@ -441,14 +406,14 @@ export function OrgCostCentersPage() {
         </SheetContent>
       </Sheet>
 
-      <ConfirmDialog
-        open={!!deleting}
-        onOpenChange={handleDeleteDialogOpenChange}
-        title="Delete Cost Center"
-        description={`Permanently delete "${deleting?.name}"? This cannot be undone.`}
-        onConfirm={handleDelete}
-        isPending={remove.isPending}
-        destructive
+      <HierarchyArchiveDialog
+        open={!!archiveFlow.target}
+        unitName={archiveFlow.target?.name ?? ""}
+        unitLabel="cost center"
+        isPending={update.isPending}
+        error={archiveFlow.error}
+        onConfirm={archiveFlow.confirmArchive}
+        onOpenChange={archiveFlow.handleOpenChange}
       />
     </PageWrapper>
     </RequireModule>

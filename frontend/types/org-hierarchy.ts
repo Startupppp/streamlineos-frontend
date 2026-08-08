@@ -4,6 +4,7 @@ export type LocationType = "OFFICE" | "WAREHOUSE" | "STORE" | "FACTORY" | "REMOT
 export interface OrgBusinessUnit {
   id: string;
   orgId: string;
+  parentId: string | null;
   name: string;
   code: string;
   description: string | null;

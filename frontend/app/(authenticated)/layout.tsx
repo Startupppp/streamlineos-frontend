@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { cookies, headers } from "next/headers";
 import { requireSession } from "../../lib/rbac/require-permission";
+import { getServerAccess } from "../../lib/rbac/get-server-access";
 import { resolveWizardGate } from "../../lib/wizard-gate";
 import { DashboardShell } from "../../components/layout/dashboard-shell";
 import { FeedbucketEmbed } from "../../components/feedbucket/feedbucket-embed";
@@ -20,6 +21,16 @@ export default async function DashboardLayout({
 
   const gate = resolveWizardGate(session, cookieStore);
   if (gate) redirect(gate);
+
+  const pathname = requestHeaders.get("x-pathname") ?? "";
+  const isSettingsRoute =
+    pathname === "/settings" || pathname.startsWith("/settings/");
+  if (!isSettingsRoute) {
+    const { mfa } = await getServerAccess();
+    if (mfa?.enforced && !mfa.satisfied) {
+      redirect("/settings?tab=security&mfa=required");
+    }
+  }
 
   const defaultCollapsed =
     cookieStore.get("sidebar-collapsed")?.value === "true";

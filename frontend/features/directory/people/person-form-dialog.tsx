@@ -180,8 +180,9 @@ export function PersonFormDialog({ open, onOpenChange, mode, defaultValues }: Pr
         >
           {mode === "create" ? (
             <div className="rounded-lg border border-border bg-muted/40 px-3 py-2.5 text-xs leading-relaxed text-muted-foreground">
-              This creates a directory record only. It does not send an
-              invitation, create a login, or grant application access.
+              This does not send an invitation or grant access. If the work
+              email already belongs to an organization member, their existing
+              account is linked automatically.
             </div>
           ) : null}
           <div className="grid grid-cols-2 gap-3">

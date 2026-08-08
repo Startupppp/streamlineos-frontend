@@ -10,14 +10,12 @@ import {
   useBusinessUnits,
   useCreateBusinessUnit,
   useUpdateBusinessUnit,
-  useDeleteBusinessUnit,
 } from "@/hooks/api/org-hierarchy";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   Sheet,
@@ -39,11 +37,14 @@ import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { Textarea } from "@/components/ui/textarea";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import type { OrgBusinessUnit } from "@/types/org-hierarchy";
+import { HierarchyArchiveDialog } from "./hierarchy-archive-dialog";
+import { useHierarchyArchive } from "./use-hierarchy-archive";
 import { RequireModule } from "@/components/auth/require-module";
+import { useCan } from "@/hooks/api/access";
 
 const formSchema = z.object({
   name: z
@@ -148,13 +149,18 @@ export function BusinessUnitsPage() {
   const { data: units, isLoading } = useBusinessUnits();
   const create = useCreateBusinessUnit();
   const update = useUpdateBusinessUnit();
-  const remove = useDeleteBusinessUnit();
+  const canManage = useCan("settings:organization:manage");
 
   const [showCreate, setShowCreate] = useState(false);
   const [editing, setEditing] = useState<OrgBusinessUnit | null>(null);
-  const [deleting, setDeleting] = useState<OrgBusinessUnit | null>(null);
   const [showArchived, setShowArchived] = useState(false);
   const [search, setSearch] = useState("");
+  const archiveFlow = useHierarchyArchive<OrgBusinessUnit>({
+    archive: (unit, callbacks) =>
+      update.mutate({ id: unit.id, status: "ARCHIVED" }, callbacks),
+    successMessage: "Business unit archived",
+    onArchived: () => setShowArchived(true),
+  });
 
   const allUnits = units?.data ?? [];
   const active = allUnits.filter(
@@ -206,22 +212,6 @@ export function BusinessUnitsPage() {
     [editing, update],
   );
 
-  const handleArchive = useCallback(
-    (u: OrgBusinessUnit) => {
-      update.mutate(
-        { id: u.id, status: "ARCHIVED" },
-        {
-          onSuccess: () => {
-            toast.success("Business unit archived");
-            setShowArchived(true);
-          },
-          onError: (err) => toast.error(getErrorMessage(err)),
-        },
-      );
-    },
-    [update],
-  );
-
   const handleRestore = useCallback(
     (u: OrgBusinessUnit) => {
       update.mutate(
@@ -238,17 +228,6 @@ export function BusinessUnitsPage() {
     [update],
   );
 
-  const handleDelete = useCallback(() => {
-    if (!deleting) return;
-    remove.mutate(deleting.id, {
-      onSuccess: () => {
-        toast.success("Business unit deleted");
-        setDeleting(null);
-      },
-      onError: (err) => toast.error(getErrorMessage(err)),
-    });
-  }, [deleting, remove]);
-
   const handleOpenCreate = useCallback(() => setShowCreate(true), []);
   const handleToggleArchived = useCallback(
     () => setShowArchived((v) => !v),
@@ -264,19 +243,13 @@ export function BusinessUnitsPage() {
     return () => handleRestore(unit);
   }
   function makeArchiveHandler(unit: OrgBusinessUnit) {
-    return () => handleArchive(unit);
+    return () => archiveFlow.requestArchive(unit);
   }
   function makeSetEditingHandler(unit: OrgBusinessUnit) {
     return () => setEditing(unit);
   }
-  function makeSetDeletingHandler(unit: OrgBusinessUnit) {
-    return () => setDeleting(unit);
-  }
   function handleEditSheetOpenChange(open: boolean) {
     if (!open) setEditing(null);
-  }
-  function handleDeleteDialogOpenChange(open: boolean) {
-    if (!open) setDeleting(null);
   }
 
   const columns: DataTableColumn<OrgBusinessUnit>[] = [
@@ -322,28 +295,17 @@ export function BusinessUnitsPage() {
       key: "actions",
       header: "",
       headerClassName: "w-28",
-      cell: (u) => (
-        <div className="flex items-center gap-1">
+      cell: (u) =>
+        canManage ? <div className="flex items-center gap-1">
           {u.status === "ARCHIVED" ? (
-            <>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={makeRestoreHandler(u)}
-                title="Restore"
-              >
-                <RotateCcw className="h-4 w-4 text-primary" />
-              </Button>
-              <AnimatedIconButton
-                icon={Trash2Icon}
-                iconSize={16}
-                variant="ghost"
-                size="sm"
-                onClick={makeSetDeletingHandler(u)}
-                title="Delete permanently"
-                className="text-destructive"
-              />
-            </>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={makeRestoreHandler(u)}
+              title="Restore"
+            >
+              <RotateCcw className="h-4 w-4 text-primary" />
+            </Button>
           ) : (
             <>
               <Button
@@ -364,8 +326,7 @@ export function BusinessUnitsPage() {
               </Button>
             </>
           )}
-        </div>
-      ),
+        </div> : null,
     },
   ];
 
@@ -389,7 +350,7 @@ export function BusinessUnitsPage() {
       illustrationPreset="companies"
       title="No business units yet"
       description="Create your first business unit to get started."
-      action={{ label: "Add Business Unit", onClick: handleOpenCreate }}
+      action={canManage ? { label: "Add Business Unit", onClick: handleOpenCreate } : undefined}
     />
   );
 
@@ -409,7 +370,7 @@ export function BusinessUnitsPage() {
               <Archive className="h-4 w-4 mr-1.5" />
               {showArchived ? "Show Active" : `Archived (${archived.length})`}
             </Button>
-            <AnimatedIconButton
+            {canManage ? <AnimatedIconButton
               icon={PlusIcon}
               iconSize={16}
               iconClassName="mr-1.5"
@@ -418,7 +379,7 @@ export function BusinessUnitsPage() {
               onClick={handleOpenCreate}
             >
               Add Business Unit
-            </AnimatedIconButton>
+            </AnimatedIconButton> : null}
           </div>
         }
         filters={
@@ -510,14 +471,14 @@ export function BusinessUnitsPage() {
           </SheetContent>
         </Sheet>
 
-        <ConfirmDialog
-          open={!!deleting}
-          onOpenChange={handleDeleteDialogOpenChange}
-          title="Delete Business Unit"
-          description={`Permanently delete "${deleting?.name}"? This cannot be undone.`}
-          onConfirm={handleDelete}
-          isPending={remove.isPending}
-          destructive
+        <HierarchyArchiveDialog
+          open={!!archiveFlow.target}
+          unitName={archiveFlow.target?.name ?? ""}
+          unitLabel="business unit"
+          isPending={update.isPending}
+          error={archiveFlow.error}
+          onConfirm={archiveFlow.confirmArchive}
+          onOpenChange={archiveFlow.handleOpenChange}
         />
       </PageWrapper>
     </RequireModule>

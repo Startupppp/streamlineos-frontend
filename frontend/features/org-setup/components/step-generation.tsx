@@ -209,6 +209,7 @@ export function StepGeneration({
     if (!orgCreatedResult || isContinuing) return;
     setIsContinuing(true);
     const orgResult = orgCreatedResult;
+    onCompletionStarted();
     try {
       clearBackendTokenCache();
       clearAll(session?.user?.id ?? "");

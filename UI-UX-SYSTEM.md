@@ -432,6 +432,12 @@ interface DataTableColumn<T> {
 
 `SheetContent` **always** gets `p-0` — inner zones own their padding. `min-h-0` on the body is mandatory or the flex chain overflows. Three or more footer buttons use `grid-flow-col auto-cols-fr`; buttons never hug.
 
+### Lifecycle confirmations
+
+- Organization hierarchy records are archived and restored; they are never permanently deleted from the UI. All six hierarchy pages use the shared `HierarchyArchiveDialog` built on `ConfirmDialog`, with clear reversible-impact copy rather than irreversible-delete language.
+- A failed archive must not dismiss its confirmation. Dependency conflicts switch the open dialog to a blocked state that lists each dependency and its count, explains how to resolve it, hides the archive action, and states that no data changed.
+- Parent selectors never offer archived, disabled, or retired units for new assignments. After create, edit, archive, or restore, invalidate the shared hierarchy query prefix so the list, overview, chart, and dependent selectors update together.
+
 ### Empty states
 
 `<EmptyState>` (`components/ui/empty-state.tsx`), always filling available height (`flex-1 min-h-[40vh]`, or `min-h-[60vh]` full-page).

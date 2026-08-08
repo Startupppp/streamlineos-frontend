@@ -11,14 +11,12 @@ import {
   useOrgBranches,
   useCreateOrgDepartment,
   useUpdateOrgDepartment,
-  useDeleteOrgDepartment,
 } from "@/hooks/api/org-hierarchy";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
@@ -48,11 +46,16 @@ import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { Textarea } from "@/components/ui/textarea";
 import { UserCombobox } from "@/components/ui/user-combobox";
+import { useOrgMembers } from "@/hooks/api/organization";
 import type { OrgDepartment } from "@/types/org-hierarchy";
 import { RequireModule } from "@/components/auth/require-module";
+import { HierarchyArchiveDialog } from "./hierarchy-archive-dialog";
+import { isAssignableHierarchyParent } from "./hierarchy-option";
+import { useHierarchyArchive } from "./use-hierarchy-archive";
+import { useCan } from "@/hooks/api/access";
 
 const NO_BRANCH = "none";
 
@@ -187,18 +190,29 @@ function DeptForm({
 export function OrgDepartmentsPage() {
   const { data: depts, isLoading } = useOrgDepartments();
   const { data: branchesData } = useOrgBranches();
+  const { data: membersData } = useOrgMembers(1, 100);
   const create = useCreateOrgDepartment();
   const update = useUpdateOrgDepartment();
-  const remove = useDeleteOrgDepartment();
+  const canManage = useCan("settings:organization:manage");
 
   const [showCreate, setShowCreate] = useState(false);
   const [editing, setEditing] = useState<OrgDepartment | null>(null);
-  const [deleting, setDeleting] = useState<OrgDepartment | null>(null);
   const [showArchived, setShowArchived] = useState(false);
   const [search, setSearch] = useState("");
+  const archiveFlow = useHierarchyArchive<OrgDepartment>({
+    archive: (department, callbacks) =>
+      update.mutate({ id: department.id, status: "ARCHIVED" }, callbacks),
+    successMessage: "Department archived",
+    onArchived: () => setShowArchived(true),
+  });
 
-  const branches = (branchesData?.data ?? []).map((b) => ({ id: b.id, name: b.name }));
+  const branches = (branchesData?.data ?? [])
+    .filter(isAssignableHierarchyParent)
+    .map((branch) => ({ id: branch.id, name: branch.name }));
   const branchMap = Object.fromEntries(branches.map((b) => [b.id, b.name]));
+  const memberMap = Object.fromEntries(
+    (membersData?.data ?? []).map((m) => [m.userId, m.name ?? m.email]),
+  );
   const allDepts = depts?.data ?? [];
   const active = allDepts.filter((d) => d.status !== "ARCHIVED" && !d.deletedAt);
   const archived = allDepts.filter((d) => d.status === "ARCHIVED" && !d.deletedAt);
@@ -243,9 +257,9 @@ export function OrgDepartmentsPage() {
           id: editing.id,
           name: values.name,
           code: values.code.toUpperCase(),
-          branchId: values.branchId === NO_BRANCH ? undefined : values.branchId,
-          headUserId: values.headUserId || undefined,
-          description: values.description || undefined,
+          branchId: values.branchId === NO_BRANCH ? null : values.branchId,
+          headUserId: values.headUserId || null,
+          description: values.description || null,
         },
         {
           onSuccess: () => {
@@ -257,22 +271,6 @@ export function OrgDepartmentsPage() {
       );
     },
     [editing, update],
-  );
-
-  const handleArchive = useCallback(
-    (d: OrgDepartment) => {
-      update.mutate(
-        { id: d.id, status: "ARCHIVED" },
-        {
-          onSuccess: () => {
-            toast.success("Department archived");
-            setShowArchived(true);
-          },
-          onError: (err) => toast.error(getErrorMessage(err)),
-        },
-      );
-    },
-    [update],
   );
 
   const handleRestore = useCallback(
@@ -291,17 +289,6 @@ export function OrgDepartmentsPage() {
     [update],
   );
 
-  const handleDelete = useCallback(() => {
-    if (!deleting) return;
-    remove.mutate(deleting.id, {
-      onSuccess: () => {
-        toast.success("Department deleted");
-        setDeleting(null);
-      },
-      onError: (err) => toast.error(getErrorMessage(err)),
-    });
-  }, [deleting, remove]);
-
   const handleOpenCreate = useCallback(() => setShowCreate(true), []);
   const handleToggleArchived = useCallback(() => setShowArchived((v) => !v), []);
   const handleSearchChange = useCallback((v: string) => setSearch(v), []);
@@ -309,11 +296,9 @@ export function OrgDepartmentsPage() {
   function handleSearchInputChange(value: string) { handleSearchChange(value); }
 
   function makeRestoreHandler(dept: OrgDepartment) { return () => handleRestore(dept); }
-  function makeArchiveHandler(dept: OrgDepartment) { return () => handleArchive(dept); }
+  function makeArchiveHandler(dept: OrgDepartment) { return () => archiveFlow.requestArchive(dept); }
   function makeSetEditingHandler(dept: OrgDepartment) { return () => setEditing(dept); }
-  function makeSetDeletingHandler(dept: OrgDepartment) { return () => setDeleting(dept); }
   function handleEditSheetOpenChange(open: boolean) { if (!open) setEditing(null); }
-  function handleDeleteDialogOpenChange(open: boolean) { if (!open) setDeleting(null); }
 
   const columns: DataTableColumn<OrgDepartment>[] = [
     {
@@ -340,6 +325,25 @@ export function OrgDepartmentsPage() {
       ),
     },
     {
+      key: "head",
+      header: "Head",
+      cell: (d) => (
+        <span className="text-muted-foreground">
+          {d.headUserId ? (memberMap[d.headUserId] ?? "—") : "—"}
+        </span>
+      ),
+    },
+    {
+      key: "description",
+      header: "Description",
+      cell: (d) => (
+        <span className="text-muted-foreground truncate block max-w-[200px]">
+          {d.description ?? "—"}
+        </span>
+      ),
+      className: "max-w-[200px]",
+    },
+    {
       key: "status",
       header: "Status",
       cell: (d) => (
@@ -362,23 +366,12 @@ export function OrgDepartmentsPage() {
       key: "actions",
       header: "",
       headerClassName: "w-28",
-      cell: (d) => (
-        <div className="flex items-center gap-1">
+      cell: (d) =>
+        canManage ? <div className="flex items-center gap-1">
           {d.status === "ARCHIVED" ? (
-            <>
-              <Button variant="ghost" size="sm" onClick={makeRestoreHandler(d)} title="Restore">
-                <RotateCcw className="h-4 w-4 text-primary" />
-              </Button>
-              <AnimatedIconButton
-                icon={Trash2Icon}
-                iconSize={16}
-                variant="ghost"
-                size="sm"
-                onClick={makeSetDeletingHandler(d)}
-                title="Delete permanently"
-                className="text-destructive"
-              />
-            </>
+            <Button variant="ghost" size="sm" onClick={makeRestoreHandler(d)} title="Restore">
+              <RotateCcw className="h-4 w-4 text-primary" />
+            </Button>
           ) : (
             <>
               <Button variant="ghost" size="sm" onClick={makeSetEditingHandler(d)} title="Edit">
@@ -389,8 +382,7 @@ export function OrgDepartmentsPage() {
               </Button>
             </>
           )}
-        </div>
-      ),
+        </div> : null,
     },
   ];
 
@@ -414,7 +406,7 @@ export function OrgDepartmentsPage() {
       illustrationPreset="team"
       title="No departments yet"
       description="Create your first department to get started."
-      action={{ label: "Add Department", onClick: handleOpenCreate }}
+      action={canManage ? { label: "Add Department", onClick: handleOpenCreate } : undefined}
     />
   );
 
@@ -434,7 +426,7 @@ export function OrgDepartmentsPage() {
             <Archive className="h-4 w-4 mr-1.5" />
             {showArchived ? "Show Active" : "Archived"}
           </Button>
-          <AnimatedIconButton
+          {canManage ? <AnimatedIconButton
             icon={PlusIcon}
             iconSize={16}
             iconClassName="mr-1.5"
@@ -443,7 +435,7 @@ export function OrgDepartmentsPage() {
             onClick={handleOpenCreate}
           >
             Add Department
-          </AnimatedIconButton>
+          </AnimatedIconButton> : null}
         </div>
       }
       filters={
@@ -457,7 +449,7 @@ export function OrgDepartmentsPage() {
         isLoading={isLoading}
         emptyState={emptyState}
         rowClassName={(d) => cn(d.status === "ARCHIVED" && "opacity-60")}
-        minWidth="580px"
+        minWidth="820px"
         className="flex-1 min-h-0"
       />
 
@@ -467,7 +459,9 @@ export function OrgDepartmentsPage() {
             <SheetTitle>New Department</SheetTitle>
           </SheetHeader>
           <SheetBody className="px-6 py-5">
-            <DeptForm branches={branches} onSubmit={handleCreate} isPending={create.isPending} />
+            {showCreate && (
+              <DeptForm branches={branches} onSubmit={handleCreate} isPending={create.isPending} />
+            )}
           </SheetBody>
           <div className="shrink-0 px-6 py-4 border-t">
             <div className="grid grid-cols-2 gap-2">
@@ -512,14 +506,14 @@ export function OrgDepartmentsPage() {
         </SheetContent>
       </Sheet>
 
-      <ConfirmDialog
-        open={!!deleting}
-        onOpenChange={handleDeleteDialogOpenChange}
-        title="Delete Department"
-        description={`Permanently delete "${deleting?.name}"? This cannot be undone.`}
-        onConfirm={handleDelete}
-        isPending={remove.isPending}
-        destructive
+      <HierarchyArchiveDialog
+        open={!!archiveFlow.target}
+        unitName={archiveFlow.target?.name ?? ""}
+        unitLabel="department"
+        isPending={update.isPending}
+        error={archiveFlow.error}
+        onConfirm={archiveFlow.confirmArchive}
+        onOpenChange={archiveFlow.handleOpenChange}
       />
     </PageWrapper>
     </RequireModule>

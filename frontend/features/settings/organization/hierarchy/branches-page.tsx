@@ -11,14 +11,13 @@ import {
   useBusinessUnits,
   useCreateOrgBranch,
   useUpdateOrgBranch,
-  useDeleteOrgBranch,
 } from "@/hooks/api/org-hierarchy";
+import { useOrgMembers } from "@/hooks/api/organization";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
@@ -48,11 +47,15 @@ import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { UserCombobox } from "@/components/ui/user-combobox";
 import type { OrgBranch } from "@/types/org-hierarchy";
 import { RequireModule } from "@/components/auth/require-module";
+import { HierarchyArchiveDialog } from "./hierarchy-archive-dialog";
+import { isAssignableHierarchyParent } from "./hierarchy-option";
+import { useHierarchyArchive } from "./use-hierarchy-archive";
+import { useCan } from "@/hooks/api/access";
 
 const NO_BUSINESS_UNIT = "none";
 
@@ -74,13 +77,26 @@ const formSchema = z.object({
   city: z.string().trim().max(100).optional(),
   state: z.string().trim().max(100).optional(),
   country: z.string().trim().max(100).optional(),
+  postalCode: z.string().trim().max(20).optional(),
   address: z.string().trim().max(500).optional(),
   phone: z.string().trim().max(30).optional(),
   email: z.string().email("Invalid email").or(z.literal("")).optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
-const EMPTY: FormValues = { name: "", code: "", businessUnitId: NO_BUSINESS_UNIT, managerUserId: "", city: "", state: "", country: "", address: "", phone: "", email: "" };
+const EMPTY: FormValues = {
+  name: "",
+  code: "",
+  businessUnitId: NO_BUSINESS_UNIT,
+  managerUserId: "",
+  city: "",
+  state: "",
+  country: "",
+  postalCode: "",
+  address: "",
+  phone: "",
+  email: "",
+};
 
 function BranchForm({
   defaultValues,
@@ -216,6 +232,19 @@ function BranchForm({
           />
           <FormField
             control={form.control}
+            name="postalCode"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Postal Code</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g. 400001" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
             name="phone"
             render={({ field }) => (
               <FormItem>
@@ -262,17 +291,30 @@ function BranchForm({
 export function OrgBranchesPage() {
   const { data: branches, isLoading } = useOrgBranches();
   const { data: busData } = useBusinessUnits();
+  const { data: membersData } = useOrgMembers(1, 100);
   const create = useCreateOrgBranch();
   const update = useUpdateOrgBranch();
-  const remove = useDeleteOrgBranch();
+  const canManage = useCan("settings:organization:manage");
 
   const [showCreate, setShowCreate] = useState(false);
   const [editing, setEditing] = useState<OrgBranch | null>(null);
-  const [deleting, setDeleting] = useState<OrgBranch | null>(null);
   const [showArchived, setShowArchived] = useState(false);
   const [search, setSearch] = useState("");
+  const archiveFlow = useHierarchyArchive<OrgBranch>({
+    archive: (branch, callbacks) =>
+      update.mutate({ id: branch.id, status: "ARCHIVED" }, callbacks),
+    successMessage: "Branch archived",
+    onArchived: () => setShowArchived(true),
+  });
 
-  const businessUnits = (busData?.data ?? []).map((b) => ({ id: b.id, name: b.name }));
+  const businessUnits = (busData?.data ?? [])
+    .filter(isAssignableHierarchyParent)
+    .map((unit) => ({ id: unit.id, name: unit.name }));
+  const buMap = Object.fromEntries(businessUnits.map((b) => [b.id, b.name]));
+  const memberMap = Object.fromEntries(
+    (membersData?.data ?? []).map((m) => [m.userId, m.name ?? m.email]),
+  );
+
   const allBranches = branches?.data ?? [];
   const active = allBranches.filter((b) => b.status !== "ARCHIVED" && !b.deletedAt);
   const archived = allBranches.filter((b) => b.status === "ARCHIVED" && !b.deletedAt);
@@ -299,10 +341,10 @@ export function OrgBranchesPage() {
           city: values.city || undefined,
           state: values.state || undefined,
           country: values.country || undefined,
+          postalCode: values.postalCode || undefined,
           address: values.address || undefined,
           phone: values.phone || undefined,
           email: values.email || undefined,
-          postalCode: undefined,
         },
         {
           onSuccess: () => {
@@ -324,14 +366,15 @@ export function OrgBranchesPage() {
           id: editing.id,
           name: values.name,
           code: values.code.toUpperCase(),
-          businessUnitId: values.businessUnitId === NO_BUSINESS_UNIT ? undefined : values.businessUnitId,
-          managerUserId: values.managerUserId || undefined,
-          city: values.city || undefined,
-          state: values.state || undefined,
-          country: values.country || undefined,
-          address: values.address || undefined,
-          phone: values.phone || undefined,
-          email: values.email || undefined,
+          businessUnitId: values.businessUnitId === NO_BUSINESS_UNIT ? null : values.businessUnitId,
+          managerUserId: values.managerUserId || null,
+          city: values.city || null,
+          state: values.state || null,
+          country: values.country || null,
+          postalCode: values.postalCode || null,
+          address: values.address || null,
+          phone: values.phone || null,
+          email: values.email || null,
         },
         {
           onSuccess: () => {
@@ -343,22 +386,6 @@ export function OrgBranchesPage() {
       );
     },
     [editing, update],
-  );
-
-  const handleArchive = useCallback(
-    (b: OrgBranch) => {
-      update.mutate(
-        { id: b.id, status: "ARCHIVED" },
-        {
-          onSuccess: () => {
-            toast.success("Branch archived");
-            setShowArchived(true);
-          },
-          onError: (err) => toast.error(getErrorMessage(err)),
-        },
-      );
-    },
-    [update],
   );
 
   const handleRestore = useCallback(
@@ -377,17 +404,6 @@ export function OrgBranchesPage() {
     [update],
   );
 
-  const handleDelete = useCallback(() => {
-    if (!deleting) return;
-    remove.mutate(deleting.id, {
-      onSuccess: () => {
-        toast.success("Branch deleted");
-        setDeleting(null);
-      },
-      onError: (err) => toast.error(getErrorMessage(err)),
-    });
-  }, [deleting, remove]);
-
   const handleOpenCreate = useCallback(() => setShowCreate(true), []);
   const handleToggleArchived = useCallback(() => setShowArchived((v) => !v), []);
   const handleSearchChange = useCallback((v: string) => setSearch(v), []);
@@ -395,11 +411,9 @@ export function OrgBranchesPage() {
   function handleSearchInputChange(value: string) { handleSearchChange(value); }
 
   function makeRestoreHandler(branch: OrgBranch) { return () => handleRestore(branch); }
-  function makeArchiveHandler(branch: OrgBranch) { return () => handleArchive(branch); }
+  function makeArchiveHandler(branch: OrgBranch) { return () => archiveFlow.requestArchive(branch); }
   function makeSetEditingHandler(branch: OrgBranch) { return () => setEditing(branch); }
-  function makeSetDeletingHandler(branch: OrgBranch) { return () => setDeleting(branch); }
   function handleEditSheetOpenChange(open: boolean) { if (!open) setEditing(null); }
-  function handleDeleteDialogOpenChange(open: boolean) { if (!open) setDeleting(null); }
 
   const emptyState = search ? (
     <EmptyState
@@ -421,7 +435,7 @@ export function OrgBranchesPage() {
       illustrationPreset="companies"
       title="No branches yet"
       description="Create your first branch to get started."
-      action={{ label: "Add Branch", onClick: handleOpenCreate }}
+      action={canManage ? { label: "Add Branch", onClick: handleOpenCreate } : undefined}
     />
   );
 
@@ -441,12 +455,44 @@ export function OrgBranchesPage() {
       ),
     },
     {
+      key: "businessUnit",
+      header: "Business Unit",
+      cell: (b) => (
+        <span className="text-muted-foreground">
+          {b.businessUnitId ? (buMap[b.businessUnitId] ?? "—") : "—"}
+        </span>
+      ),
+    },
+    {
+      key: "manager",
+      header: "Manager",
+      cell: (b) => (
+        <span className="text-muted-foreground">
+          {b.managerUserId ? (memberMap[b.managerUserId] ?? "—") : "—"}
+        </span>
+      ),
+    },
+    {
       key: "location",
       header: "Location",
       cell: (b) => (
         <span className="text-muted-foreground">
           {[b.city, b.state, b.country].filter(Boolean).join(", ") || "—"}
         </span>
+      ),
+    },
+    {
+      key: "phone",
+      header: "Phone",
+      cell: (b) => (
+        <span className="text-muted-foreground">{b.phone ?? "—"}</span>
+      ),
+    },
+    {
+      key: "email",
+      header: "Email",
+      cell: (b) => (
+        <span className="text-muted-foreground">{b.email ?? "—"}</span>
       ),
     },
     {
@@ -472,23 +518,12 @@ export function OrgBranchesPage() {
       key: "actions",
       header: "",
       headerClassName: "w-28",
-      cell: (b) => (
-        <div className="flex items-center gap-1">
+      cell: (b) =>
+        canManage ? <div className="flex items-center gap-1">
           {b.status === "ARCHIVED" ? (
-            <>
-              <Button variant="ghost" size="sm" onClick={makeRestoreHandler(b)} title="Restore">
-                <RotateCcw className="h-4 w-4 text-primary" />
-              </Button>
-              <AnimatedIconButton
-                icon={Trash2Icon}
-                iconSize={16}
-                variant="ghost"
-                size="sm"
-                onClick={makeSetDeletingHandler(b)}
-                title="Delete permanently"
-                className="text-destructive"
-              />
-            </>
+            <Button variant="ghost" size="sm" onClick={makeRestoreHandler(b)} title="Restore">
+              <RotateCcw className="h-4 w-4 text-primary" />
+            </Button>
           ) : (
             <>
               <Button variant="ghost" size="sm" onClick={makeSetEditingHandler(b)} title="Edit">
@@ -499,8 +534,7 @@ export function OrgBranchesPage() {
               </Button>
             </>
           )}
-        </div>
-      ),
+        </div> : null,
     },
   ];
 
@@ -520,7 +554,7 @@ export function OrgBranchesPage() {
             <Archive className="h-4 w-4 mr-1.5" />
             {showArchived ? "Show Active" : `Archived (${archived.length})`}
           </Button>
-          <AnimatedIconButton
+          {canManage ? <AnimatedIconButton
             icon={PlusIcon}
             iconSize={16}
             iconClassName="mr-1.5"
@@ -529,7 +563,7 @@ export function OrgBranchesPage() {
             onClick={handleOpenCreate}
           >
             Add Branch
-          </AnimatedIconButton>
+          </AnimatedIconButton> : null}
         </div>
       }
       filters={
@@ -543,7 +577,7 @@ export function OrgBranchesPage() {
         isLoading={isLoading}
         emptyState={emptyState}
         rowClassName={(b) => cn(b.status === "ARCHIVED" && "opacity-60")}
-        minWidth="580px"
+        minWidth="1000px"
         className="flex-1 min-h-0"
       />
 
@@ -553,7 +587,9 @@ export function OrgBranchesPage() {
             <SheetTitle>New Branch</SheetTitle>
           </SheetHeader>
           <SheetBody className="px-6 py-5">
-            <BranchForm businessUnits={businessUnits} onSubmit={handleCreate} isPending={create.isPending} />
+            {showCreate && (
+              <BranchForm businessUnits={businessUnits} onSubmit={handleCreate} isPending={create.isPending} />
+            )}
           </SheetBody>
           <div className="shrink-0 px-6 py-4 border-t">
             <div className="grid grid-cols-2 gap-2">
@@ -582,6 +618,7 @@ export function OrgBranchesPage() {
                   city: editing.city ?? "",
                   state: editing.state ?? "",
                   country: editing.country ?? "",
+                  postalCode: editing.postalCode ?? "",
                   address: editing.address ?? "",
                   phone: editing.phone ?? "",
                   email: editing.email ?? "",
@@ -603,14 +640,14 @@ export function OrgBranchesPage() {
         </SheetContent>
       </Sheet>
 
-      <ConfirmDialog
-        open={!!deleting}
-        onOpenChange={handleDeleteDialogOpenChange}
-        title="Delete Branch"
-        description={`Permanently delete "${deleting?.name}"? This cannot be undone.`}
-        onConfirm={handleDelete}
-        isPending={remove.isPending}
-        destructive
+      <HierarchyArchiveDialog
+        open={!!archiveFlow.target}
+        unitName={archiveFlow.target?.name ?? ""}
+        unitLabel="branch"
+        isPending={update.isPending}
+        error={archiveFlow.error}
+        onConfirm={archiveFlow.confirmArchive}
+        onOpenChange={archiveFlow.handleOpenChange}
       />
     </PageWrapper>
     </RequireModule>

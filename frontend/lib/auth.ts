@@ -105,9 +105,6 @@ async function fetchSessionDataWithCache(
   userId: string,
   _orgId: string | null,
 ): Promise<SessionData | null> {
-  // React cache deduplicates this within one server render. Do not retain
-  // session data across requests: suspension and restoration are security
-  // transitions and must be visible to an already-open browser immediately.
   return fetchSessionData(userId);
 }
 

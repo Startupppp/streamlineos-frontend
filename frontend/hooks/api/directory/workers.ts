@@ -50,7 +50,8 @@ export function useCreateWorker() {
     mutationFn: (input: CreateWorkerInput) =>
       apiClient.post<Worker>("/directory/workers", input),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.directory.workers() });
+      qc.invalidateQueries({ queryKey: queryKeys.directory.workersAll });
+      qc.invalidateQueries({ queryKey: queryKeys.directory.peopleAll });
     },
   });
 }
@@ -75,9 +76,14 @@ export function useCreateEngagement() {
         `/directory/workers/${workerId}/engagements`,
         { ...input, workerId },
       ),
-    onSuccess: (_, variables) => {
+    onSuccess: (created, variables) => {
+      qc.setQueryData<WorkerEngagement[]>(
+        queryKeys.directory.engagements(variables.workerId),
+        (old) => (old ? [...old, created] : old),
+      );
       qc.invalidateQueries({
         queryKey: queryKeys.directory.engagements(variables.workerId),
+        refetchType: "none",
       });
       qc.invalidateQueries({
         queryKey: queryKeys.directory.worker(variables.workerId),
@@ -98,10 +104,16 @@ export function useTerminateEngagement() {
         `/directory/engagements/${workerEngagementId}/terminate`,
         input,
       ),
-    onSuccess: (_, variables) => {
-      qc.invalidateQueries({
-        queryKey: queryKeys.directory.engagements(variables.workerId),
-      });
+    onSuccess: (updated, variables) => {
+      qc.setQueryData<WorkerEngagement[]>(
+        queryKeys.directory.engagements(variables.workerId),
+        (old) =>
+          old?.map((e) =>
+            e.workerEngagementId === variables.workerEngagementId
+              ? { ...e, ...updated }
+              : e,
+          ),
+      );
       qc.invalidateQueries({
         queryKey: queryKeys.directory.worker(variables.workerId),
       });

@@ -406,7 +406,7 @@ export function PartiesPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-destructive text-destructive-foreground"
+              variant="destructive"
               onClick={handleDeleteConfirm}
             >
               Delete

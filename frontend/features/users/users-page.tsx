@@ -68,7 +68,7 @@ import { resolveOrgUnitName } from "./resolve-org-unit-name";
 import { PeopleSectionTabs } from "./people-section-tabs";
 import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 
-type BulkAction = "suspend" | "archive";
+type BulkAction = "suspend" | "archive" | "restore";
 
 function assertNever(value: never): never {
   throw new Error(`Unhandled bulk action: ${String(value)}`);
@@ -88,6 +88,12 @@ function getBulkActionCopy(action: BulkAction, count: number) {
         title: `Archive ${subject}?`,
         description: `${subject} will be archived and lose access. Their data and membership are retained and they can be restored at any time. Organization owners and module owners in the selection will be skipped.`,
         confirmLabel: "Archive",
+      };
+    case "restore":
+      return {
+        title: `Restore ${subject}?`,
+        description: `${subject} will regain access to this organization immediately. It will appear in each user's workspace switcher after their session refreshes.`,
+        confirmLabel: "Restore",
       };
     default:
       return assertNever(action);
@@ -113,7 +119,9 @@ export function UsersPage() {
   const debouncedSearch = useDebouncedValue(search, 300);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(
+    () => searchParams.get("create") === "1",
+  );
   const [bulkInviteOpen, setBulkInviteOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
@@ -229,6 +237,10 @@ export function UsersPage() {
     setPendingBulkAction("archive");
   }
 
+  function handleRequestBulkRestore() {
+    setPendingBulkAction("restore");
+  }
+
   function handleBulkDialogOpenChange(open: boolean) {
     if (!open) setPendingBulkAction(null);
   }
@@ -236,6 +248,7 @@ export function UsersPage() {
   function handleConfirmBulkAction() {
     if (pendingBulkAction === "suspend") handleBulkSuspend();
     else if (pendingBulkAction === "archive") handleBulkArchive();
+    else if (pendingBulkAction === "restore") handleBulkRestore();
     setPendingBulkAction(null);
   }
 
@@ -614,7 +627,7 @@ export function UsersPage() {
                     variant="outline"
                     size="sm"
                     className="h-7 text-xs"
-                    onClick={handleBulkRestore}
+                    onClick={handleRequestBulkRestore}
                     isPending={isRestoring}
                     disabled={bulkIsPending}
                   >
@@ -711,7 +724,13 @@ export function UsersPage() {
           confirmLabel={
             getBulkActionCopy(pendingBulkAction, selectedIds.size).confirmLabel
           }
-          isPending={pendingBulkAction === "suspend" ? isSuspending : isArchiving}
+          isPending={
+            pendingBulkAction === "suspend"
+              ? isSuspending
+              : pendingBulkAction === "archive"
+                ? isArchiving
+                : isRestoring
+          }
           onConfirm={handleConfirmBulkAction}
         />
       )}

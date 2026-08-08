@@ -41,9 +41,14 @@ import {
 interface UserInviteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  defaultEmail?: string;
 }
 
-export function UserInviteDialog({ open, onOpenChange }: UserInviteDialogProps) {
+export function UserInviteDialog({
+  open,
+  onOpenChange,
+  defaultEmail,
+}: UserInviteDialogProps) {
   const [invited, setInvited] = useState(false);
   const [wasResent, setWasResent] = useState(false);
   const { mutate: inviteUser, isPending } = useInviteUser();
@@ -51,7 +56,7 @@ export function UserInviteDialog({ open, onOpenChange }: UserInviteDialogProps) 
   const form = useForm<InviteUserFormValues>({
     resolver: zodResolver(inviteUserSchema),
     defaultValues: {
-      email: "",
+      email: defaultEmail ?? "",
       role: "",
     },
   });
