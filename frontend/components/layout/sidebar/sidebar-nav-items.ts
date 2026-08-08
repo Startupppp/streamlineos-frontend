@@ -114,6 +114,35 @@ export interface NavRoute {
   /** Show the route when at least one of these products is enabled. */
   modulesAny?: ProductKey[];
   exact?: boolean;
+  /** Extra owned subpaths, used when a sibling route has a longer prefix. */
+  activePrefixes?: string[];
+  /** More-specific sibling paths that this route must never highlight. */
+  inactivePrefixes?: string[];
+}
+
+export function isNavRouteActive(
+  route: NavRoute,
+  pathname: string,
+): boolean {
+  if (pathname === route.href) return true;
+  if (
+    route.inactivePrefixes?.some(
+      (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+    )
+  ) {
+    return false;
+  }
+  if (
+    route.activePrefixes?.some(
+      (prefix) => pathname === prefix || pathname.startsWith(prefix),
+    )
+  ) {
+    return true;
+  }
+  if (route.exact || (route.children && route.children.length > 0)) {
+    return false;
+  }
+  return pathname.startsWith(`${route.href}/`);
 }
 
 export interface NavGroup {
@@ -1195,12 +1224,14 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Sales",
         icon: TrendingUp,
         href: "/accounting/invoices",
+        activePrefixes: ["/billing/invoices"],
         requiredPermission: "accounting:view",
         children: [
           {
             label: "Invoices",
             icon: FileText,
             href: "/accounting/invoices",
+            activePrefixes: ["/billing/invoices"],
             requiredPermission: "accounting:view",
           },
           {
@@ -2239,6 +2270,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Organization Settings",
         icon: Building2,
         href: "/settings/organization",
+        exact: true,
         requiredPermission: "settings:manage",
       },
       {
@@ -2261,21 +2293,23 @@ export const NAV_GROUPS: NavGroup[] = [
       {
         label: "Directory",
         icon: Contact2,
-        href: "/directory",
+        href: "/settings/directory",
         exact: true,
+        activePrefixes: ["/settings/directory/"],
+        inactivePrefixes: ["/settings/directory/workers"],
         requiredPermission: "directory:people:view",
       },
       {
         label: "Members & Access",
         icon: UserCog,
-        href: "/users",
+        href: "/settings/users",
         exact: true,
         requiredPermission: "settings:view",
       },
       {
         label: "Workers",
         icon: Briefcase,
-        href: "/directory/workers",
+        href: "/settings/directory/workers",
         requiredPermission: "workforce:workers:view",
         modulesAny: ["hrms", "payroll"],
       },
@@ -2307,50 +2341,50 @@ export const NAV_GROUPS: NavGroup[] = [
       {
         label: "Structure",
         icon: Network,
-        href: "/organization",
+        href: "/settings/organization/structure",
         exact: true,
         requiredPermission: "settings:view",
       },
       {
         label: "Business Units",
         icon: Building2,
-        href: "/organization/business-units",
+        href: "/settings/organization/business-units",
         requiredPermission: "settings:view",
       },
       {
         label: "Branches",
         icon: GitBranch,
-        href: "/organization/branches",
+        href: "/settings/organization/branches",
         requiredPermission: "settings:view",
       },
       {
         label: "Departments",
         icon: Briefcase,
-        href: "/organization/departments",
+        href: "/settings/organization/departments",
         requiredPermission: "settings:view",
       },
       {
         label: "Teams",
         icon: Users,
-        href: "/organization/teams",
+        href: "/settings/organization/teams",
         requiredPermission: "settings:view",
       },
       {
         label: "Locations",
         icon: Map,
-        href: "/organization/locations",
+        href: "/settings/organization/locations",
         requiredPermission: "settings:view",
       },
       {
         label: "Cost Centers",
         icon: Coins,
-        href: "/organization/cost-centers",
+        href: "/settings/organization/cost-centers",
         requiredPermission: "settings:view",
       },
       {
         label: "Organization Chart",
         icon: Network,
-        href: "/organization/tree",
+        href: "/settings/organization/chart",
         requiredPermission: "settings:view",
       },
     ],
@@ -2369,19 +2403,19 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     label: "Billing",
-    requiredPermission: "settings:manage",
+    requiredPermission: ["settings:manage", "billing:ai-credits:view"],
     routes: [
       {
         label: "Billing & Plan",
         icon: CreditCard,
-        href: "/billing",
+        href: "/settings/billing",
         exact: true,
         requiredPermission: "settings:manage",
       },
       {
         label: "AI Credits",
         icon: Zap,
-        href: "/billing/ai-credits",
+        href: "/settings/billing/ai-credits",
         requiredPermission: "billing:ai-credits:view",
       },
     ],
@@ -2572,7 +2606,7 @@ export const PRODUCT_DEFINITIONS: ProductDefinition[] = [
   {
     key: "administration",
     label: "Administration",
-    href: "/organization",
+    href: "/settings",
     icon: Building2,
   },
   {
@@ -2800,6 +2834,8 @@ const HOME_NAV_GROUPS: NavGroup[] = [
         icon: Contact2,
         requiredPermission: "directory:people:view",
         exact: true,
+        activePrefixes: ["/directory/"],
+        inactivePrefixes: ["/directory/workers"],
       },
     ],
   },
@@ -2864,6 +2900,7 @@ export function getProductFromPathname(pathname: string): ProductKey {
     pathname.startsWith("/me/") ||
     pathname === "/hr/announcements" ||
     pathname === "/directory" ||
+    pathname.startsWith("/directory/") ||
     pathname === "/dashboard" ||
     pathname === "/" ||
     pathname.startsWith("/mail") ||
@@ -2888,6 +2925,11 @@ export function getProductFromPathname(pathname: string): ProductKey {
   if (pathname.startsWith("/portal")) return "build";
   if (pathname.startsWith("/build")) return "build";
   if (pathname.startsWith("/inventory")) return "inventory";
+  if (
+    pathname === "/billing/invoices" ||
+    pathname.startsWith("/billing/invoices/")
+  )
+    return "finance";
   if (pathname.startsWith("/accounting")) return "finance";
   if (pathname.startsWith("/support/kb")) return "documents";
   if (pathname.startsWith("/support")) return "helpdesk";
@@ -2895,13 +2937,6 @@ export function getProductFromPathname(pathname: string): ProductKey {
   if (pathname.startsWith("/knowledge")) return "documents";
   if (pathname.startsWith("/surveys")) return "surveys";
   if (pathname.startsWith("/payroll")) return "payroll";
-  if (
-    pathname.startsWith("/organization") ||
-    pathname.startsWith("/users") ||
-    pathname.startsWith("/settings") ||
-    pathname.startsWith("/billing") ||
-    pathname.startsWith("/directory")
-  )
-    return "administration";
+  if (pathname.startsWith("/settings")) return "administration";
   return "home";
 }

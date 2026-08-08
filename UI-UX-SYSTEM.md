@@ -605,6 +605,9 @@ Mobile: [Sheet — left, w-[17rem]] for nav · [MobileModuleBottomNav — fixed 
 ### Navigation ownership
 
 - Home is the universal employee workspace. Group it as Overview, Communication, For Me, and Company; groups may collapse, but their destinations remain permission-filtered and keyboard accessible.
+- A URL communicates product context. Platform administration owns `/settings/*`; module configuration owns `/<module>/settings/*`. Settings navigation must never point at a top-level operational URL and silently switch the selected product/sidebar.
+- If the same workflow is intentionally available in two products, both routes render one shared `features/` component through thin adapters. Pass each route's base path into links and back navigation. The employee directory is the reference pattern: `/directory/*` stays in Home while `/settings/directory/*` stays in Administration.
+- When a surface moves to its canonical owner, delete the old route outright — no legacy redirect files. Sidebar, menus, command actions, empty states, and onboarding links always use the canonical route.
 - Home and Documents are always available products for active organization members. Documents owns Knowledge Base reading (`/knowledge/*`); Home owns personal employment documents (`/me/documents`). Show core products and permissions as disabled “Included” controls in administration rather than editable toggles.
 - `For Me` uses canonical `/me/*` routes and remains visible independently of paid-module enablement. It includes only the signed-in person's time off, attendance, expenses, pay, and employment documents.
 - Announcements and the people directory are company-wide reading surfaces. Their creation or administration controls may still require an owning-module permission.

@@ -59,7 +59,7 @@ export function AiQuotaEmptyState({
         size={variant === "fill" ? "default" : "sm"}
         className={cn(variant === "compact" && "mt-0.5 h-7 text-xs")}
       >
-        <Link href="/billing/ai-credits">Top up AI credits</Link>
+        <Link href="/settings/billing/ai-credits">Top up AI credits</Link>
       </Button>
     </div>
   );

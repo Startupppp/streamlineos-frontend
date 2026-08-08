@@ -110,7 +110,7 @@ interface ChecklistItem {
 }
 
 const CHECKLIST_ITEMS: ChecklistItem[] = [
-  { id: "invite", label: "Invite your first teammate", href: "/users", Icon: Users },
+  { id: "invite", label: "Invite your first teammate", href: "/settings/users", Icon: Users },
   { id: "record", label: "Create your first record", href: "/crm/leads", Icon: Database },
   { id: "email", label: "Connect your calendar", href: "/calendar", Icon: Mail },
   { id: "profile", label: "Complete your profile", href: "/settings", Icon: UserCircle },

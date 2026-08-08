@@ -72,7 +72,9 @@ export function UserActionsMenu({ user, onView }: UserActionsMenuProps) {
       { userId: user.id, status: "active" },
       {
         onSuccess: () =>
-          toast.success(isArchived ? "User restored" : "User activated"),
+          toast.success(isArchived ? "User restored" : "Access restored", {
+            description: `${displayName} can now access this organization. It will appear in their workspace switcher after their session refreshes.`,
+          }),
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );

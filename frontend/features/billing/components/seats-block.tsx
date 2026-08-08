@@ -35,7 +35,7 @@ function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }
 
-function SeatsBlockSkeleton() {
+export function SeatsBlockSkeleton() {
   return (
     <div className="rounded-xl border border-border bg-card shadow-sm p-5 space-y-4">
       <Skeleton className="h-4 w-32" />

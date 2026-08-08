@@ -35,6 +35,7 @@ type GenerationPendingState = {
 
 type StepGenerationProps = {
   data: WizardData;
+  onCompletionStarted: () => void;
 };
 
 function groupInviteesByRole(invitees: Invitee[]): { role: string; emails: string[] }[] {
@@ -53,7 +54,10 @@ function groupInviteesByRole(invitees: Invitee[]): { role: string; emails: strin
   });
 }
 
-export function StepGeneration({ data }: StepGenerationProps) {
+export function StepGeneration({
+  data,
+  onCompletionStarted,
+}: StepGenerationProps) {
   const { data: session, update } = useSession();
   const [completedSteps, setCompletedSteps] = useState(0);
   const [setupError, setSetupError] = useState<SetupError | null>(null);
@@ -129,6 +133,7 @@ export function StepGeneration({ data }: StepGenerationProps) {
     } catch {
       void 0;
     }
+    onCompletionStarted();
 
     if (autoLoginToken) {
       await signInWithMagicToken(autoLoginToken);
@@ -224,7 +229,7 @@ export function StepGeneration({ data }: StepGenerationProps) {
   }
 
   function goToInvitations() {
-    void navigateToPostSetup("/users?view=invitations");
+    void navigateToPostSetup("/settings/users?view=invitations");
   }
 
   async function retryGeneration() {

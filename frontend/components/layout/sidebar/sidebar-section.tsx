@@ -6,7 +6,13 @@ import { useCallback, useEffect, useState, startTransition } from "react";
 import { ChevronRight, ChevronDown } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { flattenNavRoutes, type NavGroup, type NavRoute, type ModuleAccent } from "./sidebar-nav-items";
+import {
+  flattenNavRoutes,
+  isNavRouteActive,
+  type NavGroup,
+  type NavRoute,
+  type ModuleAccent,
+} from "./sidebar-nav-items";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 function hoistSingletonParentRoutes(routes: NavRoute[]): NavRoute[] {
@@ -40,16 +46,13 @@ interface SidebarSectionProps {
   accent: ModuleAccent;
 }
 
-function routeIsActive(route: NavRoute, pathname: string): boolean {
-  if (route.exact || (route.children && route.children.length > 0)) {
-    return pathname === route.href;
-  }
-  return pathname === route.href || pathname.startsWith(route.href + "/");
-}
-
 function routeContainsActive(route: NavRoute, pathname: string): boolean {
   if (!route.children) return false;
-  return route.children.some((c) => routeIsActive(c, pathname) || routeContainsActive(c, pathname));
+  return route.children.some(
+    (child) =>
+      isNavRouteActive(child, pathname) ||
+      routeContainsActive(child, pathname),
+  );
 }
 
 export function SidebarSection({
@@ -142,7 +145,7 @@ function computeBadge(route: NavRoute, pendingLeaves: number) {
 }
 
 function CollapsedItem({ route, pathname, pendingLeaves, onNavigate, accent }: ItemProps) {
-  const isActive = routeIsActive(route, pathname);
+  const isActive = isNavRouteActive(route, pathname);
   const count = computeBadge(route, pendingLeaves);
   const hasBadge = count > 0;
 
@@ -188,7 +191,7 @@ function ExpandedItem({ route, depth, pathname, pendingLeaves, onNavigate, accen
   const hasChildren = !!route.children && route.children.length > 1;
   const singleChild = !!route.children && route.children.length === 1;
   const containsActive = (hasChildren || singleChild) && routeContainsActive(route, pathname);
-  const isActive = routeIsActive(route, pathname) && !containsActive;
+  const isActive = isNavRouteActive(route, pathname) && !containsActive;
   const [expanded, setExpanded] = useState<boolean>(isActive || containsActive);
 
   useEffect(() => {

@@ -126,6 +126,8 @@ export function useGetOrganizations(enabled = true) {
     staleTime: 60_000,
     enabled: status === "authenticated" && enabled,
     placeholderData: keepPreviousData,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: "always",
   });
 }
 

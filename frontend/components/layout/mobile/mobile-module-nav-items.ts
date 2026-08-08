@@ -1,4 +1,8 @@
-import type { NavGroup, NavRoute } from "../sidebar/sidebar-nav-items";
+import {
+  isNavRouteActive,
+  type NavGroup,
+  type NavRoute,
+} from "../sidebar/sidebar-nav-items";
 
 export const MAX_MOBILE_MODULE_TABS = 5;
 
@@ -60,19 +64,13 @@ export function isMobileNavRouteActive(
   route: NavRoute,
   tabs: NavRoute[],
 ): boolean {
-  if (route.exact || (route.children && route.children.length > 0)) {
-    return pathname === route.href || pathname === `${route.href}/`;
-  }
-
-  const matches =
-    pathname === route.href || pathname.startsWith(`${route.href}/`);
-  if (!matches) return false;
+  if (!isNavRouteActive(route, pathname)) return false;
 
   const longerMatch = tabs.some(
     (other) =>
       other.href !== route.href &&
       other.href.length > route.href.length &&
-      (pathname === other.href || pathname.startsWith(`${other.href}/`)),
+      isNavRouteActive(other, pathname),
   );
   return !longerMatch;
 }

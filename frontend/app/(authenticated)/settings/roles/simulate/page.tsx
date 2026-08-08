@@ -259,8 +259,11 @@ function SimulateLoadingSkeleton() {
     <div className="flex flex-col gap-3">
       {[1, 2, 3].map((i) => (
         <Card key={i}>
-          <CardHeader className="pb-2 pt-4">
-            <Skeleton className="h-4 w-32" />
+          <CardHeader className="pb-2 pt-3 px-4">
+            <div className="flex items-center justify-between">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-4 w-10 rounded-full" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">

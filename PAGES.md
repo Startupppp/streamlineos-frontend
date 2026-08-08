@@ -22,7 +22,14 @@ Full text of any pre-2026-08-03 entry is in git history.
 
 ## Changelog
 
+**2026-08-08**
+- Settings skeleton conformance pass (4 parallel lanes, audit-first): every `/settings/*` loading state is now a structural Xerox of its real page. Billing: shared `BillingPageSkeleton` (full Plan-tab mirror) unifies loading.tsx + Suspense fallback + `PlanTabSkeleton`; ai-credits loading rebuilt with real headers + `DataTableSkeleton` (7/5/8 cols, 20 history rows). Organization: 8 per-child loading files (correct titles, filter/action placeholders, true column counts; chart=tree rows, structure=link-card grid); root's two skeleton phases share `OrgSettingsSectionsSkeleton`. Roles: 5-col stat grid, filters placeholder, phantom action removed, `RoleEditorSkeleton` extracted to feature + reused by loading.tsx, members `Loader2` spinner → Skeleton, new audit/simulate loading files. Core: root cards get real chrome + MFA block, api-tokens flat bars → `DataTableSkeleton`, audit-log 4-filter row + `flex-1`, delegations/modules phase alignment, new users/webhooks/directory/workers/incoming-transfer loading files, directory skeleton 5→6 cols. `billing-page-skeleton.tsx` · `org-settings-skeleton.tsx` · `role-editor-skeleton.tsx` · ~30 files · frontend typecheck.
+- Session-state hardening: live account deactivation signs out at the server gate; an organization-only suspension keeps the identity valid and resolves to `/access-suspended`, where data-safe recovery can recheck access or explicitly switch to another ACTIVE membership. The suspended selected org remains the recovery context—siblings are never selected silently—and org creation is intentionally unavailable there. Identity-scoped RLS reads now protect setup and cross-organization recovery; setup refuses stale suspended claims, and restoration makes the org available while selecting it only when no other valid current org exists. `auth.service.ts` · `auth-tokens.service.ts` · `jwt-auth.guard.ts` · `org-setup.service.ts` · `org-membership.service.ts` · `org-profile.service.ts` · auth/session UI · focused specs + frontend/backend typecheck.
+- Administration route ownership: canonical settings navigation now stays under `/settings/*` for members, the settings directory/workers, organization hierarchy, platform billing, and AI credits. `/directory/*` remains the Home employee surface using the same base-path-aware Directory components; the old `/users`, `/organization/*`, `/directory/workers`, platform `/billing`, and `/settings/subscription` routes are deleted outright (living rule: a moved page's old route files are removed, never kept as redirects). Route-ownership rules are enforced in `CLAUDE.md` and `UI-UX-SYSTEM.md`. `sidebar-nav-items.ts` · settings route adapters · shared feature pages · route tests + frontend typecheck.
+- `ERR_TOO_MANY_REDIRECTS` root-caused: wizard gating (`org-setup` / `employee-onboarding`) ran in two places from two sources — stale-JWT claims in `proxy.ts` vs live session in the server layouts — so any JWT↔DB disagreement produced opposing redirects. Now one live-session predicate (`resolveWizardGate`) drives all three layouts (`(authenticated)`, `/org-setup`, `/employee-onboarding`); proxy keeps authN + path aliases only. `lib/wizard-gate.ts` · `lib/onboarding-gate.ts` · `proxy.ts` · the three layouts · frontend typecheck.
+
 **2026-08-06**
+- `/organization` Structure hub: removed duplicate top StatCard row (counts already in Reporting hierarchy / Places & finance). `organization-structure-page.tsx` · frontend typecheck.
 - Backend startup restored by isolating attendance policy evaluation in a narrow module boundary, removing the Calendar -> HR Time -> Automation -> AI -> Calendar import cycle while preserving existing HR Time consumers. `attendance-policy.module.ts` · `calendar.module.ts` · `hr-time.module.ts` · backend typecheck + production emission + startup smoke.
 - Universal member access review: Home, My Documents, and Knowledge Base reading remain available for every active organization member, including custom roles with no grants. Typed baseline scopes drive effective RBAC and the role editor; backend core-module metadata drives locked “Included” controls; targeted module-access reads validate membership; request schemas are boundary-validated; document ownership, KB content ACLs, and management permissions remain enforced. Access/RBAC services · permission catalogs · module-access controller/DTO · sidebar/product navigation · permission matrix · user module access · frontend + backend typecheck.
 - Org Structure hub is the base `/organization` route (sidebar Structure → `/organization`); `/organization/structure` redirects there. `organization/page.tsx` · `organization/structure/page.tsx` · `sidebar-nav-items.ts` · frontend typecheck.
@@ -204,8 +211,8 @@ Full text of any pre-2026-08-03 entry is in git history.
 - [x] `/mail` — Unified Gmail+Outlook inbox via Composio live proxy; **zero mail tables**
 - [x] `/ai` · `/ai/executive-brief` · `/ask` — AI assistant surfaces
 - [x] `/notifications` · `/notifications/preferences` · `/notifications/broadcasts` · `/notifications/events` · `/notifications/policy` · `/notifications/providers` · `/notifications/templates`
-- [x] `/users` — **Members & access** workspace; authenticated organization members and permission-gated Invitations share one route via `?view=invitations`; status filtering stays URL-backed; org-scoped lifecycle SoT = `organization_members.status`
-- [x] `/directory` · `/directory/[personId]` · `/directory/workers` · `/parties` — **Person records**, Workers, and Business Parties; directory profiles support workers/contractors/payees without login access and explicitly do not invite users; person detail tabs (Profile/Membership/Worker/Modules); `directory:people:*` gates; HRMS not required; `/parties` module-independent (no CRM/Inventory entitlement); offer-fulfillment API gated CRM+inventory (no FE UI yet)
+- [x] `/settings/users` — **Members & access** workspace; authenticated organization members and permission-gated Invitations share one route via `?view=invitations`; status filtering stays URL-backed; org-scoped lifecycle SoT = `organization_members.status`; the old `/users` route is deleted
+- [x] `/directory` · `/directory/[personId]` · `/settings/directory` · `/settings/directory/[personId]` · `/settings/directory/workers` · `/parties` — shared **Person records** in Home and Administration, plus settings-owned Workers and CRM Business Parties; base-path-aware detail/back links retain product context; the old `/directory/workers` route is deleted; `directory:people:*` gates; HRMS not required
 
 ### Build (delivery + product management)
 
@@ -305,10 +312,9 @@ Full text of any pre-2026-08-03 entry is in git history.
 - [x] `/accounting/reports/sales-by-customer` · `/accounting/reports/sales-by-item` · `/accounting/reports/tax-summary` · `/accounting/reports/vendor-statement` · `/accounting/reports/working-capital`
 
 ### Billing
-- [x] `/billing` — Plan (plan cards, promo code, seats, usage meters) · Invoices & Payments · Billing Profile
-- [x] `/billing/ai-credits` — Wallet, top-up packs (Razorpay), auto-top-up, server-paginated usage history
+- [x] `/settings/billing` — Platform Plan (plan cards, promo code, seats, usage meters) · Payments · Billing Profile; the old `/billing`, `/billing/seats`, and `/settings/subscription` routes are deleted
+- [x] `/settings/billing/ai-credits` — Wallet, top-up packs (Razorpay), auto-top-up, server-paginated usage history; the old `/billing/ai-credits` route is deleted
 - [x] `/billing/invoices` · `/billing/invoices/new` · `/billing/invoices/[invoiceId]` — The org's own customer invoicing, not platform billing
-- [x] `/billing/seats` — Redirects to `/billing?tab=plan`
 
 ### Inventory
 - [x] `/inventory` · `/inventory/access` · `/inventory/settings` · `/inventory/import` (CSV wizard) · `/inventory/barcode`
@@ -350,7 +356,7 @@ Full text of any pre-2026-08-03 entry is in git history.
 - [x] `/surveys` · `/surveys/access` · `/surveys/new` · `/surveys/[surveyId]` · `/surveys/[surveyId]/participants` · `/surveys/live/[sessionId]/host`
 
 ### Organization & Settings
-- [x] `/organization` (Structure hub) · `/organization/departments` · `/organization/teams` · `/organization/locations` · `/organization/branches` · `/organization/business-units` · `/organization/cost-centers` · `/organization/tree` — HR-gated organization structure; ~~`/organization/structure`~~ redirects to `/organization`; setup generates industry defaults plus teams for enabled modules; teams require departments; chart is a searchable read-only hierarchy
+- [x] `/settings/organization/structure` · `/settings/organization/departments` · `/settings/organization/teams` · `/settings/organization/locations` · `/settings/organization/branches` · `/settings/organization/business-units` · `/settings/organization/cost-centers` · `/settings/organization/chart` — HR-gated organization structure; the legacy `/organization/*` routes are deleted; setup generates industry defaults plus teams for enabled modules; teams require departments; chart is searchable and read-only
 - [x] `/settings/organization` — Org profile + security policies (MFA, email domain, concurrent sessions; absorbed `/settings/security` 2026-07-25)
 - [x] `/settings/roles` · `/settings/roles/[roleId]` · `/settings/roles/simulate` · `/settings/roles/audit` — Role editor with permission matrix + simulator
 - [x] `/settings/modules` — Organization module enablement (`settings:manage`); each enabled product exposes access management in its own visible module sidebar
@@ -361,7 +367,6 @@ Full text of any pre-2026-08-03 entry is in git history.
 - [x] `/settings/audit-log` · `/settings/webhooks` · `/settings/delegations` · `/settings/incoming-transfer`
 - [x] `/accounting/settings/payment-providers` — Finance-module payment provider and credential setup, visible only with payment-provider access
 - [x] `/settings/connected-accounts` · `/settings/module-access/[moduleKey]` — Retired 2026-08-05; unused sign-in-provider management and duplicate generic module-access routes removed
-- [x] `/settings/subscription` — Redirects to `/billing?tab=plan`
 
 ### Workflows & Automation
 - [x] `/workflows` — Dashboard (analytics stats, filters + search, create/duplicate/delete)
@@ -372,6 +377,7 @@ Full text of any pre-2026-08-03 entry is in git history.
 - [x] `/org-setup` — Welcome → Basics (goals + modules merged) → Launch; draft + step resume; ceremonial generation with dedicated failure recovery
 - [x] `/employee-onboarding` — Shell-free wizard; never shown to owners/platform admins; HR-prefilled personal/bank data with employee-overridable drafts; value-level review/edit; country-driven documents/bank/payroll
 - [x] `/signin` — The only account entry (`/signup` retired) · `/magic-link` · `/verify-email` · `/accept-invitation` · `/invitation/[token]`
+- [x] `/access-suspended` — Recovery screen for an organization-only suspension (`resolveWizardGate`); recheck access, switch to another ACTIVE membership, or sign out; org creation intentionally unavailable
 - [x] `/access-denied` · `/build/client-access`
 
 ### Public (no auth)

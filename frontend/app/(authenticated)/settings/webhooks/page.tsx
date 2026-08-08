@@ -202,7 +202,7 @@ export default function WebhooksPage() {
     >
       {isLoading ? (
         <div className="space-y-4">
-          {[1, 2].map((i) => <Skeleton key={i} className="h-32" />)}
+          {Array.from({ length: 5 }).map((_, i) => <WebhookCardSkeleton key={i} />)}
         </div>
       ) : isError ? (
         <ErrorState
@@ -316,6 +316,34 @@ export default function WebhooksPage() {
         </AlertDialogContent>
       </AlertDialog>
     </PageWrapper>
+  );
+}
+
+function WebhookCardSkeleton() {
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <Skeleton className="h-2 w-2 shrink-0 rounded-full" />
+            <Skeleton className="h-4 flex-1 max-w-[360px]" />
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <Skeleton className="h-5 w-16 rounded-full" />
+            <Skeleton className="h-5 w-9 rounded-full" />
+            <Skeleton className="h-8 w-8" />
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="flex flex-wrap gap-1.5">
+          <Skeleton className="h-5 w-20 rounded-full" />
+          <Skeleton className="h-5 w-20 rounded-full" />
+          <Skeleton className="h-5 w-20 rounded-full" />
+        </div>
+        <Skeleton className="mt-3 h-3 w-28" />
+      </CardContent>
+    </Card>
   );
 }
 

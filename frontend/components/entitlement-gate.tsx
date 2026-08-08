@@ -77,7 +77,7 @@ function QuotaExceededState({
 }: QuotaExceededStateProps) {
   const label = humanizeLimitKey(limitKey);
   const pct = Math.min(100, Math.round((used / limit) * 100));
-  const path = upgradePath ?? "/billing?tab=plan";
+  const path = upgradePath ?? "/settings/billing?tab=plan";
 
   return (
     <div
@@ -207,7 +207,7 @@ function FeatureUnavailableState({
 
       <div className={cn("flex items-center gap-2", compact ? "mt-4" : "mt-5")}>
         <Button asChild size={compact ? "sm" : "default"}>
-          <Link href="/billing?tab=plan">View plans</Link>
+          <Link href="/settings/billing?tab=plan">View plans</Link>
         </Button>
         {onRetry && (
           <Button

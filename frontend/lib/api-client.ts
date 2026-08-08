@@ -27,6 +27,36 @@ function isPublicPath(path: string): boolean {
   return PUBLIC_AUTH_PATHS.has(clean);
 }
 
+const ORGANIZATION_ACCESS_ERROR_CODES = new Set([
+  "ORG_MEMBERSHIP_INACTIVE",
+  "ORG_MEMBERSHIP_SUSPENDED",
+]);
+
+async function redirectForOrganizationAccessError(res: Response): Promise<void> {
+  if (
+    res.status !== 403 ||
+    typeof window === "undefined" ||
+    autoSignOutSuppressed
+  )
+    return;
+
+  try {
+    const body = (await res.clone().json()) as { code?: unknown };
+    if (
+      typeof body.code !== "string" ||
+      !ORGANIZATION_ACCESS_ERROR_CODES.has(body.code)
+    )
+      return;
+
+    clearBackendTokenCache();
+    if (window.location.pathname !== "/access-suspended") {
+      window.location.replace("/access-suspended");
+    }
+  } catch {
+    return;
+  }
+}
+
 let cachedToken: { value: string; expiresAt: number } | null = null;
 let fetchingTokenPromise: Promise<string | null> | null = null;
 let autoSignOutSuppressed = false;
@@ -119,6 +149,7 @@ export async function authedFetch(
         });
       }
     }
+    if (!isPublic) await redirectForOrganizationAccessError(res);
     return res;
   } catch (error: unknown) {
     if (error instanceof DOMException && error.name === "TimeoutError") {

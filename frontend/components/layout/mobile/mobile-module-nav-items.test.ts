@@ -207,6 +207,51 @@ describe("mobile module nav items", () => {
       ]);
       expect(isMobileNavRouteActive("/timesheets/team", tabs[1]!, tabs)).toBe(true);
     });
+
+    it("keeps an exact directory item active on details but not on Workers", () => {
+      const tabs = getMobileModuleBottomTabs([
+        {
+          label: "People",
+          routes: [
+            {
+              label: "Directory",
+              icon: Users,
+              href: "/settings/directory",
+              exact: true,
+              activePrefixes: ["/settings/directory/"],
+              inactivePrefixes: ["/settings/directory/workers"],
+            },
+            {
+              label: "Workers",
+              icon: Briefcase,
+              href: "/settings/directory/workers",
+            },
+          ],
+        },
+      ]);
+
+      expect(
+        isMobileNavRouteActive(
+          "/settings/directory/person-1",
+          tabs[0]!,
+          tabs,
+        ),
+      ).toBe(true);
+      expect(
+        isMobileNavRouteActive(
+          "/settings/directory/workers",
+          tabs[0]!,
+          tabs,
+        ),
+      ).toBe(false);
+      expect(
+        isMobileNavRouteActive(
+          "/settings/directory/workers",
+          tabs[1]!,
+          tabs,
+        ),
+      ).toBe(true);
+    });
   });
 
   describe("getMobileModuleContentPaddingClassName", () => {

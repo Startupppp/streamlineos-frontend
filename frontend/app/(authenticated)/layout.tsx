@@ -1,8 +1,7 @@
-import { getServerAuth } from "../../lib/get-server-auth";
 import { redirect } from "next/navigation";
 import { cookies, headers } from "next/headers";
-import { signInPathForMissingSession } from "../../lib/auth-session-cookies";
-import { getServerAccess } from "../../lib/rbac/get-server-access";
+import { requireSession } from "../../lib/rbac/require-permission";
+import { resolveWizardGate } from "../../lib/wizard-gate";
 import { DashboardShell } from "../../components/layout/dashboard-shell";
 import { FeedbucketEmbed } from "../../components/feedbucket/feedbucket-embed";
 import { AppThemeProvider } from "../../components/theme/app-theme-provider";
@@ -13,36 +12,14 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getServerAuth();
+  const session = await requireSession();
 
-  if (!session?.user) redirect(signInPathForMissingSession());
-
+  const cookieStore = await cookies();
   const requestHeaders = await headers();
   const nonce = requestHeaders.get("x-nonce") ?? undefined;
-  const pathname = requestHeaders.get("x-pathname") ?? "";
-  const cookieStore = await cookies();
 
-  const isOrgOwner = session.user.isOrgOwner === true;
-  const hasOrg = Boolean(session.orgId);
-  const ownerSetupPending = isOrgOwner && !session.orgOnboardingCompletedAt;
-  const orgSetupCookieName = session.orgId
-    ? `org-setup-done--${session.orgId}`
-    : null;
-  const orgSetupDone = orgSetupCookieName
-    ? Boolean(cookieStore.get(orgSetupCookieName)?.value)
-    : false;
-  const forceOrgSetup = !hasOrg || (ownerSetupPending && !orgSetupDone);
-
-  if (forceOrgSetup) redirect("/org-setup");
-
-  const isSettingsRoute =
-    pathname === "/settings" || pathname.startsWith("/settings/");
-  if (!isSettingsRoute) {
-    const { mfa } = await getServerAccess();
-    if (mfa?.enforced && !mfa.satisfied) {
-      redirect("/settings?tab=security&mfa=required");
-    }
-  }
+  const gate = resolveWizardGate(session, cookieStore);
+  if (gate) redirect(gate);
 
   const defaultCollapsed =
     cookieStore.get("sidebar-collapsed")?.value === "true";

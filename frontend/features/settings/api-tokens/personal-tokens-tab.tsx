@@ -12,11 +12,10 @@ import {
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
 import { TokenCreatedDialog } from "./token-created-dialog";
 import { CreateUserTokenSheet } from "./create-user-token-sheet";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
@@ -169,11 +168,7 @@ export function PersonalTokensTab({
   return (
     <>
       {isLoading ? (
-        <div className="space-y-1.5">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <Skeleton key={i} className="h-8 w-full rounded-md" />
-          ))}
-        </div>
+        <DataTableSkeleton rows={8} columns={6} />
       ) : isError ? (
         <ErrorState
           className={CONTENT_FILL_PANEL}

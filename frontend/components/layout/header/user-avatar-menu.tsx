@@ -82,14 +82,14 @@ function buildMenuEntries(opts: {
   ];
   if (canManageSettings) {
     accountLinks.push({
-      href: "/billing",
+      href: "/settings/billing",
       label: "Billing & Plan",
       icon: CreditCard,
     });
   }
   if (canViewAiCredits) {
     accountLinks.push({
-      href: "/billing/ai-credits",
+      href: "/settings/billing/ai-credits",
       label: "AI Credits",
       icon: Zap,
     });
@@ -108,7 +108,7 @@ function buildMenuEntries(opts: {
             label: "Organization",
             icon: Building2,
           },
-          { href: "/users", label: "Members", icon: Users },
+          { href: "/settings/users", label: "Members", icon: Users },
         ],
       },
     );

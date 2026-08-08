@@ -43,6 +43,7 @@ import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 
 interface PersonDetailPageProps {
   organizationPersonId: string;
+  directoryBasePath?: string;
 }
 
 function displayName(person: OrganizationPerson): string {
@@ -110,18 +111,49 @@ function PersonTabState({
   );
 }
 
+function TabContentSkeleton() {
+  return (
+    <div className="p-4 sm:p-5">
+      <div className="grid gap-4 sm:grid-cols-2">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="space-y-1">
+            <Skeleton className="h-3 w-24" />
+            <Skeleton className="h-4 w-40" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function DetailSkeleton() {
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <Skeleton className="h-14 w-14 rounded-full" />
-        <div className="space-y-2">
-          <Skeleton className="h-5 w-40" />
-          <Skeleton className="h-4 w-56" />
+    <div className="flex min-h-0 flex-1 flex-col gap-0 overflow-hidden rounded-lg border border-border bg-card">
+      <div className="shrink-0 overflow-x-auto border-b border-border bg-muted/20 p-2">
+        <div className="flex gap-1">
+          <Skeleton className="h-8 w-20 rounded-md" />
+          <Skeleton className="h-8 w-20 rounded-md" />
+          <Skeleton className="h-8 w-20 rounded-md" />
+          <Skeleton className="h-8 w-20 rounded-md" />
         </div>
       </div>
-      <Skeleton className="h-9 w-full max-w-md" />
-      <Skeleton className="h-48 w-full" />
+      <div className="p-4 sm:p-5">
+        <div className="mb-4 flex items-start gap-3">
+          <Skeleton className="h-14 w-14 shrink-0 rounded-full" />
+          <div className="space-y-2">
+            <Skeleton className="h-5 w-40" />
+            <Skeleton className="h-4 w-56" />
+          </div>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="space-y-1">
+              <Skeleton className="h-3 w-24" />
+              <Skeleton className="h-4 w-40" />
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -184,7 +216,7 @@ function PersonMembershipTab({ person }: { person: OrganizationPerson }) {
           canInvite
             ? {
                 label: "Invite as member",
-                href: "/users?view=invitations&create=1",
+                href: "/settings/users?view=invitations&create=1",
               }
             : undefined
         }
@@ -193,7 +225,7 @@ function PersonMembershipTab({ person }: { person: OrganizationPerson }) {
   }
 
   if (isLoading) {
-    return <DetailSkeleton />;
+    return <TabContentSkeleton />;
   }
 
   if (!user) {
@@ -235,7 +267,7 @@ function PersonMembershipTab({ person }: { person: OrganizationPerson }) {
       <UserMembershipSection userId={user.id} />
       {canInvite ? (
         <Button variant="outline" size="sm" className="text-xs" asChild>
-          <Link href="/users">Open in Members</Link>
+          <Link href="/settings/users">Open in Members</Link>
         </Button>
       ) : null}
     </div>
@@ -321,7 +353,7 @@ function PersonWorkerTab({ person }: { person: OrganizationPerson }) {
   }
 
   if (workersLoading) {
-    return <DetailSkeleton />;
+    return <TabContentSkeleton />;
   }
 
   if (!worker) {
@@ -417,7 +449,7 @@ function PersonModulesTab({ person }: { person: OrganizationPerson }) {
           canInvite
             ? {
                 label: "Invite as member",
-                href: "/users?view=invitations&create=1",
+                href: "/settings/users?view=invitations&create=1",
               }
             : undefined
         }
@@ -426,7 +458,7 @@ function PersonModulesTab({ person }: { person: OrganizationPerson }) {
   }
 
   if (isLoading) {
-    return <DetailSkeleton />;
+    return <TabContentSkeleton />;
   }
 
   if (!user) {
@@ -448,7 +480,10 @@ function PersonModulesTab({ person }: { person: OrganizationPerson }) {
   );
 }
 
-export function PersonDetailPage({ organizationPersonId }: PersonDetailPageProps) {
+export function PersonDetailPage({
+  organizationPersonId,
+  directoryBasePath = "/directory",
+}: PersonDetailPageProps) {
   const canUpdate = useCan("directory:people:update");
   const canViewMembers = useCan("settings:view");
   const canViewWorkers = useCan("workforce:workers:view");
@@ -483,7 +518,7 @@ export function PersonDetailPage({ organizationPersonId }: PersonDetailPageProps
       title={title}
       subtitle={person?.workEmail ?? "Person record"}
       badge={person ? (person.userId ? "Member linked" : "Directory only") : undefined}
-      backHref="/directory"
+      backHref={directoryBasePath}
       noInternalScroll
       actions={
         canUpdate && person ? (

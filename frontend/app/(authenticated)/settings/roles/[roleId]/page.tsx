@@ -8,14 +8,15 @@ import {
   Calendar,
   Users,
   AlertTriangle,
-  Loader2,
   RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { RoleEditorSkeleton } from "@/features/settings/roles/role-editor-skeleton";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { PermissionMatrix } from "@/components/rbac/permission-matrix";
 import { RoleAssignmentsSheet } from "@/components/rbac/role-assignments-sheet";
@@ -132,7 +133,7 @@ function RoleEditorContent() {
                     Members
                   </p>
                   {membersQuery.isLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    <Skeleton className="h-4 w-8" />
                   ) : (
                     <p className="text-sm font-medium">{memberCount}</p>
                   )}
@@ -161,65 +162,6 @@ function RoleEditorContent() {
         open={assignmentsOpen}
         onOpenChange={setAssignmentsOpen}
       />
-    </PageWrapper>
-  );
-}
-
-function RoleEditorSkeleton() {
-  return (
-    <PageWrapper
-      title="Loading…"
-      subtitle="Manage permissions for this role"
-      noInternalScroll
-      backHref="/settings/roles"
-      backLabel="Roles"
-    >
-      <div className="flex flex-col gap-4 lg:h-full lg:min-h-0">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-              <div className="space-y-1.5">
-                <div className="h-2.5 w-8 rounded bg-muted animate-pulse" />
-                <div className="h-4 w-24 rounded bg-muted animate-pulse" />
-              </div>
-              <Separator orientation="vertical" className="hidden sm:block" />
-              <div className="space-y-1.5">
-                <div className="h-2.5 w-12 rounded bg-muted animate-pulse" />
-                <div className="h-4 w-28 rounded bg-muted animate-pulse" />
-              </div>
-              <Separator orientation="vertical" className="hidden sm:block" />
-              <div className="space-y-1.5">
-                <div className="h-2.5 w-14 rounded bg-muted animate-pulse" />
-                <div className="h-4 w-6 rounded bg-muted animate-pulse" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="lg:flex-1 lg:min-h-0 flex flex-col">
-          <div className="p-4 pb-3 flex items-start justify-between gap-3">
-            <div className="space-y-1.5">
-              <div className="h-5 w-40 rounded bg-muted animate-pulse" />
-              <div className="h-3 w-48 rounded bg-muted animate-pulse" />
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-24 rounded bg-muted animate-pulse" />
-            </div>
-          </div>
-          <Separator />
-          <div className="divide-y divide-border/30">
-            {Array.from({ length: 8 }).map((_, index) => (
-              <div key={index} className="flex items-center justify-between px-3 py-3">
-                <div className="flex items-center gap-2">
-                  <div className="h-3.5 w-3.5 rounded bg-muted animate-pulse" />
-                  <div className="h-4 w-40 rounded bg-muted animate-pulse" />
-                </div>
-                <div className="h-4 w-10 rounded-full bg-muted animate-pulse" />
-              </div>
-            ))}
-          </div>
-        </Card>
-      </div>
     </PageWrapper>
   );
 }

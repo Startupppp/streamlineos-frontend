@@ -152,7 +152,7 @@ export const QUICK_CREATE_GROUPS: CreateGroup[] = [
       {
         id: "invite-user",
         label: "Invite user",
-        href: "/users?view=invitations&create=1",
+        href: "/settings/users?view=invitations&create=1",
         icon: UserPlus,
         permission: "settings:organization:manage",
       },

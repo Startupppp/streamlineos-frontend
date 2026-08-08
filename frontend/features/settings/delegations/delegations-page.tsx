@@ -257,7 +257,7 @@ export function DelegationsPage() {
 
 function DelegationSkeletons({ count }: { count: number }) {
   return (
-    <div className="divide-y divide-border/60">
+    <div className="divide-y divide-border/60 rounded-xl border border-border bg-card">
       {Array.from({ length: count }).map((_, i) => (
         <div key={i} className="flex items-center gap-3 px-4 py-2.5">
           <div className="space-y-1.5 flex-1">

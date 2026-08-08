@@ -1,20 +1,19 @@
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { FocusedWizardFrame } from "@/components/wizard-shell";
-import { getServerAuth } from "@/lib/get-server-auth";
-import { signInPathForMissingSession } from "@/lib/auth-session-cookies";
+import { requireSession } from "@/lib/rbac/require-permission";
+import { resolveWizardGate } from "@/lib/wizard-gate";
 
 export default async function EmployeeOnboardingLayout({
   children,
 }: {
   children: ReactNode;
 }) {
-  const session = await getServerAuth();
+  const session = await requireSession();
 
-  if (!session?.user) redirect(signInPathForMissingSession());
-  if (!session.orgId) redirect("/org-setup");
-  if (session.user.isOrgOwner) redirect("/dashboard");
-  if (session.userOnboardingCompletedAt) redirect("/dashboard");
+  const gate = resolveWizardGate(session, await cookies());
+  if (gate !== "/employee-onboarding") redirect(gate ?? "/dashboard");
 
   return (
     <FocusedWizardFrame

@@ -15,32 +15,6 @@ import {
 
 const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET ?? "";
 
-const SESSION_DATA_TTL_MS = 30_000;
-const sessionDataStore = new Map<string, { data: SessionData; expiresAt: number }>();
-
-function getSessionDataFromStore(key: string): SessionData | null {
-  const entry = sessionDataStore.get(key);
-  if (!entry) return null;
-  if (Date.now() > entry.expiresAt) {
-    sessionDataStore.delete(key);
-    return null;
-  }
-  return entry.data;
-}
-
-function setSessionDataInStore(key: string, data: SessionData): void {
-  sessionDataStore.set(key, { data, expiresAt: Date.now() + SESSION_DATA_TTL_MS });
-}
-
-function invalidateSessionDataInStore(userId: string): void {
-  const prefix = `${userId}:`;
-  for (const key of sessionDataStore.keys()) {
-    if (key === userId || key.startsWith(prefix)) {
-      sessionDataStore.delete(key);
-    }
-  }
-}
-
 function resolveSessionDisplayName(data: {
   name?: string | null;
   firstName?: string | null;
@@ -101,6 +75,8 @@ interface SessionData {
   plan: Plan | null;
   orgOnboardingCompletedAt: string | null;
   userOnboardingCompletedAt: string | null;
+  organizationAccess: "active" | "suspended" | "none";
+  suspendedOrganizationName: string | null;
 }
 
 async function fetchSessionData(userId: string): Promise<SessionData | null> {
@@ -125,27 +101,14 @@ async function fetchSessionData(userId: string): Promise<SessionData | null> {
   return null;
 }
 
-const lastGoodSessionData = new Map<string, SessionData>();
-
-async function fetchSessionDataWithCache(userId: string, orgId: string | null): Promise<SessionData | null> {
-  const storeKey = `${userId}:${orgId ?? ""}`;
-  if (orgId !== null) {
-    const cached = getSessionDataFromStore(storeKey);
-    if (cached) return cached;
-  }
-  const data = await fetchSessionData(userId);
-  if (!data) {
-    return lastGoodSessionData.get(userId) ?? null;
-  }
-  if (data.orgId) {
-    setSessionDataInStore(`${userId}:${data.orgId}`, data);
-    if (orgId !== null) setSessionDataInStore(storeKey, data);
-    lastGoodSessionData.set(userId, data);
-    return data;
-  }
-  lastGoodSessionData.delete(userId);
-  invalidateSessionDataInStore(userId);
-  return data;
+async function fetchSessionDataWithCache(
+  userId: string,
+  _orgId: string | null,
+): Promise<SessionData | null> {
+  // React cache deduplicates this within one server render. Do not retain
+  // session data across requests: suspension and restoration are security
+  // transitions and must be visible to an already-open browser immediately.
+  return fetchSessionData(userId);
 }
 
 const fetchSessionDataCached = cache(fetchSessionDataWithCache);
@@ -225,6 +188,8 @@ function buildUserFromSessionData(
     enabledModules: sessionData.enabledModules,
     orgOnboardingCompletedAt: sessionData.orgOnboardingCompletedAt,
     userOnboardingCompletedAt: sessionData.userOnboardingCompletedAt,
+    organizationAccess: sessionData.organizationAccess,
+    suspendedOrganizationName: sessionData.suspendedOrganizationName,
     ...(extra?.daysUntilExpiry !== undefined
       ? { daysUntilExpiry: extra.daysUntilExpiry }
       : {}),
@@ -323,6 +288,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           user.enabledModules = sessionData.enabledModules;
           user.orgOnboardingCompletedAt = sessionData.orgOnboardingCompletedAt;
           user.userOnboardingCompletedAt = sessionData.userOnboardingCompletedAt;
+          user.organizationAccess = sessionData.organizationAccess;
+          user.suspendedOrganizationName =
+            sessionData.suspendedOrganizationName;
         }
       }
       return true;
@@ -340,6 +308,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.orgOnboardingCompletedAt = user.orgOnboardingCompletedAt ?? null;
         token.userOnboardingCompletedAt =
           user.userOnboardingCompletedAt ?? null;
+        token.organizationAccess = user.organizationAccess ?? "none";
+        token.suspendedOrganizationName =
+          user.suspendedOrganizationName ?? null;
         token.sessionId = user.sessionId ?? randomUUID();
         if (user.daysUntilExpiry !== undefined)
           token.daysUntilExpiry = user.daysUntilExpiry;
@@ -349,14 +320,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (trigger === "update") {
         const userId = token.id as string | undefined;
         if (userId) {
-          invalidateSessionDataInStore(userId);
           const fresh = await fetchSessionData(userId);
           if (fresh) {
-            if (fresh.orgId) {
-              lastGoodSessionData.set(userId, fresh);
-            } else {
-              lastGoodSessionData.delete(userId);
-            }
             token.name = resolveSessionDisplayName(fresh);
             token.orgId = fresh.orgId;
             token.isOrgOwner = fresh.isOrgOwner;
@@ -364,6 +329,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             token.isActive = fresh.isActive;
             token.orgOnboardingCompletedAt = fresh.orgOnboardingCompletedAt;
             token.userOnboardingCompletedAt = fresh.userOnboardingCompletedAt;
+            token.organizationAccess = fresh.organizationAccess;
+            token.suspendedOrganizationName =
+              fresh.suspendedOrganizationName;
           } else if (
             session &&
             typeof session === "object" &&
@@ -432,6 +400,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           fresh?.userOnboardingCompletedAt ??
           (token.userOnboardingCompletedAt as string | null | undefined) ??
           null;
+        session.organizationAccess =
+          fresh?.organizationAccess ??
+          (token.organizationAccess as
+            | "active"
+            | "suspended"
+            | "none"
+            | undefined) ??
+          (orgId ? "active" : "none");
+        session.suspendedOrganizationName =
+          fresh?.suspendedOrganizationName ??
+          (token.suspendedOrganizationName as string | null | undefined) ??
+          null;
 
         const jwtSecret = process.env.BACKEND_JWT_SECRET;
         const sessionId = (token.sessionId as string | undefined)?.trim();
@@ -474,6 +454,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           (token.orgOnboardingCompletedAt as string | null | undefined) ?? null;
         session.userOnboardingCompletedAt =
           (token.userOnboardingCompletedAt as string | null | undefined) ?? null;
+        session.organizationAccess =
+          (token.organizationAccess as
+            | "active"
+            | "suspended"
+            | "none"
+            | undefined) ??
+          (session.orgId ? "active" : "none");
+        session.suspendedOrganizationName =
+          (token.suspendedOrganizationName as string | null | undefined) ??
+          null;
         return session;
       }
     },

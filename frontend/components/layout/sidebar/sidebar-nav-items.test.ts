@@ -2,6 +2,7 @@ import {
   flattenNavRoutes,
   getNavGroupsForProduct,
   getProductFromPathname,
+  isNavRouteActive,
 } from "./sidebar-nav-items";
 
 const EMPLOYEE_PERMISSIONS = [
@@ -70,10 +71,61 @@ describe("Home employee navigation", () => {
     expect(getProductFromPathname("/me/pay")).toBe("home");
     expect(getProductFromPathname("/me/documents")).toBe("home");
     expect(getProductFromPathname("/me/recruitment")).toBe("home");
+    expect(getProductFromPathname("/directory")).toBe("home");
+    expect(getProductFromPathname("/directory/person-1")).toBe("home");
   });
 });
 
 describe("Administration information architecture", () => {
+  it("matches the owning settings item without activating broader siblings", () => {
+    const groups = getNavGroupsForProduct(
+      "administration",
+      "OWNER",
+      [],
+      ["hr"],
+    );
+    const routes = groups.flatMap((group) => flattenNavRoutes(group.routes));
+    const account = routes.find((route) => route.href === "/settings");
+    const orgSettings = routes.find(
+      (route) => route.href === "/settings/organization",
+    );
+    const directory = routes.find(
+      (route) => route.href === "/settings/directory",
+    );
+    const workers = routes.find(
+      (route) => route.href === "/settings/directory/workers",
+    );
+
+    expect(account && isNavRouteActive(account, "/settings/users")).toBe(false);
+    expect(
+      orgSettings &&
+        isNavRouteActive(
+          orgSettings,
+          "/settings/organization/departments",
+        ),
+    ).toBe(false);
+    expect(
+      directory &&
+        isNavRouteActive(directory, "/settings/directory/person-1"),
+    ).toBe(true);
+    expect(
+      directory &&
+        isNavRouteActive(directory, "/settings/directory/workers"),
+    ).toBe(false);
+    expect(
+      workers && isNavRouteActive(workers, "/settings/directory/workers"),
+    ).toBe(true);
+  });
+
+  it("keeps settings-owned directory routes inside Administration", () => {
+    expect(getProductFromPathname("/settings/directory")).toBe(
+      "administration",
+    );
+    expect(getProductFromPathname("/settings/directory/person-1")).toBe(
+      "administration",
+    );
+  });
+
   it("lists organization structure as the base route with flat entity links", () => {
     const groups = getNavGroupsForProduct(
       "administration",
@@ -84,14 +136,14 @@ describe("Administration information architecture", () => {
     const organization = groups.find((group) => group.label === "Organization");
 
     expect(organization?.routes.map((route) => route.href)).toEqual([
-      "/organization",
-      "/organization/business-units",
-      "/organization/branches",
-      "/organization/departments",
-      "/organization/teams",
-      "/organization/locations",
-      "/organization/cost-centers",
-      "/organization/tree",
+      "/settings/organization/structure",
+      "/settings/organization/business-units",
+      "/settings/organization/branches",
+      "/settings/organization/departments",
+      "/settings/organization/teams",
+      "/settings/organization/locations",
+      "/settings/organization/cost-centers",
+      "/settings/organization/chart",
     ]);
   });
 
@@ -105,9 +157,9 @@ describe("Administration information architecture", () => {
     const hrefs = groups.flatMap((group) => flattenNavRoutes(group.routes)).map((route) => route.href);
 
     expect(groups.some((group) => group.label === "Organization")).toBe(false);
-    expect(hrefs).not.toContain("/directory/workers");
-    expect(hrefs).toContain("/directory");
-    expect(hrefs).toContain("/users");
+    expect(hrefs).not.toContain("/settings/directory/workers");
+    expect(hrefs).toContain("/settings/directory");
+    expect(hrefs).toContain("/settings/users");
   });
 
   it("shows workers when payroll is enabled without HR", () => {
@@ -119,7 +171,22 @@ describe("Administration information architecture", () => {
     );
     const hrefs = groups.flatMap((group) => flattenNavRoutes(group.routes)).map((route) => route.href);
 
-    expect(hrefs).toContain("/directory/workers");
+    expect(hrefs).toContain("/settings/directory/workers");
+  });
+
+  it("shows AI Credits to its permission without requiring settings management", () => {
+    const groups = getNavGroupsForProduct(
+      "administration",
+      "MEMBER",
+      ["billing:ai-credits:view"],
+      [],
+    );
+    const hrefs = groups
+      .flatMap((group) => flattenNavRoutes(group.routes))
+      .map((route) => route.href);
+
+    expect(hrefs).toContain("/settings/billing/ai-credits");
+    expect(hrefs).not.toContain("/settings/billing");
   });
 
   it("places business parties in CRM and classifies the route as CRM", () => {
@@ -133,5 +200,12 @@ describe("Administration information architecture", () => {
 
     expect(hrefs).toContain("/parties");
     expect(getProductFromPathname("/parties")).toBe("crm");
+  });
+
+  it("keeps operational customer invoices in Finance, not Settings", () => {
+    expect(getProductFromPathname("/billing/invoices")).toBe("finance");
+    expect(getProductFromPathname("/billing/invoices/invoice-1")).toBe(
+      "finance",
+    );
   });
 });

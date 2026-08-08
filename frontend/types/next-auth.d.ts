@@ -12,6 +12,8 @@ declare module "next-auth" {
     daysUntilExpiry?: number;
     orgOnboardingCompletedAt?: string | null;
     userOnboardingCompletedAt?: string | null;
+    organizationAccess?: "active" | "suspended" | "none";
+    suspendedOrganizationName?: string | null;
     backendJwt?: string;
     authProvider?: string;
     user: {
@@ -34,6 +36,8 @@ declare module "next-auth" {
     plan?: Plan | null;
     enabledModules?: string[];
     userOnboardingCompletedAt?: string | null;
+    organizationAccess?: "active" | "suspended" | "none";
+    suspendedOrganizationName?: string | null;
     name?: string | null;
     sessionId?: string;
   }
@@ -54,6 +58,8 @@ declare module "next-auth/jwt" {
     daysUntilExpiry?: number;
     orgOnboardingCompletedAt?: string | null;
     userOnboardingCompletedAt?: string | null;
+    organizationAccess?: "active" | "suspended" | "none";
+    suspendedOrganizationName?: string | null;
     authProvider?: string;
   }
 }

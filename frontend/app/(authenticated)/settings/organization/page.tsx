@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { useCan } from "@/hooks/api/access";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { OrgSettingsSectionsSkeleton } from "@/features/settings/organization/org-settings-skeleton";
 import { EmptyProjectsIllustration } from "@/components/illustrations";
 import { useOrgSettings, useUpdateOrgSettings } from "@/hooks/api/organization";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -97,23 +97,7 @@ export default function OrganizationSettingsPage() {
   if (isLoading) {
     return (
       <PageWrapper title="Organization" subtitle="Manage your organization profile, branding, and lifecycle settings">
-        <div className="space-y-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Card key={i} className="rounded-lg shadow-sm">
-              <CardHeader className="gap-1 px-4 pt-3.5 pb-2">
-                <Skeleton className="h-4 w-36" />
-                <Skeleton className="h-3 w-64 max-w-full" />
-              </CardHeader>
-              <CardContent className="px-4 pb-3.5 space-y-3">
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full hidden lg:block" />
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <OrgSettingsSectionsSkeleton />
       </PageWrapper>
     );
   }

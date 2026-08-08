@@ -113,7 +113,13 @@ function PersonRowActions({
   );
 }
 
-export function PeopleDirectoryPage() {
+interface PeopleDirectoryPageProps {
+  basePath?: string;
+}
+
+export function PeopleDirectoryPage({
+  basePath = "/directory",
+}: PeopleDirectoryPageProps) {
   const canCreate = useCan("directory:people:create");
   const canUpdate = useCan("directory:people:update");
   const canDelete = useCan("directory:people:delete");
@@ -190,7 +196,7 @@ export function PeopleDirectoryPage() {
       className: TABLE_TITLE_CELL,
       cell: (row) => (
         <Link
-          href={`/directory/${row.organizationPersonId}`}
+          href={`${basePath}/${row.organizationPersonId}`}
           className={cn(
             "font-medium text-foreground hover:text-primary transition-colors",
             TEXT_ONE_LINE,
@@ -287,7 +293,7 @@ export function PeopleDirectoryPage() {
       <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-hidden">
         <div className="flex min-h-0 flex-1 flex-col">
           {isLoading ? (
-            <DataTableSkeleton rows={12} columns={5} className="min-h-0 w-full flex-1" />
+            <DataTableSkeleton rows={12} columns={6} className="min-h-0 w-full flex-1" />
           ) : isError ? (
             <ErrorState className={cn(CONTENT_FILL_PANEL, PAGE_BODY_EMPTY_CLASS)} onRetry={handleRetry} />
           ) : rows.length === 0 ? (

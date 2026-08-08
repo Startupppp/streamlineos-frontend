@@ -87,7 +87,7 @@ export function AiAssistantPage({ projectId }: AiAssistantPageProps) {
             }
             title="Upgrade to unlock AI features"
             description={`AI Project Manager is available on the ${feature.requiredPlan ?? "PROFESSIONAL"} plan and above.`}
-            action={{ label: "View plans", href: "/billing" }}
+            action={{ label: "View plans", href: "/settings/billing" }}
           />
         </PmPageShell>
       </PageWrapper>

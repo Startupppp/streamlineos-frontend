@@ -6,7 +6,7 @@ export default function DelegationsLoading() {
     <PageWrapper
       title="Delegations"
       subtitle="Share specific permissions with teammates for a set period."
-      actions={<Skeleton className="h-9 w-24 rounded-md" />}
+      actions={<Skeleton className="h-8 w-24 rounded-md" />}
       filtersClassName="flex-col items-stretch gap-2 overflow-visible md:flex-row md:items-center md:justify-between"
       filters={
         <>
@@ -19,7 +19,7 @@ export default function DelegationsLoading() {
       }
     >
       <div className="divide-y divide-border/60 rounded-xl border border-border bg-card">
-        {Array.from({ length: 3 }).map((_, i) => (
+        {Array.from({ length: 2 }).map((_, i) => (
           <div key={i} className="flex items-center gap-3 px-4 py-2.5">
             <div className="flex-1 space-y-1.5">
               <Skeleton className="h-4 w-32" />

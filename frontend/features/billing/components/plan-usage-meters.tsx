@@ -65,6 +65,15 @@ function PlanUsageSkeletons() {
   );
 }
 
+export function PlanUsageMetersSkeleton() {
+  return (
+    <div className="rounded-xl border border-border bg-card shadow-sm p-5 space-y-4">
+      <Skeleton className="h-4 w-24" />
+      <PlanUsageSkeletons />
+    </div>
+  );
+}
+
 interface PlanUsageMetersProps {
   onUpgradeClick?: () => void;
 }
@@ -108,7 +117,7 @@ export function PlanUsageMeters({ onUpgradeClick }: PlanUsageMetersProps) {
         )}
         {hasNearLimit && !onUpgradeClick && (
           <Button variant="outline" size="sm" asChild className="text-xs h-7">
-            <Link href="/billing?tab=plan">
+            <Link href="/settings/billing?tab=plan">
               <AlertCircle className="h-3 w-3 mr-1.5 text-amber-500" />
               Upgrade plan
             </Link>

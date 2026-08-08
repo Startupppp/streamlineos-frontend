@@ -1,7 +1,46 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import type { Session } from "next-auth";
-import { SessionProvider as NextAuthSessionProvider } from "next-auth/react";
+import {
+  SessionProvider as NextAuthSessionProvider,
+  useSession,
+} from "next-auth/react";
+import { usePathname } from "next/navigation";
+import { clearBackendTokenCache } from "@/lib/api-client";
+import { getMembershipLifecycleDestination } from "@/lib/membership-lifecycle-route";
+
+function MembershipLifecycleSync() {
+  const { data } = useSession();
+  const pathname = usePathname();
+  const previous = useRef({
+    orgId: data?.orgId ?? null,
+    access: data?.organizationAccess,
+  });
+
+  useEffect(() => {
+    const current = {
+      orgId: data?.orgId ?? null,
+      access: data?.organizationAccess,
+    };
+    const orgChanged = previous.current.orgId !== current.orgId;
+    const accessChanged = previous.current.access !== current.access;
+    previous.current = current;
+
+    if (!orgChanged && !accessChanged) return;
+    clearBackendTokenCache();
+
+    const destination = getMembershipLifecycleDestination(
+      current.access,
+      pathname,
+    );
+    if (destination) {
+      window.location.replace(destination);
+    }
+  }, [data?.orgId, data?.organizationAccess, pathname]);
+
+  return null;
+}
 
 export function SessionProvider({
   children,
@@ -13,11 +52,11 @@ export function SessionProvider({
   return (
     <NextAuthSessionProvider
       session={session}
-      refetchOnWindowFocus={false}
+      refetchOnWindowFocus
       refetchInterval={0}
     >
+      <MembershipLifecycleSync />
       {children}
     </NextAuthSessionProvider>
   );
 }
-

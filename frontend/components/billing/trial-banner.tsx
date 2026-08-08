@@ -76,7 +76,7 @@ export function TrialBanner() {
           size="sm"
           className="h-7 border-0 bg-amber-600 px-2.5 text-[11px] text-white hover:bg-amber-700 sm:h-6 sm:px-3"
         >
-          <Link href="/billing?tab=plan">
+          <Link href="/settings/billing?tab=plan">
             <span className="sm:hidden">Upgrade</span>
             <span className="hidden sm:inline">Upgrade now</span>
           </Link>

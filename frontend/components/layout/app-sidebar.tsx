@@ -14,6 +14,7 @@ import {
   getNavGroupsForProduct,
   getProductFromPathname,
   flattenNavRoutes,
+  isNavRouteActive,
   isModuleEnabled,
   MODULE_ACCENTS,
   type ModuleAccent,
@@ -112,8 +113,7 @@ export function AppSidebar({
   const activeGroupLabel = useMemo(() => {
     for (const group of navGroups) {
       const match = flattenNavRoutes(group.routes).some(
-        (route) =>
-          pathname === route.href || pathname.startsWith(route.href + "/"),
+        (route) => isNavRouteActive(route, pathname),
       );
       if (match) return group.label;
     }

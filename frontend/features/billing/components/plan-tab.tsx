@@ -5,7 +5,6 @@ import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { Calendar, CreditCard } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -23,6 +22,7 @@ import { PlanCard } from "@/features/billing/components/plan-card";
 import { CouponSection } from "@/features/billing/components/coupon-section";
 import { SeatsBlock } from "@/features/billing/components/seats-block";
 import { PlanUsageMeters } from "@/features/billing/components/plan-usage-meters";
+import { PlanTabSkeleton } from "@/features/billing/components/billing-page-skeleton";
 import { EntitlementGate } from "@/components/entitlement-gate";
 import { PRICING } from "@/lib/pricing";
 
@@ -46,20 +46,6 @@ const STATUS_BADGE: Record<
   CANCELLED: { label: "Cancelled", variant: "outline" },
   EXPIRED: { label: "Expired", variant: "outline" },
 };
-
-function PlanTabSkeleton() {
-  return (
-    <div className="space-y-5">
-      <Skeleton className="h-14 w-full rounded-lg" />
-      <Skeleton className="h-9 w-52 rounded-lg" />
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {[1, 2, 3].map((i) => (
-          <Skeleton key={i} className="min-h-[240px] rounded-xl" />
-        ))}
-      </div>
-    </div>
-  );
-}
 
 export function PlanTab() {
   const { data: session } = useSession();

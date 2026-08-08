@@ -14,7 +14,11 @@ export function PeopleSectionTabs() {
       : "members";
 
   function handleValueChange(value: string) {
-    router.push(value === "invitations" ? "/users?view=invitations" : "/users");
+    router.push(
+      value === "invitations"
+        ? "/settings/users?view=invitations"
+        : "/settings/users",
+    );
   }
 
   return (

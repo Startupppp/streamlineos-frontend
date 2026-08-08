@@ -1,0 +1,93 @@
+"use client";
+
+import { useCallback, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { CreditCard, Receipt, Building2 } from "lucide-react";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BillingPageSkeleton } from "@/features/billing/components/billing-page-skeleton";
+import { PlanTab } from "@/features/billing/components/plan-tab";
+import { PaymentsTab } from "@/features/billing/components/payments-tab";
+import { BillingProfileTab } from "@/features/billing/components/billing-profile-tab";
+
+type BillingTab = "plan" | "payments" | "profile";
+
+const VALID_TABS: BillingTab[] = ["plan", "payments", "profile"];
+
+function resolveTab(raw: string | null): BillingTab {
+  if (raw && (VALID_TABS as string[]).includes(raw)) return raw as BillingTab;
+  return "plan";
+}
+
+function BillingPageContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const activeTab = resolveTab(searchParams.get("tab"));
+
+  const handleTabChange = useCallback(
+    (tab: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (tab === "plan") {
+        params.delete("tab");
+      } else {
+        params.set("tab", tab);
+      }
+      router.replace(`?${params.toString()}`, { scroll: false });
+    },
+    [searchParams, router],
+  );
+
+  return (
+    <PageWrapper
+      title="Billing & Plan"
+      subtitle="Manage your subscription, payments, and billing details"
+    >
+      <Tabs
+        value={activeTab}
+        onValueChange={handleTabChange}
+        className="flex flex-col flex-1 min-h-0 gap-0"
+      >
+        <TabsList className="mb-4">
+          <TabsTrigger value="plan">
+            <CreditCard className="h-3.5 w-3.5" />
+            Plan
+          </TabsTrigger>
+          <TabsTrigger value="payments">
+            <Receipt className="h-3.5 w-3.5" />
+            Invoices & Payments
+          </TabsTrigger>
+          <TabsTrigger value="profile">
+            <Building2 className="h-3.5 w-3.5" />
+            Billing Profile
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="plan" className="flex-1 min-h-0 mt-0 overflow-y-auto">
+          <PlanTab />
+        </TabsContent>
+
+        <TabsContent value="payments" className="flex-1 min-h-0 mt-0 overflow-y-auto">
+          <PaymentsTab />
+        </TabsContent>
+
+        <TabsContent value="profile" className="flex-1 min-h-0 mt-0 overflow-y-auto">
+          <BillingProfileTab />
+        </TabsContent>
+      </Tabs>
+    </PageWrapper>
+  );
+}
+
+export function BillingSettingsPage() {
+  return (
+    <Suspense
+      fallback={
+        <PageWrapper title="Billing & Plan" subtitle="Manage your subscription, payments, and billing details">
+          <BillingPageSkeleton />
+        </PageWrapper>
+      }
+    >
+      <BillingPageContent />
+    </Suspense>
+  );
+}

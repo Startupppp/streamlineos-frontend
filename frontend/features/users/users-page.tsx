@@ -287,7 +287,10 @@ export function UsersPage() {
           } else if (r.failed > 0) {
             toast.warning(`${r.succeeded} user(s) restored; ${r.failed} could not be updated`);
           } else {
-            toast.success(`${r.succeeded} user(s) restored`);
+            toast.success(`${r.succeeded} user(s) restored`, {
+              description:
+                "Access is restored. This organization will appear in each user's workspace switcher after their session refreshes.",
+            });
           }
           setSelectedIds(new Set());
         },
@@ -350,7 +353,7 @@ export function UsersPage() {
       key: "email",
       header: "Email",
       cell: (user) => (
-        <TruncatedText text={user.email} className="text-muted-foreground max-w-[180px]" />
+        <TruncatedText text={user.email} className="text-muted-foreground" />
       ),
     },
     {

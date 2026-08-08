@@ -32,6 +32,11 @@ export default function IncomingTransferPage() {
             <Skeleton className="h-5 w-48" />
             <Skeleton className="h-4 w-full" />
             <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-5 w-24 rounded-full" />
+            <div className="flex justify-end gap-2">
+              <Skeleton className="h-9 w-24" />
+              <Skeleton className="h-9 w-24" />
+            </div>
           </CardContent>
         </Card>
       ) : isError ? (

@@ -21,7 +21,6 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { useAccess, useCan } from "@/hooks/api/access";
 import { useOrgHierarchyOverview } from "@/hooks/api/org-hierarchy";
 import { useOrgSettings } from "@/hooks/api/organization";
@@ -40,28 +39,28 @@ const HIERARCHY_ITEMS: StructureLink[] = [
   {
     title: "Business Units",
     description: "Divisions, brands, or lines of business",
-    href: "/organization/business-units",
+    href: "/settings/organization/business-units",
     countKey: "businessUnits",
     icon: Building2,
   },
   {
     title: "Branches",
     description: "Regional or operational units",
-    href: "/organization/branches",
+    href: "/settings/organization/branches",
     countKey: "branches",
     icon: GitBranch,
   },
   {
     title: "Departments",
     description: "Functional groups like Sales or Finance",
-    href: "/organization/departments",
+    href: "/settings/organization/departments",
     countKey: "departments",
     icon: Briefcase,
   },
   {
     title: "Teams",
     description: "Delivery groups with leads and capacity",
-    href: "/organization/teams",
+    href: "/settings/organization/teams",
     countKey: "teams",
     icon: Users,
   },
@@ -71,20 +70,18 @@ const SUPPORTING_ITEMS: StructureLink[] = [
   {
     title: "Locations",
     description: "Where people work — not a reporting unit",
-    href: "/organization/locations",
+    href: "/settings/organization/locations",
     countKey: "locations",
     icon: MapPin,
   },
   {
     title: "Cost Centers",
     description: "Financial codes across the hierarchy",
-    href: "/organization/cost-centers",
+    href: "/settings/organization/cost-centers",
     countKey: "costCenters",
     icon: Coins,
   },
 ];
-
-const STAT_ITEMS = [...HIERARCHY_ITEMS, ...SUPPORTING_ITEMS];
 
 function StructureRow({
   item,
@@ -228,7 +225,7 @@ export function OrganizationStructurePage() {
               </Link>
             </Button>
             <Button asChild size="sm" className="h-8 gap-1.5">
-              <Link href="/organization/tree">
+              <Link href="/settings/organization/chart">
                 <Network className="size-3.5" />
                 Chart
               </Link>
@@ -237,19 +234,6 @@ export function OrganizationStructurePage() {
         }
       >
         <div className="space-y-4">
-          <StatCardGrid cols={6}>
-            {STAT_ITEMS.map((item) => (
-              <StatCard
-                key={item.href}
-                label={item.title}
-                value={overview?.[item.countKey] ?? 0}
-                icon={item.icon}
-                href={item.href}
-                isLoading={isLoading}
-              />
-            ))}
-          </StatCardGrid>
-
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.4fr_1fr]">
             <section className="rounded-xl border border-border bg-card shadow-sm">
               <div className="border-b border-border px-4 py-3">
@@ -354,27 +338,6 @@ export function OrganizationStructurePage() {
               </section>
             </div>
           </div>
-
-          <Link
-            href="/organization/tree"
-            className="group flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 shadow-sm transition-colors hover:border-primary/30 hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/40">
-              <Network className="size-4 text-muted-foreground" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="text-[13px] font-semibold text-foreground">
-                Organization chart
-              </p>
-              <p className="truncate text-[11px] text-muted-foreground">
-                Visual tree generated from the hierarchy above.
-              </p>
-            </div>
-            <span className="inline-flex items-center gap-1 text-[12px] font-medium text-foreground">
-              Open
-              <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
-            </span>
-          </Link>
         </div>
       </PageWrapper>
     </RequireModule>

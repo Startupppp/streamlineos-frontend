@@ -1,6 +1,5 @@
 ﻿import { NextResponse, NextRequest } from "next/server";
 import { getToken, type JWT } from "next-auth/jwt";
-import { ROLES } from "@/lib/constants/roles";
 import {
   hasSessionCookie,
   sessionCookieBases,
@@ -77,6 +76,7 @@ const PROTECTED_ROUTES = [
   "/onboarding",
   "/employee-onboarding",
   "/org-setup",
+  "/access-suspended",
   "/owner",
   "/billing",
   "/timesheets",
@@ -93,10 +93,8 @@ const PROTECTED_ROUTES = [
   "/ask",
   "/inventory",
   "/mail",
-  "/organization",
   "/payroll",
   "/sign",
-  "/users",
   "/workflows",
 ];
 
@@ -123,11 +121,6 @@ function redirectTo(
   url.pathname = pathname;
   url.search = search;
   return NextResponse.redirect(url);
-}
-
-
-function isOrgOwnerToken(token: JWT): boolean {
-  return token.isOrgOwner === true || token.role === ROLES.OWNER;
 }
 
 function resolveSafeCallbackUrl(req: NextRequest): URL | null {
@@ -169,6 +162,9 @@ export async function proxy(req: NextRequest) {
     return redirectTo(req, "/build" + rest, req.nextUrl.search);
   }
 
+  if (matchesRoute(pathname, "/onboarding"))
+    return redirectTo(req, "/employee-onboarding");
+
   if (pathname.startsWith("/api/")) return NextResponse.next();
 
   const secret = process.env.NEXTAUTH_SECRET;
@@ -202,9 +198,16 @@ export async function proxy(req: NextRequest) {
   }
 
   if (token) {
-    if (token.isActive === false) {
-      return redirectTo(req, "/api/auth/signout");
-    }
+    if (token.isActive === false)
+      return withExpiredSessionCookies(
+        redirectTo(
+          req,
+          "/signin",
+          `?${SESSION_EXPIRED_QUERY}=${SESSION_EXPIRED_VALUE}`,
+        ),
+        req,
+        true,
+      );
 
     if (matchesAny(pathname, AUTH_ROUTES)) {
       if (
@@ -217,39 +220,6 @@ export async function proxy(req: NextRequest) {
       if (target) return redirectTo(req, target.pathname, target.search);
 
       return redirectTo(req, "/dashboard");
-    }
-
-    const isOrgOwner = isOrgOwnerToken(token);
-    const hasOrg = Boolean(token.orgId);
-    const orgSetupCookieName = token.orgId ? `org-setup-done--${token.orgId}` : null;
-    const orgSetupDone = orgSetupCookieName
-      ? Boolean(req.cookies.get(orgSetupCookieName)?.value)
-      : false;
-    const onboardingCookieName = token.id ? `onboarding-done--${token.id}` : null;
-    const onboardingDone = onboardingCookieName
-      ? Boolean(req.cookies.get(onboardingCookieName)?.value)
-      : false;
-    const ownerSetupPending = isOrgOwner && !token.orgOnboardingCompletedAt;
-    const forceOrgSetup = !hasOrg || (ownerSetupPending && !orgSetupDone);
-
-    if (matchesRoute(pathname, "/org-setup")) {
-      if (!forceOrgSetup) return redirectTo(req, "/dashboard");
-    } else if (matchesRoute(pathname, "/onboarding")) {
-      return redirectTo(req, "/employee-onboarding");
-    } else if (matchesRoute(pathname, "/employee-onboarding")) {
-      if (!hasOrg) return redirectTo(req, "/org-setup");
-      if (isOrgOwner) return redirectTo(req, "/dashboard");
-      if (token.userOnboardingCompletedAt) return redirectTo(req, "/dashboard");
-    } else if (isProtected) {
-      if (forceOrgSetup) return redirectTo(req, "/org-setup");
-
-      if (
-        !isOrgOwner &&
-        hasOrg &&
-        !token.userOnboardingCompletedAt &&
-        !onboardingDone
-      )
-        return redirectTo(req, "/employee-onboarding");
     }
   }
 
