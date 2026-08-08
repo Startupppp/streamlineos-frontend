@@ -33,6 +33,15 @@ describe("getErrorMessage", () => {
     );
   });
 
+  it("replaces generic backend failures with a useful server fallback", () => {
+    expect(
+      getErrorMessage({
+        status: 500,
+        message: "An unexpected error occurred",
+      }),
+    ).toBe("Something went wrong on our end. Please try again shortly.");
+  });
+
   it("covers 402 credit and plan limits", () => {
     expect(getErrorMessage({ status: 402, message: "Payment Required" })).toBe(
       "You've reached a credit or plan limit for this action.",

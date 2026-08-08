@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import {
   Sheet,
@@ -21,16 +22,7 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   Select,
   SelectTrigger,
@@ -54,6 +46,7 @@ import { useCan } from "@/hooks/api/access";
 import {
   useWorkerEngagements,
   useCreateEngagement,
+  useCancelEngagement,
   useTerminateEngagement,
 } from "@/hooks/api/directory/workers";
 import type {
@@ -107,22 +100,51 @@ function periodLabel(engagement: WorkerEngagement): string {
   return `${start} – ${formatDateShort(engagement.endsOn)}`;
 }
 
-const engagementSchema = z.object({
-  startsOn: z.string().min(1, "Start date is required"),
-  endsOn: z.string().optional(),
-  workerType: z.enum([
-    "FULL_TIME",
-    "PART_TIME",
-    "CONTRACTOR",
-    "CONSULTANT",
-    "INTERN",
-    "TEMPORARY",
-    "AGENCY",
-    "FREELANCER",
-  ]),
-  isPrimary: z.boolean(),
-  designation: z.string().max(200).optional(),
-});
+const NON_BLOCKING_ENGAGEMENT_STATUSES = new Set<EngagementStatus>([
+  "COMPLETED",
+  "TERMINATED",
+  "CANCELLED",
+]);
+
+/** Matches the database's half-open daterange rule: [start, end). */
+function findConflictingEngagement(
+  period: { startsOn: string; endsOn?: string | null },
+  engagements: WorkerEngagement[],
+): WorkerEngagement | undefined {
+  const periodEnd = period.endsOn || "9999-12-31";
+  return engagements.find((engagement) => {
+    if (NON_BLOCKING_ENGAGEMENT_STATUSES.has(engagement.status)) return false;
+    const existingEnd = engagement.endsOn || "9999-12-31";
+    return period.startsOn < existingEnd && engagement.startsOn < periodEnd;
+  });
+}
+
+const engagementSchema = z
+  .object({
+    startsOn: z.string().min(1, "Start date is required"),
+    endsOn: z.string().optional(),
+    workerType: z.enum([
+      "FULL_TIME",
+      "PART_TIME",
+      "CONTRACTOR",
+      "CONSULTANT",
+      "INTERN",
+      "TEMPORARY",
+      "AGENCY",
+      "FREELANCER",
+    ]),
+    isPrimary: z.boolean(),
+    designation: z.string().max(200).optional(),
+  })
+  .superRefine((value, context) => {
+    if (value.endsOn && value.startsOn && value.endsOn <= value.startsOn) {
+      context.addIssue({
+        code: "custom",
+        path: ["endsOn"],
+        message: "End date must be after the start date",
+      });
+    }
+  });
 
 type EngagementFormValues = z.infer<typeof engagementSchema>;
 
@@ -134,7 +156,19 @@ const EMPTY_ENGAGEMENT_DEFAULTS: EngagementFormValues = {
   designation: "",
 };
 
-function TerminateAlertDialog({
+function DialogError({ error }: { error: unknown }) {
+  if (!error) return null;
+  return (
+    <div
+      role="alert"
+      className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2.5 text-sm text-destructive"
+    >
+      {getErrorMessage(error)}
+    </div>
+  );
+}
+
+function TerminateConfirmationDialog({
   open,
   onOpenChange,
   engagement,
@@ -146,8 +180,10 @@ function TerminateAlertDialog({
   workerId: string;
 }) {
   const terminateEngagement = useTerminateEngagement();
+  const [error, setError] = useState<unknown>(null);
 
   function handleConfirm() {
+    setError(null);
     terminateEngagement.mutate(
       {
         workerEngagementId: engagement.workerEngagementId,
@@ -158,58 +194,112 @@ function TerminateAlertDialog({
           toast.success("Engagement terminated");
           onOpenChange(false);
         },
-        onError: (e) => toast.error(getErrorMessage(e)),
+        onError: setError,
       },
     );
   }
 
+  function handleOpenChange(nextOpen: boolean) {
+    if (!nextOpen) setError(null);
+    onOpenChange(nextOpen);
+  }
+
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Terminate this engagement?</AlertDialogTitle>
-          <AlertDialogDescription>
-            This will terminate the {workerTypeLabel(engagement.workerType).toLowerCase()}{" "}
-            engagement started on {formatDateShort(engagement.startsOn)}. This action cannot be
-            undone.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={terminateEngagement.isPending}>
-            Cancel
-          </AlertDialogCancel>
-          <AlertDialogAction
-            variant="destructive"
-            onClick={handleConfirm}
-            disabled={terminateEngagement.isPending}
-          >
-            {terminateEngagement.isPending ? "Terminating…" : "Terminate"}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <ConfirmDialog
+      open={open}
+      onOpenChange={handleOpenChange}
+      title="Terminate this engagement?"
+      description={
+        <>
+          This ends the {workerTypeLabel(engagement.workerType).toLowerCase()} engagement
+          started on {formatDateShort(engagement.startsOn)}. Its history will be preserved.
+        </>
+      }
+      content={<DialogError error={error} />}
+      confirmLabel={error ? "Try again" : "Terminate"}
+      destructive
+      keepOpenOnConfirm
+      isPending={terminateEngagement.isPending}
+      onConfirm={handleConfirm}
+    />
+  );
+}
+
+function CancelPlannedConfirmationDialog({
+  open,
+  onOpenChange,
+  engagement,
+  workerId,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  engagement: WorkerEngagement;
+  workerId: string;
+}) {
+  const cancelEngagement = useCancelEngagement();
+  const [error, setError] = useState<unknown>(null);
+
+  function handleConfirm() {
+    setError(null);
+    cancelEngagement.mutate(
+      { workerEngagementId: engagement.workerEngagementId, workerId },
+      {
+        onSuccess: () => {
+          toast.success("Planned engagement cancelled");
+          onOpenChange(false);
+        },
+        onError: setError,
+      },
+    );
+  }
+
+  function handleOpenChange(nextOpen: boolean) {
+    if (!nextOpen) setError(null);
+    onOpenChange(nextOpen);
+  }
+
+  return (
+    <ConfirmDialog
+      open={open}
+      onOpenChange={handleOpenChange}
+      title="Cancel this planned engagement?"
+      description={
+        <>
+          This frees the dates reserved by the{" "}
+          {workerTypeLabel(engagement.workerType).toLowerCase()} plan starting on{" "}
+          {formatDateShort(engagement.startsOn)}. The record stays in history and can still
+          be audited.
+        </>
+      }
+      content={<DialogError error={error} />}
+      confirmLabel={error ? "Try again" : "Cancel engagement"}
+      destructive
+      keepOpenOnConfirm
+      isPending={cancelEngagement.isPending}
+      onConfirm={handleConfirm}
+    />
   );
 }
 
 function EngagementRowActions({
   engagement,
   workerId,
+  canManage,
   canTerminate,
 }: {
   engagement: WorkerEngagement;
   workerId: string;
+  canManage: boolean;
   canTerminate: boolean;
 }) {
-  const [terminateOpen, setTerminateOpen] = useState(false);
+  const [dialog, setDialog] = useState<"cancel" | "terminate" | null>(null);
+  const canCancelPlan = canManage && engagement.status === "PLANNED";
+  const canEndActive = canTerminate && engagement.status === "ACTIVE";
 
-  if (!canTerminate || engagement.status !== "ACTIVE") return null;
+  if (!canCancelPlan && !canEndActive) return null;
 
-  function handleOpenTerminate() {
-    setTerminateOpen(true);
-  }
-
-  function handleTerminateOpenChange(open: boolean) {
-    setTerminateOpen(open);
+  function handleOpenChange(open: boolean) {
+    if (!open) setDialog(null);
   }
 
   return (
@@ -218,31 +308,42 @@ function EngagementRowActions({
         variant="ghost"
         size="sm"
         className="h-7 px-2 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
-        onClick={handleOpenTerminate}
+        onClick={() => setDialog(canCancelPlan ? "cancel" : "terminate")}
       >
-        Terminate
+        {canCancelPlan ? "Cancel plan" : "Terminate"}
       </Button>
-      {terminateOpen && (
-        <TerminateAlertDialog
-          open={terminateOpen}
-          onOpenChange={handleTerminateOpenChange}
+      {dialog === "cancel" ? (
+        <CancelPlannedConfirmationDialog
+          open
+          onOpenChange={handleOpenChange}
           engagement={engagement}
           workerId={workerId}
         />
-      )}
+      ) : null}
+      {dialog === "terminate" ? (
+        <TerminateConfirmationDialog
+          open
+          onOpenChange={handleOpenChange}
+          engagement={engagement}
+          workerId={workerId}
+        />
+      ) : null}
     </>
   );
 }
 
 function AddEngagementForm({
   workerId,
+  engagements,
   onSuccess,
 }: {
   workerId: string;
+  engagements: WorkerEngagement[];
   onSuccess: () => void;
 }) {
   const createEngagement = useCreateEngagement();
   const [expanded, setExpanded] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const form = useForm<EngagementFormValues>({
     resolver: zodResolver(engagementSchema),
@@ -251,12 +352,45 @@ function AddEngagementForm({
 
   function handleToggleExpand() {
     setExpanded((prev) => !prev);
+    setSubmitError(null);
     if (!expanded) {
       form.reset(EMPTY_ENGAGEMENT_DEFAULTS);
     }
   }
 
   function handleSubmit(values: EngagementFormValues) {
+    setSubmitError(null);
+    const conflict = findConflictingEngagement(
+      { startsOn: values.startsOn, endsOn: values.endsOn },
+      engagements,
+    );
+    if (conflict) {
+      const resolution =
+        conflict.status === "PLANNED"
+          ? "Cancel that plan above, or choose dates outside its period."
+          : "End that active engagement above, or choose dates outside its period.";
+      setSubmitError(
+        "These dates overlap the " +
+          engagementStatusLabel(conflict.status).toLowerCase() +
+          " engagement for " +
+          periodLabel(conflict) +
+          ". " +
+          resolution,
+      );
+      return;
+    }
+
+    const activePrimary = engagements.find(
+      (engagement) =>
+        engagement.status === "ACTIVE" && engagement.isPrimary,
+    );
+    if (values.isPrimary && activePrimary) {
+      setSubmitError(
+        "This worker already has a primary engagement. Unmark Primary, or terminate the current primary engagement first.",
+      );
+      return;
+    }
+
     createEngagement.mutate(
       {
         workerId,
@@ -270,16 +404,18 @@ function AddEngagementForm({
         onSuccess: () => {
           toast.success("Engagement added");
           form.reset(EMPTY_ENGAGEMENT_DEFAULTS);
+          setSubmitError(null);
           setExpanded(false);
           onSuccess();
         },
-        onError: (e) => toast.error(getErrorMessage(e)),
+        onError: (error) => setSubmitError(getErrorMessage(error)),
       },
     );
   }
 
   function handleCancel() {
     setExpanded(false);
+    setSubmitError(null);
     form.reset(EMPTY_ENGAGEMENT_DEFAULTS);
   }
 
@@ -299,6 +435,15 @@ function AddEngagementForm({
   return (
     <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
       <p className="mb-3 text-sm font-semibold text-foreground">New engagement</p>
+      {submitError ? (
+        <div
+          role="alert"
+          className="mb-3 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2.5 text-sm text-destructive"
+        >
+          <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+          <span>{submitError}</span>
+        </div>
+      ) : null}
       <Form {...form}>
         <form
           id="add-engagement-form"
@@ -512,6 +657,7 @@ export function WorkerEngagementsSheet({ open, onOpenChange, worker }: Props) {
         <EngagementRowActions
           engagement={row}
           workerId={worker.workerId}
+          canManage={canManage}
           canTerminate={canTerminate}
         />
       ),
@@ -560,6 +706,7 @@ export function WorkerEngagementsSheet({ open, onOpenChange, worker }: Props) {
           {canManage && (
             <AddEngagementForm
               workerId={worker.workerId}
+              engagements={rows}
               onSuccess={handleEngagementAdded}
             />
           )}

@@ -1,6 +1,8 @@
 const NETWORK_PATTERN = /failed to fetch|networkerror|network request failed|load failed|fetch failed/i;
 const HOST_IN_MESSAGE = /contacting\s+([a-z0-9-]+(?:\.[a-z0-9-]+)*)/i;
 const CHUNK_PATTERN = /chunkloaderror|loading chunk \S+ failed|(?:failed|error) (?:to fetch|loading) dynamically imported module|importing a module script failed/i;
+const GENERIC_SERVER_PATTERN =
+  /^(?:an unexpected error occurred|unexpected error|internal server error)$/i;
 const BARE_STATUS = /^(\d{3})(\s|$)/;
 
 const GENERIC_MESSAGE = "Something went wrong. Please try again.";
@@ -100,6 +102,7 @@ export function getErrorMessage(error: unknown): string {
   if (CHUNK_PATTERN.test(message)) return STALE_BUILD_MESSAGE;
   if (NETWORK_PATTERN.test(message) || HOST_IN_MESSAGE.test(message)) 
     return networkMessage(message);
+  if (GENERIC_SERVER_PATTERN.test(message)) return statusFallback(status ?? 500);
   
 
   const bareStatus = BARE_STATUS.exec(message)?.[1];

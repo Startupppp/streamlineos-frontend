@@ -44,10 +44,7 @@ export default function SettingsAiCreditsLoading() {
           <p className="mb-2 text-sm font-semibold">Credit Packs</p>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {[1, 2, 3, 4].map((i) => (
-              <div
-                key={i}
-                className="h-[180px] rounded-lg border border-border bg-card animate-pulse"
-              />
+              <Skeleton key={i} className="h-[180px] rounded-lg" />
             ))}
           </div>
         </div>

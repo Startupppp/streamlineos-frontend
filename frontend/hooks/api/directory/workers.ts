@@ -120,3 +120,33 @@ export function useTerminateEngagement() {
     },
   });
 }
+
+export function useCancelEngagement() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["directory", "engagements", "cancel"],
+    mutationFn: ({
+      workerEngagementId,
+    }: {
+      workerEngagementId: string;
+      workerId: string;
+    }) =>
+      apiClient.post<WorkerEngagement>(
+        `/directory/engagements/${workerEngagementId}/cancel`,
+      ),
+    onSuccess: (updated, variables) => {
+      qc.setQueryData<WorkerEngagement[]>(
+        queryKeys.directory.engagements(variables.workerId),
+        (old) =>
+          old?.map((engagement) =>
+            engagement.workerEngagementId === variables.workerEngagementId
+              ? { ...engagement, ...updated }
+              : engagement,
+          ),
+      );
+      qc.invalidateQueries({
+        queryKey: queryKeys.directory.worker(variables.workerId),
+      });
+    },
+  });
+}

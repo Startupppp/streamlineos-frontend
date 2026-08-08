@@ -1,0 +1,158 @@
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { useCan } from "@/hooks/api/access";
+import {
+  useCancelEngagement,
+  useCreateEngagement,
+  useTerminateEngagement,
+  useWorkerEngagements,
+} from "@/hooks/api/directory/workers";
+import type {
+  Worker,
+  WorkerEngagement,
+} from "@/types/directory/workers";
+import { WorkerEngagementsSheet } from "./worker-engagements-sheet";
+
+jest.mock("@/hooks/api/access", () => ({
+  useCan: jest.fn(),
+}));
+
+jest.mock("@/hooks/api/directory/workers", () => ({
+  useWorkerEngagements: jest.fn(),
+  useCreateEngagement: jest.fn(),
+  useCancelEngagement: jest.fn(),
+  useTerminateEngagement: jest.fn(),
+}));
+
+jest.mock("@/components/ui/date-picker", () => ({
+  DatePicker: ({
+    value,
+    onChange,
+    placeholder,
+  }: {
+    value?: string;
+    onChange: (value: string) => void;
+    placeholder?: string;
+  }) => (
+    <input
+      aria-label={placeholder}
+      value={value ?? ""}
+      onChange={(event) => onChange(event.target.value)}
+    />
+  ),
+}));
+
+const worker: Worker = {
+  workerId: "worker-1",
+  organizationId: "org-1",
+  organizationPersonId: "person-1",
+  workerNumber: "EMP001",
+  status: "ACTIVE",
+  isPayee: false,
+  deletedAt: null,
+  createdAt: "2026-08-08T00:00:00.000Z",
+  updatedAt: "2026-08-08T00:00:00.000Z",
+  firstName: "Aditya",
+  lastName: "Challa",
+  displayName: null,
+  workEmail: "aditya@example.com",
+  avatarUrl: null,
+  userId: "user-1",
+};
+
+const plannedEngagement: WorkerEngagement = {
+  workerEngagementId: "engagement-1",
+  organizationId: "org-1",
+  workerId: "worker-1",
+  startsOn: "2026-08-17",
+  endsOn: null,
+  workerType: "FULL_TIME",
+  status: "PLANNED",
+  isPrimary: false,
+  departmentId: null,
+  businessUnitId: null,
+  branchId: null,
+  locationId: null,
+  teamId: null,
+  managerEngagementId: null,
+  designation: null,
+  jobRoleId: null,
+  jobLevelId: null,
+  employmentTypeId: null,
+  probationEndsOn: null,
+  noticePeriodDays: null,
+  terminationReason: null,
+  terminationNotes: null,
+  createdBy: null,
+  createdAt: "2026-08-08T00:00:00.000Z",
+  updatedAt: "2026-08-08T00:00:00.000Z",
+};
+
+describe("WorkerEngagementsSheet", () => {
+  const createMutate = jest.fn();
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (useCan as jest.Mock).mockReturnValue(true);
+    (useWorkerEngagements as jest.Mock).mockReturnValue({
+      data: [plannedEngagement],
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    });
+    (useCreateEngagement as jest.Mock).mockReturnValue({
+      mutate: createMutate,
+      isPending: false,
+    });
+    (useCancelEngagement as jest.Mock).mockReturnValue({
+      mutate: jest.fn(),
+      isPending: false,
+    });
+    (useTerminateEngagement as jest.Mock).mockReturnValue({
+      mutate: jest.fn(),
+      isPending: false,
+    });
+  });
+
+  it("explains an overlap before sending an invalid request", async () => {
+    render(
+      <WorkerEngagementsSheet
+        open
+        onOpenChange={jest.fn()}
+        worker={worker}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "+ Add engagement" }));
+    fireEvent.change(screen.getByLabelText("Pick a date"), {
+      target: { value: "2026-08-19" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Add engagement" }));
+
+    await waitFor(() =>
+      expect(
+        screen.getByText(/These dates overlap the planned engagement/i),
+      ).toBeInTheDocument(),
+    );
+    expect(screen.getByText(/Cancel that plan above/i)).toBeInTheDocument();
+    expect(createMutate).not.toHaveBeenCalled();
+  });
+
+  it("offers the shared confirmation flow for an accidental plan", () => {
+    render(
+      <WorkerEngagementsSheet
+        open
+        onOpenChange={jest.fn()}
+        worker={worker}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Cancel plan" }));
+
+    expect(
+      screen.getByText("Cancel this planned engagement?"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/The record stays in history and can still be audited/i),
+    ).toBeInTheDocument();
+  });
+});

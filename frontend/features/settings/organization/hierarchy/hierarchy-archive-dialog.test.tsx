@@ -74,4 +74,27 @@ describe("HierarchyArchiveDialog", () => {
     expect(onOpenChange).not.toHaveBeenCalledWith(false);
     expect(screen.getByText("Archive branch?")).toBeInTheDocument();
   });
+
+  it("uses the shared error formatter for a generic server failure", () => {
+    render(
+      <HierarchyArchiveDialog
+        open
+        unitName="HR Team"
+        unitLabel="team"
+        isPending={false}
+        error={new ApiError("An unexpected error occurred", 500)}
+        onConfirm={noop}
+        onOpenChange={noop}
+      />,
+    );
+
+    expect(
+      screen.getByText(
+        "Something went wrong on our end. Please try again shortly.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("An unexpected error occurred"),
+    ).not.toBeInTheDocument();
+  });
 });

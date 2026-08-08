@@ -71,6 +71,7 @@ Architecture · Database · API · Cache · Backend · Frontend · UI · UX · S
 - **Zod-validate every untrusted boundary** (API bodies/params, env). Types are compile-time only.
 - **Zod schemas live in `*-schema.ts` files** beside the feature (frontend) or in the module's `dto/` (backend) — never inlined in a controller, route, component, or hook. Derive the type with `z.infer`; never hand-maintain a parallel `interface`. Trivial single-field guards may stay inline.
 - **Named event handlers only** — no anonymous functions.
+- **Single-statement `if`/`for` bodies omit the curly braces (living rule, 2026-08-08);** braces return the moment a body has two statements.
 - **No comments in code.** Remove stray comments, commented-out code, `console.log`s.
 - **Delete all dead code and its files**, verifying nothing imports them.
 - Mentally test edge cases before finishing: error, loading, empty, network failure, invalid input, auth, concurrency, StrictMode double-invoke.

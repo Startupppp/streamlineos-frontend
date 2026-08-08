@@ -131,7 +131,8 @@ export function UsersPage() {
     (updates: Record<string, string | null>) => {
       const params = new URLSearchParams(searchParams.toString());
       for (const [k, v] of Object.entries(updates)) {
-        if (v === null || v === "all" || v === "1") params.delete(k);
+        if (v === null || v === "all" || (k === "page" && v === "1"))
+          params.delete(k);
         else params.set(k, v);
       }
       startTransition(() => {
