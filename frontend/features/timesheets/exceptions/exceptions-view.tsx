@@ -15,7 +15,6 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -437,20 +436,16 @@ export function ExceptionsView() {
             className="min-h-[30dvh]"
           />
         ) : (
-          <Card>
-            <CardContent className="p-0">
-              <DataTable
-                className="flex-1 min-h-0"
-                data={exceptions ?? []}
-                columns={columns}
-                getRowKey={getExceptionRowKey}
-                isLoading={isLoading}
-                pagination={{ pageSize: 25 }}
-                minWidth="800px"
-                emptyState={emptyState}
-              />
-            </CardContent>
-          </Card>
+          <DataTable
+            className="flex-1 min-h-0"
+            data={exceptions ?? []}
+            columns={columns}
+            getRowKey={getExceptionRowKey}
+            isLoading={isLoading}
+            pagination={{ pageSize: 25 }}
+            minWidth="800px"
+            emptyState={emptyState}
+          />
         )}
       </motion.div>
 

@@ -155,7 +155,7 @@ export function ComplianceTab({ params, enabled }: ComplianceTabProps) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-1 min-h-0 flex-col gap-4">
       <StatCardGrid cols={4}>
         <StatCard label="Tracked Members" value={stats.members} icon={Users} tone="blue" />
         <StatCard
@@ -192,6 +192,7 @@ export function ComplianceTab({ params, enabled }: ComplianceTabProps) {
           getRowKey={getComplianceRowKey}
           pagination={{}}
           mobileCard={renderComplianceMobileCard}
+          className="flex-1 min-h-0"
         />
       )}
     </div>

@@ -308,7 +308,7 @@ export default function PaymentRunDetailPage({
         ) : undefined
       }
     >
-      <div className="space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         {query.isLoading && <LoadingState variant="table" rows={12} />}
         {query.error && (
           <ErrorState
@@ -388,6 +388,7 @@ export default function PaymentRunDetailPage({
             )}
 
             <DataTable
+              className="flex-1 min-h-0"
               data={items}
               columns={columns}
               getRowKey={(item) => item.id}

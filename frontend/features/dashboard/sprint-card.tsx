@@ -2,13 +2,14 @@
 
 import { memo } from "react";
 import Link from "next/link";
-import { Zap, ArrowUpRight, AlertTriangle } from "lucide-react";
+import { Zap, ArrowUpRight, AlertTriangle, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptySprintIllustration } from "@/components/illustrations";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { sprintStatusColors } from "@/lib/theme-constants";
 
 const SPRINT_DANGER_DAYS = 2;
@@ -29,9 +30,11 @@ interface SprintSummary {
 interface SprintCardProps {
   summary: SprintSummary | undefined;
   isLoading: boolean;
+  error?: unknown;
+  onRetry?: () => void;
 }
 
-export const SprintCard = memo(function SprintCard({ summary, isLoading }: SprintCardProps) {
+export const SprintCard = memo(function SprintCard({ summary, isLoading, error, onRetry }: SprintCardProps) {
   return (
     <Card className="bg-card border-border shadow-noir flex flex-col h-full w-full">
       <CardHeader className="flex-shrink-0 flex flex-row items-center justify-between px-4 py-3">
@@ -53,6 +56,16 @@ export const SprintCard = memo(function SprintCard({ summary, isLoading }: Sprin
             <Skeleton className="h-6 w-48" />
             <Skeleton className="h-4 w-full" />
             <Skeleton className="h-20 w-full" />
+          </div>
+        ) : error ? (
+          <div className="space-y-2 py-2">
+            <p role="alert" className="text-sm text-destructive">{getErrorMessage(error)}</p>
+            {onRetry && (
+              <Button variant="ghost" size="sm" onClick={onRetry}>
+                <RefreshCw className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
+                Retry
+              </Button>
+            )}
           </div>
         ) : summary ? (
           <ScrollArea className="h-full pr-3">

@@ -97,6 +97,7 @@ export function SubmissionsDataTable({ formId, submissions, canManage }: Submiss
   return (
     <>
       <DataTable
+        className="flex-1 min-h-0"
         data={submissions}
         columns={columns}
         getRowKey={(row) => row.id}

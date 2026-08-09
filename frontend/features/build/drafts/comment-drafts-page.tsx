@@ -36,7 +36,7 @@ function DraftsLoadingSkeleton() {
     <PageWrapper title="Comment Drafts" subtitle="Your saved in-progress ticket comments">
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-          <PmPanel solid>
+          <PmPanel solid className="flex-1 min-h-0">
             {[0, 1, 2].map((i) => (
               <div
                 key={i}
@@ -145,7 +145,7 @@ export function CommentDraftsPage() {
                 description="Start typing a comment on a ticket and it will be saved here automatically."
               />
             ) : (
-              <PmPanel solid className="overflow-hidden">
+              <PmPanel solid className="flex-1 min-h-0 overflow-hidden">
                 {drafts.map((draft) => (
                   <CommentDraftRow
                     key={draft.id}

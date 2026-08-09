@@ -6,7 +6,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent, TABS_CONTENT_PAGE_BODY_CLASS } from "@/components/ui/tabs";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useCan } from "@/hooks/api/access";
 import { JOB_STATUS_BADGE, JOB_STATUS_LABEL, type JobStatus } from "@/features/inventory/lib";
@@ -160,7 +160,7 @@ export function ImportClient() {
           <TabsTrigger value="export">Export</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="import" className="flex flex-col gap-4 mt-0">
+        <TabsContent value="import" className={TABS_CONTENT_PAGE_BODY_CLASS}>
           {!canImport ? (
             <InventoryEmptyState
               title="Access Denied"
@@ -214,6 +214,7 @@ export function ImportClient() {
                   columns={IMPORT_HISTORY_COLUMNS}
                   getRowKey={(job) => job.id}
                   isLoading={isJobsLoading}
+                  className="flex-1 min-h-0"
                   emptyState={<div className="py-8 text-center text-sm text-muted-foreground">No import jobs yet.</div>}
                 />
               </div>
@@ -221,7 +222,7 @@ export function ImportClient() {
           )}
         </TabsContent>
 
-        <TabsContent value="export" className="flex flex-col gap-4 mt-0">
+        <TabsContent value="export" className={TABS_CONTENT_PAGE_BODY_CLASS}>
           <ExportTab />
         </TabsContent>
       </Tabs>

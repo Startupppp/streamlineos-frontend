@@ -47,7 +47,9 @@ export default function OpeningBalancesPage() {
   if (query.isLoading) {
     return (
       <PageWrapper title="Opening Balances" subtitle="Set starting account balances.">
-        <LoadingState variant="form" rows={8} />
+        <div className="flex flex-1 min-h-0 flex-col">
+          <LoadingState variant="form" rows={8} />
+        </div>
       </PageWrapper>
     );
   }
@@ -55,11 +57,13 @@ export default function OpeningBalancesPage() {
   if (query.error) {
     return (
       <PageWrapper title="Opening Balances" subtitle="Set starting account balances.">
-        <ErrorState
-          title="Failed to load opening balances"
-          description={getErrorMessage(query.error)}
-          onRetry={handleRetry}
-        />
+        <div className="flex flex-1 min-h-0 flex-col">
+          <ErrorState
+            title="Failed to load opening balances"
+            description={getErrorMessage(query.error)}
+            onRetry={handleRetry}
+          />
+        </div>
       </PageWrapper>
     );
   }

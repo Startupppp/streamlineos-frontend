@@ -130,7 +130,11 @@ export function BankingHubClient() {
   }
 
   if (isError) {
-    return <ErrorState description={getErrorMessage(error)} />;
+    return (
+      <div className="flex flex-1 min-h-0 flex-col">
+        <ErrorState description={getErrorMessage(error)} />
+      </div>
+    );
   }
 
   return (

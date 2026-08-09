@@ -126,7 +126,7 @@ function AuthedAskPanel({ className, articleId }: { className?: string; articleI
     }
     setFeedbackGiven(false);
     askMutation.mutate(
-      { question: trimmed, ...(articleId ? { spaceId: undefined } : {}) },
+      { question: trimmed },
       {
         onSuccess: (data) => setAnswer(data),
         onError: (e) => toast.error(getErrorMessage(e)),

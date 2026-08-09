@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { ErrorState } from "@/components/shared/error-state";
 import {
   Sheet,
   SheetContent,
@@ -55,6 +56,11 @@ import { RequireModule } from "@/components/auth/require-module";
 import { HierarchyArchiveDialog } from "./hierarchy-archive-dialog";
 import { isAssignableHierarchyParent } from "./hierarchy-option";
 import { useHierarchyArchive } from "./use-hierarchy-archive";
+import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
+import {
+  useHierarchyListState,
+  useHierarchyPageBounds,
+} from "./use-hierarchy-list-state";
 import { useCan } from "@/hooks/api/access";
 
 const NO_BUSINESS_UNIT = "none";
@@ -65,7 +71,10 @@ const formSchema = z.object({
     .trim()
     .min(1, "Name is required")
     .max(100)
-    .refine((v) => /[\p{L}\p{N}]/u.test(v), "Name must contain at least one letter or number"),
+    .refine(
+      (v) => /[\p{L}\p{N}]/u.test(v),
+      "Name must contain at least one letter or number",
+    ),
   code: z
     .string()
     .trim()
@@ -116,7 +125,11 @@ function BranchForm({
 
   return (
     <Form {...form}>
-      <form id="branch-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form
+        id="branch-form"
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="space-y-4"
+      >
         <div className="grid grid-cols-2 gap-3">
           <FormField
             control={form.control}
@@ -142,7 +155,11 @@ function BranchForm({
                 <FormItem>
                   <FormLabel>Code</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g. MUM" {...field} onChange={handleCodeChange} />
+                    <Input
+                      placeholder="e.g. MUM"
+                      {...field}
+                      onChange={handleCodeChange}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -263,7 +280,11 @@ function BranchForm({
               <FormItem className="col-span-2">
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input type="email" placeholder="branch@example.com" {...field} />
+                  <Input
+                    type="email"
+                    placeholder="branch@example.com"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -289,23 +310,50 @@ function BranchForm({
 }
 
 export function OrgBranchesPage() {
-  const { data: branches, isLoading } = useOrgBranches();
-  const { data: busData } = useBusinessUnits();
-  const { data: membersData } = useOrgMembers(1, 100);
+  const {
+    page,
+    pageSize,
+    query,
+    search,
+    serverSearch,
+    showArchived,
+    setPage,
+    setPageSize,
+    setSearch,
+    setStatus,
+    toggleArchived,
+  } = useHierarchyListState();
   const create = useCreateOrgBranch();
   const update = useUpdateOrgBranch();
+  const { data: membersData } = useOrgMembers(1, 100);
+  const { data: busData } = useBusinessUnits({
+    page: 1,
+    limit: 100,
+    status: "ACTIVE",
+  });
+  const {
+    data: branches,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useOrgBranches(query);
+  const isCorrectingPage = useHierarchyPageBounds({
+    page,
+    pageSize,
+    total: isError ? undefined : branches?.total,
+    setPage,
+  });
   const canManage = useCan("settings:organization:manage");
 
   const [showCreate, setShowCreate] = useState(false);
   const [editing, setEditing] = useState<OrgBranch | null>(null);
-  const [showArchived, setShowArchived] = useState(false);
-  const [search, setSearch] = useState("");
   const archiveFlow = useHierarchyArchive<OrgBranch>({
     unitKind: "BRANCH",
     archive: (branch, callbacks) =>
       update.mutate({ id: branch.id, status: "ARCHIVED" }, callbacks),
     successMessage: "Branch archived",
-    onArchived: () => setShowArchived(true),
+    onArchived: () => setStatus("ARCHIVED"),
   });
 
   const businessUnits = (busData?.data ?? [])
@@ -316,20 +364,7 @@ export function OrgBranchesPage() {
     (membersData?.data ?? []).map((m) => [m.userId, m.name ?? m.email]),
   );
 
-  const allBranches = branches?.data ?? [];
-  const active = allBranches.filter((b) => b.status !== "ARCHIVED" && !b.deletedAt);
-  const archived = allBranches.filter((b) => b.status === "ARCHIVED" && !b.deletedAt);
-  const displayed = showArchived ? archived : active;
-  const filtered = search
-    ? displayed.filter((b) => {
-        const q = search.toLowerCase();
-        return (
-          b.name.toLowerCase().includes(q) ||
-          b.code.toLowerCase().includes(q) ||
-          (b.email ?? "").toLowerCase().includes(q)
-        );
-      })
-    : displayed;
+  const displayed = branches?.data ?? [];
 
   const handleCreate = useCallback(
     (values: FormValues) => {
@@ -337,7 +372,10 @@ export function OrgBranchesPage() {
         {
           name: values.name,
           code: values.code.toUpperCase(),
-          businessUnitId: values.businessUnitId === NO_BUSINESS_UNIT ? undefined : values.businessUnitId,
+          businessUnitId:
+            values.businessUnitId === NO_BUSINESS_UNIT
+              ? undefined
+              : values.businessUnitId,
           managerUserId: values.managerUserId || undefined,
           city: values.city || undefined,
           state: values.state || undefined,
@@ -367,7 +405,10 @@ export function OrgBranchesPage() {
           id: editing.id,
           name: values.name,
           code: values.code.toUpperCase(),
-          businessUnitId: values.businessUnitId === NO_BUSINESS_UNIT ? null : values.businessUnitId,
+          businessUnitId:
+            values.businessUnitId === NO_BUSINESS_UNIT
+              ? null
+              : values.businessUnitId,
           managerUserId: values.managerUserId || null,
           city: values.city || null,
           state: values.state || null,
@@ -396,30 +437,45 @@ export function OrgBranchesPage() {
         {
           onSuccess: () => {
             toast.success("Branch restored");
-            setShowArchived(false);
+            setStatus("CURRENT");
           },
           onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
-    [update],
+    [setStatus, update],
   );
 
   const handleOpenCreate = useCallback(() => setShowCreate(true), []);
-  const handleToggleArchived = useCallback(() => setShowArchived((v) => !v), []);
-  const handleSearchChange = useCallback((v: string) => setSearch(v), []);
+  const handleSearchChange = useCallback(
+    (v: string) => setSearch(v),
+    [setSearch],
+  );
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
-  function handleSearchInputChange(value: string) { handleSearchChange(value); }
+  function handleSearchInputChange(value: string) {
+    handleSearchChange(value);
+  }
 
-  function makeRestoreHandler(branch: OrgBranch) { return () => handleRestore(branch); }
-  function makeArchiveHandler(branch: OrgBranch) { return () => archiveFlow.requestArchive(branch); }
-  function makeSetEditingHandler(branch: OrgBranch) { return () => setEditing(branch); }
-  function handleEditSheetOpenChange(open: boolean) { if (!open) setEditing(null); }
+  function makeRestoreHandler(branch: OrgBranch) {
+    return () => handleRestore(branch);
+  }
+  function makeArchiveHandler(branch: OrgBranch) {
+    return () => archiveFlow.requestArchive(branch);
+  }
+  function makeSetEditingHandler(branch: OrgBranch) {
+    return () => setEditing(branch);
+  }
+  function handleEditSheetOpenChange(open: boolean) {
+    if (!open) setEditing(null);
+  }
 
-  const emptyState = search ? (
+  const emptyState = serverSearch ? (
     <EmptyState
       illustrationPreset="companies"
-      title={`No branches matching "${search}"`}
+      title={`No branches matching "${serverSearch}"`}
       description="Try a different search term."
       compact
       className="min-h-[200px]"
@@ -436,7 +492,11 @@ export function OrgBranchesPage() {
       illustrationPreset="companies"
       title="No branches yet"
       description="Create your first branch to get started."
-      action={canManage ? { label: "Add Branch", onClick: handleOpenCreate } : undefined}
+      action={
+        canManage
+          ? { label: "Add Branch", onClick: handleOpenCreate }
+          : undefined
+      }
     />
   );
 
@@ -520,141 +580,208 @@ export function OrgBranchesPage() {
       header: "",
       headerClassName: "w-28",
       cell: (b) =>
-        canManage ? <div className="flex items-center gap-1">
-          {b.status === "ARCHIVED" ? (
-            <Button variant="ghost" size="sm" onClick={makeRestoreHandler(b)} title="Restore">
-              <RotateCcw className="h-4 w-4 text-primary" />
-            </Button>
-          ) : (
-            <>
-              <Button variant="ghost" size="sm" onClick={makeSetEditingHandler(b)} title="Edit">
-                <Pencil className="h-4 w-4" />
+        canManage ? (
+          <div className="flex items-center gap-1">
+            {b.status === "ARCHIVED" ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={makeRestoreHandler(b)}
+                title="Restore"
+              >
+                <RotateCcw className="h-4 w-4 text-primary" />
               </Button>
-              <Button variant="ghost" size="sm" onClick={makeArchiveHandler(b)} title="Archive">
-                <Archive className="h-4 w-4 text-muted-foreground" />
-              </Button>
-            </>
-          )}
-        </div> : null,
+            ) : (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={makeSetEditingHandler(b)}
+                  title="Edit"
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={makeArchiveHandler(b)}
+                  title="Archive"
+                >
+                  <Archive className="h-4 w-4 text-muted-foreground" />
+                </Button>
+              </>
+            )}
+          </div>
+        ) : null,
     },
   ];
 
   return (
     <RequireModule module="hr">
-    <PageWrapper
-      title="Branches"
-      subtitle="Branches within your organization."
-      actions={
-        <div className="flex w-full items-center gap-2 sm:w-auto">
-          <Button
-            variant={showArchived ? "secondary" : "outline"}
-            size="sm"
-            className="flex-1 text-xs sm:flex-none"
-            onClick={handleToggleArchived}
-          >
-            <Archive className="h-4 w-4 mr-1.5" />
-            {showArchived ? "Show Active" : `Archived (${archived.length})`}
-          </Button>
-          {canManage ? <AnimatedIconButton
-            icon={PlusIcon}
-            iconSize={16}
-            iconClassName="mr-1.5"
-            size="sm"
-            className="flex-1 sm:flex-none"
-            onClick={handleOpenCreate}
-          >
-            Add Branch
-          </AnimatedIconButton> : null}
-        </div>
-      }
-      filters={
-        <SearchInput placeholder="Search branches…" value={search} onValueChange={handleSearchInputChange} />
-      }
-    >
-      <DataTable
-        data={filtered}
-        columns={columns}
-        getRowKey={(b) => b.id}
-        isLoading={isLoading}
-        emptyState={emptyState}
-        rowClassName={(b) => cn(b.status === "ARCHIVED" && "opacity-60")}
-        minWidth="1000px"
-        className="flex-1 min-h-0"
-      />
-
-      <Sheet open={showCreate} onOpenChange={setShowCreate}>
-        <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md">
-          <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
-            <SheetTitle>New Branch</SheetTitle>
-          </SheetHeader>
-          <SheetBody className="px-6 py-5">
-            {showCreate && (
-              <BranchForm businessUnits={businessUnits} onSubmit={handleCreate} isPending={create.isPending} />
-            )}
-          </SheetBody>
-          <div className="shrink-0 px-6 py-4 border-t">
-            <div className="grid grid-cols-2 gap-2">
-              <SheetClose asChild>
-                <Button variant="outline" size="sm" className="w-full">Cancel</Button>
-              </SheetClose>
-              <LoadingButton size="sm" type="submit" form="branch-form" isPending={create.isPending} loadingText="Saving…" className="w-full">Save</LoadingButton>
-            </div>
+      <PageWrapper
+        title="Branches"
+        subtitle="Branches within your organization."
+        actions={
+          <div className="flex w-full items-center gap-2 sm:w-auto">
+            <Button
+              variant={showArchived ? "secondary" : "outline"}
+              size="sm"
+              className="flex-1 text-xs sm:flex-none"
+              onClick={toggleArchived}
+            >
+              <Archive className="h-4 w-4 mr-1.5" />
+              {showArchived ? "Show current" : "View archived"}
+            </Button>
+            {canManage ? (
+              <AnimatedIconButton
+                icon={PlusIcon}
+                iconSize={16}
+                iconClassName="mr-1.5"
+                size="sm"
+                className="flex-1 sm:flex-none"
+                onClick={handleOpenCreate}
+              >
+                Add Branch
+              </AnimatedIconButton>
+            ) : null}
           </div>
-        </SheetContent>
-      </Sheet>
+        }
+        filters={
+          <SearchInput
+            placeholder="Search branches…"
+            value={search}
+            onValueChange={handleSearchInputChange}
+          />
+        }
+      >
+        {isError ? (
+          <ErrorState
+            className="flex-1"
+            title="Couldn't load branches"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+          />
+        ) : (
+          <DataTable
+            data={displayed}
+            columns={columns}
+            getRowKey={(b) => b.id}
+            isLoading={isLoading || isCorrectingPage}
+            emptyState={emptyState}
+            rowClassName={(b) => cn(b.status === "ARCHIVED" && "opacity-60")}
+            minWidth="1000px"
+            className="flex-1 min-h-0"
+            pagination={{
+              mode: "server",
+              page,
+              pageSize,
+              total: branches?.total ?? 0,
+              onPageChange: setPage,
+              onPageSizeChange: setPageSize,
+              pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
+            }}
+          />
+        )}
 
-      <Sheet open={!!editing} onOpenChange={handleEditSheetOpenChange}>
-        <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md">
-          <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
-            <SheetTitle>Edit Branch</SheetTitle>
-          </SheetHeader>
-          <SheetBody className="px-6 py-5">
-            {editing && (
-              <BranchForm
-                defaultValues={{
-                  name: editing.name,
-                  code: editing.code,
-                  businessUnitId: editing.businessUnitId ?? NO_BUSINESS_UNIT,
-                  managerUserId: editing.managerUserId ?? "",
-                  city: editing.city ?? "",
-                  state: editing.state ?? "",
-                  country: editing.country ?? "",
-                  postalCode: editing.postalCode ?? "",
-                  address: editing.address ?? "",
-                  phone: editing.phone ?? "",
-                  email: editing.email ?? "",
-                }}
-                businessUnits={businessUnits}
-                onSubmit={handleUpdate}
-                isPending={update.isPending}
-              />
-            )}
-          </SheetBody>
-          <div className="shrink-0 px-6 py-4 border-t">
-            <div className="grid grid-cols-2 gap-2">
-              <SheetClose asChild>
-                <Button variant="outline" size="sm" className="w-full">Cancel</Button>
-              </SheetClose>
-              <LoadingButton size="sm" type="submit" form="branch-form" isPending={update.isPending} loadingText="Saving…" className="w-full">Save</LoadingButton>
+        <Sheet open={showCreate} onOpenChange={setShowCreate}>
+          <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md">
+            <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
+              <SheetTitle>New Branch</SheetTitle>
+            </SheetHeader>
+            <SheetBody className="px-6 py-5">
+              {showCreate && (
+                <BranchForm
+                  businessUnits={businessUnits}
+                  onSubmit={handleCreate}
+                  isPending={create.isPending}
+                />
+              )}
+            </SheetBody>
+            <div className="shrink-0 px-6 py-4 border-t">
+              <div className="grid grid-cols-2 gap-2">
+                <SheetClose asChild>
+                  <Button variant="outline" size="sm" className="w-full">
+                    Cancel
+                  </Button>
+                </SheetClose>
+                <LoadingButton
+                  size="sm"
+                  type="submit"
+                  form="branch-form"
+                  isPending={create.isPending}
+                  loadingText="Saving…"
+                  className="w-full"
+                >
+                  Save
+                </LoadingButton>
+              </div>
             </div>
-          </div>
-        </SheetContent>
-      </Sheet>
+          </SheetContent>
+        </Sheet>
 
-      <HierarchyArchiveDialog
-        open={!!archiveFlow.target}
-        unitName={archiveFlow.target?.name ?? ""}
-        unitLabel="branch"
-        isPending={update.isPending}
-        error={archiveFlow.error}
-        preflightError={archiveFlow.preflightError}
-        dependencies={archiveFlow.dependencies}
-        isChecking={archiveFlow.isChecking}
-        onRetryPreflight={archiveFlow.retryPreflight}
-        onConfirm={archiveFlow.confirmArchive}
-        onOpenChange={archiveFlow.handleOpenChange}
-      />
-    </PageWrapper>
+        <Sheet open={!!editing} onOpenChange={handleEditSheetOpenChange}>
+          <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md">
+            <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
+              <SheetTitle>Edit Branch</SheetTitle>
+            </SheetHeader>
+            <SheetBody className="px-6 py-5">
+              {editing && (
+                <BranchForm
+                  defaultValues={{
+                    name: editing.name,
+                    code: editing.code,
+                    businessUnitId: editing.businessUnitId ?? NO_BUSINESS_UNIT,
+                    managerUserId: editing.managerUserId ?? "",
+                    city: editing.city ?? "",
+                    state: editing.state ?? "",
+                    country: editing.country ?? "",
+                    postalCode: editing.postalCode ?? "",
+                    address: editing.address ?? "",
+                    phone: editing.phone ?? "",
+                    email: editing.email ?? "",
+                  }}
+                  businessUnits={businessUnits}
+                  onSubmit={handleUpdate}
+                  isPending={update.isPending}
+                />
+              )}
+            </SheetBody>
+            <div className="shrink-0 px-6 py-4 border-t">
+              <div className="grid grid-cols-2 gap-2">
+                <SheetClose asChild>
+                  <Button variant="outline" size="sm" className="w-full">
+                    Cancel
+                  </Button>
+                </SheetClose>
+                <LoadingButton
+                  size="sm"
+                  type="submit"
+                  form="branch-form"
+                  isPending={update.isPending}
+                  loadingText="Saving…"
+                  className="w-full"
+                >
+                  Save
+                </LoadingButton>
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
+
+        <HierarchyArchiveDialog
+          open={!!archiveFlow.target}
+          unitName={archiveFlow.target?.name ?? ""}
+          unitLabel="branch"
+          isPending={update.isPending}
+          error={archiveFlow.error}
+          preflightError={archiveFlow.preflightError}
+          dependencies={archiveFlow.dependencies}
+          isChecking={archiveFlow.isChecking}
+          onRetryPreflight={archiveFlow.retryPreflight}
+          onConfirm={archiveFlow.confirmArchive}
+          onOpenChange={archiveFlow.handleOpenChange}
+        />
+      </PageWrapper>
     </RequireModule>
   );
 }

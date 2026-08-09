@@ -299,7 +299,7 @@ export default function TransfersPage() {
           className="flex-1"
         />
       ) : transfers.length === 0 && !isLoading ? (
-        <motion.div variants={fadeUp} initial="hidden" animate="visible">
+        <motion.div variants={fadeUp} initial="hidden" animate="visible" className="flex flex-1 min-h-0 flex-col">
           <InventoryEmptyState
             illustration={hasActiveFilters ? <EmptySearchIllustration /> : <EmptyTransferIllustration />}
             title={hasActiveFilters ? "No matching transfers" : "No transfers yet"}

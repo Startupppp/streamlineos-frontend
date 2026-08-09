@@ -199,6 +199,7 @@ function UomPageInner() {
                 data={filteredUom}
                 getRowKey={(uom) => uom.id}
                 isLoading={query.isLoading}
+                className="flex-1 min-h-0"
                 emptyState={
                   <InventoryEmptyState
                     illustration={

@@ -2,14 +2,16 @@
 
 import { memo } from "react";
 import Link from "next/link";
-import { Activity } from "lucide-react";
+import { Activity, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { EmptyActivityIllustration } from "@/components/illustrations";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { resolveImageUrl } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getInitials } from "@/lib/format-utils";
@@ -37,9 +39,10 @@ interface RecentActivityCardProps {
   items: ActivityItem[] | undefined;
   isLoading: boolean;
   error: unknown;
+  onRetry?: () => void;
 }
 
-export const RecentActivityCard = memo(function RecentActivityCard({ items, isLoading, error }: RecentActivityCardProps) {
+export const RecentActivityCard = memo(function RecentActivityCard({ items, isLoading, error, onRetry }: RecentActivityCardProps) {
   return (
     <Card className="bg-card border-border shadow-noir flex flex-col h-full w-full">
       <CardHeader className="flex-shrink-0 px-4 py-3">
@@ -56,7 +59,15 @@ export const RecentActivityCard = memo(function RecentActivityCard({ items, isLo
             ))}
           </div>
         ) : error ? (
-          <p role="alert" className="text-sm text-destructive">Failed to load activity.</p>
+          <div className="space-y-2 py-2">
+            <p role="alert" className="text-sm text-destructive">{getErrorMessage(error)}</p>
+            {onRetry && (
+              <Button variant="ghost" size="sm" onClick={onRetry}>
+                <RefreshCw className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
+                Retry
+              </Button>
+            )}
+          </div>
         ) : items && items.length > 0 ? (
           <ScrollArea className="h-full pr-2">
             <div className="space-y-1.5">

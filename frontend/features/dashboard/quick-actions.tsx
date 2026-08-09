@@ -51,7 +51,7 @@ export function useQuickActions(): QuickAction[] {
       actions.push({ label: "My Tasks", icon: CheckSquare, href: "/build/my-work" });
     }
     if (access.hrEnabled && !access.canViewAttendance) {
-      actions.push({ label: "Check In", icon: Clock, href: "/hr/attendance" });
+      actions.push({ label: "Check In", icon: Clock, href: "/me/attendance" });
     }
     return actions.slice(0, MAX_QUICK_ACTIONS);
   }, [access]);

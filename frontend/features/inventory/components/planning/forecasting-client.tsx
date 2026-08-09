@@ -122,26 +122,28 @@ export function ForecastingClient() {
         </div>
       }
     >
-      {error ? (
-        <ErrorState onRetry={handleRetry} className="flex-1" />
-      ) : !isLoading && rows.length === 0 ? (
-        <InventoryEmptyState
-          illustrationPreset="chart"
-          title="No forecast data available"
-          description="Sales history is needed to generate forecasts."
-          className="flex-1 h-full"
-        />
-      ) : (
-        <DataTable
-          data={rows}
-          columns={columns}
-          className="flex-1 min-h-0"
-          getRowKey={(row) => row.variantId}
-          isLoading={isLoading}
-          pagination={{ mode: "server", page, pageSize: 25, total, onPageChange: setPage }}
-          minWidth="800px"
-        />
-      )}
+      <div className="flex flex-1 min-h-0 flex-col">
+        {error ? (
+          <ErrorState onRetry={handleRetry} className="flex-1" />
+        ) : !isLoading && rows.length === 0 ? (
+          <InventoryEmptyState
+            illustrationPreset="chart"
+            title="No forecast data available"
+            description="Sales history is needed to generate forecasts."
+            className="flex-1 h-full"
+          />
+        ) : (
+          <DataTable
+            data={rows}
+            columns={columns}
+            className="flex-1 min-h-0"
+            getRowKey={(row) => row.variantId}
+            isLoading={isLoading}
+            pagination={{ mode: "server", page, pageSize: 25, total, onPageChange: setPage }}
+            minWidth="800px"
+          />
+        )}
+      </div>
     </PageWrapper>
   );
 }

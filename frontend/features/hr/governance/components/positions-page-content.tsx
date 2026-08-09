@@ -23,8 +23,8 @@ export function PositionsPageContent() {
   );
 
   return (
-    <Tabs value={activeTab} onValueChange={handleTabChange}>
-      <TabsList>
+    <Tabs value={activeTab} onValueChange={handleTabChange} className="flex flex-1 min-h-0 flex-col">
+      <TabsList className="shrink-0">
         <TabsTrigger value="positions" className="gap-1.5">
           <Briefcase className="h-3.5 w-3.5" />
           Positions
@@ -35,10 +35,10 @@ export function PositionsPageContent() {
         </TabsTrigger>
       </TabsList>
 
-      <TabsContent value="positions" className="mt-4">
+      <TabsContent value="positions" className="mt-0 flex flex-1 min-h-0 flex-col">
         <PositionsTable />
       </TabsContent>
-      <TabsContent value="scenarios" className="mt-4">
+      <TabsContent value="scenarios" className="mt-0 flex flex-1 min-h-0 flex-col">
         <ReorgScenariosTab />
       </TabsContent>
     </Tabs>

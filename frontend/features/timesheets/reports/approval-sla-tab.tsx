@@ -127,7 +127,7 @@ export function ApprovalSlaTab({ params, enabled }: ApprovalSlaTabProps) {
   const pendingCount = data.byStatus.SUBMITTED ?? 0;
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-1 min-h-0 flex-col gap-4">
       <StatCardGrid cols={4}>
         <StatCard label="Submitted" value={data.totalSubmitted} icon={Inbox} tone="blue" />
         <StatCard
@@ -196,6 +196,7 @@ export function ApprovalSlaTab({ params, enabled }: ApprovalSlaTabProps) {
               getRowKey={getApproverRowKey}
               pagination={{}}
               mobileCard={renderApproverMobileCard}
+              className="flex-1 min-h-0"
             />
           )}
         </>

@@ -36,6 +36,7 @@ import {
   type PendingDocumentReason,
 } from "@/features/dashboard/use-my-pending-documents";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 function SummaryChip({
   icon: Icon,
@@ -221,7 +222,7 @@ export const PublicDocumentsCard = memo(function PublicDocumentsCard() {
   const canViewDocStats = useCan("hr:documents:view");
   const canViewSignEnvelopes = useCan("sign:envelope:view");
   const { signEnabled, canViewOnboardingDocsSummary } = useDashboardAccess();
-  const { data: documents, isLoading } = usePublicDocuments(6, canViewDocStats);
+  const { data: documents, isLoading, error: documentsError } = usePublicDocuments(6, canViewDocStats);
 
   const { data: docStats } = useHrDocumentStats({ enabled: canViewDocStats });
   const { missingCount } = useMissingOnboardingDocsCount({
@@ -291,6 +292,8 @@ export const PublicDocumentsCard = memo(function PublicDocumentsCard() {
                 </div>
               ))}
             </div>
+          ) : documentsError ? (
+            <p role="alert" className="text-sm text-destructive py-2">{getErrorMessage(documentsError)}</p>
           ) : !documents?.length ? (
             <EmptyState
               illustration={

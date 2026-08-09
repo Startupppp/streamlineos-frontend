@@ -183,7 +183,9 @@ export default function BalanceSheetPage() {
         </div>
       )}
       {query.error && (
-        <ErrorState description={getErrorMessage(query.error)} onRetry={handleRetry} />
+        <div className="flex flex-1 min-h-0 flex-col">
+          <ErrorState description={getErrorMessage(query.error)} onRetry={handleRetry} />
+        </div>
       )}
 
       {report && (

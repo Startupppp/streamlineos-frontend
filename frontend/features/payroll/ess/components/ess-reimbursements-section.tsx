@@ -22,6 +22,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { PAGE_BODY_EMPTY_CLASS, PAGE_BODY_SKELETON_CLASS } from "@/components/ui/content-fill-panel";
+import { ErrorState } from "@/components/shared";
 import { MonthPicker } from "@/features/payroll/shared/month-picker";
 import { EssStatusBadge } from "./ess-status-badge";
 import { useEssReimbursements, useSubmitReimbursement } from "@/hooks/api/payroll/ess";
@@ -258,7 +259,7 @@ export function EssReimbursementsSection({
   sheetOpen?: boolean;
   onSheetOpenChange?: (open: boolean) => void;
 }) {
-  const { data: reimbursements, isLoading } = useEssReimbursements();
+  const { data: reimbursements, isLoading, isError, error, refetch } = useEssReimbursements();
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const sheetOpen = sheetOpenProp ?? uncontrolledOpen;
   const setSheetOpen = onSheetOpenChange ?? setUncontrolledOpen;
@@ -289,6 +290,12 @@ export function EssReimbursementsSection({
               <RowSkeleton key={i} />
             ))}
           </div>
+        ) : isError ? (
+          <ErrorState
+            description={getErrorMessage(error)}
+            onRetry={refetch}
+            className={PAGE_BODY_EMPTY_CLASS}
+          />
         ) : !reimbursements || reimbursements.length === 0 ? (
           <EmptyState
             illustration={<EmptyExpensesIllustration />}

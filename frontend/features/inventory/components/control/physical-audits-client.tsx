@@ -237,6 +237,7 @@ export function PhysicalAuditsClient() {
           </Button>
         }
       >
+        <div className="flex flex-1 min-h-0 flex-col">
         {error ? (
           <ErrorState
             title="Failed to load physical audits"
@@ -244,7 +245,7 @@ export function PhysicalAuditsClient() {
             onRetry={handleRetry}
           />
         ) : isLoading ? (
-          <DataTableSkeleton rows={12} columns={6} className="flex-1" />
+          <DataTableSkeleton rows={12} columns={6} className="flex-1 min-h-0" />
         ) : (
           <DataTable
             data={items}
@@ -270,6 +271,7 @@ export function PhysicalAuditsClient() {
             minWidth="540px"
           />
         )}
+        </div>
       </PageWrapper>
 
       <NewAuditSheet open={sheetOpen} onClose={handleCloseSheet} />

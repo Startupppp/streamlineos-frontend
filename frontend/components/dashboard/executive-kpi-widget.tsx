@@ -46,7 +46,6 @@ export function ExecutiveKpiWidget() {
         icon={Briefcase}
         color="gold"
         index={0}
-        href="/hr/recruitment"
       />
       <StatCard
         label="Conversion Rate"
@@ -54,7 +53,7 @@ export function ExecutiveKpiWidget() {
         icon={Target}
         color="purple"
         index={1}
-        href="/crm/leads"
+        href={hasCrmAccess ? "/crm/leads" : undefined}
       />
       {hasCrmAccess && (
         <>

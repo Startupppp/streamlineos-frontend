@@ -156,10 +156,12 @@ export default function AccountingSetupPage() {
   if (!canManage) {
     return (
       <PageWrapper title="Accounting Setup" subtitle="Configure your accounting module">
-        <EmptyState
-          title="Insufficient permissions"
-          description="You need the accounting:settings:manage permission to access the setup wizard."
-        />
+        <div className="flex flex-1 min-h-0 flex-col">
+          <EmptyState
+            title="Insufficient permissions"
+            description="You need the accounting:settings:manage permission to access the setup wizard."
+          />
+        </div>
       </PageWrapper>
     );
   }
@@ -170,7 +172,7 @@ export default function AccountingSetupPage() {
       subtitle="Complete these steps to get your accounting module ready"
       backHref="/accounting/settings"
     >
-      <div>
+      <div className="flex flex-1 min-h-0 flex-col">
         <StepRail
           currentStep={currentStep}
           doneKeys={doneKeys}

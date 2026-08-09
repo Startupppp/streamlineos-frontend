@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger, TABS_CONTENT_PAGE_BODY_CLASS } from "@/components/ui/tabs";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared";
@@ -362,7 +362,7 @@ export default function FixedAssetsPage() {
             <TabsTrigger value="categories">Categories</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="assets">
+          <TabsContent value="assets" className={TABS_CONTENT_PAGE_BODY_CLASS}>
             <div className={FILTER_TOOLBAR_ROW}>
               <Select value={statusFilter} onValueChange={handleStatusChange}>
                 <SelectTrigger
@@ -430,7 +430,7 @@ export default function FixedAssetsPage() {
             )}
           </TabsContent>
 
-          <TabsContent value="categories">
+          <TabsContent value="categories" className={TABS_CONTENT_PAGE_BODY_CLASS}>
             <div className="flex justify-end mb-4">
               {canCreate && (
                 <Button size="sm" onClick={handleOpenCreateCategory}>

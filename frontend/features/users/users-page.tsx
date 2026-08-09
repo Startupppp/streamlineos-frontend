@@ -67,6 +67,13 @@ import { USER_STRUCTURAL_ROLES, formatRoleLabel } from "@/features/users/user-in
 import { resolveOrgUnitName } from "./resolve-org-unit-name";
 import { PeopleSectionTabs } from "./people-section-tabs";
 import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
+import {
+  DEFAULT_PAGE_SIZE,
+  getLastPage,
+  parsePage,
+  parsePageSize,
+  STANDARD_PAGE_SIZE_OPTIONS,
+} from "@/lib/list-pagination";
 
 type BulkAction = "suspend" | "archive" | "restore";
 
@@ -113,7 +120,8 @@ export function UsersPage() {
   const branchId = searchParams.get("branchId") ?? "all";
   const sortBy = (searchParams.get("sortBy") as "name" | "joinedAt" | "status") ?? "joinedAt";
   const sortOrder = (searchParams.get("sortOrder") as "asc" | "desc") ?? "desc";
-  const page = Number(searchParams.get("page") ?? "1");
+  const page = parsePage(searchParams.get("page"));
+  const pageSize = parsePageSize(searchParams.get("size"));
 
   const [search, setSearch] = useState(q);
   const debouncedSearch = useDebouncedValue(search, 300);
@@ -131,12 +139,21 @@ export function UsersPage() {
     (updates: Record<string, string | null>) => {
       const params = new URLSearchParams(searchParams.toString());
       for (const [k, v] of Object.entries(updates)) {
-        if (v === null || v === "all" || (k === "page" && v === "1"))
+        if (
+          v === null ||
+          v === "all" ||
+          (k === "page" && v === "1") ||
+          (k === "size" && v === String(DEFAULT_PAGE_SIZE))
+        )
           params.delete(k);
         else params.set(k, v);
       }
+      const queryString = params.toString();
       startTransition(() => {
-        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+        router.replace(
+          queryString ? `${pathname}?${queryString}` : pathname,
+          { scroll: false },
+        );
       });
     },
     [searchParams, router, pathname],
@@ -179,10 +196,17 @@ export function UsersPage() {
     [pushParams],
   );
 
-  const { data, isLoading, isError, error, refetch } = useUsers(
+  const {
+    data,
+    isLoading,
+    isError,
+    isPlaceholderData,
+    error,
+    refetch,
+  } = useUsers(
     {
       page,
-      limit: 20,
+      limit: pageSize,
       search: q || undefined,
       status:
         status !== "all"
@@ -222,6 +246,8 @@ export function UsersPage() {
 
   const users = data?.data ?? [];
   const pagination = data?.pagination;
+  const isPageOutOfRange =
+    !!pagination && page > getLastPage(pagination.total, pageSize);
   const someSelected = selectedIds.size > 0;
   const bulkIsPending = isSuspending || isArchiving || isRestoring;
 
@@ -337,6 +363,20 @@ export function UsersPage() {
     (p: number) => pushParams({ page: p === 1 ? null : String(p) }),
     [pushParams],
   );
+  const handlePageSizeChange = useCallback(
+    (size: number) =>
+      pushParams({
+        size: size === DEFAULT_PAGE_SIZE ? null : String(size),
+        page: null,
+      }),
+    [pushParams],
+  );
+
+  useEffect(() => {
+    if (!pagination || isPlaceholderData) return;
+    const lastPage = getLastPage(pagination.total, pageSize);
+    if (page > lastPage) handlePageChange(lastPage);
+  }, [handlePageChange, isPlaceholderData, page, pageSize, pagination]);
 
   const columns = useMemo<DataTableColumn<User>[]>(() => [
     {
@@ -673,7 +713,7 @@ export function UsersPage() {
               columns={columns}
               getRowKey={(user) => user.id}
               onRowClick={handleRowClick}
-              isLoading={isLoading}
+              isLoading={isLoading || isPageOutOfRange}
               emptyState={emptyStateNode}
               selection={{
                 selected: selectedIds,
@@ -688,9 +728,11 @@ export function UsersPage() {
               pagination={{
                 mode: "server",
                 page,
-                pageSize: 20,
+                pageSize,
                 total: pagination?.total ?? 0,
                 onPageChange: handlePageChange,
+                onPageSizeChange: handlePageSizeChange,
+                pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
               }}
             />
           )}

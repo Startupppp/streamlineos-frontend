@@ -289,14 +289,14 @@ export function ModuleAutomationsSettings({ config }: { config: ModuleAutomation
       ) : !moduleEnabled ? (
         <ModuleDisabledCard name={moduleLabel} />
       ) : (
-        <div className="space-y-3">
+        <div className="flex flex-1 min-h-0 flex-col gap-3">
           <div className="flex items-center justify-end">
             <AnimatedIconButton icon={PlusIcon} iconSize={16} iconClassName="mr-1.5" size="sm" onClick={handleOpenCreate}>
               New Rule
             </AnimatedIconButton>
           </div>
           {moduleRules.length === 0 ? (
-            <div className="flex min-h-[20dvh]">
+            <div className="flex flex-1 min-h-0 flex-col">
               <EmptyState
                 illustration={<EmptyActivityIllustration />}
                 title={`No ${moduleLabel} automation rules yet`}

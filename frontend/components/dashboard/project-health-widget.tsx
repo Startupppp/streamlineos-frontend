@@ -9,11 +9,14 @@ import { FolderKanban, RefreshCw } from "lucide-react";
 
 export function BusinessPulseWidget() {
   const { data: accessData, isLoading: accessLoading } = useAccess();
-  const { data, isLoading, error, refetch } = useExecutiveDashboard();
 
   const hasCrmAccess =
     accessData?.isOrgOwner === true ||
     (accessData?.permissions.includes("crm:leads:view") ?? false);
+
+  const { data, isLoading, error, refetch } = useExecutiveDashboard({
+    enabled: hasCrmAccess,
+  });
 
   if (!accessLoading && !hasCrmAccess) return null;
 

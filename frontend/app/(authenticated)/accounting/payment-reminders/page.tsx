@@ -199,7 +199,7 @@ function PoliciesTab({
 
   if (items.length === 0 && !query.isLoading) {
     return (
-      <>
+      <div className="flex flex-1 min-h-0 flex-col">
         <EmptyState
           illustrationPreset="automations"
           title="No reminder policies"
@@ -211,7 +211,7 @@ function PoliciesTab({
           onOpenChange={onDialogOpenChange}
           policy={editPolicy}
         />
-      </>
+      </div>
     );
   }
 
@@ -306,11 +306,13 @@ function LogTab() {
 
   if (items.length === 0 && !query.isLoading) {
     return (
-      <EmptyState
-        compact
-        title="No reminder logs yet"
-        description="Reminder send history will appear here"
-      />
+      <div className="flex flex-1 min-h-0 flex-col">
+        <EmptyState
+          compact
+          title="No reminder logs yet"
+          description="Reminder send history will appear here"
+        />
+      </div>
     );
   }
 

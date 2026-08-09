@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { UseQueryOptions } from "@tanstack/react-query";
+import type { UseQueryOptions, QueryKey } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -127,11 +127,51 @@ export const useUnreadNotificationCount = (
 };
 
 export const useMarkNotificationRead = () => {
-  const { invalidateInbox } = useNotificationInboxInvalidation();
-  return useMutation<{ success: boolean }, Error, number>({
+  const { invalidateInbox, orgId, queryClient } = useNotificationInboxInvalidation();
+  return useMutation<
+    { success: boolean },
+    Error,
+    number,
+    { previousLists: [QueryKey, Notification[] | undefined][]; previousCount: UnreadCount | undefined }
+  >({
     mutationKey: ["notifications", "mark-read"],
     mutationFn: (id) => apiClient.patch<{ success: boolean }>(`/notifications/${id}/read`),
-    onSuccess: invalidateInbox,
+    onMutate: async (id) => {
+      const listKey = queryKeys.notifications.lists(orgId);
+      const unreadKey = queryKeys.notifications.unreadCount(orgId);
+      await queryClient.cancelQueries({ queryKey: listKey });
+      await queryClient.cancelQueries({ queryKey: unreadKey });
+      const previousLists = queryClient.getQueriesData<Notification[]>({ queryKey: listKey });
+      const previousCount = queryClient.getQueryData<UnreadCount>(unreadKey);
+      let wasUnread = false;
+      for (const [, data] of previousLists) {
+        const found = data?.find((n) => n.id === id);
+        if (found) {
+          wasUnread = !found.isRead;
+          break;
+        }
+      }
+      queryClient.setQueriesData<Notification[]>({ queryKey: listKey }, (old) =>
+        old ? old.map((n) => (n.id === id ? { ...n, isRead: true } : n)) : old,
+      );
+      if (wasUnread) {
+        queryClient.setQueryData<UnreadCount>(unreadKey, (old) =>
+          old ? { count: Math.max(0, old.count - 1) } : old,
+        );
+      }
+      return { previousLists, previousCount };
+    },
+    onError: (_err, _id, context) => {
+      if (context) {
+        context.previousLists.forEach(([key, data]) => {
+          queryClient.setQueryData(key, data);
+        });
+        if (context.previousCount !== undefined) {
+          queryClient.setQueryData(queryKeys.notifications.unreadCount(orgId), context.previousCount);
+        }
+      }
+    },
+    onSettled: () => invalidateInbox(),
   });
 };
 
@@ -142,23 +182,34 @@ export const useMarkAllNotificationsRead = () => {
     { success: boolean },
     Error,
     void,
-    { previousCount: UnreadCount | undefined }
+    { previousLists: [QueryKey, Notification[] | undefined][]; previousCount: UnreadCount | undefined }
   >({
     mutationKey: ["notifications", "mark-all-read"],
     mutationFn: () => apiClient.patch<{ success: boolean }>("/notifications/read-all"),
     onMutate: async () => {
+      const listKey = queryKeys.notifications.lists(orgId);
       const unreadKey = queryKeys.notifications.unreadCount(orgId);
+      await queryClient.cancelQueries({ queryKey: listKey });
       await queryClient.cancelQueries({ queryKey: unreadKey });
+      const previousLists = queryClient.getQueriesData<Notification[]>({ queryKey: listKey });
       const previousCount = queryClient.getQueryData<UnreadCount>(unreadKey);
+      queryClient.setQueriesData<Notification[]>({ queryKey: listKey }, (old) =>
+        old ? old.map((n) => ({ ...n, isRead: true })) : old,
+      );
       queryClient.setQueryData<UnreadCount>(unreadKey, { count: 0 });
-      return { previousCount };
+      return { previousLists, previousCount };
     },
     onError: (_, _vars, context) => {
-      if (context?.previousCount !== undefined) {
-        queryClient.setQueryData(
-          queryKeys.notifications.unreadCount(orgId),
-          context.previousCount,
-        );
+      if (context) {
+        context.previousLists.forEach(([key, data]) => {
+          queryClient.setQueryData(key, data);
+        });
+        if (context.previousCount !== undefined) {
+          queryClient.setQueryData(
+            queryKeys.notifications.unreadCount(orgId),
+            context.previousCount,
+          );
+        }
       }
     },
     onSettled: () => {
@@ -223,11 +274,52 @@ export const useSnoozeNotification = () => {
 };
 
 export const useBulkMarkRead = () => {
-  const { invalidateInbox } = useNotificationInboxInvalidation();
-  return useMutation<{ success: boolean }, Error, number[]>({
+  const { invalidateInbox, orgId, queryClient } = useNotificationInboxInvalidation();
+  return useMutation<
+    { success: boolean },
+    Error,
+    number[],
+    { previousLists: [QueryKey, Notification[] | undefined][]; previousCount: UnreadCount | undefined }
+  >({
     mutationKey: ["notifications", "bulk-mark-read"],
     mutationFn: (ids) => apiClient.post<{ success: boolean }>("/notifications/bulk/read", { ids }),
-    onSuccess: invalidateInbox,
+    onMutate: async (ids) => {
+      const idSet = new Set(ids);
+      const listKey = queryKeys.notifications.lists(orgId);
+      const unreadKey = queryKeys.notifications.unreadCount(orgId);
+      await queryClient.cancelQueries({ queryKey: listKey });
+      await queryClient.cancelQueries({ queryKey: unreadKey });
+      const previousLists = queryClient.getQueriesData<Notification[]>({ queryKey: listKey });
+      const previousCount = queryClient.getQueryData<UnreadCount>(unreadKey);
+      const unreadIds = new Set<number>();
+      for (const [, data] of previousLists) {
+        if (data) {
+          for (const n of data) {
+            if (idSet.has(n.id) && !n.isRead) unreadIds.add(n.id);
+          }
+        }
+      }
+      queryClient.setQueriesData<Notification[]>({ queryKey: listKey }, (old) =>
+        old ? old.map((n) => (idSet.has(n.id) ? { ...n, isRead: true } : n)) : old,
+      );
+      if (unreadIds.size > 0) {
+        queryClient.setQueryData<UnreadCount>(unreadKey, (old) =>
+          old ? { count: Math.max(0, old.count - unreadIds.size) } : old,
+        );
+      }
+      return { previousLists, previousCount };
+    },
+    onError: (_err, _ids, context) => {
+      if (context) {
+        context.previousLists.forEach(([key, data]) => {
+          queryClient.setQueryData(key, data);
+        });
+        if (context.previousCount !== undefined) {
+          queryClient.setQueryData(queryKeys.notifications.unreadCount(orgId), context.previousCount);
+        }
+      }
+    },
+    onSettled: () => invalidateInbox(),
   });
 };
 

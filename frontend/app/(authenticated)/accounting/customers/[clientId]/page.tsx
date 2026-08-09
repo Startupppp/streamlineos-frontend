@@ -160,7 +160,7 @@ export default function CustomerLedgerDetailPage({
       subtitle={subtitle}
       backHref="/accounting/customers"
     >
-      <div className="space-y-6">
+      <div className="flex flex-1 min-h-0 flex-col gap-6">
         <StatCardGrid cols={3}>
           <StatCard
             label="Total Invoiced"
@@ -229,6 +229,7 @@ export default function CustomerLedgerDetailPage({
               />
             }
             minWidth="780px"
+            className="flex-1 min-h-0"
           />
         )}
       </div>

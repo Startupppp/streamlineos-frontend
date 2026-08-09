@@ -10,7 +10,7 @@ import { ErrorState } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger, TABS_CONTENT_PAGE_BODY_CLASS } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import {
   useVendorReturns,
@@ -273,13 +273,13 @@ export default function ReturnsPage() {
       subtitle="Manage vendor and customer return merchandise authorizations"
     >
       <div className="flex flex-1 min-h-0 flex-col gap-4">
-      <Tabs defaultValue="vendor">
+      <Tabs defaultValue="vendor" className="flex flex-1 min-h-0 flex-col">
         <TabsList className="mb-4">
           <TabsTrigger value="vendor">Vendor Returns</TabsTrigger>
           <TabsTrigger value="customer">Customer Returns</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="vendor">
+        <TabsContent value="vendor" className={TABS_CONTENT_PAGE_BODY_CLASS}>
           <div className="flex justify-end mb-3">
             <Button size="sm" onClick={handleOpenVendorSheet}>
               New Vendor Return
@@ -302,7 +302,7 @@ export default function ReturnsPage() {
           />
         </TabsContent>
 
-        <TabsContent value="customer">
+        <TabsContent value="customer" className={TABS_CONTENT_PAGE_BODY_CLASS}>
           <div className="flex justify-end mb-3">
             <Button size="sm" onClick={handleOpenCustomerSheet}>
               New Customer Return

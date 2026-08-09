@@ -17,8 +17,8 @@ export function RetentionPageContent() {
   const [activeTab, setActiveTab] = useState<ActiveTab>("policies");
 
   return (
-    <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ActiveTab)} className="mb-6">
-      <TabsList>
+    <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ActiveTab)} className="flex flex-1 min-h-0 flex-col gap-4">
+      <TabsList className="shrink-0">
         <TabsTrigger value="policies">Retention Policies</TabsTrigger>
         <TabsTrigger value="requests">Data Requests</TabsTrigger>
       </TabsList>

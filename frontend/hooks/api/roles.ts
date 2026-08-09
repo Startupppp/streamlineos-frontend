@@ -14,14 +14,64 @@ import type {
   UnassignRoleMemberInput,
 } from "@/types/access";
 
+export interface PaginatedRolesParams {
+  page: number;
+  limit: number;
+  search?: string;
+}
+
+export interface RoleListRow extends Role {
+  permissionCount: number;
+}
+
+export interface PaginatedRolesResponse {
+  data: RoleListRow[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+const ROLE_SELECTOR_PARAMS = { page: 1, limit: 100 } as const;
+
 export const useRoles = (
   options?: Omit<UseQueryOptions<Role[], Error>, "queryKey" | "queryFn">
 ) => {
   const canManage = useCan("settings:rbac:manage");
   return useQuery<Role[], Error>({
-    queryKey: queryKeys.roles.list(),
-    queryFn: () => apiClient.get<Role[]>("/roles"),
+    queryKey: queryKeys.roles.selectorList(),
+    queryFn: async () => {
+      const response = await apiClient.get<PaginatedRolesResponse>(
+        "/roles",
+        ROLE_SELECTOR_PARAMS,
+      );
+      return response.data;
+    },
     staleTime: 30 * 60_000,
+    ...options,
+    enabled: canManage && (options?.enabled ?? true),
+  });
+};
+
+export const usePaginatedRoles = (
+  params: PaginatedRolesParams,
+  options?: Omit<
+    UseQueryOptions<PaginatedRolesResponse, Error>,
+    "queryKey" | "queryFn"
+  >,
+) => {
+  const canManage = useCan("settings:rbac:manage");
+  return useQuery<PaginatedRolesResponse, Error>({
+    queryKey: queryKeys.roles.list(params),
+    queryFn: () =>
+      apiClient.get<PaginatedRolesResponse>("/roles", {
+        page: params.page,
+        limit: params.limit,
+        search: params.search,
+      }),
+    staleTime: 60_000,
     ...options,
     enabled: canManage && (options?.enabled ?? true),
   });
@@ -156,7 +206,6 @@ export const useSetRolePermissions = () => {
       });
       void queryClient.invalidateQueries({ queryKey: queryKeys.roles.list() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.access.me() });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.roles.permissionsMatrix() });
     },
   });
 };
@@ -209,26 +258,6 @@ export const useUnassignRoleMember = () => {
     },
   });
 };
-
-export interface RolePermissionsMatrixEntry {
-  roleId: number;
-  roleName: string;
-  roleSlug: string;
-  permissions: string[];
-}
-
-export function useRolePermissionsMatrix(
-  options?: Omit<UseQueryOptions<RolePermissionsMatrixEntry[], Error>, "queryKey" | "queryFn">
-) {
-  const canManage = useCan("settings:rbac:manage");
-  return useQuery<RolePermissionsMatrixEntry[], Error>({
-    queryKey: queryKeys.roles.permissionsMatrix(),
-    queryFn: () => apiClient.get<RolePermissionsMatrixEntry[]>("/roles/permissions/matrix"),
-    staleTime: 5 * 60_000,
-    ...options,
-    enabled: canManage && (options?.enabled ?? true),
-  });
-}
 
 interface RolesAnalytics {
   totalRoles: number;

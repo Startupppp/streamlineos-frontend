@@ -588,6 +588,7 @@ function ProductsPageInner() {
             columns={columns}
             getRowKey={(p) => p.id}
             isLoading={productsQuery.isLoading}
+            className="flex-1 min-h-0"
             emptyState={
               <InventoryEmptyState
                 illustration={<EmptySearchIllustration />}

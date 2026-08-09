@@ -261,6 +261,7 @@ export function SafetyPageContent() {
 
         {activeTab === "incidents" && (
           <DataTable
+            className="flex-1 min-h-0"
             columns={columns}
             data={data?.data ?? []}
             isLoading={isLoading}

@@ -216,7 +216,7 @@ export default function BacklogPage({ params }: PageProps) {
   if (isLoading) {
     return (
       <PageWrapper title="Backlog" subtitle="Loading...">
-        <DataTableSkeleton rows={12} columns={7} />
+        <DataTableSkeleton rows={12} columns={7} className="flex-1 min-h-0" />
       </PageWrapper>
     );
   }
@@ -255,7 +255,7 @@ export default function BacklogPage({ params }: PageProps) {
           />
         ) : null}
 
-        <PmPanel className="min-w-0">
+        <PmPanel className="min-w-0 flex-1 min-h-0 flex flex-col">
           <DataTable
             data={filteredTickets}
             columns={columns}
@@ -263,7 +263,7 @@ export default function BacklogPage({ params }: PageProps) {
             onRowClick={handleRowClick}
             selection={{ selected: selectedIds, onChange: handleSelectionChange }}
             minWidth="640px"
-            className="border-0 rounded-none"
+            className="border-0 rounded-none flex-1 min-h-0"
             emptyState={
               <EmptyState
                 illustrationPreset="projects"

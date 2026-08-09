@@ -40,9 +40,15 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { Textarea } from "@/components/ui/textarea";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { ErrorState } from "@/components/shared/error-state";
 import type { OrgBusinessUnit } from "@/types/org-hierarchy";
 import { HierarchyArchiveDialog } from "./hierarchy-archive-dialog";
 import { useHierarchyArchive } from "./use-hierarchy-archive";
+import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
+import {
+  useHierarchyListState,
+  useHierarchyPageBounds,
+} from "./use-hierarchy-list-state";
 import { RequireModule } from "@/components/auth/require-module";
 import { useCan } from "@/hooks/api/access";
 
@@ -146,39 +152,47 @@ function BuForm({
 }
 
 export function BusinessUnitsPage() {
-  const { data: units, isLoading } = useBusinessUnits();
+  const {
+    page,
+    pageSize,
+    query,
+    search,
+    serverSearch,
+    showArchived,
+    setPage,
+    setPageSize,
+    setSearch,
+    setStatus,
+    toggleArchived,
+  } = useHierarchyListState();
+  const {
+    data: units,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useBusinessUnits(query);
+  const isCorrectingPage = useHierarchyPageBounds({
+    page,
+    pageSize,
+    total: isError ? undefined : units?.total,
+    setPage,
+  });
   const create = useCreateBusinessUnit();
   const update = useUpdateBusinessUnit();
   const canManage = useCan("settings:organization:manage");
 
   const [showCreate, setShowCreate] = useState(false);
   const [editing, setEditing] = useState<OrgBusinessUnit | null>(null);
-  const [showArchived, setShowArchived] = useState(false);
-  const [search, setSearch] = useState("");
   const archiveFlow = useHierarchyArchive<OrgBusinessUnit>({
     unitKind: "BUSINESS_UNIT",
     archive: (unit, callbacks) =>
       update.mutate({ id: unit.id, status: "ARCHIVED" }, callbacks),
     successMessage: "Business unit archived",
-    onArchived: () => setShowArchived(true),
+    onArchived: () => setStatus("ARCHIVED"),
   });
 
-  const allUnits = units?.data ?? [];
-  const active = allUnits.filter(
-    (u) => u.status !== "ARCHIVED" && !u.deletedAt,
-  );
-  const archived = allUnits.filter(
-    (u) => u.status === "ARCHIVED" && !u.deletedAt,
-  );
-  const displayed = showArchived ? archived : active;
-  const filtered = search
-    ? displayed.filter((u) => {
-        const q = search.toLowerCase();
-        return (
-          u.name.toLowerCase().includes(q) || u.code.toLowerCase().includes(q)
-        );
-      })
-    : displayed;
+  const displayed = units?.data ?? [];
 
   const handleCreate = useCallback(
     (values: FormValues) => {
@@ -220,21 +234,23 @@ export function BusinessUnitsPage() {
         {
           onSuccess: () => {
             toast.success("Business unit restored");
-            setShowArchived(false);
+            setStatus("CURRENT");
           },
           onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
-    [update],
+    [setStatus, update],
   );
 
   const handleOpenCreate = useCallback(() => setShowCreate(true), []);
-  const handleToggleArchived = useCallback(
-    () => setShowArchived((v) => !v),
-    [],
+  const handleSearchChange = useCallback(
+    (v: string) => setSearch(v),
+    [setSearch],
   );
-  const handleSearchChange = useCallback((v: string) => setSearch(v), []);
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   function handleSearchInputChange(value: string) {
     handleSearchChange(value);
@@ -297,44 +313,46 @@ export function BusinessUnitsPage() {
       header: "",
       headerClassName: "w-28",
       cell: (u) =>
-        canManage ? <div className="flex items-center gap-1">
-          {u.status === "ARCHIVED" ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={makeRestoreHandler(u)}
-              title="Restore"
-            >
-              <RotateCcw className="h-4 w-4 text-primary" />
-            </Button>
-          ) : (
-            <>
+        canManage ? (
+          <div className="flex items-center gap-1">
+            {u.status === "ARCHIVED" ? (
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={makeSetEditingHandler(u)}
-                title="Edit"
+                onClick={makeRestoreHandler(u)}
+                title="Restore"
               >
-                <Pencil className="h-4 w-4" />
+                <RotateCcw className="h-4 w-4 text-primary" />
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={makeArchiveHandler(u)}
-                title="Archive"
-              >
-                <Archive className="h-4 w-4 text-muted-foreground" />
-              </Button>
-            </>
-          )}
-        </div> : null,
+            ) : (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={makeSetEditingHandler(u)}
+                  title="Edit"
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={makeArchiveHandler(u)}
+                  title="Archive"
+                >
+                  <Archive className="h-4 w-4 text-muted-foreground" />
+                </Button>
+              </>
+            )}
+          </div>
+        ) : null,
     },
   ];
 
-  const emptyState = search ? (
+  const emptyState = serverSearch ? (
     <EmptyState
       illustrationPreset="companies"
-      title={`No business units matching "${search}"`}
+      title={`No business units matching "${serverSearch}"`}
       description="Try a different search term."
       compact
       className="min-h-[200px]"
@@ -351,7 +369,11 @@ export function BusinessUnitsPage() {
       illustrationPreset="companies"
       title="No business units yet"
       description="Create your first business unit to get started."
-      action={canManage ? { label: "Add Business Unit", onClick: handleOpenCreate } : undefined}
+      action={
+        canManage
+          ? { label: "Add Business Unit", onClick: handleOpenCreate }
+          : undefined
+      }
     />
   );
 
@@ -366,21 +388,23 @@ export function BusinessUnitsPage() {
               variant={showArchived ? "secondary" : "outline"}
               size="sm"
               className="flex-1 text-xs sm:flex-none"
-              onClick={handleToggleArchived}
+              onClick={toggleArchived}
             >
               <Archive className="h-4 w-4 mr-1.5" />
-              {showArchived ? "Show Active" : `Archived (${archived.length})`}
+              {showArchived ? "Show current" : "View archived"}
             </Button>
-            {canManage ? <AnimatedIconButton
-              icon={PlusIcon}
-              iconSize={16}
-              iconClassName="mr-1.5"
-              size="sm"
-              className="flex-1 sm:flex-none"
-              onClick={handleOpenCreate}
-            >
-              Add Business Unit
-            </AnimatedIconButton> : null}
+            {canManage ? (
+              <AnimatedIconButton
+                icon={PlusIcon}
+                iconSize={16}
+                iconClassName="mr-1.5"
+                size="sm"
+                className="flex-1 sm:flex-none"
+                onClick={handleOpenCreate}
+              >
+                Add Business Unit
+              </AnimatedIconButton>
+            ) : null}
           </div>
         }
         filters={
@@ -391,16 +415,34 @@ export function BusinessUnitsPage() {
           />
         }
       >
-        <DataTable
-          data={filtered}
-          columns={columns}
-          getRowKey={(u) => u.id}
-          isLoading={isLoading}
-          emptyState={emptyState}
-          rowClassName={(u) => cn(u.status === "ARCHIVED" && "opacity-60")}
-          minWidth="580px"
-          className="flex-1 min-h-0"
-        />
+        {isError ? (
+          <ErrorState
+            className="flex-1"
+            title="Couldn't load business units"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+          />
+        ) : (
+          <DataTable
+            data={displayed}
+            columns={columns}
+            getRowKey={(u) => u.id}
+            isLoading={isLoading || isCorrectingPage}
+            emptyState={emptyState}
+            rowClassName={(u) => cn(u.status === "ARCHIVED" && "opacity-60")}
+            minWidth="580px"
+            className="flex-1 min-h-0"
+            pagination={{
+              mode: "server",
+              page,
+              pageSize,
+              total: units?.total ?? 0,
+              onPageChange: setPage,
+              onPageSizeChange: setPageSize,
+              pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
+            }}
+          />
+        )}
 
         <Sheet open={showCreate} onOpenChange={setShowCreate}>
           <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md">

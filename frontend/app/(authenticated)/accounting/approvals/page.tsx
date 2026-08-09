@@ -271,11 +271,13 @@ export default function FinanceApprovalsPage() {
   if (!canRead) {
     return (
       <PageWrapper title="Finance Approvals" subtitle="Review and approve financial transactions">
-        <EmptyState
-          illustration={<EmptyApprovalIllustration />}
-          title="Access restricted"
-          description="You don't have permission to view approvals."
-        />
+        <div className="flex flex-1 min-h-0 flex-col">
+          <EmptyState
+            illustration={<EmptyApprovalIllustration />}
+            title="Access restricted"
+            description="You don't have permission to view approvals."
+          />
+        </div>
       </PageWrapper>
     );
   }

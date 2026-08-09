@@ -152,35 +152,37 @@ export default function PoliciesPage() {
         ) : undefined
       }
     >
-      {query.isLoading && <LoadingState variant="table" rows={12} />}
+      <div className="flex flex-1 min-h-0 flex-col">
+        {query.isLoading && <LoadingState variant="table" rows={12} />}
 
-      {query.error && (
-        <ErrorState
-          title="Failed to load policies"
-          description={getErrorMessage(query.error)}
-          onRetry={handleRetry}
-        />
-      )}
+        {query.error && (
+          <ErrorState
+            title="Failed to load policies"
+            description={getErrorMessage(query.error)}
+            onRetry={handleRetry}
+          />
+        )}
 
-      {!query.isLoading && !query.error && policies.length === 0 && (
-        <EmptyState
-          illustration={<EmptyExpensesIllustration />}
-          title="No expense policies yet"
-          description="Create policies to enforce spending limits and receipt requirements."
-          action={canManage ? { label: "New policy", onClick: handleOpenCreate } : undefined}
-        />
-      )}
+        {!query.isLoading && !query.error && policies.length === 0 && (
+          <EmptyState
+            illustration={<EmptyExpensesIllustration />}
+            title="No expense policies yet"
+            description="Create policies to enforce spending limits and receipt requirements."
+            action={canManage ? { label: "New policy", onClick: handleOpenCreate } : undefined}
+          />
+        )}
 
-      {policies.length > 0 && (
-        <PolicyTable
-          policies={policies}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          onToggleActive={handleToggleActive}
-          togglingId={togglingId}
-          className="flex-1 min-h-0"
-        />
-      )}
+        {policies.length > 0 && (
+          <PolicyTable
+            policies={policies}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onToggleActive={handleToggleActive}
+            togglingId={togglingId}
+            className="flex-1 min-h-0"
+          />
+        )}
+      </div>
 
       <PolicyFormDialog
         open={formOpen}

@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { ErrorState } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Label } from "@/components/ui/label";
@@ -33,6 +34,10 @@ import {
   useSubmitAssignedInterviewScorecard,
 } from "@/hooks/api/employee-self-service/recruitment";
 import { getErrorMessage } from "@/lib/get-error-message";
+import {
+  PAGE_BODY_SKELETON_CLASS,
+  PAGE_BODY_EMPTY_CLASS,
+} from "@/components/ui/content-fill-panel";
 
 type Recommendation = "HIRE" | "NO_HIRE" | "MAYBE";
 
@@ -133,9 +138,9 @@ function FeedbackSheet({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={submit.isPending}>
-            {submit.isPending ? "Submitting..." : "Submit Feedback"}
-          </Button>
+          <LoadingButton isPending={submit.isPending} onClick={handleSubmit} loadingText="Submitting…">
+            Submit Feedback
+          </LoadingButton>
         </div>
       </SheetContent>
     </Sheet>
@@ -168,8 +173,9 @@ export function MyRecruitmentPage() {
       title="My Recruitment"
       subtitle="Your assigned interviews and hiring feedback actions."
     >
+      <div className="flex flex-1 min-h-0 flex-col gap-3">
       {interviews.isLoading ? (
-        <div className="space-y-2">
+        <div className={PAGE_BODY_SKELETON_CLASS}>
           {Array.from({ length: 6 }, (_, index) => (
             <Skeleton key={index} className="h-20 rounded-lg" />
           ))}
@@ -189,7 +195,7 @@ export function MyRecruitmentPage() {
           illustrationPreset="calendar"
           title="No assigned interviews"
           description="Interviews assigned to you will appear here."
-          className="flex-1"
+          className={PAGE_BODY_EMPTY_CLASS}
         />
       ) : null}
 
@@ -275,11 +281,14 @@ export function MyRecruitmentPage() {
           ) : null}
         </div>
       ) : null}
+      </div>
 
-      <FeedbackSheet
-        interview={feedbackInterview}
-        onOpenChange={handleSheetChange}
-      />
+      {feedbackInterview && (
+        <FeedbackSheet
+          interview={feedbackInterview}
+          onOpenChange={handleSheetChange}
+        />
+      )}
     </PageWrapper>
   );
 }

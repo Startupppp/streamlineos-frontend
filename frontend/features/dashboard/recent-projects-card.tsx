@@ -2,7 +2,7 @@
 
 import { memo } from "react";
 import Link from "next/link";
-import { Folder } from "lucide-react";
+import { Folder, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyProjectsIllustration } from "@/components/illustrations";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { getColorSafe, projectStatusColors } from "@/lib/theme-constants";
 
 interface Project {
@@ -24,9 +25,10 @@ interface RecentProjectsCardProps {
   isLoading: boolean;
   error: unknown;
   onCreateProject: () => void;
+  onRetry?: () => void;
 }
 
-export const RecentProjectsCard = memo(function RecentProjectsCard({ projects, isLoading, error, onCreateProject }: RecentProjectsCardProps) {
+export const RecentProjectsCard = memo(function RecentProjectsCard({ projects, isLoading, error, onCreateProject, onRetry }: RecentProjectsCardProps) {
   return (
     <Card className="bg-card border-border shadow-noir flex flex-col h-full w-full">
       <CardHeader className="flex-shrink-0 flex flex-row items-center justify-between px-4 py-3">
@@ -46,7 +48,15 @@ export const RecentProjectsCard = memo(function RecentProjectsCard({ projects, i
             ))}
           </div>
         ) : error ? (
-          <p role="alert" className="text-sm text-destructive">Failed to load projects.</p>
+          <div className="space-y-2 py-2">
+            <p role="alert" className="text-sm text-destructive">{getErrorMessage(error)}</p>
+            {onRetry && (
+              <Button variant="ghost" size="sm" onClick={onRetry}>
+                <RefreshCw className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
+                Retry
+              </Button>
+            )}
+          </div>
         ) : projects && projects.length > 0 ? (
           <ScrollArea className="h-full pr-3">
           <div className="space-y-1.5">

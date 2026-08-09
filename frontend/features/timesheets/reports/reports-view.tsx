@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import { format, subDays, parseISO, isValid } from "date-fns";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger, TABS_CONTENT_PAGE_BODY_CLASS } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
@@ -221,7 +221,7 @@ export function ReportsView() {
             ))}
           </TabsList>
 
-          <TabsContent value="overview" className="mt-0">
+          <TabsContent value="overview" className={TABS_CONTENT_PAGE_BODY_CLASS}>
             {isError ? (
               <ErrorState
                 title="Couldn't load report"
@@ -233,39 +233,39 @@ export function ReportsView() {
             )}
           </TabsContent>
 
-          <TabsContent value="utilization" className="mt-0">
+          <TabsContent value="utilization" className={TABS_CONTENT_PAGE_BODY_CLASS}>
             <UtilizationTab
               params={rangeParams}
               enabled={queryEnabled && activeTab === "utilization"}
             />
           </TabsContent>
 
-          <TabsContent value="project-budgets" className="mt-0">
+          <TabsContent value="project-budgets" className={TABS_CONTENT_PAGE_BODY_CLASS}>
             <ProjectBudgetsTab />
           </TabsContent>
 
-          <TabsContent value="client-profitability" className="mt-0">
+          <TabsContent value="client-profitability" className={TABS_CONTENT_PAGE_BODY_CLASS}>
             <ClientProfitabilityTab
               params={rangeParams}
               enabled={queryEnabled && activeTab === "client-profitability"}
             />
           </TabsContent>
 
-          <TabsContent value="compliance" className="mt-0">
+          <TabsContent value="compliance" className={TABS_CONTENT_PAGE_BODY_CLASS}>
             <ComplianceTab
               params={rangeParams}
               enabled={queryEnabled && activeTab === "compliance"}
             />
           </TabsContent>
 
-          <TabsContent value="approval-sla" className="mt-0">
+          <TabsContent value="approval-sla" className={TABS_CONTENT_PAGE_BODY_CLASS}>
             <ApprovalSlaTab
               params={rangeParams}
               enabled={queryEnabled && activeTab === "approval-sla"}
             />
           </TabsContent>
 
-          <TabsContent value="billing-leakage" className="mt-0">
+          <TabsContent value="billing-leakage" className={TABS_CONTENT_PAGE_BODY_CLASS}>
             <BillingLeakageTab
               params={rangeParams}
               enabled={queryEnabled && activeTab === "billing-leakage"}

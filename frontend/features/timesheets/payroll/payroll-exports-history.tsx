@@ -184,6 +184,7 @@ export function PayrollExportsHistory({ fallbackMapping }: PayrollExportsHistory
   return (
     <>
       <DataTable
+        className="flex-1 min-h-0"
         data={data?.items ?? []}
         columns={columns}
         getRowKey={(r) => r.id}

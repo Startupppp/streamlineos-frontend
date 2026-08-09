@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { InventoryDetailPageLoading } from "@/features/inventory/components/inventory-detail-page-loading";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent, TABS_CONTENT_PAGE_BODY_CLASS } from "@/components/ui/tabs";
 import { ErrorState } from "@/components/shared";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useWarehouse, useLocations } from "@/hooks/api/inventory/warehouses";
@@ -207,13 +207,13 @@ export default function WarehouseDetailPage({
       }
     >
       <div className="flex flex-1 min-h-0 flex-col gap-4">
-      <Tabs defaultValue="locations">
+      <Tabs defaultValue="locations" className="flex flex-1 min-h-0 flex-col">
         <TabsList>
           <TabsTrigger value="locations">Locations</TabsTrigger>
           <TabsTrigger value="stock">Stock</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="locations">
+        <TabsContent value="locations" className={TABS_CONTENT_PAGE_BODY_CLASS}>
           {locations.length === 0 ? (
             <InventoryEmptyState
               illustration={<EmptyWarehouseIllustration />}
@@ -262,7 +262,7 @@ export default function WarehouseDetailPage({
           )}
         </TabsContent>
 
-        <TabsContent value="stock">
+        <TabsContent value="stock" className={TABS_CONTENT_PAGE_BODY_CLASS}>
           <WarehouseStockTab warehouseId={warehouseId} />
         </TabsContent>
       </Tabs>

@@ -82,7 +82,7 @@ export function ManagedProductDetailPage({ managedProductId }: Props) {
       }
     >
       <PmPageShell>
-        <PmSection index={0}>
+        <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
           {isLoading ? (
             <div className="flex flex-col gap-2">
               {Array.from({ length: 5 }).map((_, i) => (

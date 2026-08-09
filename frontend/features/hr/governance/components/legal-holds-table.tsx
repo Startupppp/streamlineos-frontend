@@ -113,7 +113,7 @@ export function LegalHoldsTable() {
 
   if (isLoading) {
     return (
-      <div className="space-y-3">
+      <div className="flex flex-1 min-h-0 flex-col gap-3">
         {Array.from({ length: 12 }).map((_, i) => (
           <Skeleton key={i} className="h-12 w-full rounded-lg" />
         ))}
@@ -131,8 +131,8 @@ export function LegalHoldsTable() {
   }
 
   return (
-    <>
-      <div className="flex items-center justify-between mb-4">
+    <div className="flex flex-1 min-h-0 flex-col">
+      <div className="flex items-center justify-between mb-4 shrink-0">
         <p className="text-sm text-muted-foreground">
           {data?.total ?? 0} legal hold{data?.total !== 1 ? "s" : ""}
         </p>
@@ -144,6 +144,7 @@ export function LegalHoldsTable() {
         )}
       </div>
       <DataTable
+        className="flex-1 min-h-0"
         columns={columns}
         data={data?.data ?? []}
         getRowKey={(row) => row.id}
@@ -171,6 +172,6 @@ export function LegalHoldsTable() {
         }}
       />
       <LegalHoldSheet open={sheetOpen} onClose={() => setSheetOpen(false)} hold={selectedHold} />
-    </>
+    </div>
   );
 }

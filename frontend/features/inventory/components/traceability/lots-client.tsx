@@ -224,30 +224,32 @@ export function LotsClient() {
         </div>
       }
     >
-      {isError ? (
-        <ErrorState
-          title="Failed to load lots"
-          description="An error occurred while fetching lot data. Please try again."
-          onRetry={handleRetry}
-          className="flex-1"
-        />
-      ) : (
-        <DataTable
-          data={items}
-          columns={LOTS_COLUMNS}
-          className="flex-1 min-h-0"
-          getRowKey={(row) => row.id}
-          isLoading={isLoading}
-          emptyState={emptyState}
-          pagination={{
-            mode: "server",
-            page,
-            pageSize: 20,
-            total,
-            onPageChange: setPage,
-          }}
-        />
-      )}
+      <div className="flex flex-1 min-h-0 flex-col">
+        {isError ? (
+          <ErrorState
+            title="Failed to load lots"
+            description="An error occurred while fetching lot data. Please try again."
+            onRetry={handleRetry}
+            className="flex-1"
+          />
+        ) : (
+          <DataTable
+            data={items}
+            columns={LOTS_COLUMNS}
+            className="flex-1 min-h-0"
+            getRowKey={(row) => row.id}
+            isLoading={isLoading}
+            emptyState={emptyState}
+            pagination={{
+              mode: "server",
+              page,
+              pageSize: 20,
+              total,
+              onPageChange: setPage,
+            }}
+          />
+        )}
+      </div>
     </PageWrapper>
   );
 }

@@ -1,11 +1,19 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import {
+  useState,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useTransition,
+} from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { formatRelative } from "date-fns";
 import { Loader2, ShieldX } from "lucide-react";
 import { XIcon } from "@animateicons/react/lucide";
 import { useSession } from "next-auth/react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,6 +24,7 @@ import { PAGE_BODY_EMPTY_CLASS } from "@/components/ui/content-fill-panel";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { SearchInput } from "@/components/ui/search-input";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { DataTablePagination } from "@/components/shared/data-table-pagination";
 import {
   Tabs,
   TabsContent,
@@ -28,19 +37,47 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan, useRbacDiscoveryMembers } from "@/hooks/api/access";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { toast } from "sonner";
 import { GrantDelegationSheet, type Member } from "./grant-delegation-sheet";
-import type { Delegation } from "./delegation-schema";
+import type { Delegation, DelegationPage } from "./delegation-schema";
+import {
+  buildDelegationListUrl,
+  DELEGATION_PAGE_SIZE_OPTIONS,
+  DELEGATION_URL_KEYS,
+  readDelegationListState,
+  type DelegationListKind,
+} from "./delegation-list-state";
 
 const TAB_PANEL_CLASS = `${TABS_CONTENT_PAGE_BODY_CLASS} mt-0 h-full min-h-0 w-full flex-1 overflow-y-auto`;
 
 export function DelegationsPage() {
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const [, startTransition] = useTransition();
+  const paramsSnapshot = searchParams.toString();
+  const latestParamsRef = useRef(paramsSnapshot);
+  const requestedReceivedSearchRef = useRef<string | null>(null);
+  const requestedGrantedSearchRef = useRef<string | null>(null);
   const { data: session } = useSession();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [revokeTarget, setRevokeTarget] = useState<Delegation | null>(null);
   const [revokeError, setRevokeError] = useState<unknown>(null);
-  const [search, setSearch] = useState("");
+
+  const activeTab: DelegationListKind =
+    searchParams.get("tab") === "granted" ? "granted" : "received";
+  const receivedState = readDelegationListState(searchParams, "received");
+  const grantedState = readDelegationListState(searchParams, "granted");
+  const [receivedSearchInput, setReceivedSearchInput] = useState(
+    receivedState.search,
+  );
+  const [grantedSearchInput, setGrantedSearchInput] = useState(
+    grantedState.search,
+  );
+  const debouncedReceivedSearch = useDebouncedValue(receivedSearchInput, 300);
+  const debouncedGrantedSearch = useDebouncedValue(grantedSearchInput, 300);
 
   const canManageRbac = useCan("settings:rbac:manage");
   const membersQuery = useRbacDiscoveryMembers({ enabled: canManageRbac });
@@ -56,27 +93,97 @@ export function DelegationsPage() {
     [members],
   );
 
+  const updateParams = useCallback(
+    (updates: Record<string, string | null>) => {
+      const params = new URLSearchParams(latestParamsRef.current);
+      for (const [key, value] of Object.entries(updates)) {
+        if (value === null || value === "") params.delete(key);
+        else params.set(key, value);
+      }
+      const query = params.toString();
+      latestParamsRef.current = query;
+      startTransition(() => {
+        router.replace(query ? `${pathname}?${query}` : pathname, {
+          scroll: false,
+        });
+      });
+    },
+    [pathname, router],
+  );
+
+  useEffect(() => {
+    latestParamsRef.current = paramsSnapshot;
+  }, [paramsSnapshot]);
+
+  useEffect(() => {
+    if (requestedReceivedSearchRef.current === receivedState.search) {
+      requestedReceivedSearchRef.current = null;
+      return;
+    }
+    // Browser history can change URL state without an input event.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setReceivedSearchInput(receivedState.search);
+  }, [receivedState.search]);
+
+  useEffect(() => {
+    if (requestedGrantedSearchRef.current === grantedState.search) {
+      requestedGrantedSearchRef.current = null;
+      return;
+    }
+    // Browser history can change URL state without an input event.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setGrantedSearchInput(grantedState.search);
+  }, [grantedState.search]);
+
+  useEffect(() => {
+    const normalizedSearch = debouncedReceivedSearch.trim();
+    if (normalizedSearch === receivedState.search) return;
+    requestedReceivedSearchRef.current = normalizedSearch;
+    updateParams({
+      [DELEGATION_URL_KEYS.received.search]:
+        normalizedSearch || null,
+      [DELEGATION_URL_KEYS.received.page]: null,
+    });
+  }, [debouncedReceivedSearch, receivedState.search, updateParams]);
+
+  useEffect(() => {
+    const normalizedSearch = debouncedGrantedSearch.trim();
+    if (normalizedSearch === grantedState.search) return;
+    requestedGrantedSearchRef.current = normalizedSearch;
+    updateParams({
+      [DELEGATION_URL_KEYS.granted.search]:
+        normalizedSearch || null,
+      [DELEGATION_URL_KEYS.granted.page]: null,
+    });
+  }, [debouncedGrantedSearch, grantedState.search, updateParams]);
+
   const {
-    data: received,
+    data: receivedPage,
     isLoading: loadingReceived,
     isError: receivedError,
     error: receivedQueryError,
     refetch: refetchReceived,
-  } = useQuery<Delegation[]>({
-    queryKey: queryKeys.delegations.received(),
-    queryFn: () => apiClient.get<Delegation[]>("/access/delegations"),
+  } = useQuery<DelegationPage>({
+    queryKey: queryKeys.delegations.received(receivedState),
+    queryFn: () =>
+      apiClient.get<DelegationPage>(
+        buildDelegationListUrl("/access/delegations", receivedState),
+      ),
     staleTime: 60_000,
   });
 
   const {
-    data: given,
+    data: grantedPage,
     isLoading: loadingGiven,
     isError: givenError,
     error: givenQueryError,
     refetch: refetchGiven,
-  } = useQuery<Delegation[]>({
-    queryKey: queryKeys.delegations.given(),
-    queryFn: () => apiClient.get<Delegation[]>("/access/delegations/given"),
+  } = useQuery<DelegationPage>({
+    queryKey: queryKeys.delegations.given(grantedState),
+    queryFn: () =>
+      apiClient.get<DelegationPage>(
+        buildDelegationListUrl("/access/delegations/given", grantedState),
+      ),
     staleTime: 60_000,
   });
 
@@ -85,7 +192,9 @@ export function DelegationsPage() {
     mutationFn: (id: string) => apiClient.delete(`/access/delegations/${id}`),
     onSuccess: () => {
       toast.success("Delegation revoked");
-      void queryClient.invalidateQueries({ queryKey: queryKeys.delegations.all });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.delegations.all,
+      });
       setRevokeTarget(null);
       setRevokeError(null);
     },
@@ -112,7 +221,55 @@ export function DelegationsPage() {
   }, []);
 
   const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
-  const handleSearchChange = useCallback((value: string) => setSearch(value), []);
+  const handleTabChange = useCallback(
+    (value: string) => {
+      if (value !== "received" && value !== "granted") return;
+      updateParams({ tab: value === "received" ? null : value });
+    },
+    [updateParams],
+  );
+  const handleSearchChange = useCallback(
+    (value: string) => {
+      if (activeTab === "received") setReceivedSearchInput(value);
+      else setGrantedSearchInput(value);
+    },
+    [activeTab],
+  );
+  const handleReceivedPageChange = useCallback(
+    (page: number) => {
+      updateParams({
+        [DELEGATION_URL_KEYS.received.page]: page === 1 ? null : String(page),
+      });
+    },
+    [updateParams],
+  );
+  const handleReceivedLimitChange = useCallback(
+    (limit: number) => {
+      updateParams({
+        [DELEGATION_URL_KEYS.received.size]:
+          limit === 20 ? null : String(limit),
+        [DELEGATION_URL_KEYS.received.page]: null,
+      });
+    },
+    [updateParams],
+  );
+  const handleGrantedPageChange = useCallback(
+    (page: number) => {
+      updateParams({
+        [DELEGATION_URL_KEYS.granted.page]: page === 1 ? null : String(page),
+      });
+    },
+    [updateParams],
+  );
+  const handleGrantedLimitChange = useCallback(
+    (limit: number) => {
+      updateParams({
+        [DELEGATION_URL_KEYS.granted.size]: limit === 20 ? null : String(limit),
+        [DELEGATION_URL_KEYS.granted.page]: null,
+      });
+    },
+    [updateParams],
+  );
   const handleRetryReceived = useCallback(() => {
     void refetchReceived();
   }, [refetchReceived]);
@@ -128,55 +285,27 @@ export function DelegationsPage() {
     void queryClient.invalidateQueries({ queryKey: queryKeys.delegations.all });
   }, [queryClient]);
 
-  const matchesSearch = useCallback(
-    (d: Delegation, nameField: "delegatorId" | "delegateeId") => {
-      const q = search.trim().toLowerCase();
-      if (!q) return true;
-      const resolvedName =
-        (nameField === "delegatorId" ? d.delegatorName : d.delegateeName) ??
-        memberMap.get(d[nameField]) ??
-        "";
-      const name = resolvedName.toLowerCase();
-      const reason = (d.reason ?? "").toLowerCase();
-      return name.includes(q) || reason.includes(q);
-    },
-    [search, memberMap],
-  );
+  const receivedTotalPages = receivedPage?.pagination.totalPages;
+  const grantedTotalPages = grantedPage?.pagination.totalPages;
 
-  const filteredReceived = useMemo(
-    () => (received ?? []).filter((d) => matchesSearch(d, "delegatorId")),
-    [received, matchesSearch],
-  );
-
-  const activeGiven = useMemo(
-    () =>
-      (given ?? []).filter(
-        (d) =>
-          d.status === "ACTIVE" &&
-          new Date(d.endsAt) > new Date() &&
-          matchesSearch(d, "delegateeId"),
-      ),
-    [given, matchesSearch],
-  );
-
-  const inactiveGiven = useMemo(
-    () =>
-      (given ?? []).filter(
-        (d) =>
-          (d.status !== "ACTIVE" || new Date(d.endsAt) <= new Date()) &&
-          matchesSearch(d, "delegateeId"),
-      ),
-    [given, matchesSearch],
-  );
-
-  const receivedCount = received?.length ?? 0;
-  const activeGivenCount = useMemo(
-    () =>
-      (given ?? []).filter(
-        (d) => d.status === "ACTIVE" && new Date(d.endsAt) > new Date(),
-      ).length,
-    [given],
-  );
+  const received = receivedPage?.data ?? [];
+  const granted = grantedPage?.data ?? [];
+  const receivedCount = receivedPage?.pagination.total ?? 0;
+  const grantedCount = grantedPage?.pagination.total ?? 0;
+  const receivedPagination = receivedPage?.pagination ?? {
+    page: receivedState.page,
+    limit: receivedState.limit,
+    total: 0,
+    totalPages: 0,
+  };
+  const grantedPagination = grantedPage?.pagination ?? {
+    page: grantedState.page,
+    limit: grantedState.limit,
+    total: 0,
+    totalPages: 0,
+  };
+  const activeSearch =
+    activeTab === "received" ? receivedSearchInput : grantedSearchInput;
   const revokeDescription = revokeTarget
     ? (revokeTarget.delegateeName ??
         memberMap.get(revokeTarget.delegateeId) ??
@@ -188,8 +317,32 @@ export function DelegationsPage() {
       ". Existing audit history is preserved."
     : "";
 
+  useEffect(() => {
+    if (receivedTotalPages === undefined) return;
+    const lastPage = Math.max(1, receivedTotalPages);
+    if (receivedState.page <= lastPage) return;
+    updateParams({
+      [DELEGATION_URL_KEYS.received.page]:
+        lastPage === 1 ? null : String(lastPage),
+    });
+  }, [receivedState.page, receivedTotalPages, updateParams]);
+
+  useEffect(() => {
+    if (grantedTotalPages === undefined) return;
+    const lastPage = Math.max(1, grantedTotalPages);
+    if (grantedState.page <= lastPage) return;
+    updateParams({
+      [DELEGATION_URL_KEYS.granted.page]:
+        lastPage === 1 ? null : String(lastPage),
+    });
+  }, [grantedState.page, grantedTotalPages, updateParams]);
+
   return (
-    <Tabs defaultValue="received" className="flex min-h-0 flex-1 flex-col">
+    <Tabs
+      value={activeTab}
+      onValueChange={handleTabChange}
+      className="flex min-h-0 flex-1 flex-col"
+    >
       <PageWrapper
         title="Delegations"
         subtitle="Share specific permissions with teammates for a set period."
@@ -216,19 +369,23 @@ export function DelegationsPage() {
               <TabsTrigger value="received" className="gap-1.5 truncate">
                 Received
                 {!loadingReceived && receivedCount > 0 ? (
-                  <span className="tabular-nums text-xs opacity-70">{receivedCount}</span>
+                  <span className="tabular-nums text-xs opacity-70">
+                    {receivedCount}
+                  </span>
                 ) : null}
               </TabsTrigger>
               <TabsTrigger value="granted" className="gap-1.5 truncate">
                 Granted
-                {!loadingGiven && activeGivenCount > 0 ? (
-                  <span className="tabular-nums text-xs opacity-70">{activeGivenCount}</span>
+                {!loadingGiven && grantedCount > 0 ? (
+                  <span className="tabular-nums text-xs opacity-70">
+                    {grantedCount}
+                  </span>
                 ) : null}
               </TabsTrigger>
             </TabsList>
             <SearchInput
               placeholder="Search by name or reason…"
-              value={search}
+              value={activeSearch}
               onValueChange={handleSearchChange}
               className="w-full min-w-0"
             />
@@ -238,7 +395,7 @@ export function DelegationsPage() {
         <div className="flex min-h-0 flex-1 flex-col gap-3">
           <TabsContent value="received" className={TAB_PANEL_CLASS}>
             {loadingReceived ? (
-              <DelegationSkeletons count={2} />
+              <DelegationSkeletons count={Math.min(receivedState.limit, 5)} />
             ) : receivedError ? (
               <ErrorState
                 compact
@@ -247,34 +404,49 @@ export function DelegationsPage() {
                 onRetry={handleRetryReceived}
                 className={PAGE_BODY_EMPTY_CLASS}
               />
-            ) : filteredReceived.length === 0 ? (
+            ) : received.length === 0 ? (
               <EmptyState
                 illustrationPreset="permissions"
-                title={search ? "No matching delegations" : "No delegations received"}
+                title={
+                  receivedState.search
+                    ? "No matching delegations"
+                    : "No active delegations received"
+                }
                 description={
-                  search
+                  receivedState.search
                     ? "Try adjusting your search."
-                    : "Permissions delegated to you will appear here."
+                    : "Active permissions delegated to you will appear here. Scheduled and ended grants do not affect your current access."
                 }
                 className={PAGE_BODY_EMPTY_CLASS}
               />
             ) : (
-              <div className="divide-y divide-border/60 rounded-xl border border-border bg-card">
-                {filteredReceived.map((d) => (
-                  <DelegationRow
-                    key={d.id}
-                    delegation={d}
-                    memberMap={memberMap}
-                    nameField="delegatorId"
-                  />
-                ))}
+              <div className="flex min-h-full flex-col gap-2">
+                <div className="divide-y divide-border/60 rounded-xl border border-border bg-card">
+                  {received.map((delegation) => (
+                    <DelegationRow
+                      key={delegation.id}
+                      delegation={delegation}
+                      memberMap={memberMap}
+                      nameField="delegatorId"
+                    />
+                  ))}
+                </div>
+                <DataTablePagination
+                  page={receivedPagination.page}
+                  totalPages={receivedPagination.totalPages}
+                  total={receivedPagination.total}
+                  limit={receivedPagination.limit}
+                  onPageChange={handleReceivedPageChange}
+                  onLimitChange={handleReceivedLimitChange}
+                  pageSizeOptions={DELEGATION_PAGE_SIZE_OPTIONS}
+                />
               </div>
             )}
           </TabsContent>
 
           <TabsContent value="granted" className={TAB_PANEL_CLASS}>
             {loadingGiven ? (
-              <DelegationSkeletons count={2} />
+              <DelegationSkeletons count={Math.min(grantedState.limit, 5)} />
             ) : givenError ? (
               <ErrorState
                 compact
@@ -283,46 +455,56 @@ export function DelegationsPage() {
                 onRetry={handleRetryGiven}
                 className={PAGE_BODY_EMPTY_CLASS}
               />
-            ) : activeGiven.length === 0 && inactiveGiven.length === 0 ? (
+            ) : granted.length === 0 ? (
               <EmptyState
                 illustrationPreset="permissions"
-                title={search ? "No matching delegations" : "No delegations granted"}
+                title={
+                  grantedState.search
+                    ? "No matching delegations"
+                    : "No delegations granted"
+                }
                 description={
-                  search
+                  grantedState.search
                     ? "Try adjusting your search."
                     : "Delegate permissions to share access with colleagues."
                 }
                 action={
-                  search || !canManageRbac
+                  grantedState.search || !canManageRbac
                     ? undefined
                     : { label: "Delegate", onClick: handleOpenSheet }
                 }
                 className={PAGE_BODY_EMPTY_CLASS}
               />
             ) : (
-              <div className="divide-y divide-border/60 rounded-xl border border-border bg-card">
-                {activeGiven.map((d) => (
-                  <DelegationRow
-                    key={d.id}
-                    delegation={d}
-                    memberMap={memberMap}
-                    nameField="delegateeId"
-                    canRevoke
-                    onRevoke={handleRequestRevoke}
-                    isRevoking={
-                      revokeMutation.isPending && revokeTarget?.id === d.id
-                    }
-                  />
-                ))}
-                {inactiveGiven.map((d) => (
-                  <DelegationRow
-                    key={d.id}
-                    delegation={d}
-                    memberMap={memberMap}
-                    nameField="delegateeId"
-                    isInactive
-                  />
-                ))}
+              <div className="flex min-h-full flex-col gap-2">
+                <div className="divide-y divide-border/60 rounded-xl border border-border bg-card">
+                  {granted.map((delegation) => (
+                    <DelegationRow
+                      key={delegation.id}
+                      delegation={delegation}
+                      memberMap={memberMap}
+                      nameField="delegateeId"
+                      canRevoke={
+                        delegation.lifecycle === "ACTIVE" ||
+                        delegation.lifecycle === "SCHEDULED"
+                      }
+                      onRevoke={handleRequestRevoke}
+                      isRevoking={
+                        revokeMutation.isPending &&
+                        revokeTarget?.id === delegation.id
+                      }
+                    />
+                  ))}
+                </div>
+                <DataTablePagination
+                  page={grantedPagination.page}
+                  totalPages={grantedPagination.totalPages}
+                  total={grantedPagination.total}
+                  limit={grantedPagination.limit}
+                  onPageChange={handleGrantedPageChange}
+                  onLimitChange={handleGrantedLimitChange}
+                  pageSizeOptions={DELEGATION_PAGE_SIZE_OPTIONS}
+                />
               </div>
             )}
           </TabsContent>
@@ -392,7 +574,6 @@ interface DelegationRowProps {
   canRevoke?: boolean;
   onRevoke?: (delegation: Delegation) => void;
   isRevoking?: boolean;
-  isInactive?: boolean;
 }
 
 function DelegationRow({
@@ -402,7 +583,6 @@ function DelegationRow({
   canRevoke,
   onRevoke,
   isRevoking,
-  isInactive,
 }: DelegationRowProps) {
   const handleRevoke = useCallback(
     () => onRevoke?.(delegation),
@@ -416,23 +596,39 @@ function DelegationRow({
       : delegation.delegateeName) ??
     memberMap.get(principalId) ??
     "Team member";
-  const isRevoked = delegation.status === "REVOKED";
-  const isScheduled =
-    !isInactive &&
-    delegation.status === "ACTIVE" &&
-    new Date(delegation.startsAt) > new Date();
+  const isRevoked = delegation.lifecycle === "REVOKED";
+  const isExpired = delegation.lifecycle === "EXPIRED";
+  const isInactive = isRevoked || isExpired;
+  const isScheduled = delegation.lifecycle === "SCHEDULED";
+  const lifecycleLabel = isRevoked
+    ? "Revoked"
+    : isExpired
+      ? "Expired"
+      : isScheduled
+        ? "Starts"
+        : "Ends";
+  const lifecycleDate = isRevoked
+    ? (delegation.revokedAt ?? delegation.endsAt)
+    : isScheduled
+      ? delegation.startsAt
+      : delegation.endsAt;
 
   return (
     <div className="flex items-center gap-3 px-4 py-2.5">
       <div className="min-w-0 flex-1">
         <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-          <span className="text-sm font-medium leading-none">{displayName}</span>
+          <span className="text-sm font-medium leading-none">
+            {displayName}
+          </span>
           <span className="text-xs text-muted-foreground tabular-nums">
             {delegation.permissions.length} permission
             {delegation.permissions.length !== 1 ? "s" : ""}
           </span>
           {isInactive && (
-            <Badge variant="outline" className="text-xs text-muted-foreground shrink-0">
+            <Badge
+              variant="outline"
+              className="text-xs text-muted-foreground shrink-0"
+            >
               {isRevoked ? "Revoked" : "Expired"}
             </Badge>
           )}
@@ -443,18 +639,19 @@ function DelegationRow({
           ) : null}
         </div>
         <p className="text-xs text-muted-foreground mt-0.5 truncate">
-          {isInactive ? "Ended" : isScheduled ? "Starts" : "Ends"}{" "}
-          {formatRelative(
-            new Date(isScheduled ? delegation.startsAt : delegation.endsAt),
-            new Date(),
-          )}
+          {lifecycleLabel} {formatRelative(new Date(lifecycleDate), new Date())}
           {delegation.reason && (
-            <span className="text-muted-foreground/60"> · {delegation.reason}</span>
+            <span className="text-muted-foreground/60">
+              {" "}
+              · {delegation.reason}
+            </span>
           )}
         </p>
       </div>
-      {canRevoke && !isInactive && onRevoke && (
-        isRevoking ? (
+      {canRevoke &&
+        !isInactive &&
+        onRevoke &&
+        (isRevoking ? (
           <Button
             variant="ghost"
             size="icon"
@@ -474,8 +671,7 @@ function DelegationRow({
             onClick={handleRevoke}
             aria-label="Revoke delegation"
           />
-        )
-      )}
+        ))}
     </div>
   );
 }

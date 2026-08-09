@@ -15,7 +15,7 @@ export function TimesheetWidget() {
     <WidgetCard
       icon={Clock}
       title="Timesheet"
-      link={{ href: "/timesheets", ariaLabel: "Go to timesheets" }}
+      link={{ href: "/timesheets", label: "View all", ariaLabel: "Go to timesheets" }}
       isLoading={isLoading}
       error={error}
       loadingRows={2}

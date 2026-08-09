@@ -218,14 +218,14 @@ export function LaborTabs() {
   const isLoading = activeTab === "memberships" ? membershipsLoading : activeTab === "agreements" ? agreementsLoading : casesLoading;
 
   return (
-    <>
+    <div className="flex flex-1 min-h-0 flex-col">
       {(expiring?.data ?? []).length > 0 && (
-        <div className="flex items-start gap-2 p-3 mb-4 border border-amber-200 bg-amber-50 rounded-lg text-sm text-amber-800 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-300">
+        <div className="flex items-start gap-2 p-3 mb-4 shrink-0 border border-amber-200 bg-amber-50 rounded-lg text-sm text-amber-800 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-300">
           <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
           <span>{expiring!.data.length} collective agreement{expiring!.data.length !== 1 ? "s" : ""} expiring within 30 days.</span>
         </div>
       )}
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ActiveTab)} className="mb-4">
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ActiveTab)} className="mb-4 shrink-0">
         <TabsList>
           {tabs.map((tab) => (
             <TabsTrigger key={tab.key} value={tab.key}>
@@ -236,7 +236,7 @@ export function LaborTabs() {
       </Tabs>
 
       {isLoading ? (
-        <div className="space-y-3">
+        <div className="flex flex-1 min-h-0 flex-col gap-3">
           {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}
         </div>
       ) : activeTab === "memberships" ? (
@@ -245,7 +245,7 @@ export function LaborTabs() {
             <p className="text-sm text-muted-foreground">{memberships?.total ?? 0} memberships</p>
             {canManage && <Button onClick={handleOpenSheet} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground"><PlusIcon size={16} className="mr-1.5" />Add</Button>}
           </div>
-          <DataTable columns={membershipColumns} data={memberships?.data ?? []} getRowKey={(r) => r.id}
+          <DataTable className="flex-1 min-h-0" columns={membershipColumns} data={memberships?.data ?? []} getRowKey={(r) => r.id}
             emptyState={
               <div className="flex flex-col items-center justify-center gap-3 py-10">
                 <StateIllustration preset="team" className="h-24 w-24" />
@@ -265,7 +265,7 @@ export function LaborTabs() {
             <p className="text-sm text-muted-foreground">{agreements?.total ?? 0} agreements</p>
             {canManage && <Button onClick={handleOpenSheet} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground"><PlusIcon size={16} className="mr-1.5" />Add</Button>}
           </div>
-          <DataTable columns={agreementColumns} data={agreements?.data ?? []} getRowKey={(r) => r.id}
+          <DataTable className="flex-1 min-h-0" columns={agreementColumns} data={agreements?.data ?? []} getRowKey={(r) => r.id}
             emptyState={
               <div className="flex flex-col items-center justify-center gap-3 py-10">
                 <StateIllustration preset="documents" className="h-24 w-24" />
@@ -285,7 +285,7 @@ export function LaborTabs() {
             <p className="text-sm text-muted-foreground">{cases?.total ?? 0} cases</p>
             {canManage && <Button onClick={handleOpenSheet} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground"><PlusIcon size={16} className="mr-1.5" />New Case</Button>}
           </div>
-          <DataTable columns={caseColumns} data={cases?.data ?? []} getRowKey={(r) => r.id}
+          <DataTable className="flex-1 min-h-0" columns={caseColumns} data={cases?.data ?? []} getRowKey={(r) => r.id}
             emptyState={
               <div className="flex flex-col items-center justify-center gap-3 py-10">
                 <StateIllustration preset="approval" className="h-24 w-24" />
@@ -413,6 +413,6 @@ export function LaborTabs() {
           )}
         </SheetContent>
       </Sheet>
-    </>
+    </div>
   );
 }

@@ -194,9 +194,17 @@ export function CreateExpenseDialog({
         const expenseData = {
           category: categoryRaw,
           amount: data.amount,
-          description: capitalize(data.description?.trim() || undefined),
-          merchant: capitalize(merchantRaw),
-          paymentMethod: paymentMethodRaw || undefined,
+          description: data.description?.trim()
+            ? capitalize(data.description.trim())
+            : isEditMode
+              ? ""
+              : undefined,
+          merchant: merchantRaw
+            ? capitalize(merchantRaw)
+            : isEditMode
+              ? ""
+              : undefined,
+          paymentMethod: paymentMethodRaw || (isEditMode ? "" : undefined),
           expenseDate: formatDateOnly(new Date(data.expenseDate)),
           receiptUrl: serialized.receiptUrl ?? (isEditMode ? "" : undefined),
           receiptFileName: serialized.receiptFileName ?? (isEditMode ? "" : undefined),

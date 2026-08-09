@@ -155,28 +155,30 @@ export default function VendorPaymentsPage() {
         </Select>
       }
     >
-      {queryError && (
-        <ErrorState
-          title="Failed to load vendor payments"
-          description={getErrorMessage(queryError)}
-          onRetry={handleRetry}
-        />
-      )}
-      <DataTable
-        data={filteredItems}
-        columns={columns}
-        getRowKey={(row) => row.id}
-        isLoading={isLoading}
-        className="flex-1 min-h-0"
-        emptyState={
-          <EmptyState
-            illustrationPreset="tasks"
-            title="No payments found"
-            description="Paid and partially paid bills will appear here."
+      <div className="flex flex-1 min-h-0 flex-col">
+        {queryError && (
+          <ErrorState
+            title="Failed to load vendor payments"
+            description={getErrorMessage(queryError)}
+            onRetry={handleRetry}
           />
-        }
-        minWidth="640px"
-      />
+        )}
+        <DataTable
+          data={filteredItems}
+          columns={columns}
+          getRowKey={(row) => row.id}
+          isLoading={isLoading}
+          className="flex-1 min-h-0"
+          emptyState={
+            <EmptyState
+              illustrationPreset="tasks"
+              title="No payments found"
+              description="Paid and partially paid bills will appear here."
+            />
+          }
+          minWidth="640px"
+        />
+      </div>
 
       <VendorPaymentAllocationDialog
         open={allocationDialogOpen}

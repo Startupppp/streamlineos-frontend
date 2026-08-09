@@ -73,7 +73,7 @@ function EmptyWidget({ message }: { message: string }) {
 }
 
 export function LeavesTodayWidget() {
-  const { data, isLoading } = useLeavesToday();
+  const { data, isLoading, error } = useLeavesToday();
   const leaves = data ?? [];
 
   return (
@@ -83,6 +83,7 @@ export function LeavesTodayWidget() {
       title="Who's On Leave Today"
       badge={leaves.length || undefined}
       isLoading={isLoading}
+      error={error}
       isEmpty={!leaves.length}
       empty={<EmptyWidget message="Everyone is in today!" />}
     >
@@ -144,7 +145,7 @@ export function UpcomingHolidaysWidget() {
 export function LeaveBalanceWidget() {
   const { canViewLeaves } = useDashboardAccess();
   const { data, isLoading } = useMyLeaveBalance();
-  const { data: myRequestsData } = useHrMyLeaveRequests(canViewLeaves);
+  const { data: myRequestsData } = useHrMyLeaveRequests();
   const balances = data ?? [];
 
   const requests = useMemo(
@@ -281,7 +282,7 @@ export function BirthdaysWidget() {
 
 export function PendingApprovalsWidget() {
   const { canApproveLeaves, hrEnabled } = useDashboardAccess();
-  const { data, isLoading } = usePendingApprovals({
+  const { data, isLoading, error } = usePendingApprovals({
     enabled: canApproveLeaves && hrEnabled,
   });
 
@@ -292,6 +293,7 @@ export function PendingApprovalsWidget() {
       title="Pending Approvals"
       badge={data?.total || undefined}
       isLoading={isLoading}
+      error={error}
       loadingRows={2}
       isEmpty={!data}
       empty={<EmptyWidget message="No data." />}

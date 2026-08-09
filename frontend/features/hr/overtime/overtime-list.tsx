@@ -143,6 +143,7 @@ export function OvertimeList({ canManage }: Props) {
 
   return (
     <DataTable
+      className="flex-1 min-h-0"
       data={requests ?? []}
       columns={columns}
       getRowKey={(req) => req.id}

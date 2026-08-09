@@ -42,35 +42,37 @@ export default function ReimbursementsPage() {
         ) : undefined
       }
     >
-      {query.isLoading && <LoadingState variant="table" rows={12} />}
+      <div className="flex flex-1 min-h-0 flex-col">
+        {query.isLoading && <LoadingState variant="table" rows={12} />}
 
-      {query.error && (
-        <ErrorState
-          title="Failed to load batches"
-          description={getErrorMessage(query.error)}
-          onRetry={handleRetry}
-        />
-      )}
+        {query.error && (
+          <ErrorState
+            title="Failed to load batches"
+            description={getErrorMessage(query.error)}
+            onRetry={handleRetry}
+          />
+        )}
 
-      {!query.isLoading && !query.error && (
-        <ReimbursementTable
-          data={batches}
-          isLoading={false}
-          page={pagination?.page ?? 1}
-          pageSize={pagination?.pageSize ?? 25}
-          total={pagination?.total ?? 0}
-          onPageChange={setPage}
-          className="flex-1 min-h-0"
-          emptyState={
-            <EmptyState
-              illustration={<EmptyExpensesIllustration />}
-              title="No reimbursement batches yet"
-              description="Create a batch to group and pay approved employee expenses."
-              action={canManage ? { label: "New batch", onClick: handleOpenCreate } : undefined}
-            />
-          }
-        />
-      )}
+        {!query.isLoading && !query.error && (
+          <ReimbursementTable
+            data={batches}
+            isLoading={false}
+            page={pagination?.page ?? 1}
+            pageSize={pagination?.pageSize ?? 25}
+            total={pagination?.total ?? 0}
+            onPageChange={setPage}
+            className="flex-1 min-h-0"
+            emptyState={
+              <EmptyState
+                illustration={<EmptyExpensesIllustration />}
+                title="No reimbursement batches yet"
+                description="Create a batch to group and pay approved employee expenses."
+                action={canManage ? { label: "New batch", onClick: handleOpenCreate } : undefined}
+              />
+            }
+          />
+        )}
+      </div>
 
       <CreateBatchSheet open={createOpen} onOpenChange={setCreateOpen} />
     </PageWrapper>

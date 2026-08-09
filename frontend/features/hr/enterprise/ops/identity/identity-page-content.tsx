@@ -212,22 +212,23 @@ export function IdentityPageContent() {
           ) : null
         }
       >
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="mb-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-1 min-h-0 flex-col">
+          <TabsList className="mb-4 shrink-0">
             <TabsTrigger value="provisioning">Provisioning</TabsTrigger>
             <TabsTrigger value="templates">Templates</TabsTrigger>
             <TabsTrigger value="exit">Exit Verification</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="provisioning">
+          <TabsContent value="provisioning" className="mt-0 flex flex-1 min-h-0 flex-col">
             {isLoading ? (
-              <div className="space-y-2 animate-pulse">
+              <div className="flex flex-1 min-h-0 flex-col gap-2 animate-pulse">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <div key={i} className="h-12 rounded-lg bg-muted" />
                 ))}
               </div>
             ) : (
               <DataTable
+                className="flex-1 min-h-0"
                 data={data?.data ?? []}
                 columns={provisioningColumns}
                 getRowKey={(r) => r.id}
@@ -260,15 +261,16 @@ export function IdentityPageContent() {
             )}
           </TabsContent>
 
-          <TabsContent value="templates">
+          <TabsContent value="templates" className="mt-0 flex flex-1 min-h-0 flex-col">
             {templatesLoading ? (
-              <div className="space-y-2 animate-pulse">
+              <div className="flex flex-1 min-h-0 flex-col gap-2 animate-pulse">
                 {Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className="h-12 rounded-lg bg-muted" />
                 ))}
               </div>
             ) : (
               <DataTable
+                className="flex-1 min-h-0"
                 data={templates ?? []}
                 columns={templateColumns}
                 getRowKey={(r) => r.id}
@@ -290,7 +292,7 @@ export function IdentityPageContent() {
             )}
           </TabsContent>
 
-          <TabsContent value="exit">
+          <TabsContent value="exit" className="mt-0 flex flex-1 min-h-0 flex-col">
             <ExitVerificationView />
           </TabsContent>
         </Tabs>

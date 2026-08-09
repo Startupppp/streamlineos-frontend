@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  useState,
-  useCallback,
-  useEffect,
-  useTransition,
-  type ChangeEvent,
-} from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useState, useCallback, type ChangeEvent } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -64,7 +57,11 @@ import { useCan } from "@/hooks/api/access";
 import { HierarchyArchiveDialog } from "./hierarchy-archive-dialog";
 import { isAssignableHierarchyParent } from "./hierarchy-option";
 import { useHierarchyArchive } from "./use-hierarchy-archive";
-import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
+import {
+  useHierarchyListState,
+  useHierarchyPageBounds,
+} from "./use-hierarchy-list-state";
 
 const formSchema = z.object({
   name: z
@@ -72,7 +69,10 @@ const formSchema = z.object({
     .trim()
     .min(1, "Name is required")
     .max(100)
-    .refine((v) => /[\p{L}\p{N}]/u.test(v), "Name must contain at least one letter or number"),
+    .refine(
+      (v) => /[\p{L}\p{N}]/u.test(v),
+      "Name must contain at least one letter or number",
+    ),
   code: z
     .string()
     .trim()
@@ -101,12 +101,24 @@ function TeamForm({
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     reValidateMode: "onChange",
-    defaultValues: { name: "", code: "", departmentId: "", leadUserId: "", description: "", capacity: "", ...defaultValues },
+    defaultValues: {
+      name: "",
+      code: "",
+      departmentId: "",
+      leadUserId: "",
+      description: "",
+      capacity: "",
+      ...defaultValues,
+    },
   });
 
   return (
     <Form {...form}>
-      <form id="team-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+      <form
+        id="team-form"
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="space-y-5"
+      >
         <FormField
           control={form.control}
           name="name"
@@ -132,7 +144,11 @@ function TeamForm({
                 <FormItem className="min-w-0">
                   <FormLabel>Code</FormLabel>
                   <FormControl>
-                    <Input placeholder="FE" {...field} onChange={handleCodeChange} />
+                    <Input
+                      placeholder="FE"
+                      {...field}
+                      onChange={handleCodeChange}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -146,7 +162,12 @@ function TeamForm({
               <FormItem className="min-w-0">
                 <FormLabel>Capacity</FormLabel>
                 <FormControl>
-                  <Input type="number" min={1} placeholder="Optional" {...field} />
+                  <Input
+                    type="number"
+                    min={1}
+                    placeholder="Optional"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -157,28 +178,25 @@ function TeamForm({
           control={form.control}
           name="departmentId"
           render={({ field }) => (
-              <FormItem>
-                <FormLabel>Department</FormLabel>
-                <Select
-                  value={field.value}
-                  onValueChange={field.onChange}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a department" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {departments.map((d) => (
-                      <SelectItem key={d.id} value={d.id}>
-                        {d.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
+            <FormItem>
+              <FormLabel>Department</FormLabel>
+              <Select value={field.value} onValueChange={field.onChange}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a department" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {departments.map((d) => (
+                    <SelectItem key={d.id} value={d.id}>
+                      {d.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
         />
         <FormField
           control={form.control}
@@ -187,7 +205,11 @@ function TeamForm({
             <FormItem>
               <FormLabel>Team Lead</FormLabel>
               <FormControl>
-                <UserCombobox value={field.value ?? ""} onChange={field.onChange} placeholder="Select team lead…" />
+                <UserCombobox
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                  placeholder="Select team lead…"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -200,7 +222,11 @@ function TeamForm({
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea rows={3} placeholder="Optional description…" {...field} />
+                <Textarea
+                  rows={3}
+                  placeholder="Optional description…"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -212,55 +238,50 @@ function TeamForm({
 }
 
 export function OrgTeamsPage() {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [, startTransition] = useTransition();
-  const query = searchParams.get("search") ?? "";
-  const showArchived = searchParams.get("status") === "archived";
-  const requestedPage = Number(searchParams.get("page") ?? "1");
-  const page =
-    Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+  const {
+    page,
+    pageSize,
+    query,
+    search,
+    serverSearch,
+    showArchived,
+    setPage,
+    setPageSize,
+    setSearch,
+    setStatus,
+    toggleArchived,
+  } = useHierarchyListState();
   const [showCreate, setShowCreate] = useState(false);
   const [editing, setEditing] = useState<OrgTeam | null>(null);
-  const [search, setSearch] = useState(query);
-  const debouncedSearch = useDebouncedValue(search, 300);
-  const { data: teams, isLoading, isError, error, refetch } = useOrgTeams({
+  const {
+    data: teams,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useOrgTeams(query);
+  const isCorrectingPage = useHierarchyPageBounds({
     page,
-    limit: 20,
-    search: query || undefined,
-    status: showArchived ? "ARCHIVED" : "ACTIVE",
+    pageSize,
+    total: isError ? undefined : teams?.total,
+    setPage,
   });
-  const { data: deptsData } = useOrgDepartments();
+  const { data: deptsData } = useOrgDepartments({
+    page: 1,
+    limit: 100,
+    status: "ACTIVE",
+  });
   const create = useCreateOrgTeam();
   const update = useUpdateOrgTeam();
   const canManage = useCan("settings:organization:manage");
 
-  const updateParams = useCallback(
-    (updates: Record<string, string | null>) => {
-      const params = new URLSearchParams(searchParams.toString());
-      for (const [key, value] of Object.entries(updates)) {
-        if (value === null) params.delete(key);
-        else params.set(key, value);
-      }
-      startTransition(() => {
-        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-      });
-    },
-    [pathname, router, searchParams],
-  );
   const archiveFlow = useHierarchyArchive<OrgTeam>({
     unitKind: "TEAM",
     archive: (team, callbacks) =>
       update.mutate({ id: team.id, status: "ARCHIVED" }, callbacks),
     successMessage: "Team archived",
-    onArchived: () => updateParams({ status: "archived", page: null }),
+    onArchived: () => setStatus("ARCHIVED"),
   });
-
-  useEffect(() => {
-    if (debouncedSearch === query) return;
-    updateParams({ search: debouncedSearch || null, page: null });
-  }, [debouncedSearch, query, updateParams]);
 
   const { data: membersData } = useOrgMembers(1, 100);
   const departments = (deptsData?.data ?? [])
@@ -327,37 +348,42 @@ export function OrgTeamsPage() {
         {
           onSuccess: () => {
             toast.success("Team restored");
-            updateParams({ status: null, page: null });
+            setStatus("CURRENT");
           },
           onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
-    [update, updateParams],
+    [setStatus, update],
   );
 
   const handleOpenCreate = useCallback(() => setShowCreate(true), []);
-  const handleToggleArchived = useCallback(() => {
-    updateParams({ status: showArchived ? null : "archived", page: null });
-  }, [showArchived, updateParams]);
-  const handleSearchChange = useCallback((value: string) => {
-    setSearch(value);
-  }, []);
+  const handleSearchChange = useCallback(
+    (value: string) => {
+      setSearch(value);
+    },
+    [setSearch],
+  );
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
-  const handlePageChange = useCallback(
-    (nextPage: number) =>
-      updateParams({ page: nextPage <= 1 ? null : String(nextPage) }),
-    [updateParams],
-  );
 
-  function handleSearchInputChange(value: string) { handleSearchChange(value); }
+  function handleSearchInputChange(value: string) {
+    handleSearchChange(value);
+  }
 
-  function makeRestoreHandler(team: OrgTeam) { return () => handleRestore(team); }
-  function makeArchiveHandler(team: OrgTeam) { return () => archiveFlow.requestArchive(team); }
-  function makeSetEditingHandler(team: OrgTeam) { return () => setEditing(team); }
-  function handleEditSheetOpenChange(open: boolean) { if (!open) setEditing(null); }
+  function makeRestoreHandler(team: OrgTeam) {
+    return () => handleRestore(team);
+  }
+  function makeArchiveHandler(team: OrgTeam) {
+    return () => archiveFlow.requestArchive(team);
+  }
+  function makeSetEditingHandler(team: OrgTeam) {
+    return () => setEditing(team);
+  }
+  function handleEditSheetOpenChange(open: boolean) {
+    if (!open) setEditing(null);
+  }
 
   const columns: DataTableColumn<OrgTeam>[] = [
     {
@@ -435,31 +461,47 @@ export function OrgTeamsPage() {
       key: "actions",
       header: "",
       headerClassName: "w-28",
-      cell: (t) => (
-        canManage ? <div className="flex items-center gap-1">
-          {t.status === "ARCHIVED" ? (
-            <Button variant="ghost" size="sm" onClick={makeRestoreHandler(t)} title="Restore">
-              <RotateCcw className="h-4 w-4 text-primary" />
-            </Button>
-          ) : (
-            <>
-              <Button variant="ghost" size="sm" onClick={makeSetEditingHandler(t)} title="Edit">
-                <Pencil className="h-4 w-4" />
+      cell: (t) =>
+        canManage ? (
+          <div className="flex items-center gap-1">
+            {t.status === "ARCHIVED" ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={makeRestoreHandler(t)}
+                title="Restore"
+              >
+                <RotateCcw className="h-4 w-4 text-primary" />
               </Button>
-              <Button variant="ghost" size="sm" onClick={makeArchiveHandler(t)} title="Archive">
-                <Archive className="h-4 w-4 text-muted-foreground" />
-              </Button>
-            </>
-          )}
-        </div> : null
-      ),
+            ) : (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={makeSetEditingHandler(t)}
+                  title="Edit"
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={makeArchiveHandler(t)}
+                  title="Archive"
+                >
+                  <Archive className="h-4 w-4 text-muted-foreground" />
+                </Button>
+              </>
+            )}
+          </div>
+        ) : null,
     },
   ];
 
-  const emptyState = search ? (
+  const emptyState = serverSearch ? (
     <EmptyState
       illustrationPreset="team"
-      title={`No teams matching "${search}"`}
+      title={`No teams matching "${serverSearch}"`}
       description="Try a different search term."
       compact
       className="min-h-[200px]"
@@ -476,137 +518,174 @@ export function OrgTeamsPage() {
       illustrationPreset="team"
       title="No teams yet"
       description="Create your first team to get started."
-      action={canManage ? { label: "Add Team", onClick: handleOpenCreate } : undefined}
+      action={
+        canManage ? { label: "Add Team", onClick: handleOpenCreate } : undefined
+      }
     />
   );
 
   return (
     <RequireModule module="hr">
-    <PageWrapper
-      title="Teams"
-      subtitle="Teams within departments."
-      actions={
-        <div className="flex w-full items-center gap-2 sm:w-auto">
-          <Button
-            variant={showArchived ? "secondary" : "outline"}
-            size="sm"
-            className="flex-1 text-xs sm:flex-none"
-            onClick={handleToggleArchived}
-          >
-            <Archive className="h-4 w-4 mr-1.5" />
-            {showArchived ? "Show Active" : "View archived"}
-          </Button>
-          {canManage ? <AnimatedIconButton
-            icon={PlusIcon}
-            iconSize={16}
-            iconClassName="mr-1.5"
-            size="sm"
-            className="flex-1 sm:flex-none"
-            onClick={handleOpenCreate}
-          >
-            Add Team
-          </AnimatedIconButton> : null}
-        </div>
-      }
-      filters={
-        <SearchInput placeholder="Search teams…" value={search} onValueChange={handleSearchInputChange} />
-      }
-    >
-      {isError ? (
-        <ErrorState
-          className="flex-1"
-          title="Couldn't load teams"
-          description={getErrorMessage(error)}
-          onRetry={handleRetry}
-        />
-      ) : (
-        <DataTable
-          data={displayedTeams}
-          columns={columns}
-          getRowKey={(t) => t.id}
-          isLoading={isLoading}
-          emptyState={emptyState}
-          rowClassName={(t) => cn(t.status === "ARCHIVED" && "opacity-60")}
-          minWidth="900px"
-          className="flex-1 min-h-0"
-          pagination={{
-            mode: "server",
-            page,
-            pageSize: 20,
-            total: teams?.total ?? 0,
-            onPageChange: handlePageChange,
-          }}
-        />
-      )}
-
-      <Sheet open={showCreate} onOpenChange={setShowCreate}>
-        <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md">
-          <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
-            <SheetTitle>New Team</SheetTitle>
-          </SheetHeader>
-          <SheetBody className="px-6 py-5">
-            {showCreate && (
-              <TeamForm departments={departments} onSubmit={handleCreate} isPending={create.isPending} />
-            )}
-          </SheetBody>
-          <div className="shrink-0 px-6 py-4 border-t">
-            <div className="grid grid-cols-2 gap-2">
-              <SheetClose asChild>
-                <Button variant="outline" size="sm" className="w-full">Cancel</Button>
-              </SheetClose>
-              <LoadingButton size="sm" type="submit" form="team-form" isPending={create.isPending} loadingText="Saving…" className="w-full">Save</LoadingButton>
-            </div>
+      <PageWrapper
+        title="Teams"
+        subtitle="Teams within departments."
+        actions={
+          <div className="flex w-full items-center gap-2 sm:w-auto">
+            <Button
+              variant={showArchived ? "secondary" : "outline"}
+              size="sm"
+              className="flex-1 text-xs sm:flex-none"
+              onClick={toggleArchived}
+            >
+              <Archive className="h-4 w-4 mr-1.5" />
+              {showArchived ? "Show current" : "View archived"}
+            </Button>
+            {canManage ? (
+              <AnimatedIconButton
+                icon={PlusIcon}
+                iconSize={16}
+                iconClassName="mr-1.5"
+                size="sm"
+                className="flex-1 sm:flex-none"
+                onClick={handleOpenCreate}
+              >
+                Add Team
+              </AnimatedIconButton>
+            ) : null}
           </div>
-        </SheetContent>
-      </Sheet>
+        }
+        filters={
+          <SearchInput
+            placeholder="Search teams…"
+            value={search}
+            onValueChange={handleSearchInputChange}
+          />
+        }
+      >
+        {isError ? (
+          <ErrorState
+            className="flex-1"
+            title="Couldn't load teams"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+          />
+        ) : (
+          <DataTable
+            data={displayedTeams}
+            columns={columns}
+            getRowKey={(t) => t.id}
+            isLoading={isLoading || isCorrectingPage}
+            emptyState={emptyState}
+            rowClassName={(t) => cn(t.status === "ARCHIVED" && "opacity-60")}
+            minWidth="900px"
+            className="flex-1 min-h-0"
+            pagination={{
+              mode: "server",
+              page,
+              pageSize,
+              total: teams?.total ?? 0,
+              onPageChange: setPage,
+              onPageSizeChange: setPageSize,
+              pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
+            }}
+          />
+        )}
 
-      <Sheet open={!!editing} onOpenChange={handleEditSheetOpenChange}>
-        <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md">
-          <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
-            <SheetTitle>Edit Team</SheetTitle>
-          </SheetHeader>
-          <SheetBody className="px-6 py-5">
-            {editing && (
-              <TeamForm
-                defaultValues={{
-                  name: editing.name,
-                  code: editing.code,
-                  departmentId: editing.departmentId ?? "",
-                  leadUserId: editing.leadUserId ?? "",
-                  description: editing.description ?? "",
-                  capacity: editing.capacity != null ? String(editing.capacity) : "",
-                }}
-                departments={departments}
-                onSubmit={handleUpdate}
-                isPending={update.isPending}
-              />
-            )}
-          </SheetBody>
-          <div className="shrink-0 px-6 py-4 border-t">
-            <div className="grid grid-cols-2 gap-2">
-              <SheetClose asChild>
-                <Button variant="outline" size="sm" className="w-full">Cancel</Button>
-              </SheetClose>
-              <LoadingButton size="sm" type="submit" form="team-form" isPending={update.isPending} loadingText="Saving…" className="w-full">Save</LoadingButton>
+        <Sheet open={showCreate} onOpenChange={setShowCreate}>
+          <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md">
+            <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
+              <SheetTitle>New Team</SheetTitle>
+            </SheetHeader>
+            <SheetBody className="px-6 py-5">
+              {showCreate && (
+                <TeamForm
+                  departments={departments}
+                  onSubmit={handleCreate}
+                  isPending={create.isPending}
+                />
+              )}
+            </SheetBody>
+            <div className="shrink-0 px-6 py-4 border-t">
+              <div className="grid grid-cols-2 gap-2">
+                <SheetClose asChild>
+                  <Button variant="outline" size="sm" className="w-full">
+                    Cancel
+                  </Button>
+                </SheetClose>
+                <LoadingButton
+                  size="sm"
+                  type="submit"
+                  form="team-form"
+                  isPending={create.isPending}
+                  loadingText="Saving…"
+                  className="w-full"
+                >
+                  Save
+                </LoadingButton>
+              </div>
             </div>
-          </div>
-        </SheetContent>
-      </Sheet>
+          </SheetContent>
+        </Sheet>
 
-      <HierarchyArchiveDialog
-        open={!!archiveFlow.target}
-        unitName={archiveFlow.target?.name ?? ""}
-        unitLabel="team"
-        isPending={update.isPending}
-        error={archiveFlow.error}
-        preflightError={archiveFlow.preflightError}
-        dependencies={archiveFlow.dependencies}
-        isChecking={archiveFlow.isChecking}
-        onRetryPreflight={archiveFlow.retryPreflight}
-        onConfirm={archiveFlow.confirmArchive}
-        onOpenChange={archiveFlow.handleOpenChange}
-      />
-    </PageWrapper>
+        <Sheet open={!!editing} onOpenChange={handleEditSheetOpenChange}>
+          <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md">
+            <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
+              <SheetTitle>Edit Team</SheetTitle>
+            </SheetHeader>
+            <SheetBody className="px-6 py-5">
+              {editing && (
+                <TeamForm
+                  defaultValues={{
+                    name: editing.name,
+                    code: editing.code,
+                    departmentId: editing.departmentId ?? "",
+                    leadUserId: editing.leadUserId ?? "",
+                    description: editing.description ?? "",
+                    capacity:
+                      editing.capacity != null ? String(editing.capacity) : "",
+                  }}
+                  departments={departments}
+                  onSubmit={handleUpdate}
+                  isPending={update.isPending}
+                />
+              )}
+            </SheetBody>
+            <div className="shrink-0 px-6 py-4 border-t">
+              <div className="grid grid-cols-2 gap-2">
+                <SheetClose asChild>
+                  <Button variant="outline" size="sm" className="w-full">
+                    Cancel
+                  </Button>
+                </SheetClose>
+                <LoadingButton
+                  size="sm"
+                  type="submit"
+                  form="team-form"
+                  isPending={update.isPending}
+                  loadingText="Saving…"
+                  className="w-full"
+                >
+                  Save
+                </LoadingButton>
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
+
+        <HierarchyArchiveDialog
+          open={!!archiveFlow.target}
+          unitName={archiveFlow.target?.name ?? ""}
+          unitLabel="team"
+          isPending={update.isPending}
+          error={archiveFlow.error}
+          preflightError={archiveFlow.preflightError}
+          dependencies={archiveFlow.dependencies}
+          isChecking={archiveFlow.isChecking}
+          onRetryPreflight={archiveFlow.retryPreflight}
+          onConfirm={archiveFlow.confirmArchive}
+          onOpenChange={archiveFlow.handleOpenChange}
+        />
+      </PageWrapper>
     </RequireModule>
   );
 }

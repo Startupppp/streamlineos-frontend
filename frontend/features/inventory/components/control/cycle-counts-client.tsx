@@ -300,6 +300,7 @@ export function CycleCountsClient() {
           </Button>
         }
       >
+        <div className="flex flex-1 min-h-0 flex-col">
         {error ? (
           <ErrorState
             title="Failed to load cycle counts"
@@ -307,7 +308,7 @@ export function CycleCountsClient() {
             onRetry={handleRetry}
           />
         ) : isLoading ? (
-          <DataTableSkeleton rows={12} columns={8} className="flex-1" />
+          <DataTableSkeleton rows={12} columns={8} className="flex-1 min-h-0" />
         ) : (
           <DataTable
             data={items}
@@ -333,6 +334,7 @@ export function CycleCountsClient() {
             minWidth="640px"
           />
         )}
+        </div>
       </PageWrapper>
 
       <NewCycleCountSheet open={sheetOpen} onClose={handleCloseSheet} />

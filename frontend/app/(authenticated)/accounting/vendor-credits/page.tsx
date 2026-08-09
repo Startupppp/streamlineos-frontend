@@ -345,21 +345,23 @@ export default function VendorCreditsPage() {
         </div>
       }
     >
-      <DataTable
-        data={credits}
-        columns={columns}
-        getRowKey={(row) => row.id}
-        isLoading={query.isLoading}
-        className="flex-1 min-h-0"
-        emptyState={
-          <EmptyState
-            illustrationPreset="orders"
-            title="No vendor credits"
-            description="Record a debit note or credit memo received from a vendor."
-            action={{ label: "New credit", onClick: handleNewClick }}
-          />
-        }
-      />
+      <div className="flex flex-1 min-h-0 flex-col">
+        <DataTable
+          data={credits}
+          columns={columns}
+          getRowKey={(row) => row.id}
+          isLoading={query.isLoading}
+          className="flex-1 min-h-0"
+          emptyState={
+            <EmptyState
+              illustrationPreset="orders"
+              title="No vendor credits"
+              description="Record a debit note or credit memo received from a vendor."
+              action={{ label: "New credit", onClick: handleNewClick }}
+            />
+          }
+        />
+      </div>
 
       <VendorCreditFormSheet open={createOpen} onOpenChange={handleCreateOpenChange} />
 

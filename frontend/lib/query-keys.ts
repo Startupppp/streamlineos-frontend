@@ -60,7 +60,9 @@ export const queryKeys = {
         : ([...base, "hr", "candidates", params] as const),
     candidate: (id: number) => [...base, "hr", "candidate", id] as const,
     interviews: (params?: Record<string, unknown>) =>
-      [...base, "hr", "interviews", params] as const,
+      params !== undefined
+        ? ([...base, "hr", "interviews", params] as const)
+        : ([...base, "hr", "interviews"] as const),
     recruitmentPipeline: () => [...base, "hr", "recruitmentPipeline"] as const,
     scorecardTemplates: () => [...base, "hr", "scorecardTemplates"] as const,
     interviewScorecard: (interviewId: number) =>
@@ -660,7 +662,9 @@ export const queryKeys = {
     template: (id: number) =>
       [...base, "notifications", "template", id] as const,
     broadcasts: (params?: Record<string, unknown>) =>
-      [...base, "notifications", "broadcasts", params] as const,
+      params === undefined
+        ? ([...base, "notifications", "broadcasts"] as const)
+        : ([...base, "notifications", "broadcasts", params] as const),
     broadcast: (id: number) =>
       [...base, "notifications", "broadcast", id] as const,
     providers: () => [...base, "notifications", "providers"] as const,
@@ -764,7 +768,15 @@ export const queryKeys = {
 
   roles: {
     all: [...base, "roles"] as const,
-    list: () => [...base, "roles", "list"] as const,
+    list: (params?: {
+      page: number;
+      limit: number;
+      search?: string;
+    }) =>
+      params
+        ? ([...base, "roles", "list", params] as const)
+        : ([...base, "roles", "list"] as const),
+    selectorList: () => [...base, "roles", "list", "selector"] as const,
     permissionCatalog: () => [...base, "roles", "permission-catalog"] as const,
     discoveryGrantable: () =>
       [...base, "roles", "discovery", "grantable"] as const,
@@ -773,8 +785,6 @@ export const queryKeys = {
     detail: (id: number) => [...base, "roles", "detail", id] as const,
     permissions: (roleId: number) =>
       [...base, "roles", "permissions", roleId] as const,
-    permissionsMatrix: () =>
-      [...base, "roles", "permissions", "matrix"] as const,
     members: (roleId: number) => [...base, "roles", "members", roleId] as const,
     analytics: () => [...base, "roles", "analytics"] as const,
     departments: () => [...base, "roles", "departments"] as const,
@@ -1323,7 +1333,8 @@ export const queryKeys = {
 
   webhooks: {
     all: [...base, "webhooks"] as const,
-    list: () => [...base, "webhooks", "list"] as const,
+    list: (params?: Record<string, unknown>) =>
+      [...base, "webhooks", "list", params] as const,
   },
 
   workflows: {
@@ -1351,8 +1362,10 @@ export const queryKeys = {
 
   delegations: {
     all: [...base, "delegations"] as const,
-    received: () => [...base, "delegations", "received"] as const,
-    given: () => [...base, "delegations", "given"] as const,
+    received: (params: { page: number; limit: number; search: string }) =>
+      [...base, "delegations", "received", params] as const,
+    given: (params: { page: number; limit: number; search: string }) =>
+      [...base, "delegations", "given", params] as const,
   },
 
   auth: {
@@ -1379,6 +1392,8 @@ export const queryKeys = {
       [...base, "calendar", "memberSearch", search] as const,
     externalEvents: (start: string, end: string) =>
       [...base, "calendar", "externalEvents", start, end] as const,
+    hrSupplemental: (from: string, to: string) =>
+      [...base, "calendar", "hr-supplemental", from, to] as const,
   },
 
   integrations: {
@@ -1587,7 +1602,8 @@ export const queryKeys = {
 
   userApiTokens: {
     all: [...base, "userApiTokens"] as const,
-    list: () => [...base, "userApiTokens", "list"] as const,
+    list: (params?: Record<string, unknown>) =>
+      [...base, "userApiTokens", "list", params] as const,
     permissions: () => [...base, "userApiTokens", "permissions"] as const,
   },
 

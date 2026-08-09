@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useTransition } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Clock, ShieldOff } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -19,6 +20,13 @@ import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components
 import { TokenCreatedDialog } from "./token-created-dialog";
 import { CreateUserTokenSheet } from "./create-user-token-sheet";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
+import {
+  DEFAULT_PAGE_SIZE,
+  getLastPage,
+  parsePage,
+  parsePageSize,
+  STANDARD_PAGE_SIZE_OPTIONS,
+} from "@/lib/list-pagination";
 
 function RevokeTokenButton({
   token,
@@ -58,13 +66,66 @@ export function PersonalTokensTab({
   showCreate,
   onShowCreateChange,
 }: PersonalTokensTabProps) {
-  const { data, error, isError, isLoading, refetch } = useUserApiTokens();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [, startTransition] = useTransition();
+  const page = parsePage(searchParams.get("page"));
+  const pageSize = parsePageSize(searchParams.get("size"));
+  const {
+    data,
+    error,
+    isError,
+    isLoading,
+    isPlaceholderData,
+    refetch,
+  } = useUserApiTokens({ page, limit: pageSize });
   const revoke = useRevokeUserApiToken();
 
   const [createdRawToken, setCreatedRawToken] = useState<string | null>(null);
   const [revoking, setRevoking] = useState<UserApiToken | null>(null);
 
-  const tokens = data ?? [];
+  const tokens = data?.data ?? [];
+  const pagination = data?.pagination;
+  const isPageOutOfRange =
+    !!pagination && page > getLastPage(pagination.total, pageSize);
+
+  const updateParams = useCallback(
+    (updates: Record<string, string | null>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      for (const [key, value] of Object.entries(updates)) {
+        if (value === null) params.delete(key);
+        else params.set(key, value);
+      }
+      const query = params.toString();
+      startTransition(() => {
+        router.replace(query ? `${pathname}?${query}` : pathname, {
+          scroll: false,
+        });
+      });
+    },
+    [pathname, router, searchParams],
+  );
+
+  const handlePageChange = useCallback(
+    (nextPage: number) =>
+      updateParams({ page: nextPage <= 1 ? null : String(nextPage) }),
+    [updateParams],
+  );
+  const handlePageSizeChange = useCallback(
+    (size: number) =>
+      updateParams({
+        size: size === DEFAULT_PAGE_SIZE ? null : String(size),
+        page: null,
+      }),
+    [updateParams],
+  );
+
+  useEffect(() => {
+    if (!pagination || isPlaceholderData) return;
+    const lastPage = getLastPage(pagination.total, pageSize);
+    if (page > lastPage) handlePageChange(lastPage);
+  }, [handlePageChange, isPlaceholderData, page, pageSize, pagination]);
 
   const handleCreated = useCallback(
     (result: CreateUserApiTokenResponse) => {
@@ -167,8 +228,8 @@ export function PersonalTokensTab({
 
   return (
     <>
-      {isLoading ? (
-        <DataTableSkeleton rows={8} columns={6} />
+      {isLoading || isPageOutOfRange ? (
+        <DataTableSkeleton rows={8} columns={6} className="flex-1" />
       ) : isError ? (
         <ErrorState
           className={CONTENT_FILL_PANEL}
@@ -192,6 +253,15 @@ export function PersonalTokensTab({
           columns={columns}
           getRowKey={(t) => t.id}
           className="flex-1 min-h-0"
+          pagination={{
+            mode: "server",
+            page,
+            pageSize,
+            total: pagination?.total ?? 0,
+            onPageChange: handlePageChange,
+            onPageSizeChange: handlePageSizeChange,
+            pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
+          }}
         />
       )}
 

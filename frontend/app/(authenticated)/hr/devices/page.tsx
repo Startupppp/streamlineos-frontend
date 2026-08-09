@@ -185,7 +185,7 @@ export default function DevicesPage() {
         className="flex min-h-0 flex-1 flex-col"
       >
         <Tabs defaultValue="devices" className="flex min-h-0 flex-1 flex-col">
-          <TabsList>
+          <TabsList className="shrink-0">
             <TabsTrigger value="devices">Devices</TabsTrigger>
             <TabsTrigger value="failed-syncs">Failed Syncs</TabsTrigger>
             <TabsTrigger value="sync-logs">All Sync Logs</TabsTrigger>

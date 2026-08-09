@@ -274,35 +274,37 @@ export default function CreditNotesPage() {
         </div>
       }
     >
-      {query.isError && (
-        <ErrorState
-          title="Failed to load credit notes"
-          description={getErrorMessage(query.error)}
-        />
-      )}
-
-      <DataTable
-        data={filteredCredits}
-        columns={columns}
-        getRowKey={(row) => row.id}
-        isLoading={query.isLoading}
-        className="flex-1 min-h-0"
-        pagination={{
-          mode: "server",
-          page,
-          pageSize: 20,
-          total,
-          onPageChange: handlePageChange,
-        }}
-        emptyState={
-          <EmptyState
-            illustrationPreset="documents"
-            title="No credit notes yet"
-            description="Create credit notes to record refunds and billing adjustments."
-            action={{ label: "New credit note", onClick: handleNewClick }}
+      <div className="flex flex-1 min-h-0 flex-col">
+        {query.isError && (
+          <ErrorState
+            title="Failed to load credit notes"
+            description={getErrorMessage(query.error)}
           />
-        }
-      />
+        )}
+
+        <DataTable
+          data={filteredCredits}
+          columns={columns}
+          getRowKey={(row) => row.id}
+          isLoading={query.isLoading}
+          className="flex-1 min-h-0"
+          pagination={{
+            mode: "server",
+            page,
+            pageSize: 20,
+            total,
+            onPageChange: handlePageChange,
+          }}
+          emptyState={
+            <EmptyState
+              illustrationPreset="documents"
+              title="No credit notes yet"
+              description="Create credit notes to record refunds and billing adjustments."
+              action={{ label: "New credit note", onClick: handleNewClick }}
+            />
+          }
+        />
+      </div>
 
       <CreditNoteFormSheet open={createOpen} onOpenChange={handleCreateOpenChange} />
 

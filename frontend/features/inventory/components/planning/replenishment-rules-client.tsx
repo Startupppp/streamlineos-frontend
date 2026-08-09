@@ -213,27 +213,29 @@ export function ReplenishmentRulesClient() {
         </Button>
       }
     >
-      {error ? (
-        <ErrorState onRetry={handleRetry} />
-      ) : !isLoading && rules.length === 0 ? (
-        <InventoryEmptyState
-          illustrationPreset="inventory"
-          title="No replenishment rules"
-          description="Add rules to automate stock replenishment suggestions."
-          action={{ label: "Add Rule", onClick: handleAddRule }}
-          className="flex-1 h-full"
-        />
-      ) : (
-        <DataTable
-          data={rules}
-          columns={columns}
-          className="flex-1 min-h-0"
-          getRowKey={(rule) => rule.id}
-          isLoading={isLoading}
-          pagination={{ mode: "server", page, pageSize: 50, total, onPageChange: setPage }}
-          minWidth="900px"
-        />
-      )}
+      <div className="flex flex-1 min-h-0 flex-col">
+        {error ? (
+          <ErrorState onRetry={handleRetry} />
+        ) : !isLoading && rules.length === 0 ? (
+          <InventoryEmptyState
+            illustrationPreset="inventory"
+            title="No replenishment rules"
+            description="Add rules to automate stock replenishment suggestions."
+            action={{ label: "Add Rule", onClick: handleAddRule }}
+            className="flex-1 h-full"
+          />
+        ) : (
+          <DataTable
+            data={rules}
+            columns={columns}
+            className="flex-1 min-h-0"
+            getRowKey={(rule) => rule.id}
+            isLoading={isLoading}
+            pagination={{ mode: "server", page, pageSize: 50, total, onPageChange: setPage }}
+            minWidth="900px"
+          />
+        )}
+      </div>
 
       <ReplenishmentRuleForm
         open={sheetOpen}

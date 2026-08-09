@@ -177,24 +177,26 @@ export function ExpiryClient() {
         </div>
       }
     >
-      {isError ? (
-        <ErrorState
-          title="Failed to load expiry data"
-          description="An error occurred while fetching expiry information. Please try again."
-          onRetry={handleRetry}
-          className="flex-1"
-        />
-      ) : (
-        <DataTable
-          data={items}
-          columns={EXPIRY_COLUMNS}
-          className="flex-1 min-h-0"
-          getRowKey={(row) => row.lotId}
-          isLoading={isLoading}
-          emptyState={emptyState}
-          rowClassName={getExpiryRowClassName}
-        />
-      )}
+      <div className="flex flex-1 min-h-0 flex-col">
+        {isError ? (
+          <ErrorState
+            title="Failed to load expiry data"
+            description="An error occurred while fetching expiry information. Please try again."
+            onRetry={handleRetry}
+            className="flex-1"
+          />
+        ) : (
+          <DataTable
+            data={items}
+            columns={EXPIRY_COLUMNS}
+            className="flex-1 min-h-0"
+            getRowKey={(row) => row.lotId}
+            isLoading={isLoading}
+            emptyState={emptyState}
+            rowClassName={getExpiryRowClassName}
+          />
+        )}
+      </div>
     </PageWrapper>
   );
 }

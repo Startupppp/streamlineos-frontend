@@ -133,41 +133,43 @@ function ModulesContent() {
       title="Module Management"
       subtitle="Enable or disable feature modules for your organization"
     >
-      {isLoading ? (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <ModuleCardSkeleton key={i} />
-          ))}
-        </div>
-      ) : isError ? (
-        <ErrorState
-          title="Failed to load modules"
-          description="Unable to fetch module configuration. Please try again."
-          onRetry={handleRetry}
-        />
-      ) : !modules || modules.length === 0 ? (
-        <EmptyState
-          illustration={null}
-          title="No modules configured"
-          description="Your organization has no feature modules available to manage."
-          className="flex-1"
-        />
-      ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {modules.map((mod) => (
-            <ModuleCard
-              key={mod.moduleKey}
-              moduleKey={mod.moduleKey}
-              enabled={mod.enabled}
-              isPending={
-                toggleModule.isPending && pendingModuleKey === mod.moduleKey
-              }
-              core={mod.core}
-              onToggle={handleToggle}
-            />
-          ))}
-        </div>
-      )}
+      <div className="flex flex-1 flex-col min-h-0">
+        {isLoading ? (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <ModuleCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : isError ? (
+          <ErrorState
+            title="Failed to load modules"
+            description="Unable to fetch module configuration. Please try again."
+            onRetry={handleRetry}
+          />
+        ) : !modules || modules.length === 0 ? (
+          <EmptyState
+            illustration={null}
+            title="No modules configured"
+            description="Your organization has no feature modules available to manage."
+            className="flex-1"
+          />
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {modules.map((mod) => (
+              <ModuleCard
+                key={mod.moduleKey}
+                moduleKey={mod.moduleKey}
+                enabled={mod.enabled}
+                isPending={
+                  toggleModule.isPending && pendingModuleKey === mod.moduleKey
+                }
+                core={mod.core}
+                onToggle={handleToggle}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </PageWrapper>
   );
 }

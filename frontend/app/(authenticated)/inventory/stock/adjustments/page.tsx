@@ -220,7 +220,7 @@ export default function AdjustmentsPage() {
           className="flex-1"
         />
       ) : adjustments.length === 0 && !isLoading ? (
-        <motion.div variants={fadeUp} initial="hidden" animate="visible">
+        <motion.div variants={fadeUp} initial="hidden" animate="visible" className="flex flex-1 min-h-0 flex-col">
           <InventoryEmptyState
             illustration={hasActiveFilters ? <EmptySearchIllustration /> : <EmptyActivityIllustration />}
             title={hasActiveFilters ? "No results" : "No adjustments yet"}

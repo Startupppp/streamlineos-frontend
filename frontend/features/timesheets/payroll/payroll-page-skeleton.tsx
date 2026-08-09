@@ -22,10 +22,10 @@ export function PayrollPageSkeleton() {
         </div>
       }
     >
-      <div className="space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         <StatCardGridSkeleton cols={5} />
-        <Card>
-          <CardContent className="p-0">
+        <Card className="flex-1 min-h-0 flex flex-col overflow-hidden">
+          <CardContent className="p-0 flex-1 min-h-0 overflow-auto">
             <div className="border-b px-3 py-2 flex gap-2">
               {Array.from({ length: 10 }).map((_, i) => (
                 <Skeleton key={i} className="h-3 flex-1" />

@@ -476,7 +476,7 @@ export default function MovementsPage() {
           className="flex-1"
         />
       ) : transactions.length === 0 && !isLoading ? (
-        <motion.div variants={fadeUp} initial="hidden" animate="visible">
+        <motion.div variants={fadeUp} initial="hidden" animate="visible" className="flex flex-1 min-h-0 flex-col">
           {hasActiveFilters ? (
             <InventoryEmptyState
               illustration={<EmptySearchIllustration />}

@@ -237,26 +237,28 @@ export default function TaxPaymentsPage() {
       backHref="/accounting/taxes"
       actions={actions}
     >
-      {isLoading ? (
-        <LoadingState variant="table" rows={12} />
-      ) : isError ? (
-        <ErrorState title="Failed to load tax payments" description={getErrorMessage(error)} onRetry={handleRetry} />
-      ) : (
-        <DataTable
-          className="flex-1 min-h-0"
-          data={payments}
-          columns={columns}
-          getRowKey={(row) => row.id}
-          emptyState={
-            <EmptyState
-              illustration={<EmptyApprovalIllustration />}
-              title="No tax payments yet"
-              description="Recorded payments will appear here."
-            />
-          }
-          minWidth="720px"
-        />
-      )}
+      <div className="flex flex-1 min-h-0 flex-col">
+        {isLoading ? (
+          <LoadingState variant="table" rows={12} />
+        ) : isError ? (
+          <ErrorState title="Failed to load tax payments" description={getErrorMessage(error)} onRetry={handleRetry} />
+        ) : (
+          <DataTable
+            className="flex-1 min-h-0"
+            data={payments}
+            columns={columns}
+            getRowKey={(row) => row.id}
+            emptyState={
+              <EmptyState
+                illustration={<EmptyApprovalIllustration />}
+                title="No tax payments yet"
+                description="Recorded payments will appear here."
+              />
+            }
+            minWidth="720px"
+          />
+        )}
+      </div>
 
       <EntityFormSheet
         open={paymentSheetOpen}

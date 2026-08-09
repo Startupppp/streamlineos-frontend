@@ -280,52 +280,54 @@ export default function VendorsListPage() {
       }
       filters={filterBar}
     >
-      <DataTable
-        data={items}
-        columns={columns}
-        getRowKey={(v) => v.id}
-        isLoading={query.isLoading}
-        pagination={{
-          mode: "server",
-          page,
-          pageSize: 20,
-          total,
-          onPageChange: handlePageChange,
-        }}
-        emptyState={
-          query.error ? (
-            <ErrorState
-              description={getErrorMessage(query.error)}
-              onRetry={handleRetry}
-              compact
-            />
-          ) : (
-            <InventoryEmptyState
-              illustration={
-                search ? (
-                  <EmptySearchIllustration />
-                ) : (
-                  <EmptyCompaniesIllustration />
-                )
-              }
-              title={search ? "No vendors found" : "No vendors yet"}
-              description={
-                search
-                  ? "No results match your search."
-                  : "Add a supplier to start creating purchase orders."
-              }
-              action={
-                search
-                  ? { label: "Clear search", onClick: handleClearSearch }
-                  : { label: "New vendor", onClick: handleNewVendor }
-              }
-              compact
-            />
-          )
-        }
-        minWidth="640px"
-        className="flex-1 min-h-0"
-      />
+      <div className="flex flex-1 min-h-0 flex-col">
+        <DataTable
+          data={items}
+          columns={columns}
+          getRowKey={(v) => v.id}
+          isLoading={query.isLoading}
+          pagination={{
+            mode: "server",
+            page,
+            pageSize: 20,
+            total,
+            onPageChange: handlePageChange,
+          }}
+          emptyState={
+            query.error ? (
+              <ErrorState
+                description={getErrorMessage(query.error)}
+                onRetry={handleRetry}
+                compact
+              />
+            ) : (
+              <InventoryEmptyState
+                illustration={
+                  search ? (
+                    <EmptySearchIllustration />
+                  ) : (
+                    <EmptyCompaniesIllustration />
+                  )
+                }
+                title={search ? "No vendors found" : "No vendors yet"}
+                description={
+                  search
+                    ? "No results match your search."
+                    : "Add a supplier to start creating purchase orders."
+                }
+                action={
+                  search
+                    ? { label: "Clear search", onClick: handleClearSearch }
+                    : { label: "New vendor", onClick: handleNewVendor }
+                }
+                compact
+              />
+            )
+          }
+          minWidth="640px"
+          className="flex-1 min-h-0"
+        />
+      </div>
 
       <VendorFormSheet open={sheetOpen} onOpenChange={setSheetOpen} />
     </PageWrapper>

@@ -171,19 +171,25 @@ export default function CashFlowPage() {
       }
     >
       {query.isLoading ? (
-          <LoadingState variant="table" rows={12} />
+          <div className="flex flex-1 min-h-0 flex-col">
+            <LoadingState variant="table" rows={12} />
+          </div>
         ) : query.error ? (
-          <ErrorState
-            title="Failed to load cash flow"
-            description={getErrorMessage(query.error)}
-            onRetry={handleRetry}
-          />
+          <div className="flex flex-1 min-h-0 flex-col">
+            <ErrorState
+              title="Failed to load cash flow"
+              description={getErrorMessage(query.error)}
+              onRetry={handleRetry}
+            />
+          </div>
         ) : !report || !hasActivity ? (
-          <EmptyState
-            illustration={<EmptyExpensesIllustration />}
-            title="No cash activity for this range"
-            description="Pick a different date range or post entries that move cash or bank balances."
-          />
+          <div className="flex flex-1 min-h-0 flex-col">
+            <EmptyState
+              illustration={<EmptyExpensesIllustration />}
+              title="No cash activity for this range"
+              description="Pick a different date range or post entries that move cash or bank balances."
+            />
+          </div>
         ) : (
           <div className="flex flex-1 min-h-0 flex-col space-y-4">
             <CashFlowSummaryStrip

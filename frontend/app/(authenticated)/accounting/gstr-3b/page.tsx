@@ -100,18 +100,19 @@ export default function Gstr3BPage() {
         </div>
       }
     >
-      {query.isLoading ? (
-        <LoadingState variant="table" />
-      ) : query.error ? (
-        <ErrorState description={getErrorMessage(query.error)} onRetry={handleRetry} />
-      ) : !report ? (
-        <EmptyState
-          illustration={<EmptyExpensesIllustration />}
-          title="No GST data for this period"
-          description="Post invoices and purchase bills within the date range to populate this return."
-        />
-      ) : (
-        <div className="space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
+        {query.isLoading ? (
+          <LoadingState variant="table" />
+        ) : query.error ? (
+          <ErrorState description={getErrorMessage(query.error)} onRetry={handleRetry} />
+        ) : !report ? (
+          <EmptyState
+            illustration={<EmptyExpensesIllustration />}
+            title="No GST data for this period"
+            description="Post invoices and purchase bills within the date range to populate this return."
+          />
+        ) : (
+          <>
           <div className="rounded-lg border border-border p-4 bg-muted/40">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm tabular-nums">
               <div>
@@ -214,8 +215,9 @@ export default function Gstr3BPage() {
               {report.billCount === 1 ? "" : "s"} in period
             </div>
           </div>
-        </div>
-      )}
+          </>
+        )}
+      </div>
     </PageWrapper>
   );
 }

@@ -14,7 +14,7 @@ import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger, TABS_CONTENT_PAGE_BODY_CLASS } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import dynamic from "next/dynamic";
 import { DownloadIcon } from "@animateicons/react/lucide";
@@ -128,6 +128,7 @@ function ReportTable({
   }
   return (
     <DataTable
+      className="flex-1 min-h-0"
       data={data}
       columns={REPORT_COLUMNS}
       getRowKey={(row) => row.id}
@@ -352,7 +353,7 @@ export default function TaxReportsPage() {
         {filters}
 
         <div className="flex min-h-0 flex-1 flex-col">
-          <TabsContent value="output" className="mt-0">
+          <TabsContent value="output" className={TABS_CONTENT_PAGE_BODY_CLASS}>
             <ReportTable
               data={outputQuery.data?.items ?? []}
               isLoading={outputQuery.isLoading}
@@ -362,7 +363,7 @@ export default function TaxReportsPage() {
             />
           </TabsContent>
 
-          <TabsContent value="input" className="mt-0">
+          <TabsContent value="input" className={TABS_CONTENT_PAGE_BODY_CLASS}>
             <ReportTable
               data={inputQuery.data?.items ?? []}
               isLoading={inputQuery.isLoading}
@@ -372,7 +373,7 @@ export default function TaxReportsPage() {
             />
           </TabsContent>
 
-          <TabsContent value="liability" className="mt-0">
+          <TabsContent value="liability" className={TABS_CONTENT_PAGE_BODY_CLASS}>
             <LiabilitySection from={from} to={to} />
           </TabsContent>
         </div>

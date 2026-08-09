@@ -17,6 +17,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PAGE_BODY_SKELETON_CLASS } from "@/components/ui/content-fill-panel";
+import { ErrorState } from "@/components/shared";
 import { EssStatusBadge } from "./ess-status-badge";
 import { useEssTaxDeclaration, useSubmitTaxDeclaration } from "@/hooks/api/payroll/ess";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
@@ -196,7 +197,7 @@ export function EssTaxSection({
   sheetOpen?: boolean;
   onSheetOpenChange?: (open: boolean) => void;
 }) {
-  const { data, isLoading } = useEssTaxDeclaration();
+  const { data, isLoading, isError, error, refetch } = useEssTaxDeclaration();
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const sheetOpen = sheetOpenProp ?? uncontrolledOpen;
   const setSheetOpen = onSheetOpenChange ?? setUncontrolledOpen;
@@ -208,6 +209,18 @@ export function EssTaxSection({
     return (
       <section id="tax" className="flex min-h-0 w-full flex-1 flex-col">
         <TaxSkeleton />
+      </section>
+    );
+  }
+
+  if (isError) {
+    return (
+      <section id="tax" className="flex min-h-0 w-full flex-1 flex-col">
+        <ErrorState
+          description={getErrorMessage(error)}
+          onRetry={refetch}
+          className="flex-1"
+        />
       </section>
     );
   }

@@ -201,30 +201,32 @@ export function SerialsClient() {
         </div>
       }
     >
-      {isError ? (
-        <ErrorState
-          title="Failed to load serial numbers"
-          description="An error occurred while fetching serial data. Please try again."
-          onRetry={handleRetry}
-          className="flex-1"
-        />
-      ) : (
-        <DataTable
-          data={items}
-          columns={SERIALS_COLUMNS}
-          className="flex-1 min-h-0"
-          getRowKey={(row) => row.id}
-          isLoading={isLoading}
-          emptyState={emptyState}
-          pagination={{
-            mode: "server",
-            page,
-            pageSize: 20,
-            total,
-            onPageChange: setPage,
-          }}
-        />
-      )}
+      <div className="flex flex-1 min-h-0 flex-col">
+        {isError ? (
+          <ErrorState
+            title="Failed to load serial numbers"
+            description="An error occurred while fetching serial data. Please try again."
+            onRetry={handleRetry}
+            className="flex-1"
+          />
+        ) : (
+          <DataTable
+            data={items}
+            columns={SERIALS_COLUMNS}
+            className="flex-1 min-h-0"
+            getRowKey={(row) => row.id}
+            isLoading={isLoading}
+            emptyState={emptyState}
+            pagination={{
+              mode: "server",
+              page,
+              pageSize: 20,
+              total,
+              onPageChange: setPage,
+            }}
+          />
+        )}
+      </div>
     </PageWrapper>
   );
 }

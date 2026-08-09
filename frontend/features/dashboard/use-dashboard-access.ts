@@ -17,6 +17,7 @@ export interface DashboardAccess {
   canViewEmployees: boolean;
   canCreateEmployees: boolean;
   canViewAttendance: boolean;
+  canSelfAttendance: boolean;
   canViewLeaves: boolean;
   canApproveLeaves: boolean;
   canViewExecutive: boolean;
@@ -55,6 +56,7 @@ export function useDashboardAccess(): DashboardAccess {
       canViewEmployees: can("hr:employees:view"),
       canCreateEmployees: can("hr:employees:create"),
       canViewAttendance: can("hr:attendance:view"),
+      canSelfAttendance: can("self:attendance"),
       canViewLeaves: can("hr:leaves:view"),
       canApproveLeaves: can("hr:leaves:approve"),
       canViewExecutive: can("hr:analytics:read"),

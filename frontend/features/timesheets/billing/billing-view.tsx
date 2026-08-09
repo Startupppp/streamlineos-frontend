@@ -323,6 +323,7 @@ export function BillingView() {
           />
         ) : (
           <DataTable
+            className="flex-1 min-h-0"
             data={groups}
             columns={BILLING_COLUMNS}
             getRowKey={(r) => r.projectId ?? r.projectName}

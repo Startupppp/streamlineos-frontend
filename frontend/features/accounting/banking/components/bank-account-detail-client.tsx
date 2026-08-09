@@ -227,44 +227,46 @@ export function BankAccountDetailClient({ bankAccountId }: Props) {
         </div>
       }
     >
-      {accountQuery.isLoading ? (
-        <div className="space-y-4">
-          <div className="flex gap-3">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <Skeleton key={i} className="h-4 w-32" />
-            ))}
+      <div className="flex flex-1 min-h-0 flex-col">
+        {accountQuery.isLoading ? (
+          <div className="flex flex-1 min-h-0 flex-col gap-4">
+            <div className="flex gap-3">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <Skeleton key={i} className="h-4 w-32" />
+              ))}
+            </div>
+            <Skeleton className="h-64 w-full rounded-xl" />
           </div>
-          <Skeleton className="h-64 w-full rounded-xl" />
-        </div>
-      ) : (
-        <DataTable
-          className="flex-1 min-h-0"
-          data={txns}
-          columns={TXN_COLUMNS}
-          getRowKey={(row) => row.id}
-          isLoading={txnQuery.isLoading}
-          pagination={{
-            mode: "server",
-            page,
-            pageSize: PAGE_SIZE,
-            total,
-            onPageChange: handlePageChange,
-          }}
-          search={{
-            value: search,
-            onChange: handleSearchChange,
-            placeholder: "Search transactions…",
-          }}
-          emptyState={
-            <EmptyState
-              title="No transactions"
-              description="Import a bank statement to see transactions here."
-              action={{ label: "Import Statement", href: `/accounting/banking/import?bankAccountId=${id}` }}
-              compact
-            />
-          }
-        />
-      )}
+        ) : (
+          <DataTable
+            className="flex-1 min-h-0"
+            data={txns}
+            columns={TXN_COLUMNS}
+            getRowKey={(row) => row.id}
+            isLoading={txnQuery.isLoading}
+            pagination={{
+              mode: "server",
+              page,
+              pageSize: PAGE_SIZE,
+              total,
+              onPageChange: handlePageChange,
+            }}
+            search={{
+              value: search,
+              onChange: handleSearchChange,
+              placeholder: "Search transactions…",
+            }}
+            emptyState={
+              <EmptyState
+                title="No transactions"
+                description="Import a bank statement to see transactions here."
+                action={{ label: "Import Statement", href: `/accounting/banking/import?bankAccountId=${id}` }}
+                compact
+              />
+            }
+          />
+        )}
+      </div>
     </PageWrapper>
   );
 }

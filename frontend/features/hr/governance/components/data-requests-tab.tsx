@@ -181,7 +181,7 @@ export function DataRequestsTab() {
 
   if (isLoading) {
     return (
-      <div className="space-y-3">
+      <div className="flex flex-1 min-h-0 flex-col gap-3">
         {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}
       </div>
     );
@@ -217,6 +217,7 @@ export function DataRequestsTab() {
         )}
       </div>
       <DataTable
+        className="flex-1 min-h-0"
         columns={columns}
         data={data?.data ?? []}
         getRowKey={(row) => row.id}

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useTransition } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { ToggleLeft, ToggleRight, ExternalLink } from "lucide-react";
 import { PlusIcon, Trash2Icon, CopyIcon } from "@animateicons/react/lucide";
@@ -25,6 +26,15 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { DataTablePagination } from "@/components/shared/data-table-pagination";
+import {
+  DEFAULT_PAGE_SIZE,
+  getLastPage,
+  parsePage,
+  parsePageSize,
+  STANDARD_PAGE_SIZE_OPTIONS,
+} from "@/lib/list-pagination";
+import { keepPreviousData } from "@tanstack/react-query";
 
 const AVAILABLE_EVENTS = [
   { id: "lead.created", label: "Lead Created" },
@@ -76,10 +86,25 @@ interface CreateWebhookInput {
   events: string[];
 }
 
-function useWebhooks() {
+interface WebhooksPageResponse {
+  data: WebhookEndpoint[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+function useWebhooks(params: { page: number; limit: number }) {
   return useQuery({
-    queryKey: queryKeys.webhooks.all,
-    queryFn: () => apiClient.get<WebhookEndpoint[]>("/webhooks"),
+    queryKey: queryKeys.webhooks.list(params),
+    queryFn: () =>
+      apiClient.get<WebhooksPageResponse>("/webhooks", {
+        page: String(params.page),
+        limit: String(params.limit),
+      }),
+    placeholderData: keepPreviousData,
     staleTime: 60_000,
   });
 }
@@ -113,7 +138,20 @@ function useDeleteWebhook() {
 }
 
 export default function WebhooksPage() {
-  const { data: webhooks, isLoading, isError, refetch } = useWebhooks();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [, startTransition] = useTransition();
+  const page = parsePage(searchParams.get("page"));
+  const pageSize = parsePageSize(searchParams.get("size"));
+  const {
+    data,
+    error,
+    isLoading,
+    isError,
+    isPlaceholderData,
+    refetch,
+  } = useWebhooks({ page, limit: pageSize });
   const createWebhook = useCreateWebhook();
   const toggleWebhook = useToggleWebhook();
   const deleteWebhook = useDeleteWebhook();
@@ -123,6 +161,47 @@ export default function WebhooksPage() {
   const [url, setUrl] = useState("");
   const [description, setDescription] = useState("");
   const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
+  const webhooks = data?.data ?? [];
+  const pagination = data?.pagination;
+  const isPageOutOfRange =
+    !!pagination && page > getLastPage(pagination.total, pageSize);
+
+  const updateParams = useCallback(
+    (updates: Record<string, string | null>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      for (const [key, value] of Object.entries(updates)) {
+        if (value === null) params.delete(key);
+        else params.set(key, value);
+      }
+      const query = params.toString();
+      startTransition(() => {
+        router.replace(query ? `${pathname}?${query}` : pathname, {
+          scroll: false,
+        });
+      });
+    },
+    [pathname, router, searchParams],
+  );
+
+  const handlePageChange = useCallback(
+    (nextPage: number) =>
+      updateParams({ page: nextPage <= 1 ? null : String(nextPage) }),
+    [updateParams],
+  );
+  const handlePageSizeChange = useCallback(
+    (size: number) =>
+      updateParams({
+        size: size === DEFAULT_PAGE_SIZE ? null : String(size),
+        page: null,
+      }),
+    [updateParams],
+  );
+
+  useEffect(() => {
+    if (!pagination || isPlaceholderData) return;
+    const lastPage = getLastPage(pagination.total, pageSize);
+    if (page > lastPage) handlePageChange(lastPage);
+  }, [handlePageChange, isPlaceholderData, page, pageSize, pagination]);
 
   const handleOpenCreate = useCallback(() => setSheetOpen(true), []);
 
@@ -140,11 +219,12 @@ export default function WebhooksPage() {
           toast.success("Webhook created");
           setSheetOpen(false);
           setUrl(""); setDescription(""); setSelectedEvents([]);
+          updateParams({ page: null });
         },
         onError: (err) => toast.error(getErrorMessage(err)),
       }
     );
-  }, [url, description, selectedEvents, createWebhook]);
+  }, [url, description, selectedEvents, createWebhook, updateParams]);
 
   const handleToggle = useCallback((id: number, isActive: boolean) => {
     toggleWebhook.mutate({ id, isActive: !isActive }, {
@@ -200,18 +280,18 @@ export default function WebhooksPage() {
         </AnimatedIconButton>
       }
     >
-      {isLoading ? (
-        <div className="space-y-4">
+      {isLoading || isPageOutOfRange ? (
+        <div className="flex flex-1 flex-col min-h-0 space-y-4">
           {Array.from({ length: 5 }).map((_, i) => <WebhookCardSkeleton key={i} />)}
         </div>
       ) : isError ? (
         <ErrorState
           title="Couldn't load webhooks"
-          description="Failed to fetch webhooks. Please try again."
+          description={getErrorMessage(error)}
           onRetry={handleRetry}
           className="flex-1"
         />
-      ) : !webhooks || webhooks.length === 0 ? (
+      ) : webhooks.length === 0 ? (
         <EmptyState
           illustration={<EmptyDevicesIllustration />}
           title="No webhooks configured"
@@ -220,22 +300,35 @@ export default function WebhooksPage() {
           className="min-h-0 flex-1"
         />
       ) : (
-        <motion.div
-          className="min-h-0 flex-1 space-y-4 overflow-y-auto"
-          variants={staggerContainer}
-          initial="hidden"
-          animate="visible"
-        >
-          {webhooks.map((wh) => (
-            <WebhookCard
-              key={wh.id}
-              webhook={wh}
-              onCopyUrl={copyUrl}
-              onToggle={handleToggle}
-              onDelete={setDeleteId}
+        <div className="flex min-h-0 flex-1 flex-col">
+          <motion.div
+            className="min-h-0 flex-1 space-y-4 overflow-y-auto"
+            variants={staggerContainer}
+            initial="hidden"
+            animate="visible"
+          >
+            {webhooks.map((wh) => (
+              <WebhookCard
+                key={wh.id}
+                webhook={wh}
+                onCopyUrl={copyUrl}
+                onToggle={handleToggle}
+                onDelete={setDeleteId}
+              />
+            ))}
+          </motion.div>
+          <div className="shrink-0 border-t px-3">
+            <DataTablePagination
+              page={page}
+              totalPages={Math.max(1, pagination?.totalPages ?? 1)}
+              total={pagination?.total ?? 0}
+              limit={pageSize}
+              onPageChange={handlePageChange}
+              onLimitChange={handlePageSizeChange}
+              pageSizeOptions={STANDARD_PAGE_SIZE_OPTIONS}
             />
-          ))}
-        </motion.div>
+          </div>
+        </div>
       )}
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>

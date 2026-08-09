@@ -257,21 +257,24 @@ export function CountDetailShared({
         }
         actions={buildActions()}
       >
-        <DataTable
-          data={lines}
-          columns={columns}
-          getRowKey={(row) => row.id}
-          isLoading={isLoading}
-          emptyState={
-            <InventoryEmptyState
-              compact
-              title="No lines"
-              description={`No inventory lines are assigned to this ${shortNoun.toLowerCase()}.`}
-              className="border-0 bg-transparent min-h-[30dvh]"
-            />
-          }
-          minWidth="600px"
-        />
+        <div className="flex flex-1 min-h-0 flex-col">
+          <DataTable
+            data={lines}
+            columns={columns}
+            getRowKey={(row) => row.id}
+            isLoading={isLoading}
+            className="flex-1 min-h-0"
+            emptyState={
+              <InventoryEmptyState
+                compact
+                title="No lines"
+                description={`No inventory lines are assigned to this ${shortNoun.toLowerCase()}.`}
+                className="border-0 bg-transparent min-h-[30dvh]"
+              />
+            }
+            minWidth="600px"
+          />
+        </div>
       </PageWrapper>
 
       <AlertDialog open={postDialogOpen} onOpenChange={setPostDialogOpen}>

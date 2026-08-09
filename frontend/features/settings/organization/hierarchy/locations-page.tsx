@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { ErrorState } from "@/components/shared/error-state";
 import {
   Sheet,
   SheetContent,
@@ -49,6 +50,11 @@ import { PlusIcon } from "@animateicons/react/lucide";
 import type { OrgLocation, LocationType } from "@/types/org-hierarchy";
 import { HierarchyArchiveDialog } from "./hierarchy-archive-dialog";
 import { useHierarchyArchive } from "./use-hierarchy-archive";
+import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
+import {
+  useHierarchyListState,
+  useHierarchyPageBounds,
+} from "./use-hierarchy-list-state";
 import { RequireModule } from "@/components/auth/require-module";
 import { useCan } from "@/hooks/api/access";
 
@@ -155,36 +161,47 @@ function TypeBadge({ type }: { type: LocationType }) {
 }
 
 export function OrgLocationsPage() {
-  const { data: locations, isLoading } = useOrgLocations();
+  const {
+    page,
+    pageSize,
+    query,
+    search,
+    serverSearch,
+    showArchived,
+    setPage,
+    setPageSize,
+    setSearch,
+    setStatus,
+    toggleArchived,
+  } = useHierarchyListState();
+  const {
+    data: locations,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useOrgLocations(query);
+  const isCorrectingPage = useHierarchyPageBounds({
+    page,
+    pageSize,
+    total: isError ? undefined : locations?.total,
+    setPage,
+  });
   const create = useCreateOrgLocation();
   const update = useUpdateOrgLocation();
   const canManage = useCan("settings:organization:manage");
 
   const [showCreate, setShowCreate] = useState(false);
   const [editing, setEditing] = useState<OrgLocation | null>(null);
-  const [showArchived, setShowArchived] = useState(false);
-  const [search, setSearch] = useState("");
   const archiveFlow = useHierarchyArchive<OrgLocation>({
     unitKind: "LOCATION",
     archive: (location, callbacks) =>
       update.mutate({ id: location.id, status: "ARCHIVED" }, callbacks),
     successMessage: "Location archived",
-    onArchived: () => setShowArchived(true),
+    onArchived: () => setStatus("ARCHIVED"),
   });
 
-  const allLocations = locations ?? [];
-  const active = allLocations.filter((l) => l.status !== "ARCHIVED");
-  const archived = allLocations.filter((l) => l.status === "ARCHIVED");
-  const displayed = showArchived ? archived : active;
-  const filtered = search
-    ? displayed.filter((l) => {
-        const q = search.toLowerCase();
-        return (
-          l.name.toLowerCase().includes(q) ||
-          (l.address ?? "").toLowerCase().includes(q)
-        );
-      })
-    : displayed;
+  const displayed = locations?.data ?? [];
 
   const handleCreate = useCallback(
     (values: FormValues) => {
@@ -226,18 +243,20 @@ export function OrgLocationsPage() {
         {
           onSuccess: () => {
             toast.success("Location restored");
-            setShowArchived(false);
+            setStatus("CURRENT");
           },
           onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
-    [update],
+    [setStatus, update],
   );
 
   const handleOpenCreate = useCallback(() => setShowCreate(true), []);
-  const handleToggleArchived = useCallback(() => setShowArchived((v) => !v), []);
-  const handleSearchChange = useCallback((v: string) => setSearch(v), []);
+  const handleSearchChange = useCallback((v: string) => setSearch(v), [setSearch]);
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   function handleSearchInputChange(value: string) { handleSearchChange(value); }
 
@@ -312,10 +331,10 @@ export function OrgLocationsPage() {
     },
   ];
 
-  const emptyState = search ? (
+  const emptyState = serverSearch ? (
     <EmptyState
       illustrationPreset="companies"
-      title={`No locations matching "${search}"`}
+      title={`No locations matching "${serverSearch}"`}
       description="Try a different search term."
       compact
       className="min-h-[200px]"
@@ -347,10 +366,10 @@ export function OrgLocationsPage() {
             variant={showArchived ? "secondary" : "outline"}
             size="sm"
             className="flex-1 text-xs sm:flex-none"
-            onClick={handleToggleArchived}
+            onClick={toggleArchived}
           >
             <Archive className="h-4 w-4 mr-1.5" />
-            {showArchived ? "Show Active" : `Archived (${archived.length})`}
+            {showArchived ? "Show current" : "View archived"}
           </Button>
           {canManage ? <AnimatedIconButton
             icon={PlusIcon}
@@ -368,16 +387,34 @@ export function OrgLocationsPage() {
         <SearchInput placeholder="Search locations…" value={search} onValueChange={handleSearchInputChange} />
       }
     >
-      <DataTable
-        data={filtered}
-        columns={columns}
-        getRowKey={(l) => l.id}
-        isLoading={isLoading}
-        emptyState={emptyState}
-        rowClassName={(l) => cn(l.status === "ARCHIVED" && "opacity-60")}
-        minWidth="620px"
-        className="flex-1 min-h-0"
-      />
+      {isError ? (
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load locations"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
+      ) : (
+        <DataTable
+          data={displayed}
+          columns={columns}
+          getRowKey={(l) => l.id}
+          isLoading={isLoading || isCorrectingPage}
+          emptyState={emptyState}
+          rowClassName={(l) => cn(l.status === "ARCHIVED" && "opacity-60")}
+          minWidth="620px"
+          className="flex-1 min-h-0"
+          pagination={{
+            mode: "server",
+            page,
+            pageSize,
+            total: locations?.total ?? 0,
+            onPageChange: setPage,
+            onPageSizeChange: setPageSize,
+            pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
+          }}
+        />
+      )}
 
       <Sheet open={showCreate} onOpenChange={setShowCreate}>
         <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md">

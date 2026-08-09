@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 interface CalendarOrgMember {
   id: string;
@@ -15,10 +16,12 @@ interface CalendarOrgMember {
 }
 
 export function useCalendarOrgMembers() {
+  const canView = useCan("directory:people:view");
   return useQuery({
     queryKey: queryKeys.calendar.orgMembers(),
     queryFn: () => apiClient.get<CalendarOrgMember[]>("/org/members"),
     staleTime: 5 * 60 * 1000,
+    enabled: canView,
   });
 }
 
@@ -139,6 +142,7 @@ interface UpdateCalendarEventPayload
 }
 
 export function useCalendarEvents(start: Date, end: Date) {
+  const canView = useCan("calendar:read");
   return useQuery({
     queryKey: queryKeys.calendar.events(start.toISOString(), end.toISOString()),
     queryFn: () =>
@@ -147,6 +151,7 @@ export function useCalendarEvents(start: Date, end: Date) {
         end: end.toISOString(),
       }),
     staleTime: 2 * 60 * 1000,
+    enabled: canView,
   });
 }
 
@@ -242,6 +247,7 @@ export interface ExternalCalendarEventsResponse {
 }
 
 export function useExternalCalendarEvents(start: Date, end: Date, enabled: boolean) {
+  const canView = useCan("calendar:read");
   return useQuery({
     queryKey: queryKeys.calendar.externalEvents(start.toISOString(), end.toISOString()),
     queryFn: () =>
@@ -249,7 +255,7 @@ export function useExternalCalendarEvents(start: Date, end: Date, enabled: boole
         start: start.toISOString(),
         end: end.toISOString(),
       }),
-    enabled,
+    enabled: canView && enabled,
     staleTime: 60_000,
   });
 }

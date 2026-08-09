@@ -23,7 +23,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger, TABS_CONTENT_PAGE_BODY_CLASS } from "@/components/ui/tabs";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -267,11 +267,11 @@ export default function WorkflowDetailPage() {
               <TabsTrigger value="executions">Executions</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="overview" className="mt-0">
+            <TabsContent value="overview" className={TABS_CONTENT_PAGE_BODY_CLASS}>
               <WorkflowOverviewTab workflow={workflow} />
             </TabsContent>
 
-            <TabsContent value="executions" className="mt-0">
+            <TabsContent value="executions" className={TABS_CONTENT_PAGE_BODY_CLASS}>
               <ExecutionsTab workflowId={workflowId} />
             </TabsContent>
           </Tabs>

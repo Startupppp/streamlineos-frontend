@@ -12,7 +12,7 @@ export function RoleEditorSkeleton() {
       backHref="/settings/roles"
       backLabel="Roles"
     >
-      <div className="flex flex-col gap-4 lg:h-full lg:min-h-0">
+      <div className="flex flex-col gap-4 flex-1 min-h-0">
         <Card>
           <CardContent className="p-4">
             <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
@@ -34,7 +34,7 @@ export function RoleEditorSkeleton() {
           </CardContent>
         </Card>
 
-        <Card className="lg:flex-1 lg:min-h-0 flex flex-col">
+        <Card className="flex-1 min-h-0 flex flex-col">
           <div className="p-4 pb-3 flex items-start justify-between gap-3">
             <div className="space-y-1.5">
               <Skeleton className="h-5 w-40" />

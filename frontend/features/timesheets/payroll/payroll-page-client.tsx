@@ -9,8 +9,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger, TABS_CONTENT_PAGE_BODY_CLASS } from "@/components/ui/tabs";
 import { useCan } from "@/hooks/api/access";
 import {
   useTimesheetPayrollSummary,
@@ -223,7 +222,7 @@ export function TimesheetPayrollPageClient() {
             </div>
           ) : null}
 
-          <TabsContent value="queue" className="mt-0">
+          <TabsContent value="queue" className={TABS_CONTENT_PAGE_BODY_CLASS}>
             {summaryError ? (
               <ErrorState
                 title="Couldn't load the payroll queue"
@@ -232,27 +231,19 @@ export function TimesheetPayrollPageClient() {
                 className="flex-1 min-h-[40dvh]"
               />
             ) : (
-              <Card>
-                <CardContent className="p-0">
-                  <PayrollQueueTable
-                    rows={rows}
-                    isLoading={summaryLoading}
-                    hasFilters={hasFilters}
-                    selection={visibleSelectedUserIds}
-                    onSelectionChange={handleSelectionChange}
-                    onRowClick={handleRowClick}
-                  />
-                </CardContent>
-              </Card>
+              <PayrollQueueTable
+                rows={rows}
+                isLoading={summaryLoading}
+                hasFilters={hasFilters}
+                selection={visibleSelectedUserIds}
+                onSelectionChange={handleSelectionChange}
+                onRowClick={handleRowClick}
+              />
             )}
           </TabsContent>
 
-          <TabsContent value="history" className="mt-0">
-            <Card>
-              <CardContent className="p-0">
-                <PayrollExportsHistory fallbackMapping={mapping} />
-              </CardContent>
-            </Card>
+          <TabsContent value="history" className={TABS_CONTENT_PAGE_BODY_CLASS}>
+            <PayrollExportsHistory fallbackMapping={mapping} />
           </TabsContent>
         </Tabs>
       </motion.div>

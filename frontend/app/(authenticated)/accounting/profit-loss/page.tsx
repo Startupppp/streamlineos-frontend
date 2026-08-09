@@ -125,19 +125,25 @@ export default function ProfitLossPage() {
       }
     >
       {query.isLoading ? (
-          <LoadingState variant="table" rows={12} />
+          <div className="flex flex-1 min-h-0 flex-col">
+            <LoadingState variant="table" rows={12} />
+          </div>
         ) : query.error ? (
-          <ErrorState
-            title="Failed to load profit & loss"
-            description={getErrorMessage(query.error)}
-            onRetry={handleRetry}
-          />
+          <div className="flex flex-1 min-h-0 flex-col">
+            <ErrorState
+              title="Failed to load profit & loss"
+              description={getErrorMessage(query.error)}
+              onRetry={handleRetry}
+            />
+          </div>
         ) : !pnl || !hasAnyRows ? (
-          <EmptyState
-            illustration={<EmptyTimeIllustration />}
-            title="No income or expense activity for this range"
-            description="Pick a different date range or post entries to see this report populate."
-          />
+          <div className="flex flex-1 min-h-0 flex-col">
+            <EmptyState
+              illustration={<EmptyTimeIllustration />}
+              title="No income or expense activity for this range"
+              description="Pick a different date range or post entries to see this report populate."
+            />
+          </div>
         ) : (
           <div className="flex flex-1 min-h-0 flex-col gap-3">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">

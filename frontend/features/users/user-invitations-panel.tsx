@@ -39,6 +39,13 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { PeopleSectionTabs } from "./people-section-tabs";
 import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
+import {
+  DEFAULT_PAGE_SIZE,
+  getLastPage,
+  parsePage,
+  parsePageSize,
+  STANDARD_PAGE_SIZE_OPTIONS,
+} from "@/lib/list-pagination";
 
 type InvStatus = "pending" | "accepted" | "expired" | "revoked";
 type StatusFilter = "all" | InvStatus;
@@ -126,7 +133,8 @@ export function UserInvitationsPanel() {
 
   const q = searchParams.get("q") ?? "";
   const status = (searchParams.get("status") ?? "all") as StatusFilter;
-  const page = Number(searchParams.get("page") ?? "1");
+  const page = parsePage(searchParams.get("page"));
+  const pageSize = parsePageSize(searchParams.get("size"));
 
   const [localSearch, setLocalSearch] = useState(q);
   const debouncedLocalSearch = useDebouncedValue(localSearch, 300);
@@ -134,7 +142,7 @@ export function UserInvitationsPanel() {
   const { data, isLoading, isError, error, refetch } = useInvitations(
     {
       page,
-      limit: 20,
+      limit: pageSize,
       q: q || undefined,
       status: status === "all" ? undefined : status,
       includeAccepted: status === "all" ? true : undefined,
@@ -162,8 +170,12 @@ export function UserInvitationsPanel() {
         if (value === null) params.delete(key);
         else params.set(key, value);
       }
+      const queryString = params.toString();
       startTransition(() => {
-        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+        router.replace(
+          queryString ? `${pathname}?${queryString}` : pathname,
+          { scroll: false },
+        );
       });
     },
     [searchParams, router, pathname],
@@ -255,8 +267,24 @@ export function UserInvitationsPanel() {
     (p: number) => updateParams({ page: p <= 1 ? null : String(p) }),
     [updateParams],
   );
-
+  const handlePageSizeChange = useCallback(
+    (size: number) =>
+      updateParams({
+        size: size === DEFAULT_PAGE_SIZE ? null : String(size),
+        page: null,
+      }),
+    [updateParams],
+  );
   const pagination = data?.pagination;
+  const isPageOutOfRange =
+    !!pagination && page > getLastPage(pagination.total, pageSize);
+
+  useEffect(() => {
+    if (!pagination) return;
+    const lastPage = getLastPage(pagination.total, pageSize);
+    if (page > lastPage) handlePageChange(lastPage);
+  }, [handlePageChange, page, pageSize, pagination]);
+
   const hasFilters = !!q || status !== "all";
 
   const columns: DataTableColumn<Invitation>[] = [
@@ -477,14 +505,16 @@ export function UserInvitationsPanel() {
               data={rows}
               columns={columns}
               getRowKey={(inv) => inv.id}
-              isLoading={isLoading}
+              isLoading={isLoading || isPageOutOfRange}
               emptyState={emptyState}
               pagination={{
                 mode: "server",
                 page,
-                pageSize: 20,
+                pageSize,
                 total: pagination?.total ?? 0,
                 onPageChange: handlePageChange,
+                onPageSizeChange: handlePageSizeChange,
+                pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
               }}
             />
           )}

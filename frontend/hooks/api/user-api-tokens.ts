@@ -1,6 +1,11 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  keepPreviousData,
+} from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { Permission } from "@/lib/rbac/permissions";
@@ -26,10 +31,25 @@ export interface CreateUserApiTokenResponse extends UserApiToken {
   rawToken: string;
 }
 
-export function useUserApiTokens() {
+export interface UserApiTokenPage {
+  data: UserApiToken[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export function useUserApiTokens(params: { page: number; limit: number }) {
   return useQuery({
-    queryKey: queryKeys.userApiTokens.list(),
-    queryFn: () => apiClient.get<UserApiToken[]>("/me/api-tokens"),
+    queryKey: queryKeys.userApiTokens.list(params),
+    queryFn: () =>
+      apiClient.get<UserApiTokenPage>("/me/api-tokens", {
+        page: String(params.page),
+        limit: String(params.limit),
+      }),
+    placeholderData: keepPreviousData,
     staleTime: 30_000,
   });
 }
@@ -37,8 +57,7 @@ export function useUserApiTokens() {
 export function useGrantableUserApiTokenPermissions() {
   return useQuery({
     queryKey: queryKeys.userApiTokens.permissions(),
-    queryFn: () =>
-      apiClient.get<Permission[]>("/me/api-tokens/permissions"),
+    queryFn: () => apiClient.get<Permission[]>("/me/api-tokens/permissions"),
     staleTime: 5 * 60_000,
   });
 }

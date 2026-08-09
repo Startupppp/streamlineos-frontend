@@ -180,7 +180,7 @@ export function ClientProfitabilityTab({ params, enabled }: ClientProfitabilityT
   }
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-1 min-h-0 flex-col gap-4">
       <StatCardGrid cols={3}>
         <StatCard label="Clients" value={stats.clients} icon={Briefcase} tone="blue" />
         <StatCard
@@ -211,6 +211,7 @@ export function ClientProfitabilityTab({ params, enabled }: ClientProfitabilityT
           getRowKey={getClientRowKey}
           pagination={{}}
           mobileCard={renderClientMobileCard}
+          className="flex-1 min-h-0"
         />
       )}
     </div>

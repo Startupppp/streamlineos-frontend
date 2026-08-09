@@ -105,29 +105,31 @@ export function OrganizationSettingsPage() {
   if (!org) {
     return (
       <PageWrapper title="Organization" subtitle="Manage your organization profile, branding, and lifecycle settings">
-        <Card className="rounded-lg shadow-sm">
-          <CardHeader className="text-center px-4 pt-6 pb-2">
-            <div className="flex justify-center mb-3">
-              <EmptyProjectsIllustration />
-            </div>
-            <CardTitle className="text-sm font-semibold">No Organization Found</CardTitle>
-            <CardDescription className="text-xs">
-              Create your first organization to start managing your team and projects.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex justify-center px-4 pb-5">
-            <p className="text-sm text-muted-foreground">
-              Please contact your administrator to set up an organization.
-            </p>
-          </CardContent>
-        </Card>
+        <div className="flex flex-1 flex-col min-h-0">
+          <Card className="rounded-lg shadow-sm">
+            <CardHeader className="text-center px-4 pt-6 pb-2">
+              <div className="flex justify-center mb-3">
+                <EmptyProjectsIllustration />
+              </div>
+              <CardTitle className="text-sm font-semibold">No Organization Found</CardTitle>
+              <CardDescription className="text-xs">
+                Create your first organization to start managing your team and projects.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex justify-center px-4 pb-5">
+              <p className="text-sm text-muted-foreground">
+                Please contact your administrator to set up an organization.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
       </PageWrapper>
     );
   }
 
   return (
     <PageWrapper title="Organization" subtitle="Manage your organization profile, branding, and lifecycle settings">
-      <div className="space-y-3.5">
+      <div className="flex flex-1 flex-col min-h-0 space-y-3.5">
         <OrgProfileSection org={org} canEdit={canEdit} />
 
         <OrgBrandingSection org={org} canEdit={canEdit} />

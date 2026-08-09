@@ -41,7 +41,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Users, CalendarCheck, Clock3, BadgeCheck } from "lucide-react";
 import { HouseIcon, PlusIcon, DownloadIcon } from "@animateicons/react/lucide";
 import { resolveImageUrl } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/get-error-message";
 
+import { ErrorState } from "@/components/shared";
 import { LeaveRequestSheet } from "@/features/hr/leaves/leave-request-sheet";
 import { WfhRequestSheet } from "@/features/hr/leaves/wfh-request-sheet";
 
@@ -107,8 +109,20 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
   const [activeTab, setActiveTab] = useState("my-leaves");
   const [wfhStatusFilter, setWfhStatusFilter] = useState("ALL");
 
-  const { data: contextData, isLoading: contextLoading } = useHrLeaveContext();
-  const { data: myData, isLoading: myLoading } = useHrMyLeaveRequests();
+  const {
+    data: contextData,
+    isLoading: contextLoading,
+    isError: contextError,
+    error: contextErrorValue,
+    refetch: refetchContext,
+  } = useHrLeaveContext();
+  const {
+    data: myData,
+    isLoading: myLoading,
+    isError: myError,
+    error: myErrorValue,
+    refetch: refetchMy,
+  } = useHrMyLeaveRequests();
   const { data: approvalsData, isLoading: approvalsLoading } =
     useHrLeaveApprovals({
       enabled: isAdmin,
@@ -230,6 +244,27 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
           <StatCardGridSkeleton cols={3} count={3} />
           <Skeleton className="min-h-0 w-full flex-1 rounded-xl" />
         </div>
+      </PageWrapper>
+    );
+  }
+
+  if (contextError || myError) {
+    const handleRetry = () => {
+      void refetchContext();
+      void refetchMy();
+    };
+    return (
+      <PageWrapper
+        title={title}
+        subtitle={subtitle}
+        noInternalScroll
+        contentClassName="flex min-h-0 flex-1 flex-col"
+      >
+        <ErrorState
+          description={getErrorMessage(contextErrorValue ?? myErrorValue)}
+          onRetry={handleRetry}
+          className="flex-1"
+        />
       </PageWrapper>
     );
   }

@@ -233,7 +233,7 @@ export function OrganizationStructurePage() {
           </div>
         }
       >
-        <div className="space-y-4">
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.4fr_1fr]">
             <section className="rounded-xl border border-border bg-card shadow-sm">
               <div className="border-b border-border px-4 py-3">

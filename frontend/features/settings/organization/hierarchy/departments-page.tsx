@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { ErrorState } from "@/components/shared/error-state";
 import {
   Sheet,
   SheetContent,
@@ -55,6 +56,11 @@ import { RequireModule } from "@/components/auth/require-module";
 import { HierarchyArchiveDialog } from "./hierarchy-archive-dialog";
 import { isAssignableHierarchyParent } from "./hierarchy-option";
 import { useHierarchyArchive } from "./use-hierarchy-archive";
+import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
+import {
+  useHierarchyListState,
+  useHierarchyPageBounds,
+} from "./use-hierarchy-list-state";
 import { useCan } from "@/hooks/api/access";
 
 const NO_BRANCH = "none";
@@ -65,7 +71,10 @@ const formSchema = z.object({
     .trim()
     .min(1, "Name is required")
     .max(100)
-    .refine((v) => /[\p{L}\p{N}]/u.test(v), "Name must contain at least one letter or number"),
+    .refine(
+      (v) => /[\p{L}\p{N}]/u.test(v),
+      "Name must contain at least one letter or number",
+    ),
   code: z
     .string()
     .trim()
@@ -92,12 +101,22 @@ function DeptForm({
 }) {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: defaultValues ?? { name: "", code: "", branchId: NO_BRANCH, headUserId: "", description: "" },
+    defaultValues: defaultValues ?? {
+      name: "",
+      code: "",
+      branchId: NO_BRANCH,
+      headUserId: "",
+      description: "",
+    },
   });
 
   return (
     <Form {...form}>
-      <form id="dept-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form
+        id="dept-form"
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="space-y-4"
+      >
         <FormField
           control={form.control}
           name="name"
@@ -123,7 +142,11 @@ function DeptForm({
                 <FormItem>
                   <FormLabel>Code</FormLabel>
                   <FormControl>
-                    <Input placeholder="ENG" {...field} onChange={handleCodeChange} />
+                    <Input
+                      placeholder="ENG"
+                      {...field}
+                      onChange={handleCodeChange}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -163,7 +186,11 @@ function DeptForm({
             <FormItem>
               <FormLabel>Department Head</FormLabel>
               <FormControl>
-                <UserCombobox value={field.value ?? ""} onChange={field.onChange} placeholder="Select head…" />
+                <UserCombobox
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                  placeholder="Select head…"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -176,7 +203,11 @@ function DeptForm({
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea rows={3} placeholder="Optional description…" {...field} />
+                <Textarea
+                  rows={3}
+                  placeholder="Optional description…"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -188,8 +219,37 @@ function DeptForm({
 }
 
 export function OrgDepartmentsPage() {
-  const { data: depts, isLoading } = useOrgDepartments();
-  const { data: branchesData } = useOrgBranches();
+  const {
+    page,
+    pageSize,
+    query,
+    search,
+    serverSearch,
+    showArchived,
+    setPage,
+    setPageSize,
+    setSearch,
+    setStatus,
+    toggleArchived,
+  } = useHierarchyListState();
+  const {
+    data: depts,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useOrgDepartments(query);
+  const isCorrectingPage = useHierarchyPageBounds({
+    page,
+    pageSize,
+    total: isError ? undefined : depts?.total,
+    setPage,
+  });
+  const { data: branchesData } = useOrgBranches({
+    page: 1,
+    limit: 100,
+    status: "ACTIVE",
+  });
   const { data: membersData } = useOrgMembers(1, 100);
   const create = useCreateOrgDepartment();
   const update = useUpdateOrgDepartment();
@@ -197,14 +257,12 @@ export function OrgDepartmentsPage() {
 
   const [showCreate, setShowCreate] = useState(false);
   const [editing, setEditing] = useState<OrgDepartment | null>(null);
-  const [showArchived, setShowArchived] = useState(false);
-  const [search, setSearch] = useState("");
   const archiveFlow = useHierarchyArchive<OrgDepartment>({
     unitKind: "DEPARTMENT",
     archive: (department, callbacks) =>
       update.mutate({ id: department.id, status: "ARCHIVED" }, callbacks),
     successMessage: "Department archived",
-    onArchived: () => setShowArchived(true),
+    onArchived: () => setStatus("ARCHIVED"),
   });
 
   const branches = (branchesData?.data ?? [])
@@ -214,19 +272,7 @@ export function OrgDepartmentsPage() {
   const memberMap = Object.fromEntries(
     (membersData?.data ?? []).map((m) => [m.userId, m.name ?? m.email]),
   );
-  const allDepts = depts?.data ?? [];
-  const active = allDepts.filter((d) => d.status !== "ARCHIVED" && !d.deletedAt);
-  const archived = allDepts.filter((d) => d.status === "ARCHIVED" && !d.deletedAt);
-  const displayed = showArchived ? archived : active;
-  const filtered = search
-    ? displayed.filter((d) => {
-        const q = search.toLowerCase();
-        return (
-          d.name.toLowerCase().includes(q) ||
-          d.code.toLowerCase().includes(q)
-        );
-      })
-    : displayed;
+  const displayed = depts?.data ?? [];
 
   const handleCreate = useCallback(
     (values: FormValues) => {
@@ -281,25 +327,40 @@ export function OrgDepartmentsPage() {
         {
           onSuccess: () => {
             toast.success("Department restored");
-            setShowArchived(false);
+            setStatus("CURRENT");
           },
           onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
-    [update],
+    [setStatus, update],
   );
 
   const handleOpenCreate = useCallback(() => setShowCreate(true), []);
-  const handleToggleArchived = useCallback(() => setShowArchived((v) => !v), []);
-  const handleSearchChange = useCallback((v: string) => setSearch(v), []);
+  const handleSearchChange = useCallback(
+    (v: string) => setSearch(v),
+    [setSearch],
+  );
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
-  function handleSearchInputChange(value: string) { handleSearchChange(value); }
+  function handleSearchInputChange(value: string) {
+    handleSearchChange(value);
+  }
 
-  function makeRestoreHandler(dept: OrgDepartment) { return () => handleRestore(dept); }
-  function makeArchiveHandler(dept: OrgDepartment) { return () => archiveFlow.requestArchive(dept); }
-  function makeSetEditingHandler(dept: OrgDepartment) { return () => setEditing(dept); }
-  function handleEditSheetOpenChange(open: boolean) { if (!open) setEditing(null); }
+  function makeRestoreHandler(dept: OrgDepartment) {
+    return () => handleRestore(dept);
+  }
+  function makeArchiveHandler(dept: OrgDepartment) {
+    return () => archiveFlow.requestArchive(dept);
+  }
+  function makeSetEditingHandler(dept: OrgDepartment) {
+    return () => setEditing(dept);
+  }
+  function handleEditSheetOpenChange(open: boolean) {
+    if (!open) setEditing(null);
+  }
 
   const columns: DataTableColumn<OrgDepartment>[] = [
     {
@@ -368,29 +429,46 @@ export function OrgDepartmentsPage() {
       header: "",
       headerClassName: "w-28",
       cell: (d) =>
-        canManage ? <div className="flex items-center gap-1">
-          {d.status === "ARCHIVED" ? (
-            <Button variant="ghost" size="sm" onClick={makeRestoreHandler(d)} title="Restore">
-              <RotateCcw className="h-4 w-4 text-primary" />
-            </Button>
-          ) : (
-            <>
-              <Button variant="ghost" size="sm" onClick={makeSetEditingHandler(d)} title="Edit">
-                <Pencil className="h-4 w-4" />
+        canManage ? (
+          <div className="flex items-center gap-1">
+            {d.status === "ARCHIVED" ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={makeRestoreHandler(d)}
+                title="Restore"
+              >
+                <RotateCcw className="h-4 w-4 text-primary" />
               </Button>
-              <Button variant="ghost" size="sm" onClick={makeArchiveHandler(d)} title="Archive">
-                <Archive className="h-4 w-4 text-muted-foreground" />
-              </Button>
-            </>
-          )}
-        </div> : null,
+            ) : (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={makeSetEditingHandler(d)}
+                  title="Edit"
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={makeArchiveHandler(d)}
+                  title="Archive"
+                >
+                  <Archive className="h-4 w-4 text-muted-foreground" />
+                </Button>
+              </>
+            )}
+          </div>
+        ) : null,
     },
   ];
 
-  const emptyState = search ? (
+  const emptyState = serverSearch ? (
     <EmptyState
       illustrationPreset="team"
-      title={`No departments matching "${search}"`}
+      title={`No departments matching "${serverSearch}"`}
       description="Try a different search term."
       compact
       className="min-h-[200px]"
@@ -407,120 +485,174 @@ export function OrgDepartmentsPage() {
       illustrationPreset="team"
       title="No departments yet"
       description="Create your first department to get started."
-      action={canManage ? { label: "Add Department", onClick: handleOpenCreate } : undefined}
+      action={
+        canManage
+          ? { label: "Add Department", onClick: handleOpenCreate }
+          : undefined
+      }
     />
   );
 
   return (
     <RequireModule module="hr">
-    <PageWrapper
-      title="Departments"
-      subtitle="Departments organized within branches."
-      actions={
-        <div className="flex w-full items-center gap-2 sm:w-auto">
-          <Button
-            variant={showArchived ? "secondary" : "outline"}
-            size="sm"
-            className="flex-1 text-xs sm:flex-none"
-            onClick={handleToggleArchived}
-          >
-            <Archive className="h-4 w-4 mr-1.5" />
-            {showArchived ? "Show Active" : "Archived"}
-          </Button>
-          {canManage ? <AnimatedIconButton
-            icon={PlusIcon}
-            iconSize={16}
-            iconClassName="mr-1.5"
-            size="sm"
-            className="flex-1 sm:flex-none"
-            onClick={handleOpenCreate}
-          >
-            Add Department
-          </AnimatedIconButton> : null}
-        </div>
-      }
-      filters={
-        <SearchInput placeholder="Search departments…" value={search} onValueChange={handleSearchInputChange} />
-      }
-    >
-      <DataTable
-        data={filtered}
-        columns={columns}
-        getRowKey={(d) => d.id}
-        isLoading={isLoading}
-        emptyState={emptyState}
-        rowClassName={(d) => cn(d.status === "ARCHIVED" && "opacity-60")}
-        minWidth="820px"
-        className="flex-1 min-h-0"
-      />
-
-      <Sheet open={showCreate} onOpenChange={setShowCreate}>
-        <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md">
-          <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
-            <SheetTitle>New Department</SheetTitle>
-          </SheetHeader>
-          <SheetBody className="px-6 py-5">
-            {showCreate && (
-              <DeptForm branches={branches} onSubmit={handleCreate} isPending={create.isPending} />
-            )}
-          </SheetBody>
-          <div className="shrink-0 px-6 py-4 border-t">
-            <div className="grid grid-cols-2 gap-2">
-              <SheetClose asChild>
-                <Button variant="outline" size="sm" className="w-full">Cancel</Button>
-              </SheetClose>
-              <LoadingButton size="sm" type="submit" form="dept-form" isPending={create.isPending} loadingText="Saving…" className="w-full">Save</LoadingButton>
-            </div>
+      <PageWrapper
+        title="Departments"
+        subtitle="Departments organized within branches."
+        actions={
+          <div className="flex w-full items-center gap-2 sm:w-auto">
+            <Button
+              variant={showArchived ? "secondary" : "outline"}
+              size="sm"
+              className="flex-1 text-xs sm:flex-none"
+              onClick={toggleArchived}
+            >
+              <Archive className="h-4 w-4 mr-1.5" />
+              {showArchived ? "Show current" : "View archived"}
+            </Button>
+            {canManage ? (
+              <AnimatedIconButton
+                icon={PlusIcon}
+                iconSize={16}
+                iconClassName="mr-1.5"
+                size="sm"
+                className="flex-1 sm:flex-none"
+                onClick={handleOpenCreate}
+              >
+                Add Department
+              </AnimatedIconButton>
+            ) : null}
           </div>
-        </SheetContent>
-      </Sheet>
+        }
+        filters={
+          <SearchInput
+            placeholder="Search departments…"
+            value={search}
+            onValueChange={handleSearchInputChange}
+          />
+        }
+      >
+        {isError ? (
+          <ErrorState
+            className="flex-1"
+            title="Couldn't load departments"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+          />
+        ) : (
+          <DataTable
+            data={displayed}
+            columns={columns}
+            getRowKey={(d) => d.id}
+            isLoading={isLoading || isCorrectingPage}
+            emptyState={emptyState}
+            rowClassName={(d) => cn(d.status === "ARCHIVED" && "opacity-60")}
+            minWidth="820px"
+            className="flex-1 min-h-0"
+            pagination={{
+              mode: "server",
+              page,
+              pageSize,
+              total: depts?.total ?? 0,
+              onPageChange: setPage,
+              onPageSizeChange: setPageSize,
+              pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
+            }}
+          />
+        )}
 
-      <Sheet open={!!editing} onOpenChange={handleEditSheetOpenChange}>
-        <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md">
-          <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
-            <SheetTitle>Edit Department</SheetTitle>
-          </SheetHeader>
-          <SheetBody className="px-6 py-5">
-            {editing && (
-              <DeptForm
-                defaultValues={{
-                  name: editing.name,
-                  code: editing.code,
-                  branchId: editing.branchId ?? NO_BRANCH,
-                  headUserId: editing.headUserId ?? "",
-                  description: editing.description ?? "",
-                }}
-                branches={branches}
-                onSubmit={handleUpdate}
-                isPending={update.isPending}
-              />
-            )}
-          </SheetBody>
-          <div className="shrink-0 px-6 py-4 border-t">
-            <div className="grid grid-cols-2 gap-2">
-              <SheetClose asChild>
-                <Button variant="outline" size="sm" className="w-full">Cancel</Button>
-              </SheetClose>
-              <LoadingButton size="sm" type="submit" form="dept-form" isPending={update.isPending} loadingText="Saving…" className="w-full">Save</LoadingButton>
+        <Sheet open={showCreate} onOpenChange={setShowCreate}>
+          <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md">
+            <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
+              <SheetTitle>New Department</SheetTitle>
+            </SheetHeader>
+            <SheetBody className="px-6 py-5">
+              {showCreate && (
+                <DeptForm
+                  branches={branches}
+                  onSubmit={handleCreate}
+                  isPending={create.isPending}
+                />
+              )}
+            </SheetBody>
+            <div className="shrink-0 px-6 py-4 border-t">
+              <div className="grid grid-cols-2 gap-2">
+                <SheetClose asChild>
+                  <Button variant="outline" size="sm" className="w-full">
+                    Cancel
+                  </Button>
+                </SheetClose>
+                <LoadingButton
+                  size="sm"
+                  type="submit"
+                  form="dept-form"
+                  isPending={create.isPending}
+                  loadingText="Saving…"
+                  className="w-full"
+                >
+                  Save
+                </LoadingButton>
+              </div>
             </div>
-          </div>
-        </SheetContent>
-      </Sheet>
+          </SheetContent>
+        </Sheet>
 
-      <HierarchyArchiveDialog
-        open={!!archiveFlow.target}
-        unitName={archiveFlow.target?.name ?? ""}
-        unitLabel="department"
-        isPending={update.isPending}
-        error={archiveFlow.error}
-        preflightError={archiveFlow.preflightError}
-        dependencies={archiveFlow.dependencies}
-        isChecking={archiveFlow.isChecking}
-        onRetryPreflight={archiveFlow.retryPreflight}
-        onConfirm={archiveFlow.confirmArchive}
-        onOpenChange={archiveFlow.handleOpenChange}
-      />
-    </PageWrapper>
+        <Sheet open={!!editing} onOpenChange={handleEditSheetOpenChange}>
+          <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md">
+            <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
+              <SheetTitle>Edit Department</SheetTitle>
+            </SheetHeader>
+            <SheetBody className="px-6 py-5">
+              {editing && (
+                <DeptForm
+                  defaultValues={{
+                    name: editing.name,
+                    code: editing.code,
+                    branchId: editing.branchId ?? NO_BRANCH,
+                    headUserId: editing.headUserId ?? "",
+                    description: editing.description ?? "",
+                  }}
+                  branches={branches}
+                  onSubmit={handleUpdate}
+                  isPending={update.isPending}
+                />
+              )}
+            </SheetBody>
+            <div className="shrink-0 px-6 py-4 border-t">
+              <div className="grid grid-cols-2 gap-2">
+                <SheetClose asChild>
+                  <Button variant="outline" size="sm" className="w-full">
+                    Cancel
+                  </Button>
+                </SheetClose>
+                <LoadingButton
+                  size="sm"
+                  type="submit"
+                  form="dept-form"
+                  isPending={update.isPending}
+                  loadingText="Saving…"
+                  className="w-full"
+                >
+                  Save
+                </LoadingButton>
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
+
+        <HierarchyArchiveDialog
+          open={!!archiveFlow.target}
+          unitName={archiveFlow.target?.name ?? ""}
+          unitLabel="department"
+          isPending={update.isPending}
+          error={archiveFlow.error}
+          preflightError={archiveFlow.preflightError}
+          dependencies={archiveFlow.dependencies}
+          isChecking={archiveFlow.isChecking}
+          onRetryPreflight={archiveFlow.retryPreflight}
+          onConfirm={archiveFlow.confirmArchive}
+          onOpenChange={archiveFlow.handleOpenChange}
+        />
+      </PageWrapper>
     </RequireModule>
   );
 }

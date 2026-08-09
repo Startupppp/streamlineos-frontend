@@ -38,7 +38,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger, TABS_CONTENT_PAGE_BODY_CLASS } from "@/components/ui/tabs";
 import { DatePicker } from "@/components/ui/date-picker";
 import { FinanceStatusBadge, Money } from "@/features/accounting/shared";
 import { RecordPaymentDialog } from "@/features/accounting/sales/record-payment-dialog";
@@ -444,7 +444,7 @@ export default function AccountingInvoicesPage() {
           )}
         </TabsContent>
 
-        <TabsContent value="collections" className="mt-0">
+        <TabsContent value="collections" className={TABS_CONTENT_PAGE_BODY_CLASS}>
           <CollectionsTab />
         </TabsContent>
       </Tabs>

@@ -71,8 +71,9 @@ export function DevicesTable({ canManage, onAdd, onEdit }: Props) {
   }
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }} className="flex flex-1 min-h-0 flex-col">
       <DataTable
+        className="flex-1 min-h-0"
         getRowKey={(r) => r.id}
         columns={[
           { key: "name", header: "Device Name", cell: (r) => <span className="font-medium">{r.name}</span> },

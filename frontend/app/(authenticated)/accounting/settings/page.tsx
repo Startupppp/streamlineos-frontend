@@ -125,14 +125,16 @@ export default function FinanceSettingsPage() {
     void settingsQuery.refetch();
   }
 
-  if (settingsQuery.isLoading) return <LoadingState />;
+  if (settingsQuery.isLoading) return <div className="flex flex-1 min-h-0 flex-col"><LoadingState /></div>;
   if (settingsQuery.error)
     return (
-      <ErrorState
-        title="Failed to load settings"
-        description={getErrorMessage(settingsQuery.error)}
-        onRetry={handleRetrySettings}
-      />
+      <div className="flex flex-1 min-h-0 flex-col">
+        <ErrorState
+          title="Failed to load settings"
+          description={getErrorMessage(settingsQuery.error)}
+          onRetry={handleRetrySettings}
+        />
+      </div>
     );
 
   const sequences = sequencesQuery.data?.items ?? [];
@@ -143,7 +145,7 @@ export default function FinanceSettingsPage() {
 
   return (
     <PageWrapper title="Finance Settings" subtitle="Company financial configuration">
-      <div className="space-y-6 pb-8">
+      <div className="flex flex-1 min-h-0 flex-col gap-6 pb-8">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold">Company Financial</CardTitle>

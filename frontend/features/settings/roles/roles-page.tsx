@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, type ReactNode } from "react";
+import { useState, useCallback, useEffect, type ReactNode } from "react";
 import Link from "next/link";
 import {
   Pencil,
@@ -23,10 +23,11 @@ import { SearchInput } from "@/components/ui/search-input";
 import { EmptyApprovalIllustration } from "@/components/illustrations";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  useRoles,
   useDeleteRole,
+  usePaginatedRoles,
   useRolesAnalytics,
-  useRolePermissionsMatrix,
+  type PaginatedRolesResponse,
+  type RoleListRow,
 } from "@/hooks/api/roles";
 import {
   AlertDialog,
@@ -40,6 +41,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { DataTablePagination } from "@/components/shared/data-table-pagination";
 import {
   StatCard,
   StatCardGrid,
@@ -57,24 +59,31 @@ import { CreateRoleDialog } from "@/components/rbac/create-role-dialog";
 import { RenameRoleDialog } from "@/components/rbac/rename-role-dialog";
 import { RoleAssignmentsSheet } from "@/components/rbac/role-assignments-sheet";
 import { RoleTemplateDialog } from "./role-dialogs";
+import { useRoleListState } from "./use-role-list-state";
+import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
+
+const EMPTY_ROLE_ROWS: RoleListRow[] = [];
 
 export function RolesPage() {
   const canViewAudit = useCan("audit-log:read");
   const {
-    data: roles,
+    page,
+    limit,
+    search,
+    serverSearch,
+    setSearch,
+    setPage,
+    setPageSize,
+    query,
+  } = useRoleListState();
+  const {
+    data: rolesPage,
     isLoading,
     isError: rolesError,
+    error: rolesQueryError,
     refetch: refetchRoles,
-  } = useRoles();
+  } = usePaginatedRoles(query);
   const { data: analytics, isLoading: analyticsLoading } = useRolesAnalytics();
-  const matrixQuery = useRolePermissionsMatrix();
-  const permCountByRoleId = useMemo(() => {
-    const map = new Map<number, number>();
-    for (const entry of matrixQuery.data ?? []) {
-      map.set(entry.roleId, entry.permissions.length);
-    }
-    return map;
-  }, [matrixQuery.data]);
   const deleteRole = useDeleteRole();
 
   const [selectedRoleId, setSelectedRoleId] = useState<number | null>(null);
@@ -83,15 +92,18 @@ export function RolesPage() {
   const [assignmentsOpen, setAssignmentsOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Role | null>(null);
   const [renameTarget, setRenameTarget] = useState<Role | null>(null);
-  const [search, setSearch] = useState("");
-
-  const selectedRole = roles?.find((role) => role.id === selectedRoleId) ?? null;
-
-  const filteredRoles = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return roles ?? [];
-    return (roles ?? []).filter((role) => role.name.toLowerCase().includes(q));
-  }, [roles, search]);
+  const roles = rolesPage?.data ?? EMPTY_ROLE_ROWS;
+  const pagination = rolesPage?.pagination ?? {
+    page,
+    limit,
+    total: 0,
+    totalPages: 0,
+  };
+  const lastPage = Math.max(1, pagination.totalPages);
+  const isOutOfRange =
+    rolesPage !== undefined && page > lastPage;
+  const selectedRole =
+    roles.find((role) => role.id === selectedRoleId) ?? null;
 
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
   const handleOpenTemplate = useCallback(() => setTemplateOpen(true), []);
@@ -103,7 +115,6 @@ export function RolesPage() {
     [],
   );
   const handleRetryRoles = useCallback(() => { void refetchRoles(); }, [refetchRoles]);
-  const handleSearchChange = useCallback((value: string) => setSearch(value), []);
 
   const handleDeleteRole = useCallback(() => {
     if (!deleteTarget) return;
@@ -117,7 +128,20 @@ export function RolesPage() {
     });
   }, [deleteRole, deleteTarget, selectedRoleId]);
 
-  const metricsLoading = isLoading || analyticsLoading;
+  useEffect(() => {
+    if (!isOutOfRange) return;
+    setPage(lastPage);
+  }, [isOutOfRange, lastPage, setPage]);
+
+  useEffect(() => {
+    if (selectedRoleId === null || isLoading || rolesPage === undefined) return;
+    if (roles.some((role) => role.id === selectedRoleId)) return;
+    // A page/search change can remove the selected role from the visible page.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSelectedRoleId(null);
+  }, [isLoading, roles, rolesPage, selectedRoleId]);
+
+  const metricsLoading = analyticsLoading;
 
   return (
     <PageWrapper
@@ -165,9 +189,10 @@ export function RolesPage() {
       }
       filters={
         <SearchInput
-          placeholder="Search roles…"
+          placeholder="Search roles..."
           value={search}
-          onValueChange={handleSearchChange}
+          onValueChange={setSearch}
+          maxLength={100}
         />
       }
     >
@@ -188,17 +213,20 @@ export function RolesPage() {
 
         <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto lg:grid lg:grid-cols-[320px_1fr] lg:overflow-hidden">
           <RolesListPanel
-            isLoading={isLoading}
+            isLoading={isLoading || isOutOfRange}
             rolesError={rolesError}
-            filteredRoles={filteredRoles}
-            search={search}
+            rolesQueryError={rolesQueryError}
+            roles={roles}
+            search={serverSearch}
+            pagination={pagination}
             selectedRoleId={selectedRoleId}
-            permCountByRoleId={permCountByRoleId}
             onRetry={handleRetryRoles}
             onCreate={handleOpenCreate}
             onSelect={handleSelectRole}
             onDelete={setDeleteTarget}
             onRename={setRenameTarget}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
           />
 
           <div className="flex min-h-[260px] flex-1 flex-col lg:h-full lg:min-h-0">
@@ -263,29 +291,35 @@ export function RolesPage() {
 interface RolesListPanelProps {
   isLoading: boolean;
   rolesError: boolean;
-  filteredRoles: Role[];
+  rolesQueryError: unknown;
+  roles: RoleListRow[];
   search: string;
+  pagination: PaginatedRolesResponse["pagination"];
   selectedRoleId: number | null;
-  permCountByRoleId: Map<number, number>;
   onRetry: () => void;
   onCreate: () => void;
   onSelect: (roleId: number) => void;
   onDelete: (role: Role) => void;
   onRename: (role: Role) => void;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (limit: number) => void;
 }
 
 function RolesListPanel({
   isLoading,
   rolesError,
-  filteredRoles,
+  rolesQueryError,
+  roles,
   search,
+  pagination,
   selectedRoleId,
-  permCountByRoleId,
   onRetry,
   onCreate,
   onSelect,
   onDelete,
   onRename,
+  onPageChange,
+  onPageSizeChange,
 }: RolesListPanelProps) {
   let body: ReactNode;
 
@@ -309,14 +343,16 @@ function RolesListPanel({
         <Shield className="h-10 w-10 text-destructive/50" />
         <div>
           <p className="text-sm font-medium">Failed to load roles</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">Something went wrong</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {getErrorMessage(rolesQueryError)}
+          </p>
         </div>
         <Button size="sm" variant="outline" onClick={onRetry} className="gap-1.5">
           Retry
         </Button>
       </div>
     );
-  } else if (filteredRoles.length === 0) {
+  } else if (roles.length === 0) {
     body = (
       <EmptyState
         illustrationPreset="security"
@@ -335,7 +371,7 @@ function RolesListPanel({
     body = (
       <ScrollArea className="min-h-0 flex-1" type="auto">
         <div className="divide-y divide-border/60">
-          {filteredRoles.map((role) => (
+          {roles.map((role) => (
             <RoleListItem
               key={role.id}
               role={role}
@@ -343,7 +379,6 @@ function RolesListPanel({
               onSelect={onSelect}
               onDelete={onDelete}
               onRename={onRename}
-              permCount={permCountByRoleId.get(role.id) ?? 0}
             />
           ))}
         </div>
@@ -360,6 +395,19 @@ function RolesListPanel({
       </CardHeader>
       <CardContent className="flex min-h-0 flex-1 flex-col overflow-hidden p-0">
         {body}
+        {!isLoading && !rolesError && roles.length > 0 ? (
+          <div className="shrink-0 border-t px-2 [&>div]:!flex-col [&>div]:!items-stretch [&>div>div]:justify-between [&>div>div:last-child>div]:!hidden [&>div>div:last-child>span]:!inline">
+            <DataTablePagination
+              page={pagination.page}
+              totalPages={pagination.totalPages}
+              total={pagination.total}
+              limit={pagination.limit}
+              onPageChange={onPageChange}
+              onLimitChange={onPageSizeChange}
+              pageSizeOptions={STANDARD_PAGE_SIZE_OPTIONS}
+            />
+          </div>
+        ) : null}
       </CardContent>
     </Card>
   );
@@ -392,15 +440,14 @@ function DeleteRoleButton({ onClick }: { onClick: (e: React.MouseEvent) => void 
 }
 
 interface RoleListItemProps {
-  role: Role;
+  role: RoleListRow;
   isSelected: boolean;
   onSelect: (roleId: number) => void;
   onDelete: (role: Role) => void;
   onRename: (role: Role) => void;
-  permCount: number;
 }
 
-function RoleListItem({ role, isSelected, onSelect, onDelete, onRename, permCount }: RoleListItemProps) {
+function RoleListItem({ role, isSelected, onSelect, onDelete, onRename }: RoleListItemProps) {
   const handleSelect = useCallback(() => onSelect(role.id), [role.id, onSelect]);
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent) => {
@@ -433,7 +480,10 @@ function RoleListItem({ role, isSelected, onSelect, onDelete, onRename, permCoun
     >
       <div className="min-w-0">
         <p className="text-sm font-medium truncate">{role.name}</p>
-        <p className="text-[11px] text-muted-foreground">{permCount} permissions</p>
+        <p className="text-[11px] text-muted-foreground">
+          {role.permissionCount} permission
+          {role.permissionCount === 1 ? "" : "s"}
+        </p>
       </div>
       <div className="flex items-center gap-1 shrink-0">
         {role.isSystem && (

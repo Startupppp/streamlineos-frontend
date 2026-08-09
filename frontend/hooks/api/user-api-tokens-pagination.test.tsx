@@ -1,0 +1,56 @@
+import type { ReactNode } from "react";
+import {
+  QueryClient,
+  QueryClientProvider,
+} from "@tanstack/react-query";
+import { renderHook, waitFor } from "@testing-library/react";
+import { apiClient } from "@/lib/api-client";
+import { useUserApiTokens } from "./user-api-tokens";
+
+jest.mock("@/lib/api-client", () => ({
+  apiClient: {
+    get: jest.fn(),
+    post: jest.fn(),
+    delete: jest.fn(),
+  },
+}));
+
+const mockedGet = apiClient.get as jest.Mock;
+
+function createWrapper() {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  return function Wrapper({ children }: { children: ReactNode }) {
+    return (
+      <QueryClientProvider client={client}>{children}</QueryClientProvider>
+    );
+  };
+}
+
+describe("useUserApiTokens pagination", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("requests the selected server page and preserves its metadata", async () => {
+    const response = {
+      data: [],
+      pagination: { page: 3, limit: 50, total: 120, totalPages: 3 },
+    };
+    mockedGet.mockResolvedValue(response);
+
+    const { result } = renderHook(
+      () => useUserApiTokens({ page: 3, limit: 50 }),
+      { wrapper: createWrapper() },
+    );
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(mockedGet).toHaveBeenCalledWith("/me/api-tokens", {
+      page: "3",
+      limit: "50",
+    });
+    expect(result.current.data).toEqual(response);
+  });
+});

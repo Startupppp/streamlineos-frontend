@@ -29,7 +29,7 @@ interface ListQuery extends Record<string, unknown> {
   page?: number;
   limit?: number;
   search?: string;
-  status?: "ACTIVE" | "DISABLED" | "ARCHIVED";
+  status?: "ACTIVE" | "DISABLED" | "ARCHIVED" | "CURRENT";
 }
 
 export function getOrgUnitDependencyPreview(
@@ -101,16 +101,6 @@ export function useUpdateBusinessUnit() {
   });
 }
 
-export function useDeleteBusinessUnit() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["delete", "business", "unit"],
-    mutationFn: (id: string) =>
-      apiClient.delete<{ message: string }>(`/org-hierarchy/business-units/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.all }),
-  });
-}
-
 // ─── Org Branches ────────────────────────────────────────────────────────────
 
 export function useOrgBranches(
@@ -149,16 +139,6 @@ export function useUpdateOrgBranch() {
     mutationKey: ["update", "org", "branch"],
     mutationFn: ({ id, ...data }: { id: string } & Record<string, unknown>) =>
       apiClient.patch<OrgBranch>(`/org-hierarchy/branches/${id}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.all }),
-  });
-}
-
-export function useDeleteOrgBranch() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["delete", "org", "branch"],
-    mutationFn: (id: string) =>
-      apiClient.delete<{ message: string }>(`/org-hierarchy/branches/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.all }),
   });
 }
@@ -205,16 +185,6 @@ export function useUpdateOrgDepartment() {
   });
 }
 
-export function useDeleteOrgDepartment() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["delete", "org", "department"],
-    mutationFn: (id: string) =>
-      apiClient.delete<{ message: string }>(`/org-hierarchy/departments/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.all }),
-  });
-}
-
 // ─── Teams ───────────────────────────────────────────────────────────────────
 
 export function useOrgTeams(query?: ListQuery) {
@@ -255,23 +225,18 @@ export function useUpdateOrgTeam() {
   });
 }
 
-export function useDeleteOrgTeam() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["delete", "org", "team"],
-    mutationFn: (id: string) =>
-      apiClient.delete<{ message: string }>(`/org-hierarchy/teams/${id}`),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hierarchy.all }),
-  });
-}
-
 // ─── Locations ───────────────────────────────────────────────────────────────
 
-export function useOrgLocations() {
+export function useOrgLocations(query?: ListQuery) {
   return useQuery({
-    queryKey: queryKeys.hierarchy.locations(),
-    queryFn: () => apiClient.get<OrgLocation[]>("/org-hierarchy/locations"),
+    queryKey: queryKeys.hierarchy.locations(query),
+    queryFn: () =>
+      apiClient.get<PaginatedResponse<OrgLocation>>("/org-hierarchy/locations", {
+        page: String(query?.page ?? 1),
+        limit: String(query?.limit ?? 100),
+        ...(query?.search ? { search: query.search } : {}),
+        ...(query?.status ? { status: query.status } : {}),
+      }),
     staleTime: 60_000,
   });
 }
@@ -296,22 +261,21 @@ export function useUpdateOrgLocation() {
   });
 }
 
-export function useDeleteOrgLocation() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["delete", "org", "location"],
-    mutationFn: (id: string) =>
-      apiClient.delete<{ message: string }>(`/org-hierarchy/locations/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.all }),
-  });
-}
-
 // ─── Cost Centers ─────────────────────────────────────────────────────────────
 
-export function useOrgCostCenters() {
+export function useOrgCostCenters(query?: ListQuery) {
   return useQuery({
-    queryKey: queryKeys.hierarchy.costCenters(),
-    queryFn: () => apiClient.get<OrgCostCenter[]>("/org-hierarchy/cost-centers"),
+    queryKey: queryKeys.hierarchy.costCenters(query),
+    queryFn: () =>
+      apiClient.get<PaginatedResponse<OrgCostCenter>>(
+        "/org-hierarchy/cost-centers",
+        {
+          page: String(query?.page ?? 1),
+          limit: String(query?.limit ?? 100),
+          ...(query?.search ? { search: query.search } : {}),
+          ...(query?.status ? { status: query.status } : {}),
+        },
+      ),
     staleTime: 60_000,
   });
 }
@@ -332,16 +296,6 @@ export function useUpdateOrgCostCenter() {
     mutationKey: ["update", "org", "cost", "center"],
     mutationFn: ({ id, ...data }: { id: string } & Record<string, unknown>) =>
       apiClient.patch<OrgCostCenter>(`/org-hierarchy/cost-centers/${id}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.all }),
-  });
-}
-
-export function useDeleteOrgCostCenter() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["delete", "org", "cost", "center"],
-    mutationFn: (id: string) =>
-      apiClient.delete<{ message: string }>(`/org-hierarchy/cost-centers/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.all }),
   });
 }

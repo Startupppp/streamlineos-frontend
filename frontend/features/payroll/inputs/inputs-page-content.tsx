@@ -167,7 +167,7 @@ export function InputsPageContent() {
       }
     >
       {isLoading && (
-        <div className="space-y-3">
+        <div className="flex flex-1 min-h-0 flex-col gap-3">
           <div className="flex gap-3">
             <Skeleton className="h-4 w-24" />{" "}
             <Skeleton className="h-4 w-32" />{" "}

@@ -304,6 +304,7 @@ function AttendanceTab({ periodId }: { periodId: number }) {
   const rows = data?.data ?? [];
   return (
     <DataTable
+      className="flex-1 min-h-0"
       data={rows}
       columns={attendanceColumns}
       getRowKey={(row) => row.id}
@@ -326,6 +327,7 @@ function LeaveTab({ periodId }: { periodId: number }) {
   const rows = data?.data ?? [];
   return (
     <DataTable
+      className="flex-1 min-h-0"
       data={rows}
       columns={leaveColumns}
       getRowKey={(row) => row.id}
@@ -348,6 +350,7 @@ function OvertimeTab({ periodId }: { periodId: number }) {
   const rows = data?.data ?? [];
   return (
     <DataTable
+      className="flex-1 min-h-0"
       data={rows}
       columns={overtimeColumns}
       getRowKey={(row) => row.id}
@@ -370,6 +373,7 @@ function ReimbursementsTab({ periodId }: { periodId: number }) {
   const rows = data?.data ?? [];
   return (
     <DataTable
+      className="flex-1 min-h-0"
       data={rows}
       columns={reimbursementColumns}
       getRowKey={(row) => row.id}
@@ -397,6 +401,7 @@ function AdjustmentsTab({ periodId, isLocked }: { periodId: number; isLocked: bo
   });
   return (
     <DataTable
+      className="flex-1 min-h-0"
       data={rows}
       columns={columns}
       getRowKey={(row) => row.id}
@@ -421,8 +426,8 @@ interface InputsSectionTabsProps {
 
 export function InputsSectionTabs({ periodId, isLocked, onCreateAdjustment }: InputsSectionTabsProps) {
   return (
-    <Tabs defaultValue="attendance">
-      <div className="flex items-center justify-between mb-3">
+    <Tabs defaultValue="attendance" className="flex flex-1 min-h-0 flex-col">
+      <div className="flex shrink-0 items-center justify-between mb-3">
         <TabsList>
           <TabsTrigger value="attendance">Attendance</TabsTrigger>
           <TabsTrigger value="leave">Leave</TabsTrigger>
@@ -436,19 +441,19 @@ export function InputsSectionTabs({ periodId, isLocked, onCreateAdjustment }: In
           </AnimatedIconButton>
         )}
       </div>
-      <TabsContent value="attendance" className="mt-0">
+      <TabsContent value="attendance" className="mt-0 flex flex-1 min-h-0 flex-col">
         <AttendanceTab periodId={periodId} />
       </TabsContent>
-      <TabsContent value="leave" className="mt-0">
+      <TabsContent value="leave" className="mt-0 flex flex-1 min-h-0 flex-col">
         <LeaveTab periodId={periodId} />
       </TabsContent>
-      <TabsContent value="overtime" className="mt-0">
+      <TabsContent value="overtime" className="mt-0 flex flex-1 min-h-0 flex-col">
         <OvertimeTab periodId={periodId} />
       </TabsContent>
-      <TabsContent value="reimbursements" className="mt-0">
+      <TabsContent value="reimbursements" className="mt-0 flex flex-1 min-h-0 flex-col">
         <ReimbursementsTab periodId={periodId} />
       </TabsContent>
-      <TabsContent value="adjustments" className="mt-0">
+      <TabsContent value="adjustments" className="mt-0 flex flex-1 min-h-0 flex-col">
         <AdjustmentsTab periodId={periodId} isLocked={isLocked} />
       </TabsContent>
     </Tabs>

@@ -7,6 +7,7 @@ import { apiClient } from "@/lib/api-client";
 import type { HrCalendarEvent } from "@/hooks/api/hr/hr-calendar";
 import type { BigCalEvent } from "./big-calendar-wrapper";
 import { useCalendarSourceVisibility } from "./use-calendar-source-visibility";
+import { queryKeys } from "@/lib/query-keys";
 
 export function useHrEventsVisible() {
   return useCalendarSourceVisibility("hrEvents", true);
@@ -32,7 +33,7 @@ export function useHrCalendarEventsMapped(
   const to = format(rangeEnd, "yyyy-MM-dd");
 
   const { data, isError, error } = useQuery({
-    queryKey: ["hr", "calendar", from, to, "supplemental"],
+    queryKey: queryKeys.calendar.hrSupplemental(from, to),
     queryFn: () =>
       apiClient.get<HrCalendarEvent[]>("/hr/calendar", {
         from,

@@ -40,9 +40,15 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { Textarea } from "@/components/ui/textarea";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { ErrorState } from "@/components/shared/error-state";
 import type { OrgCostCenter } from "@/types/org-hierarchy";
 import { HierarchyArchiveDialog } from "./hierarchy-archive-dialog";
 import { useHierarchyArchive } from "./use-hierarchy-archive";
+import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
+import {
+  useHierarchyListState,
+  useHierarchyPageBounds,
+} from "./use-hierarchy-list-state";
 import { RequireModule } from "@/components/auth/require-module";
 import { useCan } from "@/hooks/api/access";
 
@@ -133,36 +139,47 @@ function CostCenterForm({
 }
 
 export function OrgCostCentersPage() {
-  const { data: costCenters, isLoading } = useOrgCostCenters();
+  const {
+    page,
+    pageSize,
+    query,
+    search,
+    serverSearch,
+    showArchived,
+    setPage,
+    setPageSize,
+    setSearch,
+    setStatus,
+    toggleArchived,
+  } = useHierarchyListState();
+  const {
+    data: costCenters,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useOrgCostCenters(query);
+  const isCorrectingPage = useHierarchyPageBounds({
+    page,
+    pageSize,
+    total: isError ? undefined : costCenters?.total,
+    setPage,
+  });
   const create = useCreateOrgCostCenter();
   const update = useUpdateOrgCostCenter();
   const canManage = useCan("settings:organization:manage");
 
   const [showCreate, setShowCreate] = useState(false);
   const [editing, setEditing] = useState<OrgCostCenter | null>(null);
-  const [showArchived, setShowArchived] = useState(false);
-  const [search, setSearch] = useState("");
   const archiveFlow = useHierarchyArchive<OrgCostCenter>({
     unitKind: "COST_CENTER",
     archive: (costCenter, callbacks) =>
       update.mutate({ id: costCenter.id, status: "ARCHIVED" }, callbacks),
     successMessage: "Cost center archived",
-    onArchived: () => setShowArchived(true),
+    onArchived: () => setStatus("ARCHIVED"),
   });
 
-  const allCostCenters = costCenters ?? [];
-  const active = allCostCenters.filter((c) => c.status !== "ARCHIVED");
-  const archived = allCostCenters.filter((c) => c.status === "ARCHIVED");
-  const displayed = showArchived ? archived : active;
-  const filtered = search
-    ? displayed.filter((c) => {
-        const q = search.toLowerCase();
-        return (
-          c.name.toLowerCase().includes(q) ||
-          c.code.toLowerCase().includes(q)
-        );
-      })
-    : displayed;
+  const displayed = costCenters?.data ?? [];
 
   const handleCreate = useCallback(
     (values: FormValues) => {
@@ -204,18 +221,20 @@ export function OrgCostCentersPage() {
         {
           onSuccess: () => {
             toast.success("Cost center restored");
-            setShowArchived(false);
+            setStatus("CURRENT");
           },
           onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
-    [update],
+    [setStatus, update],
   );
 
   const handleOpenCreate = useCallback(() => setShowCreate(true), []);
-  const handleToggleArchived = useCallback(() => setShowArchived((v) => !v), []);
-  const handleSearchChange = useCallback((v: string) => setSearch(v), []);
+  const handleSearchChange = useCallback((v: string) => setSearch(v), [setSearch]);
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   function handleSearchInputChange(value: string) { handleSearchChange(value); }
 
@@ -292,10 +311,10 @@ export function OrgCostCentersPage() {
     },
   ];
 
-  const emptyState = search ? (
+  const emptyState = serverSearch ? (
     <EmptyState
       illustrationPreset="payroll"
-      title={`No cost centers matching "${search}"`}
+      title={`No cost centers matching "${serverSearch}"`}
       description="Try a different search term."
       compact
       className="min-h-[200px]"
@@ -327,10 +346,10 @@ export function OrgCostCentersPage() {
             variant={showArchived ? "secondary" : "outline"}
             size="sm"
             className="flex-1 text-xs sm:flex-none"
-            onClick={handleToggleArchived}
+            onClick={toggleArchived}
           >
             <Archive className="h-4 w-4 mr-1.5" />
-            {showArchived ? "Show Active" : `Archived (${archived.length})`}
+            {showArchived ? "Show current" : "View archived"}
           </Button>
           {canManage ? <AnimatedIconButton
             icon={PlusIcon}
@@ -348,16 +367,34 @@ export function OrgCostCentersPage() {
         <SearchInput placeholder="Search cost centers…" value={search} onValueChange={handleSearchInputChange} />
       }
     >
-      <DataTable
-        data={filtered}
-        columns={columns}
-        getRowKey={(c) => c.id}
-        isLoading={isLoading}
-        emptyState={emptyState}
-        rowClassName={(c) => cn(c.status === "ARCHIVED" && "opacity-60")}
-        minWidth="580px"
-        className="flex-1 min-h-0"
-      />
+      {isError ? (
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load cost centers"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
+      ) : (
+        <DataTable
+          data={displayed}
+          columns={columns}
+          getRowKey={(c) => c.id}
+          isLoading={isLoading || isCorrectingPage}
+          emptyState={emptyState}
+          rowClassName={(c) => cn(c.status === "ARCHIVED" && "opacity-60")}
+          minWidth="580px"
+          className="flex-1 min-h-0"
+          pagination={{
+            mode: "server",
+            page,
+            pageSize,
+            total: costCenters?.total ?? 0,
+            onPageChange: setPage,
+            onPageSizeChange: setPageSize,
+            pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
+          }}
+        />
+      )}
 
       <Sheet open={showCreate} onOpenChange={setShowCreate}>
         <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md">

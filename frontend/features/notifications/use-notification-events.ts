@@ -77,7 +77,15 @@ export function useNotificationEvents() {
     async function connect() {
       if (!activeRef.current) return;
       const token = await fetchStreamToken();
-      if (!token || !activeRef.current) return;
+      if (!token) {
+        if (activeRef.current) {
+          retryTimeoutRef.current = setTimeout(() => {
+            void connect();
+          }, 10_000);
+        }
+        return;
+      }
+      if (!activeRef.current) return;
 
       const es = new EventSource(`${BACKEND_URL}/notifications/events?token=${encodeURIComponent(token)}`);
       esRef.current = es;

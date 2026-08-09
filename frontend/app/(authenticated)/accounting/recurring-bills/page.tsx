@@ -269,23 +269,25 @@ export default function RecurringBillsPage() {
         </Select>
       }
     >
-      {items.length === 0 && !query.isLoading ? (
-        <EmptyState
-          illustrationPreset="tasks"
-          title="No recurring bills"
-          description="Create a recurring bill template to automate vendor bill creation."
-          action={{ label: "New template", onClick: handleNewClick }}
-        />
-      ) : (
-        <DataTable
-          className="flex-1 min-h-0"
-          data={items}
-          columns={columns}
-          getRowKey={(row) => row.id}
-          isLoading={query.isLoading}
-          pagination={{ pageSize: 50 }}
-        />
-      )}
+      <div className="flex flex-1 min-h-0 flex-col">
+        {items.length === 0 && !query.isLoading ? (
+          <EmptyState
+            illustrationPreset="tasks"
+            title="No recurring bills"
+            description="Create a recurring bill template to automate vendor bill creation."
+            action={{ label: "New template", onClick: handleNewClick }}
+          />
+        ) : (
+          <DataTable
+            className="flex-1 min-h-0"
+            data={items}
+            columns={columns}
+            getRowKey={(row) => row.id}
+            isLoading={query.isLoading}
+            pagination={{ pageSize: 50 }}
+          />
+        )}
+      </div>
 
       <RecurringBillFormSheet
         open={sheetOpen}

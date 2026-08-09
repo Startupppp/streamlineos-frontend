@@ -11,6 +11,8 @@ import { FILTER_SELECT_TRIGGER, PAGE_BODY_EMPTY_CLASS, PAGE_BODY_SKELETON_CLASS 
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyPayroll } from "@/components/illustrations";
+import { ErrorState } from "@/components/shared";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useEssPayslips } from "@/hooks/api/payroll/ess";
 import { useExplainPayslip } from "@/hooks/api/payroll/use-explain-payslip";
 import { AiActionsMenu } from "@/components/ai";
@@ -132,7 +134,7 @@ export function EssPayslipsSection({
   onYearFilterChange,
   hideYearFilter = false,
 }: EssPayslipsSectionProps) {
-  const { data: payslips, isLoading } = useEssPayslips();
+  const { data: payslips, isLoading, isError, error, refetch } = useEssPayslips();
   const [uncontrolledYear, setUncontrolledYear] = useState("all");
   const yearFilter = yearFilterProp ?? uncontrolledYear;
   const setYearFilter = onYearFilterChange ?? setUncontrolledYear;
@@ -171,6 +173,12 @@ export function EssPayslipsSection({
               <PayslipRowSkeleton key={i} />
             ))}
           </div>
+        ) : isError ? (
+          <ErrorState
+            description={getErrorMessage(error)}
+            onRetry={refetch}
+            className={PAGE_BODY_EMPTY_CLASS}
+          />
         ) : filtered.length === 0 ? (
           <EmptyState
             illustration={<EmptyPayroll />}

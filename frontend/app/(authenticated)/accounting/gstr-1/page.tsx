@@ -242,7 +242,8 @@ export default function Gstr1Page() {
         </div>
       }
     >
-      {query.isLoading ? (
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
+        {query.isLoading ? (
           <LoadingState variant="table" rows={12} />
         ) : query.error ? (
           <ErrorState
@@ -257,7 +258,7 @@ export default function Gstr1Page() {
             description="Issue invoices marked ISSUED, PAID, or FAILED within the date range to populate this report."
           />
         ) : (
-          <div className="space-y-4">
+          <>
             <div className="rounded-lg border border-border bg-card px-4 py-3">
               <h3 className="text-sm font-semibold text-foreground mb-3">
                 Grand total
@@ -290,8 +291,9 @@ export default function Gstr1Page() {
               tint="b2c"
               section={report.b2c}
             />
-          </div>
+          </>
         )}
+      </div>
     </PageWrapper>
   );
 }

@@ -148,7 +148,7 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
         </>
       }
     >
-      <div className="space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         <div className="flex flex-wrap gap-4 rounded-lg border border-border bg-card px-4 py-3">
           <div>
             <p className="text-[11px] text-muted-foreground mb-0.5">Total</p>
@@ -182,6 +182,7 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
             columns={batchItemColumns}
             getRowKey={(row) => row.id}
             minWidth="560px"
+            className="flex-1 min-h-0"
           />
         )}
       </div>

@@ -306,9 +306,9 @@ function PlansAdminTab({ canManage }: { canManage: boolean }) {
   const plans = data?.data ?? [];
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-1 min-h-0 flex-col gap-4">
       {canManage && (
-        <div className="flex justify-end">
+        <div className="flex justify-end shrink-0">
           <Button size="sm" className="gap-1.5" onClick={handleNew}>
             <Plus className="h-3.5 w-3.5" />
             New Plan
@@ -317,6 +317,7 @@ function PlansAdminTab({ canManage }: { canManage: boolean }) {
       )}
 
       <DataTable<BenefitPlan>
+        className="flex-1 min-h-0"
         data={plans}
         columns={buildPlanColumns(canManage, handleEdit)}
         getRowKey={(p) => p.id}
@@ -359,8 +360,8 @@ function ClaimsDashboardTab({ canManage }: { canManage: boolean }) {
   const claims = data?.data ?? [];
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-3">
+    <div className="flex flex-1 min-h-0 flex-col gap-4">
+      <div className="flex items-center gap-3 shrink-0">
         <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
           <SelectTrigger className={cn("w-40", FILTER_SELECT_TRIGGER)}>
             <SelectValue placeholder="Filter by status" />
@@ -377,6 +378,7 @@ function ClaimsDashboardTab({ canManage }: { canManage: boolean }) {
       </div>
 
       <DataTable<InsuranceClaim>
+        className="flex-1 min-h-0"
         data={claims}
         columns={buildClaimColumns(canManage, handleReviewClaim)}
         getRowKey={(c) => c.id}

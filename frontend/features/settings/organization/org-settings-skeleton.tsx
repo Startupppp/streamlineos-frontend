@@ -21,7 +21,7 @@ function SectionCardSkeleton({ fields = 2 }: { fields?: number }) {
 
 export function OrgSettingsSectionsSkeleton() {
   return (
-    <div className="space-y-3.5">
+    <div className="flex flex-1 flex-col min-h-0 space-y-3.5">
       <SectionCardSkeleton fields={3} />
       <SectionCardSkeleton fields={2} />
       <SectionCardSkeleton fields={3} />

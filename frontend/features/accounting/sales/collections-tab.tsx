@@ -328,7 +328,7 @@ export function CollectionsTab() {
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-1 min-h-0 flex-col gap-4">
       {agingBuckets.length > 0 && (
         <StatCardGrid cols={5}>
           {agingBuckets.map((bucket) => (
@@ -355,6 +355,7 @@ export function CollectionsTab() {
       <div className="space-y-2">
         <h3 className="text-sm font-semibold text-foreground">Top Overdue Customers</h3>
         <DataTable
+          className="flex-1 min-h-0"
           data={topRisk}
           columns={riskColumns}
           getRowKey={(row) => row.clientId}

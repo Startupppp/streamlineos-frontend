@@ -233,7 +233,7 @@ export function RecurringJournalsTab() {
   );
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-1 min-h-0 flex-col gap-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
           Recurring journal templates run automatically on the configured schedule.
@@ -252,6 +252,7 @@ export function RecurringJournalsTab() {
         />
       ) : (
         <DataTable
+          className="flex-1 min-h-0"
           data={items}
           columns={columns}
           getRowKey={(row) => row.id}

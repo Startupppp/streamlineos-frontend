@@ -260,13 +260,14 @@ export function CasesPageContent() {
         onValueChange={(v) => { setActiveTab(v as ActiveTab); setPage(1); }}
         className="flex min-h-0 flex-1 flex-col pb-6"
       >
-        <TabsList className="mb-4">
+        <TabsList className="mb-4 shrink-0">
           <TabsTrigger value="cases">Cases</TabsTrigger>
           <TabsTrigger value="disciplinary">Disciplinary Actions</TabsTrigger>
         </TabsList>
 
         <TabsContent value="cases" className={TABS_CONTENT_PAGE_BODY_CLASS}>
           <DataTable
+            className="flex-1 min-h-0"
             columns={caseColumns}
             data={casesData?.data ?? []}
             isLoading={casesLoading}
@@ -298,7 +299,7 @@ export function CasesPageContent() {
         </TabsContent>
 
         <TabsContent value="disciplinary" className={TABS_CONTENT_PAGE_BODY_CLASS}>
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-1 min-h-0 flex-col gap-4">
             {canManage && (
               <div className="flex justify-end">
                 <AnimatedIconButton
@@ -314,6 +315,7 @@ export function CasesPageContent() {
               </div>
             )}
             <DataTable
+              className="flex-1 min-h-0"
               columns={[
                 {
                   key: "employee",

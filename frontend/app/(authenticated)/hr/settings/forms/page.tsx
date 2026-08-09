@@ -66,7 +66,7 @@ export default function HrFormsSettingsPage() {
         }
       >
         {isLoading ? (
-          <div className="space-y-2 pt-2">
+          <div className="flex flex-1 min-h-0 flex-col gap-2 pt-2">
             {[...Array(4)].map((_, i) => (
               <Skeleton key={i} className="h-12 w-full rounded-lg" />
             ))}

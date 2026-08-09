@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useState } from "react";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { toast } from "sonner";
 import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -121,7 +122,7 @@ export function PeopleDirectoryPage({
 
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, 300);
   const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } =
     useQueryParamOpen("create");
   const [editTarget, setEditTarget] = useState<OrganizationPerson | null>(null);
@@ -140,7 +141,6 @@ export function PeopleDirectoryPage({
   function handleSearchChange(value: string) {
     setSearch(value);
     setPage(1);
-    setDebouncedSearch(value);
   }
 
   const handleOpenCreate = useCallback(() => {

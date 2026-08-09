@@ -120,23 +120,25 @@ export default function VendorsListPage() {
         </div>
       }
     >
-      {query.error ? (
-        <ErrorState
-          title="Failed to load vendors"
-          description={getErrorMessage(query.error)}
-          onRetry={handleRetry}
-        />
-      ) : (
-        <DataTable
-          className="flex-1 min-h-0"
-          data={items}
-          columns={columns}
-          getRowKey={(row) => row.vendorId}
-          isLoading={query.isLoading}
-          pagination={{ pageSize: 100 }}
-          emptyState={emptyStateNode}
-        />
-      )}
+      <div className="flex flex-1 min-h-0 flex-col">
+        {query.error ? (
+          <ErrorState
+            title="Failed to load vendors"
+            description={getErrorMessage(query.error)}
+            onRetry={handleRetry}
+          />
+        ) : (
+          <DataTable
+            className="flex-1 min-h-0"
+            data={items}
+            columns={columns}
+            getRowKey={(row) => row.vendorId}
+            isLoading={query.isLoading}
+            pagination={{ pageSize: 100 }}
+            emptyState={emptyStateNode}
+          />
+        )}
+      </div>
     </PageWrapper>
   );
 }

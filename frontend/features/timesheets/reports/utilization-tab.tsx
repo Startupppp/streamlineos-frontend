@@ -131,7 +131,7 @@ export function UtilizationTab({ params, enabled }: UtilizationTabProps) {
   const { summary, users } = data;
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-1 min-h-0 flex-col gap-4">
       <StatCardGrid cols={5}>
         <StatCard label="Total Hours" value={summary.totalHours.toFixed(1)} icon={Clock} tone="blue" />
         <StatCard
@@ -171,6 +171,7 @@ export function UtilizationTab({ params, enabled }: UtilizationTabProps) {
             getRowKey={getUtilizationRowKey}
             pagination={{}}
             mobileCard={renderUtilizationMobileCard}
+            className="flex-1 min-h-0"
           />
         </>
       )}

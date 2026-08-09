@@ -11,7 +11,7 @@ export default function SettingsPage() {
       title="Account Settings"
       subtitle="Manage your profile and security."
     >
-      <div className="space-y-4">
+      <div className="flex flex-1 flex-col min-h-0 space-y-4">
         <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
           <div className="mb-4">
             <h2 className="text-[0.9375rem] font-semibold text-foreground">

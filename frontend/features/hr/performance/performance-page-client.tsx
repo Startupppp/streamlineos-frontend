@@ -109,28 +109,28 @@ export function PerformancePageClient() {
           </TabsList>
         </ScrollEdgeFade>
 
-        <TabsContent value="reviews" className="mt-4 flex flex-col">
+        <TabsContent value="reviews" className="mt-4 flex flex-1 min-h-0 flex-col">
           <ReviewsTab />
         </TabsContent>
-        <TabsContent value="goals" className="mt-4 flex flex-col">
+        <TabsContent value="goals" className="mt-4 flex flex-1 min-h-0 flex-col">
           <GoalsTab />
         </TabsContent>
-        <TabsContent value="one-on-ones" className="mt-4 flex flex-col">
+        <TabsContent value="one-on-ones" className="mt-4 flex flex-1 min-h-0 flex-col">
           <MeetingsTab />
         </TabsContent>
-        <TabsContent value="cycles" className="mt-4 flex flex-col">
+        <TabsContent value="cycles" className="mt-4 flex flex-1 min-h-0 flex-col">
           <CyclesTab />
         </TabsContent>
-        <TabsContent value="pip" className="mt-4 flex flex-col">
+        <TabsContent value="pip" className="mt-4 flex flex-1 min-h-0 flex-col">
           <PIPTab />
         </TabsContent>
-        <TabsContent value="calibration" className="mt-4 flex flex-col">
+        <TabsContent value="calibration" className="mt-4 flex flex-1 min-h-0 flex-col">
           <CalibrationTab />
         </TabsContent>
-        <TabsContent value="nine-box" className="mt-4 flex flex-col">
+        <TabsContent value="nine-box" className="mt-4 flex flex-1 min-h-0 flex-col">
           <NineBoxGrid />
         </TabsContent>
-        <TabsContent value="succession" className="mt-4 flex flex-col">
+        <TabsContent value="succession" className="mt-4 flex flex-1 min-h-0 flex-col">
           <SuccessionTab />
         </TabsContent>
       </Tabs>

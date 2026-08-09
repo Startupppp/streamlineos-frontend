@@ -192,64 +192,64 @@ export default function WarehousesPage() {
         </AnimatedIconButton>
       }
     >
-      {isLoading ? null : isError ? (
-        <div className="flex flex-1 min-h-0 flex-col gap-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
+        {isLoading ? null : isError ? (
           <ErrorState
             title="Failed to load warehouses"
             description="An error occurred while fetching warehouse data. Please try again."
             onRetry={handleRetry}
           />
-        </div>
-      ) : (
-        <>
-          {showFilters && (
-            <div className="mb-4 flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-              <Select
-                value={isDefaultFilter ?? "all"}
-                onValueChange={handleIsDefaultChange}
-              >
-                <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[160px] text-xs")}>
-                  <SelectValue placeholder="Default status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Any default status</SelectItem>
-                  <SelectItem value="true">Default warehouse</SelectItem>
-                  <SelectItem value="false">Non-default</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+        ) : (
+          <>
+            {showFilters && (
+              <div className="mb-4 flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+                <Select
+                  value={isDefaultFilter ?? "all"}
+                  onValueChange={handleIsDefaultChange}
+                >
+                  <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[160px] text-xs")}>
+                    <SelectValue placeholder="Default status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Any default status</SelectItem>
+                    <SelectItem value="true">Default warehouse</SelectItem>
+                    <SelectItem value="false">Non-default</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
-          {warehouses.length > 0 ? (
-            <motion.div
-              className="flex-1 grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
-              variants={shouldReduceMotion ? undefined : staggerContainer}
-              initial={shouldReduceMotion ? undefined : "hidden"}
-              animate={shouldReduceMotion ? undefined : "visible"}
-            >
-              {warehouses.map((wh) => (
-                <WarehouseCard key={wh.id} warehouse={wh} />
-              ))}
-            </motion.div>
-          ) : hasActiveFilters ? (
-            <InventoryEmptyState
-              illustration={<EmptySearchIllustration />}
-              title="No warehouses found"
-              description="No warehouses match your current filters."
-              action={{ label: "Clear filters", onClick: clearFilters }}
-              className={CONTENT_FILL_PANEL}
-            />
-          ) : (
-            <InventoryEmptyState
-              illustration={<EmptyWarehouseIllustration />}
-              title="No warehouses yet"
-              description="Add your first warehouse to start managing stock locations."
-              action={{ label: "New Warehouse", onClick: handleOpenSheet }}
-              className={CONTENT_FILL_PANEL}
-            />
-          )}
-        </>
-      )}
+            {warehouses.length > 0 ? (
+              <motion.div
+                className="flex-1 grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+                variants={shouldReduceMotion ? undefined : staggerContainer}
+                initial={shouldReduceMotion ? undefined : "hidden"}
+                animate={shouldReduceMotion ? undefined : "visible"}
+              >
+                {warehouses.map((wh) => (
+                  <WarehouseCard key={wh.id} warehouse={wh} />
+                ))}
+              </motion.div>
+            ) : hasActiveFilters ? (
+              <InventoryEmptyState
+                illustration={<EmptySearchIllustration />}
+                title="No warehouses found"
+                description="No warehouses match your current filters."
+                action={{ label: "Clear filters", onClick: clearFilters }}
+                className={CONTENT_FILL_PANEL}
+              />
+            ) : (
+              <InventoryEmptyState
+                illustration={<EmptyWarehouseIllustration />}
+                title="No warehouses yet"
+                description="Add your first warehouse to start managing stock locations."
+                action={{ label: "New Warehouse", onClick: handleOpenSheet }}
+                className={CONTENT_FILL_PANEL}
+              />
+            )}
+          </>
+        )}
+      </div>
 
       <WarehouseCreateSheet open={sheetOpen} onOpenChange={setSheetOpen} />
     </PageWrapper>

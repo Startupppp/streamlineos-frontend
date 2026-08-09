@@ -268,35 +268,37 @@ export default function RecurringInvoicesPage() {
         </Select>
       }
     >
-      {query.isError && (
-        <ErrorState
-          title="Failed to load recurring invoices"
-          description={getErrorMessage(query.error)}
-        />
-      )}
-
-      <DataTable
-        className="flex-1 min-h-0"
-        data={items}
-        columns={columns}
-        getRowKey={(row) => row.id}
-        isLoading={query.isLoading}
-        pagination={{
-          mode: "server",
-          page,
-          pageSize: 20,
-          total,
-          onPageChange: handlePageChange,
-        }}
-        emptyState={
-          <EmptyState
-            illustrationPreset="automations"
-            title="No recurring invoice templates"
-            description="Create templates to auto-generate invoices on a schedule."
-            action={{ label: "New template", onClick: handleNewClick }}
+      <div className="flex flex-1 min-h-0 flex-col">
+        {query.isError ? (
+          <ErrorState
+            title="Failed to load recurring invoices"
+            description={getErrorMessage(query.error)}
           />
-        }
-      />
+        ) : (
+          <DataTable
+            className="flex-1 min-h-0"
+            data={items}
+            columns={columns}
+            getRowKey={(row) => row.id}
+            isLoading={query.isLoading}
+            pagination={{
+              mode: "server",
+              page,
+              pageSize: 20,
+              total,
+              onPageChange: handlePageChange,
+            }}
+            emptyState={
+              <EmptyState
+                illustrationPreset="automations"
+                title="No recurring invoice templates"
+                description="Create templates to auto-generate invoices on a schedule."
+                action={{ label: "New template", onClick: handleNewClick }}
+              />
+            }
+          />
+        )}
+      </div>
 
       <RecurringTemplateFormSheet
         open={sheetOpen}

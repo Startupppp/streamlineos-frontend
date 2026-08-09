@@ -88,6 +88,7 @@ export function DashboardClient() {
     crmEnabled,
     projectsEnabled,
     canViewAttendance,
+    canSelfAttendance,
     canViewLeaves,
     canApproveLeaves,
     canViewExecutive,
@@ -115,6 +116,7 @@ export function DashboardClient() {
     data: recentProjects,
     isLoading: projectsLoading,
     error: projectsError,
+    refetch: refetchProjects,
   } = useRecentProjects({
     enabled: deferredVisible && projectsEnabled && canViewTickets,
   });
@@ -137,6 +139,7 @@ export function DashboardClient() {
     data: recentActivity,
     isLoading: activityLoading,
     error: activityError,
+    refetch: refetchActivity,
   } = useRecentActivity({
     enabled: deferredVisible && projectsEnabled && canViewTickets,
   });
@@ -145,12 +148,17 @@ export function DashboardClient() {
     data: myIssuesData,
     isLoading: ticketsLoading,
     error: ticketsError,
+    refetch: refetchTickets,
   } = useMyIssues({ enabled: deferredVisible && projectsEnabled });
 
-  const { data: sprintSummary, isLoading: sprintLoading } =
-    useActiveSprintSummary({
-      enabled: deferredVisible && projectsEnabled,
-    });
+  const {
+    data: sprintSummary,
+    isLoading: sprintLoading,
+    error: sprintError,
+    refetch: refetchSprint,
+  } = useActiveSprintSummary({
+    enabled: deferredVisible && projectsEnabled,
+  });
 
   const { data: todayActivities } = useTodayActivities({
     enabled: deferredVisible && crmEnabled && canViewCrmLeads,
@@ -197,6 +205,10 @@ export function DashboardClient() {
     () => router.push("/build/all"),
     [router],
   );
+  const handleRetryTickets = useCallback(() => void refetchTickets(), [refetchTickets]);
+  const handleRetryProjects = useCallback(() => void refetchProjects(), [refetchProjects]);
+  const handleRetryActivity = useCallback(() => void refetchActivity(), [refetchActivity]);
+  const handleRetrySprint = useCallback(() => void refetchSprint(), [refetchSprint]);
 
   const sortedMyTickets = useMemo((): DashboardTicket[] => {
     const raw = myIssuesData ?? [];
@@ -245,7 +257,7 @@ export function DashboardClient() {
     return (
       <PageWrapper title={pageTitle} subtitle="Loading your organization…">
         <div
-          className="flex flex-col gap-4"
+          className="flex flex-1 min-h-0 flex-col gap-4"
           role="status"
           aria-live="polite"
           aria-label="Loading dashboard"
@@ -308,7 +320,7 @@ export function DashboardClient() {
       subtitle={pageSubtitle}
       actions={hrEnabled ? <ClockInWidget /> : undefined}
     >
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         {statCards.length > 0 && (
           <motion.div variants={fadeUp} initial="hidden" animate="visible">
             <StatCardGrid
@@ -363,7 +375,7 @@ export function DashboardClient() {
               <AnnouncementsWidget />
               <UpcomingEventsWidget />
               {canViewExecutive && <BusinessPulseWidget />}
-              {hrEnabled && canViewAttendance && <MyAttendanceWidget />}
+              {hrEnabled && canSelfAttendance && <MyAttendanceWidget />}
               <PayrollWidget />
               <ExpensesWidget />
               <RecruitmentWidget />
@@ -417,12 +429,15 @@ export function DashboardClient() {
                 tickets={sortedMyTickets}
                 isLoading={ticketsLoading}
                 error={ticketsError}
+                onRetry={handleRetryTickets}
               />
             </div>
             <div className="min-h-0 lg:col-span-3">
               <SprintCard
                 summary={sprintSummary ?? undefined}
                 isLoading={sprintLoading}
+                error={sprintError}
+                onRetry={handleRetrySprint}
               />
             </div>
           </motion.div>
@@ -445,6 +460,7 @@ export function DashboardClient() {
                   isLoading={projectsLoading}
                   error={projectsError}
                   onCreateProject={handleGoToProjects}
+                  onRetry={handleRetryProjects}
                 />
               </div>
             )}
@@ -454,6 +470,7 @@ export function DashboardClient() {
                   items={recentActivity}
                   isLoading={activityLoading}
                   error={activityError}
+                  onRetry={handleRetryActivity}
                 />
               </div>
             )}

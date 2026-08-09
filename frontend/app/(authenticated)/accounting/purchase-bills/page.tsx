@@ -314,32 +314,32 @@ export default function PurchaseBillsListPage() {
         </div>
       }
     >
-      {query.error && (
-        <ErrorState
-          title="Failed to load purchase bills"
-          description={getErrorMessage(query.error)}
-          onRetry={handleRetry}
-        />
-      )}
-
-      {!query.error && (
-        <DataTable<PurchaseBillSummary>
-          data={items}
-          columns={columns}
-          getRowKey={(row) => row.id}
-          isLoading={query.isLoading}
-          minWidth="680px"
-          className="flex-1 min-h-0"
-          emptyState={
-            <EmptyState
-              illustration={<EmptyExpensesIllustration />}
-              title="No purchase bills yet"
-              description="Record a vendor bill to start tracking accounts payable."
-              action={{ label: "New bill", href: "/accounting/purchase-bills/new" }}
-            />
-          }
-        />
-      )}
+      <div className="flex flex-1 min-h-0 flex-col">
+        {query.error ? (
+          <ErrorState
+            title="Failed to load purchase bills"
+            description={getErrorMessage(query.error)}
+            onRetry={handleRetry}
+          />
+        ) : (
+          <DataTable<PurchaseBillSummary>
+            data={items}
+            columns={columns}
+            getRowKey={(row) => row.id}
+            isLoading={query.isLoading}
+            minWidth="680px"
+            className="flex-1 min-h-0"
+            emptyState={
+              <EmptyState
+                illustration={<EmptyExpensesIllustration />}
+                title="No purchase bills yet"
+                description="Record a vendor bill to start tracking accounts payable."
+                action={{ label: "New bill", href: "/accounting/purchase-bills/new" }}
+              />
+            }
+          />
+        )}
+      </div>
     </PageWrapper>
   );
 }

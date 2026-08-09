@@ -94,7 +94,7 @@ export default function PeriodClosePage() {
         ) : undefined
       }
     >
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+      <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
         <div className="lg:col-span-1 space-y-2">
           {periodsQuery.isLoading ? (
             <LoadingState variant="table" rows={12} />

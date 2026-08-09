@@ -180,7 +180,6 @@ export function useHrCheckIn(
     },
     onSettled: () => {
       void qc.invalidateQueries({ queryKey: statusKey, exact: true });
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.attendanceLogs() });
       void qc.invalidateQueries({
         queryKey: [...queryKeys.hr.all, "attendanceHistory"],
       });
@@ -240,7 +239,6 @@ export function useHrCheckOut(
     },
     onSettled: () => {
       void qc.invalidateQueries({ queryKey: statusKey, exact: true });
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.attendanceLogs() });
       void qc.invalidateQueries({
         queryKey: [...queryKeys.hr.all, "attendanceHistory"],
       });
@@ -267,7 +265,7 @@ export function useHrToggleBreak(
 ) {
   const qc = useQueryClient();
   const { data: session } = useSession();
-  const statusKey = queryKeys.hr.attendanceStatus(session?.orgId);
+  const statusKey = queryKeys.hr.attendanceStatus(session?.orgId ?? "");
   return useMutation({
     mutationKey: ["hr", "attendance", "toggle-break"],
     mutationFn: () =>

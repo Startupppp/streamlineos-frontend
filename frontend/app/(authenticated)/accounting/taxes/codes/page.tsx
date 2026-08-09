@@ -256,30 +256,32 @@ export default function TaxCodesPage() {
         ) : undefined
       }
     >
-      {listQuery.isLoading ? (
-        <LoadingState variant="table" rows={12} />
-      ) : listQuery.error ? (
-        <ErrorState
-          title="Failed to load tax codes"
-          description={getErrorMessage(listQuery.error)}
-          onRetry={handleRetry}
-        />
-      ) : items.length === 0 ? (
-        <EmptyState
-          illustration={<EmptyReportIllustration />}
-          title="No tax codes yet"
-          description="Seed defaults or add your first tax code to get started."
-          action={canManage ? { label: "Add Tax Code", onClick: handleAdd } : undefined}
-        />
-      ) : (
-        <DataTable
-          className="flex-1 min-h-0"
-          data={items}
-          columns={columns}
-          getRowKey={(row) => row.id}
-          minWidth="640px"
-        />
-      )}
+      <div className="flex flex-1 min-h-0 flex-col">
+        {listQuery.isLoading ? (
+          <LoadingState variant="table" rows={12} />
+        ) : listQuery.error ? (
+          <ErrorState
+            title="Failed to load tax codes"
+            description={getErrorMessage(listQuery.error)}
+            onRetry={handleRetry}
+          />
+        ) : items.length === 0 ? (
+          <EmptyState
+            illustration={<EmptyReportIllustration />}
+            title="No tax codes yet"
+            description="Seed defaults or add your first tax code to get started."
+            action={canManage ? { label: "Add Tax Code", onClick: handleAdd } : undefined}
+          />
+        ) : (
+          <DataTable
+            className="flex-1 min-h-0"
+            data={items}
+            columns={columns}
+            getRowKey={(row) => row.id}
+            minWidth="640px"
+          />
+        )}
+      </div>
 
       <EntityFormDialog
         open={editState.open}

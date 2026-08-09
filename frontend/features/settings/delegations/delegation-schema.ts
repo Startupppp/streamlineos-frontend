@@ -12,9 +12,20 @@ export interface Delegation {
   endsAt: string;
   reason: string | null;
   status: string;
+  lifecycle: "ACTIVE" | "SCHEDULED" | "EXPIRED" | "REVOKED";
   createdAt: string;
   revokedAt: string | null;
   revokedBy: string | null;
+}
+
+export interface DelegationPage {
+  data: Delegation[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 }
 
 export const delegationSchema = z

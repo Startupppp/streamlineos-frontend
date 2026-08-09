@@ -61,6 +61,7 @@ export function ShiftAssignmentsTab() {
 
   return (
     <DataTable
+      className="flex-1 min-h-0"
       data={assignments ?? []}
       columns={columns}
       getRowKey={(a) => a.id}

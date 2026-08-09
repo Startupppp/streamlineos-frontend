@@ -26,7 +26,7 @@ export default function HrFormSubmissionsPage({ params }: PageProps) {
       backHref={`/hr/settings/forms/${formId}`}
  variant="display">
       {isLoading ? (
-        <div className="space-y-2 pt-2">
+        <div className="flex flex-1 min-h-0 flex-col gap-2 pt-2">
           {[...Array(5)].map((_, i) => (
             <Skeleton key={i} className="h-12 w-full rounded-lg" />
           ))}

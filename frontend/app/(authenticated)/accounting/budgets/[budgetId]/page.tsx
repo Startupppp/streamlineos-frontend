@@ -12,7 +12,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger, TABS_CONTENT_PAGE_BODY_CLASS } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { AppSheet } from "@/components/shared/app-sheet";
 import { EntityFormSheet } from "@/components/shared/entity-form-sheet";
@@ -208,7 +208,7 @@ function BvaTab({ budgetId }: BvaTabProps) {
   ) : undefined;
 
   return (
-    <div>
+    <div className="flex flex-1 min-h-0 flex-col">
       <BvaFilters
         from={from}
         to={to}
@@ -420,31 +420,37 @@ export default function BudgetDetailPage() {
       }
     >
       {query.isLoading ? (
-        <LoadingState variant="page" />
+        <div className="flex flex-1 min-h-0 flex-col">
+          <LoadingState variant="page" />
+        </div>
       ) : query.error ? (
-        <ErrorState
-          title="Failed to load budget"
-          description={getErrorMessage(query.error)}
-          onRetry={handleRetry}
-        />
+        <div className="flex flex-1 min-h-0 flex-col">
+          <ErrorState
+            title="Failed to load budget"
+            description={getErrorMessage(query.error)}
+            onRetry={handleRetry}
+          />
+        </div>
       ) : !budget ? (
-        <ErrorState title="Budget not found" description={`No budget found for ID ${budgetId}.`} />
+        <div className="flex flex-1 min-h-0 flex-col">
+          <ErrorState title="Budget not found" description={`No budget found for ID ${budgetId}.`} />
+        </div>
       ) : (
         <div className="flex flex-1 min-h-0 flex-col">
-          <Tabs defaultValue="matrix">
+          <Tabs defaultValue="matrix" className="flex flex-1 min-h-0 flex-col">
             <TabsList className="mb-4">
               <TabsTrigger value="matrix">Budget Matrix</TabsTrigger>
               <TabsTrigger value="vs-actual">vs Actual</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="matrix">
+            <TabsContent value="matrix" className={TABS_CONTENT_PAGE_BODY_CLASS}>
               <BudgetMatrix
                 budget={budget}
                 readOnly={status !== "DRAFT"}
               />
             </TabsContent>
 
-            <TabsContent value="vs-actual">
+            <TabsContent value="vs-actual" className={TABS_CONTENT_PAGE_BODY_CLASS}>
               <BvaTab budgetId={budgetId} />
             </TabsContent>
           </Tabs>

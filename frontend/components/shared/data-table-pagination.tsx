@@ -5,6 +5,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
 
 interface PaginationProps {
   page: number;
@@ -16,11 +17,9 @@ interface PaginationProps {
   pageSizeOptions?: readonly number[];
 }
 
-const DEFAULT_PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const;
-
 export function DataTablePagination({
   page, totalPages, total, limit, onPageChange, onLimitChange,
-  pageSizeOptions = DEFAULT_PAGE_SIZE_OPTIONS,
+  pageSizeOptions = STANDARD_PAGE_SIZE_OPTIONS,
 }: PaginationProps) {
   const start = (page - 1) * limit + 1;
   const end = Math.min(page * limit, total);

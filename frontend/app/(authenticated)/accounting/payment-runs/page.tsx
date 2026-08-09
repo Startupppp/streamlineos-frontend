@@ -161,30 +161,32 @@ export default function PaymentRunsPage() {
         </Select>
       }
     >
-      {query.error ? (
-        <ErrorState
-          title="Failed to load payment runs"
-          description={getErrorMessage(query.error)}
-          onRetry={handleRetry}
-        />
-      ) : (
-        <DataTable
-          className="flex-1 min-h-0"
-          data={items}
-          columns={COLUMNS}
-          getRowKey={(run) => run.id}
-          onRowClick={handleRowClick}
-          isLoading={query.isLoading}
-          emptyState={
-            <EmptyState
-              illustrationPreset="tasks"
-              title="No payment runs"
-              description="Create a payment run to batch-process vendor payments."
-              action={{ label: "New run", onClick: handleNewClick }}
-            />
-          }
-        />
-      )}
+      <div className="flex flex-1 min-h-0 flex-col">
+        {query.error ? (
+          <ErrorState
+            title="Failed to load payment runs"
+            description={getErrorMessage(query.error)}
+            onRetry={handleRetry}
+          />
+        ) : (
+          <DataTable
+            className="flex-1 min-h-0"
+            data={items}
+            columns={COLUMNS}
+            getRowKey={(run) => run.id}
+            onRowClick={handleRowClick}
+            isLoading={query.isLoading}
+            emptyState={
+              <EmptyState
+                illustrationPreset="tasks"
+                title="No payment runs"
+                description="Create a payment run to batch-process vendor payments."
+                action={{ label: "New run", onClick: handleNewClick }}
+              />
+            }
+          />
+        )}
+      </div>
 
       <PaymentRunFormSheet open={createOpen} onOpenChange={handleCreateOpenChange} />
     </PageWrapper>

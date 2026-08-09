@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger, TABS_CONTENT_PAGE_BODY_CLASS } from "@/components/ui/tabs";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -428,14 +428,14 @@ export default function ValidationRulesPage() {
           </AnimatedIconButton>
         }
       >
-        <Tabs value={activeTab} onValueChange={handleTabChange}>
-          <TabsList className="mb-4">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="flex flex-1 min-h-0 flex-col">
+          <TabsList className="mb-4 shrink-0">
             {ENTITY_TABS.map((tab) => (
               <TabsTrigger key={tab.value} value={tab.value}>{tab.label}</TabsTrigger>
             ))}
           </TabsList>
           {ENTITY_TABS.map((tab) => (
-            <TabsContent key={tab.value} value={tab.value}>
+            <TabsContent key={tab.value} value={tab.value} className={TABS_CONTENT_PAGE_BODY_CLASS}>
               <EntityRulesTab entityType={tab.value} onNewRule={handleOpenNew} />
             </TabsContent>
           ))}

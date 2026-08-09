@@ -17,6 +17,28 @@ const LIFECYCLE_PAGES = [
 
 describe("organization hierarchy lifecycle UI", () => {
   it.each(LIFECYCLE_PAGES)(
+    "%s uses shared URL-backed server pagination",
+    (fileName) => {
+      const source = readFileSync(join(HIERARCHY_DIR, fileName), "utf8");
+
+      expect(source).toContain("useHierarchyListState()");
+      expect(source).toContain("useHierarchyPageBounds({");
+      expect(source).toContain('mode: "server"');
+      expect(source).toContain(
+        "pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS",
+      );
+      expect(source).toContain("onPageSizeChange: setPageSize");
+      expect(source).toContain("isLoading || isCorrectingPage");
+      expect(source).toContain("<ErrorState");
+      expect(source).toContain("description={getErrorMessage(error)}");
+      expect(source).toContain("onRetry={handleRetry}");
+      expect(source).not.toMatch(/Archived \(\$\{.*\.length\}\)/);
+      expect(source).not.toContain('status !== "ARCHIVED"');
+      expect(source).not.toContain('status === "ARCHIVED" && !');
+    },
+  );
+
+  it.each(LIFECYCLE_PAGES)(
     "%s archives through the shared confirmation and exposes no hard delete",
     (fileName) => {
       const source = readFileSync(join(HIERARCHY_DIR, fileName), "utf8");
@@ -38,10 +60,10 @@ describe("organization hierarchy lifecycle UI", () => {
         'const canManage = useCan("settings:organization:manage");',
       );
       expect(source).toMatch(
-        /canManage\s*\?\s*<div className="flex items-center gap-1">/,
+        /canManage\s*\?\s*\(?\s*<div className="flex items-center gap-1">/,
       );
-      expect(source).toMatch(/canManage\s*\?\s*<AnimatedIconButton/);
-      expect(source).toMatch(/action=\{canManage\s*\?/);
+      expect(source).toMatch(/canManage\s*\?\s*\(?\s*<AnimatedIconButton/);
+      expect(source).toMatch(/action=\{\s*canManage\s*\?/);
     },
   );
 

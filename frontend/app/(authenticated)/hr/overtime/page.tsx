@@ -33,19 +33,20 @@ export default function OvertimePage() {
       }
     >
       <motion.div
+        className="flex flex-1 min-h-0 flex-col"
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.22, ease: "easeOut" }}
       >
-        <Tabs defaultValue="requests">
-          <TabsList>
+        <Tabs defaultValue="requests" className="flex flex-1 min-h-0 flex-col">
+          <TabsList className="shrink-0">
             <TabsTrigger value="requests">Overtime Requests</TabsTrigger>
             <TabsTrigger value="comp-off">Comp-Off Balances</TabsTrigger>
           </TabsList>
-          <TabsContent value="requests">
+          <TabsContent value="requests" className="mt-0 flex flex-1 min-h-0 flex-col">
             <OvertimeList canManage={canManage} />
           </TabsContent>
-          <TabsContent value="comp-off">
+          <TabsContent value="comp-off" className="mt-0">
             <CompOffPanel />
           </TabsContent>
         </Tabs>

@@ -142,18 +142,19 @@ export function EventStreamPageContent() {
         ) : null
       }
     >
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-1 min-h-0 flex-col">
+        <TabsList className="mb-4 shrink-0">
           <TabsTrigger value="events">Event Log</TabsTrigger>
           <TabsTrigger value="dictionary">Data Dictionary</TabsTrigger>
           <TabsTrigger value="metrics">Metric Definitions</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="events">
-          <div className="mb-3 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-xs text-foreground">
+        <TabsContent value="events" className="mt-0 flex flex-1 min-h-0 flex-col">
+          <div className="mb-3 shrink-0 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-xs text-foreground">
             This log is <strong>append-only</strong>. Events cannot be edited or deleted.
           </div>
           <DataTable
+            className="flex-1 min-h-0"
             data={data?.data ?? []}
             columns={eventColumns}
             getRowKey={(r) => r.id}
@@ -180,8 +181,9 @@ export function EventStreamPageContent() {
           />
         </TabsContent>
 
-        <TabsContent value="dictionary">
+        <TabsContent value="dictionary" className="mt-0 flex flex-1 min-h-0 flex-col">
           <DataTable
+            className="flex-1 min-h-0"
             data={dictionary?.catalog ?? []}
             columns={catalogColumns}
             getRowKey={(e) => e.eventType}
@@ -201,7 +203,7 @@ export function EventStreamPageContent() {
           )}
         </TabsContent>
 
-        <TabsContent value="metrics">
+        <TabsContent value="metrics" className="mt-0 flex flex-1 min-h-0 flex-col">
           <div className="space-y-2">
             {metrics?.metrics.map((m) => (
               <div key={m.name} className="rounded-xl border border-border bg-card px-4 py-3">

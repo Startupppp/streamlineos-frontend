@@ -120,30 +120,32 @@ export default function CustomerLedgersPage() {
         </div>
       }
     >
-      {query.error ? (
-        <ErrorState
-          title="Failed to load customers"
-          description={getErrorMessage(query.error)}
-          onRetry={handleRetry}
-        />
-      ) : (
-        <DataTable<CustomerOutstanding>
-          className="flex-1 min-h-0"
-          data={items}
-          columns={columns}
-          getRowKey={(row) => row.clientId}
-          isLoading={query.isLoading}
-          pagination={{ pageSize: 100 }}
-          emptyState={
-            <EmptyState
-              illustration={<EmptyTeamIllustration />}
-              title="No customers found"
-              description={emptyDescription}
-              compact
-            />
-          }
-        />
-      )}
+      <div className="flex flex-1 min-h-0 flex-col">
+        {query.error ? (
+          <ErrorState
+            title="Failed to load customers"
+            description={getErrorMessage(query.error)}
+            onRetry={handleRetry}
+          />
+        ) : (
+          <DataTable<CustomerOutstanding>
+            className="flex-1 min-h-0"
+            data={items}
+            columns={columns}
+            getRowKey={(row) => row.clientId}
+            isLoading={query.isLoading}
+            pagination={{ pageSize: 100 }}
+            emptyState={
+              <EmptyState
+                illustration={<EmptyTeamIllustration />}
+                title="No customers found"
+                description={emptyDescription}
+                compact
+              />
+            }
+          />
+        )}
+      </div>
     </PageWrapper>
   );
 }
