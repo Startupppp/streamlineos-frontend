@@ -5,7 +5,11 @@ import type { UseQueryOptions } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import type { AccessResponse } from "@/types/access";
+import type {
+  AccessResponse,
+  RbacDiscoveryGrantable,
+  RbacDiscoveryMember,
+} from "@/types/access";
 import type { Permission, PermissionKey } from "@/lib/rbac/permissions";
 import { normalizeOrgModuleKey } from "@/lib/module-vocabulary";
 
@@ -53,5 +57,33 @@ export const usePermissionCatalog = (
     queryKey: queryKeys.roles.permissionCatalog(),
     queryFn: () => apiClient.get<Permission[]>("/rbac/permissions"),
     staleTime: 30 * 60_000,
+    ...options,
+  });
+
+export const useRbacDiscoveryGrantable = (
+  options?: Omit<
+    UseQueryOptions<RbacDiscoveryGrantable, Error>,
+    "queryKey" | "queryFn"
+  >,
+) =>
+  useQuery<RbacDiscoveryGrantable, Error>({
+    queryKey: queryKeys.roles.discoveryGrantable(),
+    queryFn: () =>
+      apiClient.get<RbacDiscoveryGrantable>("/rbac/discovery/grantable"),
+    staleTime: 60_000,
+    ...options,
+  });
+
+export const useRbacDiscoveryMembers = (
+  options?: Omit<
+    UseQueryOptions<RbacDiscoveryMember[], Error>,
+    "queryKey" | "queryFn"
+  >,
+) =>
+  useQuery<RbacDiscoveryMember[], Error>({
+    queryKey: queryKeys.roles.discoveryMembers(),
+    queryFn: () =>
+      apiClient.get<RbacDiscoveryMember[]>("/rbac/discovery/members"),
+    staleTime: 5 * 60_000,
     ...options,
   });

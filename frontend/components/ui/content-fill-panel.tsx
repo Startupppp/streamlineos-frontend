@@ -32,7 +32,10 @@ interface ContentFillPanelProps {
   className?: string;
 }
 
-export function ContentFillPanel({ children, className }: ContentFillPanelProps) {
+export function ContentFillPanel({
+  children,
+  className,
+}: ContentFillPanelProps) {
   return (
     <div
       className={cn(

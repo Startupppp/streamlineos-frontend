@@ -374,11 +374,10 @@ function PersonWorkerTab({ person }: { person: OrganizationPerson }) {
   const canManageWorkers = useCan("workforce:workers:manage");
   const [createWorkerOpen, setCreateWorkerOpen] = useState(false);
 
-  const searchTerm = person.workEmail ?? person.firstName;
   const { data: workersPage, isLoading: workersLoading } = useWorkers({
     page: 1,
-    limit: 100,
-    search: searchTerm || undefined,
+    limit: 1,
+    organizationPersonId: person.organizationPersonId,
   });
 
   const worker = useMemo(

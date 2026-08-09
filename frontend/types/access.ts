@@ -43,6 +43,18 @@ export interface SetRolePermissionsInput {
   items: RolePermissionGrant[];
 }
 
+export interface RbacDiscoveryGrantable {
+  grantableKeys: string[];
+  assignableRanks: number[];
+  allowedModules: string[] | null;
+}
+
+export interface RbacDiscoveryMember {
+  userId: string;
+  name: string | null;
+  email: string;
+}
+
 export interface AssignRoleMemberInput {
   roleId: number;
   principalType: RolePrincipalType;

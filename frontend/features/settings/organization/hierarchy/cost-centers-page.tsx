@@ -143,6 +143,7 @@ export function OrgCostCentersPage() {
   const [showArchived, setShowArchived] = useState(false);
   const [search, setSearch] = useState("");
   const archiveFlow = useHierarchyArchive<OrgCostCenter>({
+    unitKind: "COST_CENTER",
     archive: (costCenter, callbacks) =>
       update.mutate({ id: costCenter.id, status: "ARCHIVED" }, callbacks),
     successMessage: "Cost center archived",
@@ -310,7 +311,7 @@ export function OrgCostCentersPage() {
     <EmptyState
       illustrationPreset="payroll"
       title="No cost centers yet"
-      description="Create your first cost center to get started."
+      description="Create cost centers to classify payroll, budgets, and expenses for reporting."
       action={canManage ? { label: "Add Cost Center", onClick: handleOpenCreate } : undefined}
     />
   );
@@ -319,7 +320,7 @@ export function OrgCostCentersPage() {
     <RequireModule module="hr">
     <PageWrapper
       title="Cost Centers"
-      subtitle="Cost centers for expense tracking."
+      subtitle="Classify payroll, budgets, and expenses for reporting."
       actions={
         <div className="flex w-full items-center gap-2 sm:w-auto">
           <Button
@@ -412,6 +413,10 @@ export function OrgCostCentersPage() {
         unitLabel="cost center"
         isPending={update.isPending}
         error={archiveFlow.error}
+        preflightError={archiveFlow.preflightError}
+        dependencies={archiveFlow.dependencies}
+        isChecking={archiveFlow.isChecking}
+        onRetryPreflight={archiveFlow.retryPreflight}
         onConfirm={archiveFlow.confirmArchive}
         onOpenChange={archiveFlow.handleOpenChange}
       />

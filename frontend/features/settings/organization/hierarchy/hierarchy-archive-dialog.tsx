@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, Archive } from "lucide-react";
+import { AlertTriangle, Archive, Loader2, RefreshCw } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { isApiError } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -37,6 +37,10 @@ interface HierarchyArchiveDialogProps {
   unitLabel: string;
   isPending: boolean;
   error: unknown;
+  preflightError?: unknown;
+  dependencies?: Dependency[];
+  isChecking?: boolean;
+  onRetryPreflight?: () => void;
   onConfirm: () => void;
   onOpenChange: (open: boolean) => void;
 }
@@ -47,35 +51,54 @@ export function HierarchyArchiveDialog({
   unitLabel,
   isPending,
   error,
+  preflightError,
+  dependencies: previewDependencies = [],
+  isChecking = false,
+  onRetryPreflight,
   onConfirm,
   onOpenChange,
 }: HierarchyArchiveDialogProps) {
-  const dependencies = parseDependencies(error);
+  const dependencies =
+    previewDependencies.length > 0
+      ? previewDependencies
+      : parseDependencies(error);
   const isDependencyBlocked = dependencies.length > 0;
+  const effectiveError = preflightError ?? error;
+  const isPreflightFailure = !!preflightError;
 
   return (
     <ConfirmDialog
       open={open}
       onOpenChange={onOpenChange}
       title={
-        isDependencyBlocked
-          ? `Cannot archive ${unitLabel}`
-          : `Archive ${unitLabel}?`
+        isChecking
+          ? `Checking ${unitLabel} dependencies`
+          : isDependencyBlocked
+            ? `Cannot archive ${unitLabel}`
+            : isPreflightFailure
+              ? "Could not check dependencies"
+              : `Archive ${unitLabel}?`
       }
       description={
-        isDependencyBlocked
-          ? getErrorMessage(error)
-          : `“${unitName}” will no longer be available for new assignments. Its history is preserved and you can restore it later.`
+        isChecking
+          ? `Checking whether “${unitName}” is still used by other records.`
+          : isDependencyBlocked
+            ? `This ${unitLabel} is still in use. Update its dependent records before you archive it.`
+            : isPreflightFailure
+              ? `We could not verify whether “${unitName}” is still in use. Nothing has been changed.`
+              : `“${unitName}” will no longer be available for new assignments. Its history is preserved and you can restore it later.`
       }
       icon={
         <span
           className={
-            isDependencyBlocked
+            isChecking || isDependencyBlocked || isPreflightFailure
               ? "flex size-9 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300"
               : "flex size-9 items-center justify-center rounded-full bg-muted text-muted-foreground"
           }
         >
-          {isDependencyBlocked ? (
+          {isChecking ? (
+            <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+          ) : isDependencyBlocked || isPreflightFailure ? (
             <AlertTriangle className="size-4" aria-hidden="true" />
           ) : (
             <Archive className="size-4" aria-hidden="true" />
@@ -83,7 +106,12 @@ export function HierarchyArchiveDialog({
         </span>
       }
       content={
-        isDependencyBlocked ? (
+        isChecking ? (
+          <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-3 text-sm text-muted-foreground">
+            <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+            Reviewing active assignments and linked records…
+          </div>
+        ) : isDependencyBlocked ? (
           <div className="rounded-lg border border-amber-200 bg-amber-50/70 p-3 dark:border-amber-500/30 dark:bg-amber-500/10">
             <p className="text-xs font-semibold uppercase tracking-wide text-amber-900 dark:text-amber-200">
               Update these dependencies first
@@ -106,19 +134,27 @@ export function HierarchyArchiveDialog({
               has been changed.
             </p>
           </div>
-        ) : error ? (
+        ) : effectiveError ? (
           <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2.5 text-sm text-destructive">
-            {getErrorMessage(error)}
+            {getErrorMessage(effectiveError)}
           </div>
         ) : null
       }
-      confirmLabel={error ? "Try again" : "Archive"}
+      confirmLabel={effectiveError ? "Try again" : "Archive"}
       cancelLabel={isDependencyBlocked ? "Close" : "Cancel"}
-      confirmIcon={<Archive className="size-4" aria-hidden="true" />}
-      hideConfirm={isDependencyBlocked}
+      confirmIcon={
+        isPreflightFailure ? (
+          <RefreshCw className="size-4" aria-hidden="true" />
+        ) : (
+          <Archive className="size-4" aria-hidden="true" />
+        )
+      }
+      hideConfirm={isChecking || isDependencyBlocked}
       keepOpenOnConfirm
       isPending={isPending}
-      onConfirm={onConfirm}
+      onConfirm={
+        isPreflightFailure ? (onRetryPreflight ?? onConfirm) : onConfirm
+      }
     />
   );
 }

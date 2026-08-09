@@ -216,15 +216,15 @@ describe("mobile module nav items", () => {
             {
               label: "Directory",
               icon: Users,
-              href: "/settings/directory",
+              href: "/directory",
               exact: true,
-              activePrefixes: ["/settings/directory/"],
-              inactivePrefixes: ["/settings/directory/workers"],
+              activePrefixes: ["/directory/"],
+              inactivePrefixes: ["/directory/workers"],
             },
             {
               label: "Workers",
               icon: Briefcase,
-              href: "/settings/directory/workers",
+              href: "/directory/workers",
             },
           ],
         },
@@ -232,21 +232,21 @@ describe("mobile module nav items", () => {
 
       expect(
         isMobileNavRouteActive(
-          "/settings/directory/person-1",
+          "/directory/person-1",
           tabs[0]!,
           tabs,
         ),
       ).toBe(true);
       expect(
         isMobileNavRouteActive(
-          "/settings/directory/workers",
+          "/directory/workers",
           tabs[0]!,
           tabs,
         ),
       ).toBe(false);
       expect(
         isMobileNavRouteActive(
-          "/settings/directory/workers",
+          "/directory/workers",
           tabs[1]!,
           tabs,
         ),

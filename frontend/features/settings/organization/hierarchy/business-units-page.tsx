@@ -156,6 +156,7 @@ export function BusinessUnitsPage() {
   const [showArchived, setShowArchived] = useState(false);
   const [search, setSearch] = useState("");
   const archiveFlow = useHierarchyArchive<OrgBusinessUnit>({
+    unitKind: "BUSINESS_UNIT",
     archive: (unit, callbacks) =>
       update.mutate({ id: unit.id, status: "ARCHIVED" }, callbacks),
     successMessage: "Business unit archived",
@@ -477,6 +478,10 @@ export function BusinessUnitsPage() {
           unitLabel="business unit"
           isPending={update.isPending}
           error={archiveFlow.error}
+          preflightError={archiveFlow.preflightError}
+          dependencies={archiveFlow.dependencies}
+          isChecking={archiveFlow.isChecking}
+          onRetryPreflight={archiveFlow.retryPreflight}
           onConfirm={archiveFlow.confirmArchive}
           onOpenChange={archiveFlow.handleOpenChange}
         />

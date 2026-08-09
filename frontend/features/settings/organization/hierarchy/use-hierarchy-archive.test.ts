@@ -1,4 +1,4 @@
-import { act, renderHook } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { useHierarchyArchive } from "./use-hierarchy-archive";
 
 jest.mock("sonner", () => ({
@@ -13,7 +13,15 @@ type TestArchiveCallbacks = {
 type TestArchiveTarget = { id: string; name: string };
 
 describe("useHierarchyArchive", () => {
-  it("retains the target and error when archive is dependency-blocked", () => {
+  const emptyPreview = {
+    unitId: "branch-1",
+    unitKind: "BRANCH" as const,
+    mode: "archive" as const,
+    dependencies: [],
+    totalDependencies: 0,
+  };
+
+  it("retains the target and error when the mutation finds a new dependency", async () => {
     let callbacks: TestArchiveCallbacks | undefined;
     const archive = jest.fn(
       (_target: TestArchiveTarget, nextCallbacks: TestArchiveCallbacks) => {
@@ -23,10 +31,16 @@ describe("useHierarchyArchive", () => {
     const target = { id: "branch-1", name: "North" };
     const dependencyError = new Error("Still in use");
     const { result } = renderHook(() =>
-      useHierarchyArchive({ archive, successMessage: "Branch archived" }),
+      useHierarchyArchive({
+        unitKind: "BRANCH",
+        archive,
+        successMessage: "Branch archived",
+        loadDependencies: jest.fn().mockResolvedValue(emptyPreview),
+      }),
     );
 
     act(() => result.current.requestArchive(target));
+    await waitFor(() => expect(result.current.isChecking).toBe(false));
     act(() => result.current.confirmArchive());
     act(() => callbacks?.onError(dependencyError));
 
@@ -34,7 +48,7 @@ describe("useHierarchyArchive", () => {
     expect(result.current.error).toBe(dependencyError);
   });
 
-  it("closes only after archive succeeds", () => {
+  it("closes only after archive succeeds", async () => {
     let callbacks: TestArchiveCallbacks | undefined;
     const archive = jest.fn(
       (_target: TestArchiveTarget, nextCallbacks: TestArchiveCallbacks) => {
@@ -44,13 +58,16 @@ describe("useHierarchyArchive", () => {
     const onArchived = jest.fn();
     const { result } = renderHook(() =>
       useHierarchyArchive({
+        unitKind: "BRANCH",
         archive,
         successMessage: "Branch archived",
         onArchived,
+        loadDependencies: jest.fn().mockResolvedValue(emptyPreview),
       }),
     );
 
     act(() => result.current.requestArchive({ id: "branch-1", name: "North" }));
+    await waitFor(() => expect(result.current.isChecking).toBe(false));
     act(() => result.current.confirmArchive());
 
     expect(result.current.target).not.toBeNull();
@@ -60,5 +77,32 @@ describe("useHierarchyArchive", () => {
     expect(result.current.target).toBeNull();
     expect(result.current.error).toBeNull();
     expect(onArchived).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows preflight dependencies and never starts the archive mutation", async () => {
+    const archive = jest.fn();
+    const { result } = renderHook(() =>
+      useHierarchyArchive({
+        unitKind: "BRANCH",
+        archive,
+        successMessage: "Branch archived",
+        loadDependencies: jest.fn().mockResolvedValue({
+          ...emptyPreview,
+          dependencies: [
+            { key: "workers", label: "Current workers", count: 2 },
+          ],
+          totalDependencies: 2,
+        }),
+      }),
+    );
+
+    act(() => result.current.requestArchive({ id: "branch-1", name: "North" }));
+    await waitFor(() => expect(result.current.isChecking).toBe(false));
+    act(() => result.current.confirmArchive());
+
+    expect(result.current.dependencies).toEqual([
+      { key: "workers", label: "Current workers", count: 2 },
+    ]);
+    expect(archive).not.toHaveBeenCalled();
   });
 });

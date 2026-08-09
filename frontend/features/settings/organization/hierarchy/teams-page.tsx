@@ -250,6 +250,7 @@ export function OrgTeamsPage() {
     [pathname, router, searchParams],
   );
   const archiveFlow = useHierarchyArchive<OrgTeam>({
+    unitKind: "TEAM",
     archive: (team, callbacks) =>
       update.mutate({ id: team.id, status: "ARCHIVED" }, callbacks),
     successMessage: "Team archived",
@@ -598,6 +599,10 @@ export function OrgTeamsPage() {
         unitLabel="team"
         isPending={update.isPending}
         error={archiveFlow.error}
+        preflightError={archiveFlow.preflightError}
+        dependencies={archiveFlow.dependencies}
+        isChecking={archiveFlow.isChecking}
+        onRetryPreflight={archiveFlow.retryPreflight}
         onConfirm={archiveFlow.confirmArchive}
         onOpenChange={archiveFlow.handleOpenChange}
       />

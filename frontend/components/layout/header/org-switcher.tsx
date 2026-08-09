@@ -274,6 +274,7 @@ function OrganizationSwitcher({
   const isSidebar = variant === "sidebar";
   const isLabelHidden = isSidebar && iconOnly;
   const workspaceName = activeOrg?.name ?? "Organization";
+  const hasMultipleOrgs = (organizations?.length ?? 0) > 1;
 
   const panelProps = {
     canLeave,
@@ -287,24 +288,18 @@ function OrganizationSwitcher({
     onCreateWorkspace: handleCreateWorkspace,
   };
 
-  const triggerButton = (
-    <button
-      type="button"
-      onClick={triggerOnly ? handleTriggerClick : undefined}
-      aria-label={
-        isLabelHidden ? `Switch organization — ${workspaceName}` : "Switch organization"
-      }
-      className={cn(
-        "flex items-center outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors",
-        isLabelHidden
-          ? "h-8 w-8 justify-center rounded-lg text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-          : isSidebar
-            ? "gap-1.5 h-8 w-full min-w-0 px-2 rounded-lg text-sm font-medium text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-            : "gap-1.5 h-8 min-w-0 max-w-[12rem] px-2 rounded-lg text-sm font-medium text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent",
-        className,
-      )}
-      disabled={switchOrg.isPending}
-    >
+  const identityClassName = cn(
+    "flex items-center outline-none",
+    isLabelHidden
+      ? "h-8 w-8 justify-center rounded-lg text-sidebar-foreground/70"
+      : isSidebar
+        ? "gap-1.5 h-8 w-full min-w-0 px-2 rounded-lg text-sm font-medium text-sidebar-foreground/80"
+        : "gap-1.5 h-8 min-w-0 max-w-[12rem] px-2 rounded-lg text-sm font-medium text-sidebar-foreground/80",
+    className,
+  );
+
+  const identityContent = (
+    <>
       <Building2
         className={cn(
           "shrink-0",
@@ -313,13 +308,62 @@ function OrganizationSwitcher({
         )}
       />
       {!isLabelHidden && (
-        <>
-          <TruncatedText
-            text={workspaceName}
-            className="flex-1 text-sm font-medium text-sidebar-foreground"
-          />
-          <ChevronsUpDown className="h-3 w-3 shrink-0 text-sidebar-foreground/50" />
-        </>
+        <TruncatedText
+          text={workspaceName}
+          className="flex-1 text-sm font-medium text-sidebar-foreground"
+        />
+      )}
+    </>
+  );
+
+  if (!hasMultipleOrgs) {
+    const staticIdentity = (
+      <div
+        className={identityClassName}
+        title={workspaceName}
+        aria-label={`Organization: ${workspaceName}`}
+      >
+        {identityContent}
+      </div>
+    );
+
+    if (isLabelHidden) {
+      return (
+        <Tooltip delayDuration={0}>
+          <TooltipTrigger asChild>{staticIdentity}</TooltipTrigger>
+          <TooltipContent
+            side="right"
+            sideOffset={10}
+            className="text-xs font-medium"
+          >
+            {workspaceName}
+          </TooltipContent>
+        </Tooltip>
+      );
+    }
+
+    return staticIdentity;
+  }
+
+  const triggerButton = (
+    <button
+      type="button"
+      onClick={triggerOnly ? handleTriggerClick : undefined}
+      aria-label={
+        isLabelHidden ? `Switch organization — ${workspaceName}` : "Switch organization"
+      }
+      className={cn(
+        identityClassName,
+        "focus-visible:ring-2 focus-visible:ring-ring transition-colors",
+        isLabelHidden
+          ? "hover:text-sidebar-foreground hover:bg-sidebar-accent"
+          : "hover:text-sidebar-foreground hover:bg-sidebar-accent",
+      )}
+      disabled={switchOrg.isPending}
+    >
+      {identityContent}
+      {!isLabelHidden && (
+        <ChevronsUpDown className="h-3 w-3 shrink-0 text-sidebar-foreground/50" />
       )}
     </button>
   );

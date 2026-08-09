@@ -165,6 +165,7 @@ export function OrgLocationsPage() {
   const [showArchived, setShowArchived] = useState(false);
   const [search, setSearch] = useState("");
   const archiveFlow = useHierarchyArchive<OrgLocation>({
+    unitKind: "LOCATION",
     archive: (location, callbacks) =>
       update.mutate({ id: location.id, status: "ARCHIVED" }, callbacks),
     successMessage: "Location archived",
@@ -434,6 +435,10 @@ export function OrgLocationsPage() {
         unitLabel="location"
         isPending={update.isPending}
         error={archiveFlow.error}
+        preflightError={archiveFlow.preflightError}
+        dependencies={archiveFlow.dependencies}
+        isChecking={archiveFlow.isChecking}
+        onRetryPreflight={archiveFlow.retryPreflight}
         onConfirm={archiveFlow.confirmArchive}
         onOpenChange={archiveFlow.handleOpenChange}
       />

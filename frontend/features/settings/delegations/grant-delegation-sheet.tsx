@@ -4,6 +4,7 @@ import { useState, useCallback, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
+import { AlertCircle, Loader2, RefreshCw } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -31,7 +32,11 @@ import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { delegationSchema, type DelegationFormValues } from "./delegation-schema";
-import { usePermissionCatalog } from "@/hooks/api/access";
+import {
+  usePermissionCatalog,
+  useRbacDiscoveryGrantable,
+} from "@/hooks/api/access";
+import { groupDelegationPermissions } from "./delegation-permissions";
 
 export interface Member {
   userId: string;
@@ -44,6 +49,9 @@ interface GrantDelegationSheetProps {
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
   members: Member[];
+  membersLoading: boolean;
+  membersError: unknown;
+  onRetryMembers: () => void;
 }
 
 function toDatePart(value: string): string {
@@ -61,8 +69,12 @@ export function GrantDelegationSheet({
   onOpenChange,
   onSuccess,
   members,
+  membersLoading,
+  membersError,
+  onRetryMembers,
 }: GrantDelegationSheetProps) {
   const [permSearch, setPermSearch] = useState("");
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const {
     register,
@@ -100,9 +112,10 @@ export function GrantDelegationSheet({
       toast.success("Delegation created");
       reset();
       setPermSearch("");
+      setSubmitError(null);
       onSuccess();
     },
-    onError: (error) => toast.error(getErrorMessage(error)),
+    onError: (error) => setSubmitError(getErrorMessage(error)),
   });
 
   const handleDelegateeChange = useCallback(
@@ -147,6 +160,7 @@ export function GrantDelegationSheet({
       if (!next) {
         reset();
         setPermSearch("");
+        setSubmitError(null);
       }
       onOpenChange(next);
     },
@@ -160,18 +174,24 @@ export function GrantDelegationSheet({
     [mutation],
   );
 
-  const { data: permissionCatalog } = usePermissionCatalog();
-
-  const filteredPerms = useMemo(
+  const permissionCatalog = usePermissionCatalog({ enabled: open });
+  const grantable = useRbacDiscoveryGrantable({ enabled: open });
+  const permissionGroups = useMemo(
     () =>
-      (permissionCatalog ?? []).filter(
-        (p) =>
-          !permSearch ||
-          p.name.toLowerCase().includes(permSearch.toLowerCase()) ||
-          p.description.toLowerCase().includes(permSearch.toLowerCase()),
+      groupDelegationPermissions(
+        permissionCatalog.data ?? [],
+        grantable.data?.grantableKeys ?? [],
+        permSearch,
       ),
-    [permissionCatalog, permSearch],
+    [permissionCatalog.data, grantable.data?.grantableKeys, permSearch],
   );
+  const permissionsLoading =
+    permissionCatalog.isLoading || grantable.isLoading;
+  const permissionsError = permissionCatalog.error ?? grantable.error;
+
+  const handleRetryPermissions = useCallback(() => {
+    void Promise.all([permissionCatalog.refetch(), grantable.refetch()]);
+  }, [permissionCatalog, grantable]);
 
   const endsFromDate = useMemo(() => {
     const start = toDatePart(startsAt);
@@ -194,11 +214,24 @@ export function GrantDelegationSheet({
           className="flex flex-col flex-1 overflow-hidden"
         >
           <SheetBody className="flex flex-col gap-3 px-6 py-5">
+            {submitError ? (
+              <div
+                role="alert"
+                className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2.5 text-sm text-destructive"
+              >
+                <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden />
+                <span>{submitError}</span>
+              </div>
+            ) : null}
             <div className="space-y-1.5">
               <Label htmlFor="del-to" className="text-xs">
                 Delegate to
               </Label>
-              <Select value={delegateeId} onValueChange={handleDelegateeChange}>
+              <Select
+                value={delegateeId}
+                onValueChange={handleDelegateeChange}
+                disabled={membersLoading || !!membersError || members.length === 0}
+              >
                 <SelectTrigger id="del-to">
                   <SelectValue placeholder="Select team member…" />
                 </SelectTrigger>
@@ -210,6 +243,27 @@ export function GrantDelegationSheet({
                   ))}
                 </SelectContent>
               </Select>
+              {membersError ? (
+                <div className="flex items-center justify-between gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-2.5 py-2">
+                  <p className="text-xs text-destructive">
+                    {getErrorMessage(membersError)}
+                  </p>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={onRetryMembers}
+                  >
+                    <RefreshCw className="size-3.5" aria-hidden />
+                    Retry
+                  </Button>
+                </div>
+              ) : !membersLoading && members.length === 0 ? (
+                <p className="text-xs leading-5 text-muted-foreground">
+                  There is no other active organization member available to
+                  receive a delegation.
+                </p>
+              ) : null}
               {errors.delegateeId && (
                 <p className="text-xs text-destructive">
                   {errors.delegateeId.message}
@@ -236,17 +290,47 @@ export function GrantDelegationSheet({
                 </div>
                 <ScrollArea className="flex-1">
                   <div className="p-1.5 space-y-0.5">
-                    {filteredPerms.map((perm) => (
-                      <PermissionItem
-                        key={perm.name}
-                        perm={perm}
-                        checked={selectedPerms.includes(perm.name)}
-                        onToggle={handlePermToggle}
-                      />
-                    ))}
-                    {filteredPerms.length === 0 && (
+                    {permissionsLoading ? (
+                      <div className="flex items-center justify-center gap-2 py-6 text-xs text-muted-foreground">
+                        <Loader2 className="size-4 animate-spin" aria-hidden />
+                        Loading grantable permissions…
+                      </div>
+                    ) : permissionsError ? (
+                      <div className="space-y-2 py-4 text-center">
+                        <p className="text-xs text-destructive">
+                          {getErrorMessage(permissionsError)}
+                        </p>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleRetryPermissions}
+                        >
+                          <RefreshCw className="size-3.5" aria-hidden />
+                          Try again
+                        </Button>
+                      </div>
+                    ) : permissionGroups.length > 0 ? (
+                      permissionGroups.map((group) => (
+                        <section key={group.key} className="pb-2 last:pb-0">
+                          <p className="sticky top-0 z-10 bg-background/95 px-1.5 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground backdrop-blur">
+                            {group.label}
+                          </p>
+                          {group.permissions.map((permission) => (
+                            <PermissionItem
+                              key={permission.name}
+                              perm={permission}
+                              checked={selectedPerms.includes(permission.name)}
+                              onToggle={handlePermToggle}
+                            />
+                          ))}
+                        </section>
+                      ))
+                    ) : (
                       <p className="text-xs text-muted-foreground text-center py-4">
-                        No permissions match
+                        {permSearch
+                          ? "No grantable permissions match"
+                          : "You do not currently hold any permissions that can be delegated."}
                       </p>
                     )}
                   </div>
@@ -331,6 +415,14 @@ export function GrantDelegationSheet({
                 type="submit"
                 size="sm"
                 isPending={mutation.isPending}
+                disabled={
+                  mutation.isPending ||
+                  permissionsLoading ||
+                  !!permissionsError ||
+                  membersLoading ||
+                  !!membersError ||
+                  members.length === 0
+                }
                 loadingText="Delegating…"
                 className="bg-primary hover:bg-primary/90 text-primary-foreground"
               >

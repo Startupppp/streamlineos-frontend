@@ -8,6 +8,7 @@ import type {
   CreateEngagementInput,
   CreateWorkerInput,
   TerminateEngagementInput,
+  UpdateEngagementInput,
   Worker,
   WorkerEngagement,
   WorkersPage,
@@ -18,14 +19,16 @@ export interface UseWorkersParams {
   limit?: number;
   status?: string;
   search?: string;
+  organizationPersonId?: string;
 }
 
 export function useWorkers(params: UseWorkersParams = {}) {
   const canView = useCan("workforce:workers:view");
-  const { page = 1, limit = 20, status, search } = params;
+  const { page = 1, limit = 20, status, search, organizationPersonId } = params;
   const queryParams: Record<string, unknown> = { page, limit };
   if (status) queryParams.status = status;
   if (search) queryParams.search = search;
+  if (organizationPersonId) queryParams.organizationPersonId = organizationPersonId;
 
   return useQuery({
     queryKey: queryKeys.directory.workers(queryParams),
@@ -36,6 +39,7 @@ export function useWorkers(params: UseWorkersParams = {}) {
       });
       if (status) searchParams.set("status", status);
       if (search) searchParams.set("search", search);
+      if (organizationPersonId) searchParams.set("organizationPersonId", organizationPersonId);
       return apiClient.get<WorkersPage>(`/directory/workers?${searchParams.toString()}`);
     },
     staleTime: 60_000,
@@ -85,6 +89,36 @@ export function useCreateEngagement() {
         queryKey: queryKeys.directory.engagements(variables.workerId),
         refetchType: "none",
       });
+      qc.invalidateQueries({
+        queryKey: queryKeys.directory.worker(variables.workerId),
+      });
+    },
+  });
+}
+
+export function useUpdateEngagement() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["directory", "engagements", "update"],
+    mutationFn: ({
+      workerEngagementId,
+      workerId: _workerId,
+      ...input
+    }: UpdateEngagementInput) =>
+      apiClient.patch<WorkerEngagement>(
+        "/directory/engagements/" + workerEngagementId,
+        input,
+      ),
+    onSuccess: (updated, variables) => {
+      qc.setQueryData<WorkerEngagement[]>(
+        queryKeys.directory.engagements(variables.workerId),
+        (old) =>
+          old?.map((engagement) =>
+            engagement.workerEngagementId === variables.workerEngagementId
+              ? { ...engagement, ...updated }
+              : engagement,
+          ),
+      );
       qc.invalidateQueries({
         queryKey: queryKeys.directory.worker(variables.workerId),
       });

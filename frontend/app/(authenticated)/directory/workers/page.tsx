@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   title: "Workers | StreamlineOS",
 };
 
-export default async function SettingsWorkersRoute() {
+export default async function WorkersRoute() {
   await requirePermission("workforce:workers:view");
   return <WorkersPage />;
 }

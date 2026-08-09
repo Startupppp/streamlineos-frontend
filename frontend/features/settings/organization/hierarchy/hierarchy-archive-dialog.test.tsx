@@ -97,4 +97,51 @@ describe("HierarchyArchiveDialog", () => {
       screen.queryByText("An unexpected error occurred"),
     ).not.toBeInTheDocument();
   });
+
+  it("shows dependencies before the archive mutation is offered", () => {
+    render(
+      <HierarchyArchiveDialog
+        open
+        unitName="Engineering"
+        unitLabel="cost center"
+        isPending={false}
+        error={null}
+        dependencies={[
+          { key: "salary_profiles", label: "Salary profiles", count: 4 },
+        ]}
+        onConfirm={noop}
+        onOpenChange={noop}
+      />,
+    );
+
+    expect(screen.getByText("Cannot archive cost center")).toBeInTheDocument();
+    expect(screen.getByText("Salary profiles")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Archive" })).not.toBeInTheDocument();
+  });
+
+  it("keeps a failed preflight retryable without attempting archive", () => {
+    const onConfirm = jest.fn();
+    const onRetryPreflight = jest.fn();
+    render(
+      <HierarchyArchiveDialog
+        open
+        unitName="Engineering"
+        unitLabel="cost center"
+        isPending={false}
+        error={null}
+        preflightError={new ApiError("An unexpected error occurred", 500)}
+        onRetryPreflight={onRetryPreflight}
+        onConfirm={onConfirm}
+        onOpenChange={noop}
+      />,
+    );
+
+    expect(screen.getByText("Could not check dependencies")).toBeInTheDocument();
+    expect(
+      screen.getByText(/Nothing has been changed/),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(onRetryPreflight).toHaveBeenCalledTimes(1);
+    expect(onConfirm).not.toHaveBeenCalled();
+  });
 });

@@ -5,6 +5,8 @@ export interface Delegation {
   orgId: string;
   delegatorId: string;
   delegateeId: string;
+  delegatorName?: string | null;
+  delegateeName?: string | null;
   permissions: string[];
   startsAt: string;
   endsAt: string;

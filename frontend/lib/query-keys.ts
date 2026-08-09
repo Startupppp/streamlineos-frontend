@@ -766,6 +766,10 @@ export const queryKeys = {
     all: [...base, "roles"] as const,
     list: () => [...base, "roles", "list"] as const,
     permissionCatalog: () => [...base, "roles", "permission-catalog"] as const,
+    discoveryGrantable: () =>
+      [...base, "roles", "discovery", "grantable"] as const,
+    discoveryMembers: () =>
+      [...base, "roles", "discovery", "members"] as const,
     detail: (id: number) => [...base, "roles", "detail", id] as const,
     permissions: (roleId: number) =>
       [...base, "roles", "permissions", roleId] as const,

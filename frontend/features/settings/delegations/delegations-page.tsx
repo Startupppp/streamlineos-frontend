@@ -3,12 +3,16 @@
 import { useState, useCallback, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { formatRelative } from "date-fns";
-import { Loader2 } from "lucide-react";
+import { Loader2, ShieldX } from "lucide-react";
 import { XIcon } from "@animateicons/react/lucide";
+import { useSession } from "next-auth/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { PAGE_BODY_EMPTY_CLASS } from "@/components/ui/content-fill-panel";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { SearchInput } from "@/components/ui/search-input";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -23,33 +27,54 @@ import { PlusIcon } from "@animateicons/react/lucide";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useOrgMembers } from "@/hooks/api/organization";
+import { useCan, useRbacDiscoveryMembers } from "@/hooks/api/access";
 import { toast } from "sonner";
 import { GrantDelegationSheet, type Member } from "./grant-delegation-sheet";
 import type { Delegation } from "./delegation-schema";
 
-const TAB_PANEL_CLASS = `${TABS_CONTENT_PAGE_BODY_CLASS} mt-0`;
+const TAB_PANEL_CLASS = `${TABS_CONTENT_PAGE_BODY_CLASS} mt-0 h-full min-h-0 w-full flex-1 overflow-y-auto`;
 
 export function DelegationsPage() {
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [revoking, setRevoking] = useState<string | null>(null);
+  const [revokeTarget, setRevokeTarget] = useState<Delegation | null>(null);
+  const [revokeError, setRevokeError] = useState<unknown>(null);
   const [search, setSearch] = useState("");
 
-  const { data: membersData } = useOrgMembers(1, 200);
-  const members = useMemo(() => membersData?.data ?? [], [membersData]);
+  const canManageRbac = useCan("settings:rbac:manage");
+  const membersQuery = useRbacDiscoveryMembers({ enabled: canManageRbac });
+  const members = useMemo(
+    () =>
+      (membersQuery.data ?? []).filter(
+        (member) => member.userId !== session?.user?.id,
+      ),
+    [membersQuery.data, session?.user?.id],
+  );
   const memberMap = useMemo(
     () => new Map(members.map((m) => [m.userId, m.name ?? m.email])),
     [members],
   );
 
-  const { data: received, isLoading: loadingReceived } = useQuery<Delegation[]>({
+  const {
+    data: received,
+    isLoading: loadingReceived,
+    isError: receivedError,
+    error: receivedQueryError,
+    refetch: refetchReceived,
+  } = useQuery<Delegation[]>({
     queryKey: queryKeys.delegations.received(),
     queryFn: () => apiClient.get<Delegation[]>("/access/delegations"),
     staleTime: 60_000,
   });
 
-  const { data: given, isLoading: loadingGiven } = useQuery<Delegation[]>({
+  const {
+    data: given,
+    isLoading: loadingGiven,
+    isError: givenError,
+    error: givenQueryError,
+    refetch: refetchGiven,
+  } = useQuery<Delegation[]>({
     queryKey: queryKeys.delegations.given(),
     queryFn: () => apiClient.get<Delegation[]>("/access/delegations/given"),
     staleTime: 60_000,
@@ -61,24 +86,42 @@ export function DelegationsPage() {
     onSuccess: () => {
       toast.success("Delegation revoked");
       void queryClient.invalidateQueries({ queryKey: queryKeys.delegations.all });
-      setRevoking(null);
+      setRevokeTarget(null);
+      setRevokeError(null);
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error));
-      setRevoking(null);
+      setRevokeError(error);
     },
   });
 
-  const handleRevoke = useCallback(
-    (id: string) => {
-      setRevoking(id);
-      revokeMutation.mutate(id);
-    },
-    [revokeMutation],
-  );
+  const handleRequestRevoke = useCallback((delegation: Delegation) => {
+    setRevokeError(null);
+    setRevokeTarget(delegation);
+  }, []);
+
+  const handleConfirmRevoke = useCallback(() => {
+    if (!revokeTarget) return;
+    setRevokeError(null);
+    revokeMutation.mutate(revokeTarget.id);
+  }, [revokeMutation, revokeTarget]);
+
+  const handleRevokeOpenChange = useCallback((open: boolean) => {
+    if (open) return;
+    setRevokeTarget(null);
+    setRevokeError(null);
+  }, []);
 
   const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
   const handleSearchChange = useCallback((value: string) => setSearch(value), []);
+  const handleRetryReceived = useCallback(() => {
+    void refetchReceived();
+  }, [refetchReceived]);
+  const handleRetryGiven = useCallback(() => {
+    void refetchGiven();
+  }, [refetchGiven]);
+  const handleRetryMembers = useCallback(() => {
+    void membersQuery.refetch();
+  }, [membersQuery]);
 
   const handleGrantSuccess = useCallback(() => {
     setSheetOpen(false);
@@ -89,7 +132,11 @@ export function DelegationsPage() {
     (d: Delegation, nameField: "delegatorId" | "delegateeId") => {
       const q = search.trim().toLowerCase();
       if (!q) return true;
-      const name = (memberMap.get(d[nameField]) ?? "").toLowerCase();
+      const resolvedName =
+        (nameField === "delegatorId" ? d.delegatorName : d.delegateeName) ??
+        memberMap.get(d[nameField]) ??
+        "";
+      const name = resolvedName.toLowerCase();
       const reason = (d.reason ?? "").toLowerCase();
       return name.includes(q) || reason.includes(q);
     },
@@ -130,23 +177,37 @@ export function DelegationsPage() {
       ).length,
     [given],
   );
+  const revokeDescription = revokeTarget
+    ? (revokeTarget.delegateeName ??
+        memberMap.get(revokeTarget.delegateeId) ??
+        "This member") +
+      " will lose " +
+      revokeTarget.permissions.length +
+      " delegated permission" +
+      (revokeTarget.permissions.length === 1 ? "" : "s") +
+      ". Existing audit history is preserved."
+    : "";
 
   return (
     <Tabs defaultValue="received" className="flex min-h-0 flex-1 flex-col">
       <PageWrapper
         title="Delegations"
         subtitle="Share specific permissions with teammates for a set period."
+        noInternalScroll
+        contentClassName="flex min-h-0 flex-1 flex-col"
         actions={
-          <AnimatedIconButton
-            size="sm"
-            icon={PlusIcon}
-            iconSize={14}
-            iconClassName="mr-1.5"
-            className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground"
-            onClick={handleOpenSheet}
-          >
-            Delegate
-          </AnimatedIconButton>
+          canManageRbac ? (
+            <AnimatedIconButton
+              size="sm"
+              icon={PlusIcon}
+              iconSize={14}
+              iconClassName="mr-1.5"
+              className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground"
+              onClick={handleOpenSheet}
+            >
+              Delegate
+            </AnimatedIconButton>
+          ) : undefined
         }
         filtersClassName="flex-col items-stretch gap-2 overflow-visible md:flex-row md:items-center md:justify-between [&>[data-slot=search-input]]:flex-none [&>[data-slot=search-input]]:basis-auto"
         filters={
@@ -178,6 +239,14 @@ export function DelegationsPage() {
           <TabsContent value="received" className={TAB_PANEL_CLASS}>
             {loadingReceived ? (
               <DelegationSkeletons count={2} />
+            ) : receivedError ? (
+              <ErrorState
+                compact
+                title="Could not load received delegations"
+                description={getErrorMessage(receivedQueryError)}
+                onRetry={handleRetryReceived}
+                className={PAGE_BODY_EMPTY_CLASS}
+              />
             ) : filteredReceived.length === 0 ? (
               <EmptyState
                 illustrationPreset="permissions"
@@ -187,6 +256,7 @@ export function DelegationsPage() {
                     ? "Try adjusting your search."
                     : "Permissions delegated to you will appear here."
                 }
+                className={PAGE_BODY_EMPTY_CLASS}
               />
             ) : (
               <div className="divide-y divide-border/60 rounded-xl border border-border bg-card">
@@ -205,6 +275,14 @@ export function DelegationsPage() {
           <TabsContent value="granted" className={TAB_PANEL_CLASS}>
             {loadingGiven ? (
               <DelegationSkeletons count={2} />
+            ) : givenError ? (
+              <ErrorState
+                compact
+                title="Could not load granted delegations"
+                description={getErrorMessage(givenQueryError)}
+                onRetry={handleRetryGiven}
+                className={PAGE_BODY_EMPTY_CLASS}
+              />
             ) : activeGiven.length === 0 && inactiveGiven.length === 0 ? (
               <EmptyState
                 illustrationPreset="permissions"
@@ -215,8 +293,11 @@ export function DelegationsPage() {
                     : "Delegate permissions to share access with colleagues."
                 }
                 action={
-                  search ? undefined : { label: "Delegate", onClick: handleOpenSheet }
+                  search || !canManageRbac
+                    ? undefined
+                    : { label: "Delegate", onClick: handleOpenSheet }
                 }
+                className={PAGE_BODY_EMPTY_CLASS}
               />
             ) : (
               <div className="divide-y divide-border/60 rounded-xl border border-border bg-card">
@@ -227,8 +308,10 @@ export function DelegationsPage() {
                     memberMap={memberMap}
                     nameField="delegateeId"
                     canRevoke
-                    onRevoke={handleRevoke}
-                    isRevoking={revoking === d.id}
+                    onRevoke={handleRequestRevoke}
+                    isRevoking={
+                      revokeMutation.isPending && revokeTarget?.id === d.id
+                    }
                   />
                 ))}
                 {inactiveGiven.map((d) => (
@@ -250,7 +333,38 @@ export function DelegationsPage() {
           onOpenChange={setSheetOpen}
           onSuccess={handleGrantSuccess}
           members={members as Member[]}
+          membersLoading={membersQuery.isLoading}
+          membersError={membersQuery.error}
+          onRetryMembers={handleRetryMembers}
         />
+        {revokeTarget ? (
+          <ConfirmDialog
+            open
+            onOpenChange={handleRevokeOpenChange}
+            title="Revoke this delegation?"
+            description={revokeDescription}
+            icon={
+              <span className="flex size-9 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+                <ShieldX className="size-4" aria-hidden />
+              </span>
+            }
+            content={
+              revokeError ? (
+                <div
+                  role="alert"
+                  className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2.5 text-sm text-destructive"
+                >
+                  {getErrorMessage(revokeError)}
+                </div>
+              ) : null
+            }
+            confirmLabel={revokeError ? "Try again" : "Revoke delegation"}
+            destructive
+            keepOpenOnConfirm
+            isPending={revokeMutation.isPending}
+            onConfirm={handleConfirmRevoke}
+          />
+        ) : null}
       </PageWrapper>
     </Tabs>
   );
@@ -276,7 +390,7 @@ interface DelegationRowProps {
   memberMap: Map<string, string>;
   nameField: "delegatorId" | "delegateeId";
   canRevoke?: boolean;
-  onRevoke?: (id: string) => void;
+  onRevoke?: (delegation: Delegation) => void;
   isRevoking?: boolean;
   isInactive?: boolean;
 }
@@ -291,13 +405,22 @@ function DelegationRow({
   isInactive,
 }: DelegationRowProps) {
   const handleRevoke = useCallback(
-    () => onRevoke?.(delegation.id),
-    [delegation.id, onRevoke],
+    () => onRevoke?.(delegation),
+    [delegation, onRevoke],
   );
 
   const principalId = delegation[nameField];
-  const displayName = memberMap.get(principalId) ?? principalId.slice(0, 12);
+  const displayName =
+    (nameField === "delegatorId"
+      ? delegation.delegatorName
+      : delegation.delegateeName) ??
+    memberMap.get(principalId) ??
+    "Team member";
   const isRevoked = delegation.status === "REVOKED";
+  const isScheduled =
+    !isInactive &&
+    delegation.status === "ACTIVE" &&
+    new Date(delegation.startsAt) > new Date();
 
   return (
     <div className="flex items-center gap-3 px-4 py-2.5">
@@ -313,10 +436,18 @@ function DelegationRow({
               {isRevoked ? "Revoked" : "Expired"}
             </Badge>
           )}
+          {isScheduled ? (
+            <Badge variant="outline" className="shrink-0 text-xs text-blue-600">
+              Scheduled
+            </Badge>
+          ) : null}
         </div>
         <p className="text-xs text-muted-foreground mt-0.5 truncate">
-          {isInactive ? "Ended" : "Ends"}{" "}
-          {formatRelative(new Date(delegation.endsAt), new Date())}
+          {isInactive ? "Ended" : isScheduled ? "Starts" : "Ends"}{" "}
+          {formatRelative(
+            new Date(isScheduled ? delegation.startsAt : delegation.endsAt),
+            new Date(),
+          )}
           {delegation.reason && (
             <span className="text-muted-foreground/60"> · {delegation.reason}</span>
           )}

@@ -1,5 +1,26 @@
 export type NodeStatus = "ACTIVE" | "DISABLED" | "ARCHIVED";
 export type LocationType = "OFFICE" | "WAREHOUSE" | "STORE" | "FACTORY" | "REMOTE";
+export type OrgUnitKind =
+  | "BUSINESS_UNIT"
+  | "BRANCH"
+  | "DEPARTMENT"
+  | "TEAM"
+  | "LOCATION"
+  | "COST_CENTER";
+
+export interface OrgUnitDependency {
+  key: string;
+  label: string;
+  count: number;
+}
+
+export interface OrgUnitDependencyPreview {
+  unitId: string;
+  unitKind: OrgUnitKind;
+  mode: "archive" | "retire";
+  dependencies: OrgUnitDependency[];
+  totalDependencies: number;
+}
 
 export interface OrgBusinessUnit {
   id: string;
@@ -104,10 +125,18 @@ export interface OrgTreeBranch extends OrgBranch {
   children: OrgTreeDepartment[];
 }
 
-export interface OrgTreeNode extends OrgBusinessUnit {
+export interface OrgTreeBusinessUnit extends OrgBusinessUnit {
   type: "business_unit";
   children: OrgTreeBranch[];
 }
+
+export type OrgTreeRoot =
+  | OrgTreeBusinessUnit
+  | OrgTreeBranch
+  | OrgTreeDepartment
+  | OrgTreeTeam;
+
+export type OrgTreeNode = OrgTreeRoot;
 
 export interface OrgHierarchyOverview {
   businessUnits: number;

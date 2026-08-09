@@ -301,6 +301,7 @@ export function OrgBranchesPage() {
   const [showArchived, setShowArchived] = useState(false);
   const [search, setSearch] = useState("");
   const archiveFlow = useHierarchyArchive<OrgBranch>({
+    unitKind: "BRANCH",
     archive: (branch, callbacks) =>
       update.mutate({ id: branch.id, status: "ARCHIVED" }, callbacks),
     successMessage: "Branch archived",
@@ -646,6 +647,10 @@ export function OrgBranchesPage() {
         unitLabel="branch"
         isPending={update.isPending}
         error={archiveFlow.error}
+        preflightError={archiveFlow.preflightError}
+        dependencies={archiveFlow.dependencies}
+        isChecking={archiveFlow.isChecking}
+        onRetryPreflight={archiveFlow.retryPreflight}
         onConfirm={archiveFlow.confirmArchive}
         onOpenChange={archiveFlow.handleOpenChange}
       />

@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import {
   Sheet,
@@ -46,6 +46,7 @@ import { useCan } from "@/hooks/api/access";
 import {
   useWorkerEngagements,
   useCreateEngagement,
+  useUpdateEngagement,
   useCancelEngagement,
   useTerminateEngagement,
 } from "@/hooks/api/directory/workers";
@@ -106,13 +107,14 @@ const NON_BLOCKING_ENGAGEMENT_STATUSES = new Set<EngagementStatus>([
   "CANCELLED",
 ]);
 
-/** Matches the database's half-open daterange rule: [start, end). */
 function findConflictingEngagement(
   period: { startsOn: string; endsOn?: string | null },
   engagements: WorkerEngagement[],
+  excludedEngagementId?: string,
 ): WorkerEngagement | undefined {
   const periodEnd = period.endsOn || "9999-12-31";
   return engagements.find((engagement) => {
+    if (engagement.workerEngagementId === excludedEngagementId) return false;
     if (NON_BLOCKING_ENGAGEMENT_STATUSES.has(engagement.status)) return false;
     const existingEnd = engagement.endsOn || "9999-12-31";
     return period.startsOn < existingEnd && engagement.startsOn < periodEnd;
@@ -156,6 +158,19 @@ const EMPTY_ENGAGEMENT_DEFAULTS: EngagementFormValues = {
   designation: "",
 };
 
+function engagementDefaults(
+  engagement?: WorkerEngagement | null,
+): EngagementFormValues {
+  if (!engagement) return EMPTY_ENGAGEMENT_DEFAULTS;
+  return {
+    startsOn: engagement.startsOn,
+    endsOn: engagement.endsOn ?? "",
+    workerType: engagement.workerType,
+    isPrimary: engagement.isPrimary,
+    designation: engagement.designation ?? "",
+  };
+}
+
 function DialogError({ error }: { error: unknown }) {
   if (!error) return null;
   return (
@@ -173,11 +188,13 @@ function TerminateConfirmationDialog({
   onOpenChange,
   engagement,
   workerId,
+  onChanged,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   engagement: WorkerEngagement;
   workerId: string;
+  onChanged: (engagementId: string) => void;
 }) {
   const terminateEngagement = useTerminateEngagement();
   const [error, setError] = useState<unknown>(null);
@@ -192,6 +209,7 @@ function TerminateConfirmationDialog({
       {
         onSuccess: () => {
           toast.success("Engagement terminated");
+          onChanged(engagement.workerEngagementId);
           onOpenChange(false);
         },
         onError: setError,
@@ -211,8 +229,9 @@ function TerminateConfirmationDialog({
       title="Terminate this engagement?"
       description={
         <>
-          This ends the {workerTypeLabel(engagement.workerType).toLowerCase()} engagement
-          started on {formatDateShort(engagement.startsOn)}. Its history will be preserved.
+          This ends the {workerTypeLabel(engagement.workerType).toLowerCase()}{" "}
+          engagement started on {formatDateShort(engagement.startsOn)}. Its
+          history will be preserved.
         </>
       }
       content={<DialogError error={error} />}
@@ -230,11 +249,13 @@ function CancelPlannedConfirmationDialog({
   onOpenChange,
   engagement,
   workerId,
+  onChanged,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   engagement: WorkerEngagement;
   workerId: string;
+  onChanged: (engagementId: string) => void;
 }) {
   const cancelEngagement = useCancelEngagement();
   const [error, setError] = useState<unknown>(null);
@@ -246,6 +267,7 @@ function CancelPlannedConfirmationDialog({
       {
         onSuccess: () => {
           toast.success("Planned engagement cancelled");
+          onChanged(engagement.workerEngagementId);
           onOpenChange(false);
         },
         onError: setError,
@@ -266,9 +288,9 @@ function CancelPlannedConfirmationDialog({
       description={
         <>
           This frees the dates reserved by the{" "}
-          {workerTypeLabel(engagement.workerType).toLowerCase()} plan starting on{" "}
-          {formatDateShort(engagement.startsOn)}. The record stays in history and can still
-          be audited.
+          {workerTypeLabel(engagement.workerType).toLowerCase()} plan starting
+          on {formatDateShort(engagement.startsOn)}. The record stays in history
+          and can still be audited.
         </>
       }
       content={<DialogError error={error} />}
@@ -286,17 +308,22 @@ function EngagementRowActions({
   workerId,
   canManage,
   canTerminate,
+  onEdit,
+  onChanged,
 }: {
   engagement: WorkerEngagement;
   workerId: string;
   canManage: boolean;
   canTerminate: boolean;
+  onEdit: (engagement: WorkerEngagement) => void;
+  onChanged: (engagementId: string) => void;
 }) {
   const [dialog, setDialog] = useState<"cancel" | "terminate" | null>(null);
+  const canEditPlan = canManage && engagement.status === "PLANNED";
   const canCancelPlan = canManage && engagement.status === "PLANNED";
   const canEndActive = canTerminate && engagement.status === "ACTIVE";
 
-  if (!canCancelPlan && !canEndActive) return null;
+  if (!canEditPlan && !canCancelPlan && !canEndActive) return null;
 
   function handleOpenChange(open: boolean) {
     if (!open) setDialog(null);
@@ -304,20 +331,36 @@ function EngagementRowActions({
 
   return (
     <>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-7 px-2 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
-        onClick={() => setDialog(canCancelPlan ? "cancel" : "terminate")}
-      >
-        {canCancelPlan ? "Cancel plan" : "Terminate"}
-      </Button>
+      <div className="flex items-center justify-end gap-1">
+        {canEditPlan ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 gap-1 px-2 text-xs"
+            onClick={() => onEdit(engagement)}
+          >
+            <Pencil className="size-3" aria-hidden="true" />
+            Edit
+          </Button>
+        ) : null}
+        {canCancelPlan || canEndActive ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
+            onClick={() => setDialog(canCancelPlan ? "cancel" : "terminate")}
+          >
+            {canCancelPlan ? "Cancel plan" : "Terminate"}
+          </Button>
+        ) : null}
+      </div>
       {dialog === "cancel" ? (
         <CancelPlannedConfirmationDialog
           open
           onOpenChange={handleOpenChange}
           engagement={engagement}
           workerId={workerId}
+          onChanged={onChanged}
         />
       ) : null}
       {dialog === "terminate" ? (
@@ -326,35 +369,53 @@ function EngagementRowActions({
           onOpenChange={handleOpenChange}
           engagement={engagement}
           workerId={workerId}
+          onChanged={onChanged}
         />
       ) : null}
     </>
   );
 }
 
-function AddEngagementForm({
+function EngagementForm({
   workerId,
   engagements,
+  editingEngagement,
   onSuccess,
+  onEditCancelled,
 }: {
   workerId: string;
   engagements: WorkerEngagement[];
+  editingEngagement: WorkerEngagement | null;
   onSuccess: () => void;
+  onEditCancelled: () => void;
 }) {
   const createEngagement = useCreateEngagement();
+  const updateEngagement = useUpdateEngagement();
   const [expanded, setExpanded] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const isEditing = editingEngagement !== null;
+  const isPending = isEditing
+    ? updateEngagement.isPending
+    : createEngagement.isPending;
 
   const form = useForm<EngagementFormValues>({
     resolver: zodResolver(engagementSchema),
     defaultValues: EMPTY_ENGAGEMENT_DEFAULTS,
   });
+  const { reset } = form;
+
+  useEffect(() => {
+    if (!editingEngagement) return;
+    setExpanded(true);
+    setSubmitError(null);
+    reset(engagementDefaults(editingEngagement));
+  }, [editingEngagement, reset]);
 
   function handleToggleExpand() {
     setExpanded((prev) => !prev);
     setSubmitError(null);
     if (!expanded) {
-      form.reset(EMPTY_ENGAGEMENT_DEFAULTS);
+      reset(EMPTY_ENGAGEMENT_DEFAULTS);
     }
   }
 
@@ -363,6 +424,7 @@ function AddEngagementForm({
     const conflict = findConflictingEngagement(
       { startsOn: values.startsOn, endsOn: values.endsOn },
       engagements,
+      editingEngagement?.workerEngagementId,
     );
     if (conflict) {
       const resolution =
@@ -382,11 +444,38 @@ function AddEngagementForm({
 
     const activePrimary = engagements.find(
       (engagement) =>
-        engagement.status === "ACTIVE" && engagement.isPrimary,
+        engagement.workerEngagementId !==
+          editingEngagement?.workerEngagementId &&
+        engagement.status === "ACTIVE" &&
+        engagement.isPrimary,
     );
     if (values.isPrimary && activePrimary) {
       setSubmitError(
         "This worker already has a primary engagement. Unmark Primary, or terminate the current primary engagement first.",
+      );
+      return;
+    }
+
+    if (editingEngagement) {
+      updateEngagement.mutate(
+        {
+          workerId,
+          workerEngagementId: editingEngagement.workerEngagementId,
+          startsOn: values.startsOn,
+          endsOn: values.endsOn || null,
+          workerType: values.workerType,
+          designation: values.designation || null,
+        },
+        {
+          onSuccess: () => {
+            toast.success("Engagement updated");
+            reset(EMPTY_ENGAGEMENT_DEFAULTS);
+            setSubmitError(null);
+            setExpanded(false);
+            onSuccess();
+          },
+          onError: (error) => setSubmitError(getErrorMessage(error)),
+        },
       );
       return;
     }
@@ -403,7 +492,7 @@ function AddEngagementForm({
       {
         onSuccess: () => {
           toast.success("Engagement added");
-          form.reset(EMPTY_ENGAGEMENT_DEFAULTS);
+          reset(EMPTY_ENGAGEMENT_DEFAULTS);
           setSubmitError(null);
           setExpanded(false);
           onSuccess();
@@ -416,7 +505,8 @@ function AddEngagementForm({
   function handleCancel() {
     setExpanded(false);
     setSubmitError(null);
-    form.reset(EMPTY_ENGAGEMENT_DEFAULTS);
+    reset(EMPTY_ENGAGEMENT_DEFAULTS);
+    if (isEditing) onEditCancelled();
   }
 
   if (!expanded) {
@@ -434,7 +524,17 @@ function AddEngagementForm({
 
   return (
     <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
-      <p className="mb-3 text-sm font-semibold text-foreground">New engagement</p>
+      <div className="mb-3">
+        <p className="text-sm font-semibold text-foreground">
+          {isEditing ? "Edit planned engagement" : "New engagement"}
+        </p>
+        {isEditing ? (
+          <p className="mt-1 text-xs text-muted-foreground">
+            Correct the schedule or role details. The original record remains in
+            the audit history.
+          </p>
+        ) : null}
+      </div>
       {submitError ? (
         <div
           role="alert"
@@ -446,7 +546,7 @@ function AddEngagementForm({
       ) : null}
       <Form {...form}>
         <form
-          id="add-engagement-form"
+          id="engagement-form"
           onSubmit={form.handleSubmit(handleSubmit)}
           className="space-y-3"
           noValidate
@@ -524,43 +624,45 @@ function AddEngagementForm({
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="isPrimary"
-            render={({ field }) => (
-              <FormItem>
-                <label className="flex cursor-pointer items-center gap-2">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                      id="engagement-is-primary"
-                    />
-                  </FormControl>
-                  <span className="text-sm">Mark as primary engagement</span>
-                </label>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {!isEditing ? (
+            <FormField
+              control={form.control}
+              name="isPrimary"
+              render={({ field }) => (
+                <FormItem>
+                  <label className="flex cursor-pointer items-center gap-2">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        id="engagement-is-primary"
+                      />
+                    </FormControl>
+                    <span className="text-sm">Mark as primary engagement</span>
+                  </label>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          ) : null}
           <div className="flex items-center justify-end gap-2 pt-1">
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={handleCancel}
-              disabled={createEngagement.isPending}
+              disabled={isPending}
             >
               Cancel
             </Button>
             <LoadingButton
               type="submit"
-              form="add-engagement-form"
+              form="engagement-form"
               size="sm"
-              isPending={createEngagement.isPending}
+              isPending={isPending}
               loadingText="Saving…"
             >
-              Add engagement
+              {isEditing ? "Save changes" : "Add engagement"}
             </LoadingButton>
           </div>
         </form>
@@ -578,22 +680,56 @@ interface Props {
 export function WorkerEngagementsSheet({ open, onOpenChange, worker }: Props) {
   const canManage = useCan("workforce:workers:manage");
   const canTerminate = useCan("workforce:workers:terminate");
+  const [editingEngagement, setEditingEngagement] =
+    useState<WorkerEngagement | null>(null);
 
-  const { data: engagements, isLoading, isError, refetch } = useWorkerEngagements(
-    worker.workerId,
-  );
+  const {
+    data: engagements,
+    isLoading,
+    isError,
+    refetch,
+  } = useWorkerEngagements(worker.workerId);
 
   function handleRetry() {
     void refetch();
   }
 
-  const handleEngagementAdded = useCallback(() => {
+  const handleEngagementSaved = useCallback(() => {
+    setEditingEngagement(null);
     void refetch();
   }, [refetch]);
 
+  const handleEdit = useCallback((engagement: WorkerEngagement) => {
+    setEditingEngagement(engagement);
+  }, []);
+
+  const handleEditCancelled = useCallback(() => {
+    setEditingEngagement(null);
+  }, []);
+
+  const handleEngagementChanged = useCallback(
+    (engagementId: string) => {
+      setEditingEngagement((current) =>
+        current?.workerEngagementId === engagementId ? null : current,
+      );
+      void refetch();
+    },
+    [refetch],
+  );
+
+  const handleSheetOpenChange = useCallback(
+    (nextOpen: boolean) => {
+      if (!nextOpen) setEditingEngagement(null);
+      onOpenChange(nextOpen);
+    },
+    [onOpenChange],
+  );
+
   const workerLabel = worker.displayName
     ? worker.displayName
-    : (`${worker.firstName} ${worker.lastName}`.trim() || worker.workerNumber) ?? "Worker";
+    : ((`${worker.firstName} ${worker.lastName}`.trim() ||
+        worker.workerNumber) ??
+      "Worker");
 
   const columns: DataTableColumn<WorkerEngagement>[] = [
     {
@@ -601,7 +737,9 @@ export function WorkerEngagementsSheet({ open, onOpenChange, worker }: Props) {
       header: "Period",
       className: "min-w-[180px]",
       cell: (row) => (
-        <span className={cn("text-sm text-foreground tabular-nums", TEXT_ONE_LINE)}>
+        <span
+          className={cn("text-sm text-foreground tabular-nums", TEXT_ONE_LINE)}
+        >
           {periodLabel(row)}
         </span>
       ),
@@ -652,13 +790,15 @@ export function WorkerEngagementsSheet({ open, onOpenChange, worker }: Props) {
     {
       key: "actions",
       header: "",
-      className: "w-24 shrink-0",
+      className: "min-w-[160px]",
       cell: (row) => (
         <EngagementRowActions
           engagement={row}
           workerId={worker.workerId}
           canManage={canManage}
           canTerminate={canTerminate}
+          onEdit={handleEdit}
+          onChanged={handleEngagementChanged}
         />
       ),
     },
@@ -667,7 +807,7 @@ export function WorkerEngagementsSheet({ open, onOpenChange, worker }: Props) {
   const rows = engagements ?? [];
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={handleSheetOpenChange}>
       <SheetContent
         side="right"
         className="flex flex-col gap-0 p-0 sm:max-w-2xl"
@@ -704,10 +844,12 @@ export function WorkerEngagementsSheet({ open, onOpenChange, worker }: Props) {
           )}
 
           {canManage && (
-            <AddEngagementForm
+            <EngagementForm
               workerId={worker.workerId}
               engagements={rows}
-              onSuccess={handleEngagementAdded}
+              editingEngagement={editingEngagement}
+              onSuccess={handleEngagementSaved}
+              onEditCancelled={handleEditCancelled}
             />
           )}
         </SheetBody>

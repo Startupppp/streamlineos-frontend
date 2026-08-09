@@ -13,10 +13,11 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { useOrgTree } from "@/hooks/api/org-hierarchy";
 import type {
-  OrgTreeNode,
+  OrgTreeBusinessUnit,
   OrgTreeBranch,
   OrgTreeDepartment,
   OrgTreeTeam,
+  OrgTreeRoot,
 } from "@/types/org-hierarchy";
 import { RequireModule } from "@/components/auth/require-module";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -40,6 +41,10 @@ const NODE_LABELS: Record<NodeType, string> = {
   department: "Department",
   team: "Team",
 };
+
+function assertNever(value: never): never {
+  throw new Error(`Unhandled node type: ${String(value)}`);
+}
 
 interface TreeItemProps {
   name: string;
@@ -159,7 +164,7 @@ function BranchNode({ node, depth }: { node: OrgTreeBranch; depth: number }) {
   );
 }
 
-function BusinessUnitNode({ node }: { node: OrgTreeNode }) {
+function BusinessUnitNode({ node }: { node: OrgTreeBusinessUnit }) {
   return (
     <TreeItem
       name={node.name}
@@ -176,54 +181,84 @@ function BusinessUnitNode({ node }: { node: OrgTreeNode }) {
   );
 }
 
-function filterTree(nodes: OrgTreeNode[], q: string): OrgTreeNode[] {
+function RootNode({ node }: { node: OrgTreeRoot }) {
+  switch (node.type) {
+    case "business_unit":
+      return <BusinessUnitNode node={node} />;
+    case "branch":
+      return <BranchNode node={node} depth={0} />;
+    case "department":
+      return <DeptNode node={node} depth={0} />;
+    case "team":
+      return <TeamNode node={node} depth={0} />;
+    default:
+      return assertNever(node);
+  }
+}
+
+function matchTeam(t: OrgTreeTeam, lower: string): OrgTreeTeam | null {
+  return t.name.toLowerCase().includes(lower) || t.code.toLowerCase().includes(lower)
+    ? t
+    : null;
+}
+
+function matchDept(d: OrgTreeDepartment, lower: string): OrgTreeDepartment | null {
+  if (d.name.toLowerCase().includes(lower) || d.code.toLowerCase().includes(lower)) {
+    return { ...d, children: d.children };
+  }
+  const teams = d.children
+    .map((t) => matchTeam(t, lower))
+    .filter((t): t is OrgTreeTeam => t !== null);
+  if (teams.length) return { ...d, children: teams };
+  return null;
+}
+
+function matchBranch(b: OrgTreeBranch, lower: string): OrgTreeBranch | null {
+  if (b.name.toLowerCase().includes(lower) || b.code.toLowerCase().includes(lower)) {
+    return { ...b, children: b.children };
+  }
+  const depts = b.children
+    .map((d) => matchDept(d, lower))
+    .filter((d): d is OrgTreeDepartment => d !== null);
+  if (depts.length) return { ...b, children: depts };
+  return null;
+}
+
+function matchBusinessUnit(
+  bu: OrgTreeBusinessUnit,
+  lower: string,
+): OrgTreeBusinessUnit | null {
+  if (bu.name.toLowerCase().includes(lower) || bu.code.toLowerCase().includes(lower)) {
+    return { ...bu, children: bu.children };
+  }
+  const branches = bu.children
+    .map((b) => matchBranch(b, lower))
+    .filter((b): b is OrgTreeBranch => b !== null);
+  if (branches.length) return { ...bu, children: branches };
+  return null;
+}
+
+function filterRoot(node: OrgTreeRoot, lower: string): OrgTreeRoot | null {
+  switch (node.type) {
+    case "business_unit":
+      return matchBusinessUnit(node, lower);
+    case "branch":
+      return matchBranch(node, lower);
+    case "department":
+      return matchDept(node, lower);
+    case "team":
+      return matchTeam(node, lower);
+    default:
+      return assertNever(node);
+  }
+}
+
+function filterTree(nodes: OrgTreeRoot[], q: string): OrgTreeRoot[] {
   if (!q) return nodes;
   const lower = q.toLowerCase();
-
-  function matchesBranch(b: OrgTreeBranch): OrgTreeBranch | null {
-    const depts = b.children
-      .map((d) => {
-        const teams = d.children.filter(
-          (t) =>
-            t.name.toLowerCase().includes(lower) ||
-            t.code.toLowerCase().includes(lower),
-        );
-        if (
-          d.name.toLowerCase().includes(lower) ||
-          d.code.toLowerCase().includes(lower)
-        ) {
-          return { ...d, children: d.children };
-        }
-        if (teams.length) return { ...d, children: teams };
-        return null;
-      })
-      .filter((d): d is OrgTreeDepartment => d !== null);
-
-    if (
-      b.name.toLowerCase().includes(lower) ||
-      b.code.toLowerCase().includes(lower)
-    ) {
-      return { ...b, children: b.children };
-    }
-    if (depts.length) return { ...b, children: depts };
-    return null;
-  }
-
   return nodes
-    .map((bu) => {
-      const branches = bu.children
-        .map(matchesBranch)
-        .filter((b): b is OrgTreeBranch => b !== null);
-      if (
-        bu.name.toLowerCase().includes(lower) ||
-        bu.code.toLowerCase().includes(lower)
-      ) {
-        return { ...bu, children: bu.children };
-      }
-      if (branches.length) return { ...bu, children: branches };
-      return null;
-    })
-    .filter((n): n is OrgTreeNode => n !== null);
+    .map((node) => filterRoot(node, lower))
+    .filter((n): n is OrgTreeRoot => n !== null);
 }
 
 export function OrganizationChartPage() {
@@ -299,14 +334,14 @@ export function OrganizationChartPage() {
                 description={
                   query
                     ? "No results match your search."
-                    : "Add a business unit, or finish workspace setup to generate a starter structure."
+                    : "Add a business unit or branch, or finish workspace setup to generate a starter structure."
                 }
               />
             )}
             {!isLoading && !isError && filtered.length > 0 && (
               <div className="py-2">
-                {filtered.map((bu) => (
-                  <BusinessUnitNode key={bu.id} node={bu} />
+                {filtered.map((root) => (
+                  <RootNode key={root.id} node={root} />
                 ))}
               </div>
             )}

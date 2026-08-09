@@ -4,6 +4,7 @@ import {
   useCancelEngagement,
   useCreateEngagement,
   useTerminateEngagement,
+  useUpdateEngagement,
   useWorkerEngagements,
 } from "@/hooks/api/directory/workers";
 import type {
@@ -19,6 +20,7 @@ jest.mock("@/hooks/api/access", () => ({
 jest.mock("@/hooks/api/directory/workers", () => ({
   useWorkerEngagements: jest.fn(),
   useCreateEngagement: jest.fn(),
+  useUpdateEngagement: jest.fn(),
   useCancelEngagement: jest.fn(),
   useTerminateEngagement: jest.fn(),
 }));
@@ -89,6 +91,7 @@ const plannedEngagement: WorkerEngagement = {
 
 describe("WorkerEngagementsSheet", () => {
   const createMutate = jest.fn();
+  const updateMutate = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -101,6 +104,10 @@ describe("WorkerEngagementsSheet", () => {
     });
     (useCreateEngagement as jest.Mock).mockReturnValue({
       mutate: createMutate,
+      isPending: false,
+    });
+    (useUpdateEngagement as jest.Mock).mockReturnValue({
+      mutate: updateMutate,
       isPending: false,
     });
     (useCancelEngagement as jest.Mock).mockReturnValue({
@@ -154,5 +161,47 @@ describe("WorkerEngagementsSheet", () => {
     expect(
       screen.getByText(/The record stays in history and can still be audited/i),
     ).toBeInTheDocument();
+  });
+
+  it("edits a planned engagement without treating it as its own overlap", async () => {
+    render(
+      <WorkerEngagementsSheet
+        open
+        onOpenChange={jest.fn()}
+        worker={worker}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+
+    expect(screen.getByText("Edit planned engagement")).toBeInTheDocument();
+    expect(screen.getByLabelText("Pick a date")).toHaveValue("2026-08-17");
+    expect(
+      screen.queryByText("Mark as primary engagement"),
+    ).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("Pick a date"), {
+      target: { value: "2026-08-19" },
+    });
+    fireEvent.change(screen.getByLabelText("Open-ended"), {
+      target: { value: "2026-09-30" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+
+    await waitFor(() => expect(updateMutate).toHaveBeenCalledTimes(1));
+    expect(updateMutate).toHaveBeenCalledWith(
+      {
+        workerId: "worker-1",
+        workerEngagementId: "engagement-1",
+        startsOn: "2026-08-19",
+        endsOn: "2026-09-30",
+        workerType: "FULL_TIME",
+        designation: null,
+      },
+      expect.objectContaining({
+        onSuccess: expect.any(Function),
+        onError: expect.any(Function),
+      }),
+    );
   });
 });

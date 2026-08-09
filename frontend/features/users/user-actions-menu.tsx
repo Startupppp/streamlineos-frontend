@@ -24,12 +24,14 @@ import {
   KeyRound,
   Trash2,
   UserMinus,
+  UserCog,
 } from "lucide-react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { useCan } from "@/hooks/api/access";
+import { useAccess, useCan } from "@/hooks/api/access";
 import { useRemoveOrgMember } from "@/hooks/api/organization";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { UserChangeRoleDialog } from "./user-change-role-dialog";
 
 type PendingAction = "suspend" | "archive" | "delete" | "remove";
 
@@ -52,9 +54,13 @@ export function UserActionsMenu({ user, onView }: UserActionsMenuProps) {
     useSendSigninLink();
   const { mutate: removeMember, isPending: isRemoving } = useRemoveOrgMember();
   const canManage = useCan("settings:organization:manage");
+  const { data: accessData } = useAccess();
+  const canChangeRole =
+    useCan("settings:rbac:manage") && accessData?.isOrgOwner === true;
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(
     null,
   );
+  const [isChangeRoleOpen, setIsChangeRoleOpen] = useState(false);
 
   const isArchived = user.userStatus === "archived";
   const isActiveUser = user.userStatus ? user.userStatus === "active" : user.isActive;
@@ -149,6 +155,14 @@ export function UserActionsMenu({ user, onView }: UserActionsMenuProps) {
     setPendingAction("remove");
   }
 
+  function handleOpenChangeRole() {
+    setIsChangeRoleOpen(true);
+  }
+
+  function handleChangeRoleOpenChange(open: boolean) {
+    setIsChangeRoleOpen(open);
+  }
+
   function handleDialogOpenChange(open: boolean) {
     if (!open) setPendingAction(null);
   }
@@ -217,7 +231,13 @@ export function UserActionsMenu({ user, onView }: UserActionsMenuProps) {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
           <DropdownMenuItem onClick={onView}>View details</DropdownMenuItem>
-          {canManage && <DropdownMenuSeparator />}
+          {(canManage || (canChangeRole && !user.isOwner)) && <DropdownMenuSeparator />}
+          {canChangeRole && !user.isOwner && (
+            <DropdownMenuItem onClick={handleOpenChangeRole}>
+              <UserCog className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+              Change role
+            </DropdownMenuItem>
+          )}
           {canActivateUser && (
             <DropdownMenuItem onClick={handleActivate}>
               <ShieldCheck className="h-3.5 w-3.5 mr-2 text-green-600" />
@@ -282,6 +302,11 @@ export function UserActionsMenu({ user, onView }: UserActionsMenuProps) {
         destructive={dialogConfig?.destructive}
         isPending={dialogConfig?.isPending}
         onConfirm={dialogConfig?.onConfirm ?? noOp}
+      />
+      <UserChangeRoleDialog
+        open={isChangeRoleOpen}
+        onOpenChange={handleChangeRoleOpenChange}
+        user={user}
       />
     </>
   );

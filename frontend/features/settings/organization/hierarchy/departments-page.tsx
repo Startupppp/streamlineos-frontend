@@ -200,6 +200,7 @@ export function OrgDepartmentsPage() {
   const [showArchived, setShowArchived] = useState(false);
   const [search, setSearch] = useState("");
   const archiveFlow = useHierarchyArchive<OrgDepartment>({
+    unitKind: "DEPARTMENT",
     archive: (department, callbacks) =>
       update.mutate({ id: department.id, status: "ARCHIVED" }, callbacks),
     successMessage: "Department archived",
@@ -512,6 +513,10 @@ export function OrgDepartmentsPage() {
         unitLabel="department"
         isPending={update.isPending}
         error={archiveFlow.error}
+        preflightError={archiveFlow.preflightError}
+        dependencies={archiveFlow.dependencies}
+        isChecking={archiveFlow.isChecking}
+        onRetryPreflight={archiveFlow.retryPreflight}
         onConfirm={archiveFlow.confirmArchive}
         onOpenChange={archiveFlow.handleOpenChange}
       />

@@ -121,7 +121,7 @@ function buildMenuEntries(opts: {
         { href: "/settings/roles", label: "Roles", icon: Shield },
         {
           href: "/settings/delegations",
-          label: "Access Policies",
+          label: "Delegations",
           icon: ShieldCheck,
         },
       );

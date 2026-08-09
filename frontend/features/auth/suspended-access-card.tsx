@@ -36,7 +36,7 @@ function OrganizationRow({
   return (
     <button
       type="button"
-      className="group flex w-full items-center gap-3 rounded-lg border border-transparent bg-white px-3 py-2.5 text-left shadow-sm transition-colors hover:border-slate-300 disabled:cursor-not-allowed disabled:opacity-60"
+      className="group flex w-full items-center gap-3 rounded-lg border border-transparent bg-card px-3 py-2.5 text-left shadow-sm transition-colors hover:border-slate-300 disabled:cursor-not-allowed disabled:opacity-60"
       onClick={handleSelect}
       disabled={disabled}
     >
@@ -134,13 +134,13 @@ export function SuspendedAccessCard({
       className="w-full max-w-md animate-fade-up"
       aria-labelledby="suspended-access-title"
     >
-      <div className="rounded-2xl border border-amber-200/80 bg-white p-6 shadow-[0_20px_55px_-28px_rgba(120,53,15,0.3)] sm:p-8">
-        <div className="flex size-12 items-center justify-center rounded-xl bg-amber-50 ring-1 ring-amber-200/80">
-          <ShieldAlert className="size-6 text-amber-700" aria-hidden="true" />
+      <div className="rounded-2xl border border-amber-200/80 dark:border-amber-500/30 bg-card p-6 shadow-[0_20px_55px_-28px_rgba(120,53,15,0.3)] sm:p-8">
+        <div className="flex size-12 items-center justify-center rounded-xl bg-amber-50 ring-1 ring-amber-200/80 dark:bg-amber-500/10 dark:ring-amber-500/30">
+          <ShieldAlert className="size-6 text-amber-700 dark:text-amber-300" aria-hidden="true" />
         </div>
 
         <div className="mt-5 space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-700">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-700 dark:text-amber-300">
             Access paused
           </p>
           <h1
@@ -168,13 +168,13 @@ export function SuspendedAccessCard({
 
         {organizationsError ? (
           <div
-            className="mt-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3"
+            className="mt-5 rounded-xl border border-rose-200 bg-rose-50 dark:border-rose-500/30 dark:bg-rose-500/10 px-4 py-3"
             role="alert"
           >
-            <p className="text-sm font-medium text-rose-900">
+            <p className="text-sm font-medium text-rose-900 dark:text-rose-200">
               We couldn&apos;t check your other organizations
             </p>
-            <p className="mt-1 text-xs leading-5 text-rose-700">
+            <p className="mt-1 text-xs leading-5 text-rose-700 dark:text-rose-300">
               Your access data is unchanged. Check your connection and try
               again.
             </p>

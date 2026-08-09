@@ -68,35 +68,29 @@ export function DashboardShell({
   const pathname = usePathname();
   const route = pathname ?? "";
   const isPortalRoute = isPortalChromelessPath(route);
+
   const [isSidebarCollapsed, setIsSidebarCollapsed] =
     useState(defaultCollapsed);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isChatConversationOpen, setIsChatConversationOpen] = useState(false);
   const [productSwitcherOpen, setProductSwitcherOpen] = useState(false);
   const [workspaceSwitcherOpen, setWorkspaceSwitcherOpen] = useState(false);
+  const [isChatConversationOpen, setIsChatConversationOpen] = useState(false);
+
   const { hideSidebar, navGroups } = useProductSidebarVisibility();
   const {
     data: access,
-    isLoading: accessLoading,
-    isError: accessError,
     error: accessErr,
+    isError: accessError,
     refetch: refetchAccess,
+    isLoading: accessLoading,
   } = useAccess();
   usePushSubscription(userId);
+
   const rafIdRef = useRef<number | null>(null);
 
   const handleRetryAccess = useCallback(() => {
     void refetchAccess();
   }, [refetchAccess]);
-
-  useEffect(() => {
-    return () => {
-      if (rafIdRef.current !== null) {
-        cancelAnimationFrame(rafIdRef.current);
-        rafIdRef.current = null;
-      }
-    };
-  }, []);
 
   const handleToggleSidebar = useCallback(() => {
     setIsSidebarCollapsed((prev) => {
@@ -114,29 +108,6 @@ export function DashboardShell({
     setMobileMenuOpen(true);
   }, [hideSidebar]);
   const handleCloseMobileMenu = useCallback(() => setMobileMenuOpen(false), []);
-
-  useEffect(() => {
-    if (!route.startsWith("/chat")) return;
-    const handleConversationChange = (event: Event) => {
-      if (
-        !(event instanceof CustomEvent) ||
-        typeof event.detail !== "boolean"
-      ) {
-        return;
-      }
-      setIsChatConversationOpen(event.detail);
-    };
-    window.addEventListener(
-      "chat:conversation-change",
-      handleConversationChange,
-    );
-    return () => {
-      window.removeEventListener(
-        "chat:conversation-change",
-        handleConversationChange,
-      );
-    };
-  }, [route]);
 
   const deferCloseMobileMenu = useCallback(() => {
     if (rafIdRef.current !== null) cancelAnimationFrame(rafIdRef.current);
@@ -169,7 +140,37 @@ export function DashboardShell({
   const showChatBottomNav = isChatRoute && !isChatConversationOpen;
   const showAboveBottomNav = showModuleBottomNav || showChatBottomNav;
 
-  if ((accessLoading && !access) || (accessError && !access)) {
+  useEffect(() => {
+    if (!route.startsWith("/chat")) return;
+
+    const handleConversationChange = (event: Event) => {
+      if (!(event instanceof CustomEvent) || typeof event.detail !== "boolean")
+        return;
+
+      setIsChatConversationOpen(event.detail);
+    };
+    window.addEventListener(
+      "chat:conversation-change",
+      handleConversationChange,
+    );
+    return () => {
+      window.removeEventListener(
+        "chat:conversation-change",
+        handleConversationChange,
+      );
+    };
+  }, [route]);
+
+  useEffect(() => {
+    return () => {
+      if (rafIdRef.current !== null) {
+        cancelAnimationFrame(rafIdRef.current);
+        rafIdRef.current = null;
+      }
+    };
+  }, []);
+
+  if ((accessLoading && !access) || (accessError && !access))
     return (
       <div className="flex h-dvh flex-col overflow-hidden">
         {accessError ? (
@@ -184,7 +185,6 @@ export function DashboardShell({
         )}
       </div>
     );
-  }
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden overscroll-none">
@@ -198,7 +198,6 @@ export function DashboardShell({
       <CommandPaletteProvider>
         <AskOsProvider>
           <CommandPalette />
-
           <TrialBanner />
 
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
@@ -223,7 +222,7 @@ export function DashboardShell({
 
               <main
                 id="dashboard-content"
-                className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden md:pb-6"
+                className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
               >
                 <div
                   className={cn(

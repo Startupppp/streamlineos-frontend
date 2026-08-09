@@ -415,6 +415,7 @@ export const useInvitations = (
         ...(params?.q ? { q: params.q } : {}),
       }),
     staleTime: 30_000,
+    refetchOnWindowFocus: "always",
     ...options,
     enabled: canView && (options?.enabled ?? true),
   });
@@ -579,6 +580,29 @@ export const useSendSigninLink = () => {
   return useMutation<{ success: boolean; email: string }, Error, string>({
     mutationKey: ["send", "signin", "link"],
     mutationFn: (userId) => apiClient.post<{ success: boolean; email: string }>(`/users/${userId}/send-signin-link`, {}),
+  });
+};
+
+export const useUpdateUserRole = () => {
+  const queryClient = useQueryClient();
+  return useMutation<
+    { success: boolean; userId: string; role: string },
+    Error,
+    { userId: string; role: string }
+  >({
+    mutationKey: ["users", "update-role"],
+    mutationFn: ({ userId, role }) =>
+      apiClient.post<{ success: boolean; userId: string; role: string }>(
+        `/settings/users/${userId}/role`,
+        { role },
+      ),
+    onSuccess: (_, { userId }) => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.detail(userId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.stats() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.organization.members() });
+      invalidatePersonAccountAccess(queryClient);
+    },
   });
 };
 

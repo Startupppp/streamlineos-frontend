@@ -2287,7 +2287,6 @@ export const NAV_GROUPS: NavGroup[] = [
       "directory:people:view",
       "settings:view",
       "settings:organization:manage",
-      "workforce:workers:view",
     ],
     routes: [
       {
@@ -2296,7 +2295,6 @@ export const NAV_GROUPS: NavGroup[] = [
         href: "/settings/directory",
         exact: true,
         activePrefixes: ["/settings/directory/"],
-        inactivePrefixes: ["/settings/directory/workers"],
         requiredPermission: "directory:people:view",
       },
       {
@@ -2305,13 +2303,6 @@ export const NAV_GROUPS: NavGroup[] = [
         href: "/settings/users",
         exact: true,
         requiredPermission: "settings:view",
-      },
-      {
-        label: "Workers",
-        icon: Briefcase,
-        href: "/settings/directory/workers",
-        requiredPermission: "workforce:workers:view",
-        modulesAny: ["hrms", "payroll"],
       },
     ],
   },
@@ -2326,10 +2317,10 @@ export const NAV_GROUPS: NavGroup[] = [
         requiredPermission: "settings:rbac:manage",
       },
       {
-        label: "Access Policies",
+        label: "Delegations",
         icon: ShieldCheck,
         href: "/settings/delegations",
-        requiredPermission: "settings:manage",
+        requiredPermission: "settings:rbac:manage",
       },
     ],
   },
@@ -2836,6 +2827,13 @@ const HOME_NAV_GROUPS: NavGroup[] = [
         exact: true,
         activePrefixes: ["/directory/"],
         inactivePrefixes: ["/directory/workers"],
+      },
+      {
+        label: "Workers",
+        href: "/directory/workers",
+        icon: Briefcase,
+        requiredPermission: "workforce:workers:view",
+        modulesAny: ["hrms", "payroll"],
       },
     ],
   },

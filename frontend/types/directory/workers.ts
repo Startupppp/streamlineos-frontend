@@ -93,6 +93,16 @@ export interface CreateEngagementInput {
   designation?: string;
 }
 
+export interface UpdateEngagementInput {
+  workerId: string;
+  workerEngagementId: string;
+  startsOn?: string;
+  endsOn?: string | null;
+  workerType?: WorkerType;
+  isPrimary?: boolean;
+  designation?: string | null;
+}
+
 export interface TerminateEngagementInput {
   terminationReason?: string;
   terminationNotes?: string;

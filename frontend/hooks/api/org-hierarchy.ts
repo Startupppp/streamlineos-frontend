@@ -14,6 +14,8 @@ import type {
   OrgCostCenter,
   OrgHierarchyOverview,
   OrgTreeNode,
+  OrgUnitDependencyPreview,
+  OrgUnitKind,
 } from "@/types/org-hierarchy";
 
 interface PaginatedResponse<T> {
@@ -28,6 +30,16 @@ interface ListQuery extends Record<string, unknown> {
   limit?: number;
   search?: string;
   status?: "ACTIVE" | "DISABLED" | "ARCHIVED";
+}
+
+export function getOrgUnitDependencyPreview(
+  unitKind: OrgUnitKind,
+  unitId: string,
+) {
+  return apiClient.get<OrgUnitDependencyPreview>(
+    `/org-hierarchy/dependencies/${unitKind}/${unitId}`,
+    { mode: "archive" },
+  );
 }
 
 // ─── Overview & Tree ─────────────────────────────────────────────────────────
