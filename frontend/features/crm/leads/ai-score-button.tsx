@@ -18,6 +18,7 @@ import { useAIScoreLead } from "@/hooks/api/ai";
 import { useFeature } from "@/lib/billing/use-feature";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCan } from "@/hooks/api/access";
 
 interface AIScoreButtonProps {
   leadId: number;
@@ -35,6 +36,7 @@ export function AIScoreButton({
   const result = scoreMutation.data;
   const { enabled: featureEnabled, requiredPlan } =
     useFeature("ai.lead-scoring");
+  const canUseCrmAi = useCan("crm:ai:use");
 
   const handleScore = useCallback(() => {
     if (!featureEnabled) {
@@ -62,6 +64,8 @@ export function AIScoreButton({
     if (score >= 40) return "text-orange-500 dark:text-orange-400";
     return "text-red-500 dark:text-red-400";
   };
+
+  if (!canUseCrmAi) return null;
 
   if (compact) {
     return (

@@ -21,14 +21,18 @@ export const useAccess = (
 ) => {
   const { data: session } = useSession();
   const orgId = session?.orgId;
+  const userId = session?.user?.id;
   const { enabled: enabledOption, ...restOptions } = options ?? {};
 
   return useQuery<AccessResponse, Error>({
-    staleTime: 5 * 60_000,
-    queryKey: queryKeys.access.me(orgId),
+    staleTime: 30_000,
+    refetchOnMount: true,
+    refetchOnWindowFocus: "always",
+    refetchOnReconnect: "always",
+    queryKey: queryKeys.access.me(orgId, userId),
     queryFn: () => apiClient.get<AccessResponse>("/me/access"),
     ...restOptions,
-    enabled: !!orgId && (enabledOption ?? true),
+    enabled: !!orgId && !!userId && (enabledOption ?? true),
   });
 };
 

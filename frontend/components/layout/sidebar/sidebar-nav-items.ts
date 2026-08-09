@@ -102,13 +102,16 @@
 } from "lucide-react";
 import { matchesOrgModule } from "@/lib/module-vocabulary";
 import { ROLES } from "@/lib/constants/roles";
+import type { PermissionKey } from "@/lib/rbac/permissions";
+
+type PermissionRequirement = PermissionKey | PermissionKey[];
 
 export interface NavRoute {
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   href: string;
   badge?: "leaves";
-  requiredPermission?: string | string[];
+  requiredPermission?: PermissionRequirement;
   children?: NavRoute[];
   module?: ProductKey;
   /** Show the route when at least one of these products is enabled. */
@@ -149,7 +152,7 @@ export interface NavGroup {
   label: string;
   routes: NavRoute[];
   defaultCollapsed?: boolean;
-  requiredPermission?: string | string[];
+  requiredPermission?: PermissionRequirement;
   module?: ProductKey;
 }
 
@@ -219,6 +222,17 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
     routes: [
       {
+        label: "Overview",
+        icon: LayoutDashboard,
+        href: "/hr",
+        exact: true,
+        requiredPermission: [
+          "hr:employees:view",
+          "hr:attendance:view",
+          "hr:leaves:view",
+        ],
+      },
+      {
         label: "Approvals Inbox",
         icon: ClipboardCheck,
         href: "/hr/approvals",
@@ -227,8 +241,7 @@ export const NAV_GROUPS: NavGroup[] = [
       {
         label: "Employees",
         icon: Users,
-        href: "/hr",
-        exact: true,
+        href: "/hr/employees",
         requiredPermission: "hr:employees:view",
         children: [
           {
@@ -266,7 +279,7 @@ export const NAV_GROUPS: NavGroup[] = [
             icon: ClipboardList,
             href: "/hr/onboarding",
             exact: true,
-            requiredPermission: "hr:employees:create",
+            requiredPermission: "hr:onboarding:manage",
           },
           {
             label: "My Onboarding Tasks",
@@ -331,7 +344,7 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: CalendarCheck,
         href: "/hr/leaves",
         badge: "leaves" as const,
-        requiredPermission: "hr:leaves:view",
+        requiredPermission: ["self:leaves", "hr:leaves:view"],
         children: [
           {
             label: "Policies",
@@ -399,7 +412,7 @@ export const NAV_GROUPS: NavGroup[] = [
             label: "Reimbursements",
             icon: RefreshCcw,
             href: "/hr/reimbursements",
-            requiredPermission: "hr:expenses:view",
+            requiredPermission: "hr:payroll:view",
           },
           {
             label: "Travel",
@@ -420,7 +433,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Performance",
         icon: Star,
         href: "/hr/performance",
-        requiredPermission: "hr:performance:view",
+        requiredPermission: "hr:performance:manage",
         children: [
           {
             label: "Goals & OKRs",
@@ -438,7 +451,7 @@ export const NAV_GROUPS: NavGroup[] = [
             label: "360 Feedback",
             icon: MessageSquareText,
             href: "/hr/feedback",
-            requiredPermission: "hr:performance:view",
+            requiredPermission: "hr:feedback:view",
           },
           {
             label: "Analytics",
@@ -464,19 +477,25 @@ export const NAV_GROUPS: NavGroup[] = [
             label: "Doc Review",
             icon: FileSearch,
             href: "/hr/document-review",
-            requiredPermission: "hr:documents:manage",
+            requiredPermission: "hr:documents:view",
           },
           {
             label: "Handbook",
             icon: BookOpen,
             href: "/hr/handbook",
-            requiredPermission: "hr:documents:view",
+            requiredPermission: "hr:documents:manage",
           },
           {
             label: "Email Templates",
             icon: MailOpen,
             href: "/hr/email-templates",
-            requiredPermission: "hr:employees:update",
+            requiredPermission: "hr:email-templates:manage",
+          },
+          {
+            label: "Background Checks",
+            icon: ShieldCheck,
+            href: "/hr/background-verification",
+            requiredPermission: "hr:sensitive:view",
           },
         ],
       },
@@ -490,7 +509,7 @@ export const NAV_GROUPS: NavGroup[] = [
             label: "Asset Returns",
             icon: PackageMinus,
             href: "/hr/asset-returns",
-            requiredPermission: "hr:assets:manage",
+            requiredPermission: "hr:assets:view",
           },
         ],
       },
@@ -498,7 +517,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Workforce",
         icon: TrendingUp,
         href: "/hr/workforce",
-        requiredPermission: ["hr:analytics:read", "hr:contracts:view"],
+        requiredPermission: "hr:analytics:read",
         children: [
           {
             label: "Workforce Planning",
@@ -524,12 +543,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "People Ops",
         icon: UserCheck,
         href: "/hr/cases",
-        requiredPermission: [
-          "hr:cases:view",
-          "hr:helpdesk:view",
-          "hr:engagement:view",
-          "hr:accommodations:view",
-        ],
+        requiredPermission: "hr:cases:view",
         children: [
           {
             label: "Service Delivery",
@@ -567,14 +581,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Compliance & Risk",
         icon: Shield,
         href: "/hr/compliance",
-        requiredPermission: [
-          "hr:compliance:manage",
-          "hr:safety:view",
-          "hr:emergency:manage",
-          "hr:labor:view",
-          "hr:legalhold:view",
-          "hr:retention:manage",
-        ],
+        requiredPermission: "hr:compliance:manage",
         children: [
           {
             label: "Compliance",
@@ -618,12 +625,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Governance",
         icon: ShieldCheck,
         href: "/hr/identity",
-        requiredPermission: [
-          "hr:identity:view",
-          "hr:employees:view",
-          "hr:policies:view",
-          "hr:eventstream:view",
-        ],
+        requiredPermission: "hr:identity:view",
         children: [
           {
             label: "Identity & Access",
@@ -635,13 +637,13 @@ export const NAV_GROUPS: NavGroup[] = [
             label: "Delegations",
             icon: Share2,
             href: "/hr/delegations",
-            requiredPermission: "hr:employees:view",
+            requiredPermission: "hr:workflows:manage",
           },
           {
             label: "Simulator",
             icon: Sparkles,
             href: "/hr/simulator",
-            requiredPermission: "hr:policies:view",
+            requiredPermission: "hr:policies:manage",
           },
           {
             label: "Event Stream",
@@ -652,16 +654,10 @@ export const NAV_GROUPS: NavGroup[] = [
         ],
       },
       {
-        label: "Announcements",
-        icon: Bell,
-        href: "/hr/announcements",
-        requiredPermission: "hr:employees:view",
-      },
-      {
         label: "Exit Management",
         icon: UserMinus,
         href: "/hr/exit",
-        requiredPermission: "hr:employees:update",
+        requiredPermission: "hr:exit:view",
         children: [
           {
             label: "Full & Final",
@@ -673,13 +669,7 @@ export const NAV_GROUPS: NavGroup[] = [
             label: "Termination",
             icon: UserX,
             href: "/hr/termination",
-            requiredPermission: "hr:employees:delete",
-          },
-          {
-            label: "Background Check",
-            icon: ShieldCheck,
-            href: "/hr/background-verification",
-            requiredPermission: "hr:documents:manage",
+            requiredPermission: "hr:exit:manage",
           },
         ],
       },
@@ -687,7 +677,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "HR Analytics",
         icon: BarChart3,
         href: "/hr/analytics",
-        requiredPermission: "hr:employees:view",
+        requiredPermission: "hr:analytics:read",
       },
       {
         label: "Access",
@@ -699,67 +689,67 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Settings",
         icon: SlidersHorizontal,
         href: "/hr/settings/import-export",
-        requiredPermission: "hr:employees:view",
+        requiredPermission: ["hr:import:manage", "hr:export:manage"],
         children: [
           {
             label: "Import / Export",
             icon: FileText,
             href: "/hr/settings/import-export",
-            requiredPermission: "hr:employees:view",
+            requiredPermission: ["hr:import:manage", "hr:export:manage"],
           },
           {
             label: "Integrations",
             icon: Plug,
             href: "/hr/settings/integrations",
-            requiredPermission: "hr:employees:view",
+            requiredPermission: "hr:integrations:manage",
           },
           {
             label: "Policies",
             icon: FileText,
             href: "/hr/settings/policies",
-            requiredPermission: "hr:employees:view",
+            requiredPermission: "hr:policies:view",
           },
           {
             label: "Workflows",
             icon: Workflow,
             href: "/hr/settings/workflows",
-            requiredPermission: "hr:employees:view",
+            requiredPermission: "hr:workflows:view",
           },
           {
             label: "Templates",
             icon: LayoutTemplate,
             href: "/hr/settings/templates",
-            requiredPermission: "hr:employees:view",
+            requiredPermission: "hr:templates:view",
           },
           {
             label: "Forms",
             icon: ClipboardList,
             href: "/hr/settings/forms",
-            requiredPermission: "hr:employees:view",
+            requiredPermission: "hr:forms:view",
           },
           {
             label: "Custom Fields",
             icon: Sliders,
             href: "/hr/settings/custom-fields",
-            requiredPermission: "hr:employees:view",
+            requiredPermission: "settings:custom-fields:manage",
           },
           {
             label: "Preview",
             icon: FileSearch,
             href: "/hr/settings/preview",
-            requiredPermission: "hr:employees:view",
+            requiredPermission: "hr:policies:view",
           },
           {
             label: "Versions",
             icon: History,
             href: "/hr/settings/versions",
-            requiredPermission: "hr:employees:view",
+            requiredPermission: "hr:policies:view",
           },
           {
             label: "Automations",
             icon: Workflow,
             href: "/hr/settings/automations",
-            requiredPermission: "settings:automations:view",
+            requiredPermission: "hr:automations:view",
           },
         ],
       },
@@ -769,8 +759,6 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "Recruitment",
     module: "hrms",
     requiredPermission: [
-      "hr:employees:view",
-      "hr:employees:create",
       "hr:offers:view",
       "hr:interviews:view",
       "hr:requisitions:view",
@@ -781,32 +769,32 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: LayoutDashboard,
         href: "/hr/recruitment",
         exact: true,
-        requiredPermission: "hr:employees:view",
+        requiredPermission: "hr:requisitions:view",
       },
       {
         label: "Jobs",
         icon: Briefcase,
         href: "/hr/recruitment/jobs",
-        requiredPermission: "hr:employees:view",
+        requiredPermission: "hr:requisitions:view",
       },
       {
         label: "Candidates",
         icon: Users,
         href: "/hr/recruitment/candidates",
         exact: true,
-        requiredPermission: "hr:employees:view",
+        requiredPermission: "hr:requisitions:view",
       },
       {
         label: "Pipeline",
         icon: KanbanSquare,
         href: "/hr/recruitment/pipeline",
-        requiredPermission: "hr:employees:view",
+        requiredPermission: "hr:requisitions:view",
       },
       {
         label: "Intake Inbox",
         icon: Inbox,
         href: "/hr/recruitment/candidates/intake",
-        requiredPermission: "hr:employees:view",
+        requiredPermission: "hr:requisitions:view",
       },
       {
         label: "Interviews",
@@ -824,19 +812,19 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Referrals",
         icon: Share2,
         href: "/hr/recruitment/referrals",
-        requiredPermission: "hr:employees:view",
+        requiredPermission: "hr:requisitions:view",
       },
       {
         label: "Vendors",
         icon: Truck,
         href: "/hr/recruitment/vendors",
-        requiredPermission: "hr:employees:view",
+        requiredPermission: "hr:requisitions:view",
       },
       {
         label: "Talent Pools",
         icon: Layers,
         href: "/hr/recruitment/talent-pools",
-        requiredPermission: "hr:employees:view",
+        requiredPermission: "hr:requisitions:view",
       },
       {
         label: "Analytics",
@@ -848,7 +836,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Settings",
         icon: SlidersHorizontal,
         href: "/hr/recruitment/settings",
-        requiredPermission: "hr:employees:manage",
+        requiredPermission: "hr:requisitions:manage",
       },
     ],
   },
@@ -884,7 +872,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Run Payroll",
         icon: PlayCircle,
         href: "/payroll/runs",
-        requiredPermission: "payroll:runs:create",
+        requiredPermission: "payroll:runs:view",
       },
       {
         label: "Employees",
@@ -914,25 +902,25 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Attendance Inputs",
         icon: Clock,
         href: "/payroll/inputs",
-        requiredPermission: "payroll:runs:create",
+        requiredPermission: "hr:payroll:view",
       },
       {
         label: "Reimbursements",
         icon: RefreshCcw,
         href: "/payroll/reimbursements",
-        requiredPermission: "payroll:runs:create",
+        requiredPermission: "hr:payroll:view",
       },
       {
         label: "Bonuses & Incentives",
         icon: Award,
         href: "/payroll/bonuses",
-        requiredPermission: "payroll:runs:create",
+        requiredPermission: "hr:bonuses:manage",
       },
       {
         label: "Loans & Advances",
         icon: Coins,
         href: "/payroll/loans",
-        requiredPermission: "payroll:runs:create",
+        requiredPermission: "hr:payroll:view",
       },
       {
         label: "Taxes & Statutory",
@@ -944,7 +932,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Bank Transfers",
         icon: Landmark,
         href: "/payroll/bank-transfers",
-        requiredPermission: "payroll:bank:view",
+        requiredPermission: "payroll:bank:manage",
       },
       {
         label: "Payslips",
@@ -1565,7 +1553,10 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Settings",
         icon: SlidersHorizontal,
         href: "/accounting/settings",
-        requiredPermission: ["accounting:manage", "payments:providers:view"],
+        requiredPermission: [
+          "accounting:settings:read",
+          "payments:providers:view",
+        ],
         children: [
           {
             label: "Finance Settings",
@@ -2271,7 +2262,7 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: Building2,
         href: "/settings/organization",
         exact: true,
-        requiredPermission: "settings:manage",
+        requiredPermission: "settings:view",
       },
       {
         label: "Incoming Transfer",
@@ -2419,13 +2410,17 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Audit Logs",
         icon: History,
         href: "/settings/audit-log",
-        requiredPermission: "settings:manage",
+        requiredPermission: "audit-log:read",
       },
     ],
   },
   {
     label: "Developer",
-    requiredPermission: ["settings:manage", "settings:api-tokens:read"],
+    requiredPermission: [
+      "settings:manage",
+      "settings:api-tokens:read",
+      "settings:webhooks:manage",
+    ],
     routes: [
       {
         label: "Personal Access Tokens",
@@ -2437,14 +2432,14 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Webhooks",
         icon: Zap,
         href: "/settings/webhooks",
-        requiredPermission: "settings:manage",
+        requiredPermission: "settings:webhooks:manage",
       },
     ],
   },
 ];
 
 function matchesPermission(
-  required: string | string[] | undefined,
+  required: PermissionRequirement | undefined,
   granted: Set<string>,
 ): boolean {
   if (!required) return true;
@@ -2458,25 +2453,37 @@ function filterRoute(
   isOwner: boolean,
   granted: Set<string>,
   enabledModules: string[],
-): NavRoute | null {
+  inheritedPermission?: PermissionRequirement,
+): NavRoute[] {
   if (route.module && !isModuleEnabled(route.module, enabledModules))
-    return null;
+    return [];
   if (
     route.modulesAny &&
     !route.modulesAny.some((module) => isModuleEnabled(module, enabledModules))
   )
-    return null;
-  if (!isOwner && !matchesPermission(route.requiredPermission, granted))
-    return null;
-  if (route.children && route.children.length > 0) {
-    const children = route.children
-      .map((c) => filterRoute(c, isOwner, granted, enabledModules))
-      .filter((c): c is NavRoute => c !== null);
-    return children.length > 0
-      ? { ...route, children }
-      : { ...route, children: undefined };
+    return [];
+
+  const effectivePermission =
+    route.requiredPermission ?? inheritedPermission;
+  const children = (route.children ?? []).flatMap((child) =>
+    filterRoute(
+      child,
+      isOwner,
+      granted,
+      enabledModules,
+      effectivePermission,
+    ),
+  );
+
+  if (!isOwner && !matchesPermission(effectivePermission, granted)) {
+    return children;
   }
-  return route;
+
+  return [
+    children.length > 0
+      ? { ...route, children }
+      : { ...route, children: undefined },
+  ];
 }
 
 export function getNavGroupsForUser(
@@ -2494,15 +2501,18 @@ export function getNavGroupsForUser(
   )
     .map((group) => {
       const visibleRoutes = group.routes
-        .map((r) => filterRoute(r, isOwner, granted, enabledModules))
-        .filter((r): r is NavRoute => r !== null);
+        .flatMap((route) =>
+          filterRoute(
+            route,
+            isOwner,
+            granted,
+            enabledModules,
+            group.requiredPermission,
+          ),
+        );
       return { ...group, routes: visibleRoutes };
     })
-    .filter((group) => {
-      if (group.routes.length === 0) return false;
-      if (isOwner) return true;
-      return matchesPermission(group.requiredPermission, granted);
-    });
+    .filter((group) => group.routes.length > 0);
 }
 
 export function flattenNavRoutes(routes: NavRoute[]): NavRoute[] {
@@ -2533,6 +2543,13 @@ export function countProductNavLeaves(navGroups: NavGroup[]): number {
     (sum, group) => sum + countNavLeaves(group.routes),
     0,
   );
+}
+
+export function getAccessibleProductHref(
+  navGroups: NavGroup[],
+  fallbackHref: string,
+): string {
+  return navGroups[0]?.routes[0]?.href ?? fallbackHref;
 }
 
 export function shouldHideProductSidebar(navGroups: NavGroup[]): boolean {
@@ -2849,9 +2866,15 @@ function getHomeNavGroups(
 
   return HOME_NAV_GROUPS.map((group) => ({
     ...group,
-    routes: group.routes
-      .map((route) => filterRoute(route, isOwner, granted, enabledModules))
-      .filter((route): route is NavRoute => route !== null),
+    routes: group.routes.flatMap((route) =>
+      filterRoute(
+        route,
+        isOwner,
+        granted,
+        enabledModules,
+        group.requiredPermission,
+      ),
+    ),
   })).filter((group) => group.routes.length > 0);
 }
 

@@ -63,7 +63,7 @@ function isExpired(endsAt: string) {
 }
 
 export function DelegationSheet() {
-  const canManage = useCan("hr:employees:manage");
+  const canManage = useCan("hr:workflows:manage");
   const [sheetOpen, setSheetOpen] = useState(false);
   const [page, setPage] = useState(1);
 

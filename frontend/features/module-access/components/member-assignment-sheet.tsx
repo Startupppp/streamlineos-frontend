@@ -14,7 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { MemberCandidateSelect } from "./member-candidate-select";
+import { MemberPicker } from "@/components/members/member-picker";
 import {
   useModuleGroupMembers,
   useAddModuleGroupMember,
@@ -42,10 +42,12 @@ function getUserInitials(name: string): string {
 
 function MemberRow({
   member,
+  canManage,
   onRemove,
   isPending,
 }: {
   member: ModuleGroupMember;
+  canManage: boolean;
   onRemove: (userId: string) => void;
   isPending: boolean;
 }) {
@@ -66,19 +68,21 @@ function MemberRow({
         <p className="text-sm font-medium truncate">{member.displayName}</p>
         <p className="text-xs text-muted-foreground truncate">{member.email}</p>
       </div>
-      <button
-        type="button"
-        onClick={handleRemove}
-        disabled={isPending}
-        className="inline-flex h-7 w-7 items-center justify-center rounded text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors shrink-0"
-        aria-label={`Remove ${member.displayName}`}
-      >
-        {isPending ? (
-          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-        ) : (
-          <X className="h-3.5 w-3.5" />
-        )}
-      </button>
+      {canManage ? (
+        <button
+          type="button"
+          onClick={handleRemove}
+          disabled={isPending}
+          className="inline-flex h-7 w-7 items-center justify-center rounded text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors shrink-0"
+          aria-label={`Remove ${member.displayName}`}
+        >
+          {isPending ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <X className="h-3.5 w-3.5" />
+          )}
+        </button>
+      ) : null}
     </div>
   );
 }
@@ -100,7 +104,7 @@ export function MemberAssignmentSheet({
 
   const members = membersQuery.data ?? [];
   const handleAdd = useCallback(() => {
-    if (!selectedUserId) return;
+    if (!canManage || !selectedUserId) return;
     addMember.mutate(
       { groupId, userId: selectedUserId },
       {
@@ -111,10 +115,11 @@ export function MemberAssignmentSheet({
         onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
-  }, [selectedUserId, groupId, addMember]);
+  }, [canManage, selectedUserId, groupId, addMember]);
 
   const handleRemove = useCallback(
     (userId: string) => {
+      if (!canManage) return;
       setRemovingId(userId);
       removeMember.mutate(
         { groupId, userId },
@@ -130,11 +135,11 @@ export function MemberAssignmentSheet({
         },
       );
     },
-    [groupId, removeMember],
+    [canManage, groupId, removeMember],
   );
 
   const handleSelectChange = useCallback(
-    (val: string) => setSelectedUserId(val),
+    (val: string | null) => setSelectedUserId(val ?? ""),
     [],
   );
 
@@ -150,12 +155,13 @@ export function MemberAssignmentSheet({
         {canManage && (
           <div className="px-5 py-4 border-b border-border shrink-0 flex gap-2">
             <div className="flex-1 min-w-0">
-              <MemberCandidateSelect
+              <MemberPicker
                 moduleKey={moduleKey}
                 value={selectedUserId}
-                onValueChange={handleSelectChange}
+                onChange={handleSelectChange}
                 enabled={open}
                 excludeAssigned={false}
+                placeholder="Select a user…"
               />
             </div>
             <LoadingButton
@@ -188,7 +194,11 @@ export function MemberAssignmentSheet({
             <EmptyState
               illustrationPreset="team"
               title="No members yet"
-              description="Add members to give them this group's permissions."
+              description={
+                canManage
+                  ? "Add members to give them this group's permissions."
+                  : "No members are assigned to this group yet."
+              }
               compact
               className="border-0 bg-transparent py-12"
             />
@@ -198,6 +208,7 @@ export function MemberAssignmentSheet({
                 <MemberRow
                   key={member.userId}
                   member={member}
+                  canManage={canManage}
                   onRemove={handleRemove}
                   isPending={removingId === member.userId}
                 />

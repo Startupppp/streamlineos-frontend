@@ -21,6 +21,7 @@ export interface HrDocumentListResponse {
 export const hrDocumentListPrefix = [...queryKeys.hr.all, "documents"] as const;
 
 export function useHrDocumentList(params?: HrDocumentListParams) {
+  const canDocs = useCan("hr:documents:view");
   const queryParams: Record<string, unknown> = {
     page: params?.page ?? 1,
     limit: params?.limit ?? 20,
@@ -32,6 +33,7 @@ export function useHrDocumentList(params?: HrDocumentListParams) {
     queryFn: () => apiClient.get<HrDocumentListResponse>("/hr/documents", queryParams),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
+    enabled: canDocs,
   });
 }
 
@@ -42,11 +44,12 @@ export interface HrDocumentStats {
 }
 
 export function useHrDocumentStats(options?: { enabled?: boolean }) {
+  const canDocs = useCan("hr:documents:view");
   return useQuery({
     queryKey: queryKeys.hr.documentsStats(),
     queryFn: () => apiClient.get<HrDocumentStats>("/hr/documents/stats"),
     staleTime: 2 * 60_000,
-    enabled: options?.enabled ?? true,
+    enabled: canDocs && (options?.enabled ?? true),
   });
 }
 
@@ -92,7 +95,8 @@ interface OnboardingDocsSummaryTotals {
 }
 
 export function useMissingOnboardingDocsCount(options?: { enabled?: boolean }) {
-  const enabled = options?.enabled ?? true;
+  const canOnboarding = useCan("hr:onboarding:manage");
+  const enabled = canOnboarding && (options?.enabled ?? true);
 
   const totalQuery = useQuery({
     queryKey: queryKeys.hr.onboardingDocsSummary({ limit: 1 }),

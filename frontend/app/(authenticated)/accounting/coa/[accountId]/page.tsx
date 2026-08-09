@@ -28,6 +28,7 @@ import {
   useJournal,
   useUpdateAccount,
 } from "@/hooks/api/accounting";
+import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type {
   AccountType,
@@ -181,6 +182,8 @@ function EditAccountDialog({
 }
 
 export default function AccountDetailPage({ params }: AccountDetailPageProps) {
+  const canUpdateAccount = useCan("accounting:accounts:update");
+  const canManageJournal = useCan("accounting:journal:manage");
   const { accountId: accountIdStr } = use(params);
   const accountId = Number.parseInt(accountIdStr, 10);
 
@@ -271,7 +274,7 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
       subtitle={account ? `Code ${account.code}` : "Loading account details…"}
       actions={
         <div className="flex items-center gap-2">
-          {account && (
+          {account && canUpdateAccount && (
             <Button variant="outline" size="sm" onClick={handleOpenEdit}>
               <Pencil className="mr-1 h-4 w-4" />
               Edit
@@ -418,14 +421,16 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
                     <p className="text-sm text-muted-foreground">
                       No journal entries yet.
                     </p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="mt-3"
-                      asChild
-                    >
-                      <Link href="/accounting/journal/new">New entry</Link>
-                    </Button>
+                    {canManageJournal && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mt-3"
+                        asChild
+                      >
+                        <Link href="/accounting/journal/new">New entry</Link>
+                      </Button>
+                    )}
                   </div>
                 ) : (
                   <div className="px-0">
@@ -443,7 +448,7 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
         )}
       </div>
 
-      {account && (
+      {account && canUpdateAccount && (
         <EditAccountDialog
           account={account}
           open={editOpen}

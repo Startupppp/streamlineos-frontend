@@ -88,4 +88,6 @@ export const CRM_PERMISSIONS: Permission[] = [
   { name: "crm:tasks:view", resource: "crm:tasks", action: "view", description: "View CRM tasks and inbox" },
   { name: "crm:territories:manage", resource: "crm:territories", action: "manage", description: "Manage CRM territories" },
   { name: "crm:web-forms:manage", resource: "crm:web-forms", action: "manage", description: "Manage CRM web forms" },
+  { name: "crm:deals:create", resource: "crm:deals", action: "create", description: "Create CRM deals" },
+  { name: "crm:ai:use", resource: "crm:ai", action: "use", description: "Use CRM AI features (scoring, enrichment, briefs, email generation)" },
 ];

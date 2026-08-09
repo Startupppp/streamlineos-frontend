@@ -3,6 +3,7 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type { Asset } from "@/types/hr";
 
 export interface HrAssetListParams {
@@ -28,6 +29,7 @@ export interface HrAssetListResponse {
 export const hrAssetListPrefix = [...queryKeys.hr.all, "assets"] as const;
 
 export function useHrAssetList(params?: HrAssetListParams) {
+  const canAssets = useCan("hr:assets:view");
   const queryParams: Record<string, unknown> = {
     page: params?.page ?? 1,
     limit: params?.limit ?? 20,
@@ -38,6 +40,7 @@ export function useHrAssetList(params?: HrAssetListParams) {
     queryFn: () => apiClient.get<HrAssetListResponse>("/hr/assets", queryParams),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
+    enabled: canAssets,
   });
 }
 

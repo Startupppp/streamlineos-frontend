@@ -81,41 +81,53 @@ export function deriveRowState(
 export interface PageIndicatorProps {
   state: RowState;
   label: string;
-  disabled: boolean;
+  readOnly: boolean;
   onClick: () => void;
 }
 
 export function PageIndicator({
   state,
   label,
-  disabled,
+  readOnly,
   onClick,
 }: PageIndicatorProps) {
   const ariaChecked: boolean | "mixed" =
     state === "full" ? true : state === "unchecked" ? false : "mixed";
+  const className = cn(
+    "h-4 w-4 shrink-0 rounded-sm border-2 flex items-center justify-center transition-colors",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+    state === "unchecked" && "border-input bg-background",
+    state === "view-only" &&
+      "border-blue-500 bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400",
+    state === "partial" && "border-primary bg-primary/10 text-primary",
+    state === "full" && "border-primary bg-primary text-primary-foreground",
+  );
+  const indicator = (
+    <>
+      {state === "full" ? <Check className="h-2.5 w-2.5" strokeWidth={3} /> : null}
+      {state === "partial" ? <Minus className="h-2.5 w-2.5" strokeWidth={3} /> : null}
+      {state === "view-only" ? <Eye className="h-2.5 w-2.5" /> : null}
+    </>
+  );
+
+  if (readOnly) {
+    return (
+      <span aria-label={`${label} - ${ROW_STATE_LABELS[state]}`} className={className}>
+        {indicator}
+      </span>
+    );
+  }
 
   return (
     <button
       type="button"
       role="checkbox"
       aria-checked={ariaChecked}
-      aria-label={`${label} — ${ROW_STATE_LABELS[state]}`}
+      aria-label={`${label} - ${ROW_STATE_LABELS[state]}`}
       onClick={onClick}
-      disabled={disabled}
-      className={cn(
-        "h-4 w-4 shrink-0 rounded-sm border-2 flex items-center justify-center transition-colors",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
-        state === "unchecked" && "border-input bg-background",
-        state === "view-only" &&
-          "border-blue-500 bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400",
-        state === "partial" && "border-primary bg-primary/10 text-primary",
-        state === "full" && "border-primary bg-primary text-primary-foreground",
-        disabled && "pointer-events-none opacity-50",
-      )}
+      className={className}
     >
-      {state === "full" && <Check className="h-2.5 w-2.5" strokeWidth={3} />}
-      {state === "partial" && <Minus className="h-2.5 w-2.5" strokeWidth={3} />}
-      {state === "view-only" && <Eye className="h-2.5 w-2.5" />}
+      {indicator}
     </button>
   );
 }
@@ -136,6 +148,9 @@ export function ActionRow({
   onScopeChange,
 }: ActionRowProps) {
   const isGranted = currentScope !== "none";
+  const scopeLabel = SCOPE_OPTIONS.find(
+    (option) => option.value === currentScope,
+  )?.label;
 
   const handleCheck = useCallback(
     (v: boolean | "indeterminate") => onCheck(perm.name, v === true),
@@ -150,45 +165,78 @@ export function ActionRow({
     [perm.name, onScopeChange],
   );
 
+  const label = (
+    <>
+      <span className="text-sm text-foreground capitalize">{perm.action}</span>
+      {perm.description ? (
+        <span className="ml-1.5 text-xs text-muted-foreground">
+          - {perm.description}
+        </span>
+      ) : null}
+    </>
+  );
+
   return (
     <div className="flex items-center gap-3 pl-12 pr-5 py-2.5">
-      <Checkbox
-        id={`action-${perm.name}`}
-        checked={isGranted}
-        onCheckedChange={handleCheck}
-        disabled={readOnly}
-        aria-label={`Grant ${perm.action}`}
-      />
-      <label
-        htmlFor={`action-${perm.name}`}
-        className="flex-1 min-w-0 cursor-pointer select-none"
-      >
-        <span className="text-sm text-foreground capitalize">{perm.action}</span>
-        {perm.description && (
-          <span className="ml-1.5 text-xs text-muted-foreground">
-            — {perm.description}
-          </span>
-        )}
-      </label>
-      {perm.scopable && isGranted ? (
-        <Select
-          value={currentScope}
-          onValueChange={handleScope}
-          disabled={readOnly}
+      {readOnly ? (
+        <span
+          aria-hidden="true"
+          className={cn(
+            "flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border",
+            isGranted
+              ? "border-primary bg-primary text-primary-foreground"
+              : "border-input bg-background",
+          )}
         >
+          {isGranted ? <Check className="h-2.5 w-2.5" strokeWidth={3} /> : null}
+        </span>
+      ) : (
+        <Checkbox
+          id={`action-${perm.name}`}
+          checked={isGranted}
+          onCheckedChange={handleCheck}
+          aria-label={`Grant ${perm.action}`}
+        />
+      )}
+
+      {readOnly ? (
+        <span className="flex-1 min-w-0 select-none">{label}</span>
+      ) : (
+        <label
+          htmlFor={`action-${perm.name}`}
+          className="flex-1 min-w-0 cursor-pointer select-none"
+        >
+          {label}
+        </label>
+      )}
+
+      {readOnly ? (
+        <span className="w-24 shrink-0 text-right text-xs text-muted-foreground">
+          {isGranted
+            ? perm.scopable && scopeLabel
+              ? scopeLabel
+              : "Granted"
+            : "Not granted"}
+        </span>
+      ) : perm.scopable && isGranted ? (
+        <Select value={currentScope} onValueChange={handleScope}>
           <SelectTrigger className="w-24 text-xs border-input bg-card shrink-0">
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-            {SCOPE_OPTIONS.map((o) => (
-              <SelectItem key={o.value} value={o.value} className="text-xs">
-                {o.label}
+            {SCOPE_OPTIONS.map((option) => (
+              <SelectItem
+                key={option.value}
+                value={option.value}
+                className="text-xs"
+              >
+                {option.label}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
       ) : isGranted ? (
-        <span className="text-xs text-muted-foreground w-24 text-right shrink-0">
+        <span className="w-24 shrink-0 text-right text-xs text-muted-foreground">
           Granted
         </span>
       ) : null}

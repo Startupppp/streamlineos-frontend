@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
 
 export interface Reimbursement {
   id: number;
@@ -24,10 +25,13 @@ const reimbursementKeys = {
 };
 
 export function useReimbursements() {
+  const canPayroll = useCan("hr:payroll:view");
+  const payrollEnabled = useModuleEnabled("payroll");
   return useQuery({
     queryKey: reimbursementKeys.list(),
     queryFn: () => apiClient.get<Reimbursement[]>("/hr/reimbursements"),
     staleTime: 2 * 60_000,
+    enabled: canPayroll && payrollEnabled,
   });
 }
 

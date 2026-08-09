@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 export interface JobRequisition {
   id: number;
@@ -26,10 +27,12 @@ export interface JobRequisition {
 }
 
 export function useJobRequisitions(status?: string) {
+  const canRequisitions = useCan("hr:requisitions:view");
   return useQuery<JobRequisition[]>({
     queryKey: queryKeys.hr.requisitions(status),
     queryFn: () => apiClient.get<JobRequisition[]>("/hr/recruitment/requisitions", status ? { status } : undefined),
     staleTime: 60_000,
+    enabled: canRequisitions,
   });
 }
 

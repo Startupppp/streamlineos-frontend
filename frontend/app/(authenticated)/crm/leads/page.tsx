@@ -24,8 +24,7 @@ import {
 import { useCreateDeal } from "@/hooks/api/crm";
 import { useLeadsFilters } from "@/hooks/common/use-leads-filters";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
-import { useSession } from "next-auth/react";
-import { ADMIN_ROLES } from "@/lib/constants/roles";
+import { useCan } from "@/hooks/api/access";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { LeadsStatsBar } from "@/features/crm/leads/leads-stats-bar";
@@ -38,6 +37,11 @@ import type { CreateLeadFormValues } from "@/features/crm/leads/create-lead-shee
 import type { BoardLead, LeadStatus } from "@/features/crm/leads/leads-types";
 
 export default function LeadsPipelinePage() {
+  const canCreate = useCan("crm:leads:create");
+  const canUpdate = useCan("crm:leads:update");
+  const canAssign = useCan("crm:leads:assign");
+  const canDelete = useCan("crm:leads:delete");
+  const canCreateDeal = useCan("crm:deals:create");
   const { data: board, isLoading: boardLoading, isError: boardError, refetch: refetchBoard } = useLeadBoard();
   const { data: stats, isLoading: statsLoading, isError: statsError } = useLeadStats();
   const { open: createOpen, onOpenChange: setCreateOpen } = useQueryParamOpen("create");
@@ -92,11 +96,8 @@ export default function LeadsPipelinePage() {
   const bulkUpdateMutation = useBulkUpdateLeads();
   const bulkDeleteMutation = useBulkDeleteLeads();
 
-  const { data: session } = useSession();
   const createLead = useCreateLead();
   const updateStatus = useUpdateLeadStatus();
-
-  const isAdmin = ADMIN_ROLES.includes(session?.user?.role ?? "");
 
   const handleCloseDetail = useCallback(() => setSelectedLeadId(null), []);
 
@@ -380,13 +381,17 @@ export default function LeadsPipelinePage() {
       actions={
         <div className="flex items-center gap-2">
           <LeadExportDialog />
-          <CsvUploadDialog />
-          <CreateLeadSheet
-            open={createOpen}
-            onOpenChange={setCreateOpen}
-            onSubmit={handleCreateLead}
-            isPending={createLead.isPending}
-          />
+          {canCreate && (
+            <>
+              <CsvUploadDialog />
+              <CreateLeadSheet
+                open={createOpen}
+                onOpenChange={setCreateOpen}
+                onSubmit={handleCreateLead}
+                isPending={createLead.isPending}
+              />
+            </>
+          )}
         </div>
       }
       filters={
@@ -431,7 +436,10 @@ export default function LeadsPipelinePage() {
               onBulkDelete={handleBulkDelete}
               teamMembers={teamMembers}
               isLoading={tableLoading}
-              isAdmin={isAdmin}
+              canUpdate={canUpdate}
+              canAssign={canAssign}
+              canDelete={canDelete}
+              canCreateDeal={canCreateDeal}
             />
           </div>
         )}
@@ -443,6 +451,7 @@ export default function LeadsPipelinePage() {
               onDragEnd={handleDragEnd}
               onOpenLead={setSelectedLeadId}
               onMoveStatus={handleMoveStatus}
+              canUpdate={canUpdate}
             />
           </div>
         )}
@@ -458,6 +467,7 @@ export default function LeadsPipelinePage() {
           open={!!selectedLeadId}
           onClose={handleCloseDetail}
           onMoveStatus={handleMoveStatus}
+          canUpdate={canUpdate}
         />
       </div>
     </PageWrapper>

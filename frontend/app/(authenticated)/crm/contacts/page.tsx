@@ -27,8 +27,11 @@ import { ContactDeleteDialog } from "@/features/crm/contacts/contact-delete-dial
 import { ContactMergeDialog } from "@/features/crm/contacts/detail/contact-merge-dialog";
 import type { Contact, DuplicateContactPair } from "@/types/crm";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import { useCan } from "@/hooks/api/access";
 
 export default function ContactsPage() {
+  const canManageContacts = useCan("crm:contacts:manage");
+  const canMergeContacts = useCan("crm:contacts:merge");
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -224,6 +227,8 @@ export default function ContactsPage() {
     onEnrich: handleEnrich,
     onPageChange: handlePageChange,
     onOpenCreate: handleOpenCreate,
+    canManage: canManageContacts,
+    canMerge: canMergeContacts,
   };
 
   return (
@@ -253,12 +258,16 @@ export default function ContactsPage() {
                 <LayoutGrid className="h-3.5 w-3.5" />
               </Button>
             </div>
-            <ContactsCsvImportDialog onSuccess={handleRetry} />
-            <Button onClick={handleOpenCreate}>
-              <Plus className="h-3.5 w-3.5 mr-1.5" />
-              New Contact
-            </Button>
-            <CreateContactDialog open={createOpen} onOpenChange={setCreateOpen} />
+            {canManageContacts && (
+              <>
+                <ContactsCsvImportDialog onSuccess={handleRetry} />
+                <Button onClick={handleOpenCreate}>
+                  <Plus className="h-3.5 w-3.5 mr-1.5" />
+                  New Contact
+                </Button>
+                <CreateContactDialog open={createOpen} onOpenChange={setCreateOpen} />
+              </>
+            )}
           </>
         }
         filters={
@@ -290,7 +299,7 @@ export default function ContactsPage() {
           initial="hidden"
           animate="visible"
         >
-          {selectedIds.size > 0 && (
+          {canMergeContacts && selectedIds.size > 0 && (
             <div className="flex items-center gap-2 rounded-md border border-border bg-muted/50 px-3 py-2 text-xs">
               <span className="font-medium">{selectedIds.size} selected</span>
               <div className="ml-auto flex items-center gap-2">
@@ -327,7 +336,7 @@ export default function ContactsPage() {
         </motion.div>
       </PageWrapper>
 
-      {editContact && (
+      {canManageContacts && editContact && (
         <EditContactSheet
           key={editContact.id}
           contact={editContact}
@@ -336,13 +345,15 @@ export default function ContactsPage() {
         />
       )}
 
-      <ContactDeleteDialog
-        open={deleteId !== null}
-        onOpenChange={handleDeleteDialogOpenChange}
-        onConfirm={handleConfirmDelete}
-      />
+      {canManageContacts && (
+        <ContactDeleteDialog
+          open={deleteId !== null}
+          onOpenChange={handleDeleteDialogOpenChange}
+          onConfirm={handleConfirmDelete}
+        />
+      )}
 
-      {bulkMergePair && (
+      {canMergeContacts && bulkMergePair && (
         <ContactMergeDialog
           pair={bulkMergePair}
           currentContactId={bulkMergePair.contact1.id}

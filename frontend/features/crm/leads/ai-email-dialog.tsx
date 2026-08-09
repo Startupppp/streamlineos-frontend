@@ -25,6 +25,7 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useFeature } from "@/lib/billing/use-feature";
 import type { EmailTone } from "@/lib/ai/schemas";
+import { useCan } from "@/hooks/api/access";
 
 interface AIEmailDialogProps {
   leadName: string;
@@ -63,6 +64,7 @@ export function AIEmailDialog({
   const email = generateMutation.data;
   const { enabled: featureEnabled, requiredPlan } =
     useFeature("ai.email-drafting");
+  const canUseCrmAi = useCan("crm:ai:use");
 
   const handleGenerate = useCallback(() => {
     if (!featureEnabled) {
@@ -138,6 +140,8 @@ export function AIEmailDialog({
     );
     toast.success("Email copied to clipboard");
   }, [email]);
+
+  if (!canUseCrmAi) return null;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

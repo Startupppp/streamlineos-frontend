@@ -3,6 +3,7 @@
 import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   Interview,
   CreateInterviewInput,
@@ -345,10 +346,12 @@ export function useUpsertInterviewSla() {
 }
 
 export function useHrSlaReport() {
+  const canInterviews = useCan("hr:interviews:view");
   return useQuery({
     queryKey: SLA_REPORT_KEY,
     queryFn: () => apiClient.get<HrSlaReport>("/hr/recruitment/interviews/sla-report"),
     staleTime: 2 * 60_000,
+    enabled: canInterviews,
   });
 }
 
@@ -424,6 +427,7 @@ export function useDeleteInterviewQuestion(questionId: number) {
 }
 
 export function useInterviewerPerformance(days = 90) {
+  const canInterviews = useCan("hr:interviews:view");
   return useQuery<InterviewerPerformanceResponse>({
     queryKey: queryKeys.hr.interviewerPerformance(days),
     queryFn: () =>
@@ -431,6 +435,7 @@ export function useInterviewerPerformance(days = 90) {
         `/hr/recruitment/interviewer-performance?days=${days}`
       ),
     staleTime: 5 * 60 * 1000,
+    enabled: canInterviews,
   });
 }
 

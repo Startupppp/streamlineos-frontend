@@ -28,8 +28,19 @@ describe("query request policies", () => {
     expect(DAILY_DATA_STALE_TIME_MS).toBeGreaterThanOrEqual(6 * 60 * 60_000);
   });
 
-  it("isolates access, attendance, and notification caches by organization", () => {
+  it("isolates access caches by user and organization", () => {
     expect(queryKeys.access.me("org-a")).not.toEqual(queryKeys.access.me("org-b"));
+    expect(queryKeys.access.me("org-a", "user-1")).not.toEqual(
+      queryKeys.access.me("org-a", "user-2"),
+    );
+    expect(queryKeys.access.me("org-a", "user-1")).toEqual([
+      ...queryKeys.access.me(),
+      "org-a",
+      "user-1",
+    ]);
+  });
+
+  it("isolates attendance and notification caches by organization", () => {
     expect(queryKeys.access.simulate("org-a", "user-1")).not.toEqual(
       queryKeys.access.simulate("org-b", "user-1"),
     );

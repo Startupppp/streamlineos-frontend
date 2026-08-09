@@ -3,6 +3,7 @@
 import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import type {
   Expense,
   CreateExpenseInput,
@@ -36,12 +37,14 @@ export function useExpensePageData(
   filters: ExpensePageFilters = {},
   options?: { enabled?: boolean; selfService?: boolean },
 ) {
+  const canExpenses = useCan("hr:expenses:view");
+  const accountingEnabled = useModuleEnabled("accounting");
   const params: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(filters)) {
     if (v !== undefined && v !== "" && v !== null) params[k] = v;
   }
   return useQuery({
-    enabled: options?.enabled ?? true,
+    enabled: (options?.selfService === true || (canExpenses && accountingEnabled)) && (options?.enabled ?? true),
     queryKey: [...queryKeys.hr.expenses(), "pageData", params] as const,
     queryFn: () =>
       apiClient.get<{

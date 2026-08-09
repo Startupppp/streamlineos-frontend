@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   HrLocation,
   HrJobRole,
@@ -162,9 +163,11 @@ export function useDeleteTeam() {
 }
 
 export function useOrgHeadcount(groupBy: "department" | "location" | "role" = "department") {
+  const canEmployees = useCan("hr:employees:view");
   return useQuery({
     queryKey: queryKeys.hr.orgHeadcount(groupBy),
     queryFn: () => apiClient.get<HrHeadcountGroup[]>("/hr/org/headcount", { groupBy }),
     staleTime: 5 * 60_000,
+    enabled: canEmployees,
   });
 }

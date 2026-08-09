@@ -20,6 +20,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 interface DepartmentComboboxProps {
   value?: string | null;
   onValueChange: (value: string | undefined) => void;
+  departments?: ReadonlyArray<{ id: string; name: string }>;
   placeholder?: string;
   disabled?: boolean;
   allowCreate?: boolean;
@@ -61,6 +62,7 @@ const DepartmentOption = memo(function DepartmentOption({
 export function DepartmentCombobox({
   value,
   onValueChange,
+  departments: providedDepartments,
   placeholder = "Select Department",
   disabled = false,
   allowCreate = true,
@@ -71,7 +73,10 @@ export function DepartmentCombobox({
   const inputRef = useRef<HTMLInputElement>(null);
   const qc = useQueryClient();
 
-  const { data: departments = [] } = useHrDepartments();
+  const { data: loadedDepartments = [] } = useHrDepartments({
+    enabled: providedDepartments === undefined,
+  });
+  const departments = providedDepartments ?? loadedDepartments;
   const createDepartment = useCreateDepartment();
 
   const selectedDept = useMemo(

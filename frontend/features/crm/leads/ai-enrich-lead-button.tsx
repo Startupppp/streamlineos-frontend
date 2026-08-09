@@ -17,6 +17,7 @@ import { useEnrichLead } from "@/hooks/api/ai";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { useFeature } from "@/lib/billing/use-feature";
+import { useCan } from "@/hooks/api/access";
 
 interface AIEnrichLeadButtonProps {
   leadName: string;
@@ -37,6 +38,7 @@ export function AIEnrichLeadButton({
   const enrichMutation = useEnrichLead();
   const result = enrichMutation.data;
   const { enabled: featureEnabled, requiredPlan } = useFeature("ai.enrichment");
+  const canUseCrmAi = useCan("crm:ai:use");
 
   const handleEnrich = useCallback(() => {
     if (!featureEnabled) {
@@ -56,6 +58,8 @@ export function AIEnrichLeadButton({
       { onError: (e) => toast.error(getErrorMessage(e)) },
     );
   }, [featureEnabled, requiredPlan, enrichMutation, leadName, company, email, designation, city]);
+
+  if (!canUseCrmAi) return null;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

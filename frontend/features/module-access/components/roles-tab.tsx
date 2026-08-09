@@ -57,6 +57,7 @@ function DeleteButton({ onClick }: DeleteButtonProps) {
 interface GroupListItemProps {
   group: ModuleRoleGroup;
   isSelected: boolean;
+  canManage: boolean;
   onSelect: (id: number) => void;
   onDelete: (group: ModuleRoleGroup) => void;
   onRename: (group: ModuleRoleGroup) => void;
@@ -65,6 +66,7 @@ interface GroupListItemProps {
 function GroupListItem({
   group,
   isSelected,
+  canManage,
   onSelect,
   onDelete,
   onRename,
@@ -115,7 +117,7 @@ function GroupListItem({
           <Badge variant="outline" className="text-[9px] px-1.5">
             System
           </Badge>
-        ) : (
+        ) : canManage ? (
           <>
             <button
               type="button"
@@ -127,7 +129,7 @@ function GroupListItem({
             </button>
             <DeleteButton onClick={handleDelete} />
           </>
-        )}
+        ) : null}
       </div>
     </div>
   );
@@ -167,7 +169,9 @@ export function RolesTab({
   const selectedGroup = groups.find((g) => g.id === selectedGroupId) ?? null;
 
   const handleSelectGroup = useCallback((id: number) => setSelectedGroupId(id), []);
-  const handleOpenCreate = useCallback(() => setCreateOpen(true), [setCreateOpen]);
+  const handleOpenCreate = useCallback(() => {
+    if (canManage) setCreateOpen(true);
+  }, [canManage, setCreateOpen]);
   const handleGroupCreated = useCallback((id: number) => setSelectedGroupId(id), []);
   const handleDeleteDialogOpenChange = useCallback(
     (open: boolean) => {
@@ -185,7 +189,7 @@ export function RolesTab({
   }, []);
 
   const handleDeleteConfirm = useCallback(() => {
-    if (!deleteTarget) return;
+    if (!canManage || !deleteTarget) return;
     deleteGroup.mutate(deleteTarget.id, {
       onSuccess: () => {
         toast.success("Group deleted");
@@ -197,10 +201,10 @@ export function RolesTab({
         setDeleteTarget(null);
       },
     });
-  }, [deleteGroup, deleteTarget, selectedGroupId]);
+  }, [canManage, deleteGroup, deleteTarget, selectedGroupId]);
 
   const handleRenameSave = useCallback(() => {
-    if (!renameTarget || !renameName.trim()) return;
+    if (!canManage || !renameTarget || !renameName.trim()) return;
     renameGroup.mutate(
       { id: renameTarget.id, name: renameName.trim() },
       {
@@ -211,7 +215,7 @@ export function RolesTab({
         onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
-  }, [renameGroup, renameTarget, renameName]);
+  }, [canManage, renameGroup, renameTarget, renameName]);
 
   const handleRenameDialogOpenChange = useCallback(
     (open: boolean) => {
@@ -291,6 +295,7 @@ export function RolesTab({
                         key={group.id}
                         group={group}
                         isSelected={selectedGroupId === group.id}
+                        canManage={canManage}
                         onSelect={handleSelectGroup}
                         onDelete={handleSetDeleteTarget}
                         onRename={handleSetRenameTarget}
@@ -324,49 +329,53 @@ export function RolesTab({
         </div>
       )}
 
-      <CreateGroupDialog
-        open={createOpen}
-        onOpenChange={setCreateOpen}
-        moduleKey={moduleKey}
-        onCreated={handleGroupCreated}
-      />
-
-      <ConfirmDialog
-        open={!!deleteTarget}
-        onOpenChange={handleDeleteDialogOpenChange}
-        title="Delete role group"
-        description={`Delete "${deleteTarget?.name ?? ""}"? Members of this group will lose its permissions.`}
-        confirmLabel="Delete"
-        destructive
-        isPending={deleteGroup.isPending}
-        onConfirm={handleDeleteConfirm}
-      />
-
-      <Dialog open={!!renameTarget} onOpenChange={handleRenameDialogOpenChange}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Rename group</DialogTitle>
-          </DialogHeader>
-          <Input
-            value={renameName}
-            onChange={handleRenameNameChange}
-            placeholder="Group name"
-            autoFocus
+      {canManage ? (
+        <>
+          <CreateGroupDialog
+            open={createOpen}
+            onOpenChange={setCreateOpen}
+            moduleKey={moduleKey}
+            onCreated={handleGroupCreated}
           />
-          <DialogFooter>
-            <Button variant="outline" onClick={handleRenameDialogClose}>
-              Cancel
-            </Button>
-            <LoadingButton
-              onClick={handleRenameSave}
-              isPending={renameGroup.isPending}
-              disabled={renameGroup.isPending || !renameName.trim()}
-            >
-              Rename
-            </LoadingButton>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+
+          <ConfirmDialog
+            open={!!deleteTarget}
+            onOpenChange={handleDeleteDialogOpenChange}
+            title="Delete role group"
+            description={`Delete "${deleteTarget?.name ?? ""}"? Members of this group will lose its permissions.`}
+            confirmLabel="Delete"
+            destructive
+            isPending={deleteGroup.isPending}
+            onConfirm={handleDeleteConfirm}
+          />
+
+          <Dialog open={!!renameTarget} onOpenChange={handleRenameDialogOpenChange}>
+            <DialogContent className="sm:max-w-sm">
+              <DialogHeader>
+                <DialogTitle>Rename group</DialogTitle>
+              </DialogHeader>
+              <Input
+                value={renameName}
+                onChange={handleRenameNameChange}
+                placeholder="Group name"
+                autoFocus
+              />
+              <DialogFooter>
+                <Button variant="outline" onClick={handleRenameDialogClose}>
+                  Cancel
+                </Button>
+                <LoadingButton
+                  onClick={handleRenameSave}
+                  isPending={renameGroup.isPending}
+                  disabled={renameGroup.isPending || !renameName.trim()}
+                >
+                  Rename
+                </LoadingButton>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </>
+      ) : null}
     </div>
   );
 }

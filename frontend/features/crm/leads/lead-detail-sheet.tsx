@@ -46,6 +46,7 @@ interface LeadDetailSheetProps {
   open: boolean;
   onClose: () => void;
   onMoveStatus: (leadId: number, status: LeadStatus) => void;
+  canUpdate: boolean;
 }
 
 interface StatusMoveButtonProps {
@@ -89,6 +90,7 @@ export function LeadDetailSheet({
   open,
   onClose,
   onMoveStatus,
+  canUpdate,
 }: LeadDetailSheetProps) {
   const router = useRouter();
   const { data: lead, isLoading } = useLeadDetail(leadId ?? 0);
@@ -177,15 +179,17 @@ export function LeadDetailSheet({
                   )}
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleEditLead}
-                    className="text-xs gap-1.5"
-                  >
-                    <Edit3 className="h-3.5 w-3.5" />
-                    Edit
-                  </Button>
+                  {canUpdate && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleEditLead}
+                      className="text-xs gap-1.5"
+                    >
+                      <Edit3 className="h-3.5 w-3.5" />
+                      Edit
+                    </Button>
+                  )}
                   <CrmOptionBadge
                     option={resolveOption(statusOptions, lead.status)}
                     size="card"
@@ -223,7 +227,7 @@ export function LeadDetailSheet({
                 </div>
               </div>
 
-              <div className="space-y-2.5">
+              {canUpdate && <div className="space-y-2.5">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Move to
                 </p>
@@ -241,7 +245,7 @@ export function LeadDetailSheet({
                       />
                     ))}
                 </div>
-              </div>
+              </div>}
 
               <div className="space-y-3">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -374,18 +378,20 @@ export function LeadDetailSheet({
                     <TabsTrigger value="activity">
                       Activity
                     </TabsTrigger>
-                    <TabsTrigger
-                      value="new-activity"
-                    >
-                      Log
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="follow-up"
-                      className="gap-1"
-                    >
-                      <AlarmClock className="h-3 w-3 shrink-0" />
-                      Follow-up
-                    </TabsTrigger>
+                    {canUpdate && (
+                      <>
+                        <TabsTrigger value="new-activity">
+                          Log
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value="follow-up"
+                          className="gap-1"
+                        >
+                          <AlarmClock className="h-3 w-3 shrink-0" />
+                          Follow-up
+                        </TabsTrigger>
+                      </>
+                    )}
                   </TabsList>
 
                   <TabsContent value="details" className="mt-5">
@@ -401,16 +407,20 @@ export function LeadDetailSheet({
                     <LeadActivityTab activities={lead.activities ?? []} />
                   </TabsContent>
 
-                  <TabsContent value="new-activity" className="mt-5">
-                    <ActivityForm
-                      onSubmit={handleLogActivity}
-                      isPending={logActivity.isPending}
-                    />
-                  </TabsContent>
+                  {canUpdate && (
+                    <>
+                      <TabsContent value="new-activity" className="mt-5">
+                        <ActivityForm
+                          onSubmit={handleLogActivity}
+                          isPending={logActivity.isPending}
+                        />
+                      </TabsContent>
 
-                  <TabsContent value="follow-up" className="mt-4">
-                    <LeadFollowupTab leadId={lead.id} />
-                  </TabsContent>
+                      <TabsContent value="follow-up" className="mt-4">
+                        <LeadFollowupTab leadId={lead.id} />
+                      </TabsContent>
+                    </>
+                  )}
                 </Tabs>
               </div>
             </SheetBody>

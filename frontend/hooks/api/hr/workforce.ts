@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 export interface HeadcountPlan {
   id: number;
@@ -56,18 +57,22 @@ const workforceKeys = {
 };
 
 export function useHrWorkforcePlans() {
+  const canHeadcount = useCan("hr:headcount:read");
   return useQuery({
     queryKey: workforceKeys.plans(),
     queryFn: () => apiClient.get<HeadcountPlan[]>("/hr/analytics-plus/workforce/plans"),
     staleTime: 5 * 60_000,
+    enabled: canHeadcount,
   });
 }
 
 export function useHrBudgetVsActual() {
+  const canHeadcount = useCan("hr:headcount:read");
   return useQuery({
     queryKey: workforceKeys.budgetVsActual(),
     queryFn: () => apiClient.get<BudgetVsActual[]>("/hr/analytics-plus/workforce/budget-vs-actual"),
     staleTime: 5 * 60_000,
+    enabled: canHeadcount,
   });
 }
 
@@ -81,6 +86,7 @@ export function useHrSkillsGap() {
 }
 
 export function useHrSuccessionRisk() {
+  const canSuccession = useCan("hr:succession:view");
   return useQuery({
     queryKey: workforceKeys.successionRisk(),
     queryFn: () =>
@@ -88,6 +94,7 @@ export function useHrSuccessionRisk() {
         "/hr/analytics-plus/workforce/succession-risk",
       ),
     staleTime: 10 * 60_000,
+    enabled: canSuccession,
   });
 }
 

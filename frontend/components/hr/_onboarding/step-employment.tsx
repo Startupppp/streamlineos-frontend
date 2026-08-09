@@ -30,9 +30,14 @@ interface Role { slug: string; name: string }
 interface StepEmploymentProps {
   form: UseFormReturn<FormValues>;
   assignableRoles: Role[];
+  departments: Array<{ id: string; name: string }>;
 }
 
-export function StepEmployment({ form, assignableRoles }: StepEmploymentProps) {
+export function StepEmployment({
+  form,
+  assignableRoles,
+  departments,
+}: StepEmploymentProps) {
   const canCreateDept = useCan("hr:employees:manage");
   const canManageRbac = useCan("settings:rbac:manage");
   const seedRoles = useSeedDefaultRoles();
@@ -64,6 +69,7 @@ export function StepEmployment({ form, assignableRoles }: StepEmploymentProps) {
             <FormControl>
               <DepartmentCombobox
                 value={field.value ?? null}
+                departments={departments}
                 onValueChange={(val) => {
                   field.onChange(val);
                   form.trigger("departmentId");

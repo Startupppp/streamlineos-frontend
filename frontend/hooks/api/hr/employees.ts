@@ -22,11 +22,12 @@ import type {
   HrSensitiveData,
 } from "@/types/hr/core";
 
-export function useHrDepartments() {
+export function useHrDepartments(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: queryKeys.hr.departments(),
     queryFn: () => apiClient.get<Department[]>("/hr/departments"),
     staleTime: 2 * 60_000,
+    enabled: options?.enabled ?? true,
   });
 }
 
@@ -49,8 +50,12 @@ export function useCreateDepartment() {
     mutationKey: ["hr", "departments", "create"],
     mutationFn: (data: CreateDepartmentInput) =>
       apiClient.post<Department>("/hr/departments", data),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.departments() }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.departments() });
+      void qc.invalidateQueries({
+        queryKey: queryKeys.hr.onboardingTemplateDepartments(),
+      });
+    },
   });
 }
 

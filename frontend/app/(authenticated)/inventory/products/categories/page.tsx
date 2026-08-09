@@ -16,6 +16,7 @@ import {
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import { useCan } from "@/hooks/api/access";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SearchInput } from "@/components/ui/search-input";
 import {
@@ -50,8 +51,9 @@ function categoriesColumns(
   categoryNameById: Map<number, string>,
   onEdit: (cat: InventoryCategory) => void,
   onArchiveToggle: (cat: InventoryCategory) => void,
+  canUpdate: boolean,
 ): DataTableColumn<InventoryCategory>[] {
-  return [
+  const columns: DataTableColumn<InventoryCategory>[] = [
     {
       key: "name",
       header: "Name",
@@ -90,7 +92,10 @@ function categoriesColumns(
         </span>
       ),
     },
-    {
+  ];
+
+  if (canUpdate) {
+    columns.push({
       key: "actions",
       header: "",
       headerClassName: "w-8",
@@ -131,11 +136,15 @@ function categoriesColumns(
           </DropdownMenuContent>
         </DropdownMenu>
       ),
-    },
-  ];
+    });
+  }
+
+  return columns;
 }
 
 function CategoriesPageInner() {
+  const canCreate = useCan("inventory:products:create");
+  const canUpdate = useCan("inventory:products:update");
   const router = useRouter();
   const searchParams = useSearchParams();
   const [formKey, setFormKey] = useState<number>(0);
@@ -257,20 +266,22 @@ function CategoriesPageInner() {
       filters={filtersRow}
     >
       <div className="flex flex-1 min-h-0 flex-col gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-semibold">
-              Add Category
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <CategoryCreateForm
-              key={formKey}
-              categories={categories}
-              onSuccess={handleFormSuccess}
-            />
-          </CardContent>
-        </Card>
+        {canCreate && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm font-semibold">
+                Add Category
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CategoryCreateForm
+                key={formKey}
+                categories={categories}
+                onSuccess={handleFormSuccess}
+              />
+            </CardContent>
+          </Card>
+        )}
 
         {query.error ? (
           <ErrorState
@@ -307,13 +318,14 @@ function CategoriesPageInner() {
               categoryNameById,
               handleEditOpen,
               handleArchiveToggle,
+              canUpdate,
             )}
             minWidth="560px"
           />
         )}
       </div>
 
-      {editingCategory !== null && (
+      {canUpdate && editingCategory !== null && (
         <CategoryEditSheet
           key={editingCategory.id}
           category={editingCategory}

@@ -289,6 +289,7 @@ export function useHrMyLeaveRequests(enabled = true) {
 }
 
 export function useHrHolidaysForYear(year: number) {
+  const canAttendance = useCan("hr:attendance:view");
   return useQuery({
     queryKey: queryKeys.hr.holidaysYear(year),
     queryFn: () =>
@@ -297,6 +298,7 @@ export function useHrHolidaysForYear(year: number) {
         unknown
       >),
     staleTime: 2 * 60_000,
+    enabled: canAttendance,
   });
 }
 
@@ -304,6 +306,7 @@ export function useHrHolidaysForCalendar(params: {
   year: number;
   month: number;
 }) {
+  const canAttendance = useCan("hr:attendance:view");
   return useQuery({
     queryKey: queryKeys.hr.holidaysCalendar(params),
     queryFn: () =>
@@ -312,6 +315,7 @@ export function useHrHolidaysForCalendar(params: {
         params as Record<string, unknown>,
       ),
     staleTime: 2 * 60_000,
+    enabled: canAttendance,
   });
 }
 

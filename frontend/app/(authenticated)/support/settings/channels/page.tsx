@@ -62,6 +62,7 @@ import {
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { channelSchema, type ChannelForm } from "@/features/support/settings/channel-form.schema";
+import { useCan } from "@/hooks/api/access";
 
 const CHANNEL_TYPES: { value: SupportChannelType; label: string }[] = [
   { value: "email", label: "Email" },
@@ -290,9 +291,10 @@ interface ChannelCardProps {
   onToggle: (channel: SupportChannel) => void;
   onEdit: (channel: SupportChannel) => void;
   onDelete: (channel: SupportChannel) => void;
+  canManage: boolean;
 }
 
-function ChannelCard({ channel, onToggle, onEdit, onDelete }: ChannelCardProps) {
+function ChannelCard({ channel, onToggle, onEdit, onDelete, canManage }: ChannelCardProps) {
   const handleToggle = useCallback(() => onToggle(channel), [channel, onToggle]);
   const handleEdit = useCallback(() => onEdit(channel), [channel, onEdit]);
   const handleDelete = useCallback(() => onDelete(channel), [channel, onDelete]);
@@ -317,7 +319,7 @@ function ChannelCard({ channel, onToggle, onEdit, onDelete }: ChannelCardProps) 
               </p>
             )}
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          {canManage && <div className="flex items-center gap-2 shrink-0">
             <Switch checked={channel.isActive} onCheckedChange={handleToggle} />
             <Button variant="ghost" size="icon" className="w-7" onClick={handleEdit} aria-label="Edit channel">
               <Pencil className="h-3.5 w-3.5" />
@@ -330,7 +332,7 @@ function ChannelCard({ channel, onToggle, onEdit, onDelete }: ChannelCardProps) 
               aria-label="Delete channel"
               icon={Trash2Icon}
             />
-          </div>
+          </div>}
         </div>
       </CardContent>
     </Card>
@@ -338,6 +340,7 @@ function ChannelCard({ channel, onToggle, onEdit, onDelete }: ChannelCardProps) 
 }
 
 export default function SupportChannelsPage() {
+  const canManage = useCan("support:channels:manage");
   const { data: channels, isLoading, isError, refetch } = useSupportChannels();
   const updateChannel = useUpdateSupportChannel();
   const deleteChannel = useDeleteSupportChannel();
@@ -399,9 +402,11 @@ export default function SupportChannelsPage() {
       title="Channels"
       subtitle="Configure inbound sources that create support tickets"
       actions={
-        <AnimatedIconButton size="sm" onClick={handleOpenCreate} icon={PlusIcon} iconClassName="mr-1.5">
-          New Channel
-        </AnimatedIconButton>
+        canManage ? (
+          <AnimatedIconButton size="sm" onClick={handleOpenCreate} icon={PlusIcon} iconClassName="mr-1.5">
+            New Channel
+          </AnimatedIconButton>
+        ) : undefined
       }
     >
       {isLoading ? (
@@ -417,6 +422,7 @@ export default function SupportChannelsPage() {
               onToggle={handleToggle}
               onEdit={setEditTarget}
               onDelete={setDeleteTarget}
+              canManage={canManage}
             />
           ))}
         </div>
@@ -425,15 +431,19 @@ export default function SupportChannelsPage() {
           illustration={<EmptyInboxIllustration />}
           title="No channels yet"
           description="Add an email, chat, WhatsApp, or SMS channel to start turning inbound messages into tickets."
-          action={{ label: "New Channel", onClick: handleNewChannelAction }}
+          action={
+            canManage
+              ? { label: "New Channel", onClick: handleNewChannelAction }
+              : undefined
+          }
           className="flex-1"
         />
       )}
 
-      {createOpen && <ChannelDialog onClose={handleCloseCreate} />}
-      {editTarget && <ChannelDialog channel={editTarget} onClose={handleCloseEdit} />}
+      {canManage && createOpen && <ChannelDialog onClose={handleCloseCreate} />}
+      {canManage && editTarget && <ChannelDialog channel={editTarget} onClose={handleCloseEdit} />}
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteOpenChange}>
+      {canManage && <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteOpenChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete channel?</AlertDialogTitle>
@@ -452,7 +462,7 @@ export default function SupportChannelsPage() {
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
-      </AlertDialog>
+      </AlertDialog>}
     </PageWrapper>
   );
 }

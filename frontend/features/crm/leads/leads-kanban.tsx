@@ -22,9 +22,10 @@ interface LeadsKanbanProps {
   onDragEnd: (result: DropResult) => void;
   onOpenLead: (id: number) => void;
   onMoveStatus: (leadId: number, status: string, expectedStatus?: string) => void;
+  canUpdate: boolean;
 }
 
-export function LeadsKanban({ filteredBoard, onDragEnd, onOpenLead, onMoveStatus }: LeadsKanbanProps) {
+export function LeadsKanban({ filteredBoard, onDragEnd, onOpenLead, onMoveStatus, canUpdate }: LeadsKanbanProps) {
   const { data: metaOptions = [] } = useCrmOptions("lead_status");
   const columns = metaOptions.length > 0 ? metaOptions : FALLBACK_OPTIONS;
 
@@ -63,7 +64,7 @@ export function LeadsKanban({ filteredBoard, onDragEnd, onOpenLead, onMoveStatus
                     </Badge>
                   </div>
 
-                  <Droppable droppableId={option.key}>
+                  <Droppable droppableId={option.key} isDropDisabled={!canUpdate}>
                     {(provided, snapshot) => (
                       <div
                         ref={provided.innerRef}
@@ -82,6 +83,7 @@ export function LeadsKanban({ filteredBoard, onDragEnd, onOpenLead, onMoveStatus
                             allStatusKeys={columns.map((c) => c.key)}
                             onOpen={onOpenLead}
                             onMoveStatus={onMoveStatus}
+                            canUpdate={canUpdate}
                           />
                         ))}
                         {provided.placeholder}

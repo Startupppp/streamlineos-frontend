@@ -13,7 +13,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Check, ChevronRight, ChevronLeft, Loader2 } from "lucide-react";
-import { useHrDepartments, useOnboardEmployee } from "@/hooks/api/hr";
+import { useOnboardEmployee } from "@/hooks/api/hr";
+import { useOnboardingTemplateDepartments } from "@/hooks/api/hr/onboarding";
 import { useRoles } from "@/hooks/api/roles";
 import { useRouter } from "next/navigation";
 import { apiClient } from "@/lib/api-client";
@@ -60,7 +61,7 @@ export function OnboardingWizard() {
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const checkedEmail = useRef<string>("");
   const router = useRouter();
-  const { data: departments } = useHrDepartments();
+  const { data: departments } = useOnboardingTemplateDepartments();
   const { data: orgRoles } = useRoles();
   const onboardEmployee = useOnboardEmployee();
 
@@ -209,6 +210,7 @@ export function OnboardingWizard() {
               <StepEmployment
                 form={form}
                 assignableRoles={assignableRoles}
+                departments={departments ?? []}
               />
             )}
             {currentStep === 3 && <StepSkillsPay form={form} />}

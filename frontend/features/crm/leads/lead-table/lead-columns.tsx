@@ -30,6 +30,8 @@ export interface RenderCellOptions {
   onStatusChange: (leadId: number, newStatus: string, leadName: string) => void;
   onPriorityChange: (leadId: number, newPriority: string) => void;
   onAssign: (leadId: number, userId: string) => void;
+  canUpdate: boolean;
+  canAssign: boolean;
 }
 
 function copyToClipboard(text: string, label: string) {
@@ -44,6 +46,8 @@ export function useLeadCellRenderer({
   onStatusChange,
   onPriorityChange,
   onAssign,
+  canUpdate,
+  canAssign,
 }: Omit<RenderCellOptions, "lead" | "colKey">) {
   const router = useRouter();
   const { data: statusOptions = [] } = useCrmOptions("lead_status");
@@ -149,8 +153,12 @@ export function useLeadCellRenderer({
         }
         return (
           <div
-            className="cursor-pointer"
-            onDoubleClick={() => setEditingCell({ leadId: lead.id, column: "status" })}
+            className={canUpdate ? "cursor-pointer" : undefined}
+            onDoubleClick={
+              canUpdate
+                ? () => setEditingCell({ leadId: lead.id, column: "status" })
+                : undefined
+            }
           >
             <CrmOptionBadge
               option={resolveOption(statusOptions, lead.status)}
@@ -181,8 +189,12 @@ export function useLeadCellRenderer({
         if (!lead.priority) return <span className="text-[11px] text-muted-foreground/50">—</span>;
         return (
           <div
-            className="cursor-pointer"
-            onDoubleClick={() => setEditingCell({ leadId: lead.id, column: "priority" })}
+            className={canUpdate ? "cursor-pointer" : undefined}
+            onDoubleClick={
+              canUpdate
+                ? () => setEditingCell({ leadId: lead.id, column: "priority" })
+                : undefined
+            }
           >
             <CrmOptionBadge
               option={resolveOption(priorityOptions, lead.priority)}
@@ -245,8 +257,12 @@ export function useLeadCellRenderer({
         }
         return lead.assignedTo?.name ? (
           <div
-            className="flex items-center gap-1 cursor-pointer"
-            onDoubleClick={() => setEditingCell({ leadId: lead.id, column: "assignedTo" })}
+            className={cn("flex items-center gap-1", canAssign && "cursor-pointer")}
+            onDoubleClick={
+              canAssign
+                ? () => setEditingCell({ leadId: lead.id, column: "assignedTo" })
+                : undefined
+            }
           >
             <Avatar className="h-4 w-4">
               <AvatarImage src={lead.assignedTo.image || ""} />
@@ -258,8 +274,15 @@ export function useLeadCellRenderer({
           </div>
         ) : (
           <span
-            className="text-[11px] text-muted-foreground/50 cursor-pointer hover:text-foreground"
-            onDoubleClick={() => setEditingCell({ leadId: lead.id, column: "assignedTo" })}
+            className={cn(
+              "text-[11px] text-muted-foreground/50",
+              canAssign && "cursor-pointer hover:text-foreground",
+            )}
+            onDoubleClick={
+              canAssign
+                ? () => setEditingCell({ leadId: lead.id, column: "assignedTo" })
+                : undefined
+            }
           >
             —
           </span>

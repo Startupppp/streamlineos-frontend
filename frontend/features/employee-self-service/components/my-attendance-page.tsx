@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import Link from "next/link";
 import { CalendarDays, FilePen } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import {
   Tabs,
@@ -16,6 +17,7 @@ import { TimerCard } from "@/features/hr/attendance/check-in-button";
 import { DailyHistoryTable } from "@/features/hr/attendance/daily-history-table";
 import { AttendanceRegularizationDialog } from "@/features/hr/attendance/attendance-regularization-dialog";
 import { AttendanceEmailDialog } from "@/features/hr/attendance/attendance-email-dialog";
+import { cn } from "@/lib/utils";
 
 const TAB_PANEL_CLASS = `${TABS_CONTENT_PAGE_BODY_CLASS} mt-0 h-full min-h-0 w-full flex-1`;
 
@@ -89,9 +91,14 @@ export function MyAttendancePage() {
             </>
           }
         >
-          <div className="flex min-h-0 flex-1 flex-col">
+          <div className="flex h-full min-h-0 flex-1 flex-col">
             <TabsContent value="today" className={TAB_PANEL_CLASS}>
-              <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-center rounded-xl border border-border bg-card px-4 py-8 sm:px-6">
+              <div
+                className={cn(
+                  CONTENT_FILL_PANEL,
+                  "min-h-0 items-center justify-center rounded-xl border border-border bg-card px-4 py-8 sm:px-6",
+                )}
+              >
                 <div className="w-full max-w-sm">
                   <TimerCard chrome={false} />
                 </div>

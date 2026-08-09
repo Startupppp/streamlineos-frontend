@@ -3,6 +3,7 @@
 import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 export interface Resignation {
   id: number;
@@ -68,6 +69,7 @@ const exitKeys = {
 };
 
 export function useResignations(params?: ResignationListParams) {
+  const canExit = useCan("hr:exit:view");
   return useQuery({
     queryKey: [...exitKeys.list(), params] as const,
     queryFn: () => {
@@ -80,6 +82,7 @@ export function useResignations(params?: ResignationListParams) {
     },
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
+    enabled: canExit,
   });
 }
 

@@ -6,7 +6,13 @@ import { ClipboardList, UserPlus } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  TABS_CONTENT_PAGE_BODY_CLASS,
+} from "@/components/ui/tabs";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { useModuleMyPermissions } from "@/hooks/api/module-access";
 import { RolesTab } from "@/features/module-access/components/roles-tab";
@@ -16,6 +22,8 @@ import { AuditLogDrawer } from "@/features/module-access/components/audit-log-dr
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+const TAB_PANEL_CLASS = `${TABS_CONTENT_PAGE_BODY_CLASS} mt-0 h-full min-h-0 w-full flex-1`;
 
 interface ModuleAccessPageProps {
   moduleKey: string;
@@ -30,14 +38,13 @@ export function ModuleAccessPage({ moduleKey, title }: ModuleAccessPageProps) {
 
   const myPermissionsQuery = useModuleMyPermissions(moduleKey);
   const myPerms = myPermissionsQuery.data;
+  const isModuleOwner = myPerms?.isModuleOwner === true;
 
   const canManage =
     myPerms?.isOrgOwner === true ||
     myPerms?.isOrgAdmin === true ||
+    isModuleOwner ||
     myPerms?.isModuleAdmin === true;
-
-  const canTransferOwnership =
-    myPerms?.isOrgOwner === true || myPerms?.isModuleOwner === true;
 
   const [tab, setTab] = useState(focusUserId ? "members" : "roles");
   const [createGroupOpen, setCreateGroupOpen] = useState(false);
@@ -52,12 +59,14 @@ export function ModuleAccessPage({ moduleKey, title }: ModuleAccessPageProps) {
   );
   const handleOpenCreateGroup = useCallback(() => setCreateGroupOpen(true), []);
   const handleOpenAddMember = useCallback(() => setAddMemberOpen(true), []);
+  const canViewOwnership = isModuleOwner;
+  const visibleTab = tab === "ownership" && !canViewOwnership ? "roles" : tab;
 
   return (
     <Tabs
-      value={tab}
+      value={visibleTab}
       onValueChange={handleTabChange}
-      className="flex min-h-0 flex-1 flex-col gap-0"
+      className="flex h-full min-h-0 flex-1 flex-col gap-0"
     >
       <PageWrapper
         title={title}
@@ -76,11 +85,13 @@ export function ModuleAccessPage({ moduleKey, title }: ModuleAccessPageProps) {
             <TabsList className="w-full shrink-0 md:w-auto">
               <TabsTrigger value="roles">Roles</TabsTrigger>
               <TabsTrigger value="members">Members</TabsTrigger>
-              <TabsTrigger value="ownership">Ownership</TabsTrigger>
+              {canViewOwnership ? (
+                <TabsTrigger value="ownership">Ownership</TabsTrigger>
+              ) : null}
             </TabsList>
 
             <div className="ml-auto flex shrink-0 items-center gap-2">
-              {tab === "roles" && canManage ? (
+              {visibleTab === "roles" && canManage ? (
                 <AnimatedIconButton
                   icon={PlusIcon}
                   iconSize={14}
@@ -93,7 +104,7 @@ export function ModuleAccessPage({ moduleKey, title }: ModuleAccessPageProps) {
                 </AnimatedIconButton>
               ) : null}
 
-              {tab === "members" && canManage ? (
+              {visibleTab === "members" && canManage ? (
                 <Button size="sm" className="h-8 gap-1.5" onClick={handleOpenAddMember}>
                   <UserPlus className="h-3.5 w-3.5" />
                   Add member
@@ -103,11 +114,8 @@ export function ModuleAccessPage({ moduleKey, title }: ModuleAccessPageProps) {
           </>
         }
       >
-        <div className="flex min-h-0 flex-1 flex-col">
-          <TabsContent
-            value="roles"
-            className="mt-0 flex min-h-0 w-full flex-1 flex-col"
-          >
+        <div className="flex h-full min-h-0 flex-1 flex-col">
+          <TabsContent value="roles" className={TAB_PANEL_CLASS}>
             <RolesTab
               moduleKey={moduleKey}
               canManage={canManage}
@@ -117,10 +125,7 @@ export function ModuleAccessPage({ moduleKey, title }: ModuleAccessPageProps) {
             />
           </TabsContent>
 
-          <TabsContent
-            value="members"
-            className="mt-0 flex min-h-0 w-full flex-1 flex-col"
-          >
+          <TabsContent value="members" className={TAB_PANEL_CLASS}>
             <ModuleMembersTab
               moduleKey={moduleKey}
               canManage={canManage}
@@ -131,12 +136,11 @@ export function ModuleAccessPage({ moduleKey, title }: ModuleAccessPageProps) {
             />
           </TabsContent>
 
-          <TabsContent value="ownership" className="mt-0">
-            <OwnershipSection
-              moduleKey={moduleKey}
-              canManage={canTransferOwnership}
-            />
-          </TabsContent>
+          {isModuleOwner ? (
+            <TabsContent value="ownership" className={TAB_PANEL_CLASS}>
+              <OwnershipSection moduleKey={moduleKey} canManage />
+            </TabsContent>
+          ) : null}
         </div>
       </PageWrapper>
 

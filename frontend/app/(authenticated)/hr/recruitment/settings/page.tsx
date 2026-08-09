@@ -1,8 +1,7 @@
-"use client";
-
 import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent } from "@/components/ui/card";
+import { requirePermission } from "@/lib/rbac/require-permission";
 import {
   Workflow, ClipboardList, BookOpen, Zap, Clock, Mail, FileSignature,
   BarChart3, Users, PieChart, FileBarChart, type LucideIcon,
@@ -70,7 +69,9 @@ function SettingsCard({ link }: { link: SettingsLink }) {
   );
 }
 
-export default function RecruitmentSettingsPage() {
+export default async function RecruitmentSettingsPage() {
+  await requirePermission("hr:requisitions:manage");
+
   return (
     <PageWrapper
       title="Settings"

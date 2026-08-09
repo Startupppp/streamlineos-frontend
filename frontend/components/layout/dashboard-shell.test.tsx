@@ -4,7 +4,6 @@ import { DashboardShell } from "./dashboard-shell";
 
 const drawerCalls: Array<{ direction?: string; open?: boolean }> = [];
 const productSwitcherCalls: Array<{ drawerOnly?: boolean }> = [];
-const workspaceSwitcherCalls: Array<{ drawerOnly?: boolean }> = [];
 
 jest.mock("next/dynamic", () => () => () => null);
 
@@ -104,13 +103,6 @@ jest.mock("./header/product-switcher-menu", () => ({
   },
 }));
 
-jest.mock("./header/org-switcher", () => ({
-  WorkspaceSwitcher: ({ drawerOnly }: { drawerOnly?: boolean }) => {
-    workspaceSwitcherCalls.push({ drawerOnly });
-    return null;
-  },
-}));
-
 jest.mock("./sidebar/use-product-sidebar-visibility", () => ({
   useProductSidebarVisibility: () => ({
     hideSidebar: false,
@@ -138,7 +130,6 @@ describe("DashboardShell mobile navigation", () => {
   beforeEach(() => {
     drawerCalls.length = 0;
     productSwitcherCalls.length = 0;
-    workspaceSwitcherCalls.length = 0;
   });
 
   it("uses a bottom drawer and closes it after navigation", () => {
@@ -167,7 +158,7 @@ describe("DashboardShell mobile navigation", () => {
     expect(drawerCalls.at(-1)).toEqual({ direction: "bottom", open: false });
   });
 
-  it("configures mobile switchers as drawers", () => {
+  it("configures the product switcher as a drawer", () => {
     render(
       <DashboardShell
         userId="user-1"
@@ -178,6 +169,5 @@ describe("DashboardShell mobile navigation", () => {
     );
 
     expect(productSwitcherCalls.at(-1)).toEqual({ drawerOnly: true });
-    expect(workspaceSwitcherCalls.at(-1)).toEqual({ drawerOnly: true });
   });
 });

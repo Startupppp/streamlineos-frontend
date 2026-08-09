@@ -3,7 +3,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DelegationSheet } from "@/features/hr/governance/components/delegation-sheet";
 
 export default async function HrDelegationsPage() {
-  await requirePermission("hr:employees:view");
+  await requirePermission("hr:workflows:manage");
 
   return (
     <PageWrapper

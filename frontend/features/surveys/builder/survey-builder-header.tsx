@@ -24,8 +24,14 @@ import {
   type SurveyForm,
 } from "@/hooks/api/surveys/forms";
 import { useCreateLiveSession } from "@/hooks/api/surveys/live-session";
+import { useCan } from "@/hooks/api/access";
 
 export function SurveyBuilderHeader({ survey }: { survey: SurveyForm }) {
+  const canViewParticipants = useCan("surveys:participants:view");
+  const canPublish = useCan("surveys:publish");
+  const canDelete = useCan("surveys:delete");
+  const canCreate = useCan("surveys:create");
+  const canHostLive = useCan("surveys:live:host");
   const router = useRouter();
   const publish = usePublishSurvey();
   const pause = usePauseSurvey();
@@ -98,45 +104,51 @@ export function SurveyBuilderHeader({ survey }: { survey: SurveyForm }) {
       <SurveyStatusBadge status={survey.status} />
       <span className="text-xs text-muted-foreground">{modeMeta.label}</span>
       <div className="ml-auto flex items-center gap-2">
-        <Button variant="outline" size="sm" asChild>
-          <a href={`/surveys/${survey.id}/participants`}>
-            <Users className="h-3.5 w-3.5" /> Participants & Share
-          </a>
-        </Button>
-        {(survey.status === "draft" || survey.status === "testing" || survey.status === "paused") && (
+        {canViewParticipants && (
+          <Button variant="outline" size="sm" asChild>
+            <a href={`/surveys/${survey.id}/participants`}>
+              <Users className="h-3.5 w-3.5" /> Participants & Share
+            </a>
+          </Button>
+        )}
+        {canPublish && (survey.status === "draft" || survey.status === "testing" || survey.status === "paused") && (
           <Button size="sm" onClick={handlePublish} disabled={isBusy}>
             <Send className="h-3.5 w-3.5" /> Publish
           </Button>
         )}
-        {survey.status === "published" && (
+        {canPublish && survey.status === "published" && (
           <Button variant="outline" size="sm" onClick={handlePause} disabled={isBusy}>
             <Pause className="h-3.5 w-3.5" /> Pause
           </Button>
         )}
-        {survey.mode === "live_session" && survey.status === "published" && (
+        {canHostLive && survey.mode === "live_session" && survey.status === "published" && (
           <Button size="sm" onClick={handleStartLiveSession} disabled={createLiveSession.isPending}>
             <Radio className="h-3.5 w-3.5" /> Start Live Session
           </Button>
         )}
-        <DropdownMenu>
+        {(canCreate || canPublish || canDelete) && <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <AnimatedIconButton icon={EllipsisIcon} iconSize={16} variant="outline" size="icon" className="h-8 w-8" disabled={isBusy} aria-label="Survey actions" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={handleDuplicate}>
-              <Copy className="h-3.5 w-3.5" /> Duplicate
-            </DropdownMenuItem>
-            {(survey.status === "published" || survey.status === "paused") && (
+            {canCreate && (
+              <DropdownMenuItem onClick={handleDuplicate}>
+                <Copy className="h-3.5 w-3.5" /> Duplicate
+              </DropdownMenuItem>
+            )}
+            {canPublish && (survey.status === "published" || survey.status === "paused") && (
               <DropdownMenuItem onClick={handleClose}>
                 <Lock className="h-3.5 w-3.5" /> Close
               </DropdownMenuItem>
             )}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleArchive} variant="destructive">
-              <Archive className="h-3.5 w-3.5" /> Archive
-            </DropdownMenuItem>
+            {canDelete && <DropdownMenuSeparator />}
+            {canDelete && (
+              <DropdownMenuItem onClick={handleArchive} variant="destructive">
+                <Archive className="h-3.5 w-3.5" /> Archive
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
-        </DropdownMenu>
+        </DropdownMenu>}
       </div>
     </div>
   );

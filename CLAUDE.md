@@ -315,6 +315,12 @@ Permissions resolve from the DB on **every request** via `AccessService`. **CASL
 
 **Frontend gates** — `useCan("newmodule:resource:create")` for client checks; `<RequireModule module="newmodule">` / `useModuleEnabled` for module on/off; `requirePermission()` in server pages. New keys auto-appear in `/settings/roles` (reads `GET /rbac/permissions`).
 
+**Navigation and action parity**
+- Every permissioned destination declares the same entry/read permission enforced by its server page or backend endpoint. Desktop sidebar, mobile navigation, product switcher, command palette, hubs, and quick links consume the shared filtered navigation model; an inaccessible parent may promote an accessible child, but may never expose the parent itself.
+- Every mutation control uses the exact backend mutation permission. Hide unauthorized buttons, menus, bulk actions, empty-state CTAs, and tabs, and also fail closed in the handler. A hidden control is UX only; backend guards remain mandatory.
+- Universal employee self-service surfaces are the documented exception. Never infer broader module administration from a self-service permission.
+- In module Access pages, only the canonical `module_ownerships` owner sees the Ownership tab. Member/role mutations are limited to Org Owner, canonical Org Admin, that module's owner, or an active unexpired same-module rank-20 Module Admin. A custom or delegated `<module>:access:manage` grant provides view access only and must never create management authority.
+
 **Runtime notes**
 - Canonical grant tables are `role_assignments`, `role_permission_grants`, `principal_group_members`, `group_role_assignments`, `module_ownerships`, `user_delegations` + `user_delegation_permissions`, and `access_versions`. A delegation stores lifecycle once and one child row per permission; never put delegated permission arrays back on the header or create a parallel grant source. Never reintroduce `user_roles` or `group_roles`.
 - Structural organization roles are exactly `OWNER`, `ORG_ADMIN`, and `MEMBER`. `OWNER` and active `ORG_ADMIN` receive the same product permission catalog. Ownership transfer, organization deletion, and other ownership-lifecycle operations must still check `isOrgOwner` explicitly.

@@ -5,7 +5,7 @@ import { HrPathTracker } from "@/features/hr/shared/hr-path-tracker";
 export default function HrLayout({ children }: { children: ReactNode }) {
   return (
     <HrProvider>
-      <div className="relative flex min-h-0 flex-1 flex-col">
+      <div className="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
@@ -26,7 +26,9 @@ export default function HrLayout({ children }: { children: ReactNode }) {
           />
         </div>
         <HrPathTracker />
-        {children}
+        <div className="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden [&>:first-child]:h-full [&>:first-child]:min-h-0 [&>:first-child]:flex-1">
+          {children}
+        </div>
       </div>
     </HrProvider>
   );

@@ -22,6 +22,7 @@ import { usePayrollComponents, useDeletePayrollComponent } from "@/hooks/api/pay
 import type { SalaryComponent, ComponentType } from "@/types/payroll/setup";
 import { buildComponentColumns } from "./component-columns";
 import { ComponentFormSheet } from "./component-form-sheet";
+import { useCan } from "@/hooks/api/access";
 
 const TYPE_OPTIONS: { value: ComponentType; label: string }[] = [
   { value: "EARNING", label: "Earning" },
@@ -33,6 +34,7 @@ const TYPE_OPTIONS: { value: ComponentType; label: string }[] = [
 ];
 
 export function ComponentsPageContent() {
+  const canManage = useCan("payroll:components:manage");
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -117,7 +119,7 @@ export function ComponentsPageContent() {
 
   function handleAddNew() { setEditTarget(null); setSheetOpen(true); }
 
-  const columns = buildComponentColumns(handleEdit, handleDeleteRequest);
+  const columns = buildComponentColumns(handleEdit, handleDeleteRequest, canManage);
 
   const filters = (
     <>
@@ -158,9 +160,11 @@ export function ComponentsPageContent() {
         badge={data?.total ?? 0}
         filters={filters}
         actions={
-          <AnimatedIconButton icon={PlusIcon} iconSize={16} iconClassName="mr-1.5" size="sm" onClick={handleAddNew}>
-            Add Component
-          </AnimatedIconButton>
+          canManage ? (
+            <AnimatedIconButton icon={PlusIcon} iconSize={16} iconClassName="mr-1.5" size="sm" onClick={handleAddNew}>
+              Add Component
+            </AnimatedIconButton>
+          ) : undefined
         }
       >
         <DataTable
@@ -182,19 +186,25 @@ export function ComponentsPageContent() {
               illustration={<EmptyPayroll />}
               title="No components found"
               description="Add salary components like basic pay, HRA, PF, or custom allowances"
-              action={{ label: "Add Component", onClick: handleAddNew }}
+              action={
+                canManage
+                  ? { label: "Add Component", onClick: handleAddNew }
+                  : undefined
+              }
             />
           }
         />
       </PageWrapper>
 
-      <ComponentFormSheet
-        component={editTarget}
-        open={sheetOpen}
-        onOpenChange={handleSheetOpenChange}
-      />
+      {canManage && (
+        <ComponentFormSheet
+          component={editTarget}
+          open={sheetOpen}
+          onOpenChange={handleSheetOpenChange}
+        />
+      )}
 
-      <AlertDialog
+      {canManage && <AlertDialog
         open={!!deleteTarget}
         onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
       >
@@ -220,7 +230,7 @@ export function ComponentsPageContent() {
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
-      </AlertDialog>
+      </AlertDialog>}
     </>
   );
 }

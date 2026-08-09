@@ -93,7 +93,7 @@ export function PageWrapper({
     builtInBack != null;
 
   return (
-    <div className={cn("flex flex-col flex-1 min-h-0 min-w-0 overflow-x-hidden", className)}>
+    <div className={cn("flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden", className)}>
       {showHeader ? (
         <div
           className={cn(
@@ -178,7 +178,7 @@ export function PageWrapper({
       {noInternalScroll ? (
         <div
           className={cn(
-            "flex min-h-0 flex-1 flex-col overflow-hidden",
+            "flex h-full min-h-0 flex-1 flex-col overflow-hidden",
             PAGE_CHROME_X,
             PAGE_CHROME_BOTTOM,
             contentClassName,
@@ -187,7 +187,7 @@ export function PageWrapper({
           {children}
         </div>
       ) : (
-        <div className="min-h-0 flex-1 overflow-y-auto scrollbar-hide">
+        <div className="h-full min-h-0 flex-1 overflow-y-auto scrollbar-hide">
           <div
             className={cn(
               "flex min-h-full w-full flex-col overscroll-contain",

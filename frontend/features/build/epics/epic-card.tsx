@@ -35,6 +35,7 @@ import type { ProjectStatusRecord, Ticket } from "@/types/projects";
 import { PM_PANEL } from "@/features/build/shared/pm-chrome";
 import { TEXT_TWO_LINES } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { useCan } from "@/hooks/api/access";
 
 export interface EpicCardProps {
   epic: {
@@ -74,6 +75,10 @@ export const LinkStoryItem = memo(function LinkStoryItem({ story, onSelect }: Li
 });
 
 export const EpicCard = memo(function EpicCard({ epic, stories, projectId, projectKey, projectStatuses, unlinkedStories, onDeleteEpic, onLinkStory, onCreateStory, isDeleting }: EpicCardProps) {
+  const canCreate = useCan("build:tickets:create");
+  const canUpdate = useCan("build:tickets:update");
+  const canDelete = useCan("build:tickets:delete");
+  const canDeleteEpic = canDelete && (stories.length === 0 || canUpdate);
   const [isExpanded, setIsExpanded] = useState(false);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [newStoryTitle, setNewStoryTitle] = useState("");
@@ -203,30 +208,36 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
               >
                 {epic.priority || "MEDIUM"}
               </Badge>
-              <EditEpicDialog
-                epic={epic}
-                projectId={projectId}
-                trigger={
-                  <button ref={editTriggerRef} className="sr-only" aria-hidden tabIndex={-1}>
-                    Edit
-                  </button>
-                }
-              />
-              <DropdownMenu>
+              {canUpdate && (
+                <EditEpicDialog
+                  epic={epic}
+                  projectId={projectId}
+                  trigger={
+                    <button ref={editTriggerRef} className="sr-only" aria-hidden tabIndex={-1}>
+                      Edit
+                    </button>
+                  }
+                />
+              )}
+              {(canUpdate || canDeleteEpic) && <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="More actions" {...actionsHoverHandlers}>
                     <EllipsisIcon ref={actionsIconRef} size={14} />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onSelect={handleEditMenuSelect}>
-                    <Pencil className="mr-2 h-3.5 w-3.5" /> Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem variant="destructive" onSelect={handleDeleteMenuSelect}>
-                    <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete
-                  </DropdownMenuItem>
+                  {canUpdate && (
+                    <DropdownMenuItem onSelect={handleEditMenuSelect}>
+                      <Pencil className="mr-2 h-3.5 w-3.5" /> Edit
+                    </DropdownMenuItem>
+                  )}
+                  {canDeleteEpic && (
+                    <DropdownMenuItem variant="destructive" onSelect={handleDeleteMenuSelect}>
+                      <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
-              </DropdownMenu>
+              </DropdownMenu>}
             </div>
           </div>
 
@@ -303,7 +314,9 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
                 <EmptyState compact title="No stories linked yet" className="border-0 bg-transparent py-2.5" />
               ) : null}
 
-              <div className="flex min-w-0 flex-wrap gap-1.5 pt-1">
+              {(canCreate || canUpdate) && <div className="flex min-w-0 flex-wrap gap-1.5 pt-1">
+                {canCreate && (
+                  <>
                 <Input
                   value={newStoryTitle}
                   onChange={handleTitleChange}
@@ -316,7 +329,9 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
                   <PlusIcon ref={addIconRef} size={14} className="mr-1" />
                   Add
                 </Button>
-                {unlinkedStories.length > 0 ? (
+                  </>
+                )}
+                {canUpdate && unlinkedStories.length > 0 ? (
                   <ResponsivePopover open={linkOpen} onOpenChange={setLinkOpen}>
                     <ResponsivePopoverTrigger asChild>
                       <Button variant="outline" size="sm" className=" border-border/70 bg-background/60 px-2.5 text-xs backdrop-blur-sm">
@@ -333,22 +348,24 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
                     </ResponsivePopoverContent>
                   </ResponsivePopover>
                 ) : null}
-              </div>
+              </div>}
             </div>
           </CardContent>
         ) : null}
       </Card>
 
-      <ConfirmDialog
-        open={showDeleteAlert}
-        onOpenChange={handleDeleteAlertOpenChange}
-        title="Delete epic?"
-        description="Child stories will be unlinked. This action cannot be undone."
-        confirmLabel="Delete"
-        destructive
-        isPending={isDeleting}
-        onConfirm={handleDelete}
-      />
+      {canDeleteEpic && (
+        <ConfirmDialog
+          open={showDeleteAlert}
+          onOpenChange={handleDeleteAlertOpenChange}
+          title="Delete epic?"
+          description="Child stories will be unlinked. This action cannot be undone."
+          confirmLabel="Delete"
+          destructive
+          isPending={isDeleting}
+          onConfirm={handleDelete}
+        />
+      )}
     </>
   );
 });

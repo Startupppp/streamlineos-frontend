@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   Candidate,
   CandidateApplication,
@@ -299,10 +300,12 @@ export function useCreateApplication() {
 }
 
 export function useAtsKanban() {
+  const canEmployees = useCan("hr:employees:view");
   return useQuery({
     queryKey: ATS_KANBAN_KEY,
     queryFn: () => apiClient.get<AtsPipelineResponse>("/hr/recruitment/pipeline"),
     staleTime: 2 * 60_000,
+    enabled: canEmployees,
   });
 }
 
@@ -379,9 +382,11 @@ export function useBulkRejectCandidates() {
 }
 
 export function useRecruitmentAnalytics() {
+  const canInterviews = useCan("hr:interviews:view");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "recruitmentAnalytics"] as const,
     queryFn: () => apiClient.get<RecruitmentAnalytics>("/hr/recruitment/analytics"),
     staleTime: 2 * 60_000,
+    enabled: canInterviews,
   });
 }

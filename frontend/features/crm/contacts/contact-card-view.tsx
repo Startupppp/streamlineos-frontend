@@ -37,6 +37,7 @@ interface ContactCardViewProps {
   onEnrich: (contact: Contact) => void;
   onPageChange: (page: number) => void;
   onOpenCreate: () => void;
+  canManage: boolean;
 }
 
 export function ContactCardView({
@@ -51,6 +52,7 @@ export function ContactCardView({
   onEnrich,
   onPageChange,
   onOpenCreate,
+  canManage,
 }: ContactCardViewProps) {
   const { data: sourceOptions = [] } = useCrmOptions("source");
   const firstItem = total > 0 ? (page - 1) * 20 + 1 : 0;
@@ -219,7 +221,7 @@ export function ContactCardView({
               : "Create your first contact to get started."
           }
           action={
-            apiSearch
+            apiSearch || !canManage
               ? undefined
               : { label: "New Contact", onClick: onOpenCreate }
           }

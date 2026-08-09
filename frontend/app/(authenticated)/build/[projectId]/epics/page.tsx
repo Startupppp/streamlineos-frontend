@@ -25,6 +25,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { ModuleDisabledState } from "@/features/build/shared/module-disabled-state";
+import { useCan } from "@/hooks/api/access";
 import {
   PmPageShell,
   PmPanel,
@@ -38,6 +39,7 @@ interface PageProps {
 }
 
 export default function EpicsPage({ params }: PageProps) {
+  const canCreate = useCan("build:tickets:create");
   const { projectId: projectIdStr } = use(params);
   const projectId = parseInt(projectIdStr);
 
@@ -115,7 +117,7 @@ export default function EpicsPage({ params }: PageProps) {
     <PageWrapper
       title="Epics"
       subtitle="Organize related stories and tasks into larger themes"
-      actions={<CreateEpicDialog projectId={projectId} />}
+      actions={canCreate ? <CreateEpicDialog projectId={projectId} /> : undefined}
     >
       <PmPageShell>
         <div

@@ -59,7 +59,10 @@ export interface LeadTableViewProps {
   onBulkDelete: (leadIds: number[]) => void;
   teamMembers: TeamMember[];
   isLoading: boolean;
-  isAdmin: boolean;
+  canUpdate: boolean;
+  canAssign: boolean;
+  canDelete: boolean;
+  canCreateDeal: boolean;
 }
 
 export const PAGE_SIZES = [25, 50, 100] as const;

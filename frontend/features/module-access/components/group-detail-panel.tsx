@@ -82,6 +82,7 @@ export function GroupDetailPanel({
   const handleReset = useCallback(() => setDraft(savedBaseline), [savedBaseline]);
 
   const handleSave = useCallback(() => {
+    if (!canManage || group.isSystem) return;
     const items = Object.entries(draft)
       .filter(([, scope]) => scope !== "none")
       .map(([permissionKey, scope]) => ({ permissionKey, scope }));
@@ -113,7 +114,7 @@ export function GroupDetailPanel({
         },
       },
     );
-  }, [draft, group.id, group.version, group.name, setPermissions, setSavedBaseline, queryClient, moduleKey]);
+  }, [canManage, draft, group.id, group.isSystem, group.version, group.name, setPermissions, setSavedBaseline, queryClient, moduleKey]);
 
   const handleOpenMembers = useCallback(() => setMembersOpen(true), []);
   const handleMembersOpenChange = useCallback(

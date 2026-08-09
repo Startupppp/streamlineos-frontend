@@ -17,6 +17,7 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import type { SignTemplate, SignTemplateStatus } from "@/types/sign";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { CreateEnvelopeFromTemplateDialog } from "./create-envelope-from-template-dialog";
+import { useCan } from "@/hooks/api/access";
 
 const STATUS_VARIANT: Record<SignTemplateStatus, "default" | "secondary" | "outline"> = {
   draft: "outline",
@@ -25,6 +26,8 @@ const STATUS_VARIANT: Record<SignTemplateStatus, "default" | "secondary" | "outl
 };
 
 function TemplateRow({ template }: { template: SignTemplate }) {
+  const canManageTemplates = useCan("sign:template:manage");
+  const canCreateEnvelope = useCan("sign:envelope:create");
   const [createOpen, setCreateOpen] = useState(false);
   const duplicate = useDuplicateSignTemplate();
   const update = useUpdateSignTemplate(template.id);
@@ -72,13 +75,13 @@ function TemplateRow({ template }: { template: SignTemplate }) {
         <p className="text-xs text-muted-foreground mt-0.5">v{template.version}{template.category ? ` · ${template.category}` : ""}</p>
       </div>
       <div className="flex items-center gap-2 shrink-0">
-        {template.status === "published" && (
+        {canCreateEnvelope && template.status === "published" && (
           <Button size="sm" onClick={handleCreateOpen} {...sendHover}>
             <SendIcon ref={sendRef} className="size-4" />
             New envelope
           </Button>
         )}
-        <DropdownMenu>
+        {canManageTemplates && <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="size-8" {...ellipsisHover}>
               <EllipsisIcon ref={ellipsisRef} className="size-4" />
@@ -102,9 +105,11 @@ function TemplateRow({ template }: { template: SignTemplate }) {
               </DropdownMenuItem>
             )}
           </DropdownMenuContent>
-        </DropdownMenu>
+        </DropdownMenu>}
       </div>
-      <CreateEnvelopeFromTemplateDialog template={template} open={createOpen} onOpenChange={setCreateOpen} />
+      {canCreateEnvelope && (
+        <CreateEnvelopeFromTemplateDialog template={template} open={createOpen} onOpenChange={setCreateOpen} />
+      )}
     </div>
   );
 }

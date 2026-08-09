@@ -180,16 +180,23 @@ export function ModuleMembersTab({
     focusLookup.data,
     myPermissionsQuery.isSuccess,
     canManage,
+    setAddOpen,
   ]);
 
-  const handleOpenAdd = useCallback(() => setAddOpen(true), [setAddOpen]);
+  const handleOpenAdd = useCallback(() => {
+    if (canManage) setAddOpen(true);
+  }, [canManage, setAddOpen]);
   const handleEditMember = useCallback(
-    (member: ModuleMember) => setEditTarget(member),
-    [],
+    (member: ModuleMember) => {
+      if (canManage) setEditTarget(member);
+    },
+    [canManage],
   );
   const handleRemoveMember = useCallback(
-    (member: ModuleMember) => setRemoveTarget(member),
-    [],
+    (member: ModuleMember) => {
+      if (canManage) setRemoveTarget(member);
+    },
+    [canManage],
   );
   const handleEditClose = useCallback((open: boolean) => {
     if (!open) setEditTarget(null);
@@ -231,7 +238,11 @@ export function ModuleMembersTab({
           <EmptyState
             illustrationPreset="team"
             title="No members yet"
-            description="Add members to grant them access to this module."
+            description={
+              canManage
+                ? "Add members to grant them access to this module."
+                : "No members are assigned to this module yet."
+            }
             action={
               canManage ? { label: "Add member", onClick: handleOpenAdd } : undefined
             }
@@ -263,28 +274,32 @@ export function ModuleMembersTab({
         )}
       </div>
 
-      <AddMemberDialog
-        open={addOpen}
-        onOpenChange={setAddOpen}
-        moduleKey={moduleKey}
-        allGroups={allGroups}
-        defaultUserId={focusUserId}
-      />
+      {canManage ? (
+        <>
+          <AddMemberDialog
+            open={addOpen}
+            onOpenChange={setAddOpen}
+            moduleKey={moduleKey}
+            allGroups={allGroups}
+            defaultUserId={focusUserId}
+          />
 
-      <EditGroupsDialog
-        open={!!editTarget}
-        onOpenChange={handleEditClose}
-        moduleKey={moduleKey}
-        member={editTarget}
-        allGroups={allGroups}
-      />
+          <EditGroupsDialog
+            open={!!editTarget}
+            onOpenChange={handleEditClose}
+            moduleKey={moduleKey}
+            member={editTarget}
+            allGroups={allGroups}
+          />
 
-      <ConfirmRemoveDialog
-        open={!!removeTarget}
-        onOpenChange={handleRemoveClose}
-        moduleKey={moduleKey}
-        member={removeTarget}
-      />
+          <ConfirmRemoveDialog
+            open={!!removeTarget}
+            onOpenChange={handleRemoveClose}
+            moduleKey={moduleKey}
+            member={removeTarget}
+          />
+        </>
+      ) : null}
     </div>
   );
 }

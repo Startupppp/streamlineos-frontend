@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 interface VaultDocument {
   id: number;
@@ -242,10 +243,12 @@ export function useVaultAccessLogs(candidateId: number) {
 }
 
 export function useBgvComplianceDashboard() {
+  const canSensitive = useCan("hr:sensitive:view");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "bgv-compliance"],
     queryFn: () => apiClient.get<BgvComplianceRow[]>("/hr/recruitment/bgv-compliance"),
     staleTime: 2 * 60_000,
+    enabled: canSensitive,
   });
 }
 

@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { isApiError } from "@/lib/api-client";
-import { MemberCandidateSelect } from "./member-candidate-select";
+import { MemberPicker } from "@/components/members/member-picker";
 import {
   useAddModuleMember,
   useUpdateModuleMember,
@@ -65,7 +65,10 @@ export function AddMemberDialog({
     [onOpenChange],
   );
 
-  const handleUserChange = useCallback((val: string) => setSelectedUserId(val), []);
+  const handleUserChange = useCallback(
+    (val: string | null) => setSelectedUserId(val ?? ""),
+    [],
+  );
 
   const handleGroupToggle = useCallback((groupId: number, checked: boolean) => {
     setSelectedGroupIds((prev) => {
@@ -103,12 +106,12 @@ export function AddMemberDialog({
         <div className="space-y-3">
           <div className="space-y-1.5">
             <p className="text-sm font-medium">User</p>
-            <MemberCandidateSelect
+            <MemberPicker
               moduleKey={moduleKey}
               value={selectedUserId}
-              onValueChange={handleUserChange}
-              defaultUserId={defaultUserId}
+              onChange={handleUserChange}
               enabled={open}
+              placeholder="Select a user…"
             />
           </div>
 

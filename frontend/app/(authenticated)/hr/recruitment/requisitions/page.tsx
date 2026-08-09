@@ -27,8 +27,10 @@ import {
   STATUS_TABS,
 } from "@/features/hr/recruitment/requisitions/requisition-card";
 import { RequisitionFormSheet } from "@/features/hr/recruitment/requisitions/requisition-form-sheet";
+import { useCan } from "@/hooks/api/access";
 
 export default function RequisitionsPage() {
+  const canManage = useCan("hr:requisitions:manage");
   const router = useRouter();
   const [activeStatus, setActiveStatus] = useState<string | undefined>(undefined);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -112,9 +114,11 @@ export default function RequisitionsPage() {
         title="Job Requisitions"
         subtitle="Manage headcount requests and approvals"
         actions={
-          <Button size="sm" onClick={handleOpenSheet}>
-            <Plus className="mr-1.5 h-4 w-4" /> New Requisition
-          </Button>
+          canManage ? (
+            <Button size="sm" onClick={handleOpenSheet}>
+              <Plus className="mr-1.5 h-4 w-4" /> New Requisition
+            </Button>
+          ) : undefined
         }
         filters={
           <div className={FILTER_TOOLBAR_ROW}>
@@ -156,7 +160,11 @@ export default function RequisitionsPage() {
                   ? "Try another status filter or create a new requisition."
                   : "Create your first headcount request to get started."
               }
-              action={{ label: "New Requisition", onClick: handleOpenSheet }}
+              action={
+                canManage
+                  ? { label: "New Requisition", onClick: handleOpenSheet }
+                  : undefined
+              }
               className={CONTENT_FILL_PANEL}
             />
           ) : (
@@ -173,6 +181,7 @@ export default function RequisitionsPage() {
                     isSubmitting={submitRequisition.isPending}
                     isApproving={approveRequisition.isPending}
                     isConverting={createJobFromRequisition.isPending}
+                    canManage={canManage}
                   />
                 ))}
               </div>
@@ -181,20 +190,24 @@ export default function RequisitionsPage() {
         </div>
       </PageWrapper>
 
-      <RequisitionFormSheet open={sheetOpen} onClose={handleCloseSheet} />
+      {canManage && (
+        <RequisitionFormSheet open={sheetOpen} onClose={handleCloseSheet} />
+      )}
 
-      <ConfirmWithReasonSheet
-        open={rejectTarget !== null}
-        onOpenChange={handleRejectOpenChange}
-        title="Reject Requisition"
-        description="Provide a reason for rejecting this requisition."
-        reasonLabel="Rejection reason"
-        reasonPlaceholder="Rejection reason..."
-        reasonRequired
-        confirmLabel="Reject"
-        onConfirm={handleRejectConfirm}
-        isPending={rejectRequisition.isPending}
-      />
+      {canManage && (
+        <ConfirmWithReasonSheet
+          open={rejectTarget !== null}
+          onOpenChange={handleRejectOpenChange}
+          title="Reject Requisition"
+          description="Provide a reason for rejecting this requisition."
+          reasonLabel="Rejection reason"
+          reasonPlaceholder="Rejection reason..."
+          reasonRequired
+          confirmLabel="Reject"
+          onConfirm={handleRejectConfirm}
+          isPending={rejectRequisition.isPending}
+        />
+      )}
     </>
   );
 }

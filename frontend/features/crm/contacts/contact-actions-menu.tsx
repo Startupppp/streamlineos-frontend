@@ -62,6 +62,8 @@ export function ContactActionsMenu({
 }: ContactActionsMenuProps) {
   const router = useRouter();
   const canManageContacts = useCan("crm:contacts:manage");
+  const canMergeContacts = useCan("crm:contacts:merge");
+  const canUseCrmAi = useCan("crm:ai:use");
 
   const handleView = useCallback(() => {
     router.push(`/crm/contacts/${contact.id}`);
@@ -100,15 +102,19 @@ export function ContactActionsMenu({
           <Link2 className="h-3.5 w-3.5 mr-2" />
           View details
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleEdit}>
-          <Pencil className="h-3.5 w-3.5 mr-2" />
-          Edit
-        </DropdownMenuItem>
-        <DropdownMenuItem disabled={isEnrichPending} onClick={handleEnrich}>
-          <Sparkles className="h-3.5 w-3.5 mr-2 text-primary" />
-          Enrich with AI
-        </DropdownMenuItem>
-        {onMerge && (
+        {canManageContacts && (
+          <DropdownMenuItem onClick={handleEdit}>
+            <Pencil className="h-3.5 w-3.5 mr-2" />
+            Edit
+          </DropdownMenuItem>
+        )}
+        {canUseCrmAi && (
+          <DropdownMenuItem disabled={isEnrichPending} onClick={handleEnrich}>
+            <Sparkles className="h-3.5 w-3.5 mr-2 text-primary" />
+            Enrich with AI
+          </DropdownMenuItem>
+        )}
+        {canMergeContacts && onMerge && (
           <DropdownMenuItem onClick={handleMerge}>
             <GitMerge className="h-3.5 w-3.5 mr-2" />
             Merge

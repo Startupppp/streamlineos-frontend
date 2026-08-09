@@ -31,6 +31,7 @@ import { useEntitlements } from "@/hooks/api/entitlements";
 import {
   PRODUCT_DEFINITIONS,
   PRODUCT_DESCRIPTIONS,
+  getAccessibleProductHref,
   getNavGroupsForProduct,
   getProductFromPathname,
   isModuleEnabled,
@@ -238,8 +239,8 @@ function ProductGrid({
   shouldReduceMotion,
 }: ProductGridProps) {
   const visibleProducts = useMemo(() => {
-    const products = PRODUCT_DEFINITIONS.filter((product) => {
-      if (product.key === "administration") return false;
+    const products = PRODUCT_DEFINITIONS.flatMap((product) => {
+      if (product.key === "administration") return [];
       const groups = getNavGroupsForProduct(
         product.key,
         effectiveRole,
@@ -247,7 +248,15 @@ function ProductGrid({
         enabledModules,
       );
       const hasAccess = groups.some((group) => group.routes.length > 0);
-      return hasAccess || canManageModules;
+      if (!hasAccess && !canManageModules) return [];
+      return [
+        {
+          ...product,
+          href: hasAccess
+            ? getAccessibleProductHref(groups, product.href)
+            : "/settings/modules",
+        },
+      ];
     });
 
     return products.sort((a, b) => {

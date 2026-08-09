@@ -11,7 +11,6 @@ import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { usePushSubscription } from "@/hooks/common/use-push-subscription";
 import { TrialBanner } from "@/components/billing/trial-banner";
 import { ProductSwitcherMenu } from "./header/product-switcher-menu";
-import { WorkspaceSwitcher } from "./header/org-switcher";
 import { useProductSidebarVisibility } from "./sidebar/use-product-sidebar-visibility";
 import { useAccess } from "@/hooks/api/access";
 import { AppLoadingScreen } from "@/components/ui/app-loading-screen";
@@ -73,7 +72,6 @@ export function DashboardShell({
     useState(defaultCollapsed);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [productSwitcherOpen, setProductSwitcherOpen] = useState(false);
-  const [workspaceSwitcherOpen, setWorkspaceSwitcherOpen] = useState(false);
   const [isChatConversationOpen, setIsChatConversationOpen] = useState(false);
 
   const { hideSidebar, navGroups } = useProductSidebarVisibility();
@@ -119,11 +117,6 @@ export function DashboardShell({
 
   const handleRequestProductSwitcher = useCallback(() => {
     setProductSwitcherOpen(true);
-    deferCloseMobileMenu();
-  }, [deferCloseMobileMenu]);
-
-  const handleRequestWorkspaceSwitcher = useCallback(() => {
-    setWorkspaceSwitcherOpen(true);
     deferCloseMobileMenu();
   }, [deferCloseMobileMenu]);
 
@@ -222,11 +215,11 @@ export function DashboardShell({
 
               <main
                 id="dashboard-content"
-                className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
+                className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
               >
                 <div
                   className={cn(
-                    "flex min-h-0 flex-1 flex-col overflow-hidden",
+                    "flex h-full min-h-0 flex-1 flex-col overflow-hidden",
                     getMobileModuleContentPaddingClassName(showModuleBottomNav),
                     isChatRoute &&
                       getChatMobileContentPaddingClassName(
@@ -234,7 +227,9 @@ export function DashboardShell({
                       ),
                   )}
                 >
-                  {children}
+                  <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden [&>:first-child]:h-full [&>:first-child]:min-h-0 [&>:first-child]:flex-1">
+                    {children}
+                  </div>
                   <WelcomeToast />
                   <SuccessChecklist />
                 </div>
@@ -255,7 +250,6 @@ export function DashboardShell({
                   isMobile
                   onNavigate={handleCloseMobileMenu}
                   onRequestProductSwitcher={handleRequestProductSwitcher}
-                  onRequestWorkspaceSwitcher={handleRequestWorkspaceSwitcher}
                 />
               </DrawerContent>
             </Drawer>
@@ -266,13 +260,6 @@ export function DashboardShell({
               drawerOnly
               open={productSwitcherOpen}
               onOpenChange={setProductSwitcherOpen}
-            />
-          )}
-          {!isPortalRoute && (
-            <WorkspaceSwitcher
-              drawerOnly
-              open={workspaceSwitcherOpen}
-              onOpenChange={setWorkspaceSwitcherOpen}
             />
           )}
 

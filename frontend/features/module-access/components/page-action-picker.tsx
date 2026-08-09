@@ -4,7 +4,6 @@ import { useState, useCallback, useMemo } from "react";
 import { ChevronRight, ChevronDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import type { ModulePermission, DataScope } from "@/hooks/api/module-access";
 import {
   type PermDraft,
@@ -103,24 +102,23 @@ function ResourceRow({ group, draft, onDraftChange, readOnly }: ResourceRowProps
         <PageIndicator
           state={rowState}
           label={label}
-          disabled={readOnly}
+          readOnly={readOnly}
           onClick={handleIndicatorClick}
         />
-        <button
-          type="button"
-          onClick={handleLabelClick}
-          aria-label={
-            rowState === "unchecked" ? `Select ${label} at view level` : label
-          }
-          className={cn(
-            "flex-1 min-w-0 text-left text-sm font-medium text-foreground truncate",
-            rowState === "unchecked" && !readOnly
-              ? "cursor-pointer hover:text-primary transition-colors"
-              : "cursor-default",
-          )}
-        >
-          {label}
-        </button>
+        {rowState === "unchecked" && !readOnly ? (
+          <button
+            type="button"
+            onClick={handleLabelClick}
+            aria-label={`Select ${label} at view level`}
+            className="flex-1 min-w-0 truncate text-left text-sm font-medium text-foreground transition-colors hover:text-primary"
+          >
+            {label}
+          </button>
+        ) : (
+          <span className="flex-1 min-w-0 truncate text-sm font-medium text-foreground">
+            {label}
+          </span>
+        )}
         {grantedCount > 0 && (
           <Badge variant="secondary" className="text-[10px] shrink-0">
             {grantedCount}/{permissions.length}
@@ -210,12 +208,7 @@ export function PageActionPicker({
   }
 
   return (
-    <div
-      className={cn(
-        "rounded-lg border border-border bg-card",
-        readOnly && "opacity-60 pointer-events-none",
-      )}
-    >
+    <div className="rounded-lg border border-border bg-card">
       {!readOnly && (
         <div className="flex items-center justify-between px-5 py-2 border-b border-border bg-muted/20">
           <span className="text-xs text-muted-foreground">

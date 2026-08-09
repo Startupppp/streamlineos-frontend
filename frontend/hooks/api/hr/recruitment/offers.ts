@@ -3,6 +3,7 @@
 import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import {
   normalizeRecruitmentList,
   type RecruitmentListResponse,
@@ -82,6 +83,7 @@ export type AllOffersParams = {
 };
 
 export function useAllOffers(params?: AllOffersParams) {
+  const canOffers = useCan("hr:offers:view");
   const page = params?.page ?? 1;
   const pageSize = params?.pageSize ?? 20;
   const queryParams: Record<string, unknown> = { page, pageSize };
@@ -98,6 +100,7 @@ export function useAllOffers(params?: AllOffersParams) {
     },
     staleTime: 60_000,
     placeholderData: keepPreviousData,
+    enabled: canOffers,
   });
 }
 

@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useCan } from "@/hooks/api/access";
 
 export const HELPDESK_CATEGORIES = [
   "policy_question",
@@ -114,10 +115,12 @@ const keys = {
 };
 
 export function useHelpdeskTickets(params?: Record<string, unknown>) {
+  const canHelpdesk = useCan("hr:helpdesk:view");
   return useQuery({
     queryKey: keys.list(params),
     queryFn: () => apiClient.get<HelpdeskListResult>("/hr/helpdesk", params),
     staleTime: 60_000,
+    enabled: canHelpdesk,
   });
 }
 

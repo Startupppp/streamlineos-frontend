@@ -2,6 +2,8 @@
 
 import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 export interface TalentPool {
   id: number;
@@ -35,14 +37,16 @@ interface PoolMembersParams {
   limit?: number;
 }
 
-const poolsKey = ["hr", "talentPools"] as const;
+const poolsKey = queryKeys.hr.talentPools();
 const poolMembersKey = (poolId: number) => ["hr", "talentPools", poolId, "members"] as const;
 
 export function useTalentPools() {
+  const canEmployees = useCan("hr:employees:view");
   return useQuery({
     queryKey: poolsKey,
     queryFn: () => apiClient.get<TalentPool[]>("/hr/recruitment/talent-pools"),
     staleTime: 60_000,
+    enabled: canEmployees,
   });
 }
 

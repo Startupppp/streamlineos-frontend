@@ -88,6 +88,7 @@ export function HrEmployeeTable({
   currentUserId,
 }: HrEmployeeTableProps) {
   const canManageEmployees = useCan("hr:employees:update");
+  const canTerminateEmployees = useCan("hr:exit:manage");
   const columns = useMemo<DataTableColumn<Employee>[]>(
     () => [
       {
@@ -170,7 +171,7 @@ export function HrEmployeeTable({
             user.id,
             user.isActive,
             currentUserId,
-            canManageEmployees,
+            canTerminateEmployees,
           );
 
           function handleTerminateClick() {
@@ -179,18 +180,20 @@ export function HrEmployeeTable({
 
           return (
             <div className="flex items-center justify-end gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="w-7"
-                aria-label={`Edit ${displayName}`}
-                title={`Edit ${displayName}`}
-                asChild
-              >
-                <Link href={`/hr/employees/${user.id}?tab=profile`}>
-                  <Pencil className="h-3.5 w-3.5" />
-                </Link>
-              </Button>
+              {canManageEmployees ? (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="w-7"
+                  aria-label={`Edit ${displayName}`}
+                  title={`Edit ${displayName}`}
+                  asChild
+                >
+                  <Link href={`/hr/employees/${user.id}?tab=profile`}>
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Link>
+                </Button>
+              ) : null}
               {canTerminate && (
                 <TerminateButton
                   displayName={displayName}
@@ -202,7 +205,12 @@ export function HrEmployeeTable({
         },
       },
     ],
-    [currentUserId, canManageEmployees, onRequestDelete],
+    [
+      currentUserId,
+      canManageEmployees,
+      canTerminateEmployees,
+      onRequestDelete,
+    ],
   );
 
   return (

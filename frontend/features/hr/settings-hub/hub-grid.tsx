@@ -2,14 +2,15 @@
 
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { useCan } from "@/hooks/api/access";
+import { useAccess } from "@/hooks/api/access";
 import { cn } from "@/lib/utils";
+import type { PermissionKey } from "@/lib/rbac/permissions";
 
 type CardDef = {
   title: string;
   description: string;
   href: string;
-  permission: string;
+  permission: PermissionKey | PermissionKey[];
   advanced?: boolean;
 };
 
@@ -25,8 +26,8 @@ const CARD_GROUPS: CardGroup[] = [
       {
         title: "Company Profile",
         description: "Org info, fiscal year, work week",
-        href: "/hr/settings/company",
-        permission: "hr:employees:view",
+        href: "/settings/organization",
+        permission: "settings:organization:manage",
       },
       {
         title: "Locations & Departments",
@@ -38,13 +39,13 @@ const CARD_GROUPS: CardGroup[] = [
         title: "Permissions & Roles",
         description: "RBAC configuration",
         href: "/settings/roles",
-        permission: "hr:employees:view",
+        permission: "settings:rbac:manage",
       },
       {
-        title: "Notifications",
+        title: "Notification Providers",
         description: "Delivery providers, templates, and events",
-        href: "/notifications",
-        permission: "hr:employees:view",
+        href: "/notifications/providers",
+        permission: "notifications:providers:view",
       },
     ],
   },
@@ -94,7 +95,7 @@ const CARD_GROUPS: CardGroup[] = [
         title: "Webhooks",
         description: "Outbound event webhooks and delivery logs",
         href: "/settings/webhooks",
-        permission: "hr:automations:view",
+        permission: "settings:webhooks:manage",
         advanced: true,
       },
     ],
@@ -112,14 +113,14 @@ const CARD_GROUPS: CardGroup[] = [
         title: "Forms",
         description: "Dynamic HR forms and intake",
         href: "/hr/settings/forms",
-        permission: "hr:templates:view",
+        permission: "hr:forms:view",
         advanced: true,
       },
       {
         title: "Custom Fields",
         description: "Employee attribute extensions",
         href: "/hr/settings/custom-fields",
-        permission: "hr:employees:view",
+        permission: "settings:custom-fields:manage",
         advanced: true,
       },
     ],
@@ -131,20 +132,20 @@ const CARD_GROUPS: CardGroup[] = [
         title: "Import / Export",
         description: "Bulk employee data operations",
         href: "/hr/settings/import-export",
-        permission: "hr:employees:view",
+        permission: ["hr:import:manage", "hr:export:manage"],
       },
       {
         title: "Integrations",
         description: "Job boards and connected recruiting apps",
         href: "/hr/settings/integrations",
-        permission: "hr:automations:view",
+        permission: "hr:integrations:manage",
         advanced: true,
       },
       {
         title: "Policy & Workflow Simulator",
         description: "Dry-run policies and approval flows on sample employees",
         href: "/hr/simulator",
-        permission: "hr:policies:view",
+        permission: "hr:policies:manage",
         advanced: true,
       },
     ],
@@ -162,7 +163,7 @@ const CARD_GROUPS: CardGroup[] = [
         title: "Onboarding Flows",
         description: "New joiner steps",
         href: "/hr/onboarding",
-        permission: "hr:employees:view",
+        permission: "hr:onboarding:manage",
       },
       {
         title: "All HR modules",
@@ -175,9 +176,6 @@ const CARD_GROUPS: CardGroup[] = [
 ];
 
 function CardItem({ card }: { card: CardDef }) {
-  const can = useCan(card.permission as Parameters<typeof useCan>[0]);
-  if (!can) return null;
-
   return (
     <Link
       href={card.href}
@@ -203,9 +201,23 @@ interface Props {
 }
 
 export function HubGrid({ isAdvanced, onSwitchToAdvanced }: Props) {
+  const { data: access } = useAccess();
+  const canOpen = (card: CardDef) => {
+    if (access?.isOrgOwner) return true;
+    const required = Array.isArray(card.permission)
+      ? card.permission
+      : [card.permission];
+    return required.some((permission) =>
+      access?.permissions.includes(permission),
+    );
+  };
+  const accessibleGroups = CARD_GROUPS.map((group) => ({
+    ...group,
+    cards: group.cards.filter(canOpen),
+  })).filter((group) => group.cards.length > 0);
   const hiddenCount = isAdvanced
     ? 0
-    : CARD_GROUPS.reduce(
+    : accessibleGroups.reduce(
         (count, group) => count + group.cards.filter((c) => c.advanced).length,
         0,
       );
@@ -230,7 +242,7 @@ export function HubGrid({ isAdvanced, onSwitchToAdvanced }: Props) {
           )}
         </div>
       )}
-      {CARD_GROUPS.map((group) => {
+      {accessibleGroups.map((group) => {
         const visibleCards = group.cards.filter((c) => isAdvanced || !c.advanced);
         if (visibleCards.length === 0) return null;
 

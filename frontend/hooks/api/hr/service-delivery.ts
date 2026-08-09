@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useCan } from "@/hooks/api/access";
 
 export type AgingBucket = "fresh" | "watch" | "overdue" | "critical";
 
@@ -57,21 +58,23 @@ export const serviceDeliveryKeys = {
 };
 
 export function useServiceDeliveryOpsInbox(enabled = true) {
+  const canCases = useCan("hr:cases:view");
   return useQuery({
     queryKey: serviceDeliveryKeys.opsInbox,
     queryFn: () =>
       apiClient.get<ServiceDeliveryOpsInbox>("/hr/service-delivery/ops-inbox"),
     staleTime: 30_000,
-    enabled,
+    enabled: canCases && enabled,
   });
 }
 
 export function useServiceDeliveryMyItems(enabled = true) {
+  const canHelpdesk = useCan("hr:helpdesk:view");
   return useQuery({
     queryKey: serviceDeliveryKeys.myItems,
     queryFn: () =>
       apiClient.get<ServiceDeliveryMyItems>("/hr/service-delivery/my-items"),
     staleTime: 30_000,
-    enabled,
+    enabled: canHelpdesk && enabled,
   });
 }

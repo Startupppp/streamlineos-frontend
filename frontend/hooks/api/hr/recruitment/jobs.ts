@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   JobPosting,
   RecruitmentStats,
@@ -58,10 +59,12 @@ export interface JobShareLinks {
 }
 
 export function useRecruitmentStats() {
+  const canInterviews = useCan("hr:interviews:view");
   return useQuery({
     queryKey: queryKeys.hr.recruitmentStats(),
     queryFn: () => apiClient.get<RecruitmentStats>("/hr/recruitment/stats"),
     staleTime: 2 * 60_000,
+    enabled: canInterviews,
   });
 }
 
@@ -76,6 +79,7 @@ export type JobPostingsParams = {
  * Hooks normalize to a flat JobPosting[] so list UIs keep working.
  */
 export function useJobPostings(params?: JobPostingsParams) {
+  const canEmployees = useCan("hr:employees:view");
   const page = params?.page ?? 1;
   const pageSize = params?.pageSize ?? 100;
   const queryParams = {
@@ -93,6 +97,7 @@ export function useJobPostings(params?: JobPostingsParams) {
       return unwrapRecruitmentItems(res);
     },
     staleTime: 2 * 60_000,
+    enabled: canEmployees,
   });
 }
 

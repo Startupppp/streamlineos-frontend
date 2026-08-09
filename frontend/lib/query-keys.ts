@@ -142,6 +142,7 @@ export const queryKeys = {
       [...base, "hr", "emailSequence", id] as const,
     pipelineAutomations: () => [...base, "hr", "pipelineAutomations"] as const,
     referrals: () => [...base, "hr", "referrals"] as const,
+    talentPools: () => [...base, "hr", "talentPools"] as const,
     offerTemplates: () => [...base, "hr", "offerTemplates"] as const,
     scorecardAnalytics: (params?: Record<string, unknown>) =>
       [...base, "hr", "scorecardAnalytics", params] as const,
@@ -746,10 +747,12 @@ export const queryKeys = {
 
   access: {
     all: [...base, "access"] as const,
-    me: (orgId?: string | null) =>
-      orgId
-        ? ([...base, "access", "me", orgId] as const)
-        : ([...base, "access", "me"] as const),
+    me: (orgId?: string | null, userId?: string | null) =>
+      orgId && userId
+        ? ([...base, "access", "me", orgId, userId] as const)
+        : orgId
+          ? ([...base, "access", "me", orgId] as const)
+          : ([...base, "access", "me"] as const),
     simulate: (orgId: string | null | undefined, userId: string) =>
       orgId
         ? ([...base, "access", "simulate", orgId, userId] as const)

@@ -8,8 +8,8 @@ export const CONTENT_FILL_PANEL = "flex min-h-full w-full flex-1 flex-col";
 /** Horizontal page inset used by PageWrapper headers, filters, and content. */
 export const PAGE_CHROME_X = "px-4 sm:px-6 lg:px-8";
 
-/** Minimal bottom breathing room; mobile bottom-nav inset is reserved by the shell fill wrapper. */
-export const PAGE_CHROME_BOTTOM = "pb-2";
+/** No bottom inset — page bodies meet the shell edge; Ask OS / FABs float above. */
+export const PAGE_CHROME_BOTTOM = "pb-0";
 
 export const FILTER_SELECT_TRIGGER =
   "min-w-0 border-input bg-card text-foreground [&_svg]:text-muted-foreground [&_[data-slot=select-value]]:min-w-0 [&_[data-slot=select-value]]:truncate";

@@ -4,6 +4,7 @@ import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tansta
 import { apiClient } from "@/lib/api-client";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCan } from "@/hooks/api/access";
 
 export type CaseCategory =
   | "grievance" | "disciplinary" | "harassment" | "ethics"
@@ -92,11 +93,13 @@ const caseKeys = {
 };
 
 export function useHrCases(params: ListCasesParams = {}) {
+  const canCases = useCan("hr:cases:view");
   return useQuery({
     queryKey: caseKeys.list(params),
     queryFn: () => apiClient.get<PaginatedResult<HrCase>>("/hr/cases", params as Record<string, unknown>),
     staleTime: 30_000,
     placeholderData: keepPreviousData,
+    enabled: canCases,
   });
 }
 

@@ -27,9 +27,13 @@ const ValueCell = memo(function ValueCell({ row }: { row: SalaryComponent }) {
 export function buildComponentColumns(
   onEdit: (row: SalaryComponent) => void,
   onDelete: (row: SalaryComponent) => void,
+  canManage: boolean,
 ): DataTableColumn<SalaryComponent>[] {
-  return [
-    {
+  const columns: DataTableColumn<SalaryComponent>[] = [
+  ];
+
+  if (canManage) {
+    columns.push({
       key: "name",
       header: "Name / Code",
       cell: (row) => (
@@ -115,6 +119,8 @@ export function buildComponentColumns(
           />
         </div>
       ),
-    },
-  ];
+    });
+  }
+
+  return columns;
 }

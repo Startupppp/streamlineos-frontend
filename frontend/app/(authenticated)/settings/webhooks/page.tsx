@@ -14,12 +14,28 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetBody, SheetFooter } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetBody,
+  SheetFooter,
+} from "@/components/ui/sheet";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyDevicesIllustration } from "@/components/illustrations";
 import { Checkbox } from "@/components/ui/checkbox";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
@@ -35,6 +51,7 @@ import {
   STANDARD_PAGE_SIZE_OPTIONS,
 } from "@/lib/list-pagination";
 import { keepPreviousData } from "@tanstack/react-query";
+import { useCan } from "@/hooks/api/access";
 
 const AVAILABLE_EVENTS = [
   { id: "lead.created", label: "Lead Created" },
@@ -96,7 +113,10 @@ interface WebhooksPageResponse {
   };
 }
 
-function useWebhooks(params: { page: number; limit: number }) {
+function useWebhooks(
+  params: { page: number; limit: number },
+  enabled: boolean,
+) {
   return useQuery({
     queryKey: queryKeys.webhooks.list(params),
     queryFn: () =>
@@ -106,6 +126,7 @@ function useWebhooks(params: { page: number; limit: number }) {
       }),
     placeholderData: keepPreviousData,
     staleTime: 60_000,
+    enabled,
   });
 }
 
@@ -113,7 +134,8 @@ function useCreateWebhook() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["webhooks", "create"] as const,
-    mutationFn: (data: CreateWebhookInput) => apiClient.post<WebhookEndpoint>("/webhooks", data),
+    mutationFn: (data: CreateWebhookInput) =>
+      apiClient.post<WebhookEndpoint>("/webhooks", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.webhooks.all }),
   });
 }
@@ -138,20 +160,15 @@ function useDeleteWebhook() {
 }
 
 export default function WebhooksPage() {
+  const canManage = useCan("settings:webhooks:manage");
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
   const page = parsePage(searchParams.get("page"));
   const pageSize = parsePageSize(searchParams.get("size"));
-  const {
-    data,
-    error,
-    isLoading,
-    isError,
-    isPlaceholderData,
-    refetch,
-  } = useWebhooks({ page, limit: pageSize });
+  const { data, error, isLoading, isError, isPlaceholderData, refetch } =
+    useWebhooks({ page, limit: pageSize }, canManage);
   const createWebhook = useCreateWebhook();
   const toggleWebhook = useToggleWebhook();
   const deleteWebhook = useDeleteWebhook();
@@ -207,43 +224,66 @@ export default function WebhooksPage() {
 
   const handleCreate = useCallback(async () => {
     const trimmedUrl = url.trim();
-    if (!trimmedUrl) { toast.error("URL is required"); return; }
+    if (!trimmedUrl) {
+      toast.error("URL is required");
+      return;
+    }
     if (!isValidWebhookUrl(trimmedUrl)) {
-      toast.error("Enter a valid HTTP(S) URL (e.g. https://your-server.com/webhook)");
+      toast.error(
+        "Enter a valid HTTP(S) URL (e.g. https://your-server.com/webhook)",
+      );
       return;
     }
     createWebhook.mutate(
-      { url: trimmedUrl, description: description.trim() || undefined, events: selectedEvents },
+      {
+        url: trimmedUrl,
+        description: description.trim() || undefined,
+        events: selectedEvents,
+      },
       {
         onSuccess: () => {
           toast.success("Webhook created");
           setSheetOpen(false);
-          setUrl(""); setDescription(""); setSelectedEvents([]);
+          setUrl("");
+          setDescription("");
+          setSelectedEvents([]);
           updateParams({ page: null });
         },
         onError: (err) => toast.error(getErrorMessage(err)),
-      }
+      },
     );
   }, [url, description, selectedEvents, createWebhook, updateParams]);
 
-  const handleToggle = useCallback((id: number, isActive: boolean) => {
-    toggleWebhook.mutate({ id, isActive: !isActive }, {
-      onSuccess: () => toast.success(isActive ? "Webhook disabled" : "Webhook enabled"),
-      onError: (err) => toast.error(getErrorMessage(err)),
-    });
-  }, [toggleWebhook]);
+  const handleToggle = useCallback(
+    (id: number, isActive: boolean) => {
+      toggleWebhook.mutate(
+        { id, isActive: !isActive },
+        {
+          onSuccess: () =>
+            toast.success(isActive ? "Webhook disabled" : "Webhook enabled"),
+          onError: (err) => toast.error(getErrorMessage(err)),
+        },
+      );
+    },
+    [toggleWebhook],
+  );
 
   const handleDelete = useCallback(() => {
     if (!deleteId) return;
     deleteWebhook.mutate(deleteId, {
-      onSuccess: () => { toast.success("Webhook deleted"); setDeleteId(null); },
+      onSuccess: () => {
+        toast.success("Webhook deleted");
+        setDeleteId(null);
+      },
       onError: (err) => toast.error(getErrorMessage(err)),
     });
   }, [deleteId, deleteWebhook]);
 
   const toggleEvent = useCallback((eventId: string) => {
-    setSelectedEvents(prev =>
-      prev.includes(eventId) ? prev.filter(e => e !== eventId) : [...prev, eventId]
+    setSelectedEvents((prev) =>
+      prev.includes(eventId)
+        ? prev.filter((e) => e !== eventId)
+        : [...prev, eventId],
     );
   }, []);
 
@@ -252,13 +292,19 @@ export default function WebhooksPage() {
     toast.success("URL copied");
   }, []);
 
-  const handleUrlChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setUrl(e.target.value);
-  }, []);
+  const handleUrlChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setUrl(e.target.value);
+    },
+    [],
+  );
 
-  const handleDescriptionChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setDescription(e.target.value);
-  }, []);
+  const handleDescriptionChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setDescription(e.target.value);
+    },
+    [],
+  );
 
   const handleSheetClose = useCallback(() => setSheetOpen(false), []);
 
@@ -266,7 +312,9 @@ export default function WebhooksPage() {
     if (!open) setDeleteId(null);
   }, []);
 
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   return (
     <PageWrapper
@@ -275,14 +323,23 @@ export default function WebhooksPage() {
       noInternalScroll
       contentClassName="pb-0"
       actions={
-        <AnimatedIconButton icon={PlusIcon} iconSize={16} iconClassName="mr-2" onClick={handleOpenCreate}>
-          Add Webhook
-        </AnimatedIconButton>
+        canManage ? (
+          <AnimatedIconButton
+            icon={PlusIcon}
+            iconSize={16}
+            iconClassName="mr-2"
+            onClick={handleOpenCreate}
+          >
+            Add Webhook
+          </AnimatedIconButton>
+        ) : undefined
       }
     >
       {isLoading || isPageOutOfRange ? (
         <div className="flex flex-1 flex-col min-h-0 space-y-4">
-          {Array.from({ length: 5 }).map((_, i) => <WebhookCardSkeleton key={i} />)}
+          {Array.from({ length: 5 }).map((_, i) => (
+            <WebhookCardSkeleton key={i} />
+          ))}
         </div>
       ) : isError ? (
         <ErrorState
@@ -296,7 +353,11 @@ export default function WebhooksPage() {
           illustration={<EmptyDevicesIllustration />}
           title="No webhooks configured"
           description="Webhooks let external services receive real-time notifications when events happen in your organization."
-          action={{ label: "Add Webhook", onClick: handleOpenCreate }}
+          action={
+            canManage
+              ? { label: "Add Webhook", onClick: handleOpenCreate }
+              : undefined
+          }
           className="min-h-0 flex-1"
         />
       ) : (
@@ -314,6 +375,7 @@ export default function WebhooksPage() {
                 onCopyUrl={copyUrl}
                 onToggle={handleToggle}
                 onDelete={setDeleteId}
+                canManage={canManage}
               />
             ))}
           </motion.div>
@@ -331,83 +393,93 @@ export default function WebhooksPage() {
         </div>
       )}
 
-      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent className="w-full sm:max-w-lg p-0 flex flex-col gap-0">
-          <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
-            <SheetTitle>Add Webhook</SheetTitle>
-          </SheetHeader>
-          <SheetBody className="px-6 py-5">
-            <div className="space-y-5">
-              <div className="space-y-1.5">
-                <Label htmlFor="webhook-url">Endpoint URL *</Label>
-                <div className="relative">
-                  <ExternalLink className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      {canManage && (
+        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+          <SheetContent className="w-full sm:max-w-lg p-0 flex flex-col gap-0">
+            <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
+              <SheetTitle>Add Webhook</SheetTitle>
+            </SheetHeader>
+            <SheetBody className="px-6 py-5">
+              <div className="space-y-5">
+                <div className="space-y-1.5">
+                  <Label htmlFor="webhook-url">Endpoint URL *</Label>
+                  <div className="relative">
+                    <ExternalLink className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="webhook-url"
+                      className="pl-9"
+                      placeholder="https://your-server.com/webhook"
+                      value={url}
+                      onChange={handleUrlChange}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="webhook-desc">Description (optional)</Label>
                   <Input
-                    id="webhook-url"
-                    className="pl-9"
-                    placeholder="https://your-server.com/webhook"
-                    value={url}
-                    onChange={handleUrlChange}
+                    id="webhook-desc"
+                    placeholder="e.g. Notify the team on deal won"
+                    value={description}
+                    onChange={handleDescriptionChange}
                   />
                 </div>
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="webhook-desc">Description (optional)</Label>
-                <Input
-                  id="webhook-desc"
-                  placeholder="e.g. Notify the team on deal won"
-                  value={description}
-                  onChange={handleDescriptionChange}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Events to send</Label>
-                <div className="grid grid-cols-1 gap-2">
-                  {AVAILABLE_EVENTS.map(ev => (
-                    <EventCheckboxItem
-                      key={ev.id}
-                      event={ev}
-                      checked={selectedEvents.includes(ev.id)}
-                      onToggle={toggleEvent}
-                    />
-                  ))}
+                <div className="space-y-2">
+                  <Label>Events to send</Label>
+                  <div className="grid grid-cols-1 gap-2">
+                    {AVAILABLE_EVENTS.map((ev) => (
+                      <EventCheckboxItem
+                        key={ev.id}
+                        event={ev}
+                        checked={selectedEvents.includes(ev.id)}
+                        onToggle={toggleEvent}
+                      />
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
-          </SheetBody>
-          <SheetFooter className="shrink-0 px-6 py-4 border-t">
-            <div className="grid grid-cols-2 gap-2 w-full">
-              <Button variant="outline" onClick={handleSheetClose}>Cancel</Button>
-              <Button
-                onClick={handleCreate}
-                disabled={createWebhook.isPending || !url.trim()}
-              >
-                {createWebhook.isPending ? "Creating..." : "Create Webhook"}
-              </Button>
-            </div>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+            </SheetBody>
+            <SheetFooter className="shrink-0 px-6 py-4 border-t">
+              <div className="grid grid-cols-2 gap-2 w-full">
+                <Button variant="outline" onClick={handleSheetClose}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleCreate}
+                  disabled={createWebhook.isPending || !url.trim()}
+                >
+                  {createWebhook.isPending ? "Creating..." : "Create Webhook"}
+                </Button>
+              </div>
+            </SheetFooter>
+          </SheetContent>
+        </Sheet>
+      )}
 
-      <AlertDialog open={deleteId !== null} onOpenChange={handleDeleteDialogChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Webhook?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This webhook will stop receiving events immediately. This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive hover:bg-destructive/90"
-              onClick={handleDelete}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {canManage && (
+        <AlertDialog
+          open={deleteId !== null}
+          onOpenChange={handleDeleteDialogChange}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Webhook?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This webhook will stop receiving events immediately. This action
+                cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive hover:bg-destructive/90"
+                onClick={handleDelete}
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </PageWrapper>
   );
 }
@@ -445,21 +517,38 @@ interface WebhookCardProps {
   onCopyUrl: (url: string) => void;
   onToggle: (id: number, isActive: boolean) => void;
   onDelete: (id: number) => void;
+  canManage: boolean;
 }
 
 function CopyUrlButton({ onCopy }: { onCopy: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
     <button onClick={onCopy} aria-label="Copy URL" {...hoverHandlers}>
-      <CopyIcon ref={iconRef} size={12} className="text-muted-foreground hover:text-foreground transition-colors" />
+      <CopyIcon
+        ref={iconRef}
+        size={12}
+        className="text-muted-foreground hover:text-foreground transition-colors"
+      />
     </button>
   );
 }
 
-function WebhookCard({ webhook: wh, onCopyUrl, onToggle, onDelete }: WebhookCardProps) {
+function WebhookCard({
+  webhook: wh,
+  onCopyUrl,
+  onToggle,
+  onDelete,
+  canManage,
+}: WebhookCardProps) {
   const handleCopy = useCallback(() => onCopyUrl(wh.url), [wh.url, onCopyUrl]);
-  const handleToggleClick = useCallback(() => onToggle(wh.id, wh.isActive), [wh.id, wh.isActive, onToggle]);
-  const handleDeleteClick = useCallback(() => onDelete(wh.id), [wh.id, onDelete]);
+  const handleToggleClick = useCallback(
+    () => onToggle(wh.id, wh.isActive),
+    [wh.id, wh.isActive, onToggle],
+  );
+  const handleDeleteClick = useCallback(
+    () => onDelete(wh.id),
+    [wh.id, onDelete],
+  );
 
   return (
     <motion.div variants={fadeUp}>
@@ -467,51 +556,70 @@ function WebhookCard({ webhook: wh, onCopyUrl, onToggle, onDelete }: WebhookCard
         <CardHeader>
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3 min-w-0">
-              <div className={`h-2.5 w-2.5 rounded-full shrink-0 ${wh.isActive ? "bg-emerald-500" : "bg-muted-foreground/40"}`} />
+              <div
+                className={`h-2.5 w-2.5 rounded-full shrink-0 ${wh.isActive ? "bg-emerald-500" : "bg-muted-foreground/40"}`}
+              />
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <CardTitle className="text-sm truncate">{wh.url}</CardTitle>
                   <CopyUrlButton onCopy={handleCopy} />
                 </div>
                 {wh.description && (
-                  <p className="text-xs text-muted-foreground mt-0.5">{wh.description}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {wh.description}
+                  </p>
                 )}
               </div>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <Badge variant={wh.isActive ? "default" : "secondary"} className="text-xs">
+              <Badge
+                variant={wh.isActive ? "default" : "secondary"}
+                className="text-xs"
+              >
                 {wh.isActive ? "Active" : "Inactive"}
               </Badge>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="w-7"
-                onClick={handleToggleClick}
-                aria-label={wh.isActive ? "Disable webhook" : "Enable webhook"}
-              >
-                {wh.isActive
-                  ? <ToggleRight className="h-4 w-4 text-emerald-500" />
-                  : <ToggleLeft className="h-4 w-4 text-muted-foreground" />}
-              </Button>
-              <AnimatedIconButton
-                icon={Trash2Icon}
-                iconSize={16}
-                variant="ghost"
-                size="icon"
-                className="w-7 text-destructive hover:text-destructive"
-                onClick={handleDeleteClick}
-                aria-label="Delete webhook"
-              />
+              {canManage && (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="w-7"
+                    onClick={handleToggleClick}
+                    aria-label={
+                      wh.isActive ? "Disable webhook" : "Enable webhook"
+                    }
+                  >
+                    {wh.isActive ? (
+                      <ToggleRight className="h-4 w-4 text-emerald-500" />
+                    ) : (
+                      <ToggleLeft className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </Button>
+                  <AnimatedIconButton
+                    icon={Trash2Icon}
+                    iconSize={16}
+                    variant="ghost"
+                    size="icon"
+                    className="w-7 text-destructive hover:text-destructive"
+                    onClick={handleDeleteClick}
+                    aria-label="Delete webhook"
+                  />
+                </>
+              )}
             </div>
           </div>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-1.5">
             {(wh.events ?? []).length === 0 ? (
-              <span className="text-xs text-muted-foreground">No events selected</span>
+              <span className="text-xs text-muted-foreground">
+                No events selected
+              </span>
             ) : (
-              (wh.events ?? []).map(ev => (
-                <Badge key={ev} variant="secondary" className="text-[10px]">{ev}</Badge>
+              (wh.events ?? []).map((ev) => (
+                <Badge key={ev} variant="secondary" className="text-[10px]">
+                  {ev}
+                </Badge>
               ))
             )}
           </div>
@@ -530,8 +638,15 @@ interface EventCheckboxItemProps {
   onToggle: (eventId: string) => void;
 }
 
-function EventCheckboxItem({ event, checked, onToggle }: EventCheckboxItemProps) {
-  const handleChange = useCallback(() => onToggle(event.id), [event.id, onToggle]);
+function EventCheckboxItem({
+  event,
+  checked,
+  onToggle,
+}: EventCheckboxItemProps) {
+  const handleChange = useCallback(
+    () => onToggle(event.id),
+    [event.id, onToggle],
+  );
   return (
     <div className="flex items-center gap-2">
       <Checkbox
@@ -540,7 +655,9 @@ function EventCheckboxItem({ event, checked, onToggle }: EventCheckboxItemProps)
         onCheckedChange={handleChange}
       />
       <label htmlFor={`ev-${event.id}`} className="text-sm cursor-pointer">
-        <span className="font-mono text-xs text-muted-foreground mr-2">{event.id}</span>
+        <span className="font-mono text-xs text-muted-foreground mr-2">
+          {event.id}
+        </span>
         {event.label}
       </label>
     </div>

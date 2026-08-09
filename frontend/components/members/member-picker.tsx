@@ -23,6 +23,7 @@ import {
 import { useOrgMembers, useOrgMembersByIds } from "@/hooks/api/organization";
 import { useProjectMembers } from "@/hooks/api/build/projects";
 import { useProjectWorkspaceMembers } from "@/hooks/api/build/workspace-members";
+import { useModuleMemberCandidates } from "@/hooks/api/module-access";
 import { useCan } from "@/hooks/api/access";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import {
@@ -40,6 +41,12 @@ interface MemberOption extends NamedUser {
 
 interface MemberPickerBaseProps {
   projectId?: number;
+  /** Scopes candidates to a module's member-access candidates instead of org/project members. */
+  moduleKey?: string;
+  /** Module mode only: exclude users already assigned to the module. Defaults to true. */
+  excludeAssigned?: boolean;
+  /** Gates candidate fetching, e.g. only while a parent dialog/sheet is open. Defaults to true. */
+  enabled?: boolean;
   placeholder?: string;
   disabled?: boolean;
   className?: string;
@@ -72,14 +79,22 @@ export type MemberPickerProps = MemberPickerSingleProps | MemberPickerMultiProps
 
 function useMemberOptions(
   projectId: number | undefined,
+  moduleKey: string | undefined,
+  excludeAssigned: boolean,
+  enabled: boolean,
   search: string,
   selectedIds: string[],
 ): { options: MemberOption[]; selectedMembers: MemberOption[] } {
   const canViewOrgMembers = useCan("settings:view");
   const canViewProjectWorkspaceMembers = useCan("build:members:view");
-  const useOrgDirectory = projectId === undefined && canViewOrgMembers;
+  const useOrgDirectory =
+    projectId === undefined && moduleKey === undefined && canViewOrgMembers;
   const useWorkspaceDirectory =
-    projectId === undefined && !canViewOrgMembers && canViewProjectWorkspaceMembers;
+    projectId === undefined &&
+    moduleKey === undefined &&
+    !canViewOrgMembers &&
+    canViewProjectWorkspaceMembers;
+  const useModuleDirectory = moduleKey !== undefined && enabled;
 
   const debouncedSearch = useDebouncedValue(search.trim(), 300);
   const { data: orgData } = useOrgMembers(1, 50, debouncedSearch || undefined, {
@@ -96,6 +111,25 @@ function useMemberOptions(
     },
   );
   const { data: projectMembers = [] } = useProjectMembers(projectId ?? 0);
+  const { data: moduleData } = useModuleMemberCandidates(
+    moduleKey ?? "",
+    1,
+    50,
+    debouncedSearch,
+    { enabled: useModuleDirectory, userId: selectedIds[0], excludeAssigned },
+  );
+  const moduleOptions = useMemo(
+    () =>
+      (moduleData?.data ?? []).map((c) => ({
+        id: c.userId,
+        name: c.displayName,
+        firstName: null,
+        lastName: null,
+        email: c.email,
+        image: c.avatarUrl ?? null,
+      })),
+    [moduleData?.data],
+  );
 
   const orgOptions = useMemo(
     () =>
@@ -165,6 +199,12 @@ function useMemberOptions(
           .filter((m): m is MemberOption => m !== undefined),
       };
     }
+    if (useModuleDirectory) {
+      return {
+        options: moduleOptions,
+        selectedMembers: moduleOptions.filter((m) => selectedIds.includes(m.id)),
+      };
+    }
     return {
       options: workspaceOptions,
       selectedMembers: workspaceOptions.filter((m) => selectedIds.includes(m.id)),
@@ -172,8 +212,10 @@ function useMemberOptions(
   }, [
     projectId,
     useOrgDirectory,
+    useModuleDirectory,
     projectMembers,
     orgOptions,
+    moduleOptions,
     workspaceOptions,
     selectedData?.data,
     selectedIds,
@@ -218,6 +260,9 @@ function MemberAvatar({ member, className }: { member: MemberOption; className?:
 export function MemberPicker(props: MemberPickerProps) {
   const {
     projectId,
+    moduleKey,
+    excludeAssigned = true,
+    enabled = true,
     placeholder = "Select member…",
     disabled,
     className,
@@ -237,6 +282,9 @@ export function MemberPicker(props: MemberPickerProps) {
   );
   const { options: members, selectedMembers } = useMemberOptions(
     projectId,
+    moduleKey,
+    excludeAssigned,
+    enabled,
     search,
     selectedIds,
   );

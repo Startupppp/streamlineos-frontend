@@ -36,6 +36,7 @@ import type { Employee } from "@/types/hr";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { getInitials } from "@/lib/format-utils";
+import { useCan } from "@/hooks/api/access";
 import { InitiateBgvSheet } from "@/features/hr/background-verification/initiate-bgv-sheet";
 import { EditVerificationSheet } from "@/features/hr/background-verification/edit-verification-sheet";
 
@@ -139,6 +140,7 @@ function buildBgvColumns(
   onUpdateStatus: (id: number, status: string) => void,
   onOpenEdit: (bgv: BackgroundVerification) => void,
   isPending: boolean,
+  canManage: boolean,
 ): DataTableColumn<BackgroundVerification>[] {
   return [
     {
@@ -221,7 +223,7 @@ function buildBgvColumns(
       header: "",
       headerClassName: "text-right",
       className: "text-right",
-      cell: (bgv) => (
+      cell: (bgv) => canManage ? (
         <div className="flex gap-1 justify-end">
           {(bgv.status === "PENDING" || bgv.status === "IN_PROGRESS") && (
             <>
@@ -265,13 +267,16 @@ function buildBgvColumns(
             <Pencil className="h-3 w-3" />
           </Button>
         </div>
-      ),
+      ) : null,
     },
   ];
 }
 
 export function BackgroundVerificationPageClient() {
-  const { data: items, isLoading, isError, refetch } = useBackgroundVerifications();
+  const canManage = useCan("hr:sensitive:manage");
+  const canViewEmployees = useCan("hr:employees:view");
+  const canInitiate = canManage && canViewEmployees;
+  const { data: items, isLoading, isError, error, refetch } = useBackgroundVerifications();
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
@@ -330,7 +335,7 @@ export function BackgroundVerificationPageClient() {
         <EmptyState
           illustrationPreset="alert"
           title="Failed to load verifications"
-          description="Something went wrong. Please try again."
+          description={getErrorMessage(error)}
           action={{ label: "Retry", onClick: handleRetry }}
         />
       </PageWrapper>
@@ -347,10 +352,12 @@ export function BackgroundVerificationPageClient() {
       title="Background Verification"
       subtitle="Initiate, track employee background checks, and view candidate compliance"
       actions={
-        <Button size="sm" className="gap-1.5" onClick={handleOpenSheet}>
-          <Plus className="h-3.5 w-3.5" />
-          Initiate BGV
-        </Button>
+        canInitiate ? (
+          <Button size="sm" className="gap-1.5" onClick={handleOpenSheet}>
+            <Plus className="h-3.5 w-3.5" />
+            Initiate BGV
+          </Button>
+        ) : undefined
       }
     >
       {items && items.length > 0 && (
@@ -383,14 +390,23 @@ export function BackgroundVerificationPageClient() {
           <DataTable<BackgroundVerification>
             className="flex-1 min-h-0"
             data={items ?? []}
-            columns={buildBgvColumns(handleUpdateStatus, handleOpenEdit, update.isPending)}
+            columns={buildBgvColumns(
+              handleUpdateStatus,
+              handleOpenEdit,
+              update.isPending,
+              canManage,
+            )}
             getRowKey={(bgv) => bgv.id}
             isLoading={isLoading}
             emptyState={
               <EmptyState
                 illustrationPreset="security"
                 title="No background verifications initiated"
-                description="Initiate background checks for employees to track their verification status."
+                description={
+                  canInitiate
+                    ? "Initiate background checks for employees to track their verification status."
+                    : "Background checks will appear here after an authorized HR administrator initiates one."
+                }
               />
             }
           />

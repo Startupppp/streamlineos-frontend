@@ -125,11 +125,12 @@ export function useHrWfhRequests() {
 }
 
 export function useHrPendingWfhRequests(options?: { enabled?: boolean }) {
+  const canAttendance = useCan("hr:attendance:manage");
   return useQuery({
     queryKey: queryKeys.hr.pendingWfhRequests(),
     queryFn: () => apiClient.get<WfhRequest[]>("/hr/wfh/pending"),
     staleTime: 2 * 60_000,
-    enabled: options?.enabled ?? true,
+    enabled: canAttendance && (options?.enabled ?? true),
   });
 }
 

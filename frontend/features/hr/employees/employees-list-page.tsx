@@ -10,6 +10,7 @@ import {
   unwrapEmployees,
 } from "@/hooks/api/hr";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import { useCan } from "@/hooks/api/access";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -129,6 +130,8 @@ export function EmployeesListPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
+  const canOnboard = useCan("hr:onboarding:manage");
+  const canExport = useCan("hr:export:manage");
 
   const filters = useMemo(
     () =>
@@ -268,22 +271,26 @@ export function EmployeesListPage() {
             options={VIEW_OPTIONS}
             size="sm"
           />
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 gap-1.5 flex-1 sm:flex-none"
-            onClick={() => void handleExport()}
-          >
-            <Download className="h-3.5 w-3.5" />
-            Export
-          </Button>
-          <Button size="sm" className="h-8 gap-1.5 shadow-sm flex-1 sm:flex-none" asChild>
-            <Link href="/hr/onboarding">
-              <UserPlus className="h-3.5 w-3.5" />
-              <span className="sm:hidden">Add</span>
-              <span className="hidden sm:inline">Add Employee</span>
-            </Link>
-          </Button>
+          {canExport && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 gap-1.5 flex-1 sm:flex-none"
+              onClick={() => void handleExport()}
+            >
+              <Download className="h-3.5 w-3.5" />
+              Export
+            </Button>
+          )}
+          {canOnboard && (
+            <Button size="sm" className="h-8 gap-1.5 shadow-sm flex-1 sm:flex-none" asChild>
+              <Link href="/hr/onboarding">
+                <UserPlus className="h-3.5 w-3.5" />
+                <span className="sm:hidden">Add</span>
+                <span className="hidden sm:inline">Add Employee</span>
+              </Link>
+            </Button>
+          )}
         </div>
       }
       filters={
@@ -322,7 +329,7 @@ export function EmployeesListPage() {
 
         {isError ? (
           <HrPanel className="text-center py-10">
-            <p className="text-sm font-semibold">Couldn't load directory</p>
+            <p className="text-sm font-semibold">Couldn&apos;t load directory</p>
             <p className="text-xs text-muted-foreground mt-1 mb-4">
               Something went wrong while fetching employees.
             </p>
@@ -342,7 +349,9 @@ export function EmployeesListPage() {
             action={
               hasFilters
                 ? { label: "Clear filters", onClick: clearFilters }
-                : { label: "Add Employee", href: "/hr/onboarding" }
+                : canOnboard
+                  ? { label: "Add Employee", href: "/hr/onboarding" }
+                  : undefined
             }
           />
         ) : view === "grid" ? (

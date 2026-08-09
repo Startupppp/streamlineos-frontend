@@ -93,6 +93,7 @@ export interface RequisitionCardProps {
   isSubmitting: boolean;
   isApproving: boolean;
   isConverting: boolean;
+  canManage: boolean;
 }
 
 export function RequisitionCard({
@@ -104,6 +105,7 @@ export function RequisitionCard({
   isSubmitting,
   isApproving,
   isConverting,
+  canManage,
 }: RequisitionCardProps) {
   const statusStyle = STATUS_STYLES[req.status] ?? STATUS_STYLES.DRAFT;
   const priorityStyle = PRIORITY_STYLES[req.priority] ?? PRIORITY_STYLES.MEDIUM;
@@ -155,7 +157,7 @@ export function RequisitionCard({
             </div>
           </div>
 
-          <DropdownMenu>
+          {canManage && <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <AnimatedIconButton
                 icon={EllipsisIcon}
@@ -195,7 +197,7 @@ export function RequisitionCard({
                 </>
               )}
             </DropdownMenuContent>
-          </DropdownMenu>
+          </DropdownMenu>}
         </div>
 
         <div className="flex flex-wrap gap-1.5 mb-4">
@@ -240,7 +242,7 @@ export function RequisitionCard({
             )}
           </div>
 
-          <div className="flex items-center gap-1.5 shrink-0">
+          {canManage && <div className="flex items-center gap-1.5 shrink-0">
             {req.status === "DRAFT" && (
               <LoadingButton
                 size="sm"
@@ -292,7 +294,7 @@ export function RequisitionCard({
                 {alreadyConverted ? "Job Created" : "Create Job"}
               </LoadingButton>
             )}
-          </div>
+          </div>}
         </div>
       </div>
     </motion.div>

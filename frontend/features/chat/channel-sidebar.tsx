@@ -35,7 +35,6 @@ import { NewDMDialog } from "./new-dm-dialog";
 import { NewGroupDialog } from "./new-group-dialog";
 import { ChatSearchDialog } from "./chat-search-dialog";
 import { ChatSidebarNav } from "./chat-sidebar-nav";
-import { ChatPresenceMenu } from "./chat-presence-menu";
 
 const RAIL_ICON_SIZE = 14;
 
@@ -524,13 +523,6 @@ export function ChannelSidebar({
             </>
           )}
         </ScrollArea>
-
-        <div className={cn("hidden shrink-0 border-t border-border/30 px-3 py-2.5 sm:block", isCollapsed && "md:px-1.5")}>
-          <ChatPresenceMenu
-            compact={isCollapsed}
-            className={cn(isCollapsed && "md:justify-center md:px-1")}
-          />
-        </div>
 
         <ChatSearchDialog
           open={chatSearchOpen}

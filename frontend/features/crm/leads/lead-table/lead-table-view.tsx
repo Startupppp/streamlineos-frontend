@@ -38,7 +38,7 @@ export function LeadTableView({
   sortColumn, sortDirection, onSort, onPageChange, onPageSizeChange,
   onStatusChange, onPriorityChange, onAssign,
   onBulkUpdate, onBulkDelete, teamMembers,
-  isLoading, isAdmin,
+  isLoading, canUpdate, canAssign, canDelete, canCreateDeal,
 }: LeadTableViewProps) {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [editingCell, setEditingCell] = useState<{ leadId: number; column: string } | null>(null);
@@ -106,6 +106,8 @@ export function LeadTableView({
     onStatusChange: handleStatusChange,
     onPriorityChange,
     onAssign,
+    canUpdate,
+    canAssign,
   });
 
   const fromRow = (page - 1) * pageSize + 1;
@@ -202,7 +204,9 @@ export function LeadTableView({
         selectedArray={selectedArray}
         leads={leads}
         teamMembers={teamMembers}
-        isAdmin={isAdmin}
+        canUpdate={canUpdate}
+        canAssign={canAssign}
+        canDelete={canDelete}
         onBulkUpdate={onBulkUpdate}
         onBulkDelete={onBulkDelete}
         onClearSelection={handleClearSelection}
@@ -213,6 +217,7 @@ export function LeadTableView({
         leadName={conversionModal?.leadName}
         onClose={handleConversionClose}
         onSubmit={handleConversionSubmit}
+        canCreateDeal={canCreateDeal}
       />
 
       <LostModal

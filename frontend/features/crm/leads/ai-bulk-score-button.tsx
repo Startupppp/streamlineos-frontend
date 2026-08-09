@@ -17,6 +17,7 @@ import { useAIBatchScoreLeads } from "@/hooks/api/ai";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { useFeature } from "@/lib/billing/use-feature";
+import { useCan } from "@/hooks/api/access";
 
 interface AIBulkScoreButtonProps {
   leadIds: number[];
@@ -31,6 +32,7 @@ export function AIBulkScoreButton({
   const batchMutation = useAIBatchScoreLeads();
   const { enabled: featureEnabled, requiredPlan } =
     useFeature("ai.lead-scoring");
+  const canUseCrmAi = useCan("crm:ai:use");
 
   const handleScore = useCallback(() => {
     if (!featureEnabled) {
@@ -51,7 +53,7 @@ export function AIBulkScoreButton({
 
   const handleOpenConfirm = useCallback(() => setConfirmOpen(true), []);
 
-  if (leadIds.length === 0) return null;
+  if (!canUseCrmAi || leadIds.length === 0) return null;
 
   return (
     <>

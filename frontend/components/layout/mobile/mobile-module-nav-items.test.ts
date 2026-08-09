@@ -260,7 +260,10 @@ describe("mobile module nav items", () => {
         MOBILE_MODULE_CONTENT_PADDING_CLASS,
       );
       expect(MOBILE_MODULE_CONTENT_PADDING_CLASS).toContain("4.5rem");
-      expect(MOBILE_MODULE_CONTENT_PADDING_CLASS).toContain("md:pb-0");
+      expect(MOBILE_MODULE_CONTENT_PADDING_CLASS).toContain("max-md:pb-[");
+      expect(MOBILE_MODULE_CONTENT_PADDING_CLASS).not.toMatch(
+        /(?:^|\s)pb-\[calc/,
+      );
     });
 
     it("skips padding when the module bottom nav is hidden", () => {

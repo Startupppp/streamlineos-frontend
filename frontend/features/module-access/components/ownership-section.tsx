@@ -12,6 +12,11 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
+  CONTENT_FILL_PANEL,
+  PAGE_BODY_EMPTY_CLASS,
+} from "@/components/ui/content-fill-panel";
+import { cn } from "@/lib/utils";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -29,7 +34,7 @@ import {
 } from "@/components/ui/form";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { isApiError } from "@/lib/api-client";
-import { MemberCandidateSelect } from "./member-candidate-select";
+import { MemberPicker } from "@/components/members/member-picker";
 import {
   useModuleOwnership,
   useTransferModuleOwnership,
@@ -64,9 +69,10 @@ export function OwnershipSection({
   }, [ownershipQuery]);
 
   const handleOpenTransfer = useCallback(() => {
+    if (!canManage) return;
     form.reset();
     setTransferOpen(true);
-  }, [form]);
+  }, [canManage, form]);
 
   const handleCloseTransfer = useCallback(
     (open: boolean) => {
@@ -77,6 +83,7 @@ export function OwnershipSection({
   );
 
   function handleTransferSubmit(values: TransferOwnershipInput) {
+    if (!canManage) return;
     transferMutation.mutate(values, {
       onSuccess: () => {
         toast.success("Ownership transfer initiated. The recipient must accept.");
@@ -87,20 +94,23 @@ export function OwnershipSection({
   }
 
   const handleCancelTransfer = useCallback(() => {
+    if (!canManage) return;
     cancelMutation.mutate(undefined, {
       onSuccess: () => toast.success("Transfer cancelled"),
       onError: (err) => toast.error(getErrorMessage(err)),
     });
-  }, [cancelMutation]);
+  }, [canManage, cancelMutation]);
 
   const ownership = ownershipQuery.data;
   const pending = ownership?.pendingTransfer;
 
   if (ownershipQuery.isLoading) {
     return (
-      <Card className="p-4 flex items-center gap-3">
-        <Skeleton className="h-5 w-5 rounded-full" />
-        <Skeleton className="h-4 w-48" />
+      <Card className={cn(CONTENT_FILL_PANEL, "min-h-0 p-4")}>
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-5 w-5 rounded-full" />
+          <Skeleton className="h-4 w-48" />
+        </div>
       </Card>
     );
   }
@@ -117,7 +127,7 @@ export function OwnershipSection({
         title="Couldn't load module ownership"
         description={getErrorMessage(ownershipQuery.error)}
         action={{ label: "Retry", onClick: handleRetryOwnership }}
-        className="flex-1"
+        className={cn(CONTENT_FILL_PANEL, PAGE_BODY_EMPTY_CLASS)}
       />
     );
   }
@@ -135,7 +145,7 @@ export function OwnershipSection({
         {...(canManage
           ? { action: { label: "Assign owner", onClick: handleOpenTransfer } }
           : {})}
-        className="flex-1"
+        className={cn(CONTENT_FILL_PANEL, PAGE_BODY_EMPTY_CLASS)}
       />
     );
   }
@@ -144,58 +154,59 @@ export function OwnershipSection({
 
   return (
     <>
-      <Card className="p-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2 min-w-0">
-          <ArrowRightLeft className="h-4 w-4 text-muted-foreground shrink-0" />
-          <div className="min-w-0">
-            <span className="text-sm text-muted-foreground">Module owner:</span>{" "}
-            <span className="text-sm font-medium text-foreground">
-              {ownership.ownerDisplayName}
-            </span>{" "}
-            <span className="text-xs text-muted-foreground">
-              ({ownership.ownerEmail})
-            </span>
-          </div>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          {pending && (
-            <div className="flex items-center gap-2">
-              <Badge
-                variant="outline"
-                className="text-xs gap-1 text-amber-700 border-amber-300 bg-amber-50 dark:text-amber-400 dark:border-amber-700/50 dark:bg-amber-500/10"
-              >
-                <Clock className="h-3 w-3" />
-                Transfer pending → {pending.toDisplayName}
-              </Badge>
-              {canManage && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 text-xs"
-                  onClick={handleCancelTransfer}
-                  disabled={cancelMutation.isPending}
-                >
-                  <X className="h-3 w-3 mr-1" />
-                  Cancel
-                </Button>
-              )}
+      <Card className={cn(CONTENT_FILL_PANEL, "min-h-0 p-4")}>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-2">
+            <ArrowRightLeft className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <div className="min-w-0">
+              <span className="text-sm text-muted-foreground">Module owner:</span>{" "}
+              <span className="text-sm font-medium text-foreground">
+                {ownership.ownerDisplayName}
+              </span>{" "}
+              <span className="text-xs text-muted-foreground">
+                ({ownership.ownerEmail})
+              </span>
             </div>
-          )}
-          {!pending && canManage && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-xs"
-              onClick={handleOpenTransfer}
-            >
-              <ArrowRightLeft className="h-3.5 w-3.5 mr-1.5" />
-              Transfer ownership
-            </Button>
-          )}
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            {pending && (
+              <div className="flex items-center gap-2">
+                <Badge
+                  variant="outline"
+                  className="gap-1 border-amber-300 bg-amber-50 text-xs text-amber-700 dark:border-amber-700/50 dark:bg-amber-500/10 dark:text-amber-400"
+                >
+                  <Clock className="h-3 w-3" />
+                  Transfer pending → {pending.toDisplayName}
+                </Badge>
+                {canManage && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={handleCancelTransfer}
+                    disabled={cancelMutation.isPending}
+                  >
+                    <X className="mr-1 h-3 w-3" />
+                    Cancel
+                  </Button>
+                )}
+              </div>
+            )}
+            {!pending && canManage && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleOpenTransfer}
+              >
+                <ArrowRightLeft className="mr-1.5 h-3.5 w-3.5" />
+                Transfer ownership
+              </Button>
+            )}
+          </div>
         </div>
       </Card>
 
-      <Dialog open={transferOpen} onOpenChange={handleCloseTransfer}>
+      <Dialog open={canManage && transferOpen} onOpenChange={handleCloseTransfer}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>Transfer module ownership</DialogTitle>
@@ -211,22 +222,28 @@ export function OwnershipSection({
               <FormField
                 control={form.control}
                 name="toUserId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Transfer to</FormLabel>
-                    <FormControl>
-                      <MemberCandidateSelect
-                        moduleKey={moduleKey}
-                        value={field.value}
-                        onValueChange={field.onChange}
-                        enabled={transferOpen}
-                        excludeAssigned={false}
-                        excludedUserId={ownership.ownerId}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                render={({ field }) => {
+                  function handleTransferUserChange(userId: string | null) {
+                    field.onChange(userId ?? "");
+                  }
+                  return (
+                    <FormItem>
+                      <FormLabel>Transfer to</FormLabel>
+                      <FormControl>
+                        <MemberPicker
+                          moduleKey={moduleKey}
+                          value={field.value}
+                          onChange={handleTransferUserChange}
+                          enabled={transferOpen}
+                          excludeAssigned={false}
+                          excludeUserId={ownership.ownerId}
+                          placeholder="Select a user…"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
               />
               <DialogFooter>
                 <Button

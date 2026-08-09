@@ -161,6 +161,7 @@ function ProductRowActions({ product }: { product: InventoryProduct }) {
   const restoreMutation = useRestoreProduct();
   const deleteMutation = useDeleteProduct();
   const canUpdate = useCan("inventory:products:update");
+  const canDelete = useCan("inventory:products:delete");
 
   function handleArchive(): void {
     archiveMutation.mutate(product.id, {
@@ -213,19 +214,23 @@ function ProductRowActions({ product }: { product: InventoryProduct }) {
           <DropdownMenuItem asChild>
             <Link href={`/inventory/products/${product.id}`}>View</Link>
           </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href={`/inventory/products/${product.id}`}>Edit</Link>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
+          {canUpdate && (
+            <DropdownMenuItem asChild>
+              <Link href={`/inventory/products/${product.id}`}>Edit</Link>
+            </DropdownMenuItem>
+          )}
+          {(canUpdate || canDelete) && <DropdownMenuSeparator />}
           {canUpdate && !product.isArchived && product.status === "ACTIVE" && (
             <DropdownMenuItem onClick={handleArchive}>Archive</DropdownMenuItem>
           )}
           {canUpdate && product.isArchived && (
             <DropdownMenuItem onClick={handleRestore}>Restore</DropdownMenuItem>
           )}
-          <AlertDialogTrigger asChild>
-            <DropdownMenuItem variant="destructive">Delete</DropdownMenuItem>
-          </AlertDialogTrigger>
+          {canDelete && (
+            <AlertDialogTrigger asChild>
+              <DropdownMenuItem variant="destructive">Delete</DropdownMenuItem>
+            </AlertDialogTrigger>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
       <AlertDialogContent>
@@ -251,6 +256,8 @@ function ProductRowActions({ product }: { product: InventoryProduct }) {
 }
 
 function ProductsPageInner() {
+  const canCreate = useCan("inventory:products:create");
+  const canImport = useCan("inventory:import");
   const router = useRouter();
   const searchParams = useSearchParams();
   const { iconRef: plusRef, hoverHandlers: plusHover } = useAnimatedIcon();
@@ -552,7 +559,7 @@ function ProductsPageInner() {
       title="Products"
       subtitle="Manage your product catalogue"
       actions={
-        !isFirstLoad ? (
+        !isFirstLoad && canCreate ? (
           <Button size="sm" asChild {...plusHover}>
             <Link href="/inventory/products/new">
               <PlusIcon ref={plusRef} size={14} className="mr-1.5" />
@@ -573,13 +580,18 @@ function ProductsPageInner() {
         ) : isFirstLoad ? (
           <InventoryEmptyState
             illustration={<EmptyProductsIllustration />}
-            title="Add your first product"
+            title={canCreate ? "Add your first product" : "No products yet"}
             description="Start building your product catalogue. Define SKUs, set pricing, configure stock tracking, and manage variants all in one place."
-            action={{ label: "Add Product", href: "/inventory/products/new" }}
-            secondaryAction={{
-              label: "Import Products",
-              href: "/inventory/import",
-            }}
+            action={
+              canCreate
+                ? { label: "Add Product", href: "/inventory/products/new" }
+                : undefined
+            }
+            secondaryAction={
+              canImport
+                ? { label: "Import Products", href: "/inventory/import" }
+                : undefined
+            }
             className={CONTENT_FILL_PANEL}
           />
         ) : (

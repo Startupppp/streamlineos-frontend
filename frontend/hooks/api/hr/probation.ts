@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 export type ProbationStatus = "in_probation" | "review_due" | "extended" | "confirmed" | "terminated";
 
@@ -28,10 +29,12 @@ const probationKeys = {
 };
 
 export function useProbationList() {
+  const canProbation = useCan("hr:probation:view");
   return useQuery<ProbationReview[]>({
     queryKey: probationKeys.list(),
     queryFn: () => apiClient.get<ProbationReview[]>("/hr/probation"),
     staleTime: 60_000,
+    enabled: canProbation,
   });
 }
 

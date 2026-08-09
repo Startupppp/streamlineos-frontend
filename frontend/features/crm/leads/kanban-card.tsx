@@ -82,6 +82,7 @@ interface KanbanCardProps {
     status: string,
     expectedStatus?: string,
   ) => void;
+  canUpdate: boolean;
 }
 
 const PRIORITY_BORDER: Record<string, string> = {
@@ -222,6 +223,7 @@ export const KanbanCard = memo(function KanbanCard({
   allStatusKeys,
   onOpen,
   onMoveStatus,
+  canUpdate,
 }: KanbanCardProps) {
   const selfAssign = useSelfAssignLead();
   const lostIconAnim = useAnimatedIcon();
@@ -260,7 +262,12 @@ export const KanbanCard = memo(function KanbanCard({
     : "";
 
   return (
-    <Draggable key={lead.id} draggableId={String(lead.id)} index={index}>
+    <Draggable
+      key={lead.id}
+      draggableId={String(lead.id)}
+      index={index}
+      isDragDisabled={!canUpdate}
+    >
       {(dragProvided, dragSnapshot) => (
         <div
           ref={dragProvided.innerRef}
@@ -279,12 +286,14 @@ export const KanbanCard = memo(function KanbanCard({
           >
             <CardContent className="p-3">
               <div className="flex items-start gap-2">
-                <div
-                  {...dragProvided.dragHandleProps}
-                  className="mt-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing"
-                >
-                  <GripVertical className="h-4 w-4 text-muted-foreground/50" />
-                </div>
+                {canUpdate && (
+                  <div
+                    {...dragProvided.dragHandleProps}
+                    className="mt-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing"
+                  >
+                    <GripVertical className="h-4 w-4 text-muted-foreground/50" />
+                  </div>
+                )}
 
                 <div className="min-w-0 flex-1">
                   <div className="flex items-start justify-between gap-2">
@@ -303,7 +312,7 @@ export const KanbanCard = memo(function KanbanCard({
                           {getInitials(lead.assignedTo.name ?? "")}
                         </AvatarFallback>
                       </Avatar>
-                    ) : (
+                    ) : canUpdate ? (
                       <button
                         onClick={handleSelfAssign}
                         className="h-6 w-6 shrink-0 rounded-full border border-dashed border-muted-foreground/30 flex items-center justify-center hover:border-primary/50 transition-colors"
@@ -311,7 +320,7 @@ export const KanbanCard = memo(function KanbanCard({
                       >
                         <Plus className="h-3 w-3 text-muted-foreground" />
                       </button>
-                    )}
+                    ) : null}
                   </div>
 
                   {lead.company && (
@@ -374,7 +383,8 @@ export const KanbanCard = memo(function KanbanCard({
                         </div>
                       )}
                     </div>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {canUpdate && (
+                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       {status !== "CONVERTED" && status !== "LOST" && (
                         <>
                           <button
@@ -395,7 +405,8 @@ export const KanbanCard = memo(function KanbanCard({
                           </button>
                         </>
                       )}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

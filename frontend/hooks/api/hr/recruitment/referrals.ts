@@ -3,13 +3,16 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type { CandidateReferral, CreateReferralInput } from "@/types/hr/recruitment";
 
 export function useAllReferrals() {
+  const canEmployees = useCan("hr:employees:view");
   return useQuery({
     queryKey: queryKeys.hr.referrals(),
     queryFn: () => apiClient.get<CandidateReferral[]>("/hr/recruitment/referrals"),
     staleTime: 60_000,
+    enabled: canEmployees,
   });
 }
 

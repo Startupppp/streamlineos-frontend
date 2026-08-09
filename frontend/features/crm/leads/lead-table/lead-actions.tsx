@@ -29,13 +29,14 @@ interface ConversionModalProps {
     createDeal: boolean;
     dealName: string;
   }) => void;
+  canCreateDeal: boolean;
 }
 
-export function ConversionModal({ leadName, open, onClose, onSubmit }: ConversionModalProps) {
+export function ConversionModal({ leadName, open, onClose, onSubmit, canCreateDeal }: ConversionModalProps) {
   const [conversionNotes, setConversionNotes] = useState("");
   const [investmentInterest, setInvestmentInterest] = useState("");
   const [estimatedAmount, setEstimatedAmount] = useState("");
-  const [createDeal, setCreateDeal] = useState(true);
+  const [createDeal, setCreateDeal] = useState(canCreateDeal);
   const [dealName, setDealName] = useState("");
 
   const handleSubmit = useCallback(() => {
@@ -57,18 +58,18 @@ export function ConversionModal({ leadName, open, onClose, onSubmit }: Conversio
     setConversionNotes("");
     setInvestmentInterest("");
     setEstimatedAmount("");
-    setCreateDeal(true);
+    setCreateDeal(canCreateDeal);
     setDealName("");
-  }, [conversionNotes, investmentInterest, estimatedAmount, createDeal, dealName, leadName, onSubmit]);
+  }, [conversionNotes, investmentInterest, estimatedAmount, createDeal, dealName, leadName, onSubmit, canCreateDeal]);
 
   const handleClose = useCallback(() => {
     setConversionNotes("");
     setInvestmentInterest("");
     setEstimatedAmount("");
-    setCreateDeal(true);
+    setCreateDeal(canCreateDeal);
     setDealName("");
     onClose();
-  }, [onClose]);
+  }, [onClose, canCreateDeal]);
 
   const handleOpenChange = useCallback((isOpen: boolean) => {
     if (isOpen && leadName && !dealName) {
@@ -120,18 +121,20 @@ export function ConversionModal({ leadName, open, onClose, onSubmit }: Conversio
             />
           </div>
 
-          <label className="flex items-center gap-2.5 rounded-lg border bg-muted/30 px-3 py-2.5 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={createDeal}
-              onChange={handleCreateDealChange}
-              className="h-4 w-4 rounded border-input accent-gold"
-            />
-            <div>
-              <p className="text-sm font-medium leading-none">Auto-create Deal</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">Create a new deal pre-filled with lead data</p>
-            </div>
-          </label>
+          {canCreateDeal && (
+            <label className="flex items-center gap-2.5 rounded-lg border bg-muted/30 px-3 py-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={createDeal}
+                onChange={handleCreateDealChange}
+                className="h-4 w-4 rounded border-input accent-gold"
+              />
+              <div>
+                <p className="text-sm font-medium leading-none">Auto-create Deal</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Create a new deal pre-filled with lead data</p>
+              </div>
+            </label>
+          )}
 
           {createDeal && (
             <div className="space-y-2">
@@ -229,7 +232,9 @@ interface BulkActionsBarProps {
   selectedArray: number[];
   leads: Lead[];
   teamMembers: TeamMember[];
-  isAdmin: boolean;
+  canUpdate: boolean;
+  canAssign: boolean;
+  canDelete: boolean;
   onBulkUpdate: (
     leadIds: number[],
     update: { status?: string; priority?: string; assignedToId?: string },
@@ -243,7 +248,9 @@ export function BulkActionsBar({
   selectedArray,
   leads,
   teamMembers,
-  isAdmin,
+  canUpdate,
+  canAssign,
+  canDelete,
   onBulkUpdate,
   onBulkDelete,
   onClearSelection,
@@ -312,7 +319,7 @@ export function BulkActionsBar({
         <span className="text-sm font-medium">{selectedIds.size} selected</span>
         <div className="h-4 w-px bg-border" />
 
-        <Select onValueChange={handleBulkStatus}>
+        {canUpdate && <Select onValueChange={handleBulkStatus}>
           <SelectTrigger className="w-[120px] text-xs">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
@@ -321,9 +328,9 @@ export function BulkActionsBar({
               <SelectItem key={s.id} value={s.key} className="text-xs">{s.label}</SelectItem>
             ))}
           </SelectContent>
-        </Select>
+        </Select>}
 
-        <Select onValueChange={handleBulkPriority}>
+        {canUpdate && <Select onValueChange={handleBulkPriority}>
           <SelectTrigger className="w-[100px] text-xs">
             <SelectValue placeholder="Priority" />
           </SelectTrigger>
@@ -332,9 +339,9 @@ export function BulkActionsBar({
               <SelectItem key={p.id} value={p.key} className="text-xs">{p.label}</SelectItem>
             ))}
           </SelectContent>
-        </Select>
+        </Select>}
 
-        <Select onValueChange={handleBulkAssign}>
+        {canAssign && <Select onValueChange={handleBulkAssign}>
           <SelectTrigger className="w-[130px] text-xs">
             <SelectValue placeholder="Assign" />
           </SelectTrigger>
@@ -345,7 +352,7 @@ export function BulkActionsBar({
               </SelectItem>
             ))}
           </SelectContent>
-        </Select>
+        </Select>}
 
         <Button variant="outline" size="sm" className="text-xs" onClick={handleExport}>
           <Download className="h-3 w-3 mr-1" /> Export
@@ -353,7 +360,7 @@ export function BulkActionsBar({
 
         <AIBulkScoreButton leadIds={selectedArray.slice(0, 50)} onComplete={onClearSelection} />
 
-        {isAdmin && (
+        {canDelete && (
           <Button
             variant="destructive"
             size="sm"

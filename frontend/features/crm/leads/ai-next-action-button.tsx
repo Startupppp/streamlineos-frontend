@@ -14,6 +14,7 @@ import { useNextBestAction } from "@/hooks/api/ai";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { useFeature } from "@/lib/billing/use-feature";
+import { useCan } from "@/hooks/api/access";
 
 interface AINextActionButtonProps {
   leadId: number;
@@ -29,6 +30,7 @@ export function AINextActionButton({
   const result = actionMutation.data;
   const { enabled: featureEnabled, requiredPlan } =
     useFeature("ai.next-action");
+  const canUseCrmAi = useCan("crm:ai:use");
 
   const handleSuggest = useCallback(() => {
     if (!featureEnabled) {
@@ -52,6 +54,8 @@ export function AINextActionButton({
     if (u === "medium") return "text-amber-500 dark:text-amber-400";
     return "text-emerald-500 dark:text-emerald-400";
   };
+
+  if (!canUseCrmAi) return null;
 
   if (compact) {
     return (

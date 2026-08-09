@@ -28,6 +28,8 @@ interface ContactTableViewProps {
   onEnrich: (contact: Contact) => void;
   onPageChange: (page: number) => void;
   onOpenCreate: () => void;
+  canManage: boolean;
+  canMerge: boolean;
 }
 
 export function ContactTableView({
@@ -43,6 +45,8 @@ export function ContactTableView({
   onEnrich,
   onPageChange,
   onOpenCreate,
+  canManage,
+  canMerge,
 }: ContactTableViewProps) {
   const { data: sourceOptions = [] } = useCrmOptions("source");
   const columns = useMemo<DataTableColumn<Contact>[]>(
@@ -160,7 +164,11 @@ export function ContactTableView({
         data={items}
         columns={columns}
         getRowKey={(c) => c.id}
-        selection={{ selected: selectionSet, onChange: handleSelectionChange }}
+        selection={
+          canMerge
+            ? { selected: selectionSet, onChange: handleSelectionChange }
+            : undefined
+        }
         pagination={{
           mode: "server",
           page,
@@ -178,7 +186,7 @@ export function ContactTableView({
                 : "Create your first contact to get started."
             }
             action={
-              apiSearch
+              apiSearch || !canManage
                 ? undefined
                 : { label: "New Contact", onClick: onOpenCreate }
             }

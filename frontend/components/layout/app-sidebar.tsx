@@ -20,10 +20,8 @@ import {
   type ModuleAccent,
 } from "./sidebar/sidebar-nav-items";
 import { SidebarSection } from "./sidebar/sidebar-section";
-import { SidebarWorkspaceRow } from "./sidebar/sidebar-workspace-row";
 import { ProjectNavTree } from "@/features/build/sidebar/project-nav-tree";
 import { ProductSwitcherMenu } from "./header/product-switcher-menu";
-import { usePermissions } from "@/lib/rbac/hooks";
 import { useAccess, useCan } from "@/hooks/api/access";
 import { useEnabledModules } from "@/hooks/api/access/org-modules";
 
@@ -31,7 +29,6 @@ interface AppSidebarProps {
   isCollapsed?: boolean;
   onNavigate?: () => void;
   onRequestProductSwitcher?: () => void;
-  onRequestWorkspaceSwitcher?: () => void;
   isMobile?: boolean;
 }
 
@@ -78,11 +75,13 @@ export function AppSidebar({
   isCollapsed = false,
   onNavigate,
   onRequestProductSwitcher,
-  onRequestWorkspaceSwitcher,
   isMobile = false,
 }: AppSidebarProps) {
   const { data: session, status } = useSession();
-  const { data: access } = useAccess();
+  const { data: access } = useAccess({
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
+  });
   const isOrgOwner =
     access?.isOrgOwner === true;
   const effectiveRole = isOrgOwner ? "OWNER" : "MEMBER";
@@ -95,7 +94,10 @@ export function AppSidebar({
     return match ? match[1] : null;
   }, [pathname]);
 
-  const { permissions } = usePermissions();
+  const permissions = useMemo(
+    () => access?.permissions ?? [],
+    [access?.permissions],
+  );
   const canApproveLeaves = useCan("hr:leaves:approve");
   const canReadChat = useCan("chat:channels:read");
   const enabledModules = useEnabledModules();
@@ -209,17 +211,11 @@ export function AppSidebar({
         )}
       >
         {isMobile && (
-          <div className="shrink-0 border-b border-sidebar-border">
-            <div className="px-2.5 py-2">
-              <ProductSwitcherMenu
-                variant="sidebar"
-                triggerOnly
-                onRequestOpen={onRequestProductSwitcher}
-              />
-            </div>
-            <SidebarWorkspaceRow
+          <div className="shrink-0 border-b border-sidebar-border px-2.5 py-2">
+            <ProductSwitcherMenu
+              variant="sidebar"
               triggerOnly
-              onRequestOpen={onRequestWorkspaceSwitcher}
+              onRequestOpen={onRequestProductSwitcher}
             />
           </div>
         )}

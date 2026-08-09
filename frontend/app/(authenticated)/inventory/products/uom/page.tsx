@@ -3,6 +3,7 @@
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import { useCan } from "@/hooks/api/access";
 import { EmptyProductsIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -78,6 +79,7 @@ const uomColumns: DataTableColumn<InventoryUom>[] = [
 ];
 
 function UomPageInner() {
+  const canCreate = useCan("inventory:products:create");
   const router = useRouter();
   const searchParams = useSearchParams();
   const [formKey, setFormKey] = useState<number>(0);
@@ -175,16 +177,18 @@ function UomPageInner() {
       filters={filtersRow}
     >
       <div className="flex flex-1 min-h-0 flex-col gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-semibold">
-              Add Unit of Measure
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <UomCreateForm key={formKey} onSuccess={handleFormSuccess} />
-          </CardContent>
-        </Card>
+        {canCreate && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm font-semibold">
+                Add Unit of Measure
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <UomCreateForm key={formKey} onSuccess={handleFormSuccess} />
+            </CardContent>
+          </Card>
+        )}
 
         {query.error ? (
           <ErrorState
