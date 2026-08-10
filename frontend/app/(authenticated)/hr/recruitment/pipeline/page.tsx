@@ -66,7 +66,7 @@ export default function PipelinePage() {
       <PageWrapper
         title="Recruitment Pipeline"
         subtitle="Drag candidates between stages to update their status"
- variant="display">
+      >
         <ErrorState
           title="Unable to load pipeline"
           description="Try again. If this keeps happening, check your permissions or contact an admin."

@@ -31,7 +31,7 @@ import {
 
 function ApprovalsLoading() {
   return (
-    <PageWrapper title="Travel Approvals" subtitle="Review pending travel requests" variant="display">
+    <PageWrapper title="Travel Approvals" subtitle="Review pending travel requests">
       <div className="flex flex-1 min-h-0 flex-col gap-4">
         {Array.from({ length: 8 }).map((_, si) => (
           <div key={si} className="space-y-3">
@@ -318,7 +318,7 @@ export default function TravelApprovalsPage() {
       title="Travel Approvals"
       subtitle="Review pending travel requests"
       badge={undefined}
- variant="display">
+    >
       {isEmpty ? (
         <EmptyState
           illustrationPreset="travel"

@@ -359,7 +359,6 @@ export default function OfferTemplatesPage() {
         title="Offer Templates"
         subtitle="Reusable offer letter templates with placeholders."
         actions={pageActions}
-        variant="display"
       >
         <div className="flex flex-1 min-h-0 flex-col gap-3">
           {Array.from({ length: 12 }).map((_, i) => (
@@ -376,7 +375,6 @@ export default function OfferTemplatesPage() {
         title="Offer Templates"
         subtitle="Reusable offer letter templates with placeholders."
         actions={pageActions}
-        variant="display"
       >
         <ErrorState
           title="Unable to load offer templates"
@@ -392,7 +390,6 @@ export default function OfferTemplatesPage() {
       title="Offer Templates"
       subtitle="Create and manage reusable offer letter templates with dynamic placeholders."
       actions={pageActions}
-      variant="display"
     >
       {templates.length === 0 ? (
         <RecruitmentEmptyState

@@ -180,7 +180,7 @@ export default function RecruitersPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Recruiters" subtitle="Team members involved in hiring" variant="display">
+      <PageWrapper title="Recruiters" subtitle="Team members involved in hiring">
         <div className="flex flex-1 min-h-0 flex-col gap-4">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-44 rounded-xl" />)}
@@ -192,7 +192,7 @@ export default function RecruitersPage() {
 
   if (isError) {
     return (
-      <PageWrapper title="Recruiters" subtitle="Team members involved in hiring" variant="display">
+      <PageWrapper title="Recruiters" subtitle="Team members involved in hiring">
         <ErrorState
           title="Unable to load recruiters"
           description="Try again. If this keeps happening, check your permissions or contact an admin."
@@ -206,7 +206,6 @@ export default function RecruitersPage() {
     <PageWrapper
       title="Recruiters"
       subtitle="HR team members with active job assignments and activity tracking"
-      variant="display"
     >
       {recruiters.length === 0 ? (
         <RecruitmentEmptyState

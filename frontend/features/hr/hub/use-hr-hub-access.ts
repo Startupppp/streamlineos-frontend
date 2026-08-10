@@ -57,3 +57,5 @@ export function useHrHubAccess(): HrHubAccess {
     canCompliance: useCan("hr:compliance:manage"),
   };
 }
+
+export const HUB_RESIGNATIONS_PARAMS = { page: 1, limit: 5 } as const;

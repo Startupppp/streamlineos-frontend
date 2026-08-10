@@ -83,7 +83,6 @@ export default function ReportsPage() {
     <PageWrapper
       title="Reports & Exports"
       subtitle="Build custom reports and export recruitment data"
-      variant="display"
     >
       <div className="flex flex-1 min-h-0 flex-col">
         <div className="grid gap-4 lg:grid-cols-[300px_1fr]">

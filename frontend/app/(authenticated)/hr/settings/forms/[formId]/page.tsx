@@ -30,7 +30,7 @@ export default function HrFormBuilderPage({ params }: PageProps) {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Form Builder" backHref="/hr/settings/forms" variant="display">
+      <PageWrapper title="Form Builder" backHref="/hr/settings/forms">
         <div className="flex flex-1 min-h-0 flex-col gap-3 pt-2">
           <Skeleton className="h-8 w-64" />
           <Skeleton className="h-8 w-48" />
@@ -42,7 +42,7 @@ export default function HrFormBuilderPage({ params }: PageProps) {
 
   if (!form) {
     return (
-      <PageWrapper title="Form Builder" backHref="/hr/settings/forms" variant="display">
+      <PageWrapper title="Form Builder" backHref="/hr/settings/forms">
         <p className="text-sm text-muted-foreground pt-4">Form not found.</p>
       </PageWrapper>
     );

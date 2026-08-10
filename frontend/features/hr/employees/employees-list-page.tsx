@@ -16,8 +16,10 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ViewToggle } from "@/components/ui/view-toggle";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { EmployeeCard } from "@/features/hr/employees/employee-card";
+import { EmployeesDirectoryStats } from "@/features/hr/employees/employees-directory-stats";
 import {
   EmployeesFilters,
   type Department,
@@ -30,16 +32,13 @@ import {
   DEFAULT_PAGE_SIZE,
 } from "@/features/hr/employees/employee-list-filters";
 import { EmployeesGridSkeleton } from "@/features/hr/employees/employees-loading-skeleton";
+import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { resolveImageUrl, cn } from "@/lib/utils";
 import type { Employee } from "@/types/hr";
-import {
-  HrPageContent,
-  HrPanel,
-  HrSectionHeader,
-  HrStatusBadge,
-} from "@/features/hr/shared/hr-ui";
+import { HrPanel, HrStatusBadge } from "@/features/hr/shared/hr-ui";
 import { toast } from "sonner";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { PAGE_BODY_EMPTY_CLASS } from "@/components/ui/content-fill-panel";
 
 type ViewMode = "grid" | "list";
 
@@ -169,7 +168,6 @@ export function EmployeesListPage() {
   const employees = useMemo(() => unwrapEmployees(pageData), [pageData]);
   const pagination = pageData?.pagination;
   const total = pagination?.total ?? 0;
-  const totalPages = Math.max(1, pagination?.totalPages ?? 1);
   const page = filters.page;
 
   const updateParams = useCallback(
@@ -182,6 +180,13 @@ export function EmployeesListPage() {
       router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     },
     [searchParams, router, pathname],
+  );
+
+  const handlePageChange = useCallback(
+    (nextPage: number) => {
+      updateParams({ page: nextPage <= 1 ? null : String(nextPage) });
+    },
+    [updateParams],
   );
 
   useEffect(() => {
@@ -243,13 +248,17 @@ export function EmployeesListPage() {
     return (
       <PageWrapper
         title="Employee Directory"
-        subtitle="All team members"
-        variant="display"
+        subtitle="Team directory"
+        noInternalScroll
+        contentClassName="flex min-h-0 flex-1 flex-col gap-3 sm:gap-4"
       >
+        <StatCardGridSkeleton cols={3} count={3} />
         <EmployeesGridSkeleton />
       </PageWrapper>
     );
   }
+
+  const showPagination = !isError && (employees.length > 0 || total > 0);
 
   return (
     <PageWrapper
@@ -257,11 +266,12 @@ export function EmployeesListPage() {
       subtitle={
         isFetching && !isLoading
           ? "Updating…"
-          : `${total.toLocaleString()} team members`
+          : "Search, filter, and open employee profiles"
       }
-      variant="display"
+      noInternalScroll
+      contentClassName="flex min-h-0 flex-1 flex-col gap-3 sm:gap-4"
       actions={
-        <div className="flex w-full sm:w-auto flex-wrap items-center gap-2">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
           <ViewToggle<ViewMode>
             value={view}
             onChange={(v) => {
@@ -275,7 +285,7 @@ export function EmployeesListPage() {
             <Button
               variant="outline"
               size="sm"
-              className="h-8 gap-1.5 flex-1 sm:flex-none"
+              className="h-8 flex-1 gap-1.5 sm:flex-none"
               onClick={() => void handleExport()}
             >
               <Download className="h-3.5 w-3.5" />
@@ -283,7 +293,7 @@ export function EmployeesListPage() {
             </Button>
           )}
           {canOnboard && (
-            <Button size="sm" className="h-8 gap-1.5 shadow-sm flex-1 sm:flex-none" asChild>
+            <Button size="sm" className="h-8 flex-1 gap-1.5 shadow-sm sm:flex-none" asChild>
               <Link href="/hr/onboarding">
                 <UserPlus className="h-3.5 w-3.5" />
                 <span className="sm:hidden">Add</span>
@@ -293,6 +303,7 @@ export function EmployeesListPage() {
           )}
         </div>
       }
+      filtersClassName="max-md:flex-col max-md:items-stretch max-md:gap-2 max-md:overflow-x-visible max-md:[&>[data-slot=search-input]]:min-w-0 max-md:[&>[data-slot=search-input]]:basis-auto max-md:[&>[data-slot=search-input]]:w-full max-md:[&>*:not([data-slot=search-input])]:w-full"
       filters={
         <EmployeesFilters
           search={search}
@@ -321,99 +332,81 @@ export function EmployeesListPage() {
         />
       }
     >
-      <HrPageContent>
-        <HrSectionHeader
-          title={view === "grid" ? "People grid" : "People list"}
-          description={`Page ${page} of ${totalPages}`}
-        />
+      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
+        <div className="min-h-0 flex-1 overflow-y-auto scrollbar-hide md:flex md:flex-col md:gap-3 md:overflow-hidden">
+          <div className="mb-3 shrink-0 md:mb-0">
+            <EmployeesDirectoryStats matchingTotal={total} />
+          </div>
 
-        {isError ? (
-          <HrPanel className="text-center py-10">
-            <p className="text-sm font-semibold">Couldn&apos;t load directory</p>
-            <p className="text-xs text-muted-foreground mt-1 mb-4">
-              Something went wrong while fetching employees.
-            </p>
-            <Button size="sm" onClick={() => void refetch()}>
-              Retry
-            </Button>
-          </HrPanel>
-        ) : employees.length === 0 ? (
-          <EmptyState
-            illustrationPreset="team"
-            title="No employees match your filters"
-            description={
-              hasFilters
-                ? "Try adjusting your search or filters."
-                : "Your employee directory is empty. Add your first team member to get started."
-            }
-            action={
-              hasFilters
-                ? { label: "Clear filters", onClick: clearFilters }
-                : canOnboard
-                  ? { label: "Add Employee", href: "/hr/onboarding" }
-                  : undefined
-            }
-          />
-        ) : view === "grid" ? (
-          <div
-            className={cn(
-              "grid gap-3 sm:gap-4 grid-cols-1 min-[380px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5",
-              isFetching && "opacity-70 transition-opacity",
+          <div className="md:min-h-0 md:flex-1 md:overflow-y-auto md:scrollbar-hide">
+            {isError ? (
+              <HrPanel className="py-10 text-center">
+                <p className="text-sm font-semibold">Couldn&apos;t load directory</p>
+                <p className="mb-4 mt-1 text-xs text-muted-foreground">
+                  Something went wrong while fetching employees.
+                </p>
+                <Button size="sm" onClick={() => void refetch()}>
+                  Retry
+                </Button>
+              </HrPanel>
+            ) : employees.length === 0 ? (
+              <EmptyState
+                illustrationPreset="team"
+                title="No employees match your filters"
+                description={
+                  hasFilters
+                    ? "Try adjusting your search or filters."
+                    : "Your employee directory is empty. Add your first team member to get started."
+                }
+                action={
+                  hasFilters
+                    ? { label: "Clear filters", onClick: clearFilters }
+                    : canOnboard
+                      ? { label: "Add Employee", href: "/hr/onboarding" }
+                      : undefined
+                }
+                className={PAGE_BODY_EMPTY_CLASS}
+              />
+            ) : view === "grid" ? (
+              <div
+                className={cn(
+                  "grid auto-rows-max content-start gap-2.5 sm:gap-3",
+                  "grid-cols-1 min-[420px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4",
+                  isFetching && "opacity-70 transition-opacity",
+                )}
+              >
+                {employees.map((emp) => (
+                  <EmployeeCard key={emp.id} employee={emp} department={getDept(emp)} />
+                ))}
+              </div>
+            ) : (
+              <HrPanel
+                padded={false}
+                className="flex min-h-0 flex-col overflow-hidden md:h-full md:flex-1"
+              >
+                <DataTable<Employee>
+                  data={employees}
+                  columns={buildEmployeeListColumns(getDept)}
+                  getRowKey={(emp) => emp.id}
+                  onRowClick={(emp) => router.push(`/hr/employees/${emp.id}`)}
+                  className="min-h-0 flex-1"
+                />
+              </HrPanel>
             )}
-          >
-            {employees.map((emp) => (
-              <EmployeeCard key={emp.id} employee={emp} department={getDept(emp)} />
-            ))}
           </div>
-        ) : (
-          <HrPanel padded={false} className="overflow-hidden flex-1 min-h-0 flex flex-col">
-            <DataTable<Employee>
-              data={employees}
-              columns={buildEmployeeListColumns(getDept)}
-              getRowKey={(emp) => emp.id}
-              onRowClick={(emp) => router.push(`/hr/employees/${emp.id}`)}
-              className="flex-1 min-h-0"
-              pagination={{
-                mode: "server",
-                page,
-                pageSize: PAGE_SIZE,
-                total,
-                onPageChange: (p) =>
-                  updateParams({ page: p === 1 ? null : String(p) }),
-              }}
-            />
-          </HrPanel>
-        )}
+        </div>
 
-        {view === "grid" && employees.length > 0 && totalPages > 1 && (
-          <div className="flex items-center justify-between gap-3 pt-1">
-            <p className="text-xs text-muted-foreground tabular-nums">
-              {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} of{" "}
-              {total}
-            </p>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8"
-                disabled={page <= 1}
-                onClick={() => updateParams({ page: page <= 2 ? null : String(page - 1) })}
-              >
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8"
-                disabled={page >= totalPages}
-                onClick={() => updateParams({ page: String(page + 1) })}
-              >
-                Next
-              </Button>
-            </div>
-          </div>
-        )}
-      </HrPageContent>
+        {showPagination ? (
+          <TablePagination
+            page={page}
+            pageSize={PAGE_SIZE}
+            total={total}
+            onPageChange={handlePageChange}
+            disabled={isFetching}
+            className="rounded-xl border border-border/70"
+          />
+        ) : null}
+      </div>
     </PageWrapper>
   );
 }

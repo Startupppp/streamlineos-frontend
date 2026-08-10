@@ -67,7 +67,7 @@ export default function EditTemplatePage({ params }: EditTemplatePageProps) {
 
   if (!template) {
     return (
-      <PageWrapper title="Template Not Found" variant="display">
+      <PageWrapper title="Template Not Found">
         <p className="text-sm text-muted-foreground">
           This template does not exist or has been removed.
         </p>

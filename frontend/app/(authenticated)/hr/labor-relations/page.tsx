@@ -9,7 +9,7 @@ export default async function HrLaborRelationsPage() {
     <PageWrapper
       title="Labor Relations"
       subtitle="Manage union memberships, collective agreements, and labor disputes."
- variant="display">
+    >
       <LaborTabs />
     </PageWrapper>
   );

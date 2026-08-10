@@ -287,7 +287,7 @@ export function FnfPageClient() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Full & Final Settlement" subtitle="Employee separation settlements" variant="display">
+      <PageWrapper title="Full & Final Settlement" subtitle="Manage full and final settlements for separated employees">
         <div className="flex flex-1 min-h-0 flex-col gap-3">
           {Array.from({ length: 10 }).map((_, i) => (
             <Skeleton key={i} className="h-20 rounded-2xl" />
@@ -299,7 +299,7 @@ export function FnfPageClient() {
 
   if (isError) {
     return (
-      <PageWrapper title="Full & Final Settlement" subtitle="Employee separation settlements" variant="display">
+      <PageWrapper title="Full & Final Settlement" subtitle="Manage full and final settlements for separated employees">
         <EmptyState
           illustrationPreset="alert"
           title="Failed to load settlements"

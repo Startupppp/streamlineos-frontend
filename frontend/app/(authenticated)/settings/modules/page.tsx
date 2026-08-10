@@ -103,7 +103,7 @@ function ModuleCard({
 }
 
 function ModulesContent() {
-  const { data: modules, isLoading, isError, refetch } = useOrgModules();
+  const { data: modules, error, isLoading, isError, refetch } = useOrgModules();
   const toggleModule = useToggleOrgModule();
   const pendingModuleKey = toggleModule.variables?.moduleKey;
 
@@ -143,7 +143,7 @@ function ModulesContent() {
         ) : isError ? (
           <ErrorState
             title="Failed to load modules"
-            description="Unable to fetch module configuration. Please try again."
+            description={getErrorMessage(error)}
             onRetry={handleRetry}
           />
         ) : !modules || modules.length === 0 ? (

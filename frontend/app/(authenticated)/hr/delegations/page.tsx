@@ -9,7 +9,7 @@ export default async function HrDelegationsPage() {
     <PageWrapper
       title="Proxy Delegations"
       subtitle="Manage temporary proxy access grants across HR approval scopes."
- variant="display">
+    >
       <DelegationSheet />
     </PageWrapper>
   );

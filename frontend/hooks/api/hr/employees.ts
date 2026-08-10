@@ -23,11 +23,12 @@ import type {
 } from "@/types/hr/core";
 
 export function useHrDepartments(options?: { enabled?: boolean }) {
+  const canView = useCan("hr:employees:view");
   return useQuery({
     queryKey: queryKeys.hr.departments(),
     queryFn: () => apiClient.get<Department[]>("/hr/departments"),
     staleTime: 2 * 60_000,
-    enabled: options?.enabled ?? true,
+    enabled: canView && (options?.enabled ?? true),
   });
 }
 

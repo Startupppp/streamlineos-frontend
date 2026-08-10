@@ -6,11 +6,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle } from "lucide-react";
 
 const PAGE_TITLE = "Document Library";
-const PAGE_SUBTITLE = "Centralized repository for all HR documents, contracts, and policy files.";
+const PAGE_SUBTITLE = "Centralized repository for all company-wide HR documents, contracts, and policy files.";
 
 export function DocumentLibrarySkeleton() {
   return (
-    <PageWrapper title={PAGE_TITLE} subtitle={PAGE_SUBTITLE} variant="display">
+    <PageWrapper title={PAGE_TITLE} subtitle={PAGE_SUBTITLE}>
       <div className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 10 }).map((_, i) => (
@@ -25,7 +25,7 @@ export function DocumentLibrarySkeleton() {
 
 export function DocumentLibraryError({ onRetry }: { onRetry: () => void }) {
   return (
-    <PageWrapper title={PAGE_TITLE} subtitle={PAGE_SUBTITLE} variant="display">
+    <PageWrapper title={PAGE_TITLE} subtitle={PAGE_SUBTITLE}>
       <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
         <AlertCircle className="w-8 text-destructive" />
         <div>

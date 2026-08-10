@@ -66,7 +66,7 @@ export default function VendorsPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Vendors" subtitle="Recruitment agencies and staffing partners" variant="display">
+      <PageWrapper title="Vendors" subtitle="Recruitment agencies and staffing partners">
         <div className="flex flex-1 min-h-0 flex-col">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-44 rounded-xl" />)}
@@ -78,7 +78,7 @@ export default function VendorsPage() {
 
   if (isError) {
     return (
-      <PageWrapper title="Vendors" subtitle="Manage recruitment agencies and staffing partners" variant="display">
+      <PageWrapper title="Vendors" subtitle="Manage recruitment agencies and staffing partners">
         <ErrorState
           title="Unable to load vendors"
           description="Try again. If this keeps happening, check your permissions or contact an admin."

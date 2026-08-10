@@ -96,7 +96,6 @@ export default function ReferPage() {
     <PageWrapper
       title="Refer a Candidate"
       subtitle="Know someone great? Submit a referral and earn a bonus if they're hired."
-      variant="display"
     >
       <div className="flex flex-1 min-h-0 flex-col gap-4">
       <div className="grid gap-4 lg:grid-cols-2">

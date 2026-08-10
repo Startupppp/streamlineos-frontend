@@ -9,7 +9,7 @@ export default async function HrPositionsPage() {
     <PageWrapper
       title="Position Control"
       subtitle="Manage org positions, incumbents, and reorg simulations."
- variant="display">
+    >
       <PositionsPageContent />
     </PageWrapper>
   );

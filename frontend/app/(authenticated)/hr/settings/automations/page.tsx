@@ -195,7 +195,7 @@ export default function HrAutomationsPage() {
 
   if (!canView) {
     return (
-      <PageWrapper title="HR Automations" subtitle="Configure rules that fire automatically on HR events" variant="display">
+      <PageWrapper title="HR Automations" subtitle="Configure rules that fire automatically on HR events">
         <NoPermissionState
           permission="hr:automations:view"
           title="Access Restricted"

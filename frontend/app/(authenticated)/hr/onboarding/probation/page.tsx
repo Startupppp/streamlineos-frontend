@@ -174,7 +174,7 @@ export default function ProbationPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Probation Reviews" subtitle="Employees due for review or confirmation" backHref="/hr/onboarding" variant="display">
+      <PageWrapper title="Probation Reviews" subtitle="Employees due for review or confirmation" backHref="/hr/onboarding">
         <ProbationSkeletons />
       </PageWrapper>
     );
@@ -182,7 +182,7 @@ export default function ProbationPage() {
 
   if (isError) {
     return (
-      <PageWrapper title="Probation Reviews" subtitle="Employees due for review or confirmation" backHref="/hr/onboarding" variant="display">
+      <PageWrapper title="Probation Reviews" subtitle="Employees due for review or confirmation" backHref="/hr/onboarding">
         <EmptyState
           illustrationPreset="alert"
           title="Failed to load probation reviews"

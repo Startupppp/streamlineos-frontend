@@ -217,7 +217,7 @@ export default function ExpensesPage() {
 
   if (isError && !pageData) {
     return (
-      <PageWrapper title="Expenses" subtitle="Manage your expense claims" variant="display">
+      <PageWrapper title="Expenses" subtitle="Manage your expense claims">
         <div className="flex flex-col items-center justify-center py-20 gap-4">
           <div className="text-center">
             <p className="text-sm font-semibold text-foreground">

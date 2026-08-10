@@ -11,7 +11,7 @@ const PAGE_SUBTITLE = "Track company asset returns";
 
 export function AssetReturnsSkeleton() {
   return (
-    <PageWrapper title={PAGE_TITLE} subtitle={PAGE_SUBTITLE} variant="display">
+    <PageWrapper title={PAGE_TITLE} subtitle={PAGE_SUBTITLE}>
       <div className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
         <div className="space-y-0 divide-y divide-border">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -32,7 +32,7 @@ export function AssetReturnsSkeleton() {
 
 export function AssetReturnsError({ onRetry }: { onRetry: () => void }) {
   return (
-    <PageWrapper title={PAGE_TITLE} subtitle={PAGE_SUBTITLE} variant="display">
+    <PageWrapper title={PAGE_TITLE} subtitle={PAGE_SUBTITLE}>
       <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
         <AlertCircle className="w-8 text-destructive" />
         <div>

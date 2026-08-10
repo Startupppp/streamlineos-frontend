@@ -170,7 +170,7 @@ export default function InternalJobsPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Internal Openings" subtitle="Open positions available exclusively for employees." variant="display">
+      <PageWrapper title="Internal Openings" subtitle="Open positions available exclusively for employees.">
         <div className="flex flex-1 min-h-0 flex-col gap-4">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-48 rounded-xl" />)}
@@ -182,7 +182,7 @@ export default function InternalJobsPage() {
 
   if (isError) {
     return (
-      <PageWrapper title="Internal Openings" subtitle="Open positions available exclusively for employees." variant="display">
+      <PageWrapper title="Internal Openings" subtitle="Open positions available exclusively for employees.">
         <ErrorState
           title="Unable to load internal openings"
           description="Try again. If this keeps happening, check your permissions or contact an admin."
@@ -196,7 +196,6 @@ export default function InternalJobsPage() {
     <PageWrapper
       title="Internal Openings"
       subtitle="Open positions available exclusively for existing employees. Apply directly without going through external recruitment."
-      variant="display"
     >
       {jobs.length === 0 ? (
         <RecruitmentEmptyState

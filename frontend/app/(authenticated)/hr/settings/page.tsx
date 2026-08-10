@@ -23,7 +23,6 @@ export default function HrSettingsHubPage() {
           ? "All configuration surfaces, including workflows, automations, and versioning tools"
           : "Guided essentials — switch to Advanced for workflows, automations, and versioning tools"
       }
-      variant="display"
       actions={
         <div className="bg-muted/40 border border-border/70 rounded-xl p-0.5 flex backdrop-blur-sm">
           <button

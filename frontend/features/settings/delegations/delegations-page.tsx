@@ -49,7 +49,7 @@ import {
   type DelegationListKind,
 } from "./delegation-list-state";
 
-const TAB_PANEL_CLASS = `${TABS_CONTENT_PAGE_BODY_CLASS} mt-0 h-full min-h-0 w-full flex-1 overflow-y-auto`;
+const TAB_PANEL_CLASS = `${TABS_CONTENT_PAGE_BODY_CLASS} mt-0 h-full min-h-0 w-full flex-1`;
 
 export function DelegationsPage() {
   const queryClient = useQueryClient();
@@ -341,7 +341,7 @@ export function DelegationsPage() {
     <Tabs
       value={activeTab}
       onValueChange={handleTabChange}
-      className="flex min-h-0 flex-1 flex-col"
+      className="flex h-full min-h-0 flex-1 flex-col"
     >
       <PageWrapper
         title="Delegations"
@@ -392,10 +392,12 @@ export function DelegationsPage() {
           </>
         }
       >
-        <div className="flex min-h-0 flex-1 flex-col gap-3">
+        <div className="flex h-full min-h-0 flex-1 flex-col gap-3">
           <TabsContent value="received" className={TAB_PANEL_CLASS}>
             {loadingReceived ? (
-              <DelegationSkeletons count={Math.min(receivedState.limit, 5)} />
+              <div className="flex h-full min-h-0 flex-1 flex-col">
+                <DelegationSkeletons count={Math.min(receivedState.limit, 5)} />
+              </div>
             ) : receivedError ? (
               <ErrorState
                 compact
@@ -420,26 +422,30 @@ export function DelegationsPage() {
                 className={PAGE_BODY_EMPTY_CLASS}
               />
             ) : (
-              <div className="flex min-h-full flex-col gap-2">
-                <div className="divide-y divide-border/60 rounded-xl border border-border bg-card">
-                  {received.map((delegation) => (
-                    <DelegationRow
-                      key={delegation.id}
-                      delegation={delegation}
-                      memberMap={memberMap}
-                      nameField="delegatorId"
-                    />
-                  ))}
+              <div className="flex h-full min-h-0 flex-1 flex-col gap-2">
+                <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-border bg-card">
+                  <div className="h-full min-h-0 overflow-y-auto scrollbar-hide divide-y divide-border/60">
+                    {received.map((delegation) => (
+                      <DelegationRow
+                        key={delegation.id}
+                        delegation={delegation}
+                        memberMap={memberMap}
+                        nameField="delegatorId"
+                      />
+                    ))}
+                  </div>
                 </div>
-                <DataTablePagination
-                  page={receivedPagination.page}
-                  totalPages={receivedPagination.totalPages}
-                  total={receivedPagination.total}
-                  limit={receivedPagination.limit}
-                  onPageChange={handleReceivedPageChange}
-                  onLimitChange={handleReceivedLimitChange}
-                  pageSizeOptions={DELEGATION_PAGE_SIZE_OPTIONS}
-                />
+                <div className="mt-auto shrink-0">
+                  <DataTablePagination
+                    page={receivedPagination.page}
+                    totalPages={receivedPagination.totalPages}
+                    total={receivedPagination.total}
+                    limit={receivedPagination.limit}
+                    onPageChange={handleReceivedPageChange}
+                    onLimitChange={handleReceivedLimitChange}
+                    pageSizeOptions={DELEGATION_PAGE_SIZE_OPTIONS}
+                  />
+                </div>
               </div>
             )}
           </TabsContent>
@@ -476,35 +482,39 @@ export function DelegationsPage() {
                 className={PAGE_BODY_EMPTY_CLASS}
               />
             ) : (
-              <div className="flex min-h-full flex-col gap-2">
-                <div className="divide-y divide-border/60 rounded-xl border border-border bg-card">
-                  {granted.map((delegation) => (
-                    <DelegationRow
-                      key={delegation.id}
-                      delegation={delegation}
-                      memberMap={memberMap}
-                      nameField="delegateeId"
-                      canRevoke={
-                        delegation.lifecycle === "ACTIVE" ||
-                        delegation.lifecycle === "SCHEDULED"
-                      }
-                      onRevoke={handleRequestRevoke}
-                      isRevoking={
-                        revokeMutation.isPending &&
-                        revokeTarget?.id === delegation.id
-                      }
-                    />
-                  ))}
+              <div className="flex h-full min-h-0 flex-1 flex-col gap-2">
+                <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-border bg-card">
+                  <div className="h-full min-h-0 overflow-y-auto scrollbar-hide divide-y divide-border/60">
+                    {granted.map((delegation) => (
+                      <DelegationRow
+                        key={delegation.id}
+                        delegation={delegation}
+                        memberMap={memberMap}
+                        nameField="delegateeId"
+                        canRevoke={
+                          delegation.lifecycle === "ACTIVE" ||
+                          delegation.lifecycle === "SCHEDULED"
+                        }
+                        onRevoke={handleRequestRevoke}
+                        isRevoking={
+                          revokeMutation.isPending &&
+                          revokeTarget?.id === delegation.id
+                        }
+                      />
+                    ))}
+                  </div>
                 </div>
-                <DataTablePagination
-                  page={grantedPagination.page}
-                  totalPages={grantedPagination.totalPages}
-                  total={grantedPagination.total}
-                  limit={grantedPagination.limit}
-                  onPageChange={handleGrantedPageChange}
-                  onLimitChange={handleGrantedLimitChange}
-                  pageSizeOptions={DELEGATION_PAGE_SIZE_OPTIONS}
-                />
+                <div className="mt-auto shrink-0">
+                  <DataTablePagination
+                    page={grantedPagination.page}
+                    totalPages={grantedPagination.totalPages}
+                    total={grantedPagination.total}
+                    limit={grantedPagination.limit}
+                    onPageChange={handleGrantedPageChange}
+                    onLimitChange={handleGrantedLimitChange}
+                    pageSizeOptions={DELEGATION_PAGE_SIZE_OPTIONS}
+                  />
+                </div>
               </div>
             )}
           </TabsContent>

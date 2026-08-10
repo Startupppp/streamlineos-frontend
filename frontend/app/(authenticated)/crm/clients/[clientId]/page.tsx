@@ -119,7 +119,6 @@ export default function ClientDetailPage({
 
   return (
     <PageWrapper
-      variant="display"
       title={client.clientName}
       backHref="/crm/clients"
       subtitle={

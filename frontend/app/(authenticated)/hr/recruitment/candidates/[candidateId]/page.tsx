@@ -174,7 +174,7 @@ export default function CandidateDetailPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Candidate" subtitle="Loading..." variant="display">
+      <PageWrapper title="Candidate" subtitle="Loading...">
         <div className="space-y-4">
           <Skeleton className="h-32 w-full" />
           <Skeleton className="h-48 w-full" />
@@ -185,7 +185,7 @@ export default function CandidateDetailPage() {
 
   if (isError) {
     return (
-      <PageWrapper title="Candidate" subtitle="Unable to load candidate" variant="display">
+      <PageWrapper title="Candidate" subtitle="Unable to load candidate">
         <ErrorState
           title="Unable to load candidate"
           description="This candidate may no longer exist, or you do not have permission to view them. Try again."
@@ -197,7 +197,7 @@ export default function CandidateDetailPage() {
 
   if (!candidate) {
     return (
-      <PageWrapper title="Not Found" subtitle="This candidate no longer exists" variant="display">
+      <PageWrapper title="Not Found" subtitle="This candidate no longer exists">
         <div className="flex flex-col items-start gap-3">
           <p className="text-sm text-muted-foreground">
             The candidate may have been deleted or the link is invalid.

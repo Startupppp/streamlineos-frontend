@@ -184,7 +184,6 @@ export default function OnboardingPage() {
           ? "Hire one person or a whole cohort — then track their onboarding"
           : "Complete your onboarding steps"
       }
-      variant="display"
       noInternalScroll={!canManageOnboarding}
       backHref={canManageOnboarding ? "/hr" : undefined}
       backLabel="Back to Employees"

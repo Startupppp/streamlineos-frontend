@@ -95,7 +95,7 @@ export default function OffersPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Offers" subtitle="Track every offer across all candidates." variant="display">
+      <PageWrapper title="Offers" subtitle="Track every offer across all candidates.">
         <div className="flex flex-1 min-h-0 flex-col gap-3">
           {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
         </div>
@@ -105,7 +105,7 @@ export default function OffersPage() {
 
   if (isError) {
     return (
-      <PageWrapper title="Offers" subtitle="Track every offer across all candidates." variant="display">
+      <PageWrapper title="Offers" subtitle="Track every offer across all candidates.">
         <ErrorState
           title="Unable to load offers"
           description="You may not have permission to view offers, or the server returned an unexpected response. Try again."
@@ -126,7 +126,6 @@ export default function OffersPage() {
           ? `${total} offer${total === 1 ? "" : "s"} across all candidates`
           : "Track every offer across all candidates — status, terms, and approvals."
       }
-      variant="display"
       filters={
         total > 0 || statusFilter !== "ALL" ? (
           <div className={FILTER_TOOLBAR_ROW}>

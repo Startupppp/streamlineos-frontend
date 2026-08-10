@@ -5,21 +5,15 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export interface TablePaginationProps {
-  /** 1-based current page. */
   page: number;
-  /** Items per page. */
   pageSize: number;
-  /** Total item count across all pages. */
   total: number;
   onPageChange: (page: number) => void;
   disabled?: boolean;
-  /** Render numbered page buttons (default) or a compact `page / total` label. */
   showPageNumbers?: boolean;
   className?: string;
 }
 
-/** Page indices to render; `"gap"` renders an ellipsis. Caps at first 2 + last 2
- * with a single middle gap; ≤4 pages render in full. */
 export function getVisiblePageItems(totalPages: number): (number | "gap")[] {
   const total = Math.max(1, totalPages);
   if (total <= 4) return Array.from({ length: total }, (_, i) => i + 1);
@@ -44,25 +38,25 @@ export function TablePagination({
   return (
     <div
       className={cn(
-        "flex shrink-0 flex-col gap-2 border-t border-border/60 bg-card px-2 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-3",
+        "flex shrink-0 flex-row flex-nowrap items-center justify-between gap-2 border-t border-border/60 bg-card px-2 py-1.5",
         className,
       )}
     >
-      <p className="text-center text-xs text-muted-foreground tabular-nums sm:flex-1 sm:text-left">
+      <p className="min-w-0 flex-1 truncate text-left text-xs text-muted-foreground tabular-nums">
         Showing {from}–{to} of {total}
       </p>
 
-      <div className="flex flex-wrap items-center justify-center gap-1 sm:justify-end">
+      <div className="flex shrink-0 flex-nowrap items-center justify-end gap-0.5">
         <Button
           type="button"
           variant="outline"
           size="sm"
-          className="h-8 px-2"
+          className="h-7 px-1.5"
           disabled={disabled || currentPage <= 1}
           onClick={() => onPageChange(currentPage - 1)}
           aria-label="Previous page"
         >
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="h-3.5 w-3.5" />
         </Button>
 
         {showPageNumbers ? (
@@ -82,7 +76,7 @@ export function TablePagination({
                   type="button"
                   variant={item === currentPage ? "default" : "outline"}
                   size="sm"
-                  className="h-8 min-w-8 px-2 tabular-nums"
+                  className="h-7 min-w-7 px-1.5 tabular-nums"
                   disabled={disabled}
                   onClick={() => onPageChange(item)}
                   aria-label={`Page ${item}`}
@@ -94,7 +88,7 @@ export function TablePagination({
             )}
           </div>
         ) : (
-          <span className="min-w-[4rem] text-center text-xs text-muted-foreground tabular-nums">
+          <span className="min-w-[3.5rem] text-center text-xs text-muted-foreground tabular-nums">
             {currentPage} / {totalPages}
           </span>
         )}
@@ -103,12 +97,12 @@ export function TablePagination({
           type="button"
           variant="outline"
           size="sm"
-          className="h-8 px-2"
+          className="h-7 px-1.5"
           disabled={disabled || currentPage >= totalPages}
           onClick={() => onPageChange(currentPage + 1)}
           aria-label="Next page"
         >
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className="h-3.5 w-3.5" />
         </Button>
       </div>
     </div>

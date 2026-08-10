@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-
+import { useCan } from "@/hooks/api/access";
 
 export interface OnboardingStatus {
   userId: string;
@@ -116,11 +116,13 @@ export interface OnboardingTemplateDepartment {
 }
 
 export function useOnboardingTemplateDepartments() {
+  const canManage = useCan("hr:onboarding:manage");
   return useQuery<OnboardingTemplateDepartment[]>({
     queryKey: queryKeys.hr.onboardingTemplateDepartments(),
     queryFn: () =>
       apiClient.get<OnboardingTemplateDepartment[]>("/onboarding/templates/departments"),
     staleTime: 5 * 60_000,
+    enabled: canManage,
   });
 }
 

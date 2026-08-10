@@ -259,7 +259,7 @@ export function EmailTemplatesPageClient() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Email Templates" subtitle="Manage HR email templates" variant="display">
+      <PageWrapper title="Email Templates" subtitle="Manage reusable email templates for HR communications">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-36 rounded-xl" />)}
         </div>
@@ -269,7 +269,7 @@ export function EmailTemplatesPageClient() {
 
   if (isError) {
     return (
-      <PageWrapper title="Email Templates" subtitle="Manage HR email templates" variant="display">
+      <PageWrapper title="Email Templates" subtitle="Manage reusable email templates for HR communications">
         <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
           <AlertCircle className="w-8 text-destructive" />
           <div>

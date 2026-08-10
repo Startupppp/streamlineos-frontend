@@ -1,0 +1,143 @@
+"use client";
+
+import Link from "next/link";
+import { useMemo } from "react";
+import {
+  AlertCircle,
+  RefreshCcw,
+} from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useServiceDeliveryOpsInbox } from "@/hooks/api/hr/service-delivery";
+import { useProbationList } from "@/hooks/api/hr";
+import { useResignations } from "@/hooks/api/hr";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { HUB_RESIGNATIONS_PARAMS } from "./use-hr-hub-access";
+import { HrPanel, HrSectionHeader } from "@/features/hr/shared/hr-ui";
+import type { HrHubAccess } from "./use-hr-hub-access";
+import { buildActivityRows, type ActivityRow } from "./activity/activity-rows";
+import { ActivityRowItem } from "./activity/activity-row";
+
+interface HrHubActivityProps {
+  access: HrHubAccess;
+}
+
+export function HrHubActivity({ access }: HrHubActivityProps) {
+  const hasAny = access.canCases || access.canProbation || access.canExit;
+
+  const opsInbox = useServiceDeliveryOpsInbox(access.canCases);
+  const probation = useProbationList();
+  const resignations = useResignations(HUB_RESIGNATIONS_PARAMS);
+
+  const rows = useMemo<ActivityRow[]>(
+    () =>
+      buildActivityRows({
+        canCases: access.canCases,
+        canProbation: access.canProbation,
+        canExit: access.canExit,
+        opsItems: opsInbox.data?.items ?? [],
+        probationItems: probation.data ?? [],
+        resignationItems: resignations.data?.data ?? [],
+      }),
+    [
+      access.canCases,
+      access.canProbation,
+      access.canExit,
+      opsInbox.data,
+      probation.data,
+      resignations.data,
+    ],
+  );
+
+  if (!hasAny) return null;
+
+  const isLoading =
+    (access.canCases && opsInbox.isLoading) ||
+    (access.canProbation && probation.isLoading) ||
+    (access.canExit && resignations.isLoading);
+
+  const firstError: Error | null =
+    (access.canCases && opsInbox.isError ? opsInbox.error : null) ??
+    (access.canProbation && probation.isError ? probation.error : null) ??
+    (access.canExit && resignations.isError ? resignations.error : null);
+
+  const handleRetryOps = () => { void opsInbox.refetch(); };
+  const handleRetryProbation = () => { void probation.refetch(); };
+  const handleRetryResignations = () => { void resignations.refetch(); };
+
+  const handleRetry =
+    access.canCases && opsInbox.isError
+      ? handleRetryOps
+      : access.canProbation && probation.isError
+        ? handleRetryProbation
+        : handleRetryResignations;
+
+  return (
+    <div className="space-y-2.5">
+      <HrSectionHeader
+        title="Needs attention"
+        description="Active items across cases, probation, and exits"
+        size="lg"
+      />
+      <HrPanel padded={false}>
+        {isLoading ? (
+          <div className="p-4 space-y-2.5">
+            <Skeleton className="h-8 w-full rounded-lg" />
+            <Skeleton className="h-8 w-5/6 rounded-lg" />
+            <Skeleton className="h-8 w-4/5 rounded-lg" />
+          </div>
+        ) : firstError ? (
+          <div className="p-4 flex items-center gap-2 text-xs">
+            <AlertCircle className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            <span className="flex-1 text-muted-foreground truncate">
+              {getErrorMessage(firstError)}
+            </span>
+            <button
+              type="button"
+              onClick={handleRetry}
+              className="shrink-0 flex items-center gap-0.5 text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              <RefreshCcw className="h-3 w-3" />
+              Retry
+            </button>
+          </div>
+        ) : rows.length === 0 ? (
+          <p className="p-4 text-xs text-muted-foreground">
+            All clear — nothing needs attention right now.
+          </p>
+        ) : (
+          <div className="divide-y divide-border/60">
+            {rows.map((row) => (
+              <ActivityRowItem key={`${row.kind}-${row.id}`} row={row} />
+            ))}
+          </div>
+        )}
+        <div className="flex flex-wrap items-center gap-3 border-t border-border/60 px-3.5 py-2">
+          {access.canCases && (
+            <Link
+              href="/hr/service-delivery"
+              className="text-[10px] font-medium text-blue-600 hover:underline dark:text-blue-400"
+            >
+              Service delivery
+            </Link>
+          )}
+          {access.canProbation && (
+            <Link
+              href="/hr/onboarding/probation"
+              className="text-[10px] font-medium text-blue-600 hover:underline dark:text-blue-400"
+            >
+              Probation
+            </Link>
+          )}
+          {access.canExit && (
+            <Link
+              href="/hr/exit"
+              className="text-[10px] font-medium text-blue-600 hover:underline dark:text-blue-400"
+            >
+              Exits
+            </Link>
+          )}
+        </div>
+      </HrPanel>
+    </div>
+  );
+}

@@ -264,7 +264,7 @@ export default function InboxPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Candidate Inbox" subtitle="Messages with candidates" noInternalScroll variant="display">
+      <PageWrapper title="Candidate Inbox" subtitle="Messages with candidates" noInternalScroll>
         <div className="flex gap-4 h-full">
           <div className="w-72 space-y-2">
             {Array.from({ length: 12 }).map((_, i) => (
@@ -279,7 +279,7 @@ export default function InboxPage() {
 
   if (isError) {
     return (
-      <PageWrapper title="Candidate Inbox" subtitle="Messages with candidates" noInternalScroll variant="display">
+      <PageWrapper title="Candidate Inbox" subtitle="Messages with candidates" noInternalScroll>
         <ErrorState
           title="Unable to load inbox"
           description="Try again. If this keeps happening, check your permissions or contact an admin."
@@ -294,7 +294,7 @@ export default function InboxPage() {
       title="Candidate Inbox"
       subtitle="Manage candidate conversations across channels"
       noInternalScroll
- variant="display">
+    >
       {threads.length === 0 ? (
         <RecruitmentEmptyState
           illustration={<EmptyInboxIllustration />}

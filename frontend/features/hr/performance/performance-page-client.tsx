@@ -60,7 +60,6 @@ export function PerformancePageClient() {
     <PageWrapper
       title="Performance"
       subtitle="Reviews, goals, and team development"
-      variant="display"
     >
       <Tabs
         value={activeTab}

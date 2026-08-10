@@ -19,7 +19,8 @@ import { useHrHubAccess } from "./use-hr-hub-access";
 import { HrHubQueues } from "./hr-hub-queues";
 import { HrHubMetrics } from "./hr-hub-metrics";
 import { HrHubRecruitment } from "./hr-hub-recruitment";
-import { HrHubDestinations } from "./hr-hub-destinations";
+import { HrHubToday } from "./hr-hub-today";
+import { HrHubActivity } from "./hr-hub-activity";
 
 const ALL_QUICK_ACTIONS = [
   {
@@ -85,13 +86,8 @@ export function HrHubPage() {
     >
       <div className="flex flex-1 min-h-0 flex-col">
         <HrPageContent>
-          <HrHero
-            eyebrow="Streamline HRMS"
-            title="Build teams. Keep people thriving."
-            description="Onboard faster, track leave and attendance, and run the full employee lifecycle from one calm workspace."
-            hideDescriptionOnMobile
-          >
-            {visibleActions.length > 0 && (
+          {visibleActions.length > 0 ? (
+            <HrHero>
               <div
                 className={cn(
                   "flex min-h-0 w-full gap-2.5 overflow-x-auto overscroll-x-contain pb-0.5 scrollbar-hide",
@@ -112,13 +108,14 @@ export function HrHubPage() {
                   />
                 ))}
               </div>
-            )}
-          </HrHero>
+            </HrHero>
+          ) : null}
 
           <HrHubQueues access={access} />
           <HrHubRecruitment access={access} />
+          <HrHubToday access={access} />
+          <HrHubActivity access={access} />
           <HrHubMetrics access={access} />
-          <HrHubDestinations />
         </HrPageContent>
       </div>
     </PageWrapper>

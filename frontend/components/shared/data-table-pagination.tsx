@@ -69,14 +69,14 @@ export function DataTablePagination({
   if (total === 0) return null;
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 py-3 px-1">
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+    <div className="flex flex-col items-center justify-between gap-1.5 px-0 py-1.5 sm:flex-row sm:gap-2">
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <span className="tabular-nums">Showing {start}-{end} of {total}</span>
         {onLimitChange ? (
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             <span className="sr-only sm:not-sr-only">Rows</span>
             <Select value={String(limit)} onValueChange={handleLimitChange}>
-              <SelectTrigger className="h-8 w-[70px] text-xs" aria-label="Rows per page">
+              <SelectTrigger className="h-7 w-[4.75rem] px-2 text-xs" aria-label="Rows per page">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -89,15 +89,15 @@ export function DataTablePagination({
         ) : null}
       </div>
 
-      <div className="flex items-center gap-1">
-        <Button variant="outline" size="icon" className="size-8" disabled={page <= 1} onClick={handleFirstPage} aria-label="First page">
+      <div className="flex items-center gap-0.5">
+        <Button variant="outline" size="icon" className="size-7" disabled={page <= 1} onClick={handleFirstPage} aria-label="First page">
           <ChevronsLeft className="h-3.5 w-3.5" />
         </Button>
-        <Button variant="outline" size="icon" className="size-8" disabled={page <= 1} onClick={handlePrevPage} aria-label="Previous page">
+        <Button variant="outline" size="icon" className="size-7" disabled={page <= 1} onClick={handlePrevPage} aria-label="Previous page">
           <ChevronLeft className="h-3.5 w-3.5" />
         </Button>
 
-        <div className="hidden sm:flex items-center gap-1">
+        <div className="hidden items-center gap-0.5 sm:flex">
           {getPageNumbers().map((p, i) =>
             p === "..." ? (
               <span key={`ellipsis-${i}`} className="px-1 text-xs text-muted-foreground" aria-hidden>...</span>
@@ -106,7 +106,7 @@ export function DataTablePagination({
                 key={p}
                 variant={p === page ? "default" : "outline"}
                 size="icon"
-                className={`size-8 text-xs ${p === page ? "bg-primary hover:bg-primary/80 text-primary-foreground" : ""}`}
+                className={`size-7 text-xs ${p === page ? "bg-primary text-primary-foreground hover:bg-primary/80" : ""}`}
                 onClick={makePageHandler(p)}
                 aria-label={`Page ${p}`}
                 aria-current={p === page ? "page" : undefined}
@@ -116,12 +116,12 @@ export function DataTablePagination({
             )
           )}
         </div>
-        <span className="sm:hidden text-xs text-muted-foreground px-2 tabular-nums">{page}/{totalPages}</span>
+        <span className="px-1.5 text-xs tabular-nums text-muted-foreground sm:hidden">{page}/{totalPages}</span>
 
-        <Button variant="outline" size="icon" className="size-8" disabled={page >= totalPages} onClick={handleNextPage} aria-label="Next page">
+        <Button variant="outline" size="icon" className="size-7" disabled={page >= totalPages} onClick={handleNextPage} aria-label="Next page">
           <ChevronRight className="h-3.5 w-3.5" />
         </Button>
-        <Button variant="outline" size="icon" className="size-8" disabled={page >= totalPages} onClick={handleLastPage} aria-label="Last page">
+        <Button variant="outline" size="icon" className="size-7" disabled={page >= totalPages} onClick={handleLastPage} aria-label="Last page">
           <ChevronsRight className="h-3.5 w-3.5" />
         </Button>
       </div>

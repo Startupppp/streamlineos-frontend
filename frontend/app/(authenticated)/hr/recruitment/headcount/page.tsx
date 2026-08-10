@@ -372,7 +372,7 @@ export default function HeadcountPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Headcount Planning" subtitle="Manage hiring requests" variant="display">
+      <PageWrapper title="Headcount Planning" subtitle="Manage hiring requests">
         <div className="flex flex-1 min-h-0 flex-col gap-3">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-40 rounded-xl" />)}
@@ -384,7 +384,7 @@ export default function HeadcountPage() {
 
   if (isError) {
     return (
-      <PageWrapper title="Headcount Planning" subtitle="Manage hiring requests" variant="display">
+      <PageWrapper title="Headcount Planning" subtitle="Manage hiring requests">
         <ErrorState
           title="Unable to load headcount requests"
           description="Try again. If this keeps happening, check your permissions or contact an admin."

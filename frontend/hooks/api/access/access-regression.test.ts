@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
+import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
 import { useAuditLogs } from "@/hooks/api/audit-log";
 import {
@@ -9,6 +10,10 @@ import {
   useRolePermissionGrants,
 } from "@/hooks/api/roles";
 import { useSimulateAccess, useSimulationCandidates } from "./simulate";
+import {
+  normalizeOrgModulesResponse,
+  useOrgModules,
+} from "./org-modules";
 
 jest.mock("@tanstack/react-query", () => ({
   useQuery: jest.fn((options: unknown) => options),
@@ -94,5 +99,27 @@ describe("RBAC administration query gates", () => {
     useRole(4, { enabled: true });
 
     expect(query.mock.calls[0][0].enabled).toBe(false);
+  });
+
+  it("normalizes wrapped organization modules before caching them", async () => {
+    can.mockReturnValue(true);
+    const modules = [
+      { moduleKey: "hr", enabled: true },
+      { moduleKey: "kb", enabled: true, core: true },
+    ];
+    (apiClient.get as jest.Mock).mockResolvedValue({ data: modules });
+
+    useOrgModules();
+
+    const options = query.mock.calls[0][0];
+    await expect(options.queryFn()).resolves.toEqual(modules);
+    expect(normalizeOrgModulesResponse(modules)).toBe(modules);
+    expect(options.select({ success: true, data: modules })).toEqual(modules);
+  });
+
+  it("rejects malformed organization module payloads instead of rendering them", () => {
+    expect(() =>
+      normalizeOrgModulesResponse({ data: { hr: true } }),
+    ).toThrow("invalid module configuration");
   });
 });

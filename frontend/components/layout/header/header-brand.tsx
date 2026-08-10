@@ -1,20 +1,20 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import Image from "next/image"
+import Link from "next/link";
+import Image from "next/image";
 
 interface HeaderBrandProps {
-  showLabel?: boolean
+  showLabel?: boolean;
 }
 
 export function HeaderBrand({ showLabel = true }: HeaderBrandProps) {
   return (
-    <div className="flex shrink-0 items-center overflow-visible gap-2">
-      <Link
-        href="/dashboard"
-        className="rounded-lg overflow-hidden shrink-0 hover:opacity-80 transition-opacity flex items-center justify-center h-8 w-8"
-        aria-label="StreamlineOS home"
-      >
+    <Link
+      href="/dashboard"
+      className="flex shrink-0 items-center gap-2 overflow-visible rounded-lg select-none hover:opacity-80 transition-opacity"
+      aria-label="StreamlineOS home"
+    >
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg">
         <Image
           src="/logo.svg"
           alt=""
@@ -22,12 +22,12 @@ export function HeaderBrand({ showLabel = true }: HeaderBrandProps) {
           height={32}
           className="object-contain"
         />
-      </Link>
-      {showLabel && (
-        <span className="text-sm font-semibold text-sidebar-foreground truncate min-w-0">
+      </span>
+      {showLabel ? (
+        <span className="min-w-0 truncate text-sm font-semibold text-sidebar-foreground">
           StreamlineOS
         </span>
-      )}
-    </div>
-  )
+      ) : null}
+    </Link>
+  );
 }

@@ -257,7 +257,6 @@ export function DocumentTypesPage() {
       <PageWrapper
         title="Document Types"
         subtitle="Configure required onboarding documents"
-        variant="display"
       >
         <Skeleton className="flex-1 rounded-lg" />
       </PageWrapper>
@@ -266,7 +265,7 @@ export function DocumentTypesPage() {
 
   if (isError) {
     return (
-      <PageWrapper title="Document Types" subtitle="Configure required onboarding documents" variant="display">
+      <PageWrapper title="Document Types" subtitle="Configure required onboarding documents">
         <div className="flex flex-1 flex-col items-center justify-center text-center gap-3">
           <AlertCircle className="w-8 text-destructive" />
           <div>

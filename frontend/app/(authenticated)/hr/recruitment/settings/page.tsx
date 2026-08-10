@@ -76,7 +76,7 @@ export default async function RecruitmentSettingsPage() {
     <PageWrapper
       title="Settings"
       subtitle="Configure hiring flows, scorecards, communication templates, and reports for TalentOS."
- variant="display">
+    >
       <div className="space-y-4">
         {SECTIONS.map((section) => (
           <div key={section.title}>

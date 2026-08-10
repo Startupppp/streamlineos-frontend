@@ -148,7 +148,6 @@ export default function DiversityReportPage() {
     <PageWrapper
       title="Diversity Report"
       subtitle="Anonymized applicant pool demographics"
-      variant="display"
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
           <DatePicker value={pendingFilters.from ?? ""} onChange={handleFromChange} placeholder="From date" className="text-xs w-36" />

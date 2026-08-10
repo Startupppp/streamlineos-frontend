@@ -387,7 +387,7 @@ export default function EmailSequencesPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Email Sequences" subtitle="Automated drip campaigns for candidates." actions={pageActions} variant="display">
+      <PageWrapper title="Email Sequences" subtitle="Automated drip campaigns for candidates." actions={pageActions}>
         <div className="flex flex-1 min-h-0 flex-col gap-3">
           {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}
         </div>
@@ -397,7 +397,7 @@ export default function EmailSequencesPage() {
 
   if (isError) {
     return (
-      <PageWrapper title="Email Sequences" subtitle="Automated drip campaigns for candidates." actions={pageActions} variant="display">
+      <PageWrapper title="Email Sequences" subtitle="Automated drip campaigns for candidates." actions={pageActions}>
         <ErrorState
           title="Unable to load email sequences"
           description="Try again. If this keeps happening, check your permissions or contact an admin."
@@ -408,7 +408,7 @@ export default function EmailSequencesPage() {
   }
 
   return (
-    <PageWrapper title="Email Sequences" subtitle="Automated drip campaigns to nurture candidates at each pipeline stage." actions={pageActions} variant="display">
+    <PageWrapper title="Email Sequences" subtitle="Automated drip campaigns to nurture candidates at each pipeline stage." actions={pageActions}>
       {sequences.length === 0 ? (
         <RecruitmentEmptyState
           illustration={<EmptyMailIllustration />}

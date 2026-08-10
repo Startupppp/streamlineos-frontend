@@ -43,7 +43,7 @@ export default function SkillsMatrixPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Skills Matrix" subtitle="Cross-reference of employees and their skill levels across the org" variant="display">
+      <PageWrapper title="Skills Matrix" subtitle="Cross-reference of employees and their skill levels across the org">
         <div className="rounded-xl border border-border overflow-hidden">
           <div className="flex border-b bg-muted/40 px-3 py-2 gap-4">
             <Skeleton className="h-4 w-32" />
@@ -69,7 +69,7 @@ export default function SkillsMatrixPage() {
 
   if (isError) {
     return (
-      <PageWrapper title="Skills Matrix" subtitle="Cross-reference of employees and their skill levels across the org" variant="display">
+      <PageWrapper title="Skills Matrix" subtitle="Cross-reference of employees and their skill levels across the org">
         <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
           <AlertCircle className="w-8 text-destructive" />
           <div>

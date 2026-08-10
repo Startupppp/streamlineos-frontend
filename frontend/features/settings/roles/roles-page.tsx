@@ -40,7 +40,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { DataTablePagination } from "@/components/shared/data-table-pagination";
 import {
   StatCard,
@@ -148,6 +147,7 @@ export function RolesPage() {
       title="Roles & Permissions"
       subtitle="Configure access controls for each role."
       noInternalScroll
+      contentClassName="flex min-h-0 flex-1 flex-col"
       actions={
         <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-nowrap sm:justify-end">
           {canViewAudit && (
@@ -211,29 +211,31 @@ export function RolesPage() {
           )}
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto lg:grid lg:grid-cols-[320px_1fr] lg:overflow-hidden">
-          <RolesListPanel
-            isLoading={isLoading || isOutOfRange}
-            rolesError={rolesError}
-            rolesQueryError={rolesQueryError}
-            roles={roles}
-            search={serverSearch}
-            pagination={pagination}
-            selectedRoleId={selectedRoleId}
-            onRetry={handleRetryRoles}
-            onCreate={handleOpenCreate}
-            onSelect={handleSelectRole}
-            onDelete={setDeleteTarget}
-            onRename={setRenameTarget}
-            onPageChange={setPage}
-            onPageSizeChange={setPageSize}
-          />
+        <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-hidden lg:grid-cols-[320px_minmax(0,1fr)] lg:items-stretch">
+          <div className="min-h-0 max-lg:h-[min(420px,50dvh)] lg:h-full">
+            <RolesListPanel
+              isLoading={isLoading || isOutOfRange}
+              rolesError={rolesError}
+              rolesQueryError={rolesQueryError}
+              roles={roles}
+              search={serverSearch}
+              pagination={pagination}
+              selectedRoleId={selectedRoleId}
+              onRetry={handleRetryRoles}
+              onCreate={handleOpenCreate}
+              onSelect={handleSelectRole}
+              onDelete={setDeleteTarget}
+              onRename={setRenameTarget}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+            />
+          </div>
 
-          <div className="flex min-h-[260px] flex-1 flex-col lg:h-full lg:min-h-0">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden max-lg:min-h-[260px] lg:h-full">
             {selectedRole ? (
               <PermissionMatrix role={selectedRole} onOpenAssignments={handleOpenAssignments} />
             ) : (
-              <Card className="flex h-full min-h-[260px] items-center justify-center overflow-hidden">
+              <Card className="flex h-full min-h-0 items-center justify-center overflow-hidden">
                 <div className="px-6 text-center">
                   <EmptyApprovalIllustration className="mx-auto mb-3 h-40 w-40" />
                   <p className="text-sm font-medium text-foreground">Select a role</p>
@@ -325,21 +327,23 @@ function RolesListPanel({
 
   if (isLoading) {
     body = (
-      <div className="divide-y divide-border/60">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="flex items-center justify-between px-4 py-3">
-            <div className="space-y-1.5">
-              <Skeleton className="h-4 w-28" />
-              <Skeleton className="h-3 w-16" />
+      <div className="h-full min-h-0 flex-1 overflow-y-auto scrollbar-hide">
+        <div className="divide-y divide-border/60">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="flex items-center justify-between px-4 py-3">
+              <div className="space-y-1.5">
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-3 w-16" />
+              </div>
+              <Skeleton className="h-4 w-12 rounded-full" />
             </div>
-            <Skeleton className="h-4 w-12 rounded-full" />
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     );
   } else if (rolesError) {
     body = (
-      <div className="flex flex-col items-center justify-center gap-3 px-4 py-12 text-center">
+      <div className="flex h-full min-h-0 flex-1 flex-col items-center justify-center gap-3 px-4 py-12 text-center">
         <Shield className="h-10 w-10 text-destructive/50" />
         <div>
           <p className="text-sm font-medium">Failed to load roles</p>
@@ -364,12 +368,12 @@ function RolesListPanel({
         }
         action={search.trim() ? undefined : { label: "New role", onClick: onCreate }}
         compact
-        className="border-0 bg-transparent py-10"
+        className="h-full min-h-0 flex-1 border-0 bg-transparent"
       />
     );
   } else {
     body = (
-      <ScrollArea className="min-h-0 flex-1" type="auto">
+      <div className="h-full min-h-0 flex-1 overflow-y-auto scrollbar-hide">
         <div className="divide-y divide-border/60">
           {roles.map((role) => (
             <RoleListItem
@@ -382,13 +386,13 @@ function RolesListPanel({
             />
           ))}
         </div>
-      </ScrollArea>
+      </div>
     );
   }
 
   return (
-    <Card className="flex max-h-[min(420px,50dvh)] min-h-0 flex-col overflow-hidden lg:h-full lg:max-h-none">
-      <CardHeader className="shrink-0 border-b pb-3">
+    <Card className="flex h-full min-h-0 flex-col overflow-hidden">
+      <CardHeader className="shrink-0 gap-0 border-b px-3 py-2 [.border-b]:pb-2">
         <CardTitle className="flex items-center gap-2 text-sm font-semibold">
           <Shield className="h-4 w-4" /> Roles
         </CardTitle>
@@ -396,7 +400,19 @@ function RolesListPanel({
       <CardContent className="flex min-h-0 flex-1 flex-col overflow-hidden p-0">
         {body}
         {!isLoading && !rolesError && roles.length > 0 ? (
-          <div className="shrink-0 border-t px-2 [&>div]:!flex-col [&>div]:!items-stretch [&>div>div]:justify-between [&>div>div:last-child>div]:!hidden [&>div>div:last-child>span]:!inline">
+          <div
+            className={cn(
+              "mt-auto shrink-0 border-t px-1.5",
+              "[&>div]:!flex-row [&>div]:!flex-nowrap [&>div]:!items-center [&>div]:!justify-between [&>div]:!gap-1 [&>div]:!py-2 [&>div]:!px-0",
+              "[&>div>div:first-child]:min-w-0 [&>div>div:first-child]:gap-1",
+              "[&>div>div:first-child>span.tabular-nums]:!hidden",
+              "[&>div>div:first-child>div>span]:!hidden",
+              "[&>div>div:last-child]:shrink-0",
+              "[&>div>div:last-child>div]:!hidden [&>div>div:last-child>span]:!inline",
+              "[&_button]:!size-7 [&_button_svg]:!size-3.5",
+              "[&_[data-slot=select-trigger]]:!h-7 [&_[data-slot=select-trigger]]:!w-[4.75rem] [&_[data-slot=select-trigger]]:!px-2",
+            )}
+          >
             <DataTablePagination
               page={pagination.page}
               totalPages={pagination.totalPages}

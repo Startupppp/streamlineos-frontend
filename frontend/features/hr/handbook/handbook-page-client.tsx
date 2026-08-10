@@ -326,7 +326,7 @@ export function HandbookPageClient() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Employee Handbook" subtitle="Manage and publish handbook versions" variant="display">
+      <PageWrapper title="Employee Handbook" subtitle="Manage and publish handbook versions">
         <div className="flex flex-1 min-h-0 flex-col gap-4">
           <div className="flex items-center gap-2">
             <Skeleton className="h-8 w-48" />
@@ -346,7 +346,7 @@ export function HandbookPageClient() {
 
   if (isError) {
     return (
-      <PageWrapper title="Employee Handbook" subtitle="Manage and publish handbook versions" variant="display">
+      <PageWrapper title="Employee Handbook" subtitle="Manage and publish handbook versions">
         <div className="flex-1 flex flex-col items-center justify-center gap-4 py-20">
           <AlertTriangle className="h-10 w-10 text-muted-foreground" />
           <div className="text-center space-y-1">

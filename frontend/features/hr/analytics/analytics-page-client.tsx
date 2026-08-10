@@ -198,8 +198,7 @@ export function AnalyticsPageClient() {
     return (
       <PageWrapper
         title="HR Analytics"
-        subtitle="Workforce insights and operational metrics"
-        variant="display">
+        subtitle="Workforce insights and operational metrics">
         <EmptyState
           illustrationPreset="alert"
           title="Failed to load analytics"
@@ -214,8 +213,7 @@ export function AnalyticsPageClient() {
   return (
     <PageWrapper
       title="HR Analytics"
-      subtitle="Workforce insights and operational metrics"
-      variant="display">
+      subtitle="Workforce insights and operational metrics">
       <div className="flex min-h-0 flex-1 flex-col gap-4">
         <ExecutiveKPIs
           totalEmployees={totalEmployees}

@@ -294,7 +294,6 @@ export default function WorkLogsPage() {
     <PageWrapper
       title="Work Logs"
       subtitle={subtitle}
-      variant="display"
       actions={
         <WorkLogFilterActions {...sharedFilterProps} onExport={handleExportWorkLogs} />
       }

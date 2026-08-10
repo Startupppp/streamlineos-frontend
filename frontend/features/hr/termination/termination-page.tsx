@@ -371,7 +371,6 @@ export function TerminationPage() {
       <PageWrapper
         title="Termination Management"
         subtitle="Manage employee terminations"
-        variant="display"
       >
         <div className="flex flex-1 min-h-0 flex-col gap-3">
           {Array.from({ length: 10 }).map((_, i) => (
@@ -387,7 +386,6 @@ export function TerminationPage() {
       <PageWrapper
         title="Termination Management"
         subtitle="Manage employee terminations"
-        variant="display"
       >
         <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
           <AlertCircle className="w-8 text-destructive" />

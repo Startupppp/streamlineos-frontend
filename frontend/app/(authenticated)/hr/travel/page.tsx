@@ -24,7 +24,6 @@ function TravelLoading() {
     <PageWrapper
       title="Travel Requests"
       subtitle="Plan and track your business travel"
-      variant="display"
     >
       <div className="flex flex-1 min-h-0 flex-col gap-4">
         <Skeleton className="h-16 w-full rounded-lg" />

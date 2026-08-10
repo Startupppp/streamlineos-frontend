@@ -13,7 +13,7 @@ export default function EffectiveRulePreviewPage() {
       <PageWrapper
         title="Effective Rule Preview"
         subtitle="See which HR policy applies to an employee on a given date"
- variant="display">
+      >
         <NoPermissionState
           permission="hr:policies:view"
           title="Access Restricted"
@@ -27,7 +27,7 @@ export default function EffectiveRulePreviewPage() {
     <PageWrapper
       title="Effective Rule Preview"
       subtitle="See which HR policy applies to an employee on a given date"
- variant="display">
+    >
       <div className="py-4">
         <EffectiveRulesPreview />
       </div>

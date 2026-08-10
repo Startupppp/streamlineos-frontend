@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 
 export interface DocumentTemplate {
@@ -36,6 +37,7 @@ export interface UpdateDocumentTemplateInput {
 
 
 export function useDocumentTemplates(type?: string) {
+  const canView = useCan("hr:documents:view");
   const params = type ? { type } : undefined;
   return useQuery({
     queryKey: queryKeys.hr.documentTemplates(params as Record<string, unknown> | undefined),
@@ -45,6 +47,7 @@ export function useDocumentTemplates(type?: string) {
         params as Record<string, unknown> | undefined
       ),
     staleTime: 2 * 60_000,
+    enabled: canView,
   });
 }
 

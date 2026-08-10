@@ -243,7 +243,7 @@ export function ReimbursementsPage() {
 
   if (isError) {
     return (
-      <PageWrapper title="Reimbursements" subtitle="Submit and track expense reimbursements" variant="display">
+      <PageWrapper title="Reimbursements" subtitle="Submit and track expense reimbursements">
         <div className="flex flex-col items-center justify-center py-20 gap-4">
           <div className="text-center">
             <p className="text-sm font-semibold text-foreground">Failed to load reimbursements</p>

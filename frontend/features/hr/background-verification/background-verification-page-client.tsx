@@ -330,8 +330,7 @@ export function BackgroundVerificationPageClient() {
     return (
       <PageWrapper
         title="Background Verification"
-        subtitle="Initiate, track employee background checks, and view candidate compliance"
-        variant="display">
+        subtitle="Initiate, track employee background checks, and view candidate compliance">
         <EmptyState
           illustrationPreset="alert"
           title="Failed to load verifications"

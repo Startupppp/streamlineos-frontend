@@ -506,7 +506,7 @@ export function DataTable<T>({
       )}
 
       {showPagination && (
-        <div className="shrink-0 border-t px-3">
+        <div className="shrink-0 border-t px-2">
           <DataTablePagination
             page={currentPage + 1}
             totalPages={totalPages}

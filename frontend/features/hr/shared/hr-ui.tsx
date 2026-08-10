@@ -44,13 +44,15 @@ export function HrHero({
   children,
 }: {
   eyebrow?: string;
-  title: string;
+  title?: string;
   description?: string;
   hideDescriptionOnMobile?: boolean;
   actions?: ReactNode;
   className?: string;
   children?: ReactNode;
 }) {
+  const hasCopy = Boolean(eyebrow || title || description);
+
   return (
     <div
       className={cn(
@@ -79,38 +81,49 @@ export function HrHero({
       />
 
       <div className="relative p-4 sm:p-5">
-        {/*
-          Stack header until lg: with the app sidebar, sm/md widths (~700–900px
-          content) are too tight for title + actions side-by-side.
-        */}
-        <div className="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-end lg:justify-between lg:gap-6">
-          <div className="min-w-0 max-w-2xl flex-1">
-            {eyebrow && (
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-600/80 dark:text-blue-300/80 mb-1.5">
-                {eyebrow}
-              </p>
-            )}
-            <h2 className="text-lg sm:text-xl md:text-2xl font-bold tracking-tight text-balance leading-tight text-foreground">
-              {title}
-            </h2>
-            {description && (
-              <p
-                className={cn(
-                  "mt-1.5 text-sm text-muted-foreground leading-relaxed text-pretty max-w-prose",
-                  hideDescriptionOnMobile && "hidden sm:block",
-                )}
-              >
-                {description}
-              </p>
-            )}
+        {hasCopy || actions ? (
+          <div className="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-end lg:justify-between lg:gap-6">
+            {hasCopy ? (
+              <div className="min-w-0 max-w-2xl flex-1">
+                {eyebrow ? (
+                  <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-600/80 dark:text-blue-300/80">
+                    {eyebrow}
+                  </p>
+                ) : null}
+                {title ? (
+                  <h2 className="text-balance text-lg font-bold leading-tight tracking-tight text-foreground sm:text-xl md:text-2xl">
+                    {title}
+                  </h2>
+                ) : null}
+                {description ? (
+                  <p
+                    className={cn(
+                      "mt-1.5 max-w-prose text-pretty text-sm leading-relaxed text-muted-foreground",
+                      hideDescriptionOnMobile && "hidden sm:block",
+                    )}
+                  >
+                    {description}
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
+            {actions ? (
+              <div className="flex min-w-0 w-full flex-wrap items-stretch gap-2 sm:items-center lg:w-auto lg:shrink-0 lg:justify-end">
+                {actions}
+              </div>
+            ) : null}
           </div>
-          {actions && (
-            <div className="flex min-w-0 w-full flex-wrap items-stretch gap-2 sm:items-center lg:w-auto lg:shrink-0 lg:justify-end">
-              {actions}
-            </div>
-          )}
-        </div>
-        {children && <div className="relative mt-3 sm:mt-4 min-w-0">{children}</div>}
+        ) : null}
+        {children ? (
+          <div
+            className={cn(
+              "relative min-w-0",
+              (hasCopy || actions) && "mt-3 sm:mt-4",
+            )}
+          >
+            {children}
+          </div>
+        ) : null}
       </div>
     </div>
   );

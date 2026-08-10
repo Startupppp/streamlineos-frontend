@@ -1,17 +1,7 @@
-import { Users, Package, FileSpreadsheet } from "lucide-react";
+import { Package, FileSpreadsheet } from "lucide-react";
 import type { ImportEntity } from "@/features/shared/import-export/entity-card";
 
 export const HR_IMPORT_EXPORT_ENTITIES: ImportEntity[] = [
-  {
-    id: "employees",
-    label: "Employees",
-    icon: Users,
-    description:
-      "Export employee directory with roles, departments, and contact info.",
-    exportEndpoint: "/hr/export/employees",
-    accent: "text-blue-600 bg-blue-500/10",
-    supported: { import: false, export: true },
-  },
   {
     id: "expenses",
     label: "Expenses",

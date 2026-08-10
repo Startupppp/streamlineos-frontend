@@ -70,7 +70,6 @@ export function OrgHubClient() {
     <PageWrapper
       title="Organisation Structure"
       subtitle="Manage departments, teams, locations, and job catalog"
-      variant="display"
       noInternalScroll
       contentClassName="flex flex-col gap-4 sm:gap-5"
     >

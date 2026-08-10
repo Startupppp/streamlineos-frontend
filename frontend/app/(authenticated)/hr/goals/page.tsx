@@ -154,7 +154,6 @@ export default function GoalsPage() {
       <PageWrapper
         title="Goals & OKRs"
         subtitle="Track your personal and team goals"
-        variant="display"
       >
         <LoadingState variant="cards" rows={9} />
       </PageWrapper>
@@ -166,7 +165,6 @@ export default function GoalsPage() {
       <PageWrapper
         title="Goals & OKRs"
         subtitle="Track your personal and team goals"
-        variant="display"
       >
         <ErrorState
           title="Failed to load goals"
