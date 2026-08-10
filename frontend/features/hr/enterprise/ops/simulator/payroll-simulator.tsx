@@ -118,7 +118,7 @@ export function PayrollSimulator() {
                       type="button"
                       size="icon"
                       variant="ghost"
-                      className="h-5 w-5 text-red-500"
+                      className="h-5 w-5 text-destructive"
                       onClick={() => setComponents((cs) => cs.filter((_, idx) => idx !== i))}
                       aria-label={`Remove ${c.name}`}
                     />

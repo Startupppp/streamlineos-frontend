@@ -76,7 +76,7 @@ function RemoveLineButton({ index, onRemove }: RemoveLineButtonProps) {
       iconSize={12}
       variant="ghost"
       size="sm"
-      className="h-6 w-6 p-0 text-red-500"
+      className="h-6 w-6 p-0 text-destructive"
       onClick={handleClick}
     />
   );

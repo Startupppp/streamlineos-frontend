@@ -150,7 +150,7 @@ export function UserSessionsTab({ userId }: UserSessionsTabProps) {
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 text-[11px] text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-500/10"
+              className="h-6 text-[11px] text-destructive hover:text-destructive hover:bg-destructive/10"
               onClick={() => handleRevoke(row.id)}
               disabled={isRevoking}
             >
@@ -175,12 +175,12 @@ export function UserSessionsTab({ userId }: UserSessionsTabProps) {
           <AnimatedIconButton
             icon={Trash2Icon}
             iconSize={14}
-            iconClassName="mr-1 text-red-600 dark:text-red-400"
+            iconClassName="mr-1 text-destructive"
             variant="outline"
             size="sm"
             onClick={handleRevokeAll}
             disabled={isRevokingAll}
-            className="h-9 text-xs text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:border-red-500/30 dark:hover:bg-red-500/10 dark:hover:text-red-300 [&_svg:not([class*='text-'])]:text-red-600 hover:[&_svg:not([class*='text-'])]:text-red-700 dark:[&_svg:not([class*='text-'])]:text-red-400 dark:hover:[&_svg:not([class*='text-'])]:text-red-300"
+            className="h-9 text-xs text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive [&_svg:not([class*='text-'])]:text-destructive hover:[&_svg:not([class*='text-'])]:text-destructive"
           >
             Revoke all ({activeSessions.length})
           </AnimatedIconButton>

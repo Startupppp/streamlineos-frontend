@@ -398,7 +398,7 @@ export function AutomationBuilder({ automationId }: AutomationBuilderProps) {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="text-xs border-dashed border-red-300 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10"
+                    className="text-xs border-dashed border-destructive/30 text-destructive hover:bg-destructive/10"
                     onClick={handleAddExitNode}
                   >
                     <Plus className="h-3 w-3 mr-1" /> Exit

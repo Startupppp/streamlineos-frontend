@@ -176,7 +176,7 @@ export function TemplateSheet({ open, onOpenChange }: Props) {
                   <span className="text-sm text-foreground">{s.systemName}</span>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-muted-foreground capitalize">{s.action}</span>
-                    <AnimatedIconButton type="button" size="icon" variant="ghost" className="h-6 w-6 text-red-500" icon={Trash2Icon} iconSize={12} onClick={() => removeSystem(i)} aria-label={`Remove ${s.systemName}`} />
+                    <AnimatedIconButton type="button" size="icon" variant="ghost" className="h-6 w-6 text-destructive" icon={Trash2Icon} iconSize={12} onClick={() => removeSystem(i)} aria-label={`Remove ${s.systemName}`} />
                   </div>
                 </div>
               ))}

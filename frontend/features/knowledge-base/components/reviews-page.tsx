@@ -350,7 +350,7 @@ export default function ReviewsPage() {
             <Button
               size="sm"
               variant="outline"
-              className="text-xs text-red-700 border-red-200 hover:bg-red-50 dark:text-red-300 dark:border-red-500/30 dark:hover:bg-red-500/10"
+              className="text-xs text-destructive border-destructive/30 hover:bg-destructive/10"
               onClick={makeRejectHandler(review)}
             >
               Reject

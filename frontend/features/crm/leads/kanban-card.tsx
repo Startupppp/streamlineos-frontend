@@ -389,11 +389,11 @@ export const KanbanCard = memo(function KanbanCard({
                         <>
                           <button
                             onClick={handleMarkLost}
-                            className="h-5 w-5 rounded flex items-center justify-center hover:bg-red-500/20 transition-colors"
+                            className="h-5 w-5 rounded flex items-center justify-center hover:bg-destructive/10 transition-colors"
                             aria-label="Mark as lost"
                             {...lostIconAnim.hoverHandlers}
                           >
-                            <XIcon ref={lostIconAnim.iconRef} className="h-3 w-3 text-red-400" size={12} />
+                            <XIcon ref={lostIconAnim.iconRef} className="h-3 w-3 text-destructive" size={12} />
                           </button>
                           <button
                             onClick={handleMoveNext}

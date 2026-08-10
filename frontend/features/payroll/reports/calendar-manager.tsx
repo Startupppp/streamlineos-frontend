@@ -368,7 +368,7 @@ export function CalendarManager({ month }: CalendarManagerProps) {
                   icon={Trash2Icon}
                   variant="ghost"
                   size="icon"
-                  className="h-6 w-6 text-red-600 hover:text-red-700"
+                  className="h-6 w-6 text-destructive hover:text-destructive"
                   onClick={() => handleDelete(event.id)}
                   aria-label="Delete event"
                 />

@@ -151,7 +151,7 @@ export const DocumentRowActions = forwardRef<
           {canManageDocs && (
             <DropdownMenuItem
               onClick={handleDelete}
-              className="text-rose-600 focus:text-rose-600 focus:bg-rose-50 dark:focus:bg-rose-950/40"
+              className="text-destructive focus:text-destructive focus:bg-destructive/10"
             >
               <Trash2 className="mr-2 h-3.5 w-3.5" />
               Delete

@@ -212,7 +212,7 @@ function WebhookCard({
               variant="ghost"
               size="icon"
               aria-label="Delete webhook"
-              className="w-7 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"
+              className="w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
               icon={Trash2Icon}
               iconSize={14}
             />
@@ -228,7 +228,7 @@ function WebhookCard({
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleConfirmDelete}
-                className="bg-red-600 hover:bg-red-700"
+                variant="destructive"
               >
                 Delete
               </AlertDialogAction>

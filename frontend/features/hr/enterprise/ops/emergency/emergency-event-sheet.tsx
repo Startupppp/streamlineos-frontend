@@ -157,7 +157,7 @@ export function EmergencyEventSheet({ open, onOpenChange }: Props) {
                 type="submit"
                 isPending={create.isPending}
                 loadingText="Creating…"
-                className="bg-red-600 text-white hover:bg-red-700"
+                variant="destructive"
               >
                 Declare Event
               </LoadingButton>

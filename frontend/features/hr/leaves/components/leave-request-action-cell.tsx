@@ -110,7 +110,7 @@ export function RequestActionCell({
               {status !== "REJECTED" && status !== "CANCELLED" && (
                 <DropdownMenuItem
                   onClick={handleOpenRejectDialog}
-                  className="text-rose-600"
+                  className="text-destructive"
                 >
                   <X className="mr-2 h-4 w-4" />
                   Reject

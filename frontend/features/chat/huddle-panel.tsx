@@ -391,7 +391,7 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
             <Button
               variant="ghost"
               size="sm"
-              className="h-9 w-9 rounded-full p-0 bg-red-500/10 text-red-500 hover:bg-red-500/20 hover:text-red-500"
+              className="h-9 w-9 rounded-full p-0 bg-destructive/10 text-destructive hover:bg-destructive/20 hover:text-destructive"
               onClick={handleLeave}
               aria-label="Leave huddle"
               disabled={leaveHuddle.isPending}
@@ -498,7 +498,7 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 w-6 rounded-full p-0 text-red-500"
+              className="h-6 w-6 rounded-full p-0 text-destructive"
               onClick={handleLeave}
               aria-label="Leave huddle"
               disabled={leaveHuddle.isPending}

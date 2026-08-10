@@ -284,7 +284,7 @@ export function AdminExpenseItem({
             <Button
               variant="outline"
               size="sm"
-              className="text-xs gap-1.5 text-rose-600 border-rose-200 hover:bg-rose-50 dark:text-rose-300 dark:border-rose-800 dark:hover:bg-rose-950/30"
+              className="text-xs gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10"
               onClick={handleStartReject}
             >
               Reject

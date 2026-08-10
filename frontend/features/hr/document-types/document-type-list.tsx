@@ -78,7 +78,7 @@ export function DocumentTypeList({
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="w-7 p-0 text-muted-foreground hover:text-destructive hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors duration-200"
+                      className="w-7 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors duration-200"
                       onClick={handleDeactivate}
                       aria-label={`Deactivate ${dt.name}`}
                     >

@@ -163,7 +163,7 @@ export function CompliancePageContent() {
                   </Badge>
                   <div className="flex gap-1">
                     <Button variant="ghost" size="sm" className="text-xs" onClick={() => handleOpenEditReq(req)}>Edit</Button>
-                    <Button variant="ghost" size="sm" className="text-xs text-red-600 hover:text-red-700" onClick={() => setDeleteReqId(req.id)}>Delete</Button>
+                    <Button variant="ghost" size="sm" className="text-xs text-destructive hover:text-destructive" onClick={() => setDeleteReqId(req.id)}>Delete</Button>
                   </div>
                 </div>
               ))}
@@ -207,7 +207,7 @@ export function CompliancePageContent() {
                   <WorkAuthStatusBadge status={auth.status} />
                   <div className="flex gap-1">
                     <Button variant="ghost" size="sm" className="text-xs" onClick={() => handleOpenEditAuth(auth)}>Edit</Button>
-                    <Button variant="ghost" size="sm" className="text-xs text-red-600 hover:text-red-700" onClick={() => setDeleteAuthId(auth.id)}>Delete</Button>
+                    <Button variant="ghost" size="sm" className="text-xs text-destructive hover:text-destructive" onClick={() => setDeleteAuthId(auth.id)}>Delete</Button>
                   </div>
                 </div>
               ))}
@@ -236,7 +236,7 @@ export function CompliancePageContent() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-red-600 hover:bg-red-700"
+              variant="destructive"
               onClick={() => { if (deleteReqId) deleteReq.mutate(deleteReqId, { onSuccess: () => setDeleteReqId(null) }); }}
             >
               Delete
@@ -254,7 +254,7 @@ export function CompliancePageContent() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-red-600 hover:bg-red-700"
+              variant="destructive"
               onClick={() => { if (deleteAuthId) deleteAuth.mutate(deleteAuthId, { onSuccess: () => setDeleteAuthId(null) }); }}
             >
               Delete

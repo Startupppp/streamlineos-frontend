@@ -153,7 +153,7 @@ export function ContingentPageContent() {
                     </Button>
                   )}
                 {contract.status === "active" && (
-                  <Button variant="ghost" size="sm" className="text-xs text-red-600 hover:text-red-700" onClick={() => setEndContractId(contract.id)}>
+                  <Button variant="ghost" size="sm" className="text-xs text-destructive hover:text-destructive" onClick={() => setEndContractId(contract.id)}>
                     End
                   </Button>
                 )}
@@ -180,7 +180,7 @@ export function ContingentPageContent() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-red-600 hover:bg-red-700"
+              variant="destructive"
               onClick={() => {
                 if (endContractId) {
                   endContract.mutate({ contractId: endContractId }, { onSuccess: () => setEndContractId(null) });

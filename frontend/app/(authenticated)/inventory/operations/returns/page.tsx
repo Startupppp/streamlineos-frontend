@@ -167,7 +167,7 @@ export default function ReturnsPage() {
             </LoadingButton>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2 text-red-600">
+                <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2 text-destructive">
                   Cancel
                 </Button>
               </AlertDialogTrigger>
@@ -182,7 +182,7 @@ export default function ReturnsPage() {
                   <AlertDialogCancel>Keep</AlertDialogCancel>
                   <AlertDialogAction
                     onClick={handleCancel}
-                    className="bg-red-600 hover:bg-red-700"
+                    variant="destructive"
                   >
                     Cancel Return
                   </AlertDialogAction>
@@ -241,7 +241,7 @@ export default function ReturnsPage() {
             </LoadingButton>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2 text-red-600">
+                <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2 text-destructive">
                   Cancel
                 </Button>
               </AlertDialogTrigger>
@@ -254,7 +254,7 @@ export default function ReturnsPage() {
                   <AlertDialogCancel>Keep</AlertDialogCancel>
                   <AlertDialogAction
                     onClick={handleCancel}
-                    className="bg-red-600 hover:bg-red-700"
+                    variant="destructive"
                   >
                     Cancel Return
                   </AlertDialogAction>

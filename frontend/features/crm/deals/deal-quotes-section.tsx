@@ -338,7 +338,7 @@ export function DealQuotesSection({ dealId }: DealQuotesSectionProps) {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
-              className="bg-red-600 hover:bg-red-700 text-white"
+              variant="destructive"
             >
               Delete
             </AlertDialogAction>

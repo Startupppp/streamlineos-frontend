@@ -223,7 +223,7 @@ export function ReconciliationRulesSheet({ bankAccountId, open, onOpenChange }: 
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6 text-muted-foreground hover:text-red-600"
+                        className="h-6 w-6 text-muted-foreground hover:text-destructive"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
@@ -238,7 +238,7 @@ export function ReconciliationRulesSheet({ bankAccountId, open, onOpenChange }: 
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction
-                          className="bg-red-600 hover:bg-red-700"
+                          variant="destructive"
                           onClick={() => handleDeleteRule(rule.id)}
                         >
                           Delete

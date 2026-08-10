@@ -272,7 +272,7 @@ export function RequisitionCard({
                 <Button
                   size="sm"
                   variant="outline"
-                  className="text-xs border-rose-200 text-rose-700 hover:bg-rose-50 dark:border-rose-500/30 dark:text-rose-300 dark:hover:bg-rose-500/10"
+                  className="text-xs border-destructive/30 text-destructive hover:bg-destructive/10"
                   onClick={handleRejectClick}
                 >
                   <XCircle className="mr-1 h-3 w-3" />

@@ -86,7 +86,7 @@ function ApprovalCard({
             <Button
               size="sm"
               variant="outline"
-              className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-500/30 dark:hover:bg-red-500/10"
+              className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
               onClick={handleReject}
             >
               Reject
@@ -230,10 +230,11 @@ export default function ApprovalsPage() {
             <LoadingButton
               onClick={handleSubmitAction}
               isPending={handleApproval.isPending}
+              variant={dialogAction === "approve" ? undefined : "destructive"}
               className={
                 dialogAction === "approve"
                   ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-                  : "bg-red-600 hover:bg-red-700 text-white"
+                  : undefined
               }
             >
               {dialogAction === "approve" ? "Approve" : "Reject"}

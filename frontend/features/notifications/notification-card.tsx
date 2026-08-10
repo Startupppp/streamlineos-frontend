@@ -231,7 +231,7 @@ export function NotificationCard({
               <LoadingButton
                 size="sm"
                 variant="outline"
-                className="h-6 text-xs px-2.5 border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10"
+                className="h-6 text-xs px-2.5 border-destructive/30 text-destructive hover:bg-destructive/10 hover:border-destructive/50"
                 onClick={handleReject}
                 isPending={isRejecting}
               >

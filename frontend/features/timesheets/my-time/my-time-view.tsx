@@ -193,7 +193,7 @@ export function MyTimeView() {
               iconSize={14}
               variant="ghost"
               size="icon"
-              className="h-6 w-6 text-red-500 hover:text-red-700 hover:bg-red-100 dark:hover:bg-red-500/10 shrink-0"
+              className="h-6 w-6 text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
               onClick={handleDismissRejection}
             />
           </div>

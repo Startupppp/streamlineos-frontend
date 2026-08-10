@@ -141,7 +141,7 @@ export const ResultRow = memo(function ResultRow({
           <Button
             variant="outline"
             size="sm"
-            className="ml-auto h-6 border-red-200 text-[10px] text-red-600 hover:bg-red-50 dark:border-red-500/30 dark:text-red-400 dark:hover:bg-red-500/10"
+            className="ml-auto h-6 border-destructive/30 text-[10px] text-destructive hover:bg-destructive/10"
             onClick={handleCreateBugClick}
           >
             <BugIcon className="mr-1 h-3 w-3" />

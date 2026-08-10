@@ -139,7 +139,7 @@ export function AutomationCard({ automation, onToggle, onDelete, onEdit }: Autom
               <AnimatedIconButton
                 variant="ghost"
                 size="icon"
-                className="w-7 text-red-400 hover:text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-500/10"
+                className="w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
                 icon={Trash2Icon}
                 iconSize={14}
               />
@@ -155,7 +155,7 @@ export function AutomationCard({ automation, onToggle, onDelete, onEdit }: Autom
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                 <AlertDialogAction
                   onClick={handleDeleteAutomation}
-                  className="bg-red-600 hover:bg-red-700"
+                  variant="destructive"
                 >
                   Delete
                 </AlertDialogAction>

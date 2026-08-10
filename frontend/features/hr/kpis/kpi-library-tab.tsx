@@ -260,7 +260,7 @@ export function KpiLibraryTab() {
               <Button
                 size="sm"
                 variant="outline"
-                className={`w-full text-xs ${kpi.isActive ? "text-red-500 border-red-200 hover:bg-red-50 dark:text-red-300 dark:border-red-500/30 dark:hover:bg-red-500/10" : "text-green-600 border-green-200 hover:bg-green-50 dark:text-green-300 dark:border-green-500/30 dark:hover:bg-green-500/10"}`}
+                className={`w-full text-xs ${kpi.isActive ? "text-destructive border-destructive/30 hover:bg-destructive/10" : "text-green-600 border-green-200 hover:bg-green-50 dark:text-green-300 dark:border-green-500/30 dark:hover:bg-green-500/10"}`}
                 onClick={() => handleToggleActive(kpi.id, kpi.isActive)}
               >
                 {kpi.isActive ? "Deactivate" : "Activate"}

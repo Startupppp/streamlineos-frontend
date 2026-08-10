@@ -197,7 +197,7 @@ function TerminationCard({
                 <Button
                   size="sm"
                   variant="outline"
-                  className="text-xs gap-1.5 duration-200 text-rose-600 hover:text-rose-600 border-rose-200 hover:bg-rose-50 dark:border-rose-800 dark:hover:bg-rose-950/30"
+                  className="text-xs gap-1.5 duration-200 text-destructive hover:text-destructive border-destructive/30 hover:bg-destructive/10"
                   onClick={() => onReject(record.id)}
                   aria-label={`Reject termination for ${employee?.name ?? "employee"}`}
                 >

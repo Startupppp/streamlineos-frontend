@@ -70,7 +70,7 @@ function RichDocumentRow({ doc, onDelete, isDeletePending }: RichDocumentRowProp
         <LoadingButton
           variant="ghost"
           size="icon"
-          className="w-7 text-muted-foreground hover:text-rose-600"
+          className="w-7 text-muted-foreground hover:text-destructive"
           onClick={handleDelete}
           isPending={isDeletePending}
           aria-label="Delete document"

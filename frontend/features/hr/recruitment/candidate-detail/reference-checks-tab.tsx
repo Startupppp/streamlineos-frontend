@@ -333,7 +333,7 @@ const ReferenceCheckCard = memo(function ReferenceCheckCard({
             <Button
               variant="ghost"
               size="icon"
-              className="w-7 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors duration-200"
+              className="w-7 text-destructive hover:text-destructive hover:bg-destructive/10 transition-colors duration-200"
               disabled={deleteCheck.isPending}
               onClick={handleDelete}
               aria-label="Remove reference"

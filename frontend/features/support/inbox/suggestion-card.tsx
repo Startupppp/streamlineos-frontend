@@ -200,7 +200,7 @@ export function PendingSuggestionCard({
           />
           <AnimatedIconButton
             type="button" variant="ghost" size="icon"
-            className="h-6 w-6 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30"
+            className="h-6 w-6 text-destructive hover:text-destructive hover:bg-destructive/10"
             aria-label="Not helpful — dismiss suggestion"
             title="Not helpful — dismiss suggestion"
             disabled={isResolvePending}

@@ -87,7 +87,7 @@ export function QuoteActionBar({
           <LoadingButton
             size="sm"
             variant="outline"
-            className="border-red-300 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10"
+            className="border-destructive/30 text-destructive hover:bg-destructive/10"
             onClick={onApprovalRejectOpen}
             isPending={rejectPending}
             loadingText="Rejecting..."
@@ -129,7 +129,7 @@ export function QuoteActionBar({
           <Button
             size="sm"
             variant="outline"
-            className="text-red-600 dark:text-red-400 border-red-200 dark:border-red-500/30 hover:bg-red-50 dark:hover:bg-red-500/10"
+            className="text-destructive border-destructive/30 hover:bg-destructive/10"
             onClick={onRejectOpen}
             disabled={updateStatusPending}
           >

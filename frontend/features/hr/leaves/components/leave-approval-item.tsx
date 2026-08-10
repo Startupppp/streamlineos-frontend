@@ -129,7 +129,7 @@ export function LeaveApprovalItem({
                 </LoadingButton>
                 <Button
                   size="sm"
-                  className="h-7 rounded-full bg-transparent border border-rose-200 dark:border-rose-500/30 text-rose-600 dark:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/20 text-[11px] font-semibold px-3 gap-1 transition-colors duration-200"
+                  className="h-7 rounded-full bg-transparent border border-destructive/30 text-destructive hover:bg-destructive/10 text-[11px] font-semibold px-3 gap-1 transition-colors duration-200"
                   disabled={processingId === req.id}
                   onClick={handleReject}
                 >

@@ -120,8 +120,8 @@ export function EmergencyEventDetail({ eventId, onBack }: Props) {
                 <Button
                   onClick={() => handleRespond("need_help")}
                   disabled={respond.isPending}
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white"
-                  variant={respondStatus === "need_help" ? "default" : "outline"}
+                  variant="destructive"
+                  className="flex-1"
                 >
                   <AlertCircle className="h-4 w-4 mr-1.5" />
                   Need Help

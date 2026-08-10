@@ -334,7 +334,7 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="flex-1 h-8 text-xs gap-1.5 text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:border-red-900 dark:hover:bg-red-950"
+                            className="flex-1 h-8 text-xs gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
                             disabled={rsvpMutationIsPending}
                             onClick={() => handleRsvp("declined")}
                             aria-label="Decline event"

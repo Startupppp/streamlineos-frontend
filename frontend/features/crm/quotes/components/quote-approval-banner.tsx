@@ -45,7 +45,7 @@ export function QuoteApprovalBanner({
             <LoadingButton
               size="sm"
               variant="outline"
-              className="border-red-300 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 h-7 text-xs"
+              className="border-destructive/30 text-destructive hover:bg-destructive/10 h-7 text-xs"
               onClick={onApprovalRejectOpen}
               isPending={rejectPending}
               loadingText="Rejecting..."

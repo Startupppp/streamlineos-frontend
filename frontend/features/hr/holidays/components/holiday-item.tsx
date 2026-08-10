@@ -54,7 +54,7 @@ export function HolidayItem({ holiday, canManage, onEdit, onDelete }: HolidayIte
             icon={Trash2Icon}
             variant="ghost"
             size="icon"
-            className="w-7 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"
+            className="w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
             iconSize={14}
             aria-label={`Delete ${holiday.name}`}
             onClick={handleDeleteClick}

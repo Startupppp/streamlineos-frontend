@@ -101,7 +101,7 @@ export function DevicesTable({ canManage, onAdd, onEdit }: Props) {
                 <LoadingButton
                   variant="ghost"
                   size="icon"
-                  className="w-7 text-red-500 hover:text-red-600"
+                  className="w-7 text-destructive hover:text-destructive"
                   aria-label={`Delete ${r.name}`}
                   isPending={deletingId === r.id}
                   onClick={(e) => { e.stopPropagation(); handleDelete(r); }}
