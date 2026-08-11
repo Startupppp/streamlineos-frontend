@@ -145,7 +145,7 @@ each site already discards its error.
 
 ## SNAP-001 — Drizzle snapshot chain left stale, deliberately
 
-Migrations `0408`, `0410`–`0414` were hand-authored and journalled but have no
+Migrations `0408`, `0410`–`0415`, `0417` were hand-authored and journalled but have no
 `migrations/meta/NNNN_snapshot.json`. The next `db:generate` will re-propose applied work.
 
 **Why not fixed:** hand-crafting snapshot JSON risks being subtly wrong, which bakes the error into

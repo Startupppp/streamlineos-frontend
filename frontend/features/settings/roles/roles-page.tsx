@@ -11,8 +11,14 @@ import {
   TrendingUp,
   FlaskConical,
 } from "lucide-react";
-import { PlusIcon, CopyIcon } from "@animateicons/react/lucide";
+import { PlusIcon, CopyIcon, EllipsisIcon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -159,20 +165,34 @@ export function RolesPage() {
       actions={
         activeTab === "roles" ? (
           <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-nowrap sm:justify-end">
-            {canViewAudit && (
-              <Button variant="outline" size="sm" asChild className="w-full gap-1.5 sm:w-auto">
-                <Link href="/settings/roles/audit">
-                  <ClipboardList className="h-3.5 w-3.5" />
-                  <span className="truncate">Audit</span>
-                </Link>
-              </Button>
-            )}
-            <Button variant="outline" size="sm" asChild className="w-full gap-1.5 sm:w-auto">
-              <Link href="/settings/roles/simulate">
-                <FlaskConical className="h-3.5 w-3.5" />
-                <span className="truncate">Simulate</span>
-              </Link>
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <AnimatedIconButton
+                  icon={EllipsisIcon}
+                  iconSize={14}
+                  variant="outline"
+                  size="sm"
+                  className="w-full sm:w-auto"
+                  aria-label="More role tools"
+                />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {canViewAudit && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/settings/roles/audit">
+                      <ClipboardList className="h-3.5 w-3.5" />
+                      Audit
+                    </Link>
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem asChild>
+                  <Link href="/settings/roles/simulate">
+                    <FlaskConical className="h-3.5 w-3.5" />
+                    Simulate
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <AnimatedIconButton
               icon={CopyIcon}
               iconSize={14}
@@ -218,11 +238,11 @@ export function RolesPage() {
           <TabsTrigger value="groups">Groups</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="groups" className="flex min-h-0 flex-1 flex-col">
+        <TabsContent value="groups">
           <GroupsPanel />
         </TabsContent>
 
-        <TabsContent value="roles" className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
+        <TabsContent value="roles" className="gap-3 overflow-hidden">
         <div className="shrink-0">
           {analyticsLoading ? (
             <StatCardGridSkeleton cols={5} count={5} />

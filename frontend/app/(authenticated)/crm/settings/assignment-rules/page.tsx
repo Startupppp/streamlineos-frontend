@@ -291,13 +291,14 @@ export default function AssignmentRulesPage() {
   const handleDragEnd = useCallback(
     (result: DropResult) => {
       if (!result.destination || !rules) return;
-      const reordered = Array.from(rules);
-      const [moved] = reordered.splice(result.source.index, 1);
-      reordered.splice(result.destination.index, 0, moved);
-      const reorderPayload = reordered.map((r, i) => ({ id: r.id, priority: reordered.length - i }));
+      const working = Array.from(rules);
+      const [moved] = working.splice(result.source.index, 1);
+      if (!moved) return;
+      working.splice(result.destination.index, 0, moved);
+      const reordered = working.map((rule, index) => ({ ...rule, priority: working.length - index }));
       qc.setQueryData(queryKeys.crmSettings.assignmentRules(), reordered);
       reorderRules.mutate(
-        { rules: reorderPayload },
+        { ruleIds: reordered.map((r) => r.id) },
         {
           onError: (err) => {
             toast.error(getErrorMessage(err));

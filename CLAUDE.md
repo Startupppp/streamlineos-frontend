@@ -348,7 +348,7 @@ Permissions resolve from the DB on **every request** via `AccessService`. **CASL
 - Never `@CheckAbility`/`AbilityGuard`/`useAbility()`/`@casl/*`/`lib/abilities` (all deleted), never `requireAuthorize`/`hasRoleOrPrivileged`.
 - Never put permission checks in JWT claims; never read `req.user.permissions` for decisions (JWT is stale, DB is authoritative).
 - Never skip `@RequirePermission` on a protected endpoint, add a permission without a catalog entry, or skip `bumpPermissionsVersion`.
-- **Never send a lowercase/mixed-case role slug from the client.** Slugs are `UPPERCASE_SNAKE` (`/^[A-Z_]+$/`), canonical in `ROLE_TEMPLATES`; template **ids** stay lowercase. Uppercase before POSTing (canonical: `CreateRoleDialog.slugify()`); when cloning a template, omit `slug`/`name` to inherit canonical values.
+- **Never send a lowercase/mixed-case role slug from the client.** Slugs are `UPPERCASE_SNAKE` (`/^[A-Z0-9_]+$/` — **digits are allowed**, so `TIER_2_SUPPORT` is valid; corrected 2026-08-11 from `/^[A-Z_]+$/`, which contradicted both enforcement points: `createRoleSchema` in `rbac.schemas.ts:22-27` and `CreateRoleDialog.slugify()`, which strips `[^A-Z0-9_]`), canonical in `ROLE_TEMPLATES`; template **ids** stay lowercase. Uppercase before POSTing (canonical: `CreateRoleDialog.slugify()`); when cloning a template, omit `slug`/`name` to inherit canonical values.
 
 ---
 

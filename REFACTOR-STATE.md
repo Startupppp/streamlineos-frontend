@@ -3,7 +3,8 @@
 > Concurrent programs keep separate trackers. CRM lives in `REFACTOR-STATE-CRM.md`. This file is Build only.
 
 **Module:** Build (all four areas — PM core, time/capacity, product management, reporting/portfolio)
-**Phase:** 0 audit delivered → first fix batch landed and verified.
+**Phase:** Phase 0 complete; six fix batches + approved Phase 1 (SCH-001, SCH-002) landed.
+**Status:** 50/67 tasks done, 3 blocked, 14 open — see `TASKS-BUILD.md` and `COMPLETION-REPORT-BUILD.md`.
 **Updated:** 2026-08-10
 
 ## Closed this session (see `docs/refactor/build-changelog.md`)
@@ -39,6 +40,26 @@ verified against the DB. Lint and tests NOT run (not requested).
 
 **Standing footgun found:** `RateLimitService.check()` does `if (!TIERS[tier]) return { allowed: true }`
 — a `@UseRateLimit("key")` with no `TIERS` entry looks protected in review and silently isn't.
+
+### Batch 8 — reproducibility, billing, soft delete
+
+| ID | What | Verified |
+|---|---|---|
+| **RPT-001** | Append-only `sprint_scope_events` (migration `0156`) — pgEnum type, org-led composite index, no `updated_at`/soft-delete | Backfill first returned 0 rows because my seed never set `sprint_id`; I fixed the seed, assigned 200,000 tickets to sprints, re-ran → **200,000 events**, point-in-time reconstruction verified |
+| **TIME-004** | Rates snapshotted at **approval** (B-19), the point the entry becomes immutable. `billing.service.ts` prefers the stored rate, falls back to live resolution only for pre-change entries | No figure invented — 0 invoices ever issued |
+| **SCH-006c** | Soft delete for `roadmap_items`, `feedback_posts`, `okr_goals` (migration `0155`) | The `@Public()` roadmap feed filters deleted items — republishing a deleted item to the internet would be worse than an internal leak |
+
+**Not mine:** `nest build` currently fails on 1 error in `inventory/products/inv-products.controller.ts`
+— unstaged WIP from the concurrent Inventory program. Build scope has zero errors.
+
+### Batch 7 — scheduling + soft delete
+
+| ID | What | Verified |
+|---|---|---|
+| **RPT-002** | Daily snapshot sweep at `GET/POST /cron/build-daily-snapshots`. **I had wrongly called this blocked** — `@nestjs/schedule` is absent but HTTP cron controllers already exist (`@Public()` + `assertCronSecret` + `forEachOrg`). Caps 200 projects/org with overflow **logged, not silently truncated** | `pnpm build` exit 0 — needed because I had to add the missing `ProjectsReportsService` export, without which NestJS throws at **runtime** while typecheck passes |
+| **SCH-006b** | Soft delete for `projects`, `sprints`, `ticket_comments`. `deleteProject` stamps children in ONE transaction, closing §19's orphaned-but-visible cascade hazard | 92 `isNull` filters across 50+ files; 5 partial indexes incl. `uniq_projects_org_key` so a deleted project releases its key; 64 projects intact |
+
+**Unblocked by RPT-002:** API-005 and API-008 — the maintained aggregate now exists.
 
 ### Batch 6 — approved Phase 1 work
 

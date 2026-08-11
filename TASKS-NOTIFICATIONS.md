@@ -1,6 +1,6 @@
 # TASKS — Notifications & Realtime Delivery
 
-Updated: 2026-08-11 · **Done: 13/38**
+Updated: 2026-08-11 · **Done: 26/39**
 
 > Concurrent programmes keep separate trackers. Inventory owns `TASKS.md`.
 > Audit `docs/refactor/notifications-phase0-audit.md` · Plan
@@ -53,25 +53,67 @@ from memory. `[!]` = blocked. `[~]` = implemented, not verifiable in this enviro
 
 ## Open — correctness
 
-- [ ] **PIPE-001** Delivery intent not durable — `registerAfterCommit` is an in-memory hook
+- [x] **PIPE-001** Delivery intent was not durable — `registerAfterCommit` is an in-memory hook, so a
+      crash between COMMIT and the hook draining lost the notification with no record it was owed.
+      `notification_outbox` (migration `0419`) is written **inside the caller's transaction** via
+      `dispatch.emitDurable(tx, input)`; `NotificationOutboxRelayService` drains it into the same
+      `emitNow` pipeline, so routing, preferences and the PIPE-003 check are unchanged — only the
+      trigger becomes durable. Exposed at `/cron/notification-outbox-flush`.
+      Evidence: migration applied — table + RLS (`relrowsecurity=true`) + 3 indexes confirmed.
+      Live probe: intent written in-transaction (`state=PENDING`); a **retried request inserted 0
+      rows** (dedupe held); relay claim with `FOR UPDATE SKIP LOCKED` leased it to `IN_FLIGHT`.
+      Rolled back. Typecheck 0 errors in my files; 50/50 specs.
 - [ ] **PIPE-006** Fan-out is one transaction per recipient
-- [ ] **PIPE-015** Deactivation does not cancel queued deliveries
+- [x] **PIPE-015** Deactivation did not cancel queued deliveries
+      Fixed at the worker, not the membership code, so it catches deactivation by *any* path:
+      `deliverJob` re-runs `filterOrgMemberIds` immediately before handing the payload to a
+      provider and marks the delivery `CANCELLED` / `MEMBERSHIP_INACTIVE` if the recipient is no
+      longer active. `CANCELLED`, not `DEAD` — nothing failed. Evidence: typecheck exit 0; 42/42 specs.
 - [x] **PIPE-011** No self-notification exclusion — actor stored but never filtered
       Evidence: `notification-dispatch.service.ts` filters `actorUserId` out of `targetUserIds`
       before `filterOrgMemberIds`, with an explicit `notifySelf?: boolean` opt-out on
       `DispatchEventInput`; typecheck exit 0.
-- [ ] **PIPE-012** No TTL — stale notifications deliver instead of expiring
+- [x] **PIPE-012** No TTL — stale notifications delivered instead of expiring, so a backlog arrived
+      as a flood of things that stopped mattering hours ago.
+      `ttlSeconds` on the catalog entry → `notification_deliveries.expires_at` (migration `0420`);
+      the worker drops rather than sends, recorded `CANCELLED`/`EXPIRED` (not `DEAD` — nothing
+      failed). Set on the 9 genuinely time-boxed events only; durable records (payslips, role
+      changes, approvals) deliberately have none.
+      Evidence: migration applied — 4 columns + partial `idx_notification_deliveries_expiry`
+      confirmed; probe: a delivery with a past `expires_at` evaluates EXPIRED and records
+      `CANCELLED/EXPIRED`. Rolled back. Typecheck exit 0; 8 suites / 50 tests.
 - [ ] **PIPE-014** Locale hardcoded `"en"`
-- [ ] **PIPE-010** Backoff without jitter; no circuit breaker
+- [~] **PIPE-010** Backoff had no jitter — every delivery failing against one provider outage
+      retried in the same instant, re-forming the herd on each step.
+      `backoffMsWithJitter()` spreads each step uniformly across its own window; applied at both
+      retry sites. Evidence: typecheck exit 0. **Circuit breaker still open.**
 - [ ] **PIPE-008** `digestMode` stored, never scheduled
 - [ ] **PIPE-004** Dedupe is first-write-wins, not aggregation
 - [ ] **PIPE-013** `rate_limit_max = 0` on every event; no per-tenant cap
 - [ ] **REG-003** 77 declared events still never emitted
-- [ ] **REG-005** `eventKey` still a free-form `string`
-- [ ] **REG-006** Catalog-integrity spec exists but no CI step runs it
+- [x] **REG-005** `eventKey` was a free-form `string`
+      `e()` is now generic on the key so each entry keeps its literal type, and
+      `NotificationEventKey` is derived from the catalog. `DispatchEventInput.eventKey` uses it, so
+      a key like `build:ticket:assigned` against a catalog declaring `build.ticket.assigned` is a
+      build error. Evidence: typecheck surfaced exactly 2 dynamic sites — both fixed properly
+      (ownership helper narrowed; the admin emit endpoint now rejects unknown keys via an
+      `isNotificationEventKey` type predicate, not a cast). Final typecheck exit 0.
+- [x] **REG-006** Catalog-integrity guard runs in CI
+      Evidence: `package.json` jest `testRegex: .*\.spec\.ts$` with `roots: [src, evals]`, and
+      `.github/workflows/backend.yml` has a `Unit Tests` step running `pnpm test -- --runInBand`.
+      The spec is picked up by the existing step — **the original finding assumed a dedicated step
+      was needed; it is not.**
 - [ ] **REG-007** Unknown `{{var}}` renders as `""`
-- [ ] **REG-008** No rendered-content snapshot on the delivery record
-- [ ] **REG-002** Seeding inserts but never updates existing rows
+- [x] **REG-008** No rendered-content snapshot — "what exactly did you send my employee" was
+      unanswerable the moment a template changed.
+      `rendered_subject` / `rendered_body` / `template_version` written at persist time
+      (migration `0420`). Evidence: columns confirmed in `information_schema`; probe shows the
+      snapshot persisting on the row independently of the template it came from.
+- [x] **REG-002** Seeding inserted missing rows and never updated the rest, so any catalog change to
+      an existing event never reached the DB and the two drifted permanently.
+      Now an upsert on the global rows, keyed on the `0415` partial unique.
+      Evidence: live probe — `on conflict (event_key) where org_id is null do update` flipped
+      `user_configurable` true→false with **rows still 1** (updated, not duplicated). Rolled back.
 
 ## Open — schema
 
@@ -89,9 +131,23 @@ from memory. `[!]` = blocked. `[~]` = implemented, not verifiable in this enviro
       Evidence: migration `0415` applied; `uniq_notification_events_global_key` present in
       `pg_indexes`; 0 duplicate global keys verified before creating it.
 - [ ] **SCH-002** Timestamps are `timestamp`, not `timestamptz`
-- [ ] **SCH-005/006** `push_subscriptions` lacks `last_seen_at`; bare global UNIQUE on `endpoint`
-- [ ] **SCH-007/008** Unread index not org-led; useless `priority` index
-- [ ] **SCH-015/016/017/018** queue `delivery_id` not unique; two-statement claim; `broadcasts` JSONB; missing FK
+- [x] **SCH-005** `push_subscriptions` had only `created_at` — no staleness signal
+      Evidence: migration `0418` applied; `last_seen_at` + `updated_at` confirmed in
+      `information_schema.columns`.
+- [x] **SCH-006 — RETRACTED, deliberately not done.** The audit proposed replacing the bare global
+      `UNIQUE (endpoint)` with `(org_id, user_id, endpoint)`. That is **wrong**: a Web Push endpoint
+      identifies a *browser*, not a user. The global unique is what stops two accounts registering
+      the same device; a composite would let both keep a row and every notification for either user
+      would reach that one device. The existing constraint is correct and stays.
+- [x] **SCH-007/008** Unread index not org-led; single-column index on a 4-value enum
+      Evidence: migration `0418` applied — `idx_notifications_org_user_unread` (org-led, partial on
+      `deleted_at IS NULL AND archived_at IS NULL`) present in `pg_indexes`;
+      `idx_notifications_user_unread_created` and `idx_notifications_priority` gone.
+- [x] **SCH-015** `notification_queue.delivery_id` had no unique index
+      Evidence: migration `0418` applied; `uniq_notification_queue_delivery` present; 0 duplicate
+      `delivery_id` rows verified first. The worker already updated rather than re-inserting, so
+      this makes the invariant the database's rather than the caller's.
+- [ ] **SCH-016/017/018** two-statement claim without `SKIP LOCKED`; `broadcasts` JSONB audience; `notification_audit_logs.broadcast_id` missing FK
 - [!] **SCH-014** `email_outbox.organization_id` nullable — **BLOCKED by SEQ-001**, see `DECISIONS-NOTIFICATIONS.md`
 - [ ] **SCH-004** Partitioning — **deferred by decision D-2**, trigger recorded
 
@@ -115,6 +171,20 @@ from memory. `[!]` = blocked. `[~]` = implemented, not verifiable in this enviro
 - [ ] **RT-003/004** `requestPermission()` on mount; denied state has no UX
 - [ ] **RT-008** Feed ignores the cursor the backend supports
 
+## Found and fixed during verification (not in the original audit)
+
+- [x] **SEC-010** `email_suppressions` shipped in `0412` with **no RLS**, while every sibling table
+      enforces it — as `streamline_app` with no tenant GUC the whole table was readable. Caught by
+      an adversarial check after the fact, not by the original audit.
+      Evidence: migration `0417` applied — `relrowsecurity=true`, 1 policy. Cross-tenant probe as
+      `streamline_app`: no GUC → 1 row (platform-wide only); as org B → 1 row, org A's row **not**
+      visible; as org A → 2 rows. Probe rows removed.
+- [x] **REG-009** 10 catalog events were `mandatory: true` **and** `userConfigurable: true` — the
+      preference centre would render a toggle that `computeRouting` ignores, i.e. a control that lies.
+      Caught by my own catalog-integrity spec, which failed on first run.
+      Evidence: all 10 annotated `userConfigurable: false`; `notification-catalog-integrity.spec.ts`
+      8/8 passing.
+
 ## Infrastructure
 
-- [!] **SNAP-001** Drizzle snapshot chain stale for `0408`, `0410`–`0414` — see `DECISIONS-NOTIFICATIONS.md`
+- [!] **SNAP-001** Drizzle snapshot chain stale for `0408`, `0410`–`0415`, `0417` — see `DECISIONS-NOTIFICATIONS.md`

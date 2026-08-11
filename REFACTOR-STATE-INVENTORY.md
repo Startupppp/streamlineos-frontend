@@ -1,7 +1,7 @@
 # REFACTOR-STATE — Inventory
 
 **Module:** Inventory & Stock
-**Phase:** 2 in progress — five P0 code fixes done; migrations 0399–0407 **applied and reconciled** on the dev DB. 0408 still deferred
+**Phase:** 2 substantially complete — all Phase-0 P0s closed; migrations 0399–0407 + 0409 applied and reconciled; 22 suites/231 tests + 5 real-DB tests green. See `COMPLETION-REPORT-INVENTORY.md`, `TASKS.md` (32/39), `DECISIONS.md` (D-10..D-15)
 **Audit:** `docs/refactor/inventory-phase0-audit.md`
 **Schema plan:** `docs/refactor/inventory-phase1-schema-plan.md` (migrations 0399–0408)
 **Updated:** 2026-08-11

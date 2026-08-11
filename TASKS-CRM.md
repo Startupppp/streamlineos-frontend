@@ -1,6 +1,6 @@
 # TASKS — CRM
 
-Updated: 2026-08-11 · **Done 50 · Open 18 · Blocked 12 · Deferred 8 · Total 88**
+Updated: 2026-08-11 · **Done 56 · Open 16 · Blocked 12 · Deferred 8 · Total 92**
 Counts recomputed by script, not from memory. All 12 blocked items trace to **D-009** (migration TTY blocker).
 
 Legend: `[x]` done with evidence · `[ ]` open · `[!]` blocked · `[~]` deliberately deferred with reason.
@@ -36,10 +36,12 @@ No test suite was run — nothing here claims tests pass.
 - [ ] PERM-003 `crm:incentives:config` uses a non-canonical action
 - [x] VAL-001 `.strict()` added to **24 CRM write schemas** · Evidence: every DTO under `crm/**/dto/` enumerated; query/filter schemas deliberately left tolerant (`campaignListSchema`, `organizationListSchema`, `territoryListSchema`, `listPipelinesSchema`, `resolvePriceQuerySchema`, `orgDuplicatesQuerySchema`); `.strict()` placed before `.refine()` on `mergeOrgsSchema`; BE tsc 3 pre-existing, none in edited files
 - [x] **VAL-002 (new, found by VAL-001)** — 9 schemas could **not** be tightened because the frontend already sends fields the schema does not declare. Recorded rather than "fixed" by tightening, which would have turned working requests into 400s
-- [ ] **CONTRACT-001 · 3 live field-name mismatches silently stripping data** (§11: "drift silently strips fields into no-ops"). Each means the feature is partially broken **today**:
-  - `assignmentReorderSchema` — frontend sends `{ rules: {id,priority}[] }`, backend expects `{ ruleIds: number[] }` → **assignment-rule reorder does nothing**
-  - `territoryCreateSchema`/`territoryUpdateSchema` — frontend sends `assignedRepUserIds: string[]`, backend has `assignedReps: number[]` → **territory rep assignment is dropped** (compounds SCH-010, where the FK also points at the legacy roster)
-  - `territoryPreviewSchema` — frontend sends `{ sampleLead }`, backend expects `{ sample }` → **territory preview receives nothing**
+- [x] **CONTRACT-001 · all 3 fixed — and 2 were worse than I logged.** I recorded these as "silently stripping data"; on inspection two are **hard 400s**, so those features were dead rather than lossy. Fixed frontend-side, since the backend contract is the source of truth and its service logic was already correct:
+  - `assignmentReorderSchema` — FE sent `{ rules: {id,priority}[] }`, backend requires `ruleIds: number[]` (`rules.schemas.ts:53-55`) → **every drag 400'd**. Semantics already matched (backend derives `ruleIds.length - index`, FE computed `reordered.length - i`), so only the wire shape changed. Live-called at `assignment-rules/page.tsx:299`
+  - `territoryPreviewSchema` — FE posted `{ sampleLead }`, backend requires `sample` → **preview 400'd**. Live-called at `territories/page.tsx:53`. The sibling `/crm/assignment-rules/preview` genuinely *does* take `sampleLead` (`crm-rules.controller.ts:59`) and was already correct — left alone
+  - `territoryCreate`/`Update` — FE declared `assignedRepUserIds?: string[]`, backend takes `assignedReps?: number[]`; wrong name **and** wrong meaning, since `crm-territories.service.ts:67-69` stores them as `crmPersonId`, not user ids. This one was the genuine silent no-op
+  - Bonus: the reorder optimistic write cached the new order with **stale** `priority` values while line 86 renders `Priority {rule.priority}`; it now mirrors the server formula, and a `noUncheckedIndexedAccess` hole (`splice` re-inserting a possibly-`undefined` element) is guarded. FE tsc **0**
+- [ ] CONTRACT-003 territory preview renders **raw ids** — `territories/page.tsx:121-123` prints `assignedReps.join(", ")`, i.e. bare `crmPersonId` integers, violating §15 ("a visible id is a bug"). Not fixable client-side: the only lookup available, `useCrmPeopleSlugs`, is keyed **name → slug** (`crm-people.service.ts:89-104`) and exposes no id. Needs `preview` to return rep names alongside ids
 - [ ] CONTRACT-002 6 schemas where the frontend sends server-owned fields (`executionCount`, `lastRunAt`, `version`, `createdAt`, `ownerId`) — should be omitted client-side, then those schemas can be tightened
 
 ## Phase 1 — Query cost
@@ -50,7 +52,7 @@ No test suite was run — nothing here claims tests pass.
 - [x] QUERY-003 `getAllPeopleSlugs` capped at 1000 · Evidence: existing `columns` projection kept
 - [x] QUERY-004 `getPersonBySlug` 3 queries capped at 100 each **with column projections justified from the mapping code** · Evidence: `crmTeamPerformance` → `{month,value}`; `crmDeals` → `{companyName,value,stage,probability,closeDate}`; `crmCompanies` → `{name,revenue,health,customerSince,renewalDate}` — each field traced to its use site
 - [x] QUERY-006 both `limit(500)` in-memory averages → SQL `AVG` · Evidence: `EXTRACT(EPOCH FROM AVG(resolved_at - created_at)) * 1000`; identical filter sets; zero-row case returns SQL NULL → `?? 0` → "—", same as before. `AVG(interval)*1000` is arithmetically identical to `SUM(delta)/count`
-- [~] QUERY-002 column projection deferred · Reason: consumer shape unverified; dropping a field the UI reads is not caught by tsc across the API boundary
+- [~] QUERY-007 column projection deferred (the second half of QUERY-002) · Reason: consumer shape unverified; dropping a field the UI reads is **not** caught by tsc across the API boundary. Re-numbered from a duplicate `QUERY-002`
 
 ## Phase 1 — Caching (CACHE-*)
 

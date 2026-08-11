@@ -1,6 +1,6 @@
 # TASKS — Inventory & Stock
 
-Updated: 2026-08-11 | Done: 24/33
+Updated: 2026-08-11 | Done: 38/44
 
 Evidence rule: `[x]` requires a command and its output seen in-session. Nothing
 is checked from memory.
@@ -65,11 +65,16 @@ is checked from memory.
       Evidence: `assertLocationsInScope` at the top of executeInTx and executeMany
 - [x] SEC-003c Read scoping — stock levels, availability, movements, transfers, adjustments, warehouses, valuation
       Evidence: tsc 0 inventory errors; 231 tests green; scope in both cache keys
-- [ ] SEC-003d Read scoping — quality holds/inspections/recalls, cycle counts, reports
-- [ ] SEC-004 Cost/margin masking on `inventory:valuation:read`
+- [~] SEC-003d Read scoping — quality holds + cycle counts DONE; inspections/recalls NOT SCOPABLE, reports not done
+      Evidence: locationPredicate on invQualityHolds.locationId, warehousePredicate on invCycleCounts.warehouseId, both with scope in the cache key.
+      `inv_quality_inspections` has NO location/warehouse column — it points at its source via polymorphic source_type/source_id, the pattern §19 bans. Recalls are inherently org-wide. See DECISIONS.md#D-16
+- [x] SEC-004 Cost masking on `inventory:valuation:read`
+      Evidence: 6 `stripCostFields` sites — stock levels, movements, products list, product detail; cost visibility is a cache-key discriminator on both cached lists; 231 tests green, tsc 0 errors
 - [ ] SCH-003 Stop writing RESERVATION_* to the movement ledger (expand step of D-13)
-- [ ] COST-006b Call the period guard from the stock engine
-- [ ] STRUCT-001 Split `stock-engine.service.ts` (887 lines, over the §9 cap)
+- [x] COST-006b Period guard called from the stock engine
+      Evidence: `assertPeriodOpen` ×2 (executeInTx + executeMany) via AccountingGlModule per §18; tsc 0 errors, madge no new cycle, 231 tests green
+- [!] STRUCT-001 `stock-engine.service.ts` 868 lines, over the §9 cap
+      Partial: extracted the duplicated low-stock outbox block into `emitLowStock` (899 → 861; +7 from the period guard). The larger MovementApplier split is NOT done
 
 ## Phase 7 — Tests
 
@@ -77,6 +82,20 @@ is checked from memory.
       Evidence: 22 suites / 231 tests passing, from 3 suites failing + 1 worker crash
 - [x] TEST-002 Real coverage for the costing engine
       Evidence: valuation.service.spec.ts — 15 tests passing
-- [ ] TEST-003 Real-DB concurrency: two allocations of the last unit, exactly one wins
-- [ ] TEST-004 Real-DB idempotent replay: a retried receipt posts once
-- [ ] TEST-005 Real-DB reconciliation: ledger sum equals snapshot after randomised movements
+- [x] TEST-003 Real-DB concurrency: two allocations of the last unit, exactly one wins
+      Evidence: INV_DB_TESTS=1 run — "exactly one of two simultaneous claims succeeds under FOR UPDATE" passed (1562 ms), plus a negative control proving the unlocked shape oversells to -1
+- [x] TEST-004 Real-DB idempotency semantics
+      Evidence: same run — ON CONFLICT claim keeps the transaction usable; the caught-error shape provably poisons it
+- [x] TEST-005 Real-DB reconciliation: ledger sum equals snapshot
+      Evidence: same run — 60 deterministic movements, snapshot == SUM(ledger) (33894 ms)
+- [x] TEST-006 Full suite green after the costing/scoping/extraction work
+      Evidence: 22 suites, 231 passed, 0 failed, 477s, exit 0
+
+## Verification runs (final)
+
+- [x] VERIFY-001 Full suite: 22 suites, 231 passed, 0 failed, 541s, exit 0
+- [x] VERIFY-002 Real-DB suite: 5 passed, 0 failed, 58s
+- [x] VERIFY-003 `tsc --noEmit`: 0 Inventory errors
+- [x] VERIFY-004 Pass-3 sweep: 0 quantity mutations, 0 `any`, 0 ts-ignore, 0 `SELECT *`
+- [!] VERIFY-005 `madge --circular`: 1 cycle, `notifications/notification.types.ts > notification-events.catalog.ts`
+      NOT mine — reproduces running madge on `src/modules/notifications` alone
