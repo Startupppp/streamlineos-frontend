@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 import { ToggleLeft, ToggleRight, Activity } from "lucide-react";
-import { CopyIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { CopyIcon, KeyRoundIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,7 @@ export interface WebhookCardProps {
   onCopyUrl: (url: string) => void;
   onToggle: (id: number, isActive: boolean) => void;
   onDelete: (id: number) => void;
+  onRotateSecret: (id: number) => void;
   onViewLogs: (webhook: WebhookEndpoint) => void;
   canManage: boolean;
 }
@@ -40,10 +41,15 @@ export function WebhookCard({
   onCopyUrl,
   onToggle,
   onDelete,
+  onRotateSecret,
   onViewLogs,
   canManage,
 }: WebhookCardProps) {
   const handleCopy = useCallback(() => onCopyUrl(wh.url), [wh.url, onCopyUrl]);
+  const handleRotateClick = useCallback(
+    () => onRotateSecret(wh.id),
+    [wh.id, onRotateSecret],
+  );
   const handleToggleClick = useCallback(
     () => onToggle(wh.id, wh.isActive),
     [wh.id, wh.isActive, onToggle],
@@ -109,6 +115,15 @@ export function WebhookCard({
                       <ToggleLeft className="h-4 w-4 text-muted-foreground" />
                     )}
                   </Button>
+                  <AnimatedIconButton
+                    icon={KeyRoundIcon}
+                    iconSize={16}
+                    variant="ghost"
+                    size="icon"
+                    className="w-7"
+                    onClick={handleRotateClick}
+                    aria-label="Rotate signing secret"
+                  />
                   <AnimatedIconButton
                     icon={Trash2Icon}
                     iconSize={16}

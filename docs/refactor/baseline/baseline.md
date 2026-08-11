@@ -7,18 +7,18 @@ Org `aa5627a2-a7de-4dca-97d2-135f3a5f801b` · project `9` · ticket `251`.
 
 | ID | Query | Exec ms | Rows | Buffer blocks | Seq scans |
 |---|---|---:|---:|---:|---:|
-| Q1-board-page1 | Board / list, page 1, sorted by fractional rank (the benchmark) | 0.69 | 50 | 54 | 0 |
-| Q2-board-deep-page | Same list at offset 3000 (offset pagination cost) | 4.98 | 50 | 3082 | 0 |
-| Q3-list-count | The COUNT(*) fired alongside every list request | 4.38 | 1 | 37 | 0 |
-| Q4-search-ilike | Search: leading-wildcard ILIKE on title | 4.46 | 2 | 3340 | 0 |
-| Q5-board-with-relations | Board page 1 hydrated with assignees + labels (the relational `with` shape) | 0.68 | 50 | 390 | 1 |
-| Q6-my-work | My Work: assigned tickets across the whole org | 0.16 | 50 | 53 | 0 |
-| Q7-status-counts | Per-column badge counts for the board | 1.51 | 1 | 8 | 0 |
-| Q8-ticket-comments | Ticket detail: comment thread | 651.67 | 2 | 13520 | 1 |
-| Q9-ticket-activity | Ticket detail: activity feed | 0.07 | 2 | 5 | 0 |
+| Q1-board-page1 | Board / list, page 1, sorted by fractional rank (the benchmark) | 0.22 | 50 | 57 | 0 |
+| Q2-board-deep-page | Same list at offset 3000 (offset pagination cost) | 6.64 | 50 | 3082 | 0 |
+| Q3-list-count | The COUNT(*) fired alongside every list request | 1.35 | 1 | 37 | 0 |
+| Q4-search-ilike | Search: leading-wildcard ILIKE on title | 4.49 | 2 | 3340 | 0 |
+| Q5-board-with-relations | Board page 1 hydrated with assignees + labels (the relational `with` shape) | 0.69 | 50 | 390 | 1 |
+| Q6-my-work | My Work: assigned tickets across the whole org | 0.17 | 50 | 53 | 0 |
+| Q7-status-counts | Per-column badge counts for the board | 0.99 | 1 | 8 | 0 |
+| Q8-ticket-comments | Ticket detail: comment thread | 0.08 | 2 | 5 | 0 |
+| Q9-ticket-activity | Ticket detail: activity feed | 0.08 | 2 | 5 | 0 |
 | Q10-dependency-graph | Dependency edges for a ticket (blocks / blocked_by) | 0.07 | 0 | 4 | 0 |
-| Q11-portfolio-rollup | Portfolio dashboard: per-project open/done rollup from daily snapshots (post-fix) | 0.68 | 36 | 364 | 0 |
-| Q12-timesheet-billing-rollup | Billing: approved billable hours + amount by project | 40.47 | 21 | 3959 | 1 |
+| Q11-portfolio-rollup | Portfolio dashboard: per-project open/done rollup from daily snapshots (post-fix) | 0.64 | 36 | 364 | 0 |
+| Q12-timesheet-billing-rollup | Billing: approved billable hours + amount by project | 41.28 | 21 | 3959 | 1 |
 
 ## Table sizes
 
@@ -53,36 +53,36 @@ Org `aa5627a2-a7de-4dca-97d2-135f3a5f801b` · project `9` · ticket `251`.
 | projects | idx_projects_org_status | 0 | 16 kB |
 | projects | idx_projects_manager | 1 | 16 kB |
 | projects | uniq_projects_org_id | 139 | 16 kB |
-| projects | projects_pkey | 606 | 16 kB |
+| projects | projects_pkey | 608 | 16 kB |
 | projects | idx_projects_org_pm_workspace | 1409 | 16 kB |
 | ticket_activity_log | idx_ticket_activity_log_ticket_recent | 0 | 12 MB |
 | ticket_activity_log | uniq_ticket_activity_log_org_id | 0 | 26 MB |
 | ticket_activity_log | ticket_activity_log_pkey | 1 | 8792 kB |
-| ticket_activity_log | idx_ticket_activity_log_org_ticket | 19 | 30 MB |
+| ticket_activity_log | idx_ticket_activity_log_org_ticket | 21 | 30 MB |
 | ticket_assignees | idx_ticket_assignees_user_id | 14 | 1152 kB |
 | ticket_assignees | ticket_assignees_pkey | 171601 | 3784 kB |
 | ticket_assignees | uniq_ticket_assignees_org_id | 171603 | 11 MB |
-| ticket_assignees | uniq_ticket_assignees_ticket_user | 173114 | 17 MB |
-| ticket_comments | idx_ticket_comments_ticket | 1 | 8784 kB |
+| ticket_assignees | uniq_ticket_assignees_ticket_user | 173214 | 17 MB |
 | ticket_comments | uniq_ticket_comments_org_id | 2 | 32 MB |
+| ticket_comments | idx_ticket_comments_ticket | 3 | 8784 kB |
 | ticket_comments | ticket_comments_pkey | 901 | 11 MB |
 | ticket_label_mappings | ticket_label_mappings_pkey | 100100 | 2208 kB |
 | ticket_label_mappings | uniq_ticket_label_mappings_org_id | 100102 | 6704 kB |
-| ticket_label_mappings | uniq_ticket_label_mappings_ticket_label | 100950 | 2752 kB |
+| ticket_label_mappings | uniq_ticket_label_mappings_ticket_label | 101050 | 2752 kB |
 | tickets | idx_tickets_cycle | 0 | 1392 kB |
 | tickets | uniq_tickets_project_number | 0 | 4496 kB |
 | tickets | idx_tickets_org_status_priority | 0 | 1504 kB |
 | tickets | idx_tickets_recurrence_next | 0 | 8192 bytes |
-| tickets | idx_tickets_org_assignee_status | 1 | 1584 kB |
+| tickets | idx_tickets_org_assignee_status | 2 | 1584 kB |
 | tickets | idx_tickets_project_status | 3 | 1448 kB |
 | tickets | idx_tickets_title_trgm | 3 | 10 MB |
 | tickets | idx_tickets_customer | 5 | 1392 kB |
-| tickets | idx_tickets_org_assignee_due_open | 15 | 1264 kB |
-| tickets | idx_tickets_org_project_rank | 33 | 15 MB |
+| tickets | idx_tickets_org_assignee_due_open | 17 | 1264 kB |
+| tickets | idx_tickets_org_project_rank | 41 | 15 MB |
 | tickets | idx_tickets_sprint | 69 | 1432 kB |
 | tickets | idx_tickets_parent | 250 | 1392 kB |
-| tickets | idx_tickets_org_project_status | 1384 | 1512 kB |
-| tickets | uniq_tickets_org_id | 1381577 | 13 MB |
+| tickets | idx_tickets_org_project_status | 1388 | 1512 kB |
+| tickets | uniq_tickets_org_id | 1381580 | 13 MB |
 | tickets | tickets_pkey | 1858853 | 4496 kB |
 | timesheets | idx_timesheets_org_invoicing | 0 | 1104 kB |
 | timesheets | timesheets_pkey | 0 | 3320 kB |
@@ -94,8 +94,8 @@ Org `aa5627a2-a7de-4dca-97d2-135f3a5f801b` · project `9` · ticket `251`.
 | timesheets | idx_timesheets_user_date | 4 | 1112 kB |
 | timesheets | idx_timesheets_org_project_date | 9 | 1112 kB |
 | timesheets | uniq_timesheets_org_id | 112 | 9968 kB |
-| work_item_relations | idx_work_item_relations_item | 17 | 1392 kB |
-| work_item_relations | idx_work_item_relations_related | 18 | 1392 kB |
+| work_item_relations | idx_work_item_relations_item | 19 | 1392 kB |
+| work_item_relations | idx_work_item_relations_related | 20 | 1392 kB |
 | work_item_relations | work_item_relations_pkey | 60043 | 1328 kB |
 | work_item_relations | uniq_work_item_relation | 60043 | 1392 kB |
 | work_item_relations | uniq_work_item_relations_org_id | 60045 | 4032 kB |
@@ -177,7 +177,7 @@ Org `aa5627a2-a7de-4dca-97d2-135f3a5f801b` · project `9` · ticket `251`.
   Limit
   Sort
   Result
-  Seq Scan on ticket_comments
+  Index Scan on ticket_comments using idx_ticket_comments_ticket
 ```
 
 ### Q9-ticket-activity — Ticket detail: activity feed

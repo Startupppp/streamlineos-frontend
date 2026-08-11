@@ -36,7 +36,7 @@ import {
 interface WebhookCreateSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreated?: () => void;
+  onCreated?: (secret: string) => void;
 }
 
 interface EventCheckboxItemProps {
@@ -88,11 +88,11 @@ export function WebhookCreateSheet({
           events: values.events,
         },
         {
-          onSuccess: () => {
+          onSuccess: (created) => {
             toast.success("Webhook created");
             form.reset();
-            onCreated?.();
             onOpenChange(false);
+            onCreated?.(created.secret);
           },
           onError: (err) => toast.error(getErrorMessage(err)),
         },

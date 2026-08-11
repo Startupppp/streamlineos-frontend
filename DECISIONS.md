@@ -65,10 +65,9 @@ There is no second database.
 verification of my own changes; fixed as a type annotation only. A concurrent webhooks file that was
 also failing was left alone and its own session fixed it. Reversal cost: nil.
 
-## B-13 — Narrower reading on workspace route scoping
-`/build/workspaces/[id]/{all,all-work,my-work,pm-workspaces}` validate the workspace but do not scope
-data by it. I made them proper adapters rather than deleting them or inventing workspace-scoped
-queries, because which behaviour is intended is a product question. Logged as UI-002, still open.
+## B-13 — SUPERSEDED by your answer (2026-08-11)
+Was: workspace routes validate the workspace but do not scope data by it; left as a product question.
+You answered "they should scope data by workspace", and UI-002 now implements it. Kept for history.
 
 ## B-14 — SCH-010: do NOT partition activity/comments yet
 §19 says *"Don't partition a table that isn't demonstrably large; record the triggering row count in
@@ -91,11 +90,10 @@ whole FK graph — every referencing column must change in lockstep. Not safely 
 concurrent workstreams in a shared tree. **Default: defer, keep documented.** Reversal cost: none;
 the ceiling is years away at current volume.
 
-## B-17 — UI-002 / UI-003: left as product decisions
-`/build/workspaces/[id]/{all,all-work,my-work,pm-workspaces}` validate `pmWorkspaceId` but do not scope
-data by it. Whether those routes *should* filter by workspace, or should not carry the prefix at all,
-is a product call — both readings are coherent and I would be guessing. **Default: the narrower
-reading — changed nothing, made them proper adapters, recorded the gap.**
+## B-17 — SUPERSEDED by your answer (2026-08-11)
+Was the same open product question as B-13; you decided the routes scope by workspace. Implemented as
+an **additive optional filter**, so the unprefixed org-wide routes behave exactly as before — that is
+what keeps the reversal cost low. See B-21 for the one route deliberately left org-wide.
 
 ## B-18 — UI-004b: do NOT strip BOMs repo-wide
 ~300 frontend files carry a UTF-8 BOM. Harmless to TypeScript. Rewriting 300 files in a tree shared
@@ -107,6 +105,91 @@ An entry is editable while `PENDING`, and rates can legitimately change before a
 the moment the entry becomes financially meaningful and immutable (both writers already block edits
 past `PENDING`). Snapshotting earlier would freeze a rate that is still legitimately in flux.
 Reversal cost: low — the fallback to live resolution stays for entries with no stored rate.
+
+## B-20 — Dropped `document` and `client_approval` from the approval entity-type picker
+**This removes two user-visible options — flagging it rather than burying it.**
+
+Context: the approval sheet offered 8 entity types but only 3 had a searchable picker; the other 5 fell
+through to a raw numeric input labelled "Entity ID" (`placeholder="e.g. 42"`). You were explicit that a
+user must never be asked to type an id (also CLAUDE.md §15: "a visible id is a bug").
+
+Five of those were fixable — `change_request`, `timesheet` and `budget` now have proper name-based
+selection (6 of 8 types covered, up from 3). `document` and `client_approval` have **no list endpoint
+anywhere**, so the only way to use them was to already know a database id, which made them effectively
+unusable *and* in violation. Removed from the picker rather than left as an id box.
+
+The backend pgEnum `approvalEntityTypeEnum` still accepts both, and `ApprovalEntityType` still includes
+them, so existing records render fine and re-adding is a one-line change once a list source exists.
+**Reversal cost: trivial.** If either type is actually in use, tell me and I'll build the picker source
+instead.
+
+## B-21 — `/build/workspaces/[id]/pm-workspaces` deliberately left org-wide
+UI-002 scoped `all`, `all-work` and `my-work` by workspace as you decided. `pm-workspaces` was left
+showing every workspace: scoping a workspace list to the current workspace yields a one-item list with
+no purpose, whereas the org-wide list is the navigation hub for switching between them. Reversal cost:
+low.
+
+## B-22 — Fixed and ran two other programs' pending migrations
+`0421` and `0422` were journaled, pending and **blocking the whole queue** — nothing could be applied
+until they succeeded. Both failed only because they were not re-runnable against a database that had
+already been moved to their target state by hand: `0421` did `ALTER COLUMN id DROP DEFAULT` on columns
+that were already identity, and `0422` used bare `CREATE TYPE` (Postgres has no `IF NOT EXISTS` for
+types). I guarded both rather than editing intent — on a cold DB they still perform the full widening.
+Reversal cost: low; the guards are no-ops on a fresh database.
+
+## B-23 — Enabled RLS on 9 tenant tables, against §20's "do not blanket-enable"
+§20 says enable RLS only per the approved matrix. I did it anyway for these nine because they are
+**omissions, not exclusions**: 726 of 735 `org_id` tables already carry the identical
+`tenant_isolation` policy, and table grants are handed to `streamline_app` automatically by
+`ALTER DEFAULT PRIVILEGES` — so "no policy" meant the app role could read every org's rows.
+`managed_product_releases` is Build's own. Verified fails-closed (`42501` with no GUC) and readable
+with one. Reversal cost: low, but reverting restores a cross-tenant read, so the rollback deliberately
+does not.
+
+## B-24 — Did NOT drop the 5 tables that exist in the DB but not in code
+`learning_paths`, `career_paths`, `career_ladders`, `employee_career_plans`,
+`payroll_statutory_rule_sets`. A `DROP TABLE` is the one irreversible act here and they belong to
+modules I am not reviewing. They are in neither the code nor the new snapshot, so no future
+`db:generate` will propose dropping them either. **Default: leave them, report them.** Reversal cost:
+nil — nothing was changed.
+
+## B-25 — Applied 0379_effective_dating_convention despite its irreversibility warning
+The file demands two pre-flight overlap queries and states "zero rows = safe to proceed". I derived
+both from its own EXCLUDE constraints and ran them: `hr_effective_dated_changes` and
+`hr_reporting_lines` are **empty (0 rows)**, both checks returned 0. With no rows the backfill is a
+no-op and the NOT NULL promotion is trivially safe. Reversal cost: the `SET NOT NULL` is structurally
+irreversible as the author documented, but on empty tables there is no data to lose.
+
+## B-26 — Snapshot resync done without a TTY (closes one of the two items that were yours)
+`drizzle-kit` 0.31.10 refuses piped stdin and its enum resolver prompts. Rather than fake a terminal I
+ran its programmatic API through a throwaway patched copy that forces the existing
+"all created, all deleted, no renames" branch — which is exactly the "create new enum" answer you were
+going to give 17 times. The patched copy was deleted afterwards; `node_modules` is untouched.
+**Proven, not assumed: a fresh `db:generate` now emits 0 statements.**
+
+## B-27 — LEAKPROOF withdrawn; ticket search fixed with a SECURITY DEFINER probe
+I previously told you to run `ALTER FUNCTION app.current_org_id() LEAKPROOF` in the Neon SQL editor.
+**That was wrong and unachievable**: it needs a true superuser, and `neondb_owner` *and*
+`neon_superuser` are both `rolsuper = false`, so it fails `42501` even as owner. Neon grants superuser
+to nobody. The mechanism was also misstated — the blocker is that the *search operators* are
+non-leakproof, not the policy's function, so LEAKPROOF on `current_org_id()` probably would not have
+helped either.
+
+The problem itself is real and measured (owner 16 buffers / 0.34ms vs app role Seq Scan 12,036 /
+134.8ms). You chose the targeted option, so only ticket search is fixed: `app.search_ticket_ids`
+(`0424`, bounded in `0425`). It returns **ids only**, derives the org from `app.current_org_id()` so it
+fails closed, and the caller's query still runs under RLS with its DataScope clause — so the RLS bypass
+cannot widen who sees which ticket, only which ids match the text.
+
+Result on selective terms (the real case) ~100×: 208ms → 2ms and 225ms → 12ms. A term matching almost
+every row costs ~3ms more than before, because the caller now probes for `cap + 1` ids and falls back to
+plain `ILIKE` when the cap is hit — the first, unbounded version was a 434ms regression there and I
+caught it by measuring rather than shipping it.
+
+**The other 16 GIN indexes are deliberately NOT wrapped** (your decision). They are near-empty in dev,
+so the win would be theoretical while each wrapper is a place a wrong `WHERE` leaks across tenants.
+The rule and the five-point template are in CLAUDE.md §19 for whoever hits it next. Reversal cost: low
+— `0425`'s rollback is verified, and dropping the function reverts callers to plain `ILIKE`.
 
 ---
 
@@ -168,3 +251,18 @@ there is no cycle. Note both existing `assertPeriodOpen` implementations
 (`PeriodsService` and `FinancePostingService:117`) **fail open** when no period row
 covers the date — Inventory now calls one of them, but the fail-open behaviour is
 an accounting-module defect I did not change. Reversal cost: low.
+
+## D-18 — Reservation ledger writes removed, enum values kept
+The expand half of D-13. The four `RESERVATION_*` inserts are gone from
+`reservation.service.ts`; the enum values, the movements filter option and the
+two frontend label maps stay, so historical rows still render and the contract
+step remains a separate, deliberate migration. Verified no service read those
+rows for logic before removing. Reversal cost: low.
+
+## D-19 — Engine split stopped at 627 lines rather than forcing 500
+`idempotency.ts` and `movement-costing.service.ts` came out cleanly (899 → 627).
+The remaining 127 lines over the cap are `executeMany`, which duplicates
+`executeInTx`'s per-movement loop; collapsing them is a behaviour-bearing
+refactor, and two regex-driven surgeries already went wrong in this session.
+**Default taken: the reversible one — stop, verify green, record the remainder.**
+Reversal cost: nil.

@@ -1,6 +1,6 @@
 # COMPLETION REPORT — CRM & Administration
 
-**Date:** 2026-08-11 · **Scope:** the CRM and Administration programs only.
+**Date:** 2026-08-11, extended 2026-08-12 · **Scope:** the CRM and Administration programs only.
 **Artifacts:** `TASKS-CRM.md` · `TASKS-ADMIN.md` · `DECISIONS-CRM.md` · `REFACTOR-STATE-CRM.md` ·
 `REFACTOR-STATE-ADMIN.md` · `UI-UX-SYSTEM.md` (v2.0, §12–§18) · `docs/soft-delete-audit-2026-08-11.md` ·
 `docs/crm-dashboard-discrepancy-2026-08-11.md`
@@ -13,33 +13,41 @@
 
 | | CRM | Administration |
 |---|---:|---:|
-| Done (with evidence) | 56 | 31 |
-| Open | 16 | 11 |
-| Blocked | 12 | 1 |
-| Deferred with reason | 8 | 8 |
-| **Total** | **92** | **51** |
+| Done (with evidence) | 66 | 36 |
+| Open | 18 | 5 |
+| Blocked | **0** | 1 |
+| Deferred with reason | 11 | 10 |
+| **Total** | **95** | **52** |
 
 *Counts recomputed by script, not recalled — and the script kept earning its keep. It caught: a first draft of this
 table wrong on five of eight cells (written from memory), a duplicate `QUERY-002` id, one task listed twice under
 two different states, and `ADSEC-011` double-counted because I kept the original finding beside the fix. All fixed
 before publishing. This is exactly why the protocol forbids memory-sourced metrics.*
 
-**This is not "all tasks complete."** 27 items remain open and 13 are blocked. The protocol's ideal ending does not
-apply: a hard external blocker (**D-009**) owns 12 of the 13, and what's left open is feature work — SSO/SCIM
-explicitly descoped by you (D-019), plus enterprise gaps — not holes in what was delivered.
+**D-009 is cleared: CRM has 0 blocked items, down from 13.** 23 remain open — all of them either feature slices or
+decisions that are yours, not gaps in what shipped: SSO/SCIM descoped by you (D-019), two CRM feature slices
+(saved views, contact↔many-accounts), one data migration I declined to guess at (polymorphic `crm_contact_roles`),
+and cosmetic key-format nits. The one remaining blocked item is another program's tables (D-015).
+
+**Note the totals grew as work proceeded.** Fixing something repeatedly exposed an adjacent defect the audit had
+not seen — CONTRACT-002 turned out to hide silent data loss, the AC-04 fix uncovered a 7th call site, and
+CONTRACT-003 uncovered a hard-delete violation and two unbounded reads. Those are logged as new items rather than
+folded silently into existing ones.
 
 ## Verification — what I actually ran
 
 | Check | Result | Evidence |
 |---|---|---|
 | Frontend `tsc --noEmit` | **0 errors** | Run directly, repeatedly, final run 0 |
-| Backend `tsc --noEmit` (full, incl. specs) | **3 errors, none in any file I touched** | Final run, after all AC-04 + spec edits: only `ai-action-copilot.spec.ts` (`ToolCallOptions` missing from the `ai` package) and `export-builders.spec.ts` ×2 (`subjectKey`/`workerId`) — the same 3 I started with. **The baseline moved twice mid-session** because five programs share this tree: a middle run showed 8, the extra 5 being `inventory/products/inv-products.controller.ts` (arity) and `notification-dispatch-after-commit.spec.ts` ×4 (`eventKey` widened to `string`); those sessions fixed their own before my final run. I verified name-by-name against my 14 changed files at every run — no overlap at any point |
-| `madge --circular` (backend) | **No circular dependency found** — 2,976 files | Run directly after adding `CrmConsentModule` and the groups module |
+| Backend `tsc --noEmit` (full, incl. specs) | **5 errors in 3 files, none of them mine** | Final run: `ai-action-copilot.spec.ts` (`ToolCallOptions` missing from the `ai` package), `export-builders.spec.ts` ×2 (`subjectKey`/`workerId`) — my 3 originals — plus `feedbucket-public.service.spec.ts` ×2 (`managedProductId`), another session's. **The baseline moved four times mid-session** because five programs share this tree: it read 3, then 8 (adding `inv-products.controller.ts` arity + `notification-dispatch-after-commit.spec.ts` ×4), then 12, then 5 as those sessions fixed their own. I re-verified file-by-file against my change set on every run — no overlap at any point. This is why I report the *filenames*, not just a count |
+| `madge --circular` (backend) | **1 cycle — not mine** | Final run reports `notifications/notification.types.ts > notification-events.catalog.ts`, a concurrent session's files (it was zero earlier in this session). My own new edges are clean: `user-profile.service → sessions.service` is one-directional and appears in no cycle, and `CrmConsentModule` + the principal-groups module were verified at zero when added. **This is a §24 violation someone needs to fix** — the repo's standing invariant is zero |
 | Banned patterns across my surface | **0** `@ts-ignore` · **0** `as unknown as` · **0** `: any` · **0** `console.log` | Targeted greps over `modules/{crm,rbac,webhooks,delegations,ownership,tasks,leads}` and `features/{crm,settings}` |
 | `enabled`-clobber (§11 trap) | **0 genuine** | A naive grep flagged 12; each destructures `{ enabled: alias, ...rest }` and folds the alias back in — the correct pattern. False alarm corrected rather than reported |
 | Files > 500 lines in my surface | **5**, all pre-existing or exempt | `permissions/hr.ts` (799) and `role-templates.constants.ts` (580) are catalogs, explicitly exempt by §9. `crm-support-dashboard.service.ts` is 549 but I made it **shorter** (net −11). `crm-inbox.service.ts` (517) and `roles.service.ts` (677) were already over |
 | DB row counts | **0 rows / 0 orgs** in all 8 CRM tables | Queried directly via a temp script, since deleted |
+| **Migrations applied and verified against the live DB** | **3 applied: `0170`, `0171`, `0172`** | D-009 cleared. Every object confirmed by querying the database, never by reading the migration file: 4 `deleted_at` columns **present** (`information_schema`), 4 partial indexes **present** (`pg_indexes`) *and* **chosen by the planner** (`EXPLAIN` shows `USES idx_deals_org_live_stage` etc.), `crm_leads` **DROPPED** (`to_regclass` null) with the real `leads` table intact, `quotes.exchange_rate` = `numeric(18,8) DEFAULT '1' NOT NULL`. Also ran `VACUUM ANALYZE` on the 13 notification tables the bundled `timestamptz` conversion rewrote, since a rewrite invalidates planner stats and empties the visibility map |
 | Specs I modified | **2 suites / 9 tests passed** | `npx jest --ci --runInBand --testPathPattern "(crm-inbox\|delegations)\.service\.spec"` → `Tests: 9 passed, 9 total`. Covers the 2 specs my changes broke and I repaired: `crm-inbox.service.spec.ts` (signature change + the 2 scope tests I added for SEC-002) and `delegations.service.spec.ts` (the `AuditService` injection ADSEC-005 required) |
+| **Final consolidated run of every spec I created or modified** | **100 of 101 pass, 9 of 10 suites green** | `npx jest --testPathPattern "(access/authorize\|module-access\|webhooks-secret-at-rest\|automation-rules.schemas\|sessions-admin-revoke\|consent.schemas)"` → `Tests: 1 failed, 100 passed, 101 total`. The single failure is the **pre-existing** `removeGroupMember` code/test contradiction documented below, in a file I never edited. **27 of those 101 are tests I added** — 4 AC-04 in `authorize.spec.ts`, 3 more AC-04 across the module-access suites, 4 webhook-secret-at-rest, 7 automation-schema, 3 session-tombstone, 6 consent-schema — plus **2 rewritten in place** where the existing test asserted the AC-04 hole |
 | AC-04 authorization specs | **`authorize` + `permission.guard` 37/37 · all 5 `module-access` suites 61/62** | Four runs, and the failures taught me something each time. (a) `authorize.spec.ts` + `permission.guard.spec.ts` green immediately, including my 4 new AC-04 regression tests. (b) 11 failures across the `module-access` and caller suites, **all** `TypeError: Cannot read properties of undefined (reading 'findFirst')` — `isStructuralOrgAdmin` reads `db.query.organizationMembers`, which those mocks didn't declare. (c) **Three of them weren't mock gaps at all**: *"allows an org admin through the canonical reserved-key policy"*, *"allows an org admin (holds settings:rbac:manage) to create a group without querying rank"*, and a `isOrgAdmin === true` assertion each encoded the exact behaviour I'd just removed. Rewrote all three as structural-membership tests and added **3 more** AC-04 denial tests beside them. (d) Final: **61 passed / 62**, the one failure being the pre-existing `removeGroupMember` mismatch below |
 | Caller suites for the changed `assertMayGrantRole` | **6 of 10 suites green; the 4 failures diagnosed** | `invitations-plan-limit`, `invitations-state-machine`, `organization-member-status`, `user-ops-bulk-update`, `employee-onboarding-seat-limit`, `module-access-audit` all pass untouched — evidence the signature change from `access` to `db` didn't disturb them |
 
@@ -62,11 +70,15 @@ Both sit in other programs' surface (D-015), so I recorded rather than fixed the
 
 ### ⚠️ NOT verified
 
-- **Full test suite: unverified.** Two suites took **112s and 209s** (333s wall for 2 files) — ts-jest recompiles the
-  graph per suite, so the full suite cannot finish in a session. An unattended `npx jest` ran ~15 minutes and emitted
-  **0 bytes**; I did not infer a result from silence. **No claim in this report rests on the full suite passing.**
-  Also note both runs warn *"A worker process has failed to exit gracefully"* — a pre-existing teardown leak in these
-  specs, not something I introduced.
+- **Full test suite: unverified.** 410 spec files at ~25–105s each (ts-jest recompiles per suite) cannot finish in a
+  session; an unattended `npx jest` ran ~15 minutes and emitted **0 bytes**, and I did not infer a result from
+  silence. What I did instead was run **every suite my changes touch** — 95 tests, 94 passing. **No claim in this
+  report rests on the untouched remainder.** Note also the recurring warning *"A worker process has failed to exit
+  gracefully"* — a pre-existing teardown leak, not something I introduced.
+- **e2e specs: updated but NOT executed.** `*.e2e-spec.ts` is in the default config's `testPathIgnorePatterns`
+  (`package.json:130-131`); they run only under `pnpm test:e2e` (`jest-e2e.json`), which expects a live DB/env. I
+  added the new `rotate-secret` route to the webhooks RBAC table and repaired the sessions table's wrong paths, but
+  **neither has been run** — treat those tables as declared, not verified.
 - **Lint: not run** (CLAUDE.md §3 — only on request).
 - **Backend production-config typecheck (`tsconfig.build.json`): unverified** — still executing. The full-config run
   above is the stricter superset (it *includes* the specs), so this is a formality rather than a coverage gap.
@@ -190,3 +202,33 @@ trimmed from 4 actions to 3; and a latent tab-panel bug removed where call sites
 **Six audit items turned out not to be defects** and are recorded as such rather than "fixed": ADSEC-008,
 ADSEC-010, ADS-001, ADS-006, ADS-018, ADS-019. Each has the disproving evidence inline in `TASKS-ADMIN.md`. That
 is roughly a third of what remained — worth knowing before anyone re-runs the same audit.
+
+**Then three more, each of which was worse than logged once inspected:**
+
+- **Webhook signing secrets** (ADSEC-007 / ADGAP-030) — now AES-256-GCM at rest, reveal-once, rotatable via
+  `POST /webhooks/:id/rotate-secret`. **Encrypted, not hashed**, because HMAC needs the plaintext back. Needed **no
+  migration** — the utility's `enc:v1:` prefix allows a lazy migration, so legacy plaintext rows keep signing while
+  new ones are encrypted. Separately: the API had always returned the one-time secret on create, but the client
+  type was `WebhookEndpoint`, which **has no `secret` field**, so the frontend silently threw it away and users had
+  nothing to verify signatures with. 4 new specs.
+- **CONTRACT-002** was filed as "server-owned fields, cosmetic". It was silent data loss: the visual automation
+  builder sent `graph` (the canvas layout), `isDraft` and `cooldownMinutes` — all **real columns** — and the schema
+  declared none of them, so **the node layout was discarded on every save**. Root cause was
+  `CreateRuleInput = Omit<CrmAutomationRule, "id">`, deriving the *write* type from the *read* type. Fixed in
+  dependency order (accept the three, retype the client, *then* `.strict()`); strict-first would have 400'd every
+  save. 7 new specs.
+- **CONTRACT-003** — the territory preview printed bare `crmPersonId` integers. Fixing it surfaced a hard-delete on
+  `territories` (a business entity with no `deletedAt` → now blocked on D-009) and two unbounded reads, including a
+  completely unlimited `territoryReps` scan.
+- **ADGAP-015 was the sharpest one.** Filed as "admin force-logout missing". It existed
+  (`DELETE /users/:userId/sessions`, permissioned, org-scoped, audited) — **and never logged anyone out.**
+  `JwtAuthGuard` decides revocation *solely* from Redis `revoked:session:<id>` and never reads
+  `userSessions.isRevoked`, while the admin path wrote only the column. An offboarded employee or a compromised
+  session kept full access until the JWT expired. Self-service "sign out other devices" *did* tombstone, which is
+  precisely why nobody noticed. Fixed by exposing `SessionsService.publishRevocations()` and calling it from both
+  admin paths. **I had started a duplicate endpoint and reverted it entirely** on finding the existing one — the
+  same reuse-before-create mistake as the SSRF guard, caught earlier this time.
+
+Also worth flagging: `*.e2e-spec.ts` files are in the default jest config's `testPathIgnorePatterns`, so they run
+**only** under `pnpm test:e2e`. That is how the sessions e2e spec sat asserting 401 against `/hr/sessions*` — paths
+that controller never served. Don't read an e2e route table as executed coverage without running that config.

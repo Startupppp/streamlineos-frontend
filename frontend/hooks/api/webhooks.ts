@@ -17,6 +17,16 @@ export interface WebhookEndpoint {
   updatedAt: string;
 }
 
+/**
+ * Returned by create and rotate only. The plaintext secret exists in exactly
+ * one response and is never readable again — the column holds ciphertext and
+ * every other endpoint strips the field.
+ */
+export interface WebhookSecretReveal {
+  secret: string;
+  secretHint: string;
+}
+
 export interface WebhookLog {
   id: number;
   endpointId: number;
@@ -94,7 +104,20 @@ export function useCreateWebhook() {
   return useMutation({
     mutationKey: ["webhooks", "create"] as const,
     mutationFn: (data: CreateWebhookInput) =>
-      apiClient.post<WebhookEndpoint>("/webhooks", data),
+      apiClient.post<WebhookEndpoint & WebhookSecretReveal>("/webhooks", data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.webhooks.all }),
+  });
+}
+
+export function useRotateWebhookSecret() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["webhooks", "rotate-secret"] as const,
+    mutationFn: (id: number) =>
+      apiClient.post<{ id: number } & WebhookSecretReveal>(
+        `/webhooks/${id}/rotate-secret`,
+        {},
+      ),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.webhooks.all }),
   });
 }

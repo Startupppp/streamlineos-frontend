@@ -1,6 +1,6 @@
 # TASKS — Build module refactor
 
-Updated: 2026-08-11 · **Done: 50 / 67** · 3 blocked · 14 open · report: `COMPLETION-REPORT-BUILD.md`
+Updated: 2026-08-11 · **Done: 73 / 76** · 0 blocked · 3 open · report: `COMPLETION-REPORT-BUILD.md`
 
 Every Phase 0 finding ID is a task here; nothing was dropped silently. `[x]` requires an evidence line.
 `[!]` is blocked with the blocker named. Decisions: `DECISIONS.md` (B-NN). State: `REFACTOR-STATE.md`.
@@ -34,8 +34,13 @@ Findings: `docs/refactor/build-phase0-audit.md`. Changes: `docs/refactor/build-c
       `(org_id, project_id, rank) WHERE deleted_at IS NULL`; the 3 remaining unfiltered sites are all
       `MAX(ticket_number)` and are correctly excluded — filtering them would hand out a duplicate
       number and violate `uniq_tickets_project_number`
-- [ ] SCH-007 `timestamp` without timezone on tickets/comments/activity; sprint bounds are `timestamp`
-- [ ] SCH-008 three estimate columns (`points`, `storyPoints`, `estimate`)
+- [x] **SCH-007** temporal types (migration `0158`)
+      Evidence: `tickets.created_at`/`updated_at` now `timestamp with time zone`, converted with an
+      explicit `AT TIME ZONE 'UTC'` so the reinterpretation is intentional. Sprint bounds left as
+      `timestamp` — narrowing to `date` loses the time component irreversibly and code depends on it
+- [x] SCH-008 three estimate columns — canonical column designated, **no column dropped**
+      Dropping is irreversible and the protocol's default is the reversible path; new code writes one,
+      the others are documented rather than removed
 - [x] SCH-010 partitioning — **deliberately NOT done, see `DECISIONS.md` B-14**
       §19: don't partition what isn't demonstrably large. 500k/400k seeded rows is not. Documented
       trigger: revisit at ~50M rows or when a retention sweep starts timing out
@@ -62,12 +67,18 @@ Findings: `docs/refactor/build-phase0-audit.md`. Changes: `docs/refactor/build-c
 - [x] API-003 offset pagination — **downgraded P1→P3, deliberately not done**
       Evidence: offset 0 = 0.43ms/108 blocks; offset 400 (board's real ceiling) = 1.05ms/508
 - [x] ~~API-006~~ **RETRACTED** — `Seq Scan on users` is correct on a 7-row table; seed artifact
-- [!] **API-009** text search — **BLOCKED: superuser required.** RLS defeats every GIN/trigram index
-      for `streamline_app`; 16/17 GIN indexes never scanned. `ALTER FUNCTION app.current_org_id()
-      LEAKPROOF` is superuser-only. See `PAGES.md`
-- [ ] API-005 `COUNT(*)` per list request — was blocked on RPT-002; unblocked once the sweep lands
-- [ ] API-008 portfolio rollup — was blocked on RPT-002; unblocked once the sweep lands. Plan is
-      already index-optimal, so the fix is to read a maintained aggregate rather than recompute
+- [x] **API-009** text search — **UNBLOCKED and fixed.** The `LEAKPROOF` remedy I proposed is
+      impossible on Neon (no superuser exists; you hit `42501` as owner) and was likely the wrong
+      mechanism anyway — it is the *search operators* that are non-leakproof. Fixed instead with a
+      `SECURITY DEFINER` id-probe (`0424`/`0425`): selective searches **208ms → 2ms**, results
+      proven identical, fails closed without the tenant GUC (`DECISIONS.md` B-27)
+- [x] **API-005** list `COUNT(*)` — assessed and left as-is with evidence
+      37 buffer blocks (`Index Only Scan`). Complicating it for 37 blocks is not worth it; the real
+      risk was the soft-delete predicate breaking the index-only scan, which VACUUM restored
+- [x] **API-008** portfolio rollup now reads `project_daily_snapshots` instead of recomputing
+      Evidence: **142.8ms/1,478 blocks → 0.64ms/364 blocks, ~190× faster**, returning 36 real rows.
+      I populated the snapshot table first — measuring a snapshot-backed query against an EMPTY table
+      would have reported a fake win
 
 ## Phase 3 — security
 - [x] **SEC-002** ticket list ignored DataScope while detail enforced it — P0 disclosure
@@ -112,9 +123,13 @@ Findings: `docs/refactor/build-phase0-audit.md`. Changes: `docs/refactor/build-c
       `features/` (max 452 lines)
 - [x] Nav: `/build/page.tsx` re-export fixed; module mislabelled "Product Management" → "Build";
       2 banned legacy redirect routes deleted
-- [ ] UI-002 — **product decision, `DECISIONS.md` B-17.** Took the narrower reading: changed nothing,
-      made the routes proper adapters, recorded the gap
-- [ ] UI-003 — tied to UI-002 (`DECISIONS.md` B-17)
+- [x] **UI-002** workspace routes now scope data by workspace (your decision)
+      Evidence: `pmWorkspaceId` threaded URL → page → component → hook → SQL `WHERE`, additive so the
+      unprefixed org-wide routes are unchanged. Query keys already carry the filter object, so a
+      workspace switch can't serve the previous workspace's cache. Proof: `ws-seed-aa5627a2` → **60
+      projects**, non-existent workspace → **0**
+- [x] UI-003 `pm-workspaces` left org-wide on purpose (`DECISIONS.md` B-21) — scoping a workspace
+      list to the current workspace is a 1-item list; org-wide is the navigation hub
 - [x] UI-004 UTF-8 BOM in `build/all-work/page.tsx` — removed
       Evidence: `od -c` on the file now starts `i m p o r t`, no `\357\273\277`
 - [x] UI-004b BOMs repo-wide — **deliberately NOT stripped, `DECISIONS.md` B-18.** Harmless to
@@ -132,15 +147,21 @@ Findings: `docs/refactor/build-phase0-audit.md`. Changes: `docs/refactor/build-c
       Evidence: the `@Public()` roadmap feed now filters deleted items — verified in
       `public/roadmap.service.ts:30,43`; republishing a deleted item to the internet would have been
       worse than an internal leak
-- [ ] SCH-006d remaining 4: `project_milestones`, `project_releases`, `project_templates`,
-      `project_whiteboards`
+- [x] **SCH-006d** soft delete for the last 4: `project_milestones`, `project_releases`,
+      `project_templates`, `project_whiteboards` (migration `0160`)
+      Evidence: 18 read sites across 7 files; 6 partial indexes; **the `@Public()` whiteboard
+      share-token path now filters deleted boards** — a deleted board stops resolving before any
+      visibility/expiry check. Rollback verified in-transaction. `VACUUM ANALYZE` run on all four
 
 ## Phase 6 — product management schema
-- [ ] PM-001 feedback stores free-text email, no CRM FK → revenue-weighted prioritisation impossible
-- [ ] PM-002 no RICE inputs stored, only a vote counter
-- [ ] PM-003 `managed_products` has no releases entity, only `changelogEntries.version text`
+- [x] **PM-001** CRM linkage added to feedback (nullable FKs + value snapshot)
+- [x] **PM-002** RICE **inputs** (`reach`/`impact`/`confidence`/`effort`) on `roadmap_items` — 4/4
+      verified. Inputs stored, not a computed score, so it stays explainable and recomputable
+- [x] **PM-003** `managed_product_releases` created, mirroring `project_releases`
+      Evidence: table exists; all 5 FKs/checks `convalidated = true`
 - [ ] PM-004 no feedback dedup/merge
-- [ ] PM-013 feedback links to a project, never to a product
+- [x] **PM-013** `feedbucket_widgets.managed_product_id` added alongside `project_id` (both linkages
+      are legitimate); `fk_feedbucket_widgets_managed_product` validated
 - [x] **PM-012** owner FK `restrict` → `set null` (column confirmed nullable)
 - [ ] PM-011/014 — deferred with SCH-004 (`DECISIONS.md` B-16)
 
@@ -151,6 +172,37 @@ Findings: `docs/refactor/build-phase0-audit.md`. Changes: `docs/refactor/build-c
       before and after, identical URLs)
 - [x] Dead code: knip run, **nothing to delete in Build**
 - [x] Harness reproducible: `pnpm -C backend seed:build-load` / `baseline:build`
+
+## Phase 8 — §15 raw IDs (your instruction: never show or ask for an id)
+- [x] **FE-002** approval sheet made users type a raw numeric "Entity ID" for 5 of 8 entity types
+      Evidence: searchable name-based pickers now cover `task`, `milestone`, `release`,
+      `change_request`, `timesheet`; `budget` auto-selects (one per project) and shows a read-only
+      chip. **6 of 8 covered, up from 3.** `document`/`client_approval` dropped — no list source
+      exists, so using them required knowing a database id (`DECISIONS.md` B-20, trivially reversible)
+- [x] Audited Build for IDs rendered as visible text — **none found**. The `{projectId}` hits are
+      props, `htmlFor` attributes and URLs, not user-facing text
+
+
+## Phase 9 — migrations (standing authorization: run them, fix what breaks)
+- [x] **MIG-001** snapshot resync — was blocked on your TTY, now closed
+      Evidence: `db:generate` on a fresh snapshot emits **0 statements**. Snapshot installed as
+      `migrations/meta/0165_snapshot.json`
+- [x] **MIG-002** `0421` / `0422` were blocking the entire queue and failing with the error hidden
+      behind drizzle-kit's spinner. Made idempotent, applied (`DECISIONS.md` B-22)
+- [x] **MIG-003** 3 forward migrations existed on disk but were **never journaled**, so `db:migrate`
+      could never run them. Journaled in dependency order and applied
+- [x] **MIG-004 (P0, Build)** `0352` dropped `ticket_custom_field_values` +
+      `support_ticket_custom_field_values`, died partway through recreating them, and was still
+      recorded as applied. Every ticket custom-field read/write in **Build and Support** was throwing
+      "relation does not exist". Recreated from that migration's own DDL; both read paths verified
+- [x] **MIG-005 (P0, security)** 9 tenant tables had **no RLS at all** — incl. Build's
+      `managed_product_releases`. Grants come free via `ALTER DEFAULT PRIVILEGES`, so the app role
+      could read every org's rows. Fixed + proven fails-closed (`42501`) (`DECISIONS.md` B-23)
+- [x] **MIG-006** remaining drift: CRM consent (2 tables + 4 enums), `dunning_attempts`, 3 columns,
+      1 enum value — all committed, service-referenced schema that never had a migration
+- [x] Drift now **0 tables / 0 columns / 0 enums / 0 enum values**; rollback executed and verified
+      in-transaction; 18 misfiled `.down.sql` moved out of the forward directory; 0 orphan files
+
 
 ## Protocol gaps
 - [x] Rollback scripts for all six migrations, **executed** not merely written
@@ -164,5 +216,16 @@ Findings: `docs/refactor/build-phase0-audit.md`. Changes: `docs/refactor/build-c
 - [x] Rollback for `0416` written and executed (7 of 7 schema-changing migrations now covered)
 - [x] `ANALYZE` after table rewrites — migration `0150`
       Evidence: My Work had silently gone 53 → 201,875 blocks on stale stats; back to 54 after
-- [!] Resync `migrations/meta` snapshots — **BLOCKED: needs a real TTY**
-- [!] Full Build test suite — **BLOCKED: times out at 900s** (~28s/spec × 19). 5 specs run: 32 tests, 0 failures
+- [x] Resync `migrations/meta` snapshots — **UNBLOCKED and done.** drizzle-kit 0.31.10 refuses
+      piped stdin, so I drove its programmatic API with the rename-resolver forced to the
+      "create, never rename" branch — the same answer you'd have typed 17 times
+      (`DECISIONS.md` B-26). Proof: a fresh `db:generate` emits **0 statements**
+- [x] Full Build test suite — **UNBLOCKED and green: 19/19 suites, 155 tests, 0 failures.**
+      The 900s timeout was ts-jest compile cost, which parallelises — running in 4 bounded batches
+      finishes each in 40–120s. Two suites were actually failing and both are now fixed:
+      · `whiteboard-sharing` — **pre-existing, not mine**: `dbTransaction = jest.fn()` never invoked
+        its callback, so `withPublicToken` returned undefined and every success-path assertion
+        collapsed to NotFound. Share-link view-only enforcement had no real coverage
+      · `portfolios` — **mine**: the snapshot-backed rollup adds a 4th `select()` ending in
+        `.groupBy()`; the chain mock stopped at `.limit()`. Mock now returns a snapshot row, so the
+        new primary path is exercised rather than the live-count fallback

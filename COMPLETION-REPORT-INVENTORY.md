@@ -1,6 +1,6 @@
 # COMPLETION REPORT — Inventory & Stock
 
-Date: 2026-08-11 · Tasks: 38 of 44 complete · See `TASKS.md`, `DECISIONS.md`, `REFACTOR-STATE-INVENTORY.md`
+Date: 2026-08-11 · Tasks: 39 of 44 complete · See `TASKS.md`, `DECISIONS.md`, `REFACTOR-STATE-INVENTORY.md`
 
 ## Three-pass verification
 
@@ -8,7 +8,7 @@ Date: 2026-08-11 · Tasks: 38 of 44 complete · See `TASKS.md`, `DECISIONS.md`, 
 
 | Check | Command | Result |
 |---|---|---|
-| Full Inventory suite | `jest --maxWorkers=2 --testPathPattern="modules/inventory"` | **22 suites, 231 passed, 0 failed**, 541s, exit 0 |
+| Full Inventory suite | `jest --maxWorkers=2 --testPathPattern="modules/inventory"` | **22 suites, 231 passed, 0 failed**, 643s, exit 0 |
 | Real-DB suite | `INV_DB_TESTS=1 jest --runInBand --testPathPattern="stock-engine.db"` | **5 passed, 0 failed** |
 | Types | `tsc --noEmit` | **0 Inventory errors** (3 pre-existing elsewhere: `ai-action-copilot.spec.ts`, two payroll filings specs) |
 | Cycles | `madge --circular src/modules/inventory` | **1 cycle**, `notifications/notification.types.ts > notification-events.catalog.ts` — not mine, reproduces on `src/modules/notifications` alone |
@@ -26,8 +26,9 @@ produced false alarms and were themselves wrong:
   mutations. All 10 are **read-side `SUM()` aggregates** in SELECT projections
   (`inv-ai`, `replenishment`, `reports`, `valuation`). Not violations.
 - `grep "tx.insert(invStockTransactions)"` returned 0, implying the ledger
-  insert had vanished. It is present at `stock-engine.service.ts:186` and `:478`;
-  a formatter had split the call across lines.
+  insert had vanished. It is present twice — `stock-engine.service.ts:154` and
+  `:447` after the split, re-verified at final state; a formatter had split the
+  call across lines, so the single-line grep matched nothing.
 
 Confirmed present: `onConflictDoNothing()` ×3, `Maker-checker` guard ×1,
 `assertLocationsInScope` ×2 and `assertPeriodOpen` ×2 (both engine entry points),
@@ -41,7 +42,7 @@ Confirmed present: `onConflictDoNothing()` ×3, `Maker-checker` guard ×1,
 | `any` at boundaries / `as any` | **0** |
 | `@ts-ignore` / `@ts-expect-error` | **0** |
 | `SELECT *` | **0** |
-| Files over 500 lines | **3** — see "Not done" |
+| Files over 500 lines | **3** — `stock-engine.service.ts` 627 (was 899), plus two pre-existing. See "Not done" |
 
 Concurrency was tested under genuine parallel load with a **negative control**:
 the same test without `FOR UPDATE` provably oversells to −1, so the passing case
@@ -93,21 +94,22 @@ were deliberately **not** dropped, because they are still read.
 
 | Item | Why |
 |---|---|
-| `stock-engine.service.ts` 868 lines (§9 cap 500) | Extracted the duplicated low-stock block (899→861, +7 from the period guard); the larger MovementApplier split is a ~200-line move I judged too risky to attempt in the same pass. **The one Pass-3 finding not fixed.** |
+| `stock-engine.service.ts` **627** lines (§9 cap 500) | Reduced from 899 by extracting `idempotency.ts` (125) and `movement-costing.service.ts` (149), and stripping dead imports. The remaining 127 over the cap are `executeMany`, which duplicates `executeInTx`'s per-movement loop; collapsing them is behaviour-bearing and I stopped rather than risk it (D-19). **Partially fixed — the only Pass-3 finding still open.** |
 | `grn.service.ts` 614 lines, `inv-ai-explain.service.spec.ts` 840 | Pre-existing, outside this module's changes |
 | Quality inspections + recalls scoping | **Not scopable as designed** — inspections carry no location and point at their source via a polymorphic `source_type`/`source_id` pair (the pattern §19 bans); recalls are inherently org-wide. Needs a schema change, not a filter. D-16 |
 | Reports service scoping | Not done |
 | Period guard fail-open | **Wiring is done** — the engine now calls `assertPeriodOpen` on both entry points (D-17). But the guard is still duplicated in `FinancePostingService:117` and **both copies fail open** when no period row covers the date. That is an accounting-module defect I did not change |
-| Reservation events removed from the ledger (SCH-003) | Deferred to expand-contract per D-13 — enum value removal is irreversible |
+| Reservation enum values still in `inv_txn_type` (contract step of D-13) | The **expand** half is done — the four `RESERVATION_*` ledger writes are removed (D-18). Removing the enum values is irreversible and stays a separate deliberate migration |
 | Ledger partitioning (SCH-002) | §19 forbids partitioning a table that is not demonstrably large; would forfeit the composite tenant FKs |
 | In-transit as a real location | Stock is off the books mid-transfer, so reconciliation cannot balance during one |
 
 ## Needs your confirmation
 
-- **DECISIONS.md#D-13** — I did **not** remove `RESERVATION_*` from the
-  `inv_txn_type` enum as decision D-09 called for. Enum value removal is
-  irreversible and the protocol's default is expand-contract. The reversible
-  half (stop writing them) is also not done yet.
+- **DECISIONS.md#D-13 / D-18** — the **expand** half is done: nothing writes
+  `RESERVATION_*` to the movement ledger any more. I did **not** remove those
+  values from the `inv_txn_type` enum, because enum removal is irreversible and
+  the protocol's default is expand-contract. The contract step is yours to
+  schedule once you are satisfied no rows remain.
 - **DECISIONS.md#D-14** — real-DB tests are opt-in behind `INV_DB_TESTS=1` so the
   default run stays hermetic. They will not run in CI unless enabled.
 - **Warehouse scoping is deny-by-default.** A user with neither

@@ -101,7 +101,11 @@ function toDueBucketMap(
   return buckets;
 }
 
-export function MyWorkPage() {
+interface MyWorkPageProps {
+  pmWorkspaceId?: string;
+}
+
+export function MyWorkPage({ pmWorkspaceId }: MyWorkPageProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -120,38 +124,46 @@ export function MyWorkPage() {
   );
 
   const assignedFilters = useMemo(
-    () => ({ scope: "mine" as const, ...extraFilters, limit: 100 }),
-    [extraFilters],
+    () => ({
+      scope: "mine" as const,
+      ...extraFilters,
+      ...(pmWorkspaceId ? { pmWorkspaceId } : {}),
+      limit: 100,
+    }),
+    [extraFilters, pmWorkspaceId],
   );
   const createdFilters = useMemo(
     () => ({
       scope: "created" as const,
       ...extraFilters,
+      ...(pmWorkspaceId ? { pmWorkspaceId } : {}),
       orderBy: "created" as const,
       orderDir: "desc" as const,
       limit: 100,
     }),
-    [extraFilters],
+    [extraFilters, pmWorkspaceId],
   );
   const subscribedFilters = useMemo(
     () => ({
       scope: "subscribed" as const,
       ...extraFilters,
+      ...(pmWorkspaceId ? { pmWorkspaceId } : {}),
       orderBy: "updated" as const,
       orderDir: "desc" as const,
       limit: 100,
     }),
-    [extraFilters],
+    [extraFilters, pmWorkspaceId],
   );
   const activityFilters = useMemo(
     () => ({
       scope: "mine" as const,
       ...extraFilters,
+      ...(pmWorkspaceId ? { pmWorkspaceId } : {}),
       orderBy: "updated" as const,
       orderDir: "desc" as const,
       limit: 100,
     }),
-    [extraFilters],
+    [extraFilters, pmWorkspaceId],
   );
 
   const {

@@ -39,19 +39,19 @@ import type { ComboboxOption } from "@/components/ui/combobox";
 import { UserCombobox } from "@/components/ui/user-combobox";
 import { useProject } from "@/hooks/api/build";
 import { useTickets } from "@/hooks/api/build/tickets";
-import { useProjectMilestones } from "@/hooks/api/build/milestones";
+import { useProjectMilestones, useProjectBudget } from "@/hooks/api/build/milestones";
 import { useReleases } from "@/hooks/api/build/releases";
+import { useChangeRequests } from "@/hooks/api/build/change-requests";
+import { useTimesheetEntries } from "@/hooks/api/timesheets-core/entries";
 import type { ApprovalEntityType, CreateApprovalInput } from "@/types/projects";
 
-const ENTITY_TYPES: { value: ApprovalEntityType; label: string }[] = [
-  { value: "task", label: "Task" },
-  { value: "milestone", label: "Milestone" },
-  { value: "release", label: "Release" },
-  { value: "budget", label: "Budget" },
-  { value: "change_request", label: "Change Request" },
-  { value: "document", label: "Document" },
-  { value: "timesheet", label: "Timesheet" },
-  { value: "client_approval", label: "Client Approval" },
+const ENTITY_TYPES: { value: ApprovalEntityType; label: string; searchLabel: string }[] = [
+  { value: "task", label: "Task", searchLabel: "tasks" },
+  { value: "milestone", label: "Milestone", searchLabel: "milestones" },
+  { value: "release", label: "Release", searchLabel: "releases" },
+  { value: "budget", label: "Budget", searchLabel: "" },
+  { value: "change_request", label: "Change Request", searchLabel: "change requests" },
+  { value: "timesheet", label: "Timesheet Entry", searchLabel: "timesheet entries" },
 ];
 
 const TITLE_REGEX = /\S/;
@@ -59,7 +59,7 @@ const TITLE_REGEX = /\S/;
 const schema = z.object({
   entityType: z.enum([
     "task", "milestone", "budget", "release",
-    "change_request", "document", "timesheet", "client_approval",
+    "change_request", "timesheet",
   ] as [ApprovalEntityType, ...ApprovalEntityType[]]),
   entityId: z.string().min(1, "Select an item"),
   title: z
@@ -96,6 +96,12 @@ function useEntityItems(projectId: number, entityType: ApprovalEntityType) {
   const { data: ticketsData, isFetching: ticketsFetching } = useTickets(projectId, { limit: 50 });
   const { data: milestones, isFetching: milestonesFetching } = useProjectMilestones(projectId);
   const { data: releases, isFetching: releasesFetching } = useReleases(projectId);
+  const { data: changeRequests, isFetching: crFetching } = useChangeRequests(projectId);
+  const { data: timesheetData, isFetching: timesheetFetching } = useTimesheetEntries(
+    { projectId, limit: 50 },
+    entityType === "timesheet",
+  );
+  const { data: budget, isFetching: budgetFetching } = useProjectBudget(projectId);
 
   if (entityType === "task") {
     const tickets = ticketsData?.data ?? [];
@@ -131,6 +137,39 @@ function useEntityItems(projectId: number, entityType: ApprovalEntityType) {
         rawTitle: r.name,
       })),
       isFetching: releasesFetching,
+    };
+  }
+
+  if (entityType === "change_request") {
+    return {
+      items: (changeRequests ?? []).map((cr): EntityItem => ({
+        value: String(cr.id),
+        label: `CR-${cr.crNumber}: ${cr.title}`,
+        sublabel: cr.status,
+        rawTitle: cr.title,
+      })),
+      isFetching: crFetching,
+    };
+  }
+
+  if (entityType === "timesheet") {
+    return {
+      items: (timesheetData ?? []).map((entry): EntityItem => ({
+        value: String(entry.id),
+        label: `${entry.date} — ${entry.description ?? entry.ticket?.title ?? "(no description)"}`,
+        sublabel: `${entry.hours}h · ${entry.status}`,
+        rawTitle: entry.description ?? entry.ticket?.title ?? `Entry ${entry.id}`,
+      })),
+      isFetching: timesheetFetching,
+    };
+  }
+
+  if (entityType === "budget") {
+    return {
+      items: budget
+        ? [{ value: String(budget.projectId), label: "Project Budget", rawTitle: "Project Budget" } satisfies EntityItem]
+        : ([] as EntityItem[]),
+      isFetching: budgetFetching,
     };
   }
 
@@ -176,6 +215,11 @@ export function RequestApprovalSheet({
   }, [entityType, form]);
 
   useEffect(() => {
+    if (entityType !== "budget") return;
+    form.setValue("entityId", String(projectId));
+  }, [entityType, projectId, form]);
+
+  useEffect(() => {
     if (!entityId) return;
     const item = entityItems.find((o) => o.value === entityId);
     if (!item) return;
@@ -211,7 +255,9 @@ export function RequestApprovalSheet({
     onOpenChange(next);
   }
 
-  const showEntitySelector = ["task", "milestone", "release"].includes(entityType);
+  const showEntityPicker = ["task", "milestone", "release", "change_request", "timesheet"].includes(entityType);
+  const isBudgetType = entityType === "budget";
+  const activeEntityType = ENTITY_TYPES.find((t) => t.value === entityType);
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
@@ -250,15 +296,13 @@ export function RequestApprovalSheet({
                   </FormItem>
                 )}
               />
-              {showEntitySelector && (
+              {showEntityPicker && (
                 <FormField
                   control={form.control}
                   name="entityId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>
-                        {entityType === "task" ? "Task" : entityType === "milestone" ? "Milestone" : "Release"}
-                      </FormLabel>
+                      <FormLabel>{activeEntityType?.label ?? "Item"}</FormLabel>
                       <FormControl>
                         <Combobox
                           options={entityItems}
@@ -267,7 +311,7 @@ export function RequestApprovalSheet({
                           placeholder={
                             entityFetching
                               ? "Loading…"
-                              : `Search ${entityType === "task" ? "tasks" : entityType === "milestone" ? "milestones" : "releases"}…`
+                              : `Search ${activeEntityType?.searchLabel ?? "items"}…`
                           }
                           searchPlaceholder="Search by name…"
                           emptyText={entityFetching ? "Loading…" : "No items found."}
@@ -279,16 +323,16 @@ export function RequestApprovalSheet({
                   )}
                 />
               )}
-              {!showEntitySelector && (
+              {isBudgetType && (
                 <FormField
                   control={form.control}
                   name="entityId"
-                  render={({ field }) => (
+                  render={(_) => (
                     <FormItem>
-                      <FormLabel>Entity ID</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="e.g. 42" inputMode="numeric" />
-                      </FormControl>
+                      <FormLabel>Budget</FormLabel>
+                      <div className="flex h-9 items-center rounded-md border border-input bg-muted px-3 text-sm text-muted-foreground">
+                        {entityFetching ? "Loading budget…" : "Project Budget (auto-selected)"}
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}

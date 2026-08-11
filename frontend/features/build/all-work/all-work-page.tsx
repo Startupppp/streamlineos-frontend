@@ -37,7 +37,11 @@ import { TablePagination } from "@/components/ui/table-pagination";
 import { useAllWorkFilters } from "./use-all-work-filters";
 import { useAllWorkBulk } from "./use-all-work-bulk";
 
-export function AllWorkPage() {
+interface AllWorkPageProps {
+  pmWorkspaceId?: string;
+}
+
+export function AllWorkPage({ pmWorkspaceId }: AllWorkPageProps) {
   const router = useRouter();
   const shouldReduceMotion = useReducedMotion();
   const swapVariants = shouldReduceMotion ? viewSwapReduced : viewSwap;
@@ -54,8 +58,9 @@ export function AllWorkPage() {
     handleClearFilters,
   } = useAllWorkFilters();
 
-  const { data: allWorkData, isLoading, isError, refetch } = useAllWork(filters);
-  const { data: projectsData } = useProjects({ limit: 100 });
+  const workspaceFilters: typeof filters = pmWorkspaceId ? { ...filters, pmWorkspaceId } : filters;
+  const { data: allWorkData, isLoading, isError, refetch } = useAllWork(workspaceFilters);
+  const { data: projectsData } = useProjects({ limit: 100, ...(pmWorkspaceId ? { pmWorkspaceId } : {}) });
 
   const tickets = useMemo(() => allWorkData?.data ?? [], [allWorkData]);
   const total = allWorkData?.total ?? 0;

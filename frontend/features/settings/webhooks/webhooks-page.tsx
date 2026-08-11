@@ -35,11 +35,13 @@ import {
   useWebhooks,
   useToggleWebhook,
   useDeleteWebhook,
+  useRotateWebhookSecret,
   type WebhookEndpoint,
 } from "@/hooks/api/webhooks";
 import { WebhookCard, WebhookCardSkeleton } from "./webhook-card";
 import { WebhookCreateSheet } from "./webhook-create-sheet";
 import { WebhookDeliveryLogSheet } from "./webhook-delivery-log";
+import { WebhookSecretRevealDialog } from "./webhook-secret-reveal-dialog";
 
 export function WebhooksPage() {
   const canManage = useCan("settings:webhooks:manage");
@@ -55,8 +57,11 @@ export function WebhooksPage() {
 
   const toggleWebhook = useToggleWebhook();
   const deleteWebhook = useDeleteWebhook();
+  const rotateSecret = useRotateWebhookSecret();
 
   const [createOpen, setCreateOpen] = useState(false);
+  const [revealedSecret, setRevealedSecret] = useState<string | null>(null);
+  const [rotateId, setRotateId] = useState<number | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [logsWebhook, setLogsWebhook] = useState<WebhookEndpoint | null>(null);
   const [logsOpen, setLogsOpen] = useState(false);
@@ -100,9 +105,30 @@ export function WebhooksPage() {
 
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
 
-  const handleCreated = useCallback(() => {
-    updateParams({ page: null });
-  }, [updateParams]);
+  const handleCreated = useCallback(
+    (secret: string) => {
+      updateParams({ page: null });
+      setRevealedSecret(secret);
+    },
+    [updateParams],
+  );
+
+  const handleCloseReveal = useCallback(() => setRevealedSecret(null), []);
+
+  const handleRotateConfirm = useCallback(() => {
+    if (rotateId === null) return;
+    rotateSecret.mutate(rotateId, {
+      onSuccess: (result) => {
+        setRotateId(null);
+        setRevealedSecret(result.secret);
+      },
+      onError: (err) => toast.error(getErrorMessage(err)),
+    });
+  }, [rotateId, rotateSecret]);
+
+  const handleRotateDialogChange = useCallback((open: boolean) => {
+    if (!open) setRotateId(null);
+  }, []);
 
   const handleToggle = useCallback(
     (id: number, isActive: boolean) => {
@@ -211,6 +237,7 @@ export function WebhooksPage() {
                 onCopyUrl={handleCopyUrl}
                 onToggle={handleToggle}
                 onDelete={setDeleteId}
+                onRotateSecret={setRotateId}
                 onViewLogs={handleViewLogs}
                 canManage={canManage}
               />
@@ -242,6 +269,35 @@ export function WebhooksPage() {
         onOpenChange={handleLogsOpenChange}
         canManage={canManage}
       />
+
+      <WebhookSecretRevealDialog
+        secret={revealedSecret}
+        onClose={handleCloseReveal}
+      />
+
+      {canManage && (
+        <AlertDialog
+          open={rotateId !== null}
+          onOpenChange={handleRotateDialogChange}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Rotate signing secret?</AlertDialogTitle>
+              <AlertDialogDescription>
+                A new secret is generated immediately and the current one stops
+                working. Deliveries will fail signature verification until you
+                update the receiving service with the new value.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleRotateConfirm}>
+                Rotate secret
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
 
       {canManage && (
         <AlertDialog

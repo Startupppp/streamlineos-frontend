@@ -1,6 +1,6 @@
 # TASKS — Inventory & Stock
 
-Updated: 2026-08-11 | Done: 38/44
+Updated: 2026-08-11 | Done: 39/44
 
 Evidence rule: `[x]` requires a command and its output seen in-session. Nothing
 is checked from memory.
@@ -70,11 +70,13 @@ is checked from memory.
       `inv_quality_inspections` has NO location/warehouse column — it points at its source via polymorphic source_type/source_id, the pattern §19 bans. Recalls are inherently org-wide. See DECISIONS.md#D-16
 - [x] SEC-004 Cost masking on `inventory:valuation:read`
       Evidence: 6 `stripCostFields` sites — stock levels, movements, products list, product detail; cost visibility is a cache-key discriminator on both cached lists; 231 tests green, tsc 0 errors
-- [ ] SCH-003 Stop writing RESERVATION_* to the movement ledger (expand step of D-13)
+- [x] SCH-003 Stopped writing RESERVATION_* to the movement ledger (expand step of D-13)
+      Evidence: 4 ledger inserts removed from reservation.service.ts, `grep RESERVATION_` there returns 0; no service read them (only a filter enum + 2 frontend label maps); reservation.service.spec green, 231 tests green
 - [x] COST-006b Period guard called from the stock engine
       Evidence: `assertPeriodOpen` ×2 (executeInTx + executeMany) via AccountingGlModule per §18; tsc 0 errors, madge no new cycle, 231 tests green
-- [!] STRUCT-001 `stock-engine.service.ts` 868 lines, over the §9 cap
-      Partial: extracted the duplicated low-stock outbox block into `emitLowStock` (899 → 861; +7 from the period guard). The larger MovementApplier split is NOT done
+- [~] STRUCT-001 `stock-engine.service.ts` 899 → 627 lines; still over the §9 cap of 500
+      Evidence: extracted `idempotency.ts` (125) and `movement-costing.service.ts` (149); dead imports stripped; 231 tests green, real-DB 5 green, tsc 0 errors.
+      Remaining: `executeMany` is ~300 lines and duplicates `executeInTx`'s per-movement loop — collapsing the two is what clears 500, and is a behaviour-bearing refactor I did not attempt
 
 ## Phase 7 — Tests
 

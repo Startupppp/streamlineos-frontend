@@ -346,4 +346,5 @@ export interface ProjectFilters {
   limit?: number;
   search?: string;
   status?: "ALL" | ProjectStatusValue;
+  pmWorkspaceId?: string;
 }

@@ -4,8 +4,8 @@
 
 **Module:** Build (all four areas — PM core, time/capacity, product management, reporting/portfolio)
 **Phase:** Phase 0 complete; six fix batches + approved Phase 1 (SCH-001, SCH-002) landed.
-**Status:** 50/67 tasks done, 3 blocked, 14 open — see `TASKS-BUILD.md` and `COMPLETION-REPORT-BUILD.md`.
-**Updated:** 2026-08-10
+**Status:** 73/76 tasks done, 0 blocked, 3 open — see `TASKS-BUILD.md` and `COMPLETION-REPORT-BUILD.md`.
+**Updated:** 2026-08-11
 
 ## Closed this session (see `docs/refactor/build-changelog.md`)
 
@@ -41,6 +41,21 @@ verified against the DB. Lint and tests NOT run (not requested).
 **Standing footgun found:** `RateLimitService.check()` does `if (!TIERS[tier]) return { allowed: true }`
 — a `@UseRateLimit("key")` with no `TIERS` entry looks protected in review and silently isn't.
 
+### Batch 9 — temporal types, aggregates, PM schema
+
+| ID | What | Verified |
+|---|---|---|
+| **API-008** | Portfolio rollup reads `project_daily_snapshots` instead of recomputing | **142.8ms/1,478 → 0.64ms/364 blocks (~190×)**, 36 real rows. I populated the snapshot table first — a snapshot-backed query against an EMPTY table would have reported a fake win |
+| **API-005** | Assessed, **left as-is with evidence** — 37 blocks on an `Index Only Scan`; not worth complicating | measured |
+| **SCH-007** | `tickets.created_at`/`updated_at` → `timestamptz` with an explicit `AT TIME ZONE 'UTC'`. Sprint bounds left `timestamp` — narrowing loses the time component irreversibly | migration `0158` |
+| **SCH-008** | Canonical estimate column designated; **no column dropped** (irreversible) | — |
+| **PM-001/002/003/013** | CRM linkage on feedback, RICE **inputs** (not a computed score), `managed_product_releases`, product linkage on feedback widgets | 4/4 RICE columns; all 5 new FKs `convalidated = true`; 204k tickets / 500k comments intact |
+
+**Pass 3 caught two more regressions here:** the list `COUNT(*)` went 37 → 3,340 blocks and `ANALYZE`
+did **not** fix it — a rewrite also empties the visibility map, downgrading `Index Only Scan` to
+`Index Scan`; only `VACUUM` restores it. And the comment thread went 5 → 13,520 blocks, the same
+partial-index-predicate trap, in the harness only — the app query was always fine.
+
 ### Batch 8 — reproducibility, billing, soft delete
 
 | ID | What | Verified |
@@ -49,8 +64,9 @@ verified against the DB. Lint and tests NOT run (not requested).
 | **TIME-004** | Rates snapshotted at **approval** (B-19), the point the entry becomes immutable. `billing.service.ts` prefers the stored rate, falls back to live resolution only for pre-change entries | No figure invented — 0 invoices ever issued |
 | **SCH-006c** | Soft delete for `roadmap_items`, `feedback_posts`, `okr_goals` (migration `0155`) | The `@Public()` roadmap feed filters deleted items — republishing a deleted item to the internet would be worse than an internal leak |
 
-**Not mine:** `nest build` currently fails on 1 error in `inventory/products/inv-products.controller.ts`
-— unstaged WIP from the concurrent Inventory program. Build scope has zero errors.
+**Not mine (now resolved):** `nest build` briefly failed on 1 error in
+`inventory/products/inv-products.controller.ts` — unstaged WIP from the concurrent Inventory program.
+That session has since finished; `nest build` is exit 0 again.
 
 ### Batch 7 — scheduling + soft delete
 
@@ -217,7 +233,7 @@ Measured by `backend/src/scripts/capture-build-baseline.mjs` as `streamline_app`
 | ID | Evidence | Problem |
 |---|---|---|
 | UI-001 | 9 files under `build/workspaces/**` | 1-line `export { default } from "…/page"` — §17 forbids importing one `app/**/page.tsx` from another |
-| UI-002 | `build/all-work/page.tsx` takes no params | `pmWorkspaceId` never read → **workspace scoping is a no-op** on `all`, `all-work`, `my-work`, `pm-workspaces` |
+| UI-002 | `build/all-work/page.tsx` took no params | `pmWorkspaceId` was never read → workspace scoping was a no-op. **FIXED** — threaded to the SQL `WHERE` as an additive optional filter; `pm-workspaces` intentionally stays org-wide (B-21) |
 
 ## Non-findings — verified, do not re-raise
 
