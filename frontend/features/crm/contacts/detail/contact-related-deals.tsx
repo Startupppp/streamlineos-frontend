@@ -95,7 +95,7 @@ export function ContactRelatedDeals({ contact }: ContactRelatedDealsProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.22, ease: "easeOut", delay: 0.12 }}
     >
-      <Card className="bg-card rounded-lg border border-border shadow-sm overflow-hidden">
+      <Card className="shadow-sm overflow-hidden">
         <CardHeader className="px-4 py-3 border-b flex-row items-center justify-between space-y-0">
           <CardTitle className="text-sm font-medium">Related Deals</CardTitle>
           <Button size="sm" variant="outline" className="gap-1.5 text-xs h-7" asChild>

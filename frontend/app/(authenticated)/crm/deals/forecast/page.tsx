@@ -17,6 +17,7 @@ import { DealForecastSummary } from "@/features/crm/deals/deal-forecast-summary"
 import { DealForecastChart } from "@/features/crm/deals/deal-forecast-chart";
 import { DealCloseDateList } from "@/features/crm/deals/deal-close-date-list";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { ErrorState } from "@/components/shared";
 
 function ForecastSkeleton() {
   return (
@@ -34,7 +35,7 @@ function ForecastSkeleton() {
 
 export default function DealForecastPage() {
   const shouldReduceMotion = useReducedMotion();
-  const { data: deals, isLoading } = useDeals({ limit: 100 });
+  const { data: deals, isLoading, isError, error, refetch } = useDeals({ limit: 100 });
   const { data: snapshots = [] } = useForecastSnapshots({ limit: 10 });
   const captureForecast = useCaptureForecastSnapshot();
   const currentPeriod = new Date().toISOString().slice(0, 7);
@@ -45,6 +46,8 @@ export default function DealForecastPage() {
   const itemVariants = shouldReduceMotion
     ? { hidden: { opacity: 0 }, visible: { opacity: 1 } }
     : fadeUp;
+
+  const handleRefetch = useCallback(() => { void refetch(); }, [refetch]);
 
   const handleCapture = useCallback(() => {
     captureForecast.mutate(
@@ -64,6 +67,22 @@ export default function DealForecastPage() {
         backHref="/crm/deals"
       >
         <ForecastSkeleton />
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper
+        title="Deal Forecast"
+        subtitle="Pipeline forecast and revenue projection"
+        backHref="/crm/deals"
+      >
+        <ErrorState
+          description={getErrorMessage(error)}
+          onRetry={handleRefetch}
+          className="flex-1"
+        />
       </PageWrapper>
     );
   }

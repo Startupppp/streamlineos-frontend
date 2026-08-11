@@ -104,6 +104,8 @@ export function AdjustmentDetailSheet({ adjustmentId, open, onOpenChange }: Adju
   const postMutation = usePostAdjustment();
   const cancelMutation = useCancelAdjustment();
   const canAdjust = useCan("inventory:stock:adjust");
+  const canApprove = useCan("inventory:adjustments:approve");
+  const canPost = useCan("inventory:adjustments:post");
 
   const status: AdjustmentStatus | undefined = detail?.status;
   const isFinal = status === "POSTED" || status === "CANCELLED";
@@ -210,7 +212,7 @@ export function AdjustmentDetailSheet({ adjustmentId, open, onOpenChange }: Adju
         <SheetFooter className="shrink-0 px-6 py-4 border-t">
           <div className="flex items-center gap-2 w-full justify-between">
             <div className="flex items-center gap-2">
-              {canAdjust && status === "PENDING_APPROVAL" && (
+              {canApprove && status === "PENDING_APPROVAL" && (
                 <LoadingButton
                   size="sm"
                   className="text-xs"
@@ -221,7 +223,7 @@ export function AdjustmentDetailSheet({ adjustmentId, open, onOpenChange }: Adju
                   Approve
                 </LoadingButton>
               )}
-              {canAdjust && status === "APPROVED" && (
+              {canPost && status === "APPROVED" && (
                 <AlertDialog open={confirmPost} onOpenChange={setConfirmPost}>
                   <AlertDialogTrigger asChild>
                     <Button size="sm" className="text-xs" disabled={isPending}>

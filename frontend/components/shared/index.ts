@@ -8,3 +8,13 @@ export { NoPermissionState } from "./no-permission-state";
 export { ListToolbar } from "./list-toolbar";
 export { EntityFormSheet } from "./entity-form-sheet";
 export { EntityFormDialog } from "./entity-form-dialog";
+export {
+  RichPanel,
+  RichHero,
+  RichQuickAction,
+  RichSectionHeader,
+  RichIconWell,
+  RichPageContent,
+  type RichTone,
+  type RichWellTone,
+} from "./rich-surface";

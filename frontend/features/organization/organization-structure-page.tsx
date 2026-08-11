@@ -15,7 +15,6 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
-import { RequireModule } from "@/components/auth/require-module";
 import { AccessDenied } from "@/components/shared/access-denied";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
@@ -196,21 +195,18 @@ export function OrganizationStructurePage() {
 
   if (accessData && !canView) {
     return (
-      <RequireModule module="hr">
-        <PageWrapper
-          title="Organization Structure"
-          subtitle="Set up reporting units once, then reuse them across people, access, payroll, and reporting."
-        >
-          <AccessDenied message="You don't have permission to view organization settings." />
-        </PageWrapper>
-      </RequireModule>
+      <PageWrapper
+        title="Organization Structure"
+        subtitle="Set up reporting units once, then reuse them across people, access, payroll, and reporting."
+      >
+        <AccessDenied message="You don't have permission to view organization settings." />
+      </PageWrapper>
     );
   }
 
   return (
-    <RequireModule module="hr">
-      <PageWrapper
-        title="Organization Structure"
+    <PageWrapper
+      title="Organization Structure"
         subtitle={
           overview
             ? `${totalEntities} configured · Business Unit → Branch → Department → Team`
@@ -340,6 +336,5 @@ export function OrganizationStructurePage() {
           </div>
         </div>
       </PageWrapper>
-    </RequireModule>
   );
 }

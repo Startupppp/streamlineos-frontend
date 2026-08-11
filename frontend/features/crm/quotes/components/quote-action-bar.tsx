@@ -103,39 +103,39 @@ export function QuoteActionBar({
         </Button>
       )}
       {canSend && (
-        <Button
+        <LoadingButton
           size="sm"
           variant="outline"
           onClick={onSend}
-          disabled={updateStatusPending}
+          isPending={updateStatusPending}
           title={quote.approvalStatus === "pending" ? "Pending approval" : undefined}
         >
           <Send className="h-3.5 w-3.5 mr-1.5" />
           Send
-        </Button>
+        </LoadingButton>
       )}
       {canAcceptOrReject && (
         <>
-          <Button
+          <LoadingButton
             size="sm"
             variant="outline"
             className="text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-50 dark:hover:bg-emerald-500/10"
             onClick={onAccept}
-            disabled={updateStatusPending}
+            isPending={updateStatusPending}
           >
             <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
             Accept
-          </Button>
-          <Button
+          </LoadingButton>
+          <LoadingButton
             size="sm"
             variant="outline"
             className="text-destructive border-destructive/30 hover:bg-destructive/10"
             onClick={onRejectOpen}
-            disabled={updateStatusPending}
+            isPending={updateStatusPending}
           >
             <XCircle className="h-3.5 w-3.5 mr-1.5" />
             Reject
-          </Button>
+          </LoadingButton>
         </>
       )}
       {canConvert && (

@@ -3,23 +3,28 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type { CrmInboxCounts, CrmInboxResponse } from "@/types/crm";
 
 export function useInbox() {
+  const canView = useCan("crm:leads:view");
   return useQuery({
     queryKey: queryKeys.crmInbox.data(),
     queryFn: () => apiClient.get<CrmInboxResponse>("/crm/inbox"),
     staleTime: 65_000,
     refetchInterval: 60_000,
+    enabled: canView,
   });
 }
 
 export function useInboxCounts() {
+  const canView = useCan("crm:leads:view");
   return useQuery({
     queryKey: queryKeys.crmInbox.counts(),
     queryFn: () => apiClient.get<CrmInboxCounts>("/crm/inbox/counts"),
     staleTime: 65_000,
     refetchInterval: 60_000,
+    enabled: canView,
   });
 }
 

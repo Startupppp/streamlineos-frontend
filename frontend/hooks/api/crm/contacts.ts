@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   Contact,
   PaginatedContacts,
@@ -16,21 +17,24 @@ import type {
 } from "@/types/crm";
 
 export function useContacts(filters?: ContactFilters) {
+  const canView = useCan("crm:contacts:view");
   return useQuery({
     queryKey: queryKeys.contacts.list(filters as Record<string, unknown>),
     queryFn: () =>
       apiClient.get<PaginatedContacts>("/contacts", filters as Record<string, unknown>),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
+    enabled: canView,
   });
 }
 
 export function useContactDetail(id: number) {
+  const canView = useCan("crm:contacts:view");
   return useQuery({
     queryKey: queryKeys.contacts.detail(id),
     queryFn: () => apiClient.get<Contact>(`/contacts/${id}`),
-    enabled: id > 0,
     staleTime: 2 * 60_000,
+    enabled: canView && id > 0,
   });
 }
 
@@ -74,12 +78,13 @@ export function useDeleteContact() {
 }
 
 export function useContactRoles(contactId: number, params?: { entityType?: string; entityId?: number }) {
+  const canView = useCan("crm:contacts:view");
   return useQuery({
     queryKey: queryKeys.contactRoles.list(contactId, params as Record<string, unknown>),
     queryFn: () =>
       apiClient.get<ContactRole[]>(`/contacts/${contactId}/roles`, params as Record<string, unknown>),
-    enabled: contactId > 0,
     staleTime: 2 * 60_000,
+    enabled: canView && contactId > 0,
   });
 }
 
@@ -108,11 +113,13 @@ export function useRemoveContactRole() {
 }
 
 export function useContactDuplicates(params?: { page?: number; limit?: number }) {
+  const canView = useCan("crm:contacts:view");
   return useQuery({
     queryKey: queryKeys.contactDuplicates.list(params as Record<string, unknown>),
     queryFn: () =>
       apiClient.get<DuplicateContactPair[]>("/contacts/duplicates", params as Record<string, unknown>),
     staleTime: 5 * 60_000,
+    enabled: canView,
   });
 }
 
@@ -126,5 +133,12 @@ export function useMergeContacts() {
       void qc.invalidateQueries({ queryKey: queryKeys.contacts.all });
       void qc.invalidateQueries({ queryKey: queryKeys.contactDuplicates.all });
     },
+  });
+}
+
+export function useExportContacts() {
+  return useMutation({
+    mutationKey: ["contacts", "export"] as const,
+    mutationFn: () => apiClient.download("/contacts/export"),
   });
 }

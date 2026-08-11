@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient, queryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   CrmMetadataRaw,
   CrmMetadataResponse,
@@ -68,10 +69,15 @@ export function crmMetadataQueryOptions() {
 }
 
 export function useCrmMetadata() {
-  return useQuery(crmMetadataQueryOptions());
+  const canView = useCan("crm:leads:view");
+  return useQuery({
+    ...crmMetadataQueryOptions(),
+    enabled: canView,
+  });
 }
 
 export function useCrmPipelines(type?: CrmPipelineType) {
+  const canView = useCan("crm:leads:view");
   return useQuery({
     ...crmMetadataQueryOptions(),
     select: (data: CrmMetadataResponse): CrmPipelineWithStages[] => {
@@ -81,10 +87,12 @@ export function useCrmPipelines(type?: CrmPipelineType) {
       return sorted.filter((p) => p.type === type);
     },
     staleTime: 30_000,
+    enabled: canView,
   });
 }
 
 export function useCrmStages(pipelineIdOrType: string) {
+  const canView = useCan("crm:leads:view");
   return useQuery({
     ...crmMetadataQueryOptions(),
     select: (data: CrmMetadataResponse): CrmPipelineStage[] => {
@@ -98,10 +106,12 @@ export function useCrmStages(pipelineIdOrType: string) {
         .sort((a, b) => a.sortOrder - b.sortOrder);
     },
     staleTime: 30_000,
+    enabled: canView,
   });
 }
 
 export function useCrmOptions(type: CrmOptionType) {
+  const canView = useCan("crm:leads:view");
   return useQuery({
     ...crmMetadataQueryOptions(),
     select: (data: CrmMetadataResponse): CrmOption[] => {
@@ -112,6 +122,7 @@ export function useCrmOptions(type: CrmOptionType) {
         .sort((a, b) => a.sortOrder - b.sortOrder);
     },
     staleTime: 30_000,
+    enabled: canView,
   });
 }
 
@@ -243,11 +254,13 @@ export function useDeleteOption() {
 }
 
 export function useValidationRules(params?: Record<string, unknown>) {
+  const canView = useCan("crm:settings:view");
   return useQuery({
     queryKey: queryKeys.crmMetadata.validationRules(params),
     queryFn: () =>
       apiClient.get<CrmValidationRule[]>("/crm/validation-rules", params),
     staleTime: CRM_METADATA_STALE_TIME,
+    enabled: canView,
   });
 }
 
@@ -301,10 +314,12 @@ export function useTestValidationRules() {
 }
 
 export function useBlueprints(params?: Record<string, unknown>) {
+  const canView = useCan("crm:settings:view");
   return useQuery({
     queryKey: queryKeys.crmMetadata.blueprints(params),
     queryFn: () => apiClient.get<CrmBlueprint[]>("/crm/blueprints", params),
     staleTime: CRM_METADATA_STALE_TIME,
+    enabled: canView,
   });
 }
 
@@ -346,11 +361,12 @@ export type CreateTransitionInput = {
 export type UpdateTransitionInput = Partial<CreateTransitionInput>;
 
 export function useBlueprintTransitions(blueprintId: string | null) {
+  const canView = useCan("crm:settings:view");
   return useQuery({
     queryKey: queryKeys.crmMetadata.blueprintTransitions(blueprintId),
     queryFn: () =>
       apiClient.get<CrmBlueprintTransition[]>(`/crm/blueprints/${blueprintId}/transitions`),
-    enabled: blueprintId !== null,
+    enabled: canView && blueprintId !== null,
     staleTime: 60_000,
   });
 }

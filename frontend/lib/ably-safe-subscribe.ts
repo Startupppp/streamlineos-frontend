@@ -7,6 +7,12 @@ import type {
 
 export type AblyMessageListener = messageCallback<InboundMessage>;
 
+function isCapabilityError(error: unknown): boolean {
+  if (typeof error !== "object" || error === null) return false;
+  if (!("statusCode" in error)) return false;
+  return error.statusCode === 401 || error.statusCode === 403;
+}
+
 export async function safeSubscribe(
   channel: RealtimeChannel,
   event: string,
@@ -15,8 +21,16 @@ export async function safeSubscribe(
   try {
     await Promise.resolve(channel.subscribe(event, listener));
     return true;
-  } catch {
-    return false;
+  } catch (error: unknown) {
+    if (!isCapabilityError(error)) return false;
+    try {
+      const { reauthorizeAblyClients } = await import("./ably");
+      await reauthorizeAblyClients();
+      await Promise.resolve(channel.subscribe(event, listener));
+      return true;
+    } catch {
+      return false;
+    }
   }
 }
 

@@ -3,23 +3,31 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
-  Portfolio,
+  PortfoliosPage,
   PortfolioDetail,
+  Portfolio,
   CreatePortfolioInput,
   UpdatePortfolioInput,
 } from "@/types/projects";
 
 interface ListFilters {
+  page?: number;
+  limit?: number;
   status?: string;
 }
 
 export function usePortfolios(filters?: ListFilters) {
+  const canView = useCan("build:portfolios:view");
   const params: Record<string, string> = {};
+  if (filters?.page) params["page"] = String(filters.page);
+  if (filters?.limit) params["limit"] = String(filters.limit);
   if (filters?.status) params["status"] = filters.status;
-  return useQuery<Portfolio[]>({
+  return useQuery<PortfoliosPage>({
     queryKey: queryKeys.projects.portfolios.list(Object.keys(params).length > 0 ? params : undefined),
-    queryFn: () => apiClient.get<Portfolio[]>("/build/portfolios", params),
+    queryFn: () => apiClient.get<PortfoliosPage>("/build/portfolios", params),
+    enabled: canView,
     staleTime: 60_000,
   });
 }

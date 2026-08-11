@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -161,14 +162,14 @@ export function LinkParentDialog({
           <Button variant="outline" className="flex-1" onClick={handleCancel}>
             <X className="h-4 w-4 mr-1" /> Cancel
           </Button>
-          <Button
+          <LoadingButton
             className="flex-1"
             onClick={handleConfirm}
-            disabled={updateMutation.isPending}
+            isPending={updateMutation.isPending}
           >
             <Check className="h-4 w-4 mr-1" />
             {selectedId ? "Link Parent" : "Remove Parent"}
-          </Button>
+          </LoadingButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>

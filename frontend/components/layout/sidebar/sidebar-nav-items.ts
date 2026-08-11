@@ -1036,13 +1036,13 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Contacts",
         icon: Users,
         href: "/crm/contacts",
-        requiredPermission: "crm:leads:view",
+        requiredPermission: "crm:contacts:view",
       },
       {
         label: "Companies",
         icon: Building2,
         href: "/crm/companies",
-        requiredPermission: "crm:leads:view",
+        requiredPermission: "crm:organizations:view",
       },
       {
         label: "Business Parties",
@@ -1060,13 +1060,13 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Quotes",
         icon: FileText,
         href: "/crm/quotes",
-        requiredPermission: "crm:leads:view",
+        requiredPermission: "crm:quotes:read",
       },
       {
         label: "Deals",
         icon: Handshake,
         href: "/crm/deals",
-        requiredPermission: "crm:leads:view",
+        requiredPermission: "crm:deals:read",
         children: [
           {
             label: "Forecast",
@@ -1107,7 +1107,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Tasks",
         icon: CheckSquare,
         href: "/crm/tasks",
-        requiredPermission: "crm:leads:view",
+        requiredPermission: "tasks:read",
       },
       {
         label: "Reports",
@@ -1914,7 +1914,7 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    label: "Product Management",
+    label: "Build",
     module: "build",
     requiredPermission: ["build:view", "build:tickets:view", "build:portal:view"],
     routes: [
@@ -2318,7 +2318,6 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: "Organization",
     requiredPermission: ["settings:manage", "settings:view"],
-    module: "hrms",
     routes: [
       {
         label: "Structure",
@@ -2599,7 +2598,7 @@ export const PRODUCT_DEFINITIONS: ProductDefinition[] = [
   { key: "home", label: "Home", href: "/dashboard", icon: LayoutDashboard },
   { key: "crm", label: "CRM", href: "/crm", icon: Handshake },
   { key: "hrms", label: "HRMS", href: "/hr", icon: Users },
-  { key: "build", label: "Product Management", href: "/build", icon: Briefcase },
+  { key: "build", label: "Build", href: "/build", icon: Briefcase },
   { key: "timesheets", label: "Timesheets", href: "/timesheets", icon: Timer },
   { key: "inventory", label: "Inventory", href: "/inventory", icon: Package },
   { key: "finance", label: "Finance", href: "/accounting", icon: Calculator },
@@ -2734,7 +2733,7 @@ const PRODUCT_NAV_GROUP_LABELS: Record<ProductKey, string[]> = {
   home: [],
   crm: ["CRM"],
   hrms: ["HR – People", "Recruitment"],
-  build: ["Product Management", "More"],
+  build: ["Build", "More"],
   timesheets: ["Timesheets"],
   inventory: ["Inventory"],
   finance: ["Accounting & Finance"],

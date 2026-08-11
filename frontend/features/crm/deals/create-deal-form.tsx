@@ -3,8 +3,8 @@
 import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Input } from "@/components/ui/input";
+import { createDealSchema, type CreateDealFormValues } from "./create-deal-form-schema";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { PhoneInput } from "@/components/ui/phone-input";
@@ -30,43 +30,6 @@ import { useCrmStages } from "@/hooks/api/crm/metadata";
 import { getCrmTokenClasses } from "@/features/crm/shared/metadata";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
-
-const createDealSchema = z.object({
-  name: z
-    .string()
-    .min(1, "Deal name is required")
-    .regex(/^[A-Za-z]/, "Name must start with a letter"),
-  value: z
-    .string()
-    .optional()
-    .or(z.literal(""))
-    .refine((v) => !v || Number(v) >= 0, "Value cannot be negative"),
-  stage: z.string().min(1),
-  probability: z
-    .string()
-    .optional()
-    .or(z.literal(""))
-    .refine(
-      (v) => !v || (Number(v) >= 0 && Number(v) <= 100),
-      "Must be between 0 and 100",
-    ),
-  contactPerson: z
-    .string()
-    .regex(/^[A-Za-z\s]*$/, "Only letters allowed")
-    .optional()
-    .or(z.literal("")),
-  contactEmail: z
-    .string()
-    .email("Enter a valid email")
-    .optional()
-    .or(z.literal("")),
-  contactPhone: z.string().optional().or(z.literal("")),
-  assignedToId: z.string().optional().or(z.literal("")),
-  expectedCloseDate: z.string().optional().or(z.literal("")),
-  notes: z.string().optional().or(z.literal("")),
-});
-
-type CreateDealFormValues = z.infer<typeof createDealSchema>;
 
 interface CreateDealFormProps {
   employees: Array<{ id: string; name: string | null }>;

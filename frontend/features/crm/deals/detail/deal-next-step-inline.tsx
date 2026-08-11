@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { Pencil, Check, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Textarea } from "@/components/ui/textarea";
 import { usePatchNextStep } from "@/hooks/api/crm";
 import { toast } from "sonner";
@@ -69,10 +70,10 @@ export function DealNextStepInline({ dealId, nextStep }: DealNextStepInlineProps
                 <X className="h-3.5 w-3.5 mr-1" />
                 Cancel
               </Button>
-              <Button size="sm" onClick={handleSave} disabled={patch.isPending}>
+              <LoadingButton size="sm" onClick={handleSave} isPending={patch.isPending}>
                 <Check className="h-3.5 w-3.5 mr-1" />
                 Save
-              </Button>
+              </LoadingButton>
             </div>
           </div>
         ) : (

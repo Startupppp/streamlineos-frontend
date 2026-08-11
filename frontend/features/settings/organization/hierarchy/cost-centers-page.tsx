@@ -1,9 +1,6 @@
 "use client";
 
-import { useState, useCallback, type ChangeEvent } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { useState, useCallback } from "react";
 import { Pencil, Archive, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -17,30 +14,11 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetClose,
-  SheetBody,
-} from "@/components/ui/sheet";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { SearchInput } from "@/components/ui/search-input";
-import { LoadingButton } from "@/components/ui/loading-button";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { PlusIcon } from "@animateicons/react/lucide";
-import { Textarea } from "@/components/ui/textarea";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared/error-state";
+import { SearchInput } from "@/components/ui/search-input";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { PlusIcon } from "@animateicons/react/lucide";
 import type { OrgCostCenter } from "@/types/org-hierarchy";
 import { HierarchyArchiveDialog } from "./hierarchy-archive-dialog";
 import { useHierarchyArchive } from "./use-hierarchy-archive";
@@ -49,94 +27,10 @@ import {
   useHierarchyListState,
   useHierarchyPageBounds,
 } from "./use-hierarchy-list-state";
-import { RequireModule } from "@/components/auth/require-module";
 import { useCan } from "@/hooks/api/access";
-
-const formSchema = z.object({
-  code: z
-    .string()
-    .trim()
-    .min(2)
-    .max(20)
-    .regex(/^[A-Za-z0-9]+$/, "Only alphanumeric characters"),
-  name: z
-    .string()
-    .trim()
-    .min(1, "Name is required")
-    .max(100)
-    .refine((v) => /[\p{L}\p{N}]/u.test(v), "Name must contain at least one letter or number"),
-  description: z.string().trim().max(500).optional(),
-});
-
-type FormValues = z.infer<typeof formSchema>;
-
-function CostCenterForm({
-  defaultValues,
-  onSubmit,
-  isPending: _,
-}: {
-  defaultValues?: FormValues;
-  onSubmit: (v: FormValues) => void;
-  isPending: boolean;
-}) {
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: defaultValues ?? { code: "", name: "", description: "" },
-  });
-
-  return (
-    <Form {...form}>
-      <form id="cc-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div className="grid grid-cols-2 gap-3">
-          <FormField
-            control={form.control}
-            name="code"
-            render={({ field }) => {
-              function handleCodeChange(e: ChangeEvent<HTMLInputElement>) {
-                field.onChange(e.target.value.toUpperCase());
-              }
-              return (
-                <FormItem>
-                  <FormLabel>Code</FormLabel>
-                  <FormControl>
-                    <Input placeholder="CC001" {...field} onChange={handleCodeChange} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              );
-            }}
-          />
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Engineering" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Textarea rows={3} placeholder="Optional description…" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </form>
-    </Form>
-  );
-}
+import { CostCenterForm } from "./cost-center-form";
+import { HierarchyFormSheet } from "./hierarchy-form-sheet";
+import { type CostCenterFormValues } from "./cost-centers-schema";
 
 export function OrgCostCentersPage() {
   const {
@@ -182,9 +76,13 @@ export function OrgCostCentersPage() {
   const displayed = costCenters?.data ?? [];
 
   const handleCreate = useCallback(
-    (values: FormValues) => {
+    (values: CostCenterFormValues) => {
       create.mutate(
-        { code: values.code.toUpperCase(), name: values.name, description: values.description || undefined },
+        {
+          code: values.code.toUpperCase(),
+          name: values.name,
+          description: values.description || undefined,
+        },
         {
           onSuccess: () => {
             toast.success("Cost center created");
@@ -198,10 +96,15 @@ export function OrgCostCentersPage() {
   );
 
   const handleUpdate = useCallback(
-    (values: FormValues) => {
+    (values: CostCenterFormValues) => {
       if (!editing) return;
       update.mutate(
-        { id: editing.id, code: values.code.toUpperCase(), name: values.name, description: values.description || undefined },
+        {
+          id: editing.id,
+          code: values.code.toUpperCase(),
+          name: values.name,
+          description: values.description || undefined,
+        },
         {
           onSuccess: () => {
             toast.success("Cost center updated");
@@ -231,17 +134,25 @@ export function OrgCostCentersPage() {
   );
 
   const handleOpenCreate = useCallback(() => setShowCreate(true), []);
-  const handleSearchChange = useCallback((v: string) => setSearch(v), [setSearch]);
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
 
-  function handleSearchInputChange(value: string) { handleSearchChange(value); }
-
-  function makeRestoreHandler(cc: OrgCostCenter) { return () => handleRestore(cc); }
-  function makeArchiveHandler(cc: OrgCostCenter) { return () => archiveFlow.requestArchive(cc); }
-  function makeSetEditingHandler(cc: OrgCostCenter) { return () => setEditing(cc); }
-  function handleEditSheetOpenChange(open: boolean) { if (!open) setEditing(null); }
+  function handleSearchChange(value: string) {
+    setSearch(value);
+  }
+  function makeRestoreHandler(cc: OrgCostCenter) {
+    return () => handleRestore(cc);
+  }
+  function makeArchiveHandler(cc: OrgCostCenter) {
+    return () => archiveFlow.requestArchive(cc);
+  }
+  function makeSetEditingHandler(cc: OrgCostCenter) {
+    return () => setEditing(cc);
+  }
+  function handleEditSheetOpenChange(open: boolean) {
+    if (!open) setEditing(null);
+  }
 
   const columns: DataTableColumn<OrgCostCenter>[] = [
     {
@@ -292,22 +203,42 @@ export function OrgCostCentersPage() {
       header: "",
       headerClassName: "w-28",
       cell: (c) =>
-        canManage ? <div className="flex items-center gap-1">
-          {c.status === "ARCHIVED" ? (
-            <Button variant="ghost" size="sm" onClick={makeRestoreHandler(c)} title="Restore">
-              <RotateCcw className="h-4 w-4 text-primary" />
-            </Button>
-          ) : (
-            <>
-              <Button variant="ghost" size="sm" onClick={makeSetEditingHandler(c)} title="Edit">
-                <Pencil className="h-4 w-4" />
+        canManage ? (
+          <div className="flex items-center gap-1">
+            {c.status === "ARCHIVED" ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={makeRestoreHandler(c)}
+                title="Restore"
+                aria-label="Restore cost center"
+              >
+                <RotateCcw className="h-4 w-4 text-primary" />
               </Button>
-              <Button variant="ghost" size="sm" onClick={makeArchiveHandler(c)} title="Archive">
-                <Archive className="h-4 w-4 text-muted-foreground" />
-              </Button>
-            </>
-          )}
-        </div> : null,
+            ) : (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={makeSetEditingHandler(c)}
+                  title="Edit"
+                  aria-label="Edit cost center"
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={makeArchiveHandler(c)}
+                  title="Archive"
+                  aria-label="Archive cost center"
+                >
+                  <Archive className="h-4 w-4 text-muted-foreground" />
+                </Button>
+              </>
+            )}
+          </div>
+        ) : null,
     },
   ];
 
@@ -317,26 +248,29 @@ export function OrgCostCentersPage() {
       title={`No cost centers matching "${serverSearch}"`}
       description="Try a different search term."
       compact
-      className="min-h-[200px]"
+      className="flex-1 min-h-0"
     />
   ) : showArchived ? (
     <EmptyState
       illustrationPreset="archive"
       title="No archived cost centers"
       compact
-      className="min-h-[200px]"
+      className="flex-1 min-h-0"
     />
   ) : (
     <EmptyState
       illustrationPreset="payroll"
       title="No cost centers yet"
       description="Create cost centers to classify payroll, budgets, and expenses for reporting."
-      action={canManage ? { label: "Add Cost Center", onClick: handleOpenCreate } : undefined}
+      action={
+        canManage
+          ? { label: "Add Cost Center", onClick: handleOpenCreate }
+          : undefined
+      }
     />
   );
 
   return (
-    <RequireModule module="hr">
     <PageWrapper
       title="Cost Centers"
       subtitle="Classify payroll, budgets, and expenses for reporting."
@@ -351,20 +285,26 @@ export function OrgCostCentersPage() {
             <Archive className="h-4 w-4 mr-1.5" />
             {showArchived ? "Show current" : "View archived"}
           </Button>
-          {canManage ? <AnimatedIconButton
-            icon={PlusIcon}
-            iconSize={16}
-            iconClassName="mr-1.5"
-            size="sm"
-            className="flex-1 sm:flex-none"
-            onClick={handleOpenCreate}
-          >
-            Add Cost Center
-          </AnimatedIconButton> : null}
+          {canManage ? (
+            <AnimatedIconButton
+              icon={PlusIcon}
+              iconSize={16}
+              iconClassName="mr-1.5"
+              size="sm"
+              className="flex-1 sm:flex-none"
+              onClick={handleOpenCreate}
+            >
+              Add Cost Center
+            </AnimatedIconButton>
+          ) : null}
         </div>
       }
       filters={
-        <SearchInput placeholder="Search cost centers…" value={search} onValueChange={handleSearchInputChange} />
+        <SearchInput
+          placeholder="Search cost centers…"
+          value={search}
+          onValueChange={handleSearchChange}
+        />
       }
     >
       {isError ? (
@@ -396,53 +336,35 @@ export function OrgCostCentersPage() {
         />
       )}
 
-      <Sheet open={showCreate} onOpenChange={setShowCreate}>
-        <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md">
-          <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
-            <SheetTitle>New Cost Center</SheetTitle>
-          </SheetHeader>
-          <SheetBody className="px-6 py-5">
-            <CostCenterForm onSubmit={handleCreate} isPending={create.isPending} />
-          </SheetBody>
-          <div className="shrink-0 px-6 py-4 border-t">
-            <div className="grid grid-cols-2 gap-2">
-              <SheetClose asChild>
-                <Button variant="outline" size="sm" className="w-full">Cancel</Button>
-              </SheetClose>
-              <LoadingButton size="sm" type="submit" form="cc-form" isPending={create.isPending} loadingText="Saving…" className="w-full">Save</LoadingButton>
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
+      <HierarchyFormSheet
+        open={showCreate}
+        onOpenChange={setShowCreate}
+        title="New Cost Center"
+        formId="cc-form"
+        isPending={create.isPending}
+      >
+        <CostCenterForm onSubmit={handleCreate} isPending={create.isPending} />
+      </HierarchyFormSheet>
 
-      <Sheet open={!!editing} onOpenChange={handleEditSheetOpenChange}>
-        <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md">
-          <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
-            <SheetTitle>Edit Cost Center</SheetTitle>
-          </SheetHeader>
-          <SheetBody className="px-6 py-5">
-            {editing && (
-              <CostCenterForm
-                defaultValues={{
-                  code: editing.code,
-                  name: editing.name,
-                  description: editing.description ?? "",
-                }}
-                onSubmit={handleUpdate}
-                isPending={update.isPending}
-              />
-            )}
-          </SheetBody>
-          <div className="shrink-0 px-6 py-4 border-t">
-            <div className="grid grid-cols-2 gap-2">
-              <SheetClose asChild>
-                <Button variant="outline" size="sm" className="w-full">Cancel</Button>
-              </SheetClose>
-              <LoadingButton size="sm" type="submit" form="cc-form" isPending={update.isPending} loadingText="Saving…" className="w-full">Save</LoadingButton>
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
+      <HierarchyFormSheet
+        open={!!editing}
+        onOpenChange={handleEditSheetOpenChange}
+        title="Edit Cost Center"
+        formId="cc-form"
+        isPending={update.isPending}
+      >
+        {editing && (
+          <CostCenterForm
+            defaultValues={{
+              code: editing.code,
+              name: editing.name,
+              description: editing.description ?? "",
+            }}
+            onSubmit={handleUpdate}
+            isPending={update.isPending}
+          />
+        )}
+      </HierarchyFormSheet>
 
       <HierarchyArchiveDialog
         open={!!archiveFlow.target}
@@ -458,6 +380,5 @@ export function OrgCostCentersPage() {
         onOpenChange={archiveFlow.handleOpenChange}
       />
     </PageWrapper>
-    </RequireModule>
   );
 }

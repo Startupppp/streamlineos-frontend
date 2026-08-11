@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   Deal,
   DealActivity,
@@ -64,27 +65,32 @@ interface AgingResponse {
 }
 
 export function useDeals(filters?: DealFilters) {
+  const canRead = useCan("crm:deals:read");
   return useQuery({
     queryKey: queryKeys.deals.list(filters as Record<string, unknown>),
     queryFn: () => apiClient.get<Deal[]>("/deals", filters as Record<string, unknown>),
     staleTime: 2 * 60_000,
+    enabled: canRead,
   });
 }
 
 export function useDealStats() {
+  const canRead = useCan("crm:deals:read");
   return useQuery<DealStats, Error>({
     queryKey: queryKeys.deals.stats(),
     queryFn: () => apiClient.get<DealStats>("/deals/stats"),
     staleTime: 2 * 60_000,
+    enabled: canRead,
   });
 }
 
 export function useDealDetail(id: number) {
+  const canRead = useCan("crm:deals:read");
   return useQuery({
     queryKey: queryKeys.deals.detail(id),
     queryFn: () => apiClient.get<Deal>(`/deals/${id}`),
-    enabled: id > 0,
     staleTime: 2 * 60_000,
+    enabled: canRead && id > 0,
   });
 }
 
@@ -178,6 +184,7 @@ export function useCloneDeal() {
 }
 
 export function useDealActivities(dealId: number, limit?: number) {
+  const canRead = useCan("crm:deals:read");
   return useQuery({
     queryKey: queryKeys.dealActivities.list(dealId, limit ? { limit } : undefined),
     queryFn: () =>
@@ -186,7 +193,7 @@ export function useDealActivities(dealId: number, limit?: number) {
         limit ? { limit } : undefined
       ),
     staleTime: 2 * 60_000,
-    enabled: dealId > 0,
+    enabled: canRead && dealId > 0,
   });
 }
 
@@ -204,11 +211,12 @@ export function useLogDealActivity() {
 }
 
 export function useDealMeetings(dealId: number) {
+  const canRead = useCan("crm:deals:read");
   return useQuery({
     queryKey: queryKeys.deals.meetings(dealId),
     queryFn: () => apiClient.get<DealMeeting[]>(`/deals/${dealId}/meetings`),
     staleTime: 2 * 60_000,
-    enabled: dealId > 0,
+    enabled: canRead && dealId > 0,
   });
 }
 
@@ -237,27 +245,33 @@ export function useDeleteDealMeeting(dealId: number) {
 }
 
 export function useWinLossAnalysis() {
+  const canRead = useCan("crm:deals:read");
   return useQuery({
     queryKey: queryKeys.deals.winLoss(),
     queryFn: () => apiClient.get<WinLossAnalysis>("/deals/win-loss"),
     staleTime: 2 * 60_000,
+    enabled: canRead,
   });
 }
 
 export function useDealApprovals(params?: { status?: string }) {
+  const canRead = useCan("crm:deals:read");
   return useQuery({
     queryKey: queryKeys.deals.approvals(params as Record<string, unknown>),
     queryFn: () => apiClient.get<DealApproval[]>("/deals/approvals", params as Record<string, unknown>),
     staleTime: 2 * 60_000,
+    enabled: canRead,
   });
 }
 
 export function useDealAging() {
+  const canRead = useCan("crm:deals:read");
   return useQuery<AgingResponse>({
     queryKey: queryKeys.deals.aging(),
     queryFn: () => apiClient.get<AgingResponse>("/deals/aging"),
     staleTime: 305_000,
     refetchInterval: 300_000,
+    enabled: canRead,
   });
 }
 
@@ -275,10 +289,12 @@ export function useResolveDealApproval() {
 }
 
 export function useForecastSnapshots(params?: { period?: string; limit?: number }) {
+  const canForecast = useCan("crm:deals:forecast");
   return useQuery({
     queryKey: queryKeys.deals.forecastSnapshots(params as Record<string, unknown>),
     queryFn: () => apiClient.get<ForecastSnapshot[]>("/deals/forecast/snapshots", params as Record<string, unknown>),
     staleTime: 2 * 60_000,
+    enabled: canForecast,
   });
 }
 
@@ -295,11 +311,12 @@ export function useCaptureForecastSnapshot() {
 }
 
 export function useDealCompetitors(dealId: number) {
+  const canRead = useCan("crm:deals:read");
   return useQuery({
     queryKey: queryKeys.deals.competitors(dealId),
     queryFn: () => apiClient.get<DealCompetitor[]>(`/deals/${dealId}/competitors`),
     staleTime: 2 * 60_000,
-    enabled: dealId > 0,
+    enabled: canRead && dealId > 0,
   });
 }
 
@@ -328,11 +345,12 @@ export function useDeleteDealCompetitor(dealId: number) {
 }
 
 export function useDealHealth(dealId: number) {
+  const canRead = useCan("crm:deals:read");
   return useQuery({
     queryKey: queryKeys.deals.health(dealId),
     queryFn: () => apiClient.get<DealHealth>(`/deals/${dealId}/health`),
     staleTime: 5 * 60_000,
-    enabled: dealId > 0,
+    enabled: canRead && dealId > 0,
   });
 }
 
@@ -349,11 +367,12 @@ export function usePatchNextStep(dealId: number) {
 }
 
 export function useStakeholders(dealId: number) {
+  const canRead = useCan("crm:deals:read");
   return useQuery({
     queryKey: queryKeys.deals.stakeholders(dealId),
     queryFn: () => apiClient.get<DealStakeholder[]>(`/deals/${dealId}/stakeholders`),
     staleTime: 2 * 60_000,
-    enabled: dealId > 0,
+    enabled: canRead && dealId > 0,
   });
 }
 

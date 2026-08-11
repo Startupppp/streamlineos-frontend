@@ -136,10 +136,6 @@ function QuoteRow({ quote, dealId, onDeleteRequest }: QuoteRowProps) {
     () => handleStatusChange("REJECTED"),
     [handleStatusChange],
   );
-  const handleDownloadPdf = useCallback(() => {
-    toast.info("PDF generation coming soon");
-  }, []);
-
   return (
     <div className="flex items-center gap-3 p-3 bg-card border border-border rounded-lg shadow-sm hover:shadow-md transition-shadow">
       <div className="flex-1 min-w-0">
@@ -174,9 +170,6 @@ function QuoteRow({ quote, dealId, onDeleteRequest }: QuoteRowProps) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-44">
-          <DropdownMenuItem onClick={handleDownloadPdf}>
-            Download PDF
-          </DropdownMenuItem>
           {quote.status === "DRAFT" && (
             <DropdownMenuItem onClick={handleMarkSent}>
               Mark as Sent

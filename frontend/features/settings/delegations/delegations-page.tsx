@@ -9,22 +9,13 @@ import {
   useTransition,
 } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { formatRelative } from "date-fns";
-import { Loader2, ShieldX } from "lucide-react";
-import { XIcon } from "@animateicons/react/lucide";
+import { ShieldX } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { PAGE_BODY_EMPTY_CLASS } from "@/components/ui/content-fill-panel";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { SearchInput } from "@/components/ui/search-input";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { DataTablePagination } from "@/components/shared/data-table-pagination";
 import {
   Tabs,
   TabsContent,
@@ -43,11 +34,11 @@ import { GrantDelegationSheet, type Member } from "./grant-delegation-sheet";
 import type { Delegation, DelegationPage } from "./delegation-schema";
 import {
   buildDelegationListUrl,
-  DELEGATION_PAGE_SIZE_OPTIONS,
   DELEGATION_URL_KEYS,
   readDelegationListState,
   type DelegationListKind,
 } from "./delegation-list-state";
+import { DelegationListPanel } from "./delegation-list-panel";
 
 const TAB_PANEL_CLASS = `${TABS_CONTENT_PAGE_BODY_CLASS} mt-0 h-full min-h-0 w-full flex-1`;
 
@@ -394,129 +385,65 @@ export function DelegationsPage() {
       >
         <div className="flex h-full min-h-0 flex-1 flex-col gap-3">
           <TabsContent value="received" className={TAB_PANEL_CLASS}>
-            {loadingReceived ? (
-              <div className="flex h-full min-h-0 flex-1 flex-col">
-                <DelegationSkeletons count={Math.min(receivedState.limit, 5)} />
-              </div>
-            ) : receivedError ? (
-              <ErrorState
-                compact
-                title="Could not load received delegations"
-                description={getErrorMessage(receivedQueryError)}
-                onRetry={handleRetryReceived}
-                className={PAGE_BODY_EMPTY_CLASS}
-              />
-            ) : received.length === 0 ? (
-              <EmptyState
-                illustrationPreset="permissions"
-                title={
-                  receivedState.search
-                    ? "No matching delegations"
-                    : "No active delegations received"
-                }
-                description={
-                  receivedState.search
-                    ? "Try adjusting your search."
-                    : "Active permissions delegated to you will appear here. Scheduled and ended grants do not affect your current access."
-                }
-                className={PAGE_BODY_EMPTY_CLASS}
-              />
-            ) : (
-              <div className="flex h-full min-h-0 flex-1 flex-col gap-2">
-                <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-border bg-card">
-                  <div className="h-full min-h-0 overflow-y-auto scrollbar-hide divide-y divide-border/60">
-                    {received.map((delegation) => (
-                      <DelegationRow
-                        key={delegation.id}
-                        delegation={delegation}
-                        memberMap={memberMap}
-                        nameField="delegatorId"
-                      />
-                    ))}
-                  </div>
-                </div>
-                <div className="mt-auto shrink-0">
-                  <DataTablePagination
-                    page={receivedPagination.page}
-                    totalPages={receivedPagination.totalPages}
-                    total={receivedPagination.total}
-                    limit={receivedPagination.limit}
-                    onPageChange={handleReceivedPageChange}
-                    onLimitChange={handleReceivedLimitChange}
-                    pageSizeOptions={DELEGATION_PAGE_SIZE_OPTIONS}
-                  />
-                </div>
-              </div>
-            )}
+            <DelegationListPanel
+              isLoading={loadingReceived}
+              isError={receivedError}
+              queryError={receivedQueryError}
+              delegations={received}
+              memberMap={memberMap}
+              listState={receivedState}
+              pagination={receivedPagination}
+              nameField="delegatorId"
+              onRetry={handleRetryReceived}
+              onPageChange={handleReceivedPageChange}
+              onLimitChange={handleReceivedLimitChange}
+              emptyTitle={
+                receivedState.search
+                  ? "No matching delegations"
+                  : "No active delegations received"
+              }
+              emptyDescription={
+                receivedState.search
+                  ? "Try adjusting your search."
+                  : "Active permissions delegated to you will appear here. Scheduled and ended grants do not affect your current access."
+              }
+              errorTitle="Could not load received delegations"
+            />
           </TabsContent>
 
           <TabsContent value="granted" className={TAB_PANEL_CLASS}>
-            {loadingGiven ? (
-              <DelegationSkeletons count={Math.min(grantedState.limit, 5)} />
-            ) : givenError ? (
-              <ErrorState
-                compact
-                title="Could not load granted delegations"
-                description={getErrorMessage(givenQueryError)}
-                onRetry={handleRetryGiven}
-                className={PAGE_BODY_EMPTY_CLASS}
-              />
-            ) : granted.length === 0 ? (
-              <EmptyState
-                illustrationPreset="permissions"
-                title={
-                  grantedState.search
-                    ? "No matching delegations"
-                    : "No delegations granted"
-                }
-                description={
-                  grantedState.search
-                    ? "Try adjusting your search."
-                    : "Delegate permissions to share access with colleagues."
-                }
-                action={
-                  grantedState.search || !canManageRbac
-                    ? undefined
-                    : { label: "Delegate", onClick: handleOpenSheet }
-                }
-                className={PAGE_BODY_EMPTY_CLASS}
-              />
-            ) : (
-              <div className="flex h-full min-h-0 flex-1 flex-col gap-2">
-                <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-border bg-card">
-                  <div className="h-full min-h-0 overflow-y-auto scrollbar-hide divide-y divide-border/60">
-                    {granted.map((delegation) => (
-                      <DelegationRow
-                        key={delegation.id}
-                        delegation={delegation}
-                        memberMap={memberMap}
-                        nameField="delegateeId"
-                        canRevoke={
-                          delegation.lifecycle === "ACTIVE" ||
-                          delegation.lifecycle === "SCHEDULED"
-                        }
-                        onRevoke={handleRequestRevoke}
-                        isRevoking={
-                          revokeMutation.isPending &&
-                          revokeTarget?.id === delegation.id
-                        }
-                      />
-                    ))}
-                  </div>
-                </div>
-                <div className="mt-auto shrink-0">
-                  <DataTablePagination
-                    page={grantedPagination.page}
-                    totalPages={grantedPagination.totalPages}
-                    total={grantedPagination.total}
-                    limit={grantedPagination.limit}
-                    onPageChange={handleGrantedPageChange}
-                    onLimitChange={handleGrantedLimitChange}
-                    pageSizeOptions={DELEGATION_PAGE_SIZE_OPTIONS}
-                  />
-                </div>
-              </div>
-            )}
+            <DelegationListPanel
+              isLoading={loadingGiven}
+              isError={givenError}
+              queryError={givenQueryError}
+              delegations={granted}
+              memberMap={memberMap}
+              listState={grantedState}
+              pagination={grantedPagination}
+              nameField="delegateeId"
+              onRetry={handleRetryGiven}
+              onPageChange={handleGrantedPageChange}
+              onLimitChange={handleGrantedLimitChange}
+              emptyTitle={
+                grantedState.search
+                  ? "No matching delegations"
+                  : "No delegations granted"
+              }
+              emptyDescription={
+                grantedState.search
+                  ? "Try adjusting your search."
+                  : "Delegate permissions to share access with colleagues."
+              }
+              errorTitle="Could not load granted delegations"
+              emptyAction={
+                !grantedState.search && canManageRbac
+                  ? { label: "Delegate", onClick: handleOpenSheet }
+                  : undefined
+              }
+              revokeTarget={revokeTarget}
+              revokePending={revokeMutation.isPending}
+              onRevoke={handleRequestRevoke}
+            />
           </TabsContent>
         </div>
 
@@ -559,129 +486,5 @@ export function DelegationsPage() {
         ) : null}
       </PageWrapper>
     </Tabs>
-  );
-}
-
-function DelegationSkeletons({ count }: { count: number }) {
-  return (
-    <div className="divide-y divide-border/60 rounded-xl border border-border bg-card">
-      {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="flex items-center gap-3 px-4 py-2.5">
-          <div className="space-y-1.5 flex-1">
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-3 w-48" />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-interface DelegationRowProps {
-  delegation: Delegation;
-  memberMap: Map<string, string>;
-  nameField: "delegatorId" | "delegateeId";
-  canRevoke?: boolean;
-  onRevoke?: (delegation: Delegation) => void;
-  isRevoking?: boolean;
-}
-
-function DelegationRow({
-  delegation,
-  memberMap,
-  nameField,
-  canRevoke,
-  onRevoke,
-  isRevoking,
-}: DelegationRowProps) {
-  const handleRevoke = useCallback(
-    () => onRevoke?.(delegation),
-    [delegation, onRevoke],
-  );
-
-  const principalId = delegation[nameField];
-  const displayName =
-    (nameField === "delegatorId"
-      ? delegation.delegatorName
-      : delegation.delegateeName) ??
-    memberMap.get(principalId) ??
-    "Team member";
-  const isRevoked = delegation.lifecycle === "REVOKED";
-  const isExpired = delegation.lifecycle === "EXPIRED";
-  const isInactive = isRevoked || isExpired;
-  const isScheduled = delegation.lifecycle === "SCHEDULED";
-  const lifecycleLabel = isRevoked
-    ? "Revoked"
-    : isExpired
-      ? "Expired"
-      : isScheduled
-        ? "Starts"
-        : "Ends";
-  const lifecycleDate = isRevoked
-    ? (delegation.revokedAt ?? delegation.endsAt)
-    : isScheduled
-      ? delegation.startsAt
-      : delegation.endsAt;
-
-  return (
-    <div className="flex items-center gap-3 px-4 py-2.5">
-      <div className="min-w-0 flex-1">
-        <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-          <span className="text-sm font-medium leading-none">
-            {displayName}
-          </span>
-          <span className="text-xs text-muted-foreground tabular-nums">
-            {delegation.permissions.length} permission
-            {delegation.permissions.length !== 1 ? "s" : ""}
-          </span>
-          {isInactive && (
-            <Badge
-              variant="outline"
-              className="text-xs text-muted-foreground shrink-0"
-            >
-              {isRevoked ? "Revoked" : "Expired"}
-            </Badge>
-          )}
-          {isScheduled ? (
-            <Badge variant="outline" className="shrink-0 text-xs text-blue-600">
-              Scheduled
-            </Badge>
-          ) : null}
-        </div>
-        <p className="text-xs text-muted-foreground mt-0.5 truncate">
-          {lifecycleLabel} {formatRelative(new Date(lifecycleDate), new Date())}
-          {delegation.reason && (
-            <span className="text-muted-foreground/60">
-              {" "}
-              · {delegation.reason}
-            </span>
-          )}
-        </p>
-      </div>
-      {canRevoke &&
-        !isInactive &&
-        onRevoke &&
-        (isRevoking ? (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="w-7 shrink-0 text-muted-foreground"
-            disabled
-            aria-label="Revoking"
-          >
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          </Button>
-        ) : (
-          <AnimatedIconButton
-            icon={XIcon}
-            iconSize={14}
-            variant="ghost"
-            size="icon"
-            className="w-7 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-            onClick={handleRevoke}
-            aria-label="Revoke delegation"
-          />
-        ))}
-    </div>
   );
 }

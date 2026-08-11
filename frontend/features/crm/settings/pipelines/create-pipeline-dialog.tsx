@@ -3,7 +3,7 @@
 import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { createPipelineSchema, type CreatePipelineValues } from "./create-pipeline-dialog-schema";
 import { toast } from "sonner";
 
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -21,13 +21,6 @@ import {
 import { useCreatePipeline } from "@/hooks/api/crm";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PIPELINE_TYPES, slugify } from "./pipeline-constants";
-
-const createPipelineSchema = z.object({
-  name: z.string().min(1, "Name required"),
-  type: z.enum(["lead", "deal", "renewal", "customer_success", "partner", "custom"] as const),
-  key: z.string().min(1, "Key required"),
-});
-type CreatePipelineValues = z.infer<typeof createPipelineSchema>;
 
 export function CreatePipelineDialog({
   open,

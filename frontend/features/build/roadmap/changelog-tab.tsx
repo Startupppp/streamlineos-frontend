@@ -12,6 +12,7 @@ import {
   useUpdateChangelogEntry,
   useDeleteChangelogEntry,
 } from "@/hooks/api/build/roadmap";
+import { TablePagination } from "@/components/ui/table-pagination";
 import type { ChangelogEntry } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
@@ -39,7 +40,8 @@ function ChangelogListSkeleton() {
 }
 
 export function ChangelogTab({ createOpen, onCreateOpenChange }: ChangelogTabProps) {
-  const { data, isLoading, isError, refetch } = useChangelog();
+  const [page, setPage] = useState(1);
+  const { data, isLoading, isError, refetch } = useChangelog({ page });
   const update = useUpdateChangelogEntry();
   const deleteEntry = useDeleteChangelogEntry();
   const [internalCreateOpen, setInternalCreateOpen] = useState(false);
@@ -69,6 +71,10 @@ export function ChangelogTab({ createOpen, onCreateOpenChange }: ChangelogTabPro
 
   function handleDeleteDialogChange(open: boolean) {
     if (!open) setDeleteTarget(null);
+  }
+
+  function handlePageChange(p: number) {
+    setPage(p);
   }
 
   const handleEditEntry = useCallback((entry: ChangelogEntry) => {
@@ -114,7 +120,7 @@ export function ChangelogTab({ createOpen, onCreateOpenChange }: ChangelogTabPro
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
-      {!data || data.length === 0 ? (
+      {(data?.data ?? []).length === 0 ? (
         <EmptyState
           className={PM_FILL_PANEL}
           illustration={<EmptyTicketIllustration />}
@@ -123,18 +129,27 @@ export function ChangelogTab({ createOpen, onCreateOpenChange }: ChangelogTabPro
           action={{ label: "Add entry", onClick: handleOpenSheet }}
         />
       ) : (
-        <PmStaggerList className="space-y-2">
-          {data.map((entry) => (
-            <ChangelogEntryCard
-              key={entry.id}
-              entry={entry}
-              isUpdating={update.isPending}
-              onTogglePublish={handleTogglePublish}
-              onEdit={handleEditEntry}
-              onDelete={handleDeleteEntry}
-            />
-          ))}
-        </PmStaggerList>
+        <>
+          <PmStaggerList className="space-y-2">
+            {(data?.data ?? []).map((entry) => (
+              <ChangelogEntryCard
+                key={entry.id}
+                entry={entry}
+                isUpdating={update.isPending}
+                onTogglePublish={handleTogglePublish}
+                onEdit={handleEditEntry}
+                onDelete={handleDeleteEntry}
+              />
+            ))}
+          </PmStaggerList>
+          <TablePagination
+            page={page}
+            pageSize={data?.pagination.limit ?? 50}
+            total={data?.pagination.total ?? 0}
+            onPageChange={handlePageChange}
+            disabled={isLoading}
+          />
+        </>
       )}
 
       {sheetOpen ? <ChangelogSheet onClose={handleCloseSheet} /> : null}

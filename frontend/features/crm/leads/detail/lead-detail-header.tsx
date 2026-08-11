@@ -10,6 +10,7 @@ import {
   MapPin,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -274,15 +275,16 @@ export function LeadDetailHeader({
               </Button>
 
               {lead.status !== "CONVERTED" && lead.status !== "LOST" && (
-                <Button
+                <LoadingButton
                   size="sm"
                   className="bg-emerald-600 hover:bg-emerald-700 text-white"
                   onClick={handleConvert}
-                  disabled={isStatusPending}
+                  isPending={isStatusPending}
+                  loadingText="Updating..."
                 >
                   <ArrowRightCircle className="h-3.5 w-3.5 mr-1" />
-                  {isStatusPending ? "Updating..." : "Convert"}
-                </Button>
+                  Convert
+                </LoadingButton>
               )}
             </div>
           </div>

@@ -2,8 +2,8 @@
 
 import { useCallback } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { toast } from "sonner";
+import { taskSchema, type TaskFormValues } from "./create-task-dialog-schema";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { EntityFormDialog, MemberPicker } from "@/components/shared";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -16,18 +16,6 @@ import {
   type Task,
   type CreateTaskInput,
 } from "@/hooks/api/tasks";
-
-const taskSchema = z.object({
-  title: z.string().min(1, "Title is required").max(200),
-  type: z.enum(["CALL", "EMAIL", "MEETING", "DEMO", "FOLLOW_UP", "REMINDER", "CUSTOM"]),
-  notes: z.string().optional(),
-  entityType: z.enum(["LEAD", "DEAL", "CONTACT"]).optional(),
-  entityIdRaw: z.string().optional(),
-  assigneeId: z.string().optional(),
-  dueDate: z.string().optional(),
-});
-
-type TaskFormValues = z.infer<typeof taskSchema>;
 
 type CrmEntityType = "LEAD" | "DEAL" | "CONTACT";
 

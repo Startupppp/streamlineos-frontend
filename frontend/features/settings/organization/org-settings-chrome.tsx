@@ -2,14 +2,7 @@
 
 import type { ReactNode } from "react";
 import { Pencil } from "lucide-react";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { RichIconWell, RichPanel } from "@/components/shared/rich-surface";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -41,47 +34,52 @@ export function OrgSettingsCard({
   const showHeader = title != null || action != null;
 
   return (
-    <Card className={cn("rounded-lg shadow-sm", className)}>
+    <RichPanel padded={false} className={className}>
       {showHeader ? (
-        <CardHeader
+        <div
           className={cn(
-            "gap-1 px-4 pt-3.5 pb-2",
-            action && "grid-cols-[1fr_auto]",
+            "flex items-start justify-between gap-3 px-4 pt-4 pb-2 sm:px-5",
             headerClassName,
           )}
         >
-          <div className="min-w-0 space-y-0.5">
-            {title != null ? (
-              <CardTitle
-                className={cn(
-                  "text-sm font-semibold flex items-center gap-2",
-                  titleClassName,
-                )}
-              >
+          <div className="flex min-w-0 items-start gap-2.5">
+            {icon ? (
+              <RichIconWell size="sm" className="mt-0.5">
                 {icon}
-                <span className="truncate">{title}</span>
-                {titleExtra}
-              </CardTitle>
+              </RichIconWell>
             ) : null}
-            {description ? (
-              <CardDescription className="text-xs leading-relaxed">
-                {description}
-              </CardDescription>
-            ) : null}
+            <div className="min-w-0">
+              {title != null ? (
+                <h2
+                  className={cn(
+                    "flex items-center gap-2 text-sm font-semibold tracking-tight text-foreground",
+                    titleClassName,
+                  )}
+                >
+                  <span className="truncate">{title}</span>
+                  {titleExtra}
+                </h2>
+              ) : null}
+              {description ? (
+                <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                  {description}
+                </p>
+              ) : null}
+            </div>
           </div>
-          {action ? <CardAction className="self-start">{action}</CardAction> : null}
-        </CardHeader>
+          {action ? <div className="shrink-0 self-start">{action}</div> : null}
+        </div>
       ) : null}
-      <CardContent
+      <div
         className={cn(
-          "px-4 pb-3.5",
-          showHeader ? "pt-0" : "pt-3.5",
+          "px-4 sm:px-5",
+          showHeader ? "pb-4" : "py-4",
           contentClassName,
         )}
       >
         {children}
-      </CardContent>
-    </Card>
+      </div>
+    </RichPanel>
   );
 }
 
@@ -113,7 +111,11 @@ export function SettingsField({
       </p>
       {children ?? (
         <p className="text-sm text-foreground truncate">
-          {hasValue ? value : <span className="text-muted-foreground">{empty}</span>}
+          {hasValue ? (
+            value
+          ) : (
+            <span className="text-muted-foreground">{empty}</span>
+          )}
         </p>
       )}
     </div>
@@ -192,7 +194,6 @@ export function OrgSettingsFormActions({
         type="button"
         variant="ghost"
         size="sm"
-        className="h-8"
         onClick={onCancel}
         disabled={isPending}
       >
@@ -228,8 +229,17 @@ export function OrgSettingsActionRow({
       )}
     >
       <div className="min-w-0 space-y-0.5">
-        <p className={cn("text-sm font-medium", destructive && "text-destructive")}>{title}</p>
-        <p className="text-xs text-muted-foreground leading-relaxed">{description}</p>
+        <p
+          className={cn(
+            "text-sm font-medium",
+            destructive && "text-destructive",
+          )}
+        >
+          {title}
+        </p>
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          {description}
+        </p>
       </div>
       <div className="flex flex-wrap items-center gap-2 shrink-0 sm:justify-end [&_button]:w-full sm:[&_button]:w-auto">
         {children}

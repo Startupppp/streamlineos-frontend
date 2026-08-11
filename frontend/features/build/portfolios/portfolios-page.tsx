@@ -20,6 +20,7 @@ import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { DataTableSkeleton } from "@/components/ui/data-table";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
 import {
@@ -98,12 +99,15 @@ export function PortfoliosPage() {
 
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } =
     useQueryParamOpen("create");
   const [editTarget, setEditTarget] = useState<Portfolio | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Portfolio | null>(null);
 
   const { data, isLoading, isError, refetch } = usePortfolios({
+    page,
+    limit: 20,
     status: statusFilter !== "all" ? statusFilter : undefined,
   });
   const { data: membersRes } = useOrgMembers(1, 100);
@@ -119,11 +123,12 @@ export function PortfoliosPage() {
     return m?.name ?? m?.email ?? "Unknown";
   }
 
+  const rows = data?.data ?? [];
   const displayed = useMemo(() => {
-    if (!search.trim()) return data ?? [];
+    if (!search.trim()) return rows;
     const q = search.toLowerCase();
-    return (data ?? []).filter((p) => p.name.toLowerCase().includes(q));
-  }, [data, search]);
+    return rows.filter((p) => p.name.toLowerCase().includes(q));
+  }, [rows, search]);
 
   function handleCreate(input: CreatePortfolioInput) {
     createPortfolio.mutate(input, {
@@ -158,11 +163,22 @@ export function PortfoliosPage() {
 
   function handleSearchChange(value: string) {
     setSearch(value);
+    setPage(1);
   }
 
   function handleClearFilters() {
     setStatusFilter("all");
     setSearch("");
+    setPage(1);
+  }
+
+  function handlePageChange(next: number) {
+    setPage(next);
+  }
+
+  function handleStatusChange(value: string) {
+    setStatusFilter(value);
+    setPage(1);
   }
 
   const handleOpenCreate = useCallback(() => {
@@ -265,7 +281,7 @@ export function PortfoliosPage() {
   const isFiltered = statusFilter !== "all" || !!search.trim();
   const filtersBar = (
     <div className={FILTER_TOOLBAR_ROW}>
-      <Select value={statusFilter} onValueChange={setStatusFilter}>
+      <Select value={statusFilter} onValueChange={handleStatusChange}>
         <SelectTrigger className="w-40">
           <SelectValue />
         </SelectTrigger>
@@ -322,13 +338,23 @@ export function PortfoliosPage() {
                 }
               />
           ) : (
-            <DataTable
-              data={displayed}
-              columns={columns}
-              getRowKey={(row) => row.id}
-              minWidth="780px"
-              className={PM_FILL_PANEL}
-            />
+            <>
+              <DataTable
+                data={displayed}
+                columns={columns}
+                getRowKey={(row) => row.id}
+                minWidth="780px"
+                className={PM_FILL_PANEL}
+              />
+              {data && data.pagination.totalPages > 1 ? (
+                <TablePagination
+                  page={data.pagination.page}
+                  pageSize={data.pagination.limit}
+                  total={data.pagination.total}
+                  onPageChange={handlePageChange}
+                />
+              ) : null}
+            </>
           )}
         </PmSection>
       </PmPageShell>

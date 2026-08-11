@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 interface LeadSourceStat {
   source: string;
@@ -18,10 +19,12 @@ interface LeadSourceReport {
 }
 
 export function useLeadSourceReport() {
+  const canView = useCan("crm:leads:view");
   return useQuery({
     queryKey: queryKeys.leads.sourceReport(),
     queryFn: () => apiClient.get<LeadSourceReport>("/leads/source-report"),
     staleTime: 2 * 60_000,
+    enabled: canView,
   });
 }
 
@@ -43,10 +46,12 @@ export interface DuplicateGroup {
 }
 
 export function useDuplicateLeads() {
+  const canView = useCan("crm:leads:view");
   return useQuery({
     queryKey: queryKeys.leads.duplicates(),
     queryFn: () => apiClient.get<{ groups: DuplicateGroup[]; total: number }>("/leads/duplicates"),
     staleTime: 2 * 60 * 1000,
+    enabled: canView,
   });
 }
 
@@ -71,4 +76,3 @@ export function useMergeLead() {
     },
   });
 }
-

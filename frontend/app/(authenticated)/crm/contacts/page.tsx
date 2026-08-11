@@ -5,13 +5,15 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { Download, GitMerge, LayoutGrid, Plus, TableIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { SearchInput } from "@/components/ui/search-input";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { CrmOptionSelect } from "@/features/crm/shared/metadata";
 import { ErrorState } from "@/components/shared";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { staggerContainer } from "@/lib/motion-variants";
-import { useContacts, useDeleteContact } from "@/hooks/api/crm";
+import { useContacts, useDeleteContact, useExportContacts } from "@/hooks/api/crm";
+import { downloadBlob } from "@/lib/download-blob";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { CreateContactDialog } from "@/features/crm/contacts/create-contact-dialog";
@@ -32,6 +34,7 @@ import { useCan } from "@/hooks/api/access";
 export default function ContactsPage() {
   const canManageContacts = useCan("crm:contacts:manage");
   const canMergeContacts = useCan("crm:contacts:merge");
+  const canViewContacts = useCan("crm:contacts:view");
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -43,6 +46,7 @@ export default function ContactsPage() {
   const [bulkMergeOpen, setBulkMergeOpen] = useState(false);
   const deleteContact = useDeleteContact();
   const enrichContact = useEnrichContact();
+  const exportContacts = useExportContacts();
 
   const view = (searchParams.get("view") || "table") as "table" | "card";
   const [search, setSearch] = useState(searchParams.get("q") ?? "");
@@ -114,8 +118,11 @@ export default function ContactsPage() {
   );
 
   const handleExport = useCallback(() => {
-    toast.info("Export not yet supported");
-  }, []);
+    exportContacts.mutate(undefined, {
+      onSuccess: (blob) => downloadBlob(blob, "contacts.csv"),
+      onError: (e) => toast.error(getErrorMessage(e)),
+    });
+  }, [exportContacts]);
 
   const handleEdit = useCallback((contact: Contact) => {
     setEditContact(contact);
@@ -281,15 +288,18 @@ export default function ContactsPage() {
               allowAll
               className="w-[140px]"
             />
-            <Button
-              variant="outline"
-              size="sm"
-              className="ml-auto text-xs"
-              onClick={handleExport}
-            >
-              <Download className="h-3.5 w-3.5 mr-1.5" />
-              Export
-            </Button>
+            {canViewContacts && (
+              <LoadingButton
+                variant="outline"
+                size="sm"
+                className="ml-auto text-xs"
+                onClick={handleExport}
+                isPending={exportContacts.isPending}
+              >
+                <Download className="h-3.5 w-3.5 mr-1.5" />
+                Export
+              </LoadingButton>
+            )}
           </div>
         }
       >

@@ -2,8 +2,8 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Phone, Mail, MessageSquare, Calendar, MapPin, Clock } from "lucide-react";
+import { activityFormSchema, type ActivityFormInternalValues } from "./activity-form-schema";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,18 +17,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 
-const schema = z.object({
-  activityType: z.string().min(1, "Activity type is required"),
-  subject: z.string(),
-  duration: z
-    .string()
-    .refine((v) => v === "" || /^\d+$/.test(v), { message: "Must be a whole number" }),
-  outcome: z.string(),
-  activityNotes: z.string(),
-  location: z.string(),
-});
-
-type FormValues = z.infer<typeof schema>;
+type FormValues = ActivityFormInternalValues;
 
 export interface ActivityFormValues {
   activityType: string;
@@ -46,7 +35,7 @@ interface ActivityFormProps {
 
 export function ActivityForm({ onSubmit, isPending }: ActivityFormProps) {
   const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(activityFormSchema),
     defaultValues: {
       activityType: "call",
       subject: "",

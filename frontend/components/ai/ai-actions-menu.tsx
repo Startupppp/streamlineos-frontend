@@ -75,7 +75,7 @@ function resolveSurface(
   action: AiAction,
   defaultSurface?: AiResultSurface,
 ): AiResultSurface {
-  return action.surface ?? defaultSurface ?? "sheet";
+  return action.surface ?? defaultSurface ?? "popover";
 }
 
 function toInlineStatus(state: AiActionResultState): AiInlineSession["status"] {

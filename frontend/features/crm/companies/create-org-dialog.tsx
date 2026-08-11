@@ -2,8 +2,8 @@
 
 import { useCallback } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { EntityFormSheet } from "@/components/shared";
+import { createOrgSchema, COMPANY_SIZES, type CreateOrgForm } from "./create-org-dialog-schema";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -23,20 +23,6 @@ import {
 import { useCreateCrmOrganization } from "@/hooks/api/crm";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-
-const COMPANY_SIZES = ["1-10", "11-50", "51-200", "201-1000", "1000+"] as const;
-
-const createOrgSchema = z.object({
-  name: z.string().trim().min(1, "Name is required").max(200),
-  domain: z.string().optional(),
-  industry: z.string().optional(),
-  size: z.enum(COMPANY_SIZES).optional(),
-  website: z.string().optional(),
-  linkedinUrl: z.string().optional(),
-  description: z.string().optional(),
-});
-
-type CreateOrgForm = z.infer<typeof createOrgSchema>;
 
 interface CreateOrgDialogProps {
   open: boolean;

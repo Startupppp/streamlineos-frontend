@@ -4,7 +4,6 @@ import { use, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ErrorState } from "@/components/shared";
@@ -15,7 +14,6 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 import { LeadInlineAiMenu } from "@/features/crm/shared/crm-inline-ai-menu";
-import { LeadAttachmentsSection } from "@/features/crm/leads/detail/lead-attachments-section";
 import { LeadDetailHeader } from "@/features/crm/leads/detail/lead-detail-header";
 import { LeadInfoCard } from "@/features/crm/leads/detail/lead-info-card";
 import { LeadQuickActions } from "@/features/crm/leads/detail/lead-quick-actions";
@@ -342,11 +340,6 @@ export default function LeadDetailPage({
               timeline={timeline}
               timelineLoading={timelineLoading}
             />
-            <Card className="shadow-sm">
-              <CardContent className="p-4">
-                <LeadAttachmentsSection leadId={leadId} />
-              </CardContent>
-            </Card>
             <LeadQualificationPanel
               leadId={leadId}
               qualificationJson={lead.qualificationNotes ?? null}

@@ -112,7 +112,8 @@ export function ProgramsPage() {
   const { data, isLoading, isError, refetch } = usePrograms({
     status: statusFilter !== "all" ? statusFilter : undefined,
   });
-  const { data: portfolios } = usePortfolios();
+  const { data: portfoliosPage } = usePortfolios();
+  const portfolios = portfoliosPage?.data ?? [];
   const { data: membersRes } = useOrgMembers(1, 100);
   const members = useMemo(() => membersRes?.data ?? [], [membersRes]);
 

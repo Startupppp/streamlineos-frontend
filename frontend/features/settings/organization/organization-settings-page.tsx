@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useCan } from "@/hooks/api/access";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { RichPageContent, RichPanel } from "@/components/shared/rich-surface";
 import { OrgSettingsSectionsSkeleton } from "@/features/settings/organization/org-settings-skeleton";
 import { EmptyProjectsIllustration } from "@/components/illustrations";
 import { useOrgSettings, useUpdateOrgSettings } from "@/hooks/api/organization";
@@ -106,22 +106,18 @@ export function OrganizationSettingsPage() {
     return (
       <PageWrapper title="Organization" subtitle="Manage your organization profile, branding, and lifecycle settings">
         <div className="flex flex-1 flex-col min-h-0">
-          <Card className="rounded-lg shadow-sm">
-            <CardHeader className="text-center px-4 pt-6 pb-2">
-              <div className="flex justify-center mb-3">
-                <EmptyProjectsIllustration />
-              </div>
-              <CardTitle className="text-sm font-semibold">No Organization Found</CardTitle>
-              <CardDescription className="text-xs">
-                Create your first organization to start managing your team and projects.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex justify-center px-4 pb-5">
-              <p className="text-sm text-muted-foreground">
-                Please contact your administrator to set up an organization.
-              </p>
-            </CardContent>
-          </Card>
+          <RichPanel className="flex flex-1 min-h-0 flex-col items-center justify-center text-center">
+            <EmptyProjectsIllustration />
+            <h2 className="mt-3 text-sm font-semibold text-foreground">
+              No organization found
+            </h2>
+            <p className="mt-1 max-w-prose text-xs leading-relaxed text-muted-foreground">
+              Create your first organization to start managing your team and projects.
+            </p>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Please contact your administrator to set up an organization.
+            </p>
+          </RichPanel>
         </div>
       </PageWrapper>
     );
@@ -129,7 +125,7 @@ export function OrganizationSettingsPage() {
 
   return (
     <PageWrapper title="Organization" subtitle="Manage your organization profile, branding, and lifecycle settings">
-      <div className="flex flex-1 flex-col min-h-0 space-y-3.5">
+      <RichPageContent className="flex-1 min-h-0">
         <OrgProfileSection org={org} canEdit={canEdit} />
 
         <OrgBrandingSection org={org} canEdit={canEdit} />
@@ -166,7 +162,7 @@ export function OrganizationSettingsPage() {
         <OrgIncomingTransferSection />
 
         <OrgDangerZoneSection org={org} />
-      </div>
+      </RichPageContent>
     </PageWrapper>
   );
 }

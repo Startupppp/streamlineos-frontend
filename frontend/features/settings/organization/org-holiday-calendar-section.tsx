@@ -190,7 +190,7 @@ export function OrgHolidayCalendarSection({ canEdit }: OrgHolidayCalendarSection
                   <FormItem className="gap-1.5">
                     <FormLabel className="text-xs">Holiday name <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Republic Day" className="h-8" />
+                      <Input {...field} placeholder="Republic Day" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -232,10 +232,10 @@ export function OrgHolidayCalendarSection({ canEdit }: OrgHolidayCalendarSection
                 )}
               />
               <div className="flex gap-2 sm:ml-auto">
-                <LoadingButton type="submit" size="sm" isPending={createMutation.isPending} className="gap-1.5 h-8" loadingText="Saving…">
+                <LoadingButton type="submit" size="sm" isPending={createMutation.isPending} className="gap-1.5" loadingText="Saving…">
                   Save
                 </LoadingButton>
-                <Button type="button" variant="ghost" size="sm" className="h-8" onClick={handleCancelAdd}>
+                <Button type="button" variant="ghost" size="sm" onClick={handleCancelAdd}>
                   Cancel
                 </Button>
               </div>

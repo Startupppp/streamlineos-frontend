@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 export interface CustomFieldDefinition {
   id: number;
@@ -40,6 +41,7 @@ interface UpdateCustomFieldInput {
 }
 
 export function useCustomFields(entityType: "lead" | "deal" | "contact") {
+  const canManage = useCan("settings:custom-fields:manage");
   return useQuery({
     queryKey: queryKeys.settings.customFields(entityType),
     queryFn: () =>
@@ -47,6 +49,7 @@ export function useCustomFields(entityType: "lead" | "deal" | "contact") {
         `/settings/custom-fields?entityType=${entityType}`
       ),
     staleTime: 2 * 60_000,
+    enabled: canManage,
   });
 }
 

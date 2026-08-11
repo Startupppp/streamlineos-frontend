@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { CheckCircle2, Circle, DollarSign, Users, Target, Clock } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -172,14 +172,15 @@ export function LeadQualificationPanel({ leadId, qualificationJson }: LeadQualif
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.18 }}
             >
-              <Button
+              <LoadingButton
                 className="w-full"
                 size="sm"
                 onClick={handleSave}
-                disabled={updateLead.isPending}
+                isPending={updateLead.isPending}
+                loadingText="Saving..."
               >
-                {updateLead.isPending ? "Saving..." : "Save Qualification"}
-              </Button>
+                Save Qualification
+              </LoadingButton>
             </motion.div>
           )}
         </CardContent>

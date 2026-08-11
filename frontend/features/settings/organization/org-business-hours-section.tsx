@@ -144,9 +144,9 @@ export function OrgBusinessHoursSection({ org, canEdit }: OrgBusinessHoursSectio
                 </div>
                 {h.enabled ? (
                   <div className="flex items-center gap-2 min-w-0">
-                    <Input type="time" value={h.open} onChange={(e) => handleTimeChange(d.key, "open", e.target.value)} className="h-8 w-[7.5rem] font-mono text-xs" />
+                    <Input type="time" value={h.open} onChange={(e) => handleTimeChange(d.key, "open", e.target.value)} className="w-[7.5rem] font-mono" />
                     <span className="text-muted-foreground text-xs">to</span>
-                    <Input type="time" value={h.close} onChange={(e) => handleTimeChange(d.key, "close", e.target.value)} className="h-8 w-[7.5rem] font-mono text-xs" />
+                    <Input type="time" value={h.close} onChange={(e) => handleTimeChange(d.key, "close", e.target.value)} className="w-[7.5rem] font-mono" />
                   </div>
                 ) : (
                   <span className="text-xs text-muted-foreground">Closed</span>
@@ -155,7 +155,7 @@ export function OrgBusinessHoursSection({ org, canEdit }: OrgBusinessHoursSectio
             );
           })}
           <OrgSettingsFormActions onCancel={handleCancel} isPending={isPending} className="pt-2">
-            <LoadingButton size="sm" isPending={isPending} onClick={handleSave} className="h-8 gap-1.5" loadingText="Saving…">
+            <LoadingButton size="sm" isPending={isPending} onClick={handleSave} className="gap-1.5" loadingText="Saving…">
               Save hours
             </LoadingButton>
           </OrgSettingsFormActions>

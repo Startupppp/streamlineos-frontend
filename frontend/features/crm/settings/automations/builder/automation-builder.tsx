@@ -450,14 +450,15 @@ export function AutomationBuilder({ automationId }: AutomationBuilderProps) {
                     <Plus className="h-3 w-3 mr-1" /> Row
                   </Button>
                 </div>
-                <Button
+                <LoadingButton
                   size="sm"
                   className="text-xs w-full"
                   onClick={handleRunTest}
-                  disabled={testRule.isPending}
+                  isPending={testRule.isPending}
+                  loadingText="Running..."
                 >
-                  {testRule.isPending ? "Running..." : "Run Test"}
-                </Button>
+                  Run Test
+                </LoadingButton>
                 {testResult && (
                   <div className="space-y-2 pt-2 border-t border-border">
                     <div className={`text-xs font-medium ${testResult.matched ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>

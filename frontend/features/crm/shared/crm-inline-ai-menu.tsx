@@ -93,6 +93,7 @@ export function LeadInlineAiMenu({
         key: "email-draft",
         label: "Draft outreach email",
         run: runEmailDraft,
+        surface: "sheet",
         onApply: onDraftEmail ? applyEmailDraft : undefined,
         applyLabel: "Open in composer",
       },
@@ -176,7 +177,12 @@ export function DealInlineAiMenu({ dealId, dealName }: DealInlineAiMenuProps) {
     return [
       { key: "brief", label: "Deal brief", run: runBrief },
       { key: "next-action", label: "Next best action", run: runNextAction },
-      { key: "meeting-followup", label: "Meeting follow-up draft", run: runFollowUp },
+      {
+        key: "meeting-followup",
+        label: "Meeting follow-up draft",
+        run: runFollowUp,
+        surface: "sheet",
+      },
       {
         key: "win-probability",
         label: "Win-probability estimate (AI)",
@@ -237,6 +243,7 @@ export function ContactInlineAiMenu({
         key: "email-draft",
         label: "Draft email",
         run: runEmailDraft,
+        surface: "sheet",
         onApply: onDraftEmail ? applyEmailDraft : undefined,
         applyLabel: "Open in composer",
       },
@@ -293,6 +300,7 @@ export function AccountInlineAiMenu({
         key: "email-draft",
         label: "Draft email",
         run: runEmailDraft,
+        surface: "sheet",
         onApply: onDraftEmail ? applyEmailDraft : undefined,
         applyLabel: "Open in composer",
       },

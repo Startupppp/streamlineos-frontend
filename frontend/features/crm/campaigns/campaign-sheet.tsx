@@ -3,8 +3,8 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { toast } from "sonner";
+import { campaignSchema, type CampaignFormValues } from "./campaign-sheet-schema";
 import {
   Sheet,
   SheetContent,
@@ -46,19 +46,6 @@ const CAMPAIGN_CHANNELS = [
   { value: "event", label: "Event" },
   { value: "other", label: "Other" },
 ];
-
-const campaignSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  channel: z.string().optional(),
-  utmCampaignKey: z.string().optional(),
-  budgetAllocated: z.string().optional(),
-  startDate: z.string().optional(),
-  endDate: z.string().optional(),
-  description: z.string().optional(),
-  targetAudience: z.string().optional(),
-});
-
-type CampaignFormValues = z.infer<typeof campaignSchema>;
 
 interface CampaignSheetProps {
   open: boolean;

@@ -1,1 +1,5 @@
-export { default } from "./all/page";
+import { ProjectsPage } from "@/features/build/project-list/projects-page";
+
+export default function BuildRoute() {
+  return <ProjectsPage />;
+}

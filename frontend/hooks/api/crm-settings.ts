@@ -1,8 +1,9 @@
-﻿"use client";
+"use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 export type AssignmentType =
   | "assign_user"
@@ -70,11 +71,38 @@ interface ReorderAssignmentRulesInput {
   rules: { id: number; priority: number }[];
 }
 
+interface ScoringRule {
+  id: number;
+  orgId: string;
+  field: string;
+  operator: string;
+  value: string;
+  points: number;
+  createdAt: string | null;
+}
+
+interface CreateScoringRuleInput {
+  field: string;
+  operator: string;
+  value: string;
+  points: number;
+}
+
+interface UpdateScoringRuleInput {
+  id: number;
+  field?: string;
+  operator?: string;
+  value?: string;
+  points?: number;
+}
+
 export function useAssignmentRules() {
+  const canManage = useCan("crm:assignment-rules:manage");
   return useQuery({
     queryKey: queryKeys.crmSettings.assignmentRules(),
     queryFn: () => apiClient.get<AssignmentRule[]>("/crm/assignment-rules"),
     staleTime: 2 * 60_000,
+    enabled: canManage,
   });
 }
 
@@ -85,7 +113,9 @@ export function useCreateAssignmentRule() {
     mutationFn: (input: CreateAssignmentRuleInput) =>
       apiClient.post<AssignmentRule>("/crm/assignment-rules", input),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.crmSettings.assignmentRules() });
+      qc.invalidateQueries({
+        queryKey: queryKeys.crmSettings.assignmentRules(),
+      });
     },
   });
 }
@@ -97,7 +127,9 @@ export function useUpdateAssignmentRule() {
     mutationFn: ({ id, ...data }: UpdateAssignmentRuleInput) =>
       apiClient.patch<AssignmentRule>(`/crm/assignment-rules/${id}`, data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.crmSettings.assignmentRules() });
+      qc.invalidateQueries({
+        queryKey: queryKeys.crmSettings.assignmentRules(),
+      });
     },
   });
 }
@@ -109,7 +141,9 @@ export function useDeleteAssignmentRule() {
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/crm/assignment-rules/${id}`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.crmSettings.assignmentRules() });
+      qc.invalidateQueries({
+        queryKey: queryKeys.crmSettings.assignmentRules(),
+      });
     },
   });
 }
@@ -119,9 +153,14 @@ export function useReorderAssignmentRules() {
   return useMutation({
     mutationKey: ["crm-settings", "assignment-rules", "reorder"],
     mutationFn: (input: ReorderAssignmentRulesInput) =>
-      apiClient.patch<{ success: boolean }>("/crm/assignment-rules/reorder", input),
+      apiClient.patch<{ success: boolean }>(
+        "/crm/assignment-rules/reorder",
+        input,
+      ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.crmSettings.assignmentRules() });
+      qc.invalidateQueries({
+        queryKey: queryKeys.crmSettings.assignmentRules(),
+      });
     },
   });
 }
@@ -149,12 +188,22 @@ interface UpdateEmailTemplateInput {
   body?: string;
 }
 
-export function useEmailTemplates(params?: { limit?: number; offset?: number }) {
+export function useEmailTemplates(params?: {
+  limit?: number;
+  offset?: number;
+}) {
+  const canManage = useCan("crm:email-templates:manage");
   return useQuery({
-    queryKey: queryKeys.crmSettings.emailTemplates(params as Record<string, unknown>),
+    queryKey: queryKeys.crmSettings.emailTemplates(
+      params as Record<string, unknown>,
+    ),
     queryFn: () =>
-      apiClient.get<EmailTemplate[]>("/crm/email-templates", params as Record<string, unknown>),
+      apiClient.get<EmailTemplate[]>(
+        "/crm/email-templates",
+        params as Record<string, unknown>,
+      ),
     staleTime: 2 * 60_000,
+    enabled: canManage,
   });
 }
 
@@ -194,36 +243,13 @@ export function useDeleteEmailTemplate() {
   });
 }
 
-interface ScoringRule {
-  id: number;
-  orgId: string;
-  field: string;
-  operator: string;
-  value: string;
-  points: number;
-  createdAt: string | null;
-}
-
-interface CreateScoringRuleInput {
-  field: string;
-  operator: string;
-  value: string;
-  points: number;
-}
-
-interface UpdateScoringRuleInput {
-  id: number;
-  field?: string;
-  operator?: string;
-  value?: string;
-  points?: number;
-}
-
 export function useScoringRules() {
+  const canManage = useCan("crm:scoring-rules:manage");
   return useQuery({
     queryKey: queryKeys.crmSettings.scoringRules(),
     queryFn: () => apiClient.get<ScoringRule[]>("/crm/scoring-rules"),
     staleTime: 2 * 60_000,
+    enabled: canManage,
   });
 }
 
@@ -307,27 +333,38 @@ interface UpdateSlaPolicyInput {
 }
 
 export function useSlaPolicies() {
+  const canManage = useCan("crm:sla:manage");
   return useQuery({
     queryKey: queryKeys.crmSettings.slaPolicies(),
     queryFn: () => apiClient.get<SlaPolicy[]>("/crm/sla/policies"),
     staleTime: 2 * 60_000,
+    enabled: canManage,
   });
 }
 
 export function useSlaReport() {
+  const canManage = useCan("crm:sla:manage");
   return useQuery({
     queryKey: queryKeys.crmSettings.slaReport(),
     queryFn: () => apiClient.get<SlaReport>("/crm/sla/report"),
     staleTime: 2 * 60_000,
+    enabled: canManage,
   });
 }
 
 export function useSlaBreachedLeads(params?: { limit?: number }) {
+  const canManage = useCan("crm:sla:manage");
   return useQuery({
-    queryKey: queryKeys.crmSettings.slaBreachedLeads(params as Record<string, unknown>),
+    queryKey: queryKeys.crmSettings.slaBreachedLeads(
+      params as Record<string, unknown>,
+    ),
     queryFn: () =>
-      apiClient.get<SlaBreachedLead[]>("/crm/sla/breached", params as Record<string, unknown>),
+      apiClient.get<SlaBreachedLead[]>(
+        "/crm/sla/breached",
+        params as Record<string, unknown>,
+      ),
     staleTime: 2 * 60_000,
+    enabled: canManage,
   });
 }
 
@@ -418,10 +455,12 @@ export interface TerritoryPreviewResult {
 }
 
 export function useTerritories() {
+  const canManage = useCan("crm:territories:manage");
   return useQuery({
     queryKey: queryKeys.crmSettings.territories(),
     queryFn: () => apiClient.get<Territory[]>("/crm/territories"),
     staleTime: 2 * 60_000,
+    enabled: canManage,
   });
 }
 
@@ -464,21 +503,40 @@ export function useDeleteTerritory() {
 export function usePreviewTerritory() {
   return useMutation({
     mutationKey: ["crm-settings", "territories", "preview"],
-    mutationFn: (sampleLead: { city?: string; state?: string; country?: string; industry?: string }) =>
-      apiClient.post<TerritoryPreviewResult>("/crm/territories/preview", { sampleLead }),
+    mutationFn: (sampleLead: {
+      city?: string;
+      state?: string;
+      country?: string;
+      industry?: string;
+    }) =>
+      apiClient.post<TerritoryPreviewResult>("/crm/territories/preview", {
+        sampleLead,
+      }),
   });
 }
 
 export interface AssignmentPreviewResult {
   matchedRule: { id: number; name: string } | null;
   wouldAssignTo: string | null;
-  trace: Array<{ ruleId: number; ruleName: string; matched: boolean; reason: string }>;
+  trace: Array<{
+    ruleId: number;
+    ruleName: string;
+    matched: boolean;
+    reason: string;
+  }>;
 }
 
 export function usePreviewAssignmentRule() {
   return useMutation({
     mutationKey: ["crm-settings", "assignment-rules", "preview"],
-    mutationFn: (sampleLead: { source?: string; priority?: string; score?: number; city?: string }) =>
-      apiClient.post<AssignmentPreviewResult>("/crm/assignment-rules/preview", { sampleLead }),
+    mutationFn: (sampleLead: {
+      source?: string;
+      priority?: string;
+      score?: number;
+      city?: string;
+    }) =>
+      apiClient.post<AssignmentPreviewResult>("/crm/assignment-rules/preview", {
+        sampleLead,
+      }),
   });
 }

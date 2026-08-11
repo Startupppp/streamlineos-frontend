@@ -3,7 +3,7 @@
 import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { slaPolicySchema, type SlaPolicyFormValues } from "./sla-policy-sheet-schema";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetBody,
 } from "@/components/ui/sheet";
@@ -27,28 +27,7 @@ export interface SlaPolicyItem {
   resolutionHours: number;
 }
 
-const slaPolicySchema = z.object({
-  name: z.string().min(1, "Name required").max(100),
-  appliesTo: z.enum(["lead", "deal", "both"]),
-  priority: z.enum(["low", "medium", "high", "urgent"]),
-  firstResponseHours: z
-    .string()
-    .min(1, "Required")
-    .refine(
-      (v) => !isNaN(Number(v)) && Number.isInteger(Number(v)) && Number(v) > 0,
-      "Must be a positive whole number"
-    ),
-  resolutionHours: z
-    .string()
-    .min(1, "Required")
-    .refine(
-      (v) => !isNaN(Number(v)) && Number.isInteger(Number(v)) && Number(v) > 0,
-      "Must be a positive whole number"
-    ),
-  businessHours: z.boolean(),
-});
-
-export type SlaPolicyFormValues = z.infer<typeof slaPolicySchema>;
+export type { SlaPolicyFormValues };
 
 function defaultValues(editing: SlaPolicyItem | null): SlaPolicyFormValues {
   if (editing) {

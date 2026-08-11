@@ -355,7 +355,7 @@ export function GrantDelegationSheet({
                   placeholder="Start date"
                   disablePast
                   dateFormat="MMM d, yyyy"
-                  className="w-full text-xs"
+                  className="w-full"
                 />
                 {errors.startsAt && (
                   <p className="text-xs text-destructive">
@@ -375,7 +375,7 @@ export function GrantDelegationSheet({
                   disablePast
                   fromDate={endsFromDate}
                   dateFormat="MMM d, yyyy"
-                  className="w-full text-xs"
+                  className="w-full"
                 />
                 {errors.endsAt && (
                   <p className="text-xs text-destructive">

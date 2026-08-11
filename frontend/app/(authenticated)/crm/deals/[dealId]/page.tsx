@@ -44,9 +44,9 @@ import {
 } from "@/features/crm/deals/detail/deal-dialogs";
 import { DealInfoCard } from "@/features/crm/deals/detail/deal-info-card";
 import { DealSidebarCards } from "@/features/crm/deals/detail/deal-sidebar-cards";
-import { DealOrdersSection } from "@/features/crm/deals/deal-orders-section";
 import { DealQuotesSection } from "@/features/crm/deals/deal-quotes-section";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { ErrorState } from "@/components/shared";
 import { DealInlineAiMenu } from "@/features/crm/shared/crm-inline-ai-menu";
 
 
@@ -67,7 +67,7 @@ export default function DealDetailPage({
   const router = useRouter();
   const shouldReduceMotion = useReducedMotion();
 
-  const { data: deal, isLoading } = useDealDetail(dealId);
+  const { data: deal, isLoading, isError, error, refetch } = useDealDetail(dealId);
   const [isEditing, setIsEditing] = useState(false);
   const [pendingAction, setPendingAction] = useState<{
     type: "call" | "note" | "email" | "meeting";
@@ -254,6 +254,8 @@ export default function DealDetailPage({
     [dealId, router],
   );
 
+  const handleRefetch = useCallback(() => { void refetch(); }, [refetch]);
+
   const handleOpenMeetingDialog = useCallback(() => setMeetingDialogOpen(true), []);
   const handleOpenCreateProject = useCallback(() => setCreateProjectOpen(true), []);
 
@@ -278,6 +280,18 @@ export default function DealDetailPage({
             <Skeleton className="h-64 lg:col-span-2 rounded-lg" />
           </div>
         </div>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper title={`Deal #${dealIdStr}`} backHref="/crm/deals">
+        <ErrorState
+          description={getErrorMessage(error)}
+          onRetry={handleRefetch}
+          className="flex-1"
+        />
       </PageWrapper>
     );
   }
@@ -439,7 +453,6 @@ export default function DealDetailPage({
                 </Button>
               </>
             )}
-            <DealOrdersSection dealId={dealId} dealStage={deal.stage} />
           </motion.div>
 
           <motion.div variants={itemVariants} className="lg:col-span-2 space-y-4">

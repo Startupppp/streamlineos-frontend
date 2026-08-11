@@ -61,7 +61,8 @@ export function ProgramFormSheet({
     resolver: zodResolver(programFormSchema),
     defaultValues: DEFAULTS,
   });
-  const { data: portfolios } = usePortfolios();
+  const { data: portfoliosPage } = usePortfolios();
+  const portfolios = portfoliosPage?.data ?? [];
 
   useEffect(() => {
     if (open) form.reset(mode === "edit" && defaultValues ? toForm(defaultValues) : DEFAULTS);

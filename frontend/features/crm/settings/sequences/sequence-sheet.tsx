@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { sequenceSchema, type SequenceFormValues } from "./sequence-sheet-schema";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Sheet, SheetBody, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -54,15 +54,6 @@ const ENROLLMENT_STATUS_VARIANTS: Record<string, "default" | "secondary" | "dest
   stopped: "outline",
   failed: "destructive",
 };
-
-const sequenceSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  description: z.string().optional(),
-  entityType: z.enum(["lead", "deal", "contact"]),
-  isActive: z.boolean(),
-});
-
-type SequenceFormValues = z.infer<typeof sequenceSchema>;
 
 interface Props {
   sequence: CrmSequence | null;
@@ -261,16 +252,16 @@ function EnrollmentsTab({ sequenceId }: { sequenceId: string }) {
             </div>
           </div>
           {e.status === "active" && (
-            <Button
+            <LoadingButton
               type="button"
               variant="outline"
               size="sm"
               className="text-xs h-7 shrink-0"
               onClick={() => handleStop(e.id)}
-              disabled={stopEnrollment.isPending}
+              isPending={stopEnrollment.isPending}
             >
               Stop
-            </Button>
+            </LoadingButton>
           )}
         </div>
       ))}

@@ -19,7 +19,6 @@ import type {
   OrgTreeTeam,
   OrgTreeRoot,
 } from "@/types/org-hierarchy";
-import { RequireModule } from "@/components/auth/require-module";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 
@@ -293,9 +292,8 @@ export function OrganizationChartPage() {
   }, [refetch]);
 
   return (
-    <RequireModule module="hr">
-      <PageWrapper
-        title="Organization Chart"
+    <PageWrapper
+      title="Organization Chart"
         subtitle="See how business units, branches, departments, and teams connect."
         filters={
           <SearchInput
@@ -348,6 +346,5 @@ export function OrganizationChartPage() {
           </div>
         </div>
       </PageWrapper>
-    </RequireModule>
   );
 }

@@ -52,7 +52,7 @@ export function ContactNotes({ contactId, initialNotes }: ContactNotesProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.22, ease: "easeOut", delay: 0.08 }}
     >
-      <Card className="bg-card rounded-lg border border-border shadow-sm">
+      <Card className="shadow-sm">
         <CardHeader className="px-4 py-3 border-b">
           <CardTitle className="text-sm font-medium">Notes</CardTitle>
         </CardHeader>

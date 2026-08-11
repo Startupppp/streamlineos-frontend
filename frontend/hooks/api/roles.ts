@@ -22,6 +22,7 @@ export interface PaginatedRolesParams {
 
 export interface RoleListRow extends Role {
   permissionCount: number;
+  memberCount: number;
 }
 
 export interface PaginatedRolesResponse {

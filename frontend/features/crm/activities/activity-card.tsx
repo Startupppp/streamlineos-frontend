@@ -11,7 +11,7 @@ import {
   CheckCheck,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { ActivityTypeBadge } from "./activity-type-badge";
@@ -90,7 +90,7 @@ export function ActivityCard({ activity, index }: ActivityCardProps) {
           ? { duration: 0.15 }
           : { duration: 0.22, ease: "easeOut", delay: Math.min(index * 0.05, 0.4) }
       }
-      className="bg-card rounded-lg border border-border shadow-sm p-4 hover:shadow-md transition-shadow duration-150 group"
+      className="bg-card rounded-xl border border-border shadow-sm p-4 hover:shadow-md transition-shadow duration-150 group"
     >
       <div className="flex items-start gap-3 min-w-0">
         <div className="shrink-0 mt-0.5">
@@ -154,16 +154,16 @@ export function ActivityCard({ activity, index }: ActivityCardProps) {
             whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}
             className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
           >
-            <Button
+            <LoadingButton
               variant="ghost"
               size="sm"
               onClick={handleComplete}
-              disabled={complete.isPending}
+              isPending={complete.isPending}
               className="px-2 text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-500/10"
             >
               <CheckCheck className="h-3.5 w-3.5 mr-1" />
               Done
-            </Button>
+            </LoadingButton>
           </motion.div>
         )}
       </div>

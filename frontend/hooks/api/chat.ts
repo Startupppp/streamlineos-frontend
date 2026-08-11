@@ -11,6 +11,7 @@ import {
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { reauthorizeAblyClients } from "@/lib/ably";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import type {
   Channel,
@@ -267,6 +268,10 @@ export function useMarkChannelRead() {
   });
 }
 
+function refreshRealtimeCapability(): void {
+  void reauthorizeAblyClients();
+}
+
 export function useCreateDMChannel() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -274,6 +279,7 @@ export function useCreateDMChannel() {
     mutationFn: (input: CreateDMInput) =>
       apiClient.post<Channel>("/chat/channels", { type: "DIRECT", ...input }),
     onSuccess: () => {
+      refreshRealtimeCapability();
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
     },
   });
@@ -286,6 +292,7 @@ export function useCreateGroupChannel() {
     mutationFn: (input: CreateGroupChannelInput) =>
       apiClient.post<Channel>("/chat/channels", { type: "GROUP", ...input }),
     onSuccess: () => {
+      refreshRealtimeCapability();
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
     },
   });
@@ -298,6 +305,7 @@ export function useCreatePublicChannel() {
     mutationFn: (input: CreatePublicChannelInput) =>
       apiClient.post<Channel>("/chat/channels", { type: "PUBLIC", ...input }),
     onSuccess: () => {
+      refreshRealtimeCapability();
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
       queryClient.invalidateQueries({
         queryKey: queryKeys.chat.publicChannels(),
@@ -313,6 +321,7 @@ export function useCreatePrivateChannel() {
     mutationFn: (input: CreatePrivateChannelInput) =>
       apiClient.post<Channel>("/chat/channels", { type: "PRIVATE", ...input }),
     onSuccess: () => {
+      refreshRealtimeCapability();
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
     },
   });
@@ -325,6 +334,7 @@ export function useJoinChannel() {
     mutationFn: (channelId: number) =>
       apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/join`),
     onSuccess: () => {
+      refreshRealtimeCapability();
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
       queryClient.invalidateQueries({
         queryKey: queryKeys.chat.publicChannels(),
@@ -340,6 +350,7 @@ export function useLeaveChannel() {
     mutationFn: (channelId: number) =>
       apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/leave`),
     onSuccess: () => {
+      refreshRealtimeCapability();
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
       queryClient.invalidateQueries({
         queryKey: queryKeys.chat.publicChannels(),

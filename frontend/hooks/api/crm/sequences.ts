@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   CrmSequence,
   CrmSequenceStep,
@@ -23,10 +24,12 @@ interface EnrollmentsResponse {
 }
 
 export function useCrmSequences() {
+  const canManage = useCan("crm:sequences:manage");
   return useQuery({
     queryKey: queryKeys.crmSequences.list(),
     queryFn: () => apiClient.get<SequencesResponse>("/crm/sequences"),
     staleTime: 2 * 60_000,
+    enabled: canManage,
   });
 }
 
@@ -70,10 +73,11 @@ export function useDeleteCrmSequence() {
 }
 
 export function useCrmSequenceSteps(sequenceId: string) {
+  const canManage = useCan("crm:sequences:manage");
   return useQuery({
     queryKey: queryKeys.crmSequences.steps(sequenceId),
     queryFn: () => apiClient.get<StepsResponse>(`/crm/sequences/${sequenceId}/steps`),
-    enabled: !!sequenceId,
+    enabled: canManage && !!sequenceId,
     staleTime: 60_000,
   });
 }
@@ -103,11 +107,12 @@ export function useDeleteCrmSequenceStep(sequenceId: string) {
 }
 
 export function useCrmSequenceEnrollments(sequenceId: string, page: number) {
+  const canManage = useCan("crm:sequences:manage");
   return useQuery({
     queryKey: queryKeys.crmSequences.enrollments(sequenceId, page),
     queryFn: () =>
       apiClient.get<EnrollmentsResponse>(`/crm/sequences/${sequenceId}/enrollments`, { page }),
-    enabled: !!sequenceId,
+    enabled: canManage && !!sequenceId,
     staleTime: 30_000,
   });
 }

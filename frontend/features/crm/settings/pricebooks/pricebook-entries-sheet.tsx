@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import { z } from "zod";
 import { useForm } from "react-hook-form";
+import { entrySchema, type EntryFormValues } from "./pricebook-entries-sheet-schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -35,14 +35,6 @@ import { useProducts } from "@/hooks/api/crm/products";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { Pricebook } from "@/types/crm/pricebooks";
-
-const entrySchema = z.object({
-  productId: z.string().min(1, "Product required"),
-  unitPriceCents: z.string().min(1, "Price required"),
-  minQuantity: z.string(),
-});
-
-type EntryFormValues = z.infer<typeof entrySchema>;
 
 const defaultEntryValues: EntryFormValues = {
   productId: "",

@@ -3,21 +3,25 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type { Pricebook, PricebookEntry, QuoteSettings, QuoteTemplate } from "@/types/crm/pricebooks";
 
 export function usePricebooks() {
+  const canManage = useCan("crm:pricebooks:manage");
   return useQuery({
     queryKey: queryKeys.crmPricebooks.list(),
     queryFn: () => apiClient.get<Pricebook[]>("/crm/pricebooks"),
     staleTime: 5 * 60_000,
+    enabled: canManage,
   });
 }
 
 export function usePricebookEntries(pricebookId: string) {
+  const canManage = useCan("crm:pricebooks:manage");
   return useQuery({
     queryKey: queryKeys.crmPricebooks.entries(pricebookId),
     queryFn: () => apiClient.get<PricebookEntry[]>(`/crm/pricebooks/${pricebookId}/entries`),
-    enabled: !!pricebookId,
+    enabled: canManage && !!pricebookId,
     staleTime: 2 * 60_000,
   });
 }
@@ -98,10 +102,12 @@ export function useDeletePricebookEntry() {
 }
 
 export function useQuoteSettings() {
+  const canManage = useCan("crm:pricebooks:manage");
   return useQuery({
     queryKey: queryKeys.crmQuoteSettings.all,
     queryFn: () => apiClient.get<QuoteSettings>("/crm/quote-settings"),
     staleTime: 5 * 60_000,
+    enabled: canManage,
   });
 }
 
@@ -118,10 +124,12 @@ export function useUpdateQuoteSettings() {
 }
 
 export function useQuoteTemplates() {
+  const canManage = useCan("crm:pricebooks:manage");
   return useQuery({
     queryKey: queryKeys.crmQuoteTemplates.list(),
     queryFn: () => apiClient.get<QuoteTemplate[]>("/crm/quote-templates"),
     staleTime: 5 * 60_000,
+    enabled: canManage,
   });
 }
 

@@ -103,7 +103,7 @@ export function InboxSectionCard({
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="rounded-lg border border-border bg-card overflow-hidden"
+      className="rounded-xl border border-border bg-card overflow-hidden"
     >
       <button
         type="button"

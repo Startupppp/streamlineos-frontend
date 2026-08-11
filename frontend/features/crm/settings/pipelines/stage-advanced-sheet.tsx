@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { stageAdvancedSchema, type StageAdvancedValues } from "./stage-advanced-sheet-schema";
 import { toast } from "sonner";
 
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -28,19 +28,6 @@ import type { CrmPipelineStage } from "@/types/crm/metadata";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { STAGE_TYPES } from "./pipeline-constants";
-
-const stageAdvancedSchema = z.object({
-  label: z.string().min(1, "Label required"),
-  color: z.string().min(1),
-  probability: z.string(),
-  stageType: z.enum(["open", "won", "lost", "archived"] as const),
-  slaHours: z.string(),
-  requiresApproval: z.boolean(),
-  isTerminal: z.boolean(),
-  requiredFields: z.array(z.string()),
-  allowedNextStageKeys: z.array(z.string()).nullable(),
-});
-type StageAdvancedValues = z.infer<typeof stageAdvancedSchema>;
 
 export function StageAdvancedSheet({
   stage,

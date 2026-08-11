@@ -1,9 +1,6 @@
 "use client";
 
-import { useState, useCallback, type ChangeEvent } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { useState, useCallback } from "react";
 import { Pencil, Archive, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -17,30 +14,11 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetClose,
-  SheetBody,
-} from "@/components/ui/sheet";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { SearchInput } from "@/components/ui/search-input";
-import { LoadingButton } from "@/components/ui/loading-button";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { PlusIcon } from "@animateicons/react/lucide";
-import { Textarea } from "@/components/ui/textarea";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared/error-state";
+import { SearchInput } from "@/components/ui/search-input";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { PlusIcon } from "@animateicons/react/lucide";
 import type { OrgBusinessUnit } from "@/types/org-hierarchy";
 import { HierarchyArchiveDialog } from "./hierarchy-archive-dialog";
 import { useHierarchyArchive } from "./use-hierarchy-archive";
@@ -49,107 +27,10 @@ import {
   useHierarchyListState,
   useHierarchyPageBounds,
 } from "./use-hierarchy-list-state";
-import { RequireModule } from "@/components/auth/require-module";
 import { useCan } from "@/hooks/api/access";
-
-const formSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(1, "Name is required")
-    .max(100)
-    .refine(
-      (v) => /[\p{L}\p{N}]/u.test(v),
-      "Name must contain at least one letter or number",
-    ),
-  code: z
-    .string()
-    .trim()
-    .min(2, "Code must be 2–20 characters")
-    .max(20)
-    .regex(/^[A-Za-z0-9]+$/, "Only alphanumeric characters"),
-  description: z.string().trim().max(500).optional(),
-});
-
-type FormValues = z.infer<typeof formSchema>;
-
-function BuForm({
-  defaultValues,
-  onSubmit,
-  isPending: _,
-}: {
-  defaultValues?: FormValues;
-  onSubmit: (v: FormValues) => void;
-  isPending: boolean;
-}) {
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: defaultValues ?? { name: "", code: "", description: "" },
-  });
-
-  return (
-    <Form {...form}>
-      <form
-        id="bu-form"
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="space-y-4"
-      >
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Name</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g. Technology" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="code"
-          render={({ field }) => {
-            function handleCodeChange(e: ChangeEvent<HTMLInputElement>) {
-              field.onChange(e.target.value.toUpperCase());
-            }
-            return (
-              <FormItem>
-                <FormLabel>Code</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="e.g. TECH"
-                    {...field}
-                    onChange={handleCodeChange}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            );
-          }}
-        />
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Optional description..."
-                  rows={3}
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </form>
-    </Form>
-  );
-}
+import { BuForm } from "./business-unit-form";
+import { HierarchyFormSheet } from "./hierarchy-form-sheet";
+import { type BusinessUnitFormValues } from "./business-units-schema";
 
 export function BusinessUnitsPage() {
   const {
@@ -195,7 +76,7 @@ export function BusinessUnitsPage() {
   const displayed = units?.data ?? [];
 
   const handleCreate = useCallback(
-    (values: FormValues) => {
+    (values: BusinessUnitFormValues) => {
       create.mutate(
         { ...values, code: values.code.toUpperCase() },
         {
@@ -211,7 +92,7 @@ export function BusinessUnitsPage() {
   );
 
   const handleUpdate = useCallback(
-    (values: FormValues) => {
+    (values: BusinessUnitFormValues) => {
       if (!editing) return;
       update.mutate(
         { id: editing.id, ...values, code: values.code.toUpperCase() },
@@ -244,18 +125,13 @@ export function BusinessUnitsPage() {
   );
 
   const handleOpenCreate = useCallback(() => setShowCreate(true), []);
-  const handleSearchChange = useCallback(
-    (v: string) => setSearch(v),
-    [setSearch],
-  );
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
 
-  function handleSearchInputChange(value: string) {
-    handleSearchChange(value);
+  function handleSearchChange(value: string) {
+    setSearch(value);
   }
-
   function makeRestoreHandler(unit: OrgBusinessUnit) {
     return () => handleRestore(unit);
   }
@@ -321,6 +197,7 @@ export function BusinessUnitsPage() {
                 size="sm"
                 onClick={makeRestoreHandler(u)}
                 title="Restore"
+                aria-label="Restore business unit"
               >
                 <RotateCcw className="h-4 w-4 text-primary" />
               </Button>
@@ -331,6 +208,7 @@ export function BusinessUnitsPage() {
                   size="sm"
                   onClick={makeSetEditingHandler(u)}
                   title="Edit"
+                  aria-label="Edit business unit"
                 >
                   <Pencil className="h-4 w-4" />
                 </Button>
@@ -339,6 +217,7 @@ export function BusinessUnitsPage() {
                   size="sm"
                   onClick={makeArchiveHandler(u)}
                   title="Archive"
+                  aria-label="Archive business unit"
                 >
                   <Archive className="h-4 w-4 text-muted-foreground" />
                 </Button>
@@ -355,14 +234,14 @@ export function BusinessUnitsPage() {
       title={`No business units matching "${serverSearch}"`}
       description="Try a different search term."
       compact
-      className="min-h-[200px]"
+      className="flex-1 min-h-0"
     />
   ) : showArchived ? (
     <EmptyState
       illustrationPreset="archive"
       title="No archived business units"
       compact
-      className="min-h-[200px]"
+      className="flex-1 min-h-0"
     />
   ) : (
     <EmptyState
@@ -378,156 +257,114 @@ export function BusinessUnitsPage() {
   );
 
   return (
-    <RequireModule module="hr">
-      <PageWrapper
-        title="Business Units"
-        subtitle="Top-level divisions of your organization."
-        actions={
-          <div className="flex w-full items-center gap-2 sm:w-auto">
-            <Button
-              variant={showArchived ? "secondary" : "outline"}
+    <PageWrapper
+      title="Business Units"
+      subtitle="Top-level divisions of your organization."
+      actions={
+        <div className="flex w-full items-center gap-2 sm:w-auto">
+          <Button
+            variant={showArchived ? "secondary" : "outline"}
+            size="sm"
+            className="flex-1 text-xs sm:flex-none"
+            onClick={toggleArchived}
+          >
+            <Archive className="h-4 w-4 mr-1.5" />
+            {showArchived ? "Show current" : "View archived"}
+          </Button>
+          {canManage ? (
+            <AnimatedIconButton
+              icon={PlusIcon}
+              iconSize={16}
+              iconClassName="mr-1.5"
               size="sm"
-              className="flex-1 text-xs sm:flex-none"
-              onClick={toggleArchived}
+              className="flex-1 sm:flex-none"
+              onClick={handleOpenCreate}
             >
-              <Archive className="h-4 w-4 mr-1.5" />
-              {showArchived ? "Show current" : "View archived"}
-            </Button>
-            {canManage ? (
-              <AnimatedIconButton
-                icon={PlusIcon}
-                iconSize={16}
-                iconClassName="mr-1.5"
-                size="sm"
-                className="flex-1 sm:flex-none"
-                onClick={handleOpenCreate}
-              >
-                Add Business Unit
-              </AnimatedIconButton>
-            ) : null}
-          </div>
-        }
-        filters={
-          <SearchInput
-            value={search}
-            placeholder="Search business units…"
-            onValueChange={handleSearchInputChange}
-          />
-        }
+              Add Business Unit
+            </AnimatedIconButton>
+          ) : null}
+        </div>
+      }
+      filters={
+        <SearchInput
+          value={search}
+          placeholder="Search business units…"
+          onValueChange={handleSearchChange}
+        />
+      }
+    >
+      {isError ? (
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load business units"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
+      ) : (
+        <DataTable
+          data={displayed}
+          columns={columns}
+          getRowKey={(u) => u.id}
+          isLoading={isLoading || isCorrectingPage}
+          emptyState={emptyState}
+          rowClassName={(u) => cn(u.status === "ARCHIVED" && "opacity-60")}
+          minWidth="580px"
+          className="flex-1 min-h-0"
+          pagination={{
+            mode: "server",
+            page,
+            pageSize,
+            total: units?.total ?? 0,
+            onPageChange: setPage,
+            onPageSizeChange: setPageSize,
+            pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
+          }}
+        />
+      )}
+
+      <HierarchyFormSheet
+        open={showCreate}
+        onOpenChange={setShowCreate}
+        title="New Business Unit"
+        formId="bu-form"
+        isPending={create.isPending}
       >
-        {isError ? (
-          <ErrorState
-            className="flex-1"
-            title="Couldn't load business units"
-            description={getErrorMessage(error)}
-            onRetry={handleRetry}
-          />
-        ) : (
-          <DataTable
-            data={displayed}
-            columns={columns}
-            getRowKey={(u) => u.id}
-            isLoading={isLoading || isCorrectingPage}
-            emptyState={emptyState}
-            rowClassName={(u) => cn(u.status === "ARCHIVED" && "opacity-60")}
-            minWidth="580px"
-            className="flex-1 min-h-0"
-            pagination={{
-              mode: "server",
-              page,
-              pageSize,
-              total: units?.total ?? 0,
-              onPageChange: setPage,
-              onPageSizeChange: setPageSize,
-              pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
+        <BuForm onSubmit={handleCreate} isPending={create.isPending} />
+      </HierarchyFormSheet>
+
+      <HierarchyFormSheet
+        open={!!editing}
+        onOpenChange={handleEditSheetOpenChange}
+        title="Edit Business Unit"
+        formId="bu-form"
+        isPending={update.isPending}
+      >
+        {editing && (
+          <BuForm
+            defaultValues={{
+              name: editing.name,
+              code: editing.code,
+              description: editing.description ?? "",
             }}
+            onSubmit={handleUpdate}
+            isPending={update.isPending}
           />
         )}
+      </HierarchyFormSheet>
 
-        <Sheet open={showCreate} onOpenChange={setShowCreate}>
-          <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md">
-            <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
-              <SheetTitle>New Business Unit</SheetTitle>
-            </SheetHeader>
-            <SheetBody className="px-6 py-5">
-              <BuForm onSubmit={handleCreate} isPending={create.isPending} />
-            </SheetBody>
-            <div className="shrink-0 px-6 py-4 border-t">
-              <div className="grid grid-cols-2 gap-2">
-                <SheetClose asChild>
-                  <Button variant="outline" size="sm" className="w-full">
-                    Cancel
-                  </Button>
-                </SheetClose>
-                <LoadingButton
-                  size="sm"
-                  type="submit"
-                  form="bu-form"
-                  isPending={create.isPending}
-                  loadingText="Saving…"
-                  className="w-full"
-                >
-                  Save
-                </LoadingButton>
-              </div>
-            </div>
-          </SheetContent>
-        </Sheet>
-
-        <Sheet open={!!editing} onOpenChange={handleEditSheetOpenChange}>
-          <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md">
-            <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
-              <SheetTitle>Edit Business Unit</SheetTitle>
-            </SheetHeader>
-            <SheetBody className="px-6 py-5">
-              {editing && (
-                <BuForm
-                  defaultValues={{
-                    name: editing.name,
-                    code: editing.code,
-                    description: editing.description ?? "",
-                  }}
-                  onSubmit={handleUpdate}
-                  isPending={update.isPending}
-                />
-              )}
-            </SheetBody>
-            <div className="shrink-0 px-6 py-4 border-t">
-              <div className="grid grid-cols-2 gap-2">
-                <SheetClose asChild>
-                  <Button variant="outline" size="sm" className="w-full">
-                    Cancel
-                  </Button>
-                </SheetClose>
-                <LoadingButton
-                  size="sm"
-                  type="submit"
-                  form="bu-form"
-                  isPending={update.isPending}
-                  loadingText="Saving…"
-                  className="w-full"
-                >
-                  Save
-                </LoadingButton>
-              </div>
-            </div>
-          </SheetContent>
-        </Sheet>
-
-        <HierarchyArchiveDialog
-          open={!!archiveFlow.target}
-          unitName={archiveFlow.target?.name ?? ""}
-          unitLabel="business unit"
-          isPending={update.isPending}
-          error={archiveFlow.error}
-          preflightError={archiveFlow.preflightError}
-          dependencies={archiveFlow.dependencies}
-          isChecking={archiveFlow.isChecking}
-          onRetryPreflight={archiveFlow.retryPreflight}
-          onConfirm={archiveFlow.confirmArchive}
-          onOpenChange={archiveFlow.handleOpenChange}
-        />
-      </PageWrapper>
-    </RequireModule>
+      <HierarchyArchiveDialog
+        open={!!archiveFlow.target}
+        unitName={archiveFlow.target?.name ?? ""}
+        unitLabel="business unit"
+        isPending={update.isPending}
+        error={archiveFlow.error}
+        preflightError={archiveFlow.preflightError}
+        dependencies={archiveFlow.dependencies}
+        isChecking={archiveFlow.isChecking}
+        onRetryPreflight={archiveFlow.retryPreflight}
+        onConfirm={archiveFlow.confirmArchive}
+        onOpenChange={archiveFlow.handleOpenChange}
+      />
+    </PageWrapper>
   );
 }

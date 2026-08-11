@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 export type CrmActivityType = "CALL" | "EMAIL" | "MEETING" | "CUSTOM";
 export type CrmActivityEntityType = "LEAD" | "DEAL" | "CONTACT";
@@ -64,11 +65,13 @@ function buildParams(filters?: CrmActivitiesFilters): Record<string, unknown> {
 }
 
 export function useCrmActivities(filters?: CrmActivitiesFilters) {
+  const canRead = useCan("tasks:read");
   return useQuery({
     queryKey: queryKeys.crmActivities.list(filters as Record<string, unknown>),
     queryFn: () =>
       apiClient.get<CrmActivitiesResponse>("/tasks", buildParams(filters)),
     staleTime: 60_000,
+    enabled: canRead,
   });
 }
 

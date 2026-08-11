@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Card } from "@/components/ui/card";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
@@ -52,6 +53,7 @@ export function PermissionMatrix({
   const [draft, setDraft] = useState<{ roleId: number; map: ScopeMap } | null>(
     null,
   );
+  const [reviewOpen, setReviewOpen] = useState(false);
 
   const isReadOnly = role.isSystem;
   const catalogQuery = usePermissionCatalog();
@@ -153,6 +155,28 @@ export function PermissionMatrix({
 
   const handleReset = useCallback(() => setDraft(null), []);
 
+  const pendingChanges = useMemo(() => {
+    const keys = new Set([...Object.keys(baseline), ...Object.keys(effective)]);
+    const added: string[] = [];
+    const removed: string[] = [];
+    const rescoped: { key: string; from: EditableScope; to: EditableScope }[] = [];
+    for (const key of keys) {
+      const before = baseline[key];
+      const after = effective[key];
+      if (!before && after) added.push(key);
+      else if (before && !after) removed.push(key);
+      else if (before && after && before !== after)
+        rescoped.push({ key, from: before, to: after });
+    }
+    added.sort();
+    removed.sort();
+    rescoped.sort((a, b) => a.key.localeCompare(b.key));
+    return { added, removed, rescoped };
+  }, [baseline, effective]);
+
+  const handleOpenReview = useCallback(() => setReviewOpen(true), []);
+  const handleReviewOpenChange = useCallback((open: boolean) => setReviewOpen(open), []);
+
   const handleSave = useCallback(() => {
     const items = Object.entries(effective).flatMap(
       ([permissionKey, scope]) =>
@@ -165,6 +189,7 @@ export function PermissionMatrix({
       {
         onSuccess: () => {
           setDraft(null);
+          setReviewOpen(false);
           toast.success("Permissions saved");
         },
         onError: (error) => {
@@ -234,12 +259,12 @@ export function PermissionMatrix({
               </Button>
               <LoadingButton
                 size="sm"
-                onClick={handleSave}
+                onClick={handleOpenReview}
                 isPending={setRolePermissions.isPending}
                 className="gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground"
               >
                 {!setRolePermissions.isPending && <Save className="h-3.5 w-3.5" />}
-                Save
+                Review &amp; save
               </LoadingButton>
             </>
           )}
@@ -309,6 +334,78 @@ export function PermissionMatrix({
           </div>
         </ScrollArea>
       )}
+      <ConfirmDialog
+        open={reviewOpen}
+        onOpenChange={handleReviewOpenChange}
+        title="Review permission changes"
+        description={`These changes apply to every member holding the ${role.name} role.`}
+        confirmLabel="Apply changes"
+        isPending={setRolePermissions.isPending}
+        keepOpenOnConfirm
+        onConfirm={handleSave}
+        content={<PermissionChangeSummary changes={pendingChanges} />}
+      />
     </Card>
+  );
+}
+
+function PermissionChangeSummary({
+  changes,
+}: {
+  changes: {
+    added: string[];
+    removed: string[];
+    rescoped: { key: string; from: EditableScope; to: EditableScope }[];
+  };
+}) {
+  const { added, removed, rescoped } = changes;
+  const total = added.length + removed.length + rescoped.length;
+
+  if (total === 0)
+    return (
+      <p className="text-[13px] text-muted-foreground">No changes to apply.</p>
+    );
+
+  return (
+    <div className="max-h-[45dvh] space-y-3 overflow-y-auto text-[13px]">
+      {added.length > 0 && (
+        <div>
+          <p className="font-medium text-emerald-700 dark:text-emerald-300">
+            Granting {added.length}
+          </p>
+          <ul className="mt-1 space-y-0.5 font-mono text-[11px] text-muted-foreground">
+            {added.map((key) => (
+              <li key={key}>{key}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {removed.length > 0 && (
+        <div>
+          <p className="font-medium text-red-700 dark:text-red-300">
+            Revoking {removed.length}
+          </p>
+          <ul className="mt-1 space-y-0.5 font-mono text-[11px] text-muted-foreground">
+            {removed.map((key) => (
+              <li key={key}>{key}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {rescoped.length > 0 && (
+        <div>
+          <p className="font-medium text-amber-700 dark:text-amber-300">
+            Changing scope on {rescoped.length}
+          </p>
+          <ul className="mt-1 space-y-0.5 font-mono text-[11px] text-muted-foreground">
+            {rescoped.map((change) => (
+              <li key={change.key}>
+                {change.key}: {change.from} → {change.to}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
   );
 }

@@ -116,7 +116,7 @@ export function PermissionScopeSelector({
           value={search}
           onChange={handleSearchChange}
           placeholder="Search permissions…"
-          className="h-8 min-w-0 flex-1"
+          className="min-w-0 flex-1"
         />
         <Badge variant="secondary" className="shrink-0">
           {value.length} selected

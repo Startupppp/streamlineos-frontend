@@ -3,8 +3,8 @@
 import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { dealEditSchema, type EditFormValues } from "./deal-edit-form-schema";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
@@ -18,20 +18,7 @@ import {
 } from "@/components/ui/form";
 import { useCrmStages } from "@/hooks/api/crm/metadata";
 
-const editSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  value: z.string().optional(),
-  stage: z.string().min(1),
-  probability: z.string().optional(),
-  contactPerson: z.string().optional(),
-  contactEmail: z.string().email().optional().or(z.literal("")),
-  contactPhone: z.string().optional(),
-  expectedCloseDate: z.string().optional(),
-  notes: z.string().optional(),
-  lostReason: z.string().optional(),
-});
-
-export type EditFormValues = z.infer<typeof editSchema>;
+export type { EditFormValues };
 
 export interface DealForEditForm {
   name: string;
@@ -57,7 +44,7 @@ interface DealEditFormProps {
 export function DealEditForm({ deal, isPending, onSubmit, onCancel }: DealEditFormProps) {
   const { data: dealStages = [] } = useCrmStages("deal");
   const form = useForm<EditFormValues>({
-    resolver: zodResolver(editSchema),
+    resolver: zodResolver(dealEditSchema),
     values: {
       name: deal.name,
       value: deal.value ??"0",

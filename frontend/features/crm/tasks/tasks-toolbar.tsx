@@ -65,50 +65,50 @@ export function TasksToolbar({
         <SearchInput placeholder="Search tasks..." value={search} onValueChange={handleSearchChange} />
 
       <Select value={typeFilter || "all"} onValueChange={handleTypeFilter}>
-        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[110px] text-[11px]")}>
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[110px]")}>
           <SelectValue placeholder="Type" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all" className="text-[11px]">All Types</SelectItem>
-          <SelectItem value="CALL" className="text-[11px]">Call</SelectItem>
-          <SelectItem value="EMAIL" className="text-[11px]">Email</SelectItem>
-          <SelectItem value="MEETING" className="text-[11px]">Meeting</SelectItem>
-          <SelectItem value="CUSTOM" className="text-[11px]">Custom</SelectItem>
+          <SelectItem value="all">All Types</SelectItem>
+          <SelectItem value="CALL">Call</SelectItem>
+          <SelectItem value="EMAIL">Email</SelectItem>
+          <SelectItem value="MEETING">Meeting</SelectItem>
+          <SelectItem value="CUSTOM">Custom</SelectItem>
         </SelectContent>
       </Select>
 
       <Select value={statusFilter || "all"} onValueChange={handleStatusFilter}>
-        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[110px] text-[11px]")}>
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[110px]")}>
           <SelectValue placeholder="Status" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all" className="text-[11px]">All Status</SelectItem>
-          <SelectItem value="pending" className="text-[11px]">Pending</SelectItem>
-          <SelectItem value="completed" className="text-[11px]">Completed</SelectItem>
-          <SelectItem value="cancelled" className="text-[11px]">Cancelled</SelectItem>
+          <SelectItem value="all">All Status</SelectItem>
+          <SelectItem value="pending">Pending</SelectItem>
+          <SelectItem value="completed">Completed</SelectItem>
+          <SelectItem value="cancelled">Cancelled</SelectItem>
         </SelectContent>
       </Select>
 
       <Select value={entityTypeFilter || "all"} onValueChange={handleEntityTypeFilter}>
-        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[110px] text-[11px]")}>
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[110px]")}>
           <SelectValue placeholder="Entity" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all" className="text-[11px]">All Entities</SelectItem>
-          <SelectItem value="LEAD" className="text-[11px]">Lead</SelectItem>
-          <SelectItem value="DEAL" className="text-[11px]">Deal</SelectItem>
-          <SelectItem value="CONTACT" className="text-[11px]">Contact</SelectItem>
+          <SelectItem value="all">All Entities</SelectItem>
+          <SelectItem value="LEAD">Lead</SelectItem>
+          <SelectItem value="DEAL">Deal</SelectItem>
+          <SelectItem value="CONTACT">Contact</SelectItem>
         </SelectContent>
       </Select>
 
       <Select value={assigneeFilter || "all"} onValueChange={handleAssigneeFilter}>
-        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[130px] text-[11px]")}>
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[130px]")}>
           <SelectValue placeholder="Assignee" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all" className="text-[11px]">All Assignees</SelectItem>
+          <SelectItem value="all">All Assignees</SelectItem>
           {members.map((m) => (
-            <SelectItem key={m.id} value={m.id} className="text-[11px]">
+            <SelectItem key={m.id} value={m.id}>
               {m.name ?? m.id}
             </SelectItem>
           ))}

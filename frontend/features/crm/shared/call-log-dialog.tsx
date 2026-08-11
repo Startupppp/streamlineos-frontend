@@ -2,8 +2,8 @@
 
 import { useCallback } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { toast } from "sonner";
+import { callLogSchema, type CallLogFormValues } from "./call-log-dialog-schema";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   FormControl,
@@ -24,16 +24,6 @@ import {
 import { EntityFormDialog } from "@/components/shared/entity-form-dialog";
 import { useCreateTask } from "@/hooks/api/tasks";
 import type { TaskEntityType } from "@/hooks/api/tasks";
-
-const callLogSchema = z.object({
-  direction: z.enum(["INBOUND", "OUTBOUND"]),
-  outcome: z.enum(["CONNECTED", "NO_ANSWER", "VOICEMAIL", "BUSY", "WRONG_NUMBER"]),
-  durationMinutes: z.string().optional(),
-  notes: z.string().optional(),
-  calledAt: z.string().optional(),
-});
-
-type CallLogFormValues = z.infer<typeof callLogSchema>;
 
 const DIRECTION_LABELS: Record<CallLogFormValues["direction"], string> = {
   INBOUND: "Inbound",

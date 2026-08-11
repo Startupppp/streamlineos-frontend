@@ -1,9 +1,6 @@
 "use client";
 
-import { useState, useCallback, type ChangeEvent } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { useState, useCallback } from "react";
 import { Pencil, Archive, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -20,39 +17,11 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared/error-state";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetClose,
-  SheetBody,
-} from "@/components/ui/sheet";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
-import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PlusIcon } from "@animateicons/react/lucide";
-import { Textarea } from "@/components/ui/textarea";
-import { UserCombobox } from "@/components/ui/user-combobox";
 import { useOrgMembers } from "@/hooks/api/organization";
 import type { OrgDepartment } from "@/types/org-hierarchy";
-import { RequireModule } from "@/components/auth/require-module";
 import { HierarchyArchiveDialog } from "./hierarchy-archive-dialog";
 import { isAssignableHierarchyParent } from "./hierarchy-option";
 import { useHierarchyArchive } from "./use-hierarchy-archive";
@@ -62,161 +31,9 @@ import {
   useHierarchyPageBounds,
 } from "./use-hierarchy-list-state";
 import { useCan } from "@/hooks/api/access";
-
-const NO_BRANCH = "none";
-
-const formSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(1, "Name is required")
-    .max(100)
-    .refine(
-      (v) => /[\p{L}\p{N}]/u.test(v),
-      "Name must contain at least one letter or number",
-    ),
-  code: z
-    .string()
-    .trim()
-    .min(2)
-    .max(20)
-    .regex(/^[A-Za-z0-9]+$/, "Only alphanumeric characters"),
-  branchId: z.string().optional(),
-  headUserId: z.string().optional(),
-  description: z.string().trim().max(500).optional(),
-});
-
-type FormValues = z.infer<typeof formSchema>;
-
-function DeptForm({
-  defaultValues,
-  branches,
-  onSubmit,
-  isPending: _,
-}: {
-  defaultValues?: FormValues;
-  branches: { id: string; name: string }[];
-  onSubmit: (v: FormValues) => void;
-  isPending: boolean;
-}) {
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: defaultValues ?? {
-      name: "",
-      code: "",
-      branchId: NO_BRANCH,
-      headUserId: "",
-      description: "",
-    },
-  });
-
-  return (
-    <Form {...form}>
-      <form
-        id="dept-form"
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="space-y-4"
-      >
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Name</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g. Engineering" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <div className="grid grid-cols-2 gap-3">
-          <FormField
-            control={form.control}
-            name="code"
-            render={({ field }) => {
-              function handleCodeChange(e: ChangeEvent<HTMLInputElement>) {
-                field.onChange(e.target.value.toUpperCase());
-              }
-              return (
-                <FormItem>
-                  <FormLabel>Code</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="ENG"
-                      {...field}
-                      onChange={handleCodeChange}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              );
-            }}
-          />
-          <FormField
-            control={form.control}
-            name="branchId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Branch</FormLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="None" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value={NO_BRANCH}>None</SelectItem>
-                    {branches.map((b) => (
-                      <SelectItem key={b.id} value={b.id}>
-                        {b.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        <FormField
-          control={form.control}
-          name="headUserId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Department Head</FormLabel>
-              <FormControl>
-                <UserCombobox
-                  value={field.value ?? ""}
-                  onChange={field.onChange}
-                  placeholder="Select head…"
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Textarea
-                  rows={3}
-                  placeholder="Optional description…"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </form>
-    </Form>
-  );
-}
+import { DeptForm } from "./department-form";
+import { HierarchyFormSheet } from "./hierarchy-form-sheet";
+import { NO_BRANCH, type DepartmentFormValues } from "./departments-schema";
 
 export function OrgDepartmentsPage() {
   const {
@@ -275,7 +92,7 @@ export function OrgDepartmentsPage() {
   const displayed = depts?.data ?? [];
 
   const handleCreate = useCallback(
-    (values: FormValues) => {
+    (values: DepartmentFormValues) => {
       create.mutate(
         {
           name: values.name,
@@ -297,7 +114,7 @@ export function OrgDepartmentsPage() {
   );
 
   const handleUpdate = useCallback(
-    (values: FormValues) => {
+    (values: DepartmentFormValues) => {
       if (!editing) return;
       update.mutate(
         {
@@ -337,18 +154,13 @@ export function OrgDepartmentsPage() {
   );
 
   const handleOpenCreate = useCallback(() => setShowCreate(true), []);
-  const handleSearchChange = useCallback(
-    (v: string) => setSearch(v),
-    [setSearch],
-  );
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
 
-  function handleSearchInputChange(value: string) {
-    handleSearchChange(value);
+  function handleSearchChange(value: string) {
+    setSearch(value);
   }
-
   function makeRestoreHandler(dept: OrgDepartment) {
     return () => handleRestore(dept);
   }
@@ -437,6 +249,7 @@ export function OrgDepartmentsPage() {
                 size="sm"
                 onClick={makeRestoreHandler(d)}
                 title="Restore"
+                aria-label="Restore department"
               >
                 <RotateCcw className="h-4 w-4 text-primary" />
               </Button>
@@ -447,6 +260,7 @@ export function OrgDepartmentsPage() {
                   size="sm"
                   onClick={makeSetEditingHandler(d)}
                   title="Edit"
+                  aria-label="Edit department"
                 >
                   <Pencil className="h-4 w-4" />
                 </Button>
@@ -455,6 +269,7 @@ export function OrgDepartmentsPage() {
                   size="sm"
                   onClick={makeArchiveHandler(d)}
                   title="Archive"
+                  aria-label="Archive department"
                 >
                   <Archive className="h-4 w-4 text-muted-foreground" />
                 </Button>
@@ -471,14 +286,14 @@ export function OrgDepartmentsPage() {
       title={`No departments matching "${serverSearch}"`}
       description="Try a different search term."
       compact
-      className="min-h-[200px]"
+      className="flex-1 min-h-0"
     />
   ) : showArchived ? (
     <EmptyState
       illustrationPreset="archive"
       title="No archived departments"
       compact
-      className="min-h-[200px]"
+      className="flex-1 min-h-0"
     />
   ) : (
     <EmptyState
@@ -494,165 +309,123 @@ export function OrgDepartmentsPage() {
   );
 
   return (
-    <RequireModule module="hr">
-      <PageWrapper
-        title="Departments"
-        subtitle="Departments organized within branches."
-        actions={
-          <div className="flex w-full items-center gap-2 sm:w-auto">
-            <Button
-              variant={showArchived ? "secondary" : "outline"}
+    <PageWrapper
+      title="Departments"
+      subtitle="Departments organized within branches."
+      actions={
+        <div className="flex w-full items-center gap-2 sm:w-auto">
+          <Button
+            variant={showArchived ? "secondary" : "outline"}
+            size="sm"
+            className="flex-1 text-xs sm:flex-none"
+            onClick={toggleArchived}
+          >
+            <Archive className="h-4 w-4 mr-1.5" />
+            {showArchived ? "Show current" : "View archived"}
+          </Button>
+          {canManage ? (
+            <AnimatedIconButton
+              icon={PlusIcon}
+              iconSize={16}
+              iconClassName="mr-1.5"
               size="sm"
-              className="flex-1 text-xs sm:flex-none"
-              onClick={toggleArchived}
+              className="flex-1 sm:flex-none"
+              onClick={handleOpenCreate}
             >
-              <Archive className="h-4 w-4 mr-1.5" />
-              {showArchived ? "Show current" : "View archived"}
-            </Button>
-            {canManage ? (
-              <AnimatedIconButton
-                icon={PlusIcon}
-                iconSize={16}
-                iconClassName="mr-1.5"
-                size="sm"
-                className="flex-1 sm:flex-none"
-                onClick={handleOpenCreate}
-              >
-                Add Department
-              </AnimatedIconButton>
-            ) : null}
-          </div>
-        }
-        filters={
-          <SearchInput
-            placeholder="Search departments…"
-            value={search}
-            onValueChange={handleSearchInputChange}
-          />
-        }
+              Add Department
+            </AnimatedIconButton>
+          ) : null}
+        </div>
+      }
+      filters={
+        <SearchInput
+          placeholder="Search departments…"
+          value={search}
+          onValueChange={handleSearchChange}
+        />
+      }
+    >
+      {isError ? (
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load departments"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
+      ) : (
+        <DataTable
+          data={displayed}
+          columns={columns}
+          getRowKey={(d) => d.id}
+          isLoading={isLoading || isCorrectingPage}
+          emptyState={emptyState}
+          rowClassName={(d) => cn(d.status === "ARCHIVED" && "opacity-60")}
+          minWidth="820px"
+          className="flex-1 min-h-0"
+          pagination={{
+            mode: "server",
+            page,
+            pageSize,
+            total: depts?.total ?? 0,
+            onPageChange: setPage,
+            onPageSizeChange: setPageSize,
+            pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
+          }}
+        />
+      )}
+
+      <HierarchyFormSheet
+        open={showCreate}
+        onOpenChange={setShowCreate}
+        title="New Department"
+        formId="dept-form"
+        isPending={create.isPending}
       >
-        {isError ? (
-          <ErrorState
-            className="flex-1"
-            title="Couldn't load departments"
-            description={getErrorMessage(error)}
-            onRetry={handleRetry}
-          />
-        ) : (
-          <DataTable
-            data={displayed}
-            columns={columns}
-            getRowKey={(d) => d.id}
-            isLoading={isLoading || isCorrectingPage}
-            emptyState={emptyState}
-            rowClassName={(d) => cn(d.status === "ARCHIVED" && "opacity-60")}
-            minWidth="820px"
-            className="flex-1 min-h-0"
-            pagination={{
-              mode: "server",
-              page,
-              pageSize,
-              total: depts?.total ?? 0,
-              onPageChange: setPage,
-              onPageSizeChange: setPageSize,
-              pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
-            }}
+        {showCreate && (
+          <DeptForm
+            branches={branches}
+            onSubmit={handleCreate}
+            isPending={create.isPending}
           />
         )}
+      </HierarchyFormSheet>
 
-        <Sheet open={showCreate} onOpenChange={setShowCreate}>
-          <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md">
-            <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
-              <SheetTitle>New Department</SheetTitle>
-            </SheetHeader>
-            <SheetBody className="px-6 py-5">
-              {showCreate && (
-                <DeptForm
-                  branches={branches}
-                  onSubmit={handleCreate}
-                  isPending={create.isPending}
-                />
-              )}
-            </SheetBody>
-            <div className="shrink-0 px-6 py-4 border-t">
-              <div className="grid grid-cols-2 gap-2">
-                <SheetClose asChild>
-                  <Button variant="outline" size="sm" className="w-full">
-                    Cancel
-                  </Button>
-                </SheetClose>
-                <LoadingButton
-                  size="sm"
-                  type="submit"
-                  form="dept-form"
-                  isPending={create.isPending}
-                  loadingText="Saving…"
-                  className="w-full"
-                >
-                  Save
-                </LoadingButton>
-              </div>
-            </div>
-          </SheetContent>
-        </Sheet>
+      <HierarchyFormSheet
+        open={!!editing}
+        onOpenChange={handleEditSheetOpenChange}
+        title="Edit Department"
+        formId="dept-form"
+        isPending={update.isPending}
+      >
+        {editing && (
+          <DeptForm
+            defaultValues={{
+              name: editing.name,
+              code: editing.code,
+              branchId: editing.branchId ?? NO_BRANCH,
+              headUserId: editing.headUserId ?? "",
+              description: editing.description ?? "",
+            }}
+            branches={branches}
+            onSubmit={handleUpdate}
+            isPending={update.isPending}
+          />
+        )}
+      </HierarchyFormSheet>
 
-        <Sheet open={!!editing} onOpenChange={handleEditSheetOpenChange}>
-          <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md">
-            <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
-              <SheetTitle>Edit Department</SheetTitle>
-            </SheetHeader>
-            <SheetBody className="px-6 py-5">
-              {editing && (
-                <DeptForm
-                  defaultValues={{
-                    name: editing.name,
-                    code: editing.code,
-                    branchId: editing.branchId ?? NO_BRANCH,
-                    headUserId: editing.headUserId ?? "",
-                    description: editing.description ?? "",
-                  }}
-                  branches={branches}
-                  onSubmit={handleUpdate}
-                  isPending={update.isPending}
-                />
-              )}
-            </SheetBody>
-            <div className="shrink-0 px-6 py-4 border-t">
-              <div className="grid grid-cols-2 gap-2">
-                <SheetClose asChild>
-                  <Button variant="outline" size="sm" className="w-full">
-                    Cancel
-                  </Button>
-                </SheetClose>
-                <LoadingButton
-                  size="sm"
-                  type="submit"
-                  form="dept-form"
-                  isPending={update.isPending}
-                  loadingText="Saving…"
-                  className="w-full"
-                >
-                  Save
-                </LoadingButton>
-              </div>
-            </div>
-          </SheetContent>
-        </Sheet>
-
-        <HierarchyArchiveDialog
-          open={!!archiveFlow.target}
-          unitName={archiveFlow.target?.name ?? ""}
-          unitLabel="department"
-          isPending={update.isPending}
-          error={archiveFlow.error}
-          preflightError={archiveFlow.preflightError}
-          dependencies={archiveFlow.dependencies}
-          isChecking={archiveFlow.isChecking}
-          onRetryPreflight={archiveFlow.retryPreflight}
-          onConfirm={archiveFlow.confirmArchive}
-          onOpenChange={archiveFlow.handleOpenChange}
-        />
-      </PageWrapper>
-    </RequireModule>
+      <HierarchyArchiveDialog
+        open={!!archiveFlow.target}
+        unitName={archiveFlow.target?.name ?? ""}
+        unitLabel="department"
+        isPending={update.isPending}
+        error={archiveFlow.error}
+        preflightError={archiveFlow.preflightError}
+        dependencies={archiveFlow.dependencies}
+        isChecking={archiveFlow.isChecking}
+        onRetryPreflight={archiveFlow.retryPreflight}
+        onConfirm={archiveFlow.confirmArchive}
+        onOpenChange={archiveFlow.handleOpenChange}
+      />
+    </PageWrapper>
   );
 }

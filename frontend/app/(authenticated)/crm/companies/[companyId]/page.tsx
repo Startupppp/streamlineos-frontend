@@ -46,6 +46,7 @@ import { Customer360Timeline } from "@/features/crm/shared/customer-360-timeline
 import { CrmOptionBadge } from "@/features/crm/shared/metadata";
 import { formatCurrency } from "@/lib/format-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { ErrorState } from "@/components/shared";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import type { RelatedLead } from "@/types/crm";
 
@@ -118,7 +119,7 @@ export default function CompanyDetailPage({
   const [linkParentOpen, setLinkParentOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
-  const { data: org, isLoading: orgLoading } = useCrmOrganizationDetail(id);
+  const { data: org, isLoading: orgLoading, isError: orgError, error: orgDetailError, refetch: refetchOrg } = useCrmOrganizationDetail(id);
   const { data: rollup } = useCrmOrgRollup(id);
   const { data: hierarchy } = useCrmOrgHierarchy(id);
   const { data: timeline } = useCrmOrgTimeline(id);
@@ -188,7 +189,21 @@ export default function CompanyDetailPage({
     });
   }, [id, deleteMutation, router]);
 
+  const handleRefetchOrg = useCallback(() => { void refetchOrg(); }, [refetchOrg]);
+
   if (orgLoading) return <DetailPageSkeleton />;
+
+  if (orgError) {
+    return (
+      <PageWrapper title="Company" subtitle="" backHref="/crm/companies">
+        <ErrorState
+          description={getErrorMessage(orgDetailError)}
+          onRetry={handleRefetchOrg}
+          className="flex-1"
+        />
+      </PageWrapper>
+    );
+  }
 
   if (!org) {
     return (

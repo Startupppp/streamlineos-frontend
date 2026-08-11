@@ -14,6 +14,16 @@ export interface Portfolio {
   projectCount?: number;
 }
 
+export interface PortfoliosPage {
+  data: Portfolio[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
 export interface LinkedProject {
   id: number;
   name: string;

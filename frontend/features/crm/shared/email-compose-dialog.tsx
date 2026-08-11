@@ -2,8 +2,8 @@
 
 import { useCallback } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { toast } from "sonner";
+import { emailSchema, type EmailFormValues } from "./email-compose-dialog-schema";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   FormControl,
@@ -17,14 +17,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { EntityFormDialog } from "@/components/shared/entity-form-dialog";
 import { useCreateTask } from "@/hooks/api/tasks";
 import type { TaskEntityType } from "@/hooks/api/tasks";
-
-const emailSchema = z.object({
-  to: z.string().email("Invalid email address"),
-  subject: z.string().min(1, "Subject is required").max(200, "Max 200 characters"),
-  body: z.string().min(1, "Message is required"),
-});
-
-type EmailFormValues = z.infer<typeof emailSchema>;
 
 interface EmailComposeDialogProps {
   open: boolean;

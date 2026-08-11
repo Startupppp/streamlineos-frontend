@@ -1,7 +1,7 @@
 "use client";
 
-import { z } from "zod";
 import { useForm } from "react-hook-form";
+import { quoteSettingsFormSchema, type QuoteSettingsFormValues } from "./quote-settings-form-schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -17,14 +17,7 @@ import {
 } from "@/components/ui/form";
 import type { QuoteSettings } from "@/types/crm/pricebooks";
 
-const schema = z.object({
-  maxDiscountPercent: z.number().int().min(0).max(100).nullable().optional(),
-  requirePricebookPrice: z.boolean(),
-  defaultExpiryDays: z.number().int().min(1).max(365),
-  allowPriceOverride: z.boolean(),
-});
-
-export type QuoteSettingsFormValues = z.infer<typeof schema>;
+export type { QuoteSettingsFormValues };
 
 interface QuoteSettingsFormProps {
   settings: QuoteSettings | undefined;
@@ -34,7 +27,7 @@ interface QuoteSettingsFormProps {
 
 export function QuoteSettingsForm({ settings, onSubmit, isPending }: QuoteSettingsFormProps) {
   const form = useForm<QuoteSettingsFormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(quoteSettingsFormSchema),
     values: settings
       ? {
           maxDiscountPercent: settings.maxDiscountPercent,

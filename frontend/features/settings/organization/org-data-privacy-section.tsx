@@ -48,7 +48,7 @@ export function OrgDataPrivacySection({ canEdit }: OrgDataPrivacySectionProps) {
             onValueChange={handleRetentionChange}
             disabled={!canEdit}
           >
-            <SelectTrigger className="h-8 w-full sm:w-44">
+            <SelectTrigger className="w-full sm:w-44">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

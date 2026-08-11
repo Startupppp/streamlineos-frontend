@@ -1,9 +1,6 @@
 "use client";
 
-import { useState, useCallback, type ChangeEvent } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { useState, useCallback } from "react";
 import { Pencil, Archive, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -19,40 +16,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetClose,
-  SheetBody,
-} from "@/components/ui/sheet";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
+import { ErrorState } from "@/components/shared/error-state";
 import { SearchInput } from "@/components/ui/search-input";
-import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PlusIcon } from "@animateicons/react/lucide";
-import { Textarea } from "@/components/ui/textarea";
-import { UserCombobox } from "@/components/ui/user-combobox";
 import { useOrgMembers } from "@/hooks/api/organization";
 import type { OrgTeam } from "@/types/org-hierarchy";
-import { RequireModule } from "@/components/auth/require-module";
-import { ErrorState } from "@/components/shared/error-state";
 import { useCan } from "@/hooks/api/access";
 import { HierarchyArchiveDialog } from "./hierarchy-archive-dialog";
 import { isAssignableHierarchyParent } from "./hierarchy-option";
@@ -62,180 +31,9 @@ import {
   useHierarchyListState,
   useHierarchyPageBounds,
 } from "./use-hierarchy-list-state";
-
-const formSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(1, "Name is required")
-    .max(100)
-    .refine(
-      (v) => /[\p{L}\p{N}]/u.test(v),
-      "Name must contain at least one letter or number",
-    ),
-  code: z
-    .string()
-    .trim()
-    .min(2, "At least 2 characters")
-    .max(20, "Max 20 characters")
-    .regex(/^[A-Za-z0-9]+$/, "Letters and numbers only"),
-  departmentId: z.string().min(1, "Department is required"),
-  leadUserId: z.string().optional(),
-  description: z.string().trim().max(500).optional(),
-  capacity: z.string().optional(),
-});
-
-type FormValues = z.infer<typeof formSchema>;
-
-function TeamForm({
-  defaultValues,
-  departments,
-  onSubmit,
-  isPending: _,
-}: {
-  defaultValues?: Partial<FormValues>;
-  departments: { id: string; name: string }[];
-  onSubmit: (v: FormValues) => void;
-  isPending: boolean;
-}) {
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    reValidateMode: "onChange",
-    defaultValues: {
-      name: "",
-      code: "",
-      departmentId: "",
-      leadUserId: "",
-      description: "",
-      capacity: "",
-      ...defaultValues,
-    },
-  });
-
-  return (
-    <Form {...form}>
-      <form
-        id="team-form"
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="space-y-5"
-      >
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Name</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g. Frontend Team" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <div className="grid grid-cols-2 items-start gap-3">
-          <FormField
-            control={form.control}
-            name="code"
-            render={({ field }) => {
-              function handleCodeChange(e: ChangeEvent<HTMLInputElement>) {
-                field.onChange(e.target.value.toUpperCase());
-              }
-              return (
-                <FormItem className="min-w-0">
-                  <FormLabel>Code</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="FE"
-                      {...field}
-                      onChange={handleCodeChange}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              );
-            }}
-          />
-          <FormField
-            control={form.control}
-            name="capacity"
-            render={({ field }) => (
-              <FormItem className="min-w-0">
-                <FormLabel>Capacity</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    min={1}
-                    placeholder="Optional"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        <FormField
-          control={form.control}
-          name="departmentId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Department</FormLabel>
-              <Select value={field.value} onValueChange={field.onChange}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a department" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {departments.map((d) => (
-                    <SelectItem key={d.id} value={d.id}>
-                      {d.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="leadUserId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Team Lead</FormLabel>
-              <FormControl>
-                <UserCombobox
-                  value={field.value ?? ""}
-                  onChange={field.onChange}
-                  placeholder="Select team lead…"
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Textarea
-                  rows={3}
-                  placeholder="Optional description…"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </form>
-    </Form>
-  );
-}
+import { TeamForm } from "./team-form";
+import { HierarchyFormSheet } from "./hierarchy-form-sheet";
+import { type TeamFormValues } from "./teams-schema";
 
 export function OrgTeamsPage() {
   const {
@@ -294,7 +92,7 @@ export function OrgTeamsPage() {
   const displayedTeams = teams?.data ?? [];
 
   const handleCreate = useCallback(
-    (values: FormValues) => {
+    (values: TeamFormValues) => {
       create.mutate(
         {
           name: values.name,
@@ -317,7 +115,7 @@ export function OrgTeamsPage() {
   );
 
   const handleUpdate = useCallback(
-    (values: FormValues) => {
+    (values: TeamFormValues) => {
       if (!editing) return;
       update.mutate(
         {
@@ -358,20 +156,13 @@ export function OrgTeamsPage() {
   );
 
   const handleOpenCreate = useCallback(() => setShowCreate(true), []);
-  const handleSearchChange = useCallback(
-    (value: string) => {
-      setSearch(value);
-    },
-    [setSearch],
-  );
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
 
-  function handleSearchInputChange(value: string) {
-    handleSearchChange(value);
+  function handleSearchChange(value: string) {
+    setSearch(value);
   }
-
   function makeRestoreHandler(team: OrgTeam) {
     return () => handleRestore(team);
   }
@@ -470,6 +261,7 @@ export function OrgTeamsPage() {
                 size="sm"
                 onClick={makeRestoreHandler(t)}
                 title="Restore"
+                aria-label="Restore team"
               >
                 <RotateCcw className="h-4 w-4 text-primary" />
               </Button>
@@ -480,6 +272,7 @@ export function OrgTeamsPage() {
                   size="sm"
                   onClick={makeSetEditingHandler(t)}
                   title="Edit"
+                  aria-label="Edit team"
                 >
                   <Pencil className="h-4 w-4" />
                 </Button>
@@ -488,6 +281,7 @@ export function OrgTeamsPage() {
                   size="sm"
                   onClick={makeArchiveHandler(t)}
                   title="Archive"
+                  aria-label="Archive team"
                 >
                   <Archive className="h-4 w-4 text-muted-foreground" />
                 </Button>
@@ -504,14 +298,14 @@ export function OrgTeamsPage() {
       title={`No teams matching "${serverSearch}"`}
       description="Try a different search term."
       compact
-      className="min-h-[200px]"
+      className="flex-1 min-h-0"
     />
   ) : showArchived ? (
     <EmptyState
       illustrationPreset="archive"
       title="No archived teams"
       compact
-      className="min-h-[200px]"
+      className="flex-1 min-h-0"
     />
   ) : (
     <EmptyState
@@ -525,167 +319,125 @@ export function OrgTeamsPage() {
   );
 
   return (
-    <RequireModule module="hr">
-      <PageWrapper
-        title="Teams"
-        subtitle="Teams within departments."
-        actions={
-          <div className="flex w-full items-center gap-2 sm:w-auto">
-            <Button
-              variant={showArchived ? "secondary" : "outline"}
+    <PageWrapper
+      title="Teams"
+      subtitle="Teams within departments."
+      actions={
+        <div className="flex w-full items-center gap-2 sm:w-auto">
+          <Button
+            variant={showArchived ? "secondary" : "outline"}
+            size="sm"
+            className="flex-1 text-xs sm:flex-none"
+            onClick={toggleArchived}
+          >
+            <Archive className="h-4 w-4 mr-1.5" />
+            {showArchived ? "Show current" : "View archived"}
+          </Button>
+          {canManage ? (
+            <AnimatedIconButton
+              icon={PlusIcon}
+              iconSize={16}
+              iconClassName="mr-1.5"
               size="sm"
-              className="flex-1 text-xs sm:flex-none"
-              onClick={toggleArchived}
+              className="flex-1 sm:flex-none"
+              onClick={handleOpenCreate}
             >
-              <Archive className="h-4 w-4 mr-1.5" />
-              {showArchived ? "Show current" : "View archived"}
-            </Button>
-            {canManage ? (
-              <AnimatedIconButton
-                icon={PlusIcon}
-                iconSize={16}
-                iconClassName="mr-1.5"
-                size="sm"
-                className="flex-1 sm:flex-none"
-                onClick={handleOpenCreate}
-              >
-                Add Team
-              </AnimatedIconButton>
-            ) : null}
-          </div>
-        }
-        filters={
-          <SearchInput
-            placeholder="Search teams…"
-            value={search}
-            onValueChange={handleSearchInputChange}
-          />
-        }
+              Add Team
+            </AnimatedIconButton>
+          ) : null}
+        </div>
+      }
+      filters={
+        <SearchInput
+          placeholder="Search teams…"
+          value={search}
+          onValueChange={handleSearchChange}
+        />
+      }
+    >
+      {isError ? (
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load teams"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
+      ) : (
+        <DataTable
+          data={displayedTeams}
+          columns={columns}
+          getRowKey={(t) => t.id}
+          isLoading={isLoading || isCorrectingPage}
+          emptyState={emptyState}
+          rowClassName={(t) => cn(t.status === "ARCHIVED" && "opacity-60")}
+          minWidth="900px"
+          className="flex-1 min-h-0"
+          pagination={{
+            mode: "server",
+            page,
+            pageSize,
+            total: teams?.total ?? 0,
+            onPageChange: setPage,
+            onPageSizeChange: setPageSize,
+            pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
+          }}
+        />
+      )}
+
+      <HierarchyFormSheet
+        open={showCreate}
+        onOpenChange={setShowCreate}
+        title="New Team"
+        formId="team-form"
+        isPending={create.isPending}
       >
-        {isError ? (
-          <ErrorState
-            className="flex-1"
-            title="Couldn't load teams"
-            description={getErrorMessage(error)}
-            onRetry={handleRetry}
-          />
-        ) : (
-          <DataTable
-            data={displayedTeams}
-            columns={columns}
-            getRowKey={(t) => t.id}
-            isLoading={isLoading || isCorrectingPage}
-            emptyState={emptyState}
-            rowClassName={(t) => cn(t.status === "ARCHIVED" && "opacity-60")}
-            minWidth="900px"
-            className="flex-1 min-h-0"
-            pagination={{
-              mode: "server",
-              page,
-              pageSize,
-              total: teams?.total ?? 0,
-              onPageChange: setPage,
-              onPageSizeChange: setPageSize,
-              pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
-            }}
+        {showCreate && (
+          <TeamForm
+            departments={departments}
+            onSubmit={handleCreate}
+            isPending={create.isPending}
           />
         )}
+      </HierarchyFormSheet>
 
-        <Sheet open={showCreate} onOpenChange={setShowCreate}>
-          <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md">
-            <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
-              <SheetTitle>New Team</SheetTitle>
-            </SheetHeader>
-            <SheetBody className="px-6 py-5">
-              {showCreate && (
-                <TeamForm
-                  departments={departments}
-                  onSubmit={handleCreate}
-                  isPending={create.isPending}
-                />
-              )}
-            </SheetBody>
-            <div className="shrink-0 px-6 py-4 border-t">
-              <div className="grid grid-cols-2 gap-2">
-                <SheetClose asChild>
-                  <Button variant="outline" size="sm" className="w-full">
-                    Cancel
-                  </Button>
-                </SheetClose>
-                <LoadingButton
-                  size="sm"
-                  type="submit"
-                  form="team-form"
-                  isPending={create.isPending}
-                  loadingText="Saving…"
-                  className="w-full"
-                >
-                  Save
-                </LoadingButton>
-              </div>
-            </div>
-          </SheetContent>
-        </Sheet>
+      <HierarchyFormSheet
+        open={!!editing}
+        onOpenChange={handleEditSheetOpenChange}
+        title="Edit Team"
+        formId="team-form"
+        isPending={update.isPending}
+      >
+        {editing && (
+          <TeamForm
+            defaultValues={{
+              name: editing.name,
+              code: editing.code,
+              departmentId: editing.departmentId ?? "",
+              leadUserId: editing.leadUserId ?? "",
+              description: editing.description ?? "",
+              capacity:
+                editing.capacity != null ? String(editing.capacity) : "",
+            }}
+            departments={departments}
+            onSubmit={handleUpdate}
+            isPending={update.isPending}
+          />
+        )}
+      </HierarchyFormSheet>
 
-        <Sheet open={!!editing} onOpenChange={handleEditSheetOpenChange}>
-          <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md">
-            <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
-              <SheetTitle>Edit Team</SheetTitle>
-            </SheetHeader>
-            <SheetBody className="px-6 py-5">
-              {editing && (
-                <TeamForm
-                  defaultValues={{
-                    name: editing.name,
-                    code: editing.code,
-                    departmentId: editing.departmentId ?? "",
-                    leadUserId: editing.leadUserId ?? "",
-                    description: editing.description ?? "",
-                    capacity:
-                      editing.capacity != null ? String(editing.capacity) : "",
-                  }}
-                  departments={departments}
-                  onSubmit={handleUpdate}
-                  isPending={update.isPending}
-                />
-              )}
-            </SheetBody>
-            <div className="shrink-0 px-6 py-4 border-t">
-              <div className="grid grid-cols-2 gap-2">
-                <SheetClose asChild>
-                  <Button variant="outline" size="sm" className="w-full">
-                    Cancel
-                  </Button>
-                </SheetClose>
-                <LoadingButton
-                  size="sm"
-                  type="submit"
-                  form="team-form"
-                  isPending={update.isPending}
-                  loadingText="Saving…"
-                  className="w-full"
-                >
-                  Save
-                </LoadingButton>
-              </div>
-            </div>
-          </SheetContent>
-        </Sheet>
-
-        <HierarchyArchiveDialog
-          open={!!archiveFlow.target}
-          unitName={archiveFlow.target?.name ?? ""}
-          unitLabel="team"
-          isPending={update.isPending}
-          error={archiveFlow.error}
-          preflightError={archiveFlow.preflightError}
-          dependencies={archiveFlow.dependencies}
-          isChecking={archiveFlow.isChecking}
-          onRetryPreflight={archiveFlow.retryPreflight}
-          onConfirm={archiveFlow.confirmArchive}
-          onOpenChange={archiveFlow.handleOpenChange}
-        />
-      </PageWrapper>
-    </RequireModule>
+      <HierarchyArchiveDialog
+        open={!!archiveFlow.target}
+        unitName={archiveFlow.target?.name ?? ""}
+        unitLabel="team"
+        isPending={update.isPending}
+        error={archiveFlow.error}
+        preflightError={archiveFlow.preflightError}
+        dependencies={archiveFlow.dependencies}
+        isChecking={archiveFlow.isChecking}
+        onRetryPreflight={archiveFlow.retryPreflight}
+        onConfirm={archiveFlow.confirmArchive}
+        onOpenChange={archiveFlow.handleOpenChange}
+      />
+    </PageWrapper>
   );
 }

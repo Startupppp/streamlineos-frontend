@@ -85,7 +85,7 @@ function ColorField({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder="#0b1220"
-          className="h-8 flex-1 font-mono text-sm"
+          className="flex-1 font-mono text-sm"
           maxLength={7}
         />
       </div>
@@ -97,7 +97,7 @@ function ColorField({
 function UploadButton({ uploading, onClick }: { uploading: boolean; onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
-    <LoadingButton type="button" variant="outline" size="sm" className="h-8 shrink-0 gap-1 px-2" isPending={uploading} onClick={onClick} {...hoverHandlers}>
+    <LoadingButton type="button" variant="outline" size="sm" className="shrink-0 gap-1 px-2" isPending={uploading} onClick={onClick} {...hoverHandlers}>
       {!uploading && <UploadIcon ref={iconRef} size={14} />}
     </LoadingButton>
   );
@@ -247,7 +247,7 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
                     <FormLabel className="text-xs">Logo</FormLabel>
                     <div className="flex gap-2">
                       <FormControl>
-                        <Input {...field} placeholder="https://cdn.example.com/logo.png" className="h-8 flex-1" />
+                        <Input {...field} placeholder="https://cdn.example.com/logo.png" className="flex-1" />
                       </FormControl>
                       <UploadButton uploading={logoUploading} onClick={handleClickLogoInput} />
                       <input ref={logoInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/svg+xml" className="hidden" onChange={handleLogoUpload} />
@@ -265,7 +265,7 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
                     <FormLabel className="text-xs">Favicon <span className="text-muted-foreground font-normal">(max 256 KB)</span></FormLabel>
                     <div className="flex gap-2">
                       <FormControl>
-                        <Input {...field} placeholder="https://cdn.example.com/favicon.ico" className="h-8 flex-1" />
+                        <Input {...field} placeholder="https://cdn.example.com/favicon.ico" className="flex-1" />
                       </FormControl>
                       <UploadButton uploading={faviconUploading} onClick={handleClickFaviconInput} />
                       <input ref={faviconInputRef} type="file" accept="image/x-icon,image/vnd.microsoft.icon,image/png,image/jpeg" className="hidden" onChange={handleFaviconUpload} />
@@ -314,7 +314,7 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
                 <FormItem className="gap-1.5">
                   <FormLabel className="text-xs">Login page background URL</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="https://cdn.example.com/bg.jpg" className="h-8" />
+                    <Input {...field} placeholder="https://cdn.example.com/bg.jpg" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -328,7 +328,7 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
             />
 
             <OrgSettingsFormActions onCancel={handleCancel} isPending={isPending}>
-              <LoadingButton type="submit" isPending={isPending} size="sm" className="h-8 gap-1.5" loadingText="Saving…">
+              <LoadingButton type="submit" isPending={isPending} size="sm" className="gap-1.5" loadingText="Saving…">
                 Save branding
               </LoadingButton>
             </OrgSettingsFormActions>

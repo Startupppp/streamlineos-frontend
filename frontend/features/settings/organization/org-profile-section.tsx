@@ -152,7 +152,7 @@ export function OrgProfileSection({ org, canEdit }: OrgProfileSectionProps) {
                   <FormItem className="gap-1.5">
                     <FormLabel className="text-xs">Organization name <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
-                      <Input {...field} className="h-8" />
+                      <Input {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -165,7 +165,7 @@ export function OrgProfileSection({ org, canEdit }: OrgProfileSectionProps) {
                   <FormItem className="gap-1.5">
                     <FormLabel className="text-xs">Slug <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
-                      <Input {...field} className="h-8" />
+                      <Input {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -178,7 +178,7 @@ export function OrgProfileSection({ org, canEdit }: OrgProfileSectionProps) {
                   <FormItem className="gap-1.5">
                     <FormLabel className="text-xs">Legal name</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Acme Inc. Pvt. Ltd." className="h-8" />
+                      <Input {...field} placeholder="Acme Inc. Pvt. Ltd." />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -191,7 +191,7 @@ export function OrgProfileSection({ org, canEdit }: OrgProfileSectionProps) {
                   <FormItem className="gap-1.5">
                     <FormLabel className="text-xs">Organization code</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="ACM-001" className="h-8 font-mono" />
+                      <Input {...field} placeholder="ACM-001" className="font-mono" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -205,7 +205,7 @@ export function OrgProfileSection({ org, canEdit }: OrgProfileSectionProps) {
                     <FormLabel className="text-xs">Industry</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value ?? ""}>
                       <FormControl>
-                        <SelectTrigger className="h-8"><SelectValue placeholder="Select industry" /></SelectTrigger>
+                        <SelectTrigger><SelectValue placeholder="Select industry" /></SelectTrigger>
                       </FormControl>
                       <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                         {INDUSTRIES.map((i) => <SelectItem key={i} value={i}>{i}</SelectItem>)}
@@ -222,7 +222,7 @@ export function OrgProfileSection({ org, canEdit }: OrgProfileSectionProps) {
                   <FormItem className="gap-1.5">
                     <FormLabel className="text-xs">Website</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="https://acme.com" className="h-8" />
+                      <Input {...field} placeholder="https://acme.com" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -235,7 +235,7 @@ export function OrgProfileSection({ org, canEdit }: OrgProfileSectionProps) {
                   <FormItem className="gap-1.5">
                     <FormLabel className="text-xs">Registration number</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="CIN / Company reg. no." className="h-8" />
+                      <Input {...field} placeholder="CIN / Company reg. no." />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -248,7 +248,7 @@ export function OrgProfileSection({ org, canEdit }: OrgProfileSectionProps) {
                   <FormItem className="gap-1.5">
                     <FormLabel className="text-xs">Tax / GST number</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="GSTIN / PAN / VAT" className="h-8 font-mono" />
+                      <Input {...field} placeholder="GSTIN / PAN / VAT" className="font-mono" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -261,7 +261,7 @@ export function OrgProfileSection({ org, canEdit }: OrgProfileSectionProps) {
                   <FormItem className="gap-1.5">
                     <FormLabel className="text-xs">Support email</FormLabel>
                     <FormControl>
-                      <Input type="email" {...field} placeholder="support@acme.com" className="h-8" />
+                      <Input type="email" {...field} placeholder="support@acme.com" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -286,7 +286,7 @@ export function OrgProfileSection({ org, canEdit }: OrgProfileSectionProps) {
               />
             </div>
             <OrgSettingsFormActions onCancel={handleCancel} isPending={isPending}>
-              <LoadingButton type="submit" isPending={isPending} size="sm" className="h-8 gap-1.5" loadingText="Saving…">
+              <LoadingButton type="submit" isPending={isPending} size="sm" className="gap-1.5" loadingText="Saving…">
                 Save changes
               </LoadingButton>
             </OrgSettingsFormActions>

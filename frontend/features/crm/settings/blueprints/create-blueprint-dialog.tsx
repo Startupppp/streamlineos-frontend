@@ -3,8 +3,8 @@
 import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { toast } from "sonner";
+import { createBlueprintSchema, type CreateBlueprintFormValues } from "./create-blueprint-dialog-schema";
 
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
@@ -21,13 +21,6 @@ import {
 import { useCreateBlueprint, useCrmMetadata } from "@/hooks/api/crm";
 import { getErrorMessage } from "@/lib/get-error-message";
 
-const createSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  description: z.string().optional(),
-  pipelineId: z.string().min(1, "Pipeline is required"),
-});
-type CreateFormValues = z.infer<typeof createSchema>;
-
 export function CreateBlueprintDialog({
   open,
   onOpenChange,
@@ -40,13 +33,13 @@ export function CreateBlueprintDialog({
   const { data: metadata } = useCrmMetadata();
   const createBlueprint = useCreateBlueprint();
 
-  const form = useForm<CreateFormValues>({
-    resolver: zodResolver(createSchema),
+  const form = useForm<CreateBlueprintFormValues>({
+    resolver: zodResolver(createBlueprintSchema),
     defaultValues: { name: "", description: "", pipelineId: "" },
   });
 
   const handleSubmit = useCallback(
-    (values: CreateFormValues) => {
+    (values: CreateBlueprintFormValues) => {
       createBlueprint.mutate(
         {
           name: values.name,

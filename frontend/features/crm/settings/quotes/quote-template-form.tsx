@@ -1,7 +1,7 @@
 "use client";
 
-import { z } from "zod";
 import { useForm } from "react-hook-form";
+import { quoteTemplateFormSchema, type QuoteTemplateFormValues } from "./quote-template-form-schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,13 +26,7 @@ import {
 } from "@/components/ui/form";
 import type { QuoteTemplate } from "@/types/crm/pricebooks";
 
-const schema = z.object({
-  name: z.string().min(1, "Name is required").max(200),
-  isDefault: z.boolean(),
-  terms: z.string().optional(),
-});
-
-export type QuoteTemplateFormValues = z.infer<typeof schema>;
+export type { QuoteTemplateFormValues };
 
 export const defaultTemplateValues: QuoteTemplateFormValues = {
   name: "",
@@ -66,7 +60,7 @@ export function QuoteTemplateFormSheet({
   initialValues,
 }: QuoteTemplateFormSheetProps) {
   const form = useForm<QuoteTemplateFormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(quoteTemplateFormSchema),
     values: initialValues,
   });
 

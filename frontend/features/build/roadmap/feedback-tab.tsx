@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyMailIllustration } from "@/components/illustrations";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,6 +12,7 @@ import {
   useDeleteFeedbackPost,
   useRoadmapItems,
 } from "@/hooks/api/build/roadmap";
+import { TablePagination } from "@/components/ui/table-pagination";
 import type { FeedbackPost } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
@@ -40,12 +41,17 @@ function FeedbackListSkeleton() {
 }
 
 export function FeedbackTab({ search }: FeedbackTabProps) {
+  const [page, setPage] = useState(1);
   const { data, isLoading, isError, refetch } = useFeedbackPosts(
-    search.trim() ? { search: search.trim() } : {},
+    search.trim() ? { search: search.trim(), page } : { page },
   );
   const { data: roadmapData } = useRoadmapItems();
   const deletePost = useDeleteFeedbackPost();
   const [deleteTarget, setDeleteTarget] = useState<FeedbackPost | null>(null);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search]);
 
   function handleRetry() {
     void refetch();
@@ -53,6 +59,10 @@ export function FeedbackTab({ search }: FeedbackTabProps) {
 
   function handleDeleteDialogChange(open: boolean) {
     if (!open) setDeleteTarget(null);
+  }
+
+  function handlePageChange(p: number) {
+    setPage(p);
   }
 
   const handleSetDeleteTarget = useCallback((post: FeedbackPost) => {
@@ -78,7 +88,7 @@ export function FeedbackTab({ search }: FeedbackTabProps) {
     );
   }
 
-  if (!data || data.length === 0) {
+  if ((data?.data ?? []).length === 0) {
     return (
       <EmptyState
         className={PM_FILL_PANEL}
@@ -92,15 +102,23 @@ export function FeedbackTab({ search }: FeedbackTabProps) {
   return (
     <>
       <PmStaggerList className="space-y-2">
-        {data.map((post) => (
+        {(data?.data ?? []).map((post) => (
           <FeedbackRow
             key={post.id}
             post={post}
-            roadmapItems={roadmapData ?? []}
+            roadmapItems={roadmapData?.data ?? []}
             onDelete={handleSetDeleteTarget}
           />
         ))}
       </PmStaggerList>
+
+      <TablePagination
+        page={page}
+        pageSize={data?.pagination.limit ?? 50}
+        total={data?.pagination.total ?? 0}
+        onPageChange={handlePageChange}
+        disabled={isLoading}
+      />
 
       <ConfirmDialog
         open={!!deleteTarget}

@@ -1,8 +1,13 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  logActivitySchema,
+  ENTITY_TYPE_VALUES,
+  type EntityTypeFieldValue,
+  type LogActivityValues,
+} from "./log-activity-dialog-schema";
 import { EntityFormDialog } from "@/components/shared";
 import {
   FormControl,
@@ -29,20 +34,6 @@ function isCrmActivityType(v: string): v is CrmActivityType {
 }
 
 const NO_ENTITY_TYPE = "none";
-
-const ENTITY_TYPE_VALUES = ["LEAD", "DEAL", "CONTACT", "", "none"] as const;
-type EntityTypeFieldValue = (typeof ENTITY_TYPE_VALUES)[number];
-
-const logActivitySchema = z.object({
-  type: z.enum(["CALL", "EMAIL", "MEETING", "CUSTOM"] as const),
-  title: z.string().min(1, "Title is required").max(255),
-  notes: z.string().optional(),
-  entityType: z.enum(ENTITY_TYPE_VALUES).optional(),
-  entityId: z.string().optional(),
-  dueDate: z.string().optional(),
-});
-
-type LogActivityValues = z.infer<typeof logActivitySchema>;
 
 function isCrmEntityType(v: string): v is CrmActivityEntityType {
   return v === "LEAD" || v === "DEAL" || v === "CONTACT";

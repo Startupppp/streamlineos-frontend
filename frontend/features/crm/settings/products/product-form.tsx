@@ -1,7 +1,7 @@
 "use client";
 
-import { z } from "zod";
 import { useForm } from "react-hook-form";
+import { productSchema, CURRENCIES, type ProductFormValues } from "./product-form-schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,23 +33,7 @@ import {
 import { LoadingButton } from "@/components/ui/loading-button";
 import type { Product } from "@/types/crm/products";
 
-export const productSchema = z.object({
-  name: z.string().min(1, "Name required").max(200),
-  description: z.string().optional(),
-  sku: z.string().optional(),
-  category: z.string().optional(),
-  unitPrice: z
-    .string()
-    .min(1, "Price required")
-    .refine(
-      (v) => !isNaN(parseFloat(v)) && parseFloat(v) > 0,
-      "Price must be greater than 0",
-    ),
-  currency: z.enum(["USD", "EUR", "GBP", "INR"]),
-  taxRate: z.string(),
-});
-
-export type ProductFormValues = z.infer<typeof productSchema>;
+export { productSchema, type ProductFormValues };
 
 export const defaultProductValues: ProductFormValues = {
   name: "",
@@ -61,7 +45,6 @@ export const defaultProductValues: ProductFormValues = {
   taxRate: "0",
 };
 
-const CURRENCIES = ["USD", "EUR", "GBP", "INR"] as const;
 type Currency = (typeof CURRENCIES)[number];
 
 function isCurrency(v: string): v is Currency {

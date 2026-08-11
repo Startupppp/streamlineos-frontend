@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -83,9 +84,9 @@ export function DealCompetitorsCard({ dealId }: DealCompetitorsCardProps) {
                 if (e.key === "Escape") handleCancelAdding();
               }}
             />
-            <Button size="sm" className="px-2" onClick={handleAdd} disabled={addCompetitor.isPending}>
+            <LoadingButton size="sm" className="px-2" onClick={handleAdd} isPending={addCompetitor.isPending}>
               Add
-            </Button>
+            </LoadingButton>
           </div>
         )}
         {competitors.length === 0 && !adding ? (

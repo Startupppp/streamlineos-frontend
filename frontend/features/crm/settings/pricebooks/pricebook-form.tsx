@@ -1,7 +1,7 @@
 "use client";
 
-import { z } from "zod";
 import { useForm } from "react-hook-form";
+import { pricebookFormSchema, type PricebookFormValues } from "./pricebook-form-schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,15 +26,7 @@ import { Switch } from "@/components/ui/switch";
 import { LoadingButton } from "@/components/ui/loading-button";
 import type { Pricebook } from "@/types/crm/pricebooks";
 
-const schema = z.object({
-  name: z.string().min(1, "Name is required").max(200),
-  description: z.string().optional(),
-  currency: z.string().min(1),
-  isDefault: z.boolean(),
-  isActive: z.boolean(),
-});
-
-export type PricebookFormValues = z.infer<typeof schema>;
+export type { PricebookFormValues };
 
 export const defaultPricebookValues: PricebookFormValues = {
   name: "",
@@ -72,7 +64,7 @@ export function PricebookFormSheet({
   initialValues,
 }: PricebookFormSheetProps) {
   const form = useForm<PricebookFormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(pricebookFormSchema),
     values: initialValues,
   });
 

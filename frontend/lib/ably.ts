@@ -36,3 +36,14 @@ export function getSupportAblyClient(): Ably.Realtime {
   }
   return supportClient;
 }
+
+export async function reauthorizeAblyClients(): Promise<void> {
+  const active = [client, supportClient].filter(
+    (candidate): candidate is Ably.Realtime => candidate !== null,
+  );
+  await Promise.all(
+    active.map((candidate) =>
+      candidate.auth.authorize().catch(() => undefined),
+    ),
+  );
+}

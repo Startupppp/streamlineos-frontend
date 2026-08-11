@@ -118,7 +118,7 @@ export function OrgConfigSection({
             <div className="space-y-1">
               <Label htmlFor="timezone" className="text-xs font-medium">Timezone</Label>
               <Select value={timezone} onValueChange={onTimezoneChange}>
-                <SelectTrigger id="timezone" aria-label="Timezone" className="h-8">
+                <SelectTrigger id="timezone" aria-label="Timezone">
                   <SelectValue placeholder="Select timezone" />
                 </SelectTrigger>
                 <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
@@ -134,7 +134,7 @@ export function OrgConfigSection({
             <div className="space-y-1">
               <Label htmlFor="currency" className="text-xs font-medium">Default currency</Label>
               <Select value={currency} onValueChange={onCurrencyChange}>
-                <SelectTrigger id="currency" aria-label="Default currency" className="h-8">
+                <SelectTrigger id="currency" aria-label="Default currency">
                   <SelectValue placeholder="Select currency" />
                 </SelectTrigger>
                 <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
@@ -150,7 +150,7 @@ export function OrgConfigSection({
             <div className="space-y-1">
               <Label htmlFor="fiscal-year" className="text-xs font-medium">Fiscal year start</Label>
               <Select value={fiscalYearStart} onValueChange={onFiscalYearStartChange}>
-                <SelectTrigger id="fiscal-year" aria-label="Fiscal year start month" className="h-8">
+                <SelectTrigger id="fiscal-year" aria-label="Fiscal year start month">
                   <SelectValue placeholder="Select month" />
                 </SelectTrigger>
                 <SelectContent>
@@ -180,7 +180,7 @@ export function OrgConfigSection({
           </div>
 
           <OrgSettingsFormActions onCancel={onCancel} isPending={isUpdating}>
-            <LoadingButton onClick={onSave} isPending={isUpdating} size="sm" className="h-8" loadingText="Saving…">
+            <LoadingButton onClick={onSave} isPending={isUpdating} size="sm" loadingText="Saving…">
               Save configuration
             </LoadingButton>
           </OrgSettingsFormActions>

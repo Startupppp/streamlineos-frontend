@@ -126,7 +126,6 @@ function SessionsSection() {
             <LoadingButton
               variant="outline"
               size="sm"
-              className="h-8 text-xs"
               isPending={revokeAll.isPending}
               onClick={handleOpenRevokeAll}
               loadingText="Signing out…"

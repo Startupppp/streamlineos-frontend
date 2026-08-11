@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -35,7 +35,10 @@ interface AuditLogFilters {
   targetType?: string;
   dateFrom?: string;
   dateTo?: string;
+  userSearch?: string;
 }
+
+type AuditLogExportFilters = Omit<AuditLogFilters, "page" | "pageSize">;
 
 export const useAuditLogs = (
   filters?: AuditLogFilters,
@@ -56,6 +59,7 @@ export const useAuditLogs = (
         ...(filters?.targetType ? { targetType: filters.targetType } : {}),
         ...(filters?.dateFrom ? { dateFrom: filters.dateFrom } : {}),
         ...(filters?.dateTo ? { dateTo: filters.dateTo } : {}),
+        ...(filters?.userSearch ? { userSearch: filters.userSearch } : {}),
       }),
     staleTime: 30_000,
     ...options,
@@ -88,3 +92,17 @@ export const useAuditLogTargetTypes = (
     enabled: canView && (options?.enabled ?? true),
   });
 };
+
+export const useExportAuditLog = () =>
+  useMutation<Blob, Error, AuditLogExportFilters>({
+    mutationKey: ["auditLog", "export"],
+    mutationFn: (filters) =>
+      apiClient.download("/audit-log/export", {
+        ...(filters.action ? { action: filters.action } : {}),
+        ...(filters.actions?.length ? { actions: filters.actions.join(",") } : {}),
+        ...(filters.targetType ? { targetType: filters.targetType } : {}),
+        ...(filters.dateFrom ? { dateFrom: filters.dateFrom } : {}),
+        ...(filters.dateTo ? { dateTo: filters.dateTo } : {}),
+        ...(filters.userSearch ? { userSearch: filters.userSearch } : {}),
+      }),
+  });

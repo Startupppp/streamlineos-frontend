@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   Quote,
   QuoteListItem,
@@ -18,6 +19,7 @@ export interface QuoteListResponse {
 }
 
 export function useQuotes(filters?: QuoteFilters) {
+  const canRead = useCan("crm:quotes:read");
   return useQuery({
     queryKey: queryKeys.crmQuotes.list(filters as Record<string, unknown>),
     queryFn: () => {
@@ -31,24 +33,27 @@ export function useQuotes(filters?: QuoteFilters) {
     },
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
+    enabled: canRead,
   });
 }
 
 export function useQuoteDetail(id: number) {
+  const canRead = useCan("crm:quotes:read");
   return useQuery({
     queryKey: queryKeys.crmQuotes.detail(id),
     queryFn: () => apiClient.get<Quote>(`/quotes/${id}`),
-    enabled: id > 0,
     staleTime: 2 * 60_000,
+    enabled: canRead && id > 0,
   });
 }
 
 export function useDealQuotes(dealId: number) {
+  const canRead = useCan("crm:quotes:read");
   return useQuery({
     queryKey: queryKeys.crmQuotes.byDeal(dealId),
     queryFn: () => apiClient.get<QuoteListResponse>("/quotes", { dealId, pageSize: 100 }),
-    enabled: dealId > 0,
     staleTime: 2 * 60_000,
+    enabled: canRead && dealId > 0,
   });
 }
 

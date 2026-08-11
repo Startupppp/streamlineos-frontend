@@ -3,8 +3,12 @@
 import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { X } from "lucide-react";
+import {
+  addRoleSchema,
+  type AddRoleFormInput,
+  type AddRoleFormValues,
+} from "./contact-roles-card-schema";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,22 +24,6 @@ import { useContactRoles, useAddContactRole, useRemoveContactRole, useDeals, use
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { CONTACT_ROLE_DEFAULTS } from "@/types/crm";
-
-const addRoleSchema = z.object({
-  entityType: z.enum(["deal", "company"]),
-  entityId: z.string().transform((v) => parseInt(v, 10)).pipe(z.number().int().positive()),
-  roleKey: z.string().min(1),
-  isPrimary: z.boolean(),
-});
-
-type AddRoleFormInput = {
-  entityType: "deal" | "company";
-  entityId: string;
-  roleKey: string;
-  isPrimary: boolean;
-};
-
-type AddRoleFormValues = z.output<typeof addRoleSchema>;
 
 interface ContactRolesCardProps {
   contactId: number;

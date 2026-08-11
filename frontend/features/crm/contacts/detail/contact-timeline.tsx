@@ -37,7 +37,7 @@ export function ContactTimeline({ contactId, onLogActivity }: ContactTimelinePro
 
   if (isLoading) {
     return (
-      <Card className="bg-card rounded-lg border border-border shadow-sm">
+      <Card className="shadow-sm">
         <CardHeader className="px-4 py-3 border-b">
           <Skeleton className="h-4 w-32" />
         </CardHeader>
@@ -58,7 +58,7 @@ export function ContactTimeline({ contactId, onLogActivity }: ContactTimelinePro
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.22, ease: "easeOut", delay: 0.04 }}
     >
-      <Card className="bg-card rounded-lg border border-border shadow-sm">
+      <Card className="shadow-sm">
         <CardHeader className="px-4 py-3 border-b flex-row items-center justify-between space-y-0">
           <CardTitle className="text-sm font-medium">Activity Timeline</CardTitle>
           <Button

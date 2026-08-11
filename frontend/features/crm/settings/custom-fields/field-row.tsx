@@ -1,8 +1,14 @@
 "use client";
 
 import { useCallback } from "react";
-import { z } from "zod";
 import { type Control } from "react-hook-form";
+import {
+  optionSchema,
+  createSchema,
+  editSchema,
+  type CreateForm,
+  type EditForm,
+} from "./field-row-schema";
 import { motion, useReducedMotion } from "framer-motion";
 import { Pencil, Trash2, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,6 +26,9 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { fadeUp } from "@/lib/motion-variants";
 import type { CustomFieldDefinition } from "@/hooks/api/crm/custom-fields";
+
+export { optionSchema, createSchema, editSchema };
+export type { CreateForm, EditForm };
 
 export type EntityType = "lead" | "deal" | "contact";
 
@@ -39,26 +48,6 @@ const FIELD_TYPE_CONFIG: Record<
   boolean: { label: "Yes/No", className: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30" },
   select: { label: "Select", className: "bg-primary/10 text-primary border-primary/20" },
 };
-
-export const optionSchema = z.object({
-  value: z.string().min(1, "Value required"),
-  label: z.string().min(1, "Label required"),
-});
-
-export const createSchema = z.object({
-  label: z.string().min(1, "Label is required").max(100),
-  fieldType: z.enum(["text", "number", "date", "boolean", "select"]),
-  isRequired: z.boolean(),
-  options: z.array(optionSchema).optional(),
-});
-export type CreateForm = z.infer<typeof createSchema>;
-
-export const editSchema = z.object({
-  label: z.string().min(1, "Label is required").max(100),
-  isRequired: z.boolean(),
-  options: z.array(optionSchema).optional(),
-});
-export type EditForm = z.infer<typeof editSchema>;
 
 export function labelToName(label: string): string {
   return label

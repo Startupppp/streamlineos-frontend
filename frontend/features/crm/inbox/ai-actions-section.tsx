@@ -19,7 +19,7 @@ export function AiActionsSection({ actions }: AiActionsSectionProps) {
   if (actions.length === 0) return null;
 
   return (
-    <div className="rounded-lg border border-border bg-card overflow-hidden">
+    <div className="rounded-xl border border-border bg-card overflow-hidden">
       <div
         className="flex items-center gap-2.5 w-full px-3 py-2"
         {...hoverHandlers}

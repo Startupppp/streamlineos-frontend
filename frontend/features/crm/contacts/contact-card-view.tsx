@@ -75,7 +75,7 @@ export function ContactCardView({
         {items.map((contact) => (
           <Card
             key={contact.id}
-            className="bg-card rounded-lg border border-border shadow-sm hover:shadow-md transition-shadow group"
+            className="bg-card rounded-xl border border-border shadow-sm hover:shadow-md transition-shadow group"
           >
             <CardContent className="p-4">
               <div className="flex items-start gap-3">

@@ -74,7 +74,7 @@ export function ContactInfoCard({ contact, onEdit, onSendEmail, onLogCall, entit
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.22, ease: "easeOut" }}
     >
-      <Card className="bg-card rounded-lg border border-border shadow-sm overflow-hidden">
+      <Card className="shadow-sm overflow-hidden">
         <CardHeader className="px-5 pt-5 pb-4">
           <div className="flex items-start gap-4">
             <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xl font-bold shrink-0">

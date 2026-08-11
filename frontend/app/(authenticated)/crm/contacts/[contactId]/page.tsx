@@ -23,6 +23,7 @@ import { ContactRolesCard } from "@/features/crm/contacts/detail/contact-roles-c
 import { ContactDuplicateBanner } from "@/features/crm/contacts/detail/contact-merge-dialog";
 import { CreateTaskDialog } from "@/features/crm/tasks/create-task-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { ErrorState } from "@/components/shared";
 import { ContactInlineAiMenu } from "@/features/crm/shared/crm-inline-ai-menu";
 
 function ContactDetailSkeleton() {
@@ -64,7 +65,7 @@ export default function ContactDetailPage({
   const [emailOpen, setEmailOpen] = useState(false);
   const [callOpen, setCallOpen] = useState(false);
 
-  const { data: contact, isLoading } = useContactDetail(id);
+  const { data: contact, isLoading, isError, error, refetch } = useContactDetail(id);
   const deleteMutation = useDeleteContact();
 
   const handleOpenEdit = useCallback(() => setEditOpen(true), []);
@@ -86,7 +87,21 @@ export default function ContactDetailPage({
     });
   }, [id, deleteMutation, router]);
 
+  const handleRefetch = useCallback(() => { void refetch(); }, [refetch]);
+
   if (isLoading) return <ContactDetailSkeleton />;
+
+  if (isError) {
+    return (
+      <PageWrapper title="Contact" subtitle="" backHref="/crm/contacts">
+        <ErrorState
+          description={getErrorMessage(error)}
+          onRetry={handleRefetch}
+          className="flex-1"
+        />
+      </PageWrapper>
+    );
+  }
 
   if (!contact) {
     return (

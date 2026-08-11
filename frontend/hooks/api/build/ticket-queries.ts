@@ -1,6 +1,7 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo } from "react";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
@@ -14,7 +15,7 @@ import type {
 import { useProjectLabels } from "./projects";
 
 const BOARD_PAGE_SIZE = 100;
-const BOARD_MAX_PAGES = 5;
+const BOARD_AUTOLOAD_LIMIT = 500;
 
 export function useTickets(
   projectId: number,
@@ -33,37 +34,45 @@ export function useTickets(
   });
 }
 
-export function useProjectBoardTickets(
-  projectId: number,
-  options?: Omit<UseQueryOptions<Ticket[]>, "queryKey" | "queryFn" | "enabled">
-) {
+export function useProjectBoardTickets(projectId: number) {
   const canView = useCan("build:tickets:view");
-  return useQuery<Ticket[]>({
+  const query = useInfiniteQuery<PaginatedResponse<Ticket>>({
     queryKey: queryKeys.projects.tickets({ projectId, view: "board" }),
-    queryFn: async () => {
-      const first = await apiClient.get<PaginatedResponse<Ticket>>(
-        `/build/${projectId}/tickets`,
-        { limit: BOARD_PAGE_SIZE, page: 1, orderBy: "order", orderDir: "asc" },
-      );
-      const pages = Math.min(first.totalPages ?? 1, BOARD_MAX_PAGES);
-      if (pages <= 1) return first.data ?? [];
-      const rest = await Promise.all(
-        Array.from({ length: pages - 1 }, (_, i) =>
-          apiClient.get<PaginatedResponse<Ticket>>(`/build/${projectId}/tickets`, {
-            limit: BOARD_PAGE_SIZE,
-            page: i + 2,
-            orderBy: "order",
-            orderDir: "asc",
-          }),
-        ),
-      );
-      return [...(first.data ?? []), ...rest.flatMap((p) => p.data ?? [])];
-    },
+    queryFn: ({ pageParam }) =>
+      apiClient.get<PaginatedResponse<Ticket>>(`/build/${projectId}/tickets`, {
+        limit: BOARD_PAGE_SIZE,
+        page: pageParam as number,
+        orderBy: "order",
+        orderDir: "asc",
+      }),
+    initialPageParam: 1,
+    getNextPageParam: (last) =>
+      last.page < last.totalPages ? last.page + 1 : undefined,
     enabled: canView && !!projectId,
     staleTime: 30_000,
     placeholderData: (prev) => prev,
-    ...options,
   });
+
+  const data = useMemo(
+    () => query.data?.pages.flatMap((p) => p.data ?? []) ?? [],
+    [query.data],
+  );
+  const total = query.data?.pages[0]?.total ?? 0;
+  const { hasNextPage, isFetchingNextPage, fetchNextPage } = query;
+
+  useEffect(() => {
+    if (!hasNextPage || isFetchingNextPage) return;
+    if (data.length >= BOARD_AUTOLOAD_LIMIT) return;
+    void fetchNextPage();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage, data.length]);
+
+  return {
+    ...query,
+    data,
+    total,
+    loadedCount: data.length,
+    isTruncated: total > data.length,
+  };
 }
 
 export function useTicket(
