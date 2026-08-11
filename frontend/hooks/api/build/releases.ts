@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import type { Release, CreateReleaseInput, UpdateReleaseInput } from "@/types/projects";
 export type { Release } from "@/types/projects";
@@ -10,10 +11,11 @@ function releaseKey(projectId: number) {
 }
 
 export function useReleases(projectId: number) {
+  const canView = useCan("build:view");
   return useQuery<Release[]>({
     queryKey: releaseKey(projectId),
     queryFn: () => apiClient.get<Release[]>(`/build/${projectId}/releases`),
-    enabled: !!projectId,
+    enabled: canView && !!projectId,
     staleTime: 60_000,
   });
 }

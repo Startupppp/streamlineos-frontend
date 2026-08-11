@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -31,13 +32,14 @@ export interface TicketActivityEntry {
 }
 
 export function useTicketActivity(projectId: number, ticketId: number) {
+  const canView = useCan("build:tickets:view");
   return useQuery({
     queryKey: queryKeys.ticketActivity.list(ticketId),
     queryFn: () =>
       apiClient.get<TicketActivityEntry[]>(
         `/build/${projectId}/tickets/${ticketId}/activity`,
       ),
-    enabled: !!projectId && !!ticketId,
+    enabled: canView && !!projectId && !!ticketId,
     staleTime: 30_000,
   });
 }

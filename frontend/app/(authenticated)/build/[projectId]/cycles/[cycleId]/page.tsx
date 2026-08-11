@@ -69,7 +69,7 @@ export default function CycleDetailPage({ params }: PageProps) {
         points: t.points ?? undefined,
         timeSpent: t.timeSpent ?? undefined,
         ticketNumber: t.ticketNumber,
-        order: t.order ?? undefined,
+        rank: t.rank ?? undefined,
         epicId: t.epicId ?? undefined,
         assigneeId: t.assigneeId ?? undefined,
         sprintId: t.sprintId ?? undefined,

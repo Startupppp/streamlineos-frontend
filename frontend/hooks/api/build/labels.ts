@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useCan } from "@/hooks/api/access";
 
 export interface TicketLabel {
   id: number;
@@ -13,9 +14,11 @@ export interface TicketLabel {
 const LABELS_KEY = ["streamlineos", "projects", "labels"] as const;
 
 export function useOrgLabels() {
+  const canView = useCan("build:view");
   return useQuery<TicketLabel[]>({
     queryKey: LABELS_KEY,
     queryFn: () => apiClient.get<TicketLabel[]>("/build/labels"),
+    enabled: canView,
     staleTime: 60_000,
   });
 }

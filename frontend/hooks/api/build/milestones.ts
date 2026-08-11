@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { ProjectMilestone, ProjectBudget } from "@/types/projects";
@@ -25,10 +26,11 @@ function milestoneKey(projectId: number) {
 }
 
 export function useProjectMilestones(projectId: number) {
+  const canView = useCan("build:view");
   return useQuery({
     queryKey: milestoneKey(projectId),
     queryFn: () => apiClient.get<ProjectMilestone[]>(`/build/${projectId}/milestones`),
-    enabled: !!projectId,
+    enabled: canView && !!projectId,
     staleTime: 30_000,
   });
 }
@@ -64,10 +66,11 @@ export function useDeleteMilestone(projectId: number) {
 }
 
 export function useProjectBudget(projectId: number) {
+  const canManage = useCan("build:manage");
   return useQuery({
     queryKey: queryKeys.projects.budget(projectId),
     queryFn: () => apiClient.get<ProjectBudget>(`/build/${projectId}/budget`),
-    enabled: !!projectId,
+    enabled: canManage && !!projectId,
     staleTime: 60_000,
   });
 }

@@ -1,6 +1,7 @@
 ﻿"use client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useCan } from "@/hooks/api/access";
 import type { ProjectAutomation } from "@/types/projects";
 export type { ProjectAutomation } from "@/types/projects";
 
@@ -26,10 +27,11 @@ function automationKeys(projectId: number) {
 }
 
 export function useAutomations(projectId: number) {
+  const canView = useCan("build:view");
   return useQuery<ProjectAutomation[]>({
     queryKey: automationKeys(projectId),
     queryFn: () => apiClient.get<ProjectAutomation[]>(`/build/${projectId}/automations`),
-    enabled: !!projectId,
+    enabled: canView && !!projectId,
     staleTime: 60_000,
   });
 }

@@ -1,8 +1,11 @@
 # REFACTOR-STATE — Administration
 
 **Module:** Administration (`/settings/*`) — functional completeness · UI/UX conformance · security · benchmark
-**Phase:** 1 audit delivered → **first fix batch landed**
+**Phase:** 1 audit delivered → **four fix batches landed; running under the Execution Protocol**
 **Updated:** 2026-08-11
+**Next action:** work `TASKS-ADMIN.md` open items. ADGAP-007 (permission groups) is in progress.
+**Artifacts:** `TASKS-ADMIN.md` · `DECISIONS-CRM.md` (shared decisions log for both my programs) ·
+`docs/soft-delete-audit-2026-08-11.md`. (`TASKS.md`/`DECISIONS.md` at the root belong to **Inventory**.)
 
 ## Closed this session
 
@@ -214,7 +217,32 @@ whether the bulk-invite/import backend route exists.
 
 ## Phase 1 — prioritised build order
 
-**Status: 1–11 and 13 are CLOSED** (see the batches above). Remaining:
+**Status: 1–8, 10–13 are CLOSED. #9 was wrongly marked closed and is NOT** — see below. Remaining:
+
+- ~~**#9 ADSEC-F04**~~ — **WITHDRAWN. Not a defect.** Owner decision (2026-08-11): **org API tokens are a CRM-level
+  capability only.** So `@RequireModule("crm")` + `crm:settings:manage` on `api-tokens.controller.ts` is the
+  *intended* design, and the audit finding ("non-CRM orgs cannot get an API key") described the product working as
+  specified. **Fully reverted:** the module gate and `ModuleGuard` restored, all three handlers back on
+  `crm:settings:manage`, and the two keys I had invented (`settings:org-api-tokens:view`/`:manage`) removed from the
+  backend catalog, the frontend catalog and the `PermissionKey` union. Verified zero residual references; both
+  repos typecheck.
+
+  **The audit's premise was wrong too — verified, nothing to fix.** The two surfaces are already cleanly separated:
+  - `/crm/api-keys` → `CrmApiKeysPage` → `OrgTokensTab`, gated on `crm:settings:manage` **plus** an explicit
+    `access.modules.crm === false` redirect; sidebar entry `crm:settings:manage` inside the CRM group.
+  - `/settings/api-tokens` → `PersonalApiTokensPage` **only** — no org tab — on the universal
+    `settings:api-tokens:read`; sidebar label is literally "Personal Access Tokens".
+
+  So the Developer entry needs no module gate: it points at *personal* tokens, which every member has. `OrgTokensTab`
+  is mounted **only** under the CRM route. The org capability was never reachable outside CRM.
+
+  Two keepers from the detour: (a) `settings:api-tokens:read`/`write` are **`EMPLOYEE_SELF_SERVICE`** keys for
+  *personal* tokens that every member holds — never reuse them for anything org-scoped, or any employee can mint
+  org-wide credentials; (b) I mis-tracked this item twice — first marking it closed while untouched, then "fixing" a
+  non-defect. Both came from trusting a finding instead of reading the two routes, which would have taken one grep.
+
+  Remaining nit, not worth churn: the CRM-only components live in `features/settings/api-tokens/` rather than
+  `features/crm/` — a §9 placement inconsistency only.
 
 - ~~**#12** / ADS-014~~ — **CLOSED.** All 8 files are now under the cap. (I briefly overstated this before the last
   two were done; `delegations-page.tsx` 687→490 + `delegation-row.tsx` 135 + `delegation-list-panel.tsx` 116, and

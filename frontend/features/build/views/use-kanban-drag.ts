@@ -6,7 +6,7 @@ import {
   type MutableRefObject,
   type SetStateAction,
 } from "react";
-import { useUpdateTicketOrder, useReorderCustomStates } from "@/hooks/api";
+import { useRankTicket, useReorderCustomStates } from "@/hooks/api";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -16,11 +16,20 @@ import type { KanbanTicket, KanbanColumn } from "../shared/types";
 import { isCompletedTicketStatus } from "../shared/completed-status";
 import {
   type StatusEntry,
-  type UpdateOrderContext,
   COLUMN_DND_TYPE,
-  isUpdateOrderContext,
   decodeRowKey,
+  compareByRank,
+  computeOptimisticRank,
 } from "./kanban-board-utils";
+
+type RankDragContext = {
+  previous: KanbanTicket[];
+  previousCache: KanbanTicket[] | undefined;
+};
+
+function isRankDragContext(v: unknown): v is RankDragContext {
+  return typeof v === "object" && v !== null && "previous" in v;
+}
 
 interface KanbanDragParams {
   projectId: number;
@@ -59,28 +68,62 @@ export function useKanbanDrag({
   const boardTicketsKey = queryKeys.projects.tickets({ projectId, view: "board" });
   const reorderStates = useReorderCustomStates(projectId);
 
-  const updateOrder = useUpdateTicketOrder({
-    onMutate: async (variables): Promise<UpdateOrderContext> => {
+  const rankTicket = useRankTicket<RankDragContext>({
+    onMutate: async (variables) => {
       await queryClient.cancelQueries({ queryKey: boardTicketsKey });
       const previousCache = queryClient.getQueryData<KanbanTicket[]>(boardTicketsKey);
-      const byId = new Map(variables.items.map((item) => [item.id, item]));
-      queryClient.setQueryData<KanbanTicket[]>(boardTicketsKey, (old) => {
-        if (!old) return old;
-        return old.map((ticket) => {
-          const next = byId.get(ticket.id);
-          return next
-            ? { ...ticket, status: next.status, order: next.order }
-            : ticket;
+
+      if (previousCache) {
+        const dragged = previousCache.find((t) => t.id === variables.ticketId);
+        const effectiveStatus = variables.status ?? dragged?.status ?? "";
+
+        const destColTickets = previousCache
+          .filter((t) => t.status === effectiveStatus && t.id !== variables.ticketId)
+          .sort(compareByRank);
+
+        const beforeNeighbor =
+          variables.beforeTicketId != null
+            ? destColTickets.find((t) => t.id === variables.beforeTicketId)
+            : null;
+        const afterNeighbor =
+          variables.afterTicketId != null
+            ? destColTickets.find((t) => t.id === variables.afterTicketId)
+            : null;
+
+        const optimisticRank = computeOptimisticRank(
+          beforeNeighbor?.rank ?? null,
+          afterNeighbor?.rank ?? null,
+        );
+
+        queryClient.setQueryData<KanbanTicket[]>(boardTicketsKey, (old) => {
+          if (!old) return old;
+          return old.map((t) =>
+            t.id === variables.ticketId
+              ? { ...t, status: effectiveStatus, rank: optimisticRank }
+              : t,
+          );
         });
-      });
+      }
+
       return { previous: optimisticTickets, previousCache };
     },
-    onError: (error, __, context) => {
-      if (isUpdateOrderContext(context)) {
+    onError: (error, _vars, context) => {
+      if (isRankDragContext(context)) {
         setOptimisticTickets(context.previous);
         queryClient.setQueryData(boardTicketsKey, context.previousCache);
       }
       toast.error(getErrorMessage(error));
+    },
+    onSettled: (data) => {
+      if (data) {
+        queryClient.setQueryData<KanbanTicket[]>(boardTicketsKey, (old) => {
+          if (!old) return old;
+          return old.map((t) =>
+            t.id === data.id ? { ...t, rank: data.rank, status: data.status } : t,
+          );
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: boardTicketsKey });
     },
   });
 
@@ -187,66 +230,37 @@ export function useKanbanDrag({
       const sourceTicket = optimisticTickets.find((t) => t.id === ticketId);
       if (!sourceTicket) return;
 
-      const newTickets = [...optimisticTickets];
-      const movedTicket = { ...sourceTicket, status: newStatus };
+      const isCrossColumn = srcColId !== newStatus;
 
-      const sourceTickets = newTickets
-        .filter((t) => t.status === srcColId)
-        .sort((a, b) => (a.order || 0) - (b.order || 0));
+      const destColTickets = optimisticTickets
+        .filter((t) => t.status === newStatus && t.id !== ticketId)
+        .sort(compareByRank);
 
-      const destTickets =
-        srcColId === newStatus
-          ? sourceTickets
-          : newTickets
-              .filter((t) => t.status === newStatus)
-              .sort((a, b) => (a.order || 0) - (b.order || 0));
+      const beforeTicketId = destColTickets[destination.index - 1]?.id ?? null;
+      const afterTicketId = destColTickets[destination.index]?.id ?? null;
 
-      const updates: { id: number; status: string; order: number }[] = [];
+      const optimisticRank = computeOptimisticRank(
+        destColTickets.find((t) => t.id === beforeTicketId)?.rank ?? null,
+        destColTickets.find((t) => t.id === afterTicketId)?.rank ?? null,
+      );
 
-      if (srcColId === newStatus) {
-        const items = Array.from(sourceTickets);
-        const [reorderedItem] = items.splice(source.index, 1);
-        if (!reorderedItem) return;
-        items.splice(destination.index, 0, reorderedItem);
-        items.forEach((ticket, index) => {
-          const tIndex = newTickets.findIndex((t) => t.id === ticket.id);
-          if (tIndex === -1) return;
-          newTickets[tIndex] = { ...newTickets[tIndex], order: index };
-          updates.push({ id: ticket.id, status: ticket.status, order: index });
-        });
-      } else {
-        const sourceItems = Array.from(sourceTickets);
-        sourceItems.splice(source.index, 1);
-        const destItems = Array.from(destTickets);
-        destItems.splice(destination.index, 0, movedTicket);
-        destItems.forEach((ticket, index) => {
-          const tIndex = newTickets.findIndex((t) => t.id === ticket.id);
-          if (tIndex === -1) return;
-          newTickets[tIndex] = {
-            ...newTickets[tIndex],
-            status: newStatus,
-            order: index,
-          };
-          updates.push({ id: ticket.id, status: newStatus, order: index });
-        });
-        sourceItems.forEach((ticket, index) => {
-          const tIndex = newTickets.findIndex((t) => t.id === ticket.id);
-          if (tIndex === -1) return;
-          newTickets[tIndex] = { ...newTickets[tIndex], order: index };
-          updates.push({
-            id: ticket.id,
-            status: ticket.status,
-            order: index,
-          });
-        });
-      }
+      setOptimisticTickets(
+        optimisticTickets.map((t) =>
+          t.id === ticketId ? { ...t, status: newStatus, rank: optimisticRank } : t,
+        ),
+      );
 
-      setOptimisticTickets(newTickets);
-      updateOrder.mutate({ projectId, items: updates });
+      rankTicket.mutate({
+        projectId,
+        ticketId,
+        beforeTicketId,
+        afterTicketId,
+        ...(isCrossColumn ? { status: newStatus } : {}),
+      });
     },
     [
       optimisticTickets,
-      updateOrder,
+      rankTicket,
       projectId,
       rowBy,
       hideCompleted,

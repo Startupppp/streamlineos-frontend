@@ -213,7 +213,7 @@ function CreditPackCard({
 type TxnPageSize = 10 | 20 | 50;
 
 export function AiCreditsSettingsPage() {
-  const { data, isLoading, isError, refetch } = useAiCreditsWallet();
+  const { data, isLoading, isError, error: walletError, refetch } = useAiCreditsWallet();
   const configureTopUp = useConfigureAutoTopUp();
   const purchaseMutation = usePurchaseAiCredits();
   const verifyMutation = useVerifyAiCreditPurchase();
@@ -227,6 +227,7 @@ export function AiCreditsSettingsPage() {
     data: txnData,
     isLoading: txnLoading,
     isError: txnError,
+    error: txnErrorObj,
     refetch: refetchTxns,
   } = useAiCreditTransactions(txnPage, txnLimit);
 
@@ -234,6 +235,7 @@ export function AiCreditsSettingsPage() {
     data: usageData,
     isLoading: usageLoading,
     isError: usageError,
+    error: usageErrorObj,
     refetch: refetchUsage,
   } = useAiCreditsUsage(usageDays);
 
@@ -372,7 +374,7 @@ export function AiCreditsSettingsPage() {
         {isError ? (
           <ErrorState
             title="Failed to load AI credits"
-            description="Something went wrong fetching your credit balance."
+            description={getErrorMessage(walletError)}
             onRetry={handleRefresh}
             className="flex-1"
           />
@@ -435,7 +437,7 @@ export function AiCreditsSettingsPage() {
               {usageError ? (
                 <ErrorState
                   title="Failed to load usage data"
-                  description="Something went wrong fetching analytics."
+                  description={getErrorMessage(usageErrorObj)}
                   onRetry={handleUsageRetry}
                   compact
                   className="border border-border rounded-xl py-8"
@@ -526,7 +528,7 @@ export function AiCreditsSettingsPage() {
               ) : txnError ? (
                 <ErrorState
                   title="Failed to load transactions"
-                  description="Something went wrong fetching your usage history."
+                  description={getErrorMessage(txnErrorObj)}
                   onRetry={handleTxnRetry}
                   compact
                   className="border-0 bg-transparent py-8"

@@ -146,6 +146,7 @@ export function InvoicesClient() {
     data: invoicesData,
     isLoading,
     isError,
+    error,
     refetch,
   } = useInvoices(
     statusFilter !== "all"
@@ -318,7 +319,7 @@ export function InvoicesClient() {
               <ErrorState
                 compact
                 title="Failed to load invoices"
-                description="Something went wrong while fetching your invoices."
+                description={getErrorMessage(error)}
                 onRetry={handleRetryLoad}
               />
             ) : (

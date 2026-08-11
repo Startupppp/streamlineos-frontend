@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   Risk, Decision,
   CreateRiskInput, UpdateRiskInput,
@@ -14,6 +15,7 @@ interface ListFilters {
 }
 
 export function useProjectRisks(projectId: number, filters?: ListFilters) {
+  const canView = useCan("build:risks:view");
   const params: Record<string, string> = {};
   if (filters?.status) params["status"] = filters.status;
 
@@ -23,7 +25,7 @@ export function useProjectRisks(projectId: number, filters?: ListFilters) {
       Object.keys(params).length > 0 ? params : undefined,
     ),
     queryFn: () => apiClient.get<Risk[]>(`/build/${projectId}/risks`, params),
-    enabled: !!projectId,
+    enabled: canView && !!projectId,
     staleTime: 60_000,
   });
 }
@@ -66,6 +68,7 @@ export function useDeleteRisk(projectId: number) {
 }
 
 export function useProjectDecisions(projectId: number, filters?: ListFilters) {
+  const canView = useCan("build:decisions:view");
   const params: Record<string, string> = {};
   if (filters?.status) params["status"] = filters.status;
 
@@ -75,7 +78,7 @@ export function useProjectDecisions(projectId: number, filters?: ListFilters) {
       Object.keys(params).length > 0 ? params : undefined,
     ),
     queryFn: () => apiClient.get<Decision[]>(`/build/${projectId}/decisions`, params),
-    enabled: !!projectId,
+    enabled: canView && !!projectId,
     staleTime: 60_000,
   });
 }

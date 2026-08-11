@@ -9,7 +9,7 @@ import type {
   PaginatedResponse,
   CreateTicketInput,
   UpdateTicketInput,
-  MoveTicketInput,
+  RankTicketInput,
   ProjectWithDetails,
   ProjectMember,
 } from "@/types/projects";
@@ -245,28 +245,27 @@ export function useDeleteTicket(
   });
 }
 
-export function useMoveTicket(
-  options?: Omit<UseMutationOptions<{ success: boolean }, Error, MoveTicketInput>, "mutationFn">
-) {
-  const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, MoveTicketInput>({
-    ...options,
-    mutationKey: ["projects", "tickets", "move"],
-    mutationFn: ({ projectId, items }: MoveTicketInput) =>
-      apiClient.patch<{ success: boolean }>(`/build/${projectId}/tickets/reorder`, { items }),
-    onSuccess: (data, variables, context, mutFnCtx) => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.tickets({ projectId: variables.projectId }),
-      });
-      options?.onSuccess?.(data, variables, context, mutFnCtx);
-    },
-  });
+export interface RankTicketResponse {
+  id: number;
+  rank: string;
+  status: string;
 }
 
-export function useUpdateTicketOrder(
-  options?: Omit<UseMutationOptions<{ success: boolean }, Error, MoveTicketInput>, "mutationFn">
+export function useRankTicket<TContext = unknown>(
+  options?: Omit<
+    UseMutationOptions<RankTicketResponse, Error, RankTicketInput, TContext>,
+    "mutationFn" | "mutationKey"
+  >
 ) {
-  return useMoveTicket(options);
+  return useMutation<RankTicketResponse, Error, RankTicketInput, TContext>({
+    ...options,
+    mutationKey: ["projects", "tickets", "rank"],
+    mutationFn: ({ projectId, ticketId, ...data }) =>
+      apiClient.patch<RankTicketResponse>(
+        `/build/${projectId}/tickets/${ticketId}/rank`,
+        data,
+      ),
+  });
 }
 
 export interface BulkUpdateTicketsInput {

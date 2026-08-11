@@ -10,7 +10,29 @@ Measured against a seeded 1.53M-row dataset as `streamline_app` with RLS enforce
 | ID | Table/Column | Evidence | Problem | Impact | Sev | Fix | Migration risk |
 |---|---|---|---|---|---|---|---|
 | SCH-001 | `tickets.order` | `schema/build/tasks.ts:60`, `use-kanban-drag.ts:211-241`, `projects-tickets-query.service.ts:353-368` | `integer` position. Client renumbers both columns `0..n-1` and server writes all via `CASE`. No rank, no version | One drag rewrites a whole column; concurrent drags silently clobber; a stale client reorders cards it never saw move | **P0** | Fractional/lexicographic rank, server-authoritative, scoped per board/sprint/parent + rebalance job | Backfill ranks from current `order` |
-| SCH-002 | `tickets.status` / `stateId` / `project_statuses` | `tasks.ts:41`, `tasks.ts:68`, `project_statuses` table | Three competing status systems; free-text `status` is the one queried | No consistent definition of "done" → every status report is unreliable | **P0** | One workflow definition + status table + enforced transitions; `status` becomes FK | Map free text → status rows |
+| SCH-002 | `tickets.status` / `stateId` / `project_statuses` | `tasks.ts:41`, `tasks.ts:68`, `project_statuses` table | **Corrected on mapping — see below.** Three status systems exist in the schema, but one is dead code, not a competing system | No consistent definition of "done" → every status report is unreliable | **P0** | One status table (`project_statuses`) + typed lifecycle group + FK from `tickets.status`; delete the orphan | Backfill unconfigured statuses before adding the FK |
+
+### SCH-002 correction — one of the "three systems" is orphaned
+
+Calling this "three competing status systems" was literally true of the schema and misleading about the
+codebase. The usage mapping found:
+
+| System | Reality |
+|---|---|
+| `tickets.status` (free text) | **The real system** — 68 read/write sites |
+| `project_statuses` | **The live config table** — 11 files: WIP limits, ordering, workflow transitions, provisioning, templates, git integration, cron. Already carries `name`, `order`, `color`, **`type`**, `wip_limit` |
+| `custom_states` | **Orphaned** |
+
+Proof `custom_states` is orphaned: **zero write sites** anywhere in `src/modules/`; exactly **one** read
+site (a `leftJoin` at `projects-reports.service.ts:80`); and `tickets.state_id` is **NULL on 100% of
+204,000 rows**, so that join has never once returned a value — the burndown's
+`COALESCE(custom_states.group, …)` fallback is always taken. Compounding the confusion, the service
+named `projects-custom-states.service.ts` actually operates on `project_statuses`.
+
+The fix is therefore much smaller than the P0 framing implied: type `project_statuses.type` as the
+existing `state_group` enum, repoint the burndown at it (**which closes RPT-003**), FK-constrain
+`tickets.status` to `project_statuses(org_id, project_id, name)`, and delete the orphan. Design and
+migration order in `docs/refactor/sch-002-status-model-design.md`.
 | SCH-003 | `tickets.epicId` / `parentTicketId`; `work_item_relations` | `tasks.ts:50,61,88`, `tasks.ts:278` | Two independent parent pointers, no cycle prevention on either or on the dependency edge table | Circular blockers make critical-path non-terminating | **P1** | One hierarchy pointer; cycle check at write time on both | Detect existing cycles first |
 | SCH-004 | `tickets.id` and siblings | `tasks.ts:34` | `serial` = int4, ceiling 2.1B; CLAUDE.md §19 mandates UUID/identity | Ceiling vs 100M-row target; violates house rule | **P1** | `generatedAlwaysAsIdentity()` | Large; sequence + FK rewrite |
 | SCH-005 | Build-wide | no `version` column anywhere | No optimistic locking on concurrently-edited entities | Lost updates on ticket edit, not just drag | **P1** | `version` + conditional update | Additive |

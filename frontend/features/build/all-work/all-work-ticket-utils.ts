@@ -17,7 +17,7 @@ export function toKanbanTicket(t: AllWorkTicket): KanbanTicket {
     priority: t.priority ?? undefined,
     points: t.points ?? undefined,
     ticketNumber: t.ticketNumber,
-    order: t.order ?? undefined,
+    rank: t.rank ?? undefined,
     epicId: t.epicId ?? undefined,
     assigneeId: t.assigneeId ?? undefined,
     sprintId: t.sprintId ?? undefined,

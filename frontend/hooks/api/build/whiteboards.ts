@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -75,20 +76,22 @@ export interface SetWhiteboardSharesInput {
 }
 
 export function useWhiteboards(projectId: number) {
+  const canView = useCan("build:view");
   return useQuery({
     queryKey: queryKeys.whiteboards.list(projectId),
     queryFn: () => apiClient.get<WhiteboardSummary[]>(`/build/${projectId}/whiteboards`),
-    enabled: !!projectId,
+    enabled: canView && !!projectId,
     staleTime: 30_000,
   });
 }
 
 export function useWhiteboard(projectId: number, whiteboardId: number | null) {
+  const canView = useCan("build:view");
   return useQuery({
     queryKey: queryKeys.whiteboards.detail(whiteboardId ?? 0),
     queryFn: () =>
       apiClient.get<WhiteboardDetail>(`/build/${projectId}/whiteboards/${whiteboardId}`),
-    enabled: !!projectId && !!whiteboardId,
+    enabled: canView && !!projectId && !!whiteboardId,
     staleTime: 60_000,
   });
 }

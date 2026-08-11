@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   Incident,
   IncidentDetail,
@@ -18,6 +19,7 @@ type IncidentFilters = {
 };
 
 export function useIncidents(projectId?: number, filters?: IncidentFilters) {
+  const canView = useCan("build:incidents:view");
   const params: Record<string, string> = {};
   if (filters?.status) params["status"] = filters.status;
   if (filters?.severity) params["severity"] = filters.severity;
@@ -25,17 +27,18 @@ export function useIncidents(projectId?: number, filters?: IncidentFilters) {
   return useQuery<Incident[]>({
     queryKey: queryKeys.projects.incidents.list(projectId, filters),
     queryFn: () => apiClient.get<Incident[]>(`/build/${projectId}/incidents`, params),
-    enabled: !!projectId,
+    enabled: canView && !!projectId,
     staleTime: 60_000,
   });
 }
 
 export function useIncident(projectId?: number, incidentId?: number) {
+  const canView = useCan("build:incidents:view");
   return useQuery<IncidentDetail>({
     queryKey: queryKeys.projects.incidents.detail(projectId, incidentId),
     queryFn: () =>
       apiClient.get<IncidentDetail>(`/build/${projectId}/incidents/${incidentId}`),
-    enabled: !!projectId && !!incidentId,
+    enabled: canView && !!projectId && !!incidentId,
     staleTime: 60_000,
   });
 }

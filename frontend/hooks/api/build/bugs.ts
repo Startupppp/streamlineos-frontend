@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type { Bug, CreateBugInput, UpdateBugInput } from "@/types/projects";
 
 type BugFilters = {
@@ -13,6 +14,7 @@ type BugFilters = {
 };
 
 export function useBugs(projectId?: number, filters?: BugFilters) {
+  const canView = useCan("build:bugs:view");
   const params: Record<string, string> = {};
   if (filters?.status) params["status"] = filters.status;
   if (filters?.severity) params["severity"] = filters.severity;
@@ -22,7 +24,7 @@ export function useBugs(projectId?: number, filters?: BugFilters) {
   return useQuery<Bug[]>({
     queryKey: queryKeys.projects.bugs.list(projectId, filters),
     queryFn: () => apiClient.get<Bug[]>(`/build/${projectId}/bugs`, params),
-    enabled: !!projectId,
+    enabled: canView && !!projectId,
     staleTime: 60_000,
     placeholderData: keepPreviousData,
   });

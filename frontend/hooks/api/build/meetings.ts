@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type {
@@ -28,6 +29,7 @@ interface MeetingFilters {
 }
 
 export function useMeetings(projectId: number, filters?: MeetingFilters) {
+  const canView = useCan("build:meetings:view");
   const params: Record<string, string> = {};
   if (filters?.status) params["status"] = filters.status;
   if (filters?.type) params["type"] = filters.type;
@@ -41,16 +43,17 @@ export function useMeetings(projectId: number, filters?: MeetingFilters) {
   return useQuery<Meeting[]>({
     queryKey: queryKeys.projects.meetings.list(projectId, hasParams ? params : undefined),
     queryFn: () => apiClient.get<Meeting[]>(`/build/${projectId}/meetings`, hasParams ? params : undefined),
-    enabled: !!projectId,
+    enabled: canView && !!projectId,
     staleTime: 60_000,
   });
 }
 
 export function useMeeting(projectId: number, meetingId: number) {
+  const canView = useCan("build:meetings:view");
   return useQuery<MeetingDetail>({
     queryKey: queryKeys.projects.meetings.detail(projectId, meetingId),
     queryFn: () => apiClient.get<MeetingDetail>(`/build/${projectId}/meetings/${meetingId}`),
-    enabled: !!projectId && !!meetingId,
+    enabled: canView && !!projectId && !!meetingId,
     staleTime: 60_000,
   });
 }

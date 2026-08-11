@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
+import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type {
@@ -14,11 +15,12 @@ export function useSprints(
   projectId?: number,
   options?: Omit<UseQueryOptions<Sprint[]>, "queryKey" | "queryFn" | "enabled">
 ) {
+  const canView = useCan("build:sprints:view");
   return useQuery<Sprint[]>({
     queryKey: queryKeys.projects.sprints(projectId),
     queryFn: () =>
       apiClient.get<Sprint[]>(`/build/${projectId}/sprints`),
-    enabled: !!projectId,
+    enabled: canView && !!projectId,
     staleTime: 60_000,
     ...options,
   });

@@ -1,8 +1,13 @@
 # REFACTOR-STATE — CRM
 
 **Module:** CRM (design alignment · completion · AI layer)
-**Phase:** 0 + 1 delivered → **first fix batch landed**
+**Phase:** 0 + 1 delivered → **six fix batches landed; running under the Execution Protocol**
 **Updated:** 2026-08-11
+**Next action:** work `TASKS-CRM.md` open items. 12 are blocked on **`DECISIONS-CRM.md#D-009`** — `drizzle-kit
+generate` needs an interactive TTY for its enum-conflict prompt, so no migration can be produced here.
+**Artifacts:** `TASKS-CRM.md` · `DECISIONS-CRM.md` · `docs/soft-delete-audit-2026-08-11.md` ·
+`docs/crm-dashboard-discrepancy-2026-08-11.md`. (`TASKS.md`/`DECISIONS.md` at the root belong to the **Inventory**
+program — do not merge.)
 
 ## Closed this session
 
@@ -32,6 +37,73 @@
 | **QUERY-005** | `wouldCreateCycle` and `getAllDescendantIds` each fetched **every** org row to walk the tree in memory on every parent change. Both are now single `WITH RECURSIVE` CTEs (ancestors / descendants) with a `HIERARCHY_MAX_DEPTH` guard so pre-existing bad data can't spin. Raw rows converted at the use site per §7 (`Number(row.id)`) | BE 0 errors in my files |
 | **BRK-001/002** | Dead surfaces **deleted**: `deal-orders-section.tsx` (4 nonexistent endpoints) and `lead-attachments-section.tsx` (3 nonexistent endpoints), plus their imports, the orphaned `Card` wrapper on the lead page, and the now-unused `Card`/`CardContent` imports. Non-use proven per §25 before deleting — component name, file basename, barrel re-export, bare side-effect import and dynamic `import(` all searched; 2 references each, both the expected call site | FE tsc 0 |
 | **BRK-004** | "Download PDF" menu item and its `toast.info` stub removed from `deal-quotes-section.tsx`; the rest of the section is real and untouched | FE tsc 0 |
+
+## Soft-delete policy — CRM slice
+
+Full repo-wide audit: **`docs/soft-delete-audit-2026-08-11.md`** (41 violations across 15 modules; only the CRM
+slice is actioned here — Build/HR/Inventory violations belong to those sessions).
+
+| ID | Table | Status |
+|---|---|---|
+| V-08/09 | `leads` | ✅ **FIXED.** 24 `isNull(leads.deletedAt)` filters added across all 8 leads services. Merged leads no longer reappear in lists, boards, status counts, exports, reports, SLA alerts or the leaderboard. **List/count agreement verified** on all four pairs (`listLeads`, `getBoard`, `getStats`, `getFollowUps`) — each shares one conditions object, so pagination totals cannot drift from rows |
+| V-14 | `crm_organizations` | ✅ **FIXED.** `remove()` is now a soft delete (`deletedAt` + `updatedAt`, guarded by `isNull` so a double-delete is a no-op) with cache invalidation preserved; `queryList`, `getWithContacts` and `exists` all filter. Both `WITH RECURSIVE` CTEs now carry `deleted_at IS NULL` on **both** the anchor and the recursive arm, so a deleted org no longer participates in cycle checks or descendant rollups |
+| — | `contacts` in org detail | ✅ **FIXED (my catch).** `getWithContacts` filtered the org but not its contacts, which also soft-delete — so deleted contacts still appeared on the account. The contacts service filters this in 4 places; this read was the lone outlier |
+| V-07 | `deals` | ⛔ **Blocked on migration** — no `deleted_at` column at all. `deal_activities` FK is `cascade`, so deal history dies with the deal |
+| V-13 | `quotes` + `quote_line_items` | ⛔ Blocked on migration — financial documents |
+| V-25 | `crm_campaigns` | ⛔ Blocked on migration — carries send/click/attribution history |
+
+Partial indexes are also missing on `contacts`, `leads`, `crm_organizations`, `crm_pricebooks`,
+`crm_quote_templates`, `crm_products`, `crm_sequences` (§19 asks for soft-delete "consistent with partial indexes").
+
+**Relevant to GAP-025:** `contacts` soft-deletes, so the `cascade` on `crm_contact_channel_consent.contactId` never
+fires — consent rows for deleted contacts linger. Consent reads must join through the contact's `deleted_at`.
+
+## GAP-025 — consent & suppression 🔄 foundation landed, not yet complete
+
+The CRM had **no** consent, suppression or unsubscribe field anywhere (verified: zero matches for
+consent/suppress/unsubscribe/opt_out across `schema/crm/`), while sequences could already send.
+
+### Landed
+
+| Piece | Detail |
+|---|---|
+| Schema | `crm_contact_channel_consent` — current state, `uniqueIndex(org_id, contact_id, channel)`, org-led composite indexes, composite tenant key. Carries **status, source, sourceDetail, legalBasis, capturedAt, expiresAt, recordedByUserId** — the doc's "status, source, timestamp and legal basis per contact per channel" |
+| Schema | `crm_contact_consent_events` — **append-only history**, so a past decision is never rewritten and an audit can prove what was true at send time |
+| Enums | `crm_consent_channel` (EMAIL/SMS/WHATSAPP/PHONE/POST) · `crm_consent_status` (OPTED_IN/OPTED_OUT/UNKNOWN) · `crm_consent_source` · `crm_legal_basis` |
+| `CrmConsentService` | `filterSendable` (bulk), `assertSendable` (single), `suppressedEmails` (address-based, for paths holding an address but no contact id), `record` (upsert + history event + `audit.logCritical` in **one** transaction), `listForContact`, `countMissingConsent`. OPTED_OUT and an expired OPTED_IN both block; UNKNOWN does not block but is reported |
+| **The choke point** | `CrmOutboundEmailService` — the only way CRM automated paths reach email. Both senders (`crm-sequences-runner`, `crm-automation-runner`) now go through it. **Verified: no `AutomationEmailService` reference remains anywhere in `modules/crm/` except inside the wrapper itself**, so a future CRM bulk sender cannot bypass consent |
+| Placement | Consent lives in a leaf `CrmConsentModule` (`crm/consent/`) that both `CrmModule` and `CrmAutomationStudioModule` import — §24.2, no cycle, no new `forwardRef`. **`madge --circular` re-run: 0 cycles.** |
+
+**Why the gate is CRM-only and not in `AutomationEmailService`:** that shared service also carries HR and platform
+automation mail, which CRM marketing consent must not suppress. Gating there would have broken HR notifications.
+
+### Not done — required before this is usable
+
+1. ⚠️ **Migration NOT generated, deliberately.** `db:generate` diffs the whole schema against the journal, and other
+   sessions are concurrently editing `schema/build/roadmap.ts` and inventory schema — a generate now would bundle
+   their in-flight work into my migration. **Run it when the tree is quiet**, then verify the SQL contains only the
+   two consent tables + four enums. The FK to `contacts` must be added `NOT VALID` then `VALIDATE` (§19), and set
+   `lock_timeout`.
+2. No endpoints yet: record/update consent, list per contact, and a `@Public()` unsubscribe-link handler (which
+   needs the public-token treatment from §20, not a guessable id).
+3. The four **manual** lead send paths (`leads-detail`, `leads-ops`, `leads.service`, `lead-status`) are not routed
+   through the gate — they are human-in-the-loop single sends; `assertSendable` exists for them.
+4. No UI, no tests, and the DPDP/GDPR **retention and erasure** path for contact PII is untouched.
+
+### Batch 6
+
+| ID | What | Verified |
+|---|---|---|
+| **NAV-002** | **CRM Tasks un-gated from Build — but a real exposure had to be closed first.** Investigating turned up that `GET /tasks` was **org-wide unscoped** unless the caller passed `assigneeId`, while `tasks:read` is a **universal employee self-service grant** (`role-defaults.ts` `EMPLOYEE_SELF_SERVICE`). So every member of a Build-enabled org could read every task in the org, including CRM tasks attached to leads and deals. Simply removing the module gate — the literal ask — would have **widened** that. Fix: `tasks:read` now exposes only the caller's own tasks; the whole-org queue requires **`crm:tasks:view`**, which finally gives that previously-inert key an enforcement point. Owners bypass. Then `@RequireModule("build")` was removed, so a CRM-only org works. `TasksModule` gained `AccessModule` | BE 0 errors in my files |
+
+⚠️ **Correction to my own option text.** When I asked about this I said the repo's array `@RequireModule` supports
+"either module". It does not — `ModuleGuard` loops and throws if **any** listed module is disabled, so an array is
+**AND** (that is why `offer-fulfillment` uses `["crm","inventory"]` to require both). `@RequireModule(["build","crm"])`
+would have made the CRM-only case strictly worse. Delivered the endorsed *intent* instead.
+
+`crm:tasks:view` is currently in exactly one role template — **SALES_REP** — so sales users keep the full CRM task
+queue and unrelated employees drop to their own tasks. If sales managers hold a different template, that template
+needs the key added; flagging rather than guessing at the role model.
 
 ### Batch 5
 

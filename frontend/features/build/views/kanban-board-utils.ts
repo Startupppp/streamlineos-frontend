@@ -9,12 +9,29 @@ export type StatusEntry = {
   type?: string | null;
 };
 
-export type UpdateOrderContext = {
-  previous: KanbanTicket[];
-  previousCache: KanbanTicket[] | undefined;
-};
-
 export const COLUMN_DND_TYPE = "COLUMN";
+
+export function compareByRank<T extends { rank?: string | null; id: number }>(
+  a: T,
+  b: T,
+): number {
+  const ra = parseFloat(a.rank ?? "0");
+  const rb = parseFloat(b.rank ?? "0");
+  if (ra !== rb) return ra - rb;
+  return a.id - b.id;
+}
+
+export function computeOptimisticRank(
+  beforeRank: string | null,
+  afterRank: string | null,
+): string {
+  const before = beforeRank != null ? parseFloat(beforeRank) : null;
+  const after = afterRank != null ? parseFloat(afterRank) : null;
+  if (before != null && after != null) return String((before + after) / 2);
+  if (after != null) return String(after - 1000);
+  if (before != null) return String(before + 1000);
+  return "1000";
+}
 
 const DEFAULT_COLUMNS: KanbanColumn[] = [
   { id: "TODO", name: "To Do", color: "#94a3b8", order: 0 },
@@ -22,10 +39,6 @@ const DEFAULT_COLUMNS: KanbanColumn[] = [
   { id: "IN_REVIEW", name: "In Review", color: "#eab308", order: 2 },
   { id: "DONE", name: "Done", color: "#22c55e", order: 3 },
 ];
-
-export function isUpdateOrderContext(v: unknown): v is UpdateOrderContext {
-  return typeof v === "object" && v !== null && "previous" in v;
-}
 
 export function columnDraggableId(col: KanbanColumn): string {
   return `column-${col.statusId ?? col.id}`;
@@ -85,7 +98,7 @@ export function groupTicketsByStatus(
     else map.set(ticket.status, [ticket]);
   }
   for (const list of map.values()) {
-    list.sort((a, b) => (a.order || 0) - (b.order || 0));
+    list.sort(compareByRank);
   }
   return map;
 }

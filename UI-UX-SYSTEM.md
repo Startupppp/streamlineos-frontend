@@ -6,6 +6,10 @@
 >
 > **There is no `UI-CONTRACT.md`.** This file is it — a second design document would drift. §12–§17 are the code-level
 > half: overlay rules, form/error contract, data-layer contract, structure, an import index, and the conflicts register.
+> **§18 is the screen-template catalog** — nine copy-pasteable archetypes (list+table, list+cards, detail+tabs,
+> settings section, hub, board, overlays, states, data contract), each extracted from a named conformed file. Build a
+> new screen from §18 and it will match by construction; the scroll chain at the top of §18 is the single most
+> common source of layout bugs.
 > §12–§17 were extracted from **Build, Accounting and Inventory** (2026-08-10); every claim carries a `file:line`.
 > A `> **Correction (v2.0)**` block marks a place where v1.0 described something the code does not do — those are
 > the ones most likely to be wrong in existing screens.
@@ -979,6 +983,248 @@ Reference modules and v1.0 of this document disagreed in nine places. Each is re
 | DS-007 | "Pagination is `TablePagination`" | `DataTable` uses `shared/data-table-pagination` (`:19`) | **Two components, split by surface.** §7 table added |
 | DS-008 | "`PageWrapper` renders a hairline divider" | No border element in `page-wrapper.tsx` | **No divider exists.** Claim removed |
 | DS-009 | Table density `h-8`/`text-[11px]` | `table.tsx:79` `h-10 text-sm`; `data-table.tsx:360` `px-2 py-2 text-sm` | **`h-10` / `px-2 py-2` / `text-sm`.** §4 rewritten |
+
+---
+
+## 18. Screen Templates
+
+Copy the archetype, fill in the entity. These are extracted from conformed pages, not invented — each names its
+reference file. **Anything not shown here is already owned by a primitive; do not re-declare it.** In particular you
+never write page padding (`PAGE_CHROME_X`), control heights (`h-9`), table density (§4), card radius, or the
+scroll container.
+
+### The scroll chain — memorise this
+
+Only **one** element scrolls: `PageWrapper`'s content zone. The shell is `overflow-hidden` above it (Appendix).
+
+```
+PageWrapper                         flex h-full min-h-0 flex-1 flex-col   ← owned by the component
+├── header zone                     shrink-0
+├── filter zone                     shrink-0, one non-wrapping scrollable row
+└── content zone                    flex-1 min-h-0 overflow-y-auto        ← the ONE scroller
+    └── your body                   must carry flex-1 min-h-0 to fill it
+```
+
+Consequences, and the two mistakes that cause 90% of fill bugs:
+- A body using `space-y-4` instead of `flex flex-1 min-h-0 flex-col` leaves dead background above the Ask OS bar.
+- A `DataTable`/`EmptyState`/`ErrorState` without `flex-1 min-h-0` (or `flex-1`) stops short of the shell edge.
+- `noInternalScroll` moves the scroll responsibility to **you** — use it only for boards/maps that scroll internally.
+
+---
+
+### T1 · List + filters + table — the most common screen
+
+Reference: `features/settings/organization/hierarchy/branches-page.tsx:343-406`.
+
+```tsx
+<PageWrapper
+  title="Branches"
+  subtitle="Branches within your organization."          // descriptive, not a bare row count
+  actions={
+    <div className="flex w-full items-center gap-2 sm:w-auto">
+      {/* secondary first, ONE primary last, max 3 total */}
+      <Button variant="outline" size="sm" className="flex-1 text-xs sm:flex-none" onClick={onToggle}>…</Button>
+      {canManage ? (
+        <AnimatedIconButton icon={PlusIcon} iconSize={16} iconClassName="mr-1.5" size="sm"
+          className="flex-1 sm:flex-none" onClick={onCreate}>Add Branch</AnimatedIconButton>
+      ) : null}
+    </div>
+  }
+  filters={<SearchInput placeholder="Search branches…" value={search} onValueChange={onSearch} />}
+>
+  {isError ? (
+    <ErrorState className="flex-1" title="Couldn't load branches"
+      description={getErrorMessage(error)} onRetry={onRetry} />
+  ) : (
+    <DataTable
+      data={rows}
+      columns={columns}
+      getRowKey={(row) => row.id}
+      isLoading={isLoading}
+      emptyState={emptyState}
+      minWidth="1000px"
+      className="flex-1 min-h-0"                          // mandatory — this is the fill chain
+      pagination={{
+        mode: "server", page, pageSize, total: data?.total ?? 0,
+        onPageChange: setPage, onPageSizeChange: setPageSize,
+        pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
+      }}
+    />
+  )}
+</PageWrapper>
+```
+
+Rules that bite here:
+- **`className="flex-1 min-h-0"` on `DataTable` is not optional.**
+- `pagination` is always **server** mode for anything that can exceed a page (§19 caps at 100).
+- Error branch comes **before** the empty/not-found branch, or a failure reads as "no data".
+- `minWidth` forces horizontal scroll rather than crushing columns.
+- A sole filter (usually search) fills the width on mobile — never collapse a lone search into a Drawer.
+- 2+ filters: search stays first, the rest collapse into a Drawer below `md` (§6). Use `ResponsivePopover`.
+
+**Mobile (375px):** actions become a full-width row (`PageWrapper` handles it), the filter row scrolls
+horizontally rather than wrapping, and the table becomes cards if you pass `mobileCard`. Reserve
+`pb-[calc(4rem+…)]` only when a bottom bar is mounted.
+
+---
+
+### T2 · List + cards, when rows aren't tabular
+
+Same header/filters as T1. Body:
+
+```tsx
+<div className="flex flex-1 min-h-0 flex-col gap-3">
+  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+    {rows.map((row) => (
+      <div key={row.id} className="bg-card rounded-xl border border-border shadow-sm p-4
+        hover:border-primary/40 hover:shadow-md transition-all cursor-pointer">…</div>
+    ))}
+  </div>
+  <TablePagination … />                                  {/* the non-DataTable pagination */}
+</div>
+```
+
+Card surface is `rounded-xl border border-border bg-card shadow-sm` (§7). Inner rows and chips inside a card stay
+`rounded-lg`/`rounded-md` — only the card itself is `xl`.
+
+---
+
+### T3 · Detail + tabs
+
+```tsx
+<PageWrapper title={record.name} backHref="/crm/contacts" subtitle={…}
+  contentClassName="flex min-h-0 flex-1 flex-col">
+  <Tabs value={tab} onValueChange={onTabChange} className="flex min-h-0 flex-1 flex-col">
+    <TabsList>…</TabsList>
+    <TabsContent value="overview" className={TABS_CONTENT_PAGE_BODY_CLASS}>…</TabsContent>
+  </Tabs>
+</PageWrapper>
+```
+
+- `backHref` **only** on a page with no sidebar entry of its own (§5).
+- Tab state syncs to the URL: `router.replace(\`${pathname}?${params}\`, { scroll: false })` (§15).
+- Every body-filling `TabsContent` gets `TABS_CONTENT_PAGE_BODY_CLASS` — hand-writing `flex-1 min-h-0 mt-0` omits
+  the `data-[state=active]:` guards.
+- Tabs sharing the line with search/filters/actions use `PageTabsToolbar`.
+- 5+ triggers used as a status filter is **AP-2** — that is a `Select`, not tabs.
+
+---
+
+### T4 · Settings section page — Administration & HR (rich surface)
+
+Administration and HRMS use the **rich-surface** kit; every other module stays ink-first. Reference:
+`features/settings/organization/organization-settings-page.tsx`.
+
+```tsx
+<PageWrapper title="Organization" subtitle="Profile, branding, localization and lifecycle.">
+  <RichPageContent className="flex-1 min-h-0">
+    <OrgSettingsCard title="Profile" description="…" icon={<Building2 className="h-4 w-4" />}
+      action={canEdit ? <OrgSettingsEditButton onClick={onEdit} /> : undefined}>
+      <SettingsFieldGrid>
+        <SettingsField label="Legal name" value={org.legalName} />
+      </SettingsFieldGrid>
+    </OrgSettingsCard>
+  </RichPageContent>
+</PageWrapper>
+```
+
+`OrgSettingsCard` sits on `RichPanel` + `RichIconWell`, so all sections inherit the treatment from one place.
+`RichPageContent` supplies the `gap-3 sm:gap-4` rhythm — never `space-y-*` here, and never a non-4px value.
+
+---
+
+### T5 · Module hub / landing
+
+Reference: `features/hr/hub/hr-hub-page.tsx`.
+
+```tsx
+<PageWrapper title="HR" subtitle="…" variant="display">
+  <div className="flex flex-1 min-h-0 flex-col">
+    <RichPageContent>
+      <RichHero>{/* quick-action tiles, horizontally scrollable on mobile */}
+        <RichQuickAction href="…" icon={UserPlus} label="Add employee" tone="blue" />
+      </RichHero>
+      <QueuesBand /> <TodayPanel /> <MetricsRow />
+    </RichPageContent>
+  </div>
+</PageWrapper>
+```
+
+- `variant="display"` is for genuine hero surfaces only, and must be consistent across siblings.
+- Every panel self-gates on the endpoint's exact permission and renders **nothing** when unheld — a 2-permission
+  user gets a short clean page, not a wall of empty states.
+- Do not put a hero on a page whose `PageWrapper` title already says the same thing.
+
+---
+
+### T6 · Board / kanban — the one screen that owns its scroll
+
+```tsx
+<PageWrapper title="Deals" filters={…} noInternalScroll
+  className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+  <div className="flex min-h-0 flex-1 gap-3 overflow-x-auto">
+    {columns.map((col) => (
+      <div key={col.key} className="flex w-72 shrink-0 flex-col rounded-xl border border-border bg-card">
+        <div className="shrink-0 px-3 py-2">{col.label}</div>
+        <div className="flex-1 min-h-0 overflow-y-auto p-2">{/* virtualize past ~50 */}</div>
+      </div>
+    ))}
+  </div>
+</PageWrapper>
+```
+
+Column totals come from a server aggregate, never `COUNT(*)` per render. Past ~50 cards use `react-window` v2 with
+`Droppable mode="virtual"` + `renderClone` (§23, and note the `api.element`-is-null gotcha).
+
+---
+
+### T7 · Overlays — pick by the §12 ladder
+
+| Situation | Component |
+|---|---|
+| One field, immediate | inline edit — no overlay |
+| One field, bounded choice | `ResponsivePopover` (Drawer below `md`) |
+| ≤5 fields | `EntityFormDialog` |
+| 6+ fields, multi-section, or context must stay visible | `EntityFormSheet` |
+| Read-only detail | `AppSheet` |
+| Irreversible / lifecycle | `ConfirmDialog destructive` (+ typed-name confirm for high blast radius) |
+
+`SheetContent` is **always** `p-0` with inner zones owning padding (AP-1), and the body needs `min-h-0`.
+
+---
+
+### T8 · The four states — every screen ships all of them
+
+```tsx
+if (isLoading) return <SkeletonTable rows={10} columns={columns.length} />;   // never a spinner
+if (isError)   return <ErrorState className="flex-1" description={getErrorMessage(error)} onRetry={refetch} />;
+if (!canView)  return <NoPermissionState permission="crm:contacts:view" />;
+if (rows.length === 0) return <EmptyState className="flex-1 min-h-0" … />;    // filter-empty ≠ data-empty
+```
+
+- Skeleton is a **visual Xerox**: same sections, same column count, ~9–12 dense rows, `h-9` filter blocks.
+- Empty state distinguishes *filters active* ("No results match your filters" + Clear filters) from *no data*
+  (the create action). One CTA, never two.
+- Suppress the skeleton under 200ms (`isPending && !data`).
+
+---
+
+### T9 · The data contract behind every template
+
+```tsx
+const canView = useCan("crm:contacts:view");            // the endpoint's EXACT @RequirePermission key
+const { data, isLoading, isError, error, refetch } = useContacts(
+  { page, limit, search },
+  { enabled: canView },                                  // never fire an API the role cannot access
+);
+```
+
+- Hook lives in `hooks/api/<module>/<entity>.ts`; key from the `queryKeys` factory; calibrated `staleTime`;
+  `mutationKey` on every mutation; `enabled` combined **after** any `...options` spread, never re-declared.
+- Search is debounced ≥300ms (`SearchInput` / `useDebouncedValue`) and resets pagination to page 1.
+- Forms: react-hook-form + `zodResolver`, schema in a sibling `*-schema.ts`, per-field `<FormMessage>`.
+- Every async button `<LoadingButton isPending>`; every error string `getErrorMessage`.
+- Never render a raw id — resolve names at the display boundary.
 
 ---
 

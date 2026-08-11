@@ -5,8 +5,153 @@
 
 **Scope:** in-app feed · web push · email · pipeline, preferences, templates, delivery tracking, admin surface.
 SMS (Twilio) and WhatsApp as built-but-not-enabled adapters. Mobile push / Slack / webhooks designed for, not built.
-**Phase:** 1 — Core model & schema. Design complete and gated. **REG-001 slice shipped.**
+**Phase:** 1 — Core model & schema. Design complete and gated. **Five slices shipped.**
 **Updated:** 2026-08-11
+
+**Shipped so far** (all backend, uncommitted on `main`, migrations `0408`/`0410`–`0413`):
+REG-001 accounting blackout · PIPE-003 permission re-check before render · SEC-002/003 bounce
+webhooks + suppression · SEC-009 retention sweep · RT-001/002 push payload minimisation.
+**All three Phase 0 P0s are closed.**
+
+**Next by value:** REG-004 (align Build event keys → unlocks the `build.ticket` resolver) ·
+PIPE-001 (durable intent, migration `0414`) · COMP-002 (unsubscribe + `List-Unsubscribe`) ·
+RT-007 (Ably carries content) · SEC-007 (net pay rendered into the payslip body).
+
+## Shipped — RT-001, no content in push payloads (and RT-002)
+
+**Decision: strip everywhere, no exceptions** (2026-08-11). Chat loses its lock-screen preview
+deliberately — a chat message can contain anything and the push service is a third party.
+
+**The fix is structural, not a convention.** `pushPayloadSchema` previously had
+`{ title, body, url }`; it now has `{ category?, url?, notificationId? }` and **no free-text field
+at all**. `category` is the pgEnum, so the only thing that can cross the boundary is a fixed label.
+§20 is explicit that a "safe usage" flag is the pattern that failed in `kb-rag.service.ts` — a
+`body` field commented "nothing sensitive here" is the version that eventually leaks. Removing the
+field made all four call sites fail to compile until they carried nothing.
+
+| Call site | Was | Now |
+|---|---|---|
+| `notifications.service.ts:113` | `title: input.title`, `body: input.message.slice(0,140)` | `notificationId` + `category` |
+| `providers/notification-web-push.provider.ts:21` | same 140-char body | `url` only (delivery rows carry no category) |
+| `chat-messages.service.ts:213` | sender name + `content.slice(0,80)` | `category: "CHAT"` |
+| `chat-huddles.service.ts:181` | generic strings | `category: "CHAT"` |
+
+All user-facing copy is now generated in `frontend/public/sw.js` from the category, so nothing
+sensitive reaches a lock screen even if a caller regresses. **RT-002 closed in the same edit:** the
+service worker is shared across tabs, so tagging by `notif-${notificationId}` collapses the
+three-tabs-three-notifications duplication at the OS level.
+
+The `sw.js` change is frontend but not scope creep — without it push would render an `undefined`
+body. The rest of Phase 8 stays deferred.
+
+**Verification.** Backend `pnpm typecheck` **exit 0, 0 errors**. `push-payload.spec.ts` asserts on
+the payload rather than the UI, per the brief: allowed keys exactly `{category, url,
+notificationId}` · no `title`/`body`/`message`/`content`/`subject`/`name`/`preview` key ·
+a caller smuggling `body: "Net pay ₹120000"` has it **stripped by the parse**, checked by asserting
+the serialised payload contains neither `120000` nor `payslip` · a non-enum category throws, so it
+cannot become a free-text channel. **Tests not run** (§3).
+
+Mid-run a typecheck showed 4 errors in `db/schema/build/**` from the Build programme's concurrent
+schema split — none in my files, and clean once their refactor landed. Second time this session;
+worth checking whose errors they are before reacting.
+
+**Still open nearby:** RT-007 — Ably still publishes `content: message.content` to
+`notifications:${orgId}:${userId}` (`chat-notifications.service.ts:44,84`). That is the user's own
+authenticated channel rather than a third party, so it is a lesser issue than push, but the brief
+wants realtime to carry an invalidation signal rather than content.
+
+## ⚠️ PENDING — the Drizzle snapshot chain is stale
+
+**Do not run `pnpm -C backend db:generate` without reading this.** Migrations `0408`, `0410`–`0413`
+were hand-authored and journalled but have **no `migrations/meta/NNNN_snapshot.json`**. Drizzle
+diffs against the last snapshot, so the next `db:generate` will re-propose work that is already
+applied — re-adding `visibility_resource_kind`, re-creating `email_suppressions`, and so on.
+
+Options, none of them free: regenerate the snapshot chain from the live DB, or discard the
+re-proposed statements by hand on the next generate. I did not hand-craft snapshot JSON — getting
+it subtly wrong is worse than the stale state, because the error would then be baked in.
+
+Related: [[custom-migrations-leave-snapshot-stale]] — `generate --custom` has the same effect for
+a different reason, so this repo has two independent paths to a desynced `meta/`.
+
+## Shipped — SEC-009, retention sweep
+
+Migration `0413_notification_retention_indexes`, applied and journalled.
+**Retention decided 2026-08-11: 90 days for rendered bodies, 13 months for the metadata row.**
+Metadata outlives the body so a delivery dispute or bounce history stays answerable long after the
+content stops being worth the exposure.
+
+`CronNotificationRetentionService.sweep()` behind `GET|POST /cron/notifications-retention-sweep`
+(cron-secret auth, matching the other 35 jobs — `@nestjs/schedule` is not installed, so an external
+scheduler must call it).
+
+- `email_outbox` sweeps **globally** — every row has `organization_id IS NULL` and its RLS policy
+  escapes on that, so no tenant context is needed.
+- `notification_deliveries` sweeps **per tenant via `forEachOrg`** — it enforces
+  `org_id = app.current_org_id()`, so a global sweep is denied `42501` (§20).
+- Deletes are **batched at 1000 with a 100-batch cap**, and hitting the cap **logs a warning**
+  rather than returning silently — a silent cap reads as "everything is purged" when it is not.
+
+**Verification.** Typecheck **exit 0, 0 errors**. Live-DB probe against seeded rows: a 200-day-old
+payslip email keeps its subject, recipient and status but its `html` becomes `""` — the net-pay
+figure is gone; a 500-day-old row is deleted entirely. Both rolled back.
+
+Honest caveat: `EXPLAIN` shows a **seq scan**, because the table holds 36 rows and that is the
+correct plan at that size. The three indexes exist (verified in `pg_indexes`) but their use is
+**not demonstrated** and cannot be until the table is seeded to scale.
+
+**Still open in this area:** SEC-007 — the payslip email still *renders* net pay into the body.
+Retention now bounds how long that is stored; it does not stop it being sent or stored for 90 days.
+
+## Shipped — SEC-002/SEC-003, bounce webhooks and suppression at the choke point
+
+Migration `0412_email_suppressions` (new table + two new enum **types**, so no `ADD VALUE`
+transaction constraint), applied and journalled.
+
+**D-1's leverage, realised.** `EmailService` overrides the base sender to route through
+`EmailOutboxService.enqueueAndTry` (`email.service.ts:46`), so putting the suppression gate in
+that **one method** covers all 75 direct-send call sites without touching one of them.
+Suppression applies to mandatory types too — a hard-bounced address is not deliverable regardless
+of policy, and continuing to send to it degrades delivery for every other recipient on the domain.
+
+**`email_suppressions` is keyed on the address, not a user FK.** `notification_suppression_rules`
+cascades on user delete, so purging a user would resurrect their bounced address; a hard bounce
+must outlive the account. `org_id IS NULL` = platform-wide (correct for a bounce, which is a
+property of the address); a tenant may additionally suppress for itself. **Two partial uniques**
+rather than one nullable composite — `NULL <> NULL` in a btree unique would leave the
+platform-wide rows unconstrained, which is the SCH-013 defect.
+
+**Multi-recipient sends are filtered, not dropped.** Suppressed addresses are removed and the
+remainder still sends; a withheld send writes an `email_outbox` row with `status = 'SUPPRESSED'`
+and **no body** (there is no delivery to reconstruct, and `email_outbox` still has no retention
+sweep — SEC-009). It never throws: many callers `void` this method, so a throw would surface as an
+unhandled rejection on an unrelated request.
+
+**`POST /webhooks/email/:provider`** — `@Public()`, because a provider cannot carry a session.
+Authentication is the signature check, run before anything is parsed or written.
+
+| Provider | Verification |
+|---|---|
+| `resend` | Full Svix HMAC — SHA-256 over `${id}.${timestamp}.${body}`, base64 key after the `whsec_` prefix, multiple `v1,<sig>` candidates accepted for key rotation, and a **5-minute replay window**. Implemented with node `crypto`; no new dependency |
+| `zeptomail` | Constant-time shared secret (`x-zeptomail-webhook-secret`). **Deliberately not a guessed HMAC** — inventing a construction that is wrong would silently accept everything. Replace once the provider's real scheme is confirmed |
+
+Every path fails closed: no secret configured → 401, no headers → 401, forged or stale → 401.
+`@UseRateLimit`-equivalent check uses tier `"webhook:email"`, **and the `TIERS` entry is
+registered** — without it `check()` returns `allowed` for an unknown key and the guard is a no-op,
+which is exactly how `hr-form:public-view` ended up unprotected.
+
+**Verification.** Backend `pnpm typecheck` **exit 0, 0 errors**. Live-DB probe of the partial
+uniques: a platform-wide hard bounce inserts; **a redelivered duplicate is rejected `23505`**, so
+webhook redelivery is idempotent; a per-org row for the same address coexists with the global one.
+`email-webhook.spec.ts` added — 10 cases covering valid signature, missing headers, forged
+signature, signature over a different body, replay outside the window, no secret configured,
+non-bounce events, complaints, and both ZeptoMail branches. **Tests not run** (§3).
+
+New env: `RESEND_WEBHOOK_SECRET`, `ZEPTOMAIL_WEBHOOK_SECRET` (both in `.env.example`; unset means
+the endpoint rejects everything, so bounces are never suppressed).
+
+**Not in this slice:** consent records, the unsubscribe endpoint and `List-Unsubscribe` (COMP-002/003),
+and the `email_outbox` retention sweep (SEC-009).
 
 ## Shipped — PIPE-003, permission re-check before render
 
@@ -180,10 +325,10 @@ Severity ranked. Full evidence in the audit doc.
 | **SEND-001** | High | **Dual send** — `cron-hr.service.ts:200,220` fires the automation event *and* a direct email for `document.expiring`. §9 forbids dual-send outright |
 | **SEND-002** | High | Broadcasts (`broadcasts.service.ts:160`), birthday cron and interview no-show INSERT into `notifications` directly, skipping `announce()` → no SSE, no push, stale bell count |
 | **PIPE-001** | **P0** | Delivery intent is not durable — `registerAfterCommit` is an in-memory hook; `outbox_events` is the right table, is disconnected from notifications, and `isDispatchConfigured()` returns `false` |
-| **SEC-002** | **P0** | No bounce/complaint webhook for ZeptoMail or Resend → hard bounces never suppress, and resend forever |
+| ~~**SEC-002/003**~~ | ~~**P0**~~ | **CLOSED** — signature-verified bounce/complaint webhook + `email_suppressions`, enforced at the `enqueueAndTry` choke point (covers all 75 direct-send sites) |
 | **REG-003** | High | **79 of 130 declared events are never emitted** — all of CHAT, PROJECTS, PAYROLL, RECRUITMENT, INVENTORY, SURVEYS, CALENDAR, SIGN are aspirational |
 | **REG-004/005/006** | High | 10 keys emitted but undeclared (build uses `build:ticket:assigned`, catalog declares `project.task.assigned`; e-sign emits `sign.envelope.*`, catalog declares `sign.document.*`). `eventKey` is a free-form `string`, and **no CI check** exists — which is why REG-001…004 coexist |
-| **RT-001** | High | **Push payloads carry real content** (`message.slice(0,140)`) through a third-party push service, onto lock screens |
+| ~~**RT-001**~~ | ~~High~~ | **CLOSED** — `pushPayloadSchema` has no free-text field; payload is `{category?, url?, notificationId?}` |
 | **SCH-004** | High | **Nothing is partitioned** — `notifications`, `notification_deliveries`, `notification_queue`, `outbox_events`, `email_outbox` all `parts=0` |
 | **SCH-001** | High | `serial` int4 PK on `notifications` + `notification_deliveries` against a 100M-row target (§19 requires identity/UUID) |
 | **SCH-003** | High | Preferences are four JSONB blobs — unindexable, un-toggleable, no server-side preference centre |
@@ -195,7 +340,7 @@ Severity ranked. Full evidence in the audit doc.
 | COMP-004 | High | **India DLT registration not started** — weeks-long, blocks SMS regardless of code |
 | PIPE-006 | High | Fan-out is sequential, one transaction per recipient. 50k recipients = 50k transactions |
 | PIPE-015 | High | Deactivation does not cancel already-queued deliveries |
-| RT-002/003/004 | Med | Multi-tab: `new Notification()` with no `tag` → 3 tabs = 3 OS notifications. `requestPermission()` fires **on mount**, spending the one prompt each user ever gets. Denied state has no UX |
+| RT-003/004 | Med | `requestPermission()` fires **on mount**, spending the one prompt each user ever gets. Denied state has no UX. (**RT-002 CLOSED** — SW tags by `notif-<id>`) |
 | RT-005/006 | Med | Support Ably token grants `support:${orgId}:*`; Ably tokens are 1h TTL with **no revocation** on deactivation |
 | REG-007/008 | Med | Unknown `{{var}}` renders as `""` silently; **no rendered-content snapshot** on the delivery record, so "what did you send my employee" is unanswerable |
 | REG-002 | Med | Catalog has 130 entries, live `notification_events` has 126 — seeding is not reconciled |
@@ -204,7 +349,7 @@ Severity ranked. Full evidence in the audit doc.
 | PIPE-004 | Med | Dedupe is first-write-wins, not aggregation: 15 comments → "comment #1", not "15 new comments" |
 | PIPE-011/012/014 | Med | No self-notification exclusion, no TTL/expiry, locale hardcoded `"en"` |
 | PIPE-010 | Med | Backoff has no jitter; no circuit breaker per provider |
-| SEC-009 | Med | No purge for `email_outbox` / `notification_deliveries` — bodies retained forever, including the salary figure below |
+| ~~SEC-009~~ | ~~Med~~ | **CLOSED** — 90-day body purge / 13-month row delete via `/cron/notifications-retention-sweep` |
 | SEC-007/008 | Med | Net pay and deal value rendered into email bodies (subjects are clean) |
 | SCH-013 | Med | `uq_notification_events_org_key` is `(org_id, event_key)` with `org_id` nullable and **all 126 rows NULL** → covers nothing |
 | SCH-005/006 | Low | `push_subscriptions` has no `last_seen_at`/`deleted_at`; `UNIQUE(endpoint)` is bare global |

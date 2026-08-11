@@ -42,7 +42,7 @@ export function useProjectBoardTickets(projectId: number) {
       apiClient.get<PaginatedResponse<Ticket>>(`/build/${projectId}/tickets`, {
         limit: BOARD_PAGE_SIZE,
         page: pageParam as number,
-        orderBy: "order",
+        orderBy: "rank",
         orderDir: "asc",
       }),
     initialPageParam: 1,

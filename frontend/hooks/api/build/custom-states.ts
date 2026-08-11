@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 export interface CustomState {
   id: number;
@@ -40,11 +41,12 @@ function invalidateStateCaches(
 }
 
 export function useCustomStates(projectId: number) {
+  const canView = useCan("build:view");
   return useQuery<CustomState[]>({
     queryKey: stateKeys(projectId),
     queryFn: () =>
       apiClient.get<CustomState[]>(`/build/${projectId}/custom-states`),
-    enabled: !!projectId,
+    enabled: canView && !!projectId,
     staleTime: 60_000,
   });
 }

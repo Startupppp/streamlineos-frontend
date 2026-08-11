@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type {
@@ -15,11 +16,12 @@ function customStateKeys(projectId: number) {
 }
 
 export function useWorkflowTransitions(projectId: number) {
+  const canView = useCan("build:workflow:view");
   return useQuery<WorkflowTransition[]>({
     queryKey: queryKeys.projects.workflow.transitions(projectId),
     queryFn: () =>
       apiClient.get<WorkflowTransition[]>(`/build/${projectId}/workflow/transitions`),
-    enabled: !!projectId,
+    enabled: canView && !!projectId,
     staleTime: 60_000,
   });
 }

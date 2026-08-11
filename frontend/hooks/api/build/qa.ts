@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type {
@@ -28,15 +29,17 @@ interface TestRunFilters {
 }
 
 export function useTestSuites(projectId?: number) {
+  const canView = useCan("build:qa:view");
   return useQuery<TestSuite[]>({
     queryKey: queryKeys.projects.qa.suites(projectId),
     queryFn: () => apiClient.get<TestSuite[]>(`/build/${projectId}/test-suites`),
-    enabled: !!projectId,
+    enabled: canView && !!projectId,
     staleTime: 60_000,
   });
 }
 
 export function useTestCases(projectId?: number, filters?: TestCaseFilters) {
+  const canView = useCan("build:qa:view");
   const params: Record<string, string> = {};
   if (filters?.q) params["q"] = filters.q;
   if (filters?.suiteId !== undefined) params["suiteId"] = String(filters.suiteId);
@@ -46,7 +49,7 @@ export function useTestCases(projectId?: number, filters?: TestCaseFilters) {
   return useQuery<TestCase[]>({
     queryKey: queryKeys.projects.qa.cases(projectId, filters),
     queryFn: () => apiClient.get<TestCase[]>(`/build/${projectId}/test-cases`, params),
-    enabled: !!projectId,
+    enabled: canView && !!projectId,
     staleTime: 60_000,
     placeholderData: keepPreviousData,
   });
@@ -93,22 +96,24 @@ export function useDeleteTestCase() {
 }
 
 export function useTestRuns(projectId?: number, filters?: TestRunFilters) {
+  const canView = useCan("build:qa:view");
   const params: Record<string, string> = {};
   if (filters?.status) params["status"] = filters.status;
 
   return useQuery<TestRun[]>({
     queryKey: queryKeys.projects.qa.runs(projectId, filters?.status),
     queryFn: () => apiClient.get<TestRun[]>(`/build/${projectId}/test-runs`, params),
-    enabled: !!projectId,
+    enabled: canView && !!projectId,
     staleTime: 60_000,
   });
 }
 
 export function useTestRunDetail(projectId?: number, runId?: number) {
+  const canView = useCan("build:qa:view");
   return useQuery<TestRunDetail>({
     queryKey: queryKeys.projects.qa.run(projectId, runId),
     queryFn: () => apiClient.get<TestRunDetail>(`/build/${projectId}/test-runs/${runId}`),
-    enabled: !!projectId && !!runId,
+    enabled: canView && !!projectId && !!runId,
     staleTime: 30_000,
   });
 }

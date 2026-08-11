@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
+import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { TicketWatcher } from "@/types/projects";
@@ -11,13 +12,14 @@ export function useWatchers(
   ticketId: number,
   options?: Omit<UseQueryOptions<TicketWatcher[]>, "queryKey" | "queryFn" | "enabled">
 ) {
+  const canView = useCan("build:tickets:view");
   return useQuery<TicketWatcher[]>({
     queryKey: queryKeys.projects.watchers(ticketId),
     queryFn: () =>
       apiClient.get<TicketWatcher[]>(
         `/build/${projectId}/tickets/${ticketId}/watchers`
       ),
-    enabled: !!ticketId && !!projectId,
+    enabled: canView && !!ticketId && !!projectId,
     staleTime: 30_000,
     ...options,
   });

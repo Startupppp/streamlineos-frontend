@@ -17,7 +17,7 @@ export interface Ticket {
   sprintId?: number | null;
   dueDate?: string | null;
   startDate?: string | null;
-  order?: number | null;
+  rank?: string | null;
   assignee?: { id: string; name?: string | null; firstName?: string | null; lastName?: string | null; email?: string | null; image?: string | null } | null;
   labels?: { label?: { id: number; name: string; color?: string | null } }[];
   cycle?: { id: number; name: string; status: string; startDate: string; endDate: string } | null;

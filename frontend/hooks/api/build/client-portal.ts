@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   ClientPortalProject,
   ClientPortalOverview,
@@ -12,29 +13,33 @@ import type {
 } from "@/types/projects";
 
 export function usePortalProjects() {
+  const canView = useCan("build:portal:view");
   return useQuery<ClientPortalProject[]>({
     queryKey: queryKeys.projects.clientPortal.projects(),
     queryFn: () => apiClient.get<ClientPortalProject[]>("/build/portal/projects"),
+    enabled: canView,
     staleTime: 60_000,
   });
 }
 
 export function usePortalProjectOverview(projectId: number) {
+  const canView = useCan("build:portal:view");
   return useQuery<ClientPortalOverview>({
     queryKey: queryKeys.projects.clientPortal.overview(projectId),
     queryFn: () =>
       apiClient.get<ClientPortalOverview>(`/build/portal/projects/${projectId}/overview`),
-    enabled: !!projectId,
+    enabled: canView && !!projectId,
     staleTime: 60_000,
   });
 }
 
 export function usePortalChangeRequests(projectId: number) {
+  const canView = useCan("build:changerequests:view");
   return useQuery<ChangeRequest[]>({
     queryKey: queryKeys.projects.clientPortal.changeRequests(projectId),
     queryFn: () =>
       apiClient.get<ChangeRequest[]>(`/build/portal/projects/${projectId}/change-requests`),
-    enabled: !!projectId,
+    enabled: canView && !!projectId,
     staleTime: 60_000,
   });
 }
@@ -57,11 +62,12 @@ export function useSubmitPortalChangeRequest(projectId: number) {
 }
 
 export function useClientVisibility(projectId: number) {
+  const canManage = useCan("build:clientvisibility:manage");
   return useQuery<ClientVisibilitySummary>({
     queryKey: queryKeys.projects.clientPortal.visibility(projectId),
     queryFn: () =>
       apiClient.get<ClientVisibilitySummary>(`/build/${projectId}/client-visibility`),
-    enabled: !!projectId,
+    enabled: canManage && !!projectId,
     staleTime: 30_000,
   });
 }

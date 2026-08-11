@@ -633,8 +633,6 @@ export type PermissionKey =
   | "self:recruitment"
   | "settings:api-tokens:read"
   | "settings:api-tokens:write"
-  | "settings:org-api-tokens:view"
-  | "settings:org-api-tokens:manage"
   | "settings:custom-fields:manage"
   | "settings:email-templates:manage"
   | "settings:mfa"

@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useCan } from "@/hooks/api/access";
 import type { PaginatedCrmOrganizations } from "@/types/crm";
 
 interface ProjectCustomersFilters {
@@ -21,6 +22,7 @@ export const projectCustomersQueryKeys = {
 };
 
 export function useProjectCustomers(filters?: ProjectCustomersFilters) {
+  const canView = useCan("build:customers:view");
   return useQuery({
     queryKey: projectCustomersQueryKeys.list(filters as Record<string, unknown>),
     queryFn: () =>
@@ -28,6 +30,7 @@ export function useProjectCustomers(filters?: ProjectCustomersFilters) {
         "/build/customers",
         filters as Record<string, unknown>,
       ),
+    enabled: canView,
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
   });

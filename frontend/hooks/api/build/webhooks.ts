@@ -1,25 +1,28 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { ProjectWebhook, WebhookDelivery } from "@/types/projects";
 export type { ProjectWebhook, WebhookDelivery } from "@/types/projects";
 
 export function useWebhooks(projectId: number) {
+  const canManage = useCan("build:manage");
   return useQuery<ProjectWebhook[]>({
     queryKey: queryKeys.projects.webhooks(projectId),
     queryFn: () => apiClient.get<ProjectWebhook[]>(`/build/${projectId}/webhooks`),
-    enabled: !!projectId,
+    enabled: canManage && !!projectId,
     staleTime: 30_000,
   });
 }
 
 export function useWebhookDeliveries(projectId: number, webhookId: number, enabled = false) {
+  const canManage = useCan("build:manage");
   return useQuery<WebhookDelivery[]>({
     queryKey: queryKeys.projects.webhookDeliveries(projectId, webhookId),
     queryFn: () => apiClient.get<WebhookDelivery[]>(`/build/${projectId}/webhooks/${webhookId}/deliveries`),
-    enabled: enabled && !!projectId && !!webhookId,
+    enabled: canManage && enabled && !!projectId && !!webhookId,
     staleTime: 15_000,
   });
 }

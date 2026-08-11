@@ -20,6 +20,8 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { SearchInput } from "@/components/ui/search-input";
 import { EmptyApprovalIllustration } from "@/components/illustrations";
 import { Card } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { GroupsPanel } from "./groups/groups-panel";
 import {
   useDeleteRole,
   usePaginatedRoles,
@@ -57,6 +59,7 @@ import { RolesListPanel } from "./roles-list-panel";
 const EMPTY_ROLE_ROWS: RoleListRow[] = [];
 
 export function RolesPage() {
+  const [activeTab, setActiveTab] = useState<"roles" | "groups">("roles");
   const canViewAudit = useCan("audit-log:read");
   const {
     page,
@@ -154,54 +157,72 @@ export function RolesPage() {
       noInternalScroll
       contentClassName="flex min-h-0 flex-1 flex-col"
       actions={
-        <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-nowrap sm:justify-end">
-          {canViewAudit && (
+        activeTab === "roles" ? (
+          <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-nowrap sm:justify-end">
+            {canViewAudit && (
+              <Button variant="outline" size="sm" asChild className="w-full gap-1.5 sm:w-auto">
+                <Link href="/settings/roles/audit">
+                  <ClipboardList className="h-3.5 w-3.5" />
+                  <span className="truncate">Audit</span>
+                </Link>
+              </Button>
+            )}
             <Button variant="outline" size="sm" asChild className="w-full gap-1.5 sm:w-auto">
-              <Link href="/settings/roles/audit">
-                <ClipboardList className="h-3.5 w-3.5" />
-                <span className="truncate">Audit</span>
+              <Link href="/settings/roles/simulate">
+                <FlaskConical className="h-3.5 w-3.5" />
+                <span className="truncate">Simulate</span>
               </Link>
             </Button>
-          )}
-          <Button variant="outline" size="sm" asChild className="w-full gap-1.5 sm:w-auto">
-            <Link href="/settings/roles/simulate">
-              <FlaskConical className="h-3.5 w-3.5" />
-              <span className="truncate">Simulate</span>
-            </Link>
-          </Button>
-          <AnimatedIconButton
-            icon={CopyIcon}
-            iconSize={14}
-            iconClassName="mr-1.5"
-            variant="outline"
-            size="sm"
-            onClick={handleOpenTemplate}
-            className="w-full sm:w-auto"
-          >
-            <span className="truncate">Template</span>
-          </AnimatedIconButton>
-          <AnimatedIconButton
-            icon={PlusIcon}
-            iconSize={14}
-            iconClassName="mr-1.5"
-            size="sm"
-            onClick={handleOpenCreate}
-            className="w-full gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90 sm:w-auto"
-          >
-            <span className="truncate">New role</span>
-          </AnimatedIconButton>
-        </div>
+            <AnimatedIconButton
+              icon={CopyIcon}
+              iconSize={14}
+              iconClassName="mr-1.5"
+              variant="outline"
+              size="sm"
+              onClick={handleOpenTemplate}
+              className="w-full sm:w-auto"
+            >
+              <span className="truncate">Template</span>
+            </AnimatedIconButton>
+            <AnimatedIconButton
+              icon={PlusIcon}
+              iconSize={14}
+              iconClassName="mr-1.5"
+              size="sm"
+              onClick={handleOpenCreate}
+              className="w-full gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90 sm:w-auto"
+            >
+              <span className="truncate">New role</span>
+            </AnimatedIconButton>
+          </div>
+        ) : undefined
       }
       filters={
-        <SearchInput
-          placeholder="Search roles..."
-          value={search}
-          onValueChange={setSearch}
-          maxLength={100}
-        />
+        activeTab === "roles" ? (
+          <SearchInput
+            placeholder="Search roles..."
+            value={search}
+            onValueChange={setSearch}
+            maxLength={100}
+          />
+        ) : undefined
       }
     >
-      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
+      <Tabs
+        value={activeTab}
+        onValueChange={(v) => setActiveTab(v as "roles" | "groups")}
+        className="flex min-h-0 flex-1 flex-col gap-3"
+      >
+        <TabsList className="shrink-0">
+          <TabsTrigger value="roles">Roles</TabsTrigger>
+          <TabsTrigger value="groups">Groups</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="groups" className="flex min-h-0 flex-1 flex-col">
+          <GroupsPanel />
+        </TabsContent>
+
+        <TabsContent value="roles" className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
         <div className="shrink-0">
           {analyticsLoading ? (
             <StatCardGridSkeleton cols={5} count={5} />
@@ -252,7 +273,8 @@ export function RolesPage() {
             )}
           </div>
         </div>
-      </div>
+        </TabsContent>
+      </Tabs>
 
       <CreateRoleDialog open={createOpen} onOpenChange={setCreateOpen} />
       <RenameRoleDialog

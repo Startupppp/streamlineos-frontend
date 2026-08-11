@@ -793,6 +793,18 @@ export const queryKeys = {
     departments: () => [...base, "roles", "departments"] as const,
   },
 
+  principalGroups: {
+    all: [...base, "principalGroups"] as const,
+    list: (params?: { page: number; limit: number }) =>
+      params
+        ? ([...base, "principalGroups", "list", params] as const)
+        : ([...base, "principalGroups", "list"] as const),
+    members: (groupId: string) =>
+      [...base, "principalGroups", "members", groupId] as const,
+    roles: (groupId: string) =>
+      [...base, "principalGroups", "roles", groupId] as const,
+  },
+
   branches: {
     all: [...base, "branches"] as const,
     list: () => [...base, "branches", "list"] as const,

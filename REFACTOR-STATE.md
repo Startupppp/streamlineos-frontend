@@ -40,6 +40,21 @@ verified against the DB. Lint and tests NOT run (not requested).
 **Standing footgun found:** `RateLimitService.check()` does `if (!TIERS[tier]) return { allowed: true }`
 — a `@UseRateLimit("key")` with no `TIERS` entry looks protected in review and silently isn't.
 
+### Batch 6 — approved Phase 1 work
+
+| ID | What | Verified |
+|---|---|---|
+| **SCH-001** | **Ranking, the headline Phase 1 item.** `tickets.order` (integer) → `tickets.rank` (`numeric`), server-authoritative. A drag now sends two neighbour ids and updates **one row**, instead of the client renumbering both columns and the server writing them all via `CASE`. Design in `docs/refactor/sch-001-ranking-design.md` | 0 ordering violations across 200k tickets; ranks exact multiples of 1000; 30 successive midpoints still strictly between neighbours at 13 dp; board **54 blocks** vs 55 before |
+| **SCH-009** | 17 timesheets enums applied (migration `0143`), 18 columns converted | 150,150 rows intact, 0 nulls; `timesheet_exceptions.status` correctly left as `text` |
+
+**Blocker found before writing the enum SQL:** my own seed had written `'DRAFT'`/`'SUBMITTED'` into
+`timesheets.status` (75,075 rows), values absent from `timesheet_entry_status`, so the `USING` cast
+would have failed. Fixed the seed script and normalised the rows first.
+
+**Debt this created:** `generate --custom` copies the previous snapshot rather than diffing, so
+`migrations/meta` is now behind reality. DB and migration files are right; Drizzle's model isn't.
+Resync instructions are in `PAGES.md`.
+
 ### Batch 5 — pagination envelopes + measurement-driven triage
 
 | ID | What | Verified |

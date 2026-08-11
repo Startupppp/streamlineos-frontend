@@ -70,3 +70,12 @@ remove the unnecessary comments and add it needed only and that too at max of on
 
 make sure one module having there own schemas example products in build module is different and inventory is different so keep this in mind and check for all the schemas 
 
+
+
+before today what are the RBAC and permission were there those are correct don't change anything but fix if there are any issues in that and efficient issues and optimization issues etc 
+
+org owner and org admin having access equal and just transfer org ownership and changing the org owner and other then everyone will be org members, everything including members by default having the access to two modules one is home module and another one is documents/kb. 
+
+org admin or org owner can add/change/remove the module owner this module owner having all the access in that module only and also he can able to add the module members so these will get access to module level once it is done then inside module level as well admin level access and also ownership transfer as well and also these module admins/module owner can able to change the acess and permission to the members so they do those actions which they having the access to so keep this in mind and previously this is working in hrms module so keep this in mind and you should fix it in other modules as well 
+
+because of previous prompts it broken the RBAC and access check once and you should fix them if they are required keep them else fix it 

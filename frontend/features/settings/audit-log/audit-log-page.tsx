@@ -74,7 +74,7 @@ export function AuditLogPage() {
     updateParams({ user: debouncedUserSearch || null, page: null });
   }, [debouncedUserSearch, searchParams, updateParams]);
 
-  const { data, isLoading, isError, refetch } = useAuditLogs({
+  const { data, isLoading, isError, error, refetch } = useAuditLogs({
     page,
     pageSize,
     action: actionFilter !== "all" ? actionFilter : undefined,
@@ -249,8 +249,9 @@ export function AuditLogPage() {
         {isError ? (
           <ErrorState
             title="Failed to load audit events"
-            description="Something went wrong while fetching audit events. Please try again."
+            description={getErrorMessage(error)}
             onRetry={handleRetry}
+            className="flex-1"
           />
         ) : isLoading ? (
           <DataTableSkeleton rows={pageSize} columns={6} className="flex-1" />

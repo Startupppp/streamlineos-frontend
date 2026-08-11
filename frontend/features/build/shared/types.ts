@@ -49,7 +49,7 @@ export interface KanbanTicket {
   sprintId?: number | null;
   cycleId?: number | null;
   moduleId?: number | null;
-  order?: number | null;
+  rank?: string | null;
   dueDate?: string | null;
   startDate?: string | null;
   timeSpent?: string | null;

@@ -90,7 +90,7 @@ export interface Ticket {
   points: number | null;
   storyPoints: number | null;
   link: string | null;
-  order: number | null;
+  rank: string | null;
   parentTicketId: number | null;
   originalEstimate: string | null;
   timeSpent: string | null;
@@ -180,9 +180,12 @@ export interface UpdateTicketInput {
   parentTicketId?: number | null;
 }
 
-export interface MoveTicketInput {
+export interface RankTicketInput {
   projectId: number;
-  items: { id: number; status: string; order: number }[];
+  ticketId: number;
+  beforeTicketId?: number | null;
+  afterTicketId?: number | null;
+  status?: string;
 }
 
 export interface LogTimeInput {
@@ -214,7 +217,7 @@ export interface TicketFilters {
   epicId?: number;
   dueDateFrom?: string;
   dueDateTo?: string;
-  orderBy?: "created" | "updated" | "priority" | "dueDate" | "order";
+  orderBy?: "created" | "updated" | "priority" | "dueDate" | "rank";
   orderDir?: "asc" | "desc";
 }
 
@@ -248,7 +251,7 @@ export interface AllWorkTicket {
   reporterId: string | null;
   points: number | null;
   storyPoints: number | null;
-  order: number | null;
+  rank: string | null;
   startDate: string | null;
   dueDate: string | null;
   cycleId: number | null;

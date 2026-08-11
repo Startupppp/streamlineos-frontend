@@ -327,8 +327,8 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
       }
       doc.save(`${invoice.invoiceNumber}.pdf`);
       toast.success("Invoice PDF downloaded");
-    } catch {
-      toast.error("Failed to generate PDF");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     }
   }, [invoice]);
 

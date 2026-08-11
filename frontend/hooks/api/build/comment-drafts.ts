@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 export interface CommentDraftAssignee {
   id: string;
@@ -35,9 +36,11 @@ export interface CommentDraft {
 }
 
 export function useMyCommentDrafts() {
+  const canView = useCan("build:tickets:view");
   return useQuery<CommentDraft[]>({
     queryKey: queryKeys.projects.commentDrafts.mine(),
     queryFn: () => apiClient.get<CommentDraft[]>("/build/comment-drafts/mine"),
+    enabled: canView,
     staleTime: 60_000,
   });
 }

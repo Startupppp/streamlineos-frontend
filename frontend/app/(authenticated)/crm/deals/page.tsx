@@ -19,7 +19,7 @@ import { DragDropContext, type DropResult } from "@hello-pangea/dnd";
 import { useDeals, useUpdateDealStage, useDeleteDeal, useCrmPipelines } from "@/hooks/api/crm";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
-import type { Deal, DealStage } from "@/types/crm";
+import type { Deal, DealFilters, DealStage } from "@/types/crm";
 import { useHrEmployees } from "@/hooks/api/hr";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -84,10 +84,16 @@ export default function DealsPage() {
 
   const stageFromUrl = searchParams.get("stage");
   const stageFilter = dealStages.find((s) => s.key === stageFromUrl)?.key;
+  const assigneeFilter = searchParams.get("assignee");
 
-  const { data: allDeals, isLoading, isError, refetch } = useDeals(
-    stageFilter ? { stage: stageFilter as DealStage } : undefined,
-  );
+  const dealFilters = useMemo<DealFilters | undefined>(() => {
+    const filters: DealFilters = {};
+    if (stageFilter) filters.stage = stageFilter as DealStage;
+    if (assigneeFilter && assigneeFilter !== "all") filters.assignedToId = assigneeFilter;
+    return Object.keys(filters).length > 0 ? filters : undefined;
+  }, [assigneeFilter, stageFilter]);
+
+  const { data: allDeals, isLoading, isError, refetch } = useDeals(dealFilters);
   const { data: rawEmployees } = useHrEmployees();
   const employees = Array.isArray(rawEmployees) ? rawEmployees : (rawEmployees?.data ?? []);
 
@@ -237,17 +243,12 @@ export default function DealsPage() {
     );
   }, [stageSkipDialog, updateStageMutation]);
 
-  const assigneeFilter = searchParams.get("assignee");
-
   const filteredDeals = useMemo(() => {
     if (!allDeals) return [];
     const q = debouncedSearchInput.trim().toLowerCase();
-    return allDeals.filter((d) => {
-      if (q && !d.name.toLowerCase().includes(q)) return false;
-      if (assigneeFilter && assigneeFilter !== "all" && d.assignedToId !== assigneeFilter) return false;
-      return true;
-    });
-  }, [allDeals, debouncedSearchInput, assigneeFilter]);
+    if (!q) return allDeals;
+    return allDeals.filter((d) => d.name.toLowerCase().includes(q));
+  }, [allDeals, debouncedSearchInput]);
 
   const dealsByStage = useMemo(() => {
     const map: Record<string, Deal[]> = {};

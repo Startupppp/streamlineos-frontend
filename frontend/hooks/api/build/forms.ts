@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   ProjectForm,
   FormSubmission,
@@ -20,6 +21,7 @@ interface FormFilters {
 }
 
 export function useForms(projectId: number, filters?: FormFilters) {
+  const canView = useCan("build:forms:view");
   const params: Record<string, string> = {};
   if (filters?.type) params["type"] = filters.type;
   if (filters?.isActive !== undefined) params["isActive"] = String(filters.isActive);
@@ -30,16 +32,17 @@ export function useForms(projectId: number, filters?: FormFilters) {
       Object.keys(params).length > 0 ? params : undefined,
     ),
     queryFn: () => apiClient.get<ProjectForm[]>(`/build/${projectId}/forms`, params),
-    enabled: !!projectId,
+    enabled: canView && !!projectId,
     staleTime: 60_000,
   });
 }
 
 export function useForm(projectId: number, formId: number) {
+  const canView = useCan("build:forms:view");
   return useQuery<ProjectForm>({
     queryKey: queryKeys.projects.forms.detail(projectId, formId),
     queryFn: () => apiClient.get<ProjectForm>(`/build/${projectId}/forms/${formId}`),
-    enabled: !!projectId && !!formId,
+    enabled: canView && !!projectId && !!formId,
     staleTime: 60_000,
   });
 }
@@ -82,11 +85,12 @@ export function useDeleteForm(projectId: number) {
 }
 
 export function useFormSubmissions(projectId: number, formId: number) {
+  const canManage = useCan("build:forms:manage");
   return useQuery<FormSubmission[]>({
     queryKey: queryKeys.projects.forms.submissions(projectId, formId),
     queryFn: () =>
       apiClient.get<FormSubmission[]>(`/build/${projectId}/forms/${formId}/submissions`),
-    enabled: !!projectId && !!formId,
+    enabled: canManage && !!projectId && !!formId,
     staleTime: 60_000,
   });
 }

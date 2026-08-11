@@ -49,11 +49,12 @@ const STATUS_BADGE: Record<
 
 export function PlanTab() {
   const { data: session } = useSession();
-  const { data, isLoading, isError, refetch } = useSubscription();
+  const { data, isLoading, isError, error, refetch } = useSubscription();
   const {
     data: plansResponse,
     isLoading: plansLoading,
     isError: plansError,
+    error: plansErrorObj,
     refetch: refetchPlans,
   } = useBillingPlans();
   const { mutateAsync: createOrder, isPending: isCreatingOrder } =
@@ -206,7 +207,7 @@ export function PlanTab() {
     return (
       <ErrorState
         title="Couldn't load subscription"
-        description="Something went wrong while fetching your subscription details."
+        description={getErrorMessage(isError ? error : plansErrorObj)}
         onRetry={handleRetry}
         className="flex-1"
       />

@@ -13,7 +13,7 @@ import {
   type DropResult,
 } from "@hello-pangea/dnd";
 import { useQueryClient } from "@tanstack/react-query";
-import { useUpdateTicket, useUpdateTicketOrder } from "@/hooks/api";
+import { useUpdateTicket, useRankTicket } from "@/hooks/api";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
@@ -30,6 +30,7 @@ import {
   buildGroupFieldPatch,
   applyLocalPatch,
 } from "./list-view-shared";
+import { compareByRank, computeOptimisticRank } from "./kanban-board-utils";
 import { ListViewItem } from "./list-view-item";
 import { InlineGroupCreate } from "./list-view-group-create";
 import { OuterGroupHeader, NestedGroup, DroppableGroup } from "./list-view-group";
@@ -64,7 +65,7 @@ export const ListView = memo(function ListView({
   const isDnDMode = !hasRowBy && !!groupBy && groupBy !== "none" && DROPPABLE_MODES.has(groupBy) && projectId != null;
 
   const updateTicket = useUpdateTicket(projectId ?? 0);
-  const updateOrder = useUpdateTicketOrder({
+  const rankTicket = useRankTicket<ReorderContext>({
     onMutate: async (): Promise<ReorderContext> => {
       if (projectId == null) return { previousTickets: optimisticTickets };
       await queryClient.cancelQueries({
@@ -76,7 +77,12 @@ export const ListView = memo(function ListView({
       if (isReorderContext(context)) setOptimisticTickets(context.previousTickets);
       toast.error(getErrorMessage(error));
     },
-    onSettled: () => {
+    onSettled: (data) => {
+      if (data) {
+        setOptimisticTickets((prev) =>
+          prev.map((t) => (t.id === data.id ? { ...t, rank: data.rank } : t)),
+        );
+      }
       if (projectId == null) return;
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.tickets({ projectId }),
@@ -154,28 +160,31 @@ export const ListView = memo(function ListView({
           },
         );
       } else {
-        const groupTickets = (grouped[srcGroup] ?? []).slice();
+        const groupTickets = (grouped[srcGroup] ?? []).slice().sort(compareByRank);
         const [moved] = groupTickets.splice(source.index, 1);
         if (!moved) return;
-        groupTickets.splice(destination.index, 0, moved);
 
-        const reorderedIds = new Set(groupTickets.map((t) => t.id));
-        const outsideTickets = allTickets.filter((t) => !reorderedIds.has(t.id));
-        const nextTickets = [...outsideTickets];
-        groupTickets.forEach((t, idx) => {
-          nextTickets.push({ ...t, order: idx });
+        const beforeId = groupTickets[destination.index - 1]?.id ?? null;
+        const afterId = groupTickets[destination.index]?.id ?? null;
+
+        const optimisticRank = computeOptimisticRank(
+          groupTickets.find((t) => t.id === beforeId)?.rank ?? null,
+          groupTickets.find((t) => t.id === afterId)?.rank ?? null,
+        );
+
+        setOptimisticTickets(
+          allTickets.map((t) => (t.id === moved.id ? { ...t, rank: optimisticRank } : t)),
+        );
+
+        rankTicket.mutate({
+          projectId,
+          ticketId: moved.id,
+          beforeTicketId: beforeId,
+          afterTicketId: afterId,
         });
-        setOptimisticTickets(nextTickets);
-
-        const updates = groupTickets.map((t, idx) => ({
-          id: t.id,
-          status: t.status,
-          order: idx,
-        }));
-        updateOrder.mutate({ projectId, items: updates });
       }
     },
-    [groupBy, projectId, optimisticTickets, grouped, updateTicket, updateOrder],
+    [groupBy, projectId, optimisticTickets, grouped, updateTicket, rankTicket],
   );
 
   if (hasRowBy && nested) {

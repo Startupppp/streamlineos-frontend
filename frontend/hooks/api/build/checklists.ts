@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useCan } from "@/hooks/api/access";
 import type { Checklist, ChecklistItem } from "@/types/projects";
 
 function checklistKeys(projectId: number, ticketId: number) {
@@ -9,13 +10,14 @@ function checklistKeys(projectId: number, ticketId: number) {
 }
 
 export function useChecklists(projectId: number, ticketId: number) {
+  const canView = useCan("build:tickets:view");
   return useQuery<Checklist[]>({
     queryKey: checklistKeys(projectId, ticketId),
     queryFn: () =>
       apiClient.get<Checklist[]>(
         `/build/${projectId}/tickets/${ticketId}/checklists`,
       ),
-    enabled: !!projectId && !!ticketId,
+    enabled: canView && !!projectId && !!ticketId,
     staleTime: 30_000,
   });
 }

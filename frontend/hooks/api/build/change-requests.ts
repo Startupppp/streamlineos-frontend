@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   ChangeRequest,
   CreateChangeRequestInput,
@@ -14,6 +15,7 @@ interface CrFilters {
 }
 
 export function useChangeRequests(projectId: number, filters?: CrFilters) {
+  const canView = useCan("build:changerequests:view");
   const params: Record<string, string> = {};
   if (filters?.status) params["status"] = filters.status;
 
@@ -24,7 +26,7 @@ export function useChangeRequests(projectId: number, filters?: CrFilters) {
     ),
     queryFn: () =>
       apiClient.get<ChangeRequest[]>(`/build/${projectId}/change-requests`, params),
-    enabled: !!projectId,
+    enabled: canView && !!projectId,
     staleTime: 60_000,
   });
 }

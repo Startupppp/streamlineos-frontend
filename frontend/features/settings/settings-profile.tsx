@@ -110,7 +110,7 @@ export function SettingsProfile() {
       setCropDialogOpen(false);
       setCropImageSrc(null);
     } catch (err) {
-      toast.error(getErrorMessage(err) || "Failed to upload photo");
+      toast.error(getErrorMessage(err));
       setPreviewUrl(null);
     } finally {
       setUploading(false);
@@ -131,8 +131,8 @@ export function SettingsProfile() {
         );
       });
       toast.success("Profile photo removed");
-    } catch {
-      toast.error("Failed to remove photo");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     } finally {
       setUploading(false);
     }

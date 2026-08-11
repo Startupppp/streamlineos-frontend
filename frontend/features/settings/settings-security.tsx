@@ -15,6 +15,7 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { formatClientDeviceLabel } from "@/lib/format-utils";
 import { useLoginHistory } from "@/hooks/api/auth";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/shared/error-state";
 
 function getDeviceIcon(session: { os: string | null; platform: string | null }) {
   const label = `${session.os ?? ""} ${session.platform ?? ""}`.toLowerCase();
@@ -198,8 +199,12 @@ function SignInRow({ entry }: { entry: LoginEntry }) {
 }
 
 function RecentSignInsSection() {
-  const { data, isLoading, isError } = useLoginHistory({ page: 1, limit: 5 });
+  const { data, isLoading, isError, error, refetch } = useLoginHistory({ page: 1, limit: 5 });
   const entries = data?.data ?? [];
+
+  function handleRetry() {
+    void refetch();
+  }
 
   return (
     <div className="space-y-3 rounded-lg border border-border p-4">
@@ -223,9 +228,12 @@ function RecentSignInsSection() {
             ))}
           </div>
         ) : isError ? (
-          <p className="py-4 text-center text-xs text-muted-foreground">
-            Recent sign-ins could not be loaded.
-          </p>
+          <ErrorState
+            compact
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+            className="mt-3"
+          />
         ) : entries.length === 0 ? (
           <p className="py-4 text-center text-xs text-muted-foreground">
             No sign-in activity has been recorded yet.

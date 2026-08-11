@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   Approval,
   ApprovalInboxItem,
@@ -17,9 +18,11 @@ interface ApprovalFilters {
 }
 
 export function useApprovalInbox() {
+  const canView = useCan("build:approvals:view");
   return useQuery<ApprovalInboxItem[]>({
     queryKey: queryKeys.projects.approvals.inbox(),
     queryFn: () => apiClient.get<ApprovalInboxItem[]>("/build/approvals/inbox"),
+    enabled: canView,
     staleTime: 120_000,
     refetchInterval: 120_000,
     refetchIntervalInBackground: false,
@@ -27,6 +30,7 @@ export function useApprovalInbox() {
 }
 
 export function useProjectApprovals(projectId: number, filters?: ApprovalFilters) {
+  const canView = useCan("build:approvals:view");
   const params: Record<string, string> = {};
   if (filters?.status) params["status"] = filters.status;
   if (filters?.entityType) params["entityType"] = filters.entityType;
@@ -37,7 +41,7 @@ export function useProjectApprovals(projectId: number, filters?: ApprovalFilters
       Object.keys(params).length > 0 ? params : undefined,
     ),
     queryFn: () => apiClient.get<Approval[]>(`/build/${projectId}/approvals`, params),
-    enabled: !!projectId,
+    enabled: canView && !!projectId,
     staleTime: 60_000,
   });
 }

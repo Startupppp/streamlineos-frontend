@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -55,9 +56,11 @@ const TEMPLATES_KEY = queryKeys.projects.templates();
 
 
 export function useProjectTemplates() {
+  const canView = useCan("build:view");
   return useQuery({
     queryKey: TEMPLATES_KEY,
     queryFn: () => apiClient.get<ProjectTemplate[]>("/build/templates"),
+    enabled: canView,
     staleTime: 60_000,
   });
 }

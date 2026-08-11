@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useCan } from "@/hooks/api/access";
 import type {
   ProjectCustomField,
   TicketCustomFieldValue,
@@ -17,11 +18,12 @@ function ticketCustomFieldValueKeys(projectId: number, ticketId: number) {
 }
 
 export function useProjectCustomFields(projectId: number) {
+  const canView = useCan("build:view");
   return useQuery<ProjectCustomField[]>({
     queryKey: customFieldKeys(projectId),
     queryFn: () =>
       apiClient.get<ProjectCustomField[]>(`/build/${projectId}/custom-fields`),
-    enabled: !!projectId,
+    enabled: canView && !!projectId,
     staleTime: 60_000,
   });
 }
@@ -57,13 +59,14 @@ export function useDeleteProjectCustomField(projectId: number) {
 }
 
 export function useTicketCustomFieldValues(projectId: number, ticketId: number) {
+  const canView = useCan("build:tickets:view");
   return useQuery<TicketCustomFieldValue[]>({
     queryKey: ticketCustomFieldValueKeys(projectId, ticketId),
     queryFn: () =>
       apiClient.get<TicketCustomFieldValue[]>(
         `/build/${projectId}/tickets/${ticketId}/custom-field-values`,
       ),
-    enabled: !!projectId && !!ticketId,
+    enabled: canView && !!projectId && !!ticketId,
     staleTime: 30_000,
   });
 }

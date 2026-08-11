@@ -444,6 +444,102 @@ typecheck — and therefore verification of everything above — it is now
 `Record<string, capabilityOp[]>` with `capabilityOp` imported as a type from `ably`. Type annotation
 only; no behaviour change, no change to which capabilities are granted.
 
+---
+
+# Batch 6 — approved Phase 1 work
+
+### SCH-002 — status model — CLOSED
+Design and evidence: `docs/refactor/sch-002-status-model-design.md`. Migration `0146`.
+
+**The mapping corrected the finding before any code changed.** "Three competing status systems" was
+literally true of the schema and misleading about the codebase: `custom_states` had **zero write sites**
+anywhere in `src/modules/`, exactly **one** read site, and `tickets.state_id` was **NULL on 100% of
+204,000 rows** — so the burndown's `COALESCE(custom_states.group, …)` fallback had *always* been taken
+and that table had never once supplied a value. The service named `projects-custom-states.service.ts`
+turned out to operate on `project_statuses`. So this was one real system, one live config table, and an
+orphan — not three competitors.
+
+What shipped:
+- `project_statuses.type` typed as the **existing** `state_group` enum (it already existed in the DB
+  for the orphan's sake).
+- Burndown, velocity and the daily snapshot repointed off the dead join onto `project_statuses.type`,
+  matched on `(org_id, project_id, name)`. **This closes RPT-003** — the aggregate stops `COALESCE`ing
+  across two systems and reads a real lifecycle value.
+- Composite FK `tickets(org_id, project_id, status) → project_statuses(org_id, project_id, name)`,
+  `ON UPDATE CASCADE`, added `NOT VALID` then `VALIDATE` per §19. A ticket can no longer hold a status
+  its project has not configured. 16 previously-unconfigured statuses were backfilled first, or the
+  constraint would have failed.
+- `custom_states` and `tickets.state_id` dropped.
+
+`status` stays the natural text key rather than becoming `status_id`: the composite FK already
+guarantees one definition of "done", while an integer key would have forced a join into all 68 existing
+read sites and changed the wire format for no correctness gain.
+
+**Verified independently.** The agent reported `db:migrate` exiting 1 and said it had applied the
+statements manually and hand-inserted the migration hash row — so I re-checked everything from the DB
+rather than trusting the report: `custom_states` dropped, `state_id` dropped, `type` is `state_group`,
+`fk_tickets_status` `convalidated = true`, **0 orphan tickets**, the `state_group` enum survives the
+table drop, and both repos typecheck at 0. The frontend needed no change — its `stateId` references are
+a route param and its `customStates` prop is passed by nothing.
+
+### SCH-001 — item ranking — CLOSED (the headline Phase 1 item)
+Design: `docs/refactor/sch-001-ranking-design.md`. Schema + API + UI landed together.
+
+`tickets.order` (integer) is gone. `tickets.rank` is `numeric NOT NULL DEFAULT 1000`, with
+`idx_tickets_org_project_rank`. Migration `0142` backfills `("order" + 1) * 1000` **before** the
+`SET NOT NULL` and before dropping the old column, so existing order is preserved exactly.
+
+**The client is no longer the authority.** Previously a drag made the browser renumber every card in
+both the source and destination columns `0..n-1` and the server wrote all of them via a `CASE` — so a
+stale client silently reordered cards it never saw move, and concurrent drags were last-writer-wins.
+Now the browser sends only the two neighbour ids to
+`PATCH /build/:projectId/tickets/:ticketId/rank`, and the server computes the midpoint and updates
+**one row**. Two clients dropping into the same slot compute the same midpoint and converge; the full
+`(rank, created_at DESC, id)` tiebreak makes the result deterministic rather than arbitrary.
+
+`numeric` was chosen over LexoRank deliberately — Postgres numeric is arbitrary-precision, so the
+midpoint is always exact and rebalancing is housekeeping rather than a correctness requirement.
+`rebalanceProjectRanks` exists and auto-triggers past a decimal-scale threshold.
+
+**Verified against the seeded 200k-ticket dataset, not just typecheck:**
+- Ranks are exact multiples of 1000 (2000, 3000, 4000 …) and **zero ordering violations** across the
+  whole project — the backfill preserved the original sequence.
+- 30 successive midpoint inserts at the *same* point still yield a value strictly between its
+  neighbours, using only 13 decimal places (Postgres allows 16383) — the precision argument holds.
+- Board query after the column swap: **54 blocks**, versus 55 before. No regression. The table rewrite
+  incidentally compacted the portfolio rollup from 1,311 to 314 blocks.
+
+Two traps caught during the change: `projects-templates.service.ts` was still writing to the dropped
+column, and on the frontend `rank` serialises as a **string** (Postgres `numeric`), so a naive
+comparator would have sorted `"999"` after `"1000"` — it uses `parseFloat`.
+
+**Known debt this created:** `generate --custom` copies the previous snapshot rather than diffing, so
+`migrations/meta` is now behind reality (snapshot `0143` records 0 timesheet enums and still has
+`tickets.order`). The DB and the migration files are correct; Drizzle's model of them is not. Resyncing
+needs one `db:generate` at a TTY answering "create new enum" for all 17, with the emitted SQL inspected
+before it is applied. Logged in `PAGES.md`.
+
+### SCH-009 — timesheets enum drift — CLOSED
+Migration `0143_timesheets_text_to_enums`, authored with `generate --custom` so **no TTY was needed
+after all**. 17 `CREATE TYPE` statements guarded by `DO … EXCEPTION WHEN duplicate_object`, plus 18
+column conversions. Each conversion is three statements in order — `DROP DEFAULT`, then
+`ALTER … TYPE x USING col::x`, then `SET DEFAULT 'v'::x`. Dropping the text default first is not
+optional: the existing default is a text literal that cannot be auto-cast, and skipping it fails the
+whole migration.
+
+**The migration would have failed, and the cause was my own seed.** Before writing any SQL I
+inventoried the actual values in all 18 columns. `timesheets.status` held `'DRAFT'` (37,537) and
+`'SUBMITTED'` (37,538) — values **not** in `timesheet_entry_status` (`PENDING|APPROVED|REJECTED`), so
+`USING status::timesheet_entry_status` would have errored on 75,075 rows. Those values came from
+`seed-build-load.mjs`, not from the application, whose DTO and service only ever write
+`PENDING`/`APPROVED`/`REJECTED`. Fixed the seed script and normalised the rows to `PENDING` first.
+
+Also verified `timesheet_exceptions.status` is declared `text(...)` and **not** an enum, so it was
+correctly excluded — converting it would have been drift in the opposite direction.
+
+Verified after applying: 18 columns now `USER-DEFINED`, all 150,150 rows intact, 0 nulls, value
+distribution unchanged.
+
 ### PM-008 / PM-009 — pagination envelopes — CLOSED (both repos)
 
 Four list endpoints returned bare arrays, so callers could not tell a full page from a truncated one —
