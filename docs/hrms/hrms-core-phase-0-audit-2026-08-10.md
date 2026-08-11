@@ -333,7 +333,7 @@ Navigation is centralized through `frontend/components/layout/sidebar/sidebar-na
 | Artifact | Purpose | Findings closed |
 |---|---|---|
 | This audit | Evidence-backed current-state report and prioritization | Phase 0 reporting only; no product finding is closed |
-| DB inventory appendix | Full table/column/index/RLS/count/size baseline | Inventory deliverable only |
+| DB inventory plus linked column/index appendices | Full table/column/index/RLS/count/size baseline | Inventory deliverable only |
 | Index inventory appendix | Full live index/size/scan/definition baseline | Inventory deliverable only |
 | Code inventory appendix | Full screened controller/service/route/component/hook/test catalog | Inventory deliverable only |
 | `REFACTOR-STATE.md` | Resume point and gates | Process-state deliverable only |

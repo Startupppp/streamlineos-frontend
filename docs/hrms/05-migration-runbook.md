@@ -1,6 +1,8 @@
 # 05 — Migration Runbook (Batch 12)
 
-**Status: authored, NOT journaled, NOT applied.** These files exist on disk but are invisible to `db:migrate`.
+> **Historical runbook; do not execute as current instructions (2026-08-10).** Its migration/journal status has changed since authorship. The current HRMS-core proposal is `hrms-core-phase-1-expand-contract-plan-2026-08-10.md`; exact SQL and current journal state must be regenerated and reviewed after approval.
+
+**Status: historical snapshot; its journal/application statements must not be treated as current.**
 
 Three migration pairs were authored for Batch 12 (legal entities + effective-dating). Each has a paired `.down.sql` — the first migrations in this repo to have one; 96 of the existing 101 have no rollback at all.
 

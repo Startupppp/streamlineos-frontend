@@ -1,10 +1,8 @@
 # HRMS core Phase 0 code inventory - 2026-08-10
 
-This appendix catalogs the production source surfaces screened for HRMS core. Adjacent files inside shared HR directories are included so consolidation and dependency decisions are not made from an incomplete graph.
+This appendix catalogs the production source surfaces screened for HRMS core. Adjacent files inside shared HR directories are included so consolidation and dependency decisions are not made from an incomplete graph; controller entries include base paths and route-decorator counts, while the main audit owns the route-family contract.
 
-## Backend controller/endpoint catalog
-
-Controller files: 50. Each entry includes its base controller path and route-decorator count; the main audit contains the route-family contract.
+## Backend controller/endpoint catalog (50 files)
 
 - backend/src/modules/directory/directory.controller.ts - @Controller("directory"); routes=13; lines=160
 - backend/src/modules/hr/config/hr-departments.controller.ts - @Controller("hr/departments"); routes=2; lines=30
@@ -56,10 +54,7 @@ Controller files: 50. Each entry includes its base controller path and route-dec
 - backend/src/modules/hr/time/wfh.controller.ts - @Controller("hr/wfh"); routes=4; lines=59
 - backend/src/modules/hr/time/work-logs.controller.ts - @Controller("hr/work-logs"); routes=4; lines=64
 - backend/src/modules/organization/hierarchy/org-hierarchy.controller.ts - @Controller("org-hierarchy"); routes=31; lines=366
-
-## Backend service catalog
-
-Service files: 84.
+## Backend service catalog (84 files)
 
 - backend/src/modules/directory/directory.service.ts (672 lines)
 - backend/src/modules/directory/directory-identity.service.ts (506 lines)
@@ -145,10 +140,7 @@ Service files: 84.
 - backend/src/modules/organization/hierarchy/org-hierarchy-dependencies.service.ts (423 lines)
 - backend/src/modules/organization/hierarchy/org-hierarchy-locations.service.ts (230 lines)
 - backend/src/modules/organization/hierarchy/org-hierarchy-teams.service.ts (303 lines)
-
-## Backend contract/DTO catalog
-
-Contract files: 25.
+## Backend contract/DTO catalog (25 files)
 
 - backend/src/modules/directory/dto/directory.schemas.ts (121 lines)
 - backend/src/modules/hr/config/dto/departments.schemas.ts (19 lines)
@@ -175,10 +167,9 @@ Contract files: 25.
 - backend/src/modules/hr/time/dto/wfh.schemas.ts (21 lines)
 - backend/src/modules/hr/time/dto/work-logs.schemas.ts (48 lines)
 - backend/src/modules/organization/hierarchy/dto/org-hierarchy.schemas.ts (187 lines)
+## Backend schema source catalog (23 files)
 
-## Backend schema source catalog
-
-Schema source files: 23. The live table/column/index catalog is in the DB inventory appendix.
+The live table/column/index catalog is in the DB inventory appendix.
 
 - backend/src/db/schema/common/auth.ts (478 lines)
 - backend/src/db/schema/common/organization.ts (129 lines)
@@ -203,10 +194,7 @@ Schema source files: 23. The live table/column/index catalog is in the DB invent
 - backend/src/db/schema/hr/probation.ts (41 lines)
 - backend/src/db/schema/hr/rosters.ts (30 lines)
 - backend/src/db/schema/hr/shifts.ts (50 lines)
-
-## Frontend route-page catalog
-
-Route page files: 50.
+## Frontend route-page catalog (50 files)
 
 - frontend/app/(authenticated)/directory/[personId]/page.tsx (10 lines)
 - frontend/app/(authenticated)/directory/page.tsx (6 lines)
@@ -258,10 +246,7 @@ Route page files: 50.
 - frontend/app/(authenticated)/settings/organization/page.tsx (6 lines)
 - frontend/app/(authenticated)/settings/organization/structure/page.tsx (10 lines)
 - frontend/app/(authenticated)/settings/organization/teams/page.tsx (6 lines)
-
-## Frontend component/feature catalog
-
-Production feature files: 182.
+## Frontend component/feature catalog (182 production files)
 
 - frontend/features/directory/people/people-directory-page.tsx (338 lines)
 - frontend/features/directory/people/person-account-access.ts (47 lines)
@@ -445,10 +430,7 @@ Production feature files: 182.
 - frontend/features/settings/organization/hierarchy/teams-page.tsx (671 lines)
 - frontend/features/settings/organization/hierarchy/use-hierarchy-archive.ts (107 lines)
 - frontend/features/settings/organization/hierarchy/use-hierarchy-list-state.ts (141 lines)
-
-## Frontend hook/query-key catalog
-
-Hook/query-key files: 23.
+## Frontend hook/query-key catalog (23 files)
 
 - frontend/hooks/api/directory/people.ts (153 lines)
 - frontend/hooks/api/directory/workers.ts (176 lines)
@@ -473,10 +455,7 @@ Hook/query-key files: 23.
 - frontend/hooks/api/organization.ts (294 lines)
 - frontend/hooks/api/org-hierarchy.ts (270 lines)
 - frontend/lib/query-keys.ts (1995 lines)
-
-## Existing focused test-file catalog
-
-Test files: 41.
+## Existing focused test-file catalog (41 files)
 
 - backend/src/modules/directory/directory.service.spec.ts (985 lines)
 - backend/src/modules/directory/directory-identity.service.spec.ts (415 lines)

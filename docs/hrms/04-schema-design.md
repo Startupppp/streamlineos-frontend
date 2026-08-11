@@ -1,8 +1,10 @@
 # 04 — Target Schema Design
 
-**Status: awaiting approval. No production code until this document is approved (brief, Phase 3 gate).**
+> **Superseded for HRMS-core identity and migration decisions (2026-08-10).** The fresh Phase 0 live audit found three competing employee models and selected the existing tenant-scoped directory/workforce chain in `hrms-core-phase-1-schema-proposal-2026-08-10.md`. Do not use this document's `users -> hr_people -> hr_employments` statement as the current employee authority. Payroll/Billing material below remains prior research only and has not passed the new gated module process.
 
-Full column tables, index tables, access-pattern matrices and capacity estimates live in the design lane files — this document is the binding synthesis:
+**Status: historical prior research; not a current approval or execution plan.**
+
+Full column tables, index tables, access-pattern matrices and capacity estimates from that earlier review live in the design lane files:
 `_plan/S1-schema-identity-org.md` · `_plan/S2-schema-payroll-statutory.md` · `_plan/S3-schema-billing.md`
 
 ---
