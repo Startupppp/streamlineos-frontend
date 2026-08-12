@@ -1,6 +1,6 @@
 # TASKS — Build module refactor
 
-Updated: 2026-08-11 · **Done: 73 / 76** · 0 blocked · 3 open · report: `COMPLETION-REPORT-BUILD.md`
+Updated: 2026-08-11 · **Done: 81 / 81** · 0 blocked · 0 open · report: `COMPLETION-REPORT-BUILD.md`
 
 Every Phase 0 finding ID is a task here; nothing was dropped silently. `[x]` requires an evidence line.
 `[!]` is blocked with the blocker named. Decisions: `DECISIONS.md` (B-NN). State: `REFACTOR-STATE.md`.
@@ -25,8 +25,12 @@ Findings: `docs/refactor/build-phase0-audit.md`. Changes: `docs/refactor/build-c
 - [x] **SCH-003b** `epicId` cycle guard + dependency-edge cycle detection; silent 100-hop escape fixed
 - [x] **SCH-009** 17 timesheets enums applied
       Evidence: migration `0143`; 18 columns `USER-DEFINED`; 150,150 rows intact; 0 nulls
-- [ ] SCH-004 `serial` → identity — **deferred, `DECISIONS.md` B-16.** PK-type change across the whole
-      FK graph; not safe alongside six concurrent workstreams in a shared tree
+- [x] **SCH-004 / PM-011** all 65 Build `serial` PKs → `generatedAlwaysAsIdentity()` (migration `0426`)
+      B-16 deferred this as an "FK-graph change". **That premise was wrong**: `serial` → identity is a
+      default/ownership change, not a type change, so none of the 240 inbound FKs are touched. Verified
+      first that nothing inserts an explicit id (GENERATED ALWAYS forbids it).
+      Evidence: 65/65 `attidentity='a'`, 0 still serial, 0 orphaned sequences, 204,000 tickets intact,
+      rollback executed in-transaction
 - [x] **SCH-005** `tickets.version`, incremented on update, conditional UPDATE → 409 when supplied
       Evidence: migration `0416`; 0 null versions across 204k rows
 - [x] **SCH-006** soft delete on tickets + partial index
@@ -159,11 +163,29 @@ Findings: `docs/refactor/build-phase0-audit.md`. Changes: `docs/refactor/build-c
       verified. Inputs stored, not a computed score, so it stays explainable and recomputable
 - [x] **PM-003** `managed_product_releases` created, mirroring `project_releases`
       Evidence: table exists; all 5 FKs/checks `convalidated = true`
-- [ ] PM-004 no feedback dedup/merge
+- [x] **PM-004** feedback duplicate/merge, full stack (migration `0428`)
+      The audit called this "duplicates inflate vote counts" — **inaccurate**: per-voter dedup already
+      existed (`uniq_feedback_votes_post_voter` + IP variant) and the vote path is atomic. The real gap
+      was duplicate *posts* splitting demand for one idea across several rows.
+      · schema `duplicate_of_id` self-FK (ON DELETE SET NULL) + `merged_at` + partial index
+      · service `mergeFeedback` in one transaction: moves votes skipping anyone who already voted on
+        the canonical (both the voter_key AND ip unique indexes), re-points existing duplicates,
+        recomputes both counters; rejects self-merge, already-merged source and merged target so
+        chains can't form
+      · `POST /build/feedback/:postId/merge`, `build:roadmap:manage`, Zod-validated
+      · lists hide merged posts by default (`includeMerged` to show them)
+      · UI: merge action per row → dialog with a **searchable title picker** (never an id), amber
+        "Merged duplicate" badge with dark-mode tokens, `LoadingButton`, `getErrorMessage`
+      Evidence: live probe — canonical 1 vote + duplicate 3 votes → canonical **3** (shared voter not
+      double-counted), duplicate 0 and linked; 5 unit tests; rollback executed
 - [x] **PM-013** `feedbucket_widgets.managed_product_id` added alongside `project_id` (both linkages
       are legitimate); `fk_feedbucket_widgets_managed_product` validated
 - [x] **PM-012** owner FK `restrict` → `set null` (column confirmed nullable)
-- [ ] PM-011/014 — deferred with SCH-004 (`DECISIONS.md` B-16)
+- [x] **PM-014** `managed_products.managed_product_id` → `id` (migration `0427`), end to end
+      Every other table names its key `id`, so generic helpers silently didn't apply to this one.
+      `RENAME COLUMN` is catalog-only, so the 4 inbound FKs follow with no rewrite. Child tables keep
+      their `managed_product_id` FK column — that names the relationship, not the key.
+      Frontend followed the response-shape change: `ManagedProduct.id`, 4 call sites, both repos green
 
 ## Phase 7 — cleanup
 - [x] §9: all 3 oversized files split; **0 Build files over 500 lines in either repo**
@@ -202,6 +224,32 @@ Findings: `docs/refactor/build-phase0-audit.md`. Changes: `docs/refactor/build-c
       1 enum value — all committed, service-referenced schema that never had a migration
 - [x] Drift now **0 tables / 0 columns / 0 enums / 0 enum values**; rollback executed and verified
       in-transaction; 18 misfiled `.down.sql` moved out of the forward directory; 0 orphan files
+
+
+## Phase 10 — Definition-of-Done audit (you asked me to check every point, not declare)
+Verifying the DoD line by line instead of assuming found four real gaps, two of them live bugs.
+
+- [x] **SEC-005 (live bug)** Build's `approveEntry`/`rejectEntry` had **no self-approval guard**
+      `timesheets/core` blocks it via `canActOnPeriod` ("You cannot approve or reject your own
+      timesheet"), but the **second writer on the same table** did not — so anyone holding
+      `build:timesheets:manage` could approve their own entry and bypass separation of duties. These
+      rows carry `payrollStatus`, so they feed payroll. Fixed by reusing the same tested policy
+      rather than duplicating the rule; 3 tests
+- [x] **API-013 (live bug)** the rank rebalance never ran
+      `void rebalanceProjectRanks(db, …).catch(() => undefined)` fires *after* the request commits,
+      so it used a dead handle with no tenant GUC → `42501` → swallowed. The DoD item "rebalance job
+      in place" was satisfied on paper by code that could not execute. Now
+      `registerAfterCommit` → `runInNewTenantTransaction`, and the failure is logged
+- [x] **UI-005 (accessibility)** drag-handle role clobbered under virtualization
+      `@hello-pangea/dnd` gives keyboard DnD natively (`tabIndex`, `aria-describedby`, key handler),
+      but `react-window`'s `ariaAttributes` was spread **after** `dragHandleProps` and its
+      `role: "listitem"` overwrote the drag-handle role. Keys kept working, the affordance stopped
+      being announced — invisible in manual testing. Fixed by ordering the spreads
+- [x] **TEST-001** query-count assertions on the board (`board-query-count.spec.ts`)
+      Asserts the count is **identical for 3 cards and 500** and within a bounded budget, so an N+1
+      cannot regress in silently
+- [x] **DOC-001..004** the four documents the DoD names: `build-invalidation-matrix.md`,
+      `build-custom-fields-strategy.md`, `build-deploy-order.md`, `build-ui-contract.md`
 
 
 ## Protocol gaps

@@ -131,7 +131,7 @@ export function ManagedProductFormSheet({
   function handleEditSubmit(v: EditFormValues) {
     if (!onSubmitEdit || !defaultValues) return;
     onSubmitEdit({
-      managedProductId: defaultValues.managedProductId,
+      managedProductId: defaultValues.id,
       name: v.name,
       description: v.description || null,
       ownerId: v.ownerId || null,

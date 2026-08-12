@@ -18,6 +18,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { PmStaggerList, PM_FILL_PANEL, PM_PANEL } from "@/features/build/shared/pm-chrome";
 import { FeedbackRow } from "./feedback-row";
+import { MergeFeedbackDialog } from "./merge-feedback-dialog";
 
 interface FeedbackTabProps {
   search: string;
@@ -48,6 +49,15 @@ export function FeedbackTab({ search }: FeedbackTabProps) {
   const { data: roadmapData } = useRoadmapItems();
   const deletePost = useDeleteFeedbackPost();
   const [deleteTarget, setDeleteTarget] = useState<FeedbackPost | null>(null);
+  const [mergeTarget, setMergeTarget] = useState<FeedbackPost | null>(null);
+
+  const handleSetMergeTarget = useCallback((post: FeedbackPost) => {
+    setMergeTarget(post);
+  }, []);
+
+  const handleMergeDialogChange = useCallback((open: boolean) => {
+    if (!open) setMergeTarget(null);
+  }, []);
 
   useEffect(() => {
     setPage(1);
@@ -108,6 +118,7 @@ export function FeedbackTab({ search }: FeedbackTabProps) {
             post={post}
             roadmapItems={roadmapData?.data ?? []}
             onDelete={handleSetDeleteTarget}
+            onMerge={handleSetMergeTarget}
           />
         ))}
       </PmStaggerList>
@@ -119,6 +130,8 @@ export function FeedbackTab({ search }: FeedbackTabProps) {
         onPageChange={handlePageChange}
         disabled={isLoading}
       />
+
+      <MergeFeedbackDialog post={mergeTarget} onOpenChange={handleMergeDialogChange} />
 
       <ConfirmDialog
         open={!!deleteTarget}

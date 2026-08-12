@@ -4,7 +4,7 @@
 
 **Module:** Build (all four areas — PM core, time/capacity, product management, reporting/portfolio)
 **Phase:** Phase 0 complete; six fix batches + approved Phase 1 (SCH-001, SCH-002) landed.
-**Status:** 73/76 tasks done, 0 blocked, 3 open — see `TASKS-BUILD.md` and `COMPLETION-REPORT-BUILD.md`.
+**Status:** 81/81 tasks done, 0 blocked, 0 open — see `TASKS-BUILD.md` and `COMPLETION-REPORT-BUILD.md`.
 **Updated:** 2026-08-11
 
 ## Closed this session (see `docs/refactor/build-changelog.md`)

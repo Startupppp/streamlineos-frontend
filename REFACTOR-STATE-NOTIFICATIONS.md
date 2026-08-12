@@ -473,3 +473,22 @@ immediate silent outage of every transactional email.
 - Per-type registry cross-check (declared-but-never-emitted, emitted-but-undeclared)
 - Load measurement of the unread-count query at realistic row counts (3 rows today proves nothing)
 - Ably channel/capability re-verification — deferred to the Access program which owns AC-02
+
+## 2026-08-12 — closing pass
+
+All work items are closed except those held by an explicit decision or a hard blocker.
+
+- **PIPE-008 / PIPE-004** digest queue wired, cron endpoint live, coalescing proven on Neon.
+- **SCH-017** migration `0430`; audience reads/writes cut over to `broadcast_audience_targets`.
+  JSONB column retained — the contract step is a separate decision.
+- **COMP-005** `NotificationWhatsAppProvider` enforces template approval before any send.
+- **RT-007** message bodies removed from Ably payloads.
+- Fixed a type-only import cycle I introduced with REG-005; `madge --circular` is back to zero.
+
+Still open, each by decision rather than omission: **REG-003** (77 declared-but-unemitted events —
+held as the Phase 2 spec), **SCH-004** (partitioning, deferred by D-2 until 50M rows),
+**SCH-014** (blocked by SEQ-001), **COMP-004** (India DLT, human-only), **SNAP-001** (Drizzle
+snapshot chain stale — `db:generate` will re-propose applied work until it is rebuilt).
+
+Nothing committed; working tree only.
+

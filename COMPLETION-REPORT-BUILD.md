@@ -9,7 +9,7 @@ Companion documents: `TASKS-BUILD.md` (work list) · `DECISIONS.md` §Build (ass
 
 ---
 
-## Status: 73 of 76 tasks done, 0 blocked, 3 open.
+## Status: 81 of 81 tasks done, 0 blocked, 0 open — **all closed**.
 
 Reporting this honestly rather than declaring victory. What remains is listed with reasons.
 
@@ -304,3 +304,149 @@ snapshot row rather than an empty array, so the test now exercises the new snaps
 silently falling through to the live-count fallback.
 
 Both fixes are to test doubles; no production code changed. Typecheck clean.
+
+---
+
+## Final pass — the three deferred items, now closed
+
+You said it is not complete until migrations, schema, APIs, UI/UX and scripts are all done. The three
+remaining items were all "deferred by decision", so I re-examined the decisions rather than the tasks.
+
+### SCH-004 / PM-011 — B-16's premise was wrong
+
+B-16 deferred this as "a PK-type migration across the whole FK graph". It isn't. `serial` is an
+`integer` column plus a `nextval` default, so converting to `GENERATED ALWAYS AS IDENTITY` changes the
+default and ownership and **not the type** — none of the 240 inbound foreign keys are touched. That is
+what made it safe to do in one catalog-driven migration (`0426`).
+
+| check | result |
+|---|---|
+| PKs converted | **65 / 65** (`attidentity = 'a'`) |
+| still `serial` | 0 |
+| orphaned sequences | 0 (the 64 remaining are the *new* identity sequences — `deptype='i'`) |
+| `tickets` rows | 204,000 intact |
+| rollback | executed in-transaction, discarded, forward state re-confirmed |
+
+Verified beforehand that nothing inserts an explicit id, since `GENERATED ALWAYS` forbids it — the only
+literal `id:` inserts in Build are on `organizations`, whose PK is text.
+
+**The int4 ceiling is deliberately still there** (B-28): widening to bigint *is* the 240-column lockstep
+change, and at ~20× headroom against the stated target it is not worth doing next to five concurrent
+workstreams. `0421` is the working template when a table gets close.
+
+### PM-014 — `managed_product_id` → `id`, end to end
+
+`RENAME COLUMN` is catalog-only, so the 4 inbound FKs followed with no rewrite. The child tables keep
+their own `managed_product_id` FK column, which is correct — that names the relationship, not the key.
+This changes the API response shape, so the frontend followed: `ManagedProduct.id` plus 4 call sites.
+
+### PM-004 — feedback merge
+
+The audit's stated symptom was wrong, and worth correcting: per-voter dedup already existed
+(`uniq_feedback_votes_post_voter` + an IP variant) and the counter is only incremented inside the same
+transaction that actually inserted a vote. Duplicates don't *inflate* votes — duplicate **posts** split
+demand for one idea across several rows, so the board ranks on a number that understates it.
+
+Shipped across the stack: `duplicate_of_id` self-FK + `merged_at` + partial index; a transactional
+`mergeFeedback` that moves votes while skipping anyone who already voted on the canonical (respecting
+**both** the voter_key and IP unique indexes), re-points existing duplicates, and recomputes both
+counters; guards that reject self-merge, an already-merged source and a merged target so chains cannot
+form; `POST /build/feedback/:postId/merge` under `build:roadmap:manage`; lists hide merged posts by
+default; and a UI merge action opening a **searchable title picker** — never an id — with an amber
+"Merged duplicate" badge.
+
+Proven on live data rather than asserted:
+
+```
+before:  canonical = 1 vote   duplicate = 3 votes  (one voter had voted on both)
+after :  canonical = 3 votes  duplicate = 0, duplicate_of_id set, merged_at set
+```
+
+3, not 4 — the shared voter is counted once. Plus 5 unit tests covering every guard.
+
+## Definition of Done
+
+| | |
+|---|---|
+| backend `typecheck` | 0 errors |
+| backend `build` (nest) | exit 0 |
+| frontend `type-check` | 0 errors |
+| frontend `build` (next) | exit 0, 451 pages generated |
+| Build test suite | **20 suites / 160 tests, 0 failures** |
+| schema drift (code vs live DB) | **0 tables / 0 columns / 0 enums / 0 values** |
+| `db:generate` | **0 statements** (snapshot resynced) |
+| migrations pending | 0 |
+| rollbacks | every new migration has one, each **executed** in-transaction |
+| tasks | **76 / 76, 0 blocked, 0 open** |
+
+Nothing is committed, per B-04.
+
+---
+
+## Definition-of-Done audit — checking every line found two live bugs
+
+You told me to check the DoD point by point rather than declare completion. Verifying instead of
+assuming found four gaps behind items I had already counted as done.
+
+### SEC-005 — separation of duties was bypassable (live)
+
+`timesheets/core` refuses self-approval through `canActOnPeriod` — *"You cannot approve or reject
+your own timesheet"*. Build's `approveEntry`/`rejectEntry`, the **second writer on the same table**,
+had no such check. Anyone holding `build:timesheets:manage` could approve their own entry by going
+through the Build path. These rows carry `payrollStatus`, so they reach payroll.
+
+Fixed by importing the existing, already-tested policy rather than writing the rule a second time —
+duplicating it is how the two paths diverged in the first place. `approval-guard.ts` is a
+dependency-free leaf, so no import cycle. 3 tests: self-approve rejected, self-reject rejected,
+approving someone else still works.
+
+### API-013 — the rebalance job never ran (live)
+
+The DoD line "concurrent reorders converge; rebalance job in place" was satisfied on paper by code
+that could not execute:
+
+```ts
+void rebalanceProjectRanks(db, orgId, projectId).catch(() => undefined);
+```
+
+It fires *after* the request transaction commits, so it used a pooled handle with no tenant GUC →
+`42501` → swallowed by the empty catch. Silent, permanent, and exactly the failure mode that once
+produced zero rows in `notifications` for the life of the product. Now `registerAfterCommit` →
+`runInNewTenantTransaction`, with the failure logged rather than discarded.
+
+### UI-005 — keyboard drag worked; the announcement didn't
+
+`@hello-pangea/dnd` provides the keyboard equivalent natively — `tabIndex`, `aria-describedby`
+carrying the instructions, and the key handler (Space lifts, arrows move, Escape cancels). So the
+DoD item was *nearly* satisfied. But under virtualization `react-window` injects its own
+`ariaAttributes`, and it was spread **after** `dragHandleProps`:
+
+```
+dragHandleProps = { role, aria-describedby, tabIndex, draggable, … }
+ariaAttributes  = { aria-posinset, aria-setsize, role: "listitem" }   ← overwrites role
+```
+
+The keys kept working and the affordance stopped being announced — a regression that is invisible to
+manual testing and only shows up to a screen-reader user. Fixed by ordering the spreads so the
+library's role wins while `posinset`/`setsize` survive.
+
+### TEST-001 — query-count assertions
+
+The DoD requires board query counts *asserted*, not just bounded. `board-query-count.spec.ts` asserts
+the count is **identical for 3 cards and for 500** — the property that actually prevents an N+1 — and
+within a fixed budget.
+
+### DOC-001..004
+
+The four documents the DoD names, now written: `build-invalidation-matrix.md` (per-mutation, with
+what is deliberately *not* invalidated and why), `build-custom-fields-strategy.md` (EAV chosen, both
+alternatives rejected with reasons), `build-deploy-order.md` (backend-first, the one coupled pair,
+the non-migration operator steps), `build-ui-contract.md` (including the load-bearing aria ordering).
+
+### Verification after this pass
+
+backend typecheck 0 · nest build exit 0 · frontend type-check 0 · next build exit 0 ·
+**22 suites / 165 tests, 0 failures** · schema drift 0/0/0/0 · `db:generate` 0 statements.
+
+One migration is pending that is **not mine**: `0429_digest_queue_broadcast_audience`, from the
+notifications session. I left it — nothing of mine depends on it and it belongs to work in flight.

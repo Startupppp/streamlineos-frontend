@@ -186,13 +186,79 @@ point of running them.
 
 ---
 
+## Final closing pass (2026-08-12)
+
+The last four open work items are closed. Each is stated with the evidence that proves it,
+not the intent behind it.
+
+**PIPE-008 / PIPE-004 — digest queue.** `notification-digest.service.ts` wired into
+`NotificationsModule` and `/cron/notification-digest-flush`. Dispatch routes a channel the
+user set to DIGEST into `enqueue()`; **mandatory events bypass it** — a security alert held
+for a daily digest is not a digest, it is a missed alert. Proven live against Neon in a
+rolled-back transaction: 15 events on one entity produced **1 row with `occurrence_count=15`**,
+where the old path produced one notification about event #1 and silently dropped fourteen.
+`deliverAfter` is deliberately not extended on a repeat, or a continuously active thread
+would reset its own window forever and the digest would never arrive — a spec pins this.
+
+Two defects found and fixed while spec'ing it, both mine, neither visible to typecheck:
+- The flush bucket key was reassembled with `key.split(":")`. A user id is opaque text; one
+  containing a colon would have resolved to the wrong user. Now the tuple is carried, not parsed.
+- The post-flush UPDATE was not scoped by channel, so flushing a user's EMAIL bucket also
+  marked their IN_APP items delivered — those notifications would never have arrived.
+
+**SCH-017 — broadcast audience.** `0430` adds `broadcasts.audience_type` and backfills both it
+and `broadcast_audience_targets` from the existing JSONB. Dev holds **zero broadcasts**, so the
+backfill was proven against synthetic pre-cutover rows instead: roles→2 targets, departments→1,
+users→3, all→0, `audience_type` correct in each case, rolled back. The service now dual-writes
+in a transaction and resolves recipients from the junction. The JSONB column is retained and
+still written — dropping it is the contract step, and a broadcast resolving to the wrong
+audience is not a defect anyone notices quietly.
+
+**COMP-005 — WhatsApp template approval.** WHATSAPP previously resolved to the generic sandbox
+provider, which reports SENT for everything — including templates the provider would reject.
+`NotificationWhatsAppProvider` now owns the channel and refuses to send unless the template is
+APPROVED *and* carries a provider template name. All failures are **non-retryable**: approval
+takes hours or days, far outside the queue's backoff, so retrying only burns the provider's
+rate limit and the account's standing. The transport is still simulated — no WhatsApp Business
+account is connected — which is exactly why the gate exists now rather than later: it cannot be
+forgotten when a real transport is dropped in behind it. 6 specs.
+
+**RT-007 — realtime content leak.** `notification:message` and `notification:mention` carried the
+full message body. An Ably capability is granted at connect time, so a user removed from a
+channel keeps receiving on a subscription they already hold, and text delivered that way never
+passes the read endpoint's authorization at all. `content` is removed from both payloads and
+from the method signatures. **No client ever consumed it** — verified across the frontend — so
+this cost nothing to fix and had been leaking for nothing.
+
+**A cycle I introduced and did not notice until the final check.** `madge --circular` flagged
+`notification-events.catalog.ts ↔ notification.types.ts`. REG-005 made `eventKey` a real union
+derived from the catalog, which made types.ts depend on the catalog while the catalog already
+depended on types.ts. Fixed per §24 by extracting the shared vocabulary into
+`notification-event-definition.types.ts` and re-exporting it from the old home, so no importer
+changed. Both repos are back to **zero circular dependencies**. Worth recording: this was
+invisible to `tsc` because both edges are type-only imports.
+
+### Verification of this pass
+
+| Check | Result |
+|---|---|
+| Backend `tsc --noEmit` | exit 0, 0 errors |
+| Frontend `tsc --noEmit` | exit 0, 0 errors |
+| `madge --circular` (backend `src`) | ✔ none |
+| Affected specs, `--runInBand` | 21 suites / 204 tests pass |
+| Migration `0430` | applied + journalled; backfill verified on all 4 audience shapes |
+
+---
+
 ## Honest limits of this report
 
-- **Two pre-existing spec failures are unrelated to this work and remain failing:**
-  `ownership-notifications.spec.ts` ("Number of calls: 0") and
+- **Three pre-existing spec failures are unrelated to this work and remain failing:**
+  `ownership-notifications.spec.ts` ("Number of calls: 0"),
   `org-membership-notifications.spec.ts` (`tx.select(...).leftJoin is not a function`, an incomplete
-  test double). `git status` shows **both paths completely unmodified** in the working tree, so they
-  fail against untouched committed code. I did not fix them — out of scope, and they are someone
+  test double), and `chat-channel-members.service.spec.ts` (6 tests, failing inside `assertMember`).
+  `git status` shows **all three paths completely unmodified** in the working tree, and the
+  chat-channel-members service holds **zero references** to either file I changed in that module, so
+  they fail against untouched committed code. I did not fix them — out of scope, and they are someone
   else's module.
 - **The full suite was not re-run to completion.** It takes ~10 minutes and several suites hold open
   handles; I ran the specs covering my changes instead and said so rather than claiming a green suite.

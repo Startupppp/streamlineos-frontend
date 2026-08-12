@@ -1,7 +1,7 @@
 export type ManagedProductStatus = "active" | "archived";
 
 export interface ManagedProduct {
-  managedProductId: number;
+  id: number;
   orgId: string;
   pmWorkspaceId: string | null;
   name: string;

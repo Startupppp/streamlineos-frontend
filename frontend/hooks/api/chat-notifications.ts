@@ -35,12 +35,10 @@ export function useChatGlobalNotifications(
   // eslint-disable-next-line react-hooks/refs
   currentUserIdRef.current = currentUserId;
 
-  useEffect(() => {
-    if (typeof window === "undefined" || !("Notification" in window)) return;
-    if (Notification.permission === "default") {
-      Notification.requestPermission();
-    }
-  }, []);
+  // RT-003: the second on-mount permission prompt, removed. Opening chat is not
+  // consent to be notified, and a denial here is effectively permanent — the ask now
+  // belongs to the explicit control in notification preferences (`usePushSubscription`).
+  // Chat still shows OS notifications when permission was already granted.
 
   useEffect(() => {
     if (!orgId || !channels?.length) return;

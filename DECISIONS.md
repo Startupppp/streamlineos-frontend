@@ -191,6 +191,48 @@ so the win would be theoretical while each wrapper is a place a wrong `WHERE` le
 The rule and the five-point template are in CLAUDE.md §19 for whoever hits it next. Reversal cost: low
 — `0425`'s rollback is verified, and dropping the function reverts callers to plain `ILIKE`.
 
+## B-28 — B-16 reversed: the identity PK conversion was not the risk I claimed
+B-16 deferred SCH-004/PM-011 as "a PK-type migration across the whole FK graph — every referencing
+column must change in lockstep". **That was wrong.** `serial` is an `integer` column plus a `nextval`
+default; converting it to `GENERATED ALWAYS AS IDENTITY` changes the default and ownership, not the
+type, so **none of the 240 inbound foreign keys are touched**. The lockstep problem I described belongs
+to *widening these ids to bigint*, which is a different change and is still not done.
+
+All 65 converted in `0426`, catalog-driven so the cursor skips anything already converted. Verified
+65/65 `attidentity='a'`, 0 remaining serial, 0 orphaned sequences, 204,000 tickets intact, rollback
+executed in-transaction.
+
+**int4 ceiling deliberately left:** ids stay `integer` (2.1B) against a stated 100M-row target — ~20×
+headroom. Widening is the change that needs 240 columns moved in lockstep, and `0421` is the working
+template when a table gets close. Trigger to revisit: any Build table passing ~500M rows.
+
+## B-29 — PM-004 scoped as merge, not as auto-detection
+The audit line was "no dedup or merge". I built **merge** and deliberately did not build automatic
+duplicate *detection* (fuzzy title matching / suggestion). Detection is a product feature with a
+false-positive cost — silently linking two genuinely different requests destroys information — whereas
+merge is the correctness fix that makes vote totals mean something. The searchable picker gives a human
+the same reach without guessing on their behalf. Reversal cost: nil; detection can be added on top of
+`duplicate_of_id` later.
+
+Also corrected in passing: the audit's stated symptom, "duplicates inflate vote counts", was wrong.
+Per-voter dedup already existed and the vote counter is incremented only inside the same transaction
+that actually inserted a vote row. Duplicates *split* demand across posts; they do not inflate it.
+
+## B-30 — Reused the timesheets approval policy across a module boundary
+Fixing SEC-005 needed the self-approval rule in `build/execution`. I imported
+`canActOnPeriod` from `timesheets/core/lib/approval-guard.ts` rather than re-implementing it.
+§18 says cross-module access goes through the other module's *service* — this is a pure, stateless
+policy function in a leaf file with no imports, so importing it creates no cycle (`madge` still
+clean) and no repository or schema access. Duplicating the rule is precisely how the two writers
+diverged and produced the bug. Reversal cost: nil.
+
+## B-31 — Left the notifications session's pending migration alone
+`0429_digest_queue_broadcast_audience` is journaled and pending but belongs to another program's
+in-flight work, and nothing of mine depends on it. I ran `0421`/`0422` earlier only because they were
+blocking the entire queue and my own migrations could not be applied behind them. **Watermark hazard
+to note:** if someone applies a migration with a later `when` before `0429` runs, `0429` drops below
+the watermark and is skipped forever. It is currently above the watermark and will run normally.
+
 ---
 
 # Inventory (D-NN)

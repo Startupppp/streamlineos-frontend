@@ -8,7 +8,7 @@ import { CheckCheck } from "lucide-react";
 import { XIcon } from "@animateicons/react/lucide";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
-  useNotifications,
+  useInfiniteNotifications,
   useUnreadNotificationCount,
   useMarkNotificationRead,
   useMarkAllNotificationsRead,
@@ -71,17 +71,28 @@ export default function NotificationsPage() {
     setSearch("");
   }, []);
 
-  const { data: notifications, isLoading, isError, refetch } = useNotifications(
-    {
-      section: activeSection,
-      category: activeCategory,
-      priority: activePriority,
-      search: debouncedSearch || undefined,
-      limit: 50,
-    },
-    { placeholderData: keepPreviousData },
-  );
+  // RT-008: keyset pages instead of a flat limit: 50 that silently truncated the feed.
+  const {
+    data: pages,
+    isLoading,
+    isError,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteNotifications({
+    section: activeSection,
+    category: activeCategory,
+    priority: activePriority,
+    search: debouncedSearch || undefined,
+    limit: 30,
+  });
+  const notifications = pages?.pages.flat();
   const { data: unreadData } = useUnreadNotificationCount();
+  function handleLoadMore() {
+    void fetchNextPage();
+  }
+
   const markRead = useMarkNotificationRead();
   const markAllRead = useMarkAllNotificationsRead();
   const archive = useArchiveNotification();
@@ -396,6 +407,20 @@ export default function NotificationsPage() {
             </AnimatePresence>
           </div>
         )}
+
+        {/* RT-008: keyset "load older" instead of a silent truncation at 50. */}
+        {hasNextPage ? (
+          <div className="flex justify-center pt-2">
+            <LoadingButton
+              variant="outline"
+              size="sm"
+              isPending={isFetchingNextPage}
+              onClick={handleLoadMore}
+            >
+              Load older notifications
+            </LoadingButton>
+          </div>
+        ) : null}
       </div>
 
       <NotificationDetailDrawer

@@ -201,6 +201,16 @@ export function useUpdateFeedbackPost() {
   });
 }
 
+export function useMergeFeedbackPost() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["projects", "feedback", "merge"],
+    mutationFn: ({ id, targetPostId }: { id: number; targetPostId: number }) =>
+      apiClient.post<FeedbackPost>(`/build/feedback/${id}/merge`, { targetPostId }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.roadmap.all }),
+  });
+}
+
 export function useDeleteFeedbackPost() {
   const qc = useQueryClient();
   return useMutation({

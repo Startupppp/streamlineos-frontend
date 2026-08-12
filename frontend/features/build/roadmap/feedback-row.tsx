@@ -3,7 +3,7 @@
 import { memo, useCallback } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowBigUp } from "lucide-react";
-import { Trash2Icon } from "@animateicons/react/lucide";
+import { GitMergeIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -28,12 +28,14 @@ interface FeedbackRowProps {
   post: FeedbackPost;
   roadmapItems: RoadmapItem[];
   onDelete: (post: FeedbackPost) => void;
+  onMerge: (post: FeedbackPost) => void;
 }
 
 export const FeedbackRow = memo(function FeedbackRow({
   post,
   roadmapItems,
   onDelete,
+  onMerge,
 }: FeedbackRowProps) {
   const update = useUpdateFeedbackPost();
   const shouldReduceMotion = useReducedMotion();
@@ -70,6 +72,12 @@ export const FeedbackRow = memo(function FeedbackRow({
     onDelete(post);
   }, [onDelete, post]);
 
+  const handleMergeClick = useCallback(() => {
+    onMerge(post);
+  }, [onMerge, post]);
+
+  const isMerged = post.duplicateOfId !== null;
+
   return (
     <motion.div
       variants={shouldReduceMotion ? listItemReduced : listItem}
@@ -102,14 +110,28 @@ export const FeedbackRow = memo(function FeedbackRow({
                 </p>
               ) : null}
             </div>
-            <AnimatedIconButton
-              size="icon"
-              variant="ghost"
-              className="h-6 w-6 shrink-0 text-destructive hover:text-destructive"
-              onClick={handleDeleteClick}
-              icon={Trash2Icon}
-              iconSize={12}
-            />
+            <div className="flex shrink-0 items-center gap-1">
+              {isMerged ? null : (
+                <AnimatedIconButton
+                  size="icon"
+                  variant="ghost"
+                  className="h-6 w-6"
+                  onClick={handleMergeClick}
+                  icon={GitMergeIcon}
+                  iconSize={12}
+                  aria-label="Merge into another post"
+                />
+              )}
+              <AnimatedIconButton
+                size="icon"
+                variant="ghost"
+                className="h-6 w-6 text-destructive hover:text-destructive"
+                onClick={handleDeleteClick}
+                icon={Trash2Icon}
+                iconSize={12}
+                aria-label="Delete feedback"
+              />
+            </div>
           </div>
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <Select value={post.status} onValueChange={handleStatusChange}>
@@ -143,6 +165,14 @@ export const FeedbackRow = memo(function FeedbackRow({
             <Badge variant={FEEDBACK_STATUS_VARIANT[post.status]} className="text-[10px]">
               {FEEDBACK_STATUS_OPTIONS.find((o) => o.value === post.status)?.label}
             </Badge>
+            {isMerged ? (
+              <Badge
+                variant="outline"
+                className="border-amber-200 bg-amber-50 text-[10px] text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300"
+              >
+                Merged duplicate
+              </Badge>
+            ) : null}
           </div>
         </div>
       </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions, QueryKey } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
@@ -86,6 +86,40 @@ export const useNotifications = (
     staleTime: 30_000,
     ...restOptions,
     enabled: !!orgId && (enabledOption ?? true),
+  });
+};
+
+/**
+ * RT-008. The feed fetched a flat `limit: 50` and ignored the `cursor` the backend has
+ * always supported, so it silently truncated at 50 with no way to see anything older.
+ *
+ * Keyset, not offset: the list endpoint filters `id < cursor`, so the next cursor is
+ * simply the last id on the page. A full page means there may be more; a short page is
+ * the end. Offset pagination would re-scan everything already seen.
+ */
+export const useInfiniteNotifications = (
+  params?: Omit<NotificationListParams, "cursor">,
+  options?: { enabled?: boolean },
+) => {
+  const { data: session } = useSession();
+  const orgId = session?.orgId;
+  const limit = params?.limit ?? 30;
+
+  return useInfiniteQuery<Notification[], Error>({
+    queryKey: queryKeys.notifications.list(
+      { ...(params as Record<string, unknown>), infinite: true },
+      orgId,
+    ),
+    initialPageParam: undefined as number | undefined,
+    queryFn: ({ pageParam }) =>
+      apiClient.get<Notification[]>(
+        "/notifications",
+        toStringParams({ ...(params as Record<string, unknown>), limit, cursor: pageParam }),
+      ),
+    getNextPageParam: (lastPage) =>
+      lastPage.length < limit ? undefined : lastPage[lastPage.length - 1]?.id,
+    staleTime: 30_000,
+    enabled: !!orgId && (options?.enabled ?? true),
   });
 };
 

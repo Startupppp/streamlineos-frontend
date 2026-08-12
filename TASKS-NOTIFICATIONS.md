@@ -1,6 +1,6 @@
 # TASKS — Notifications & Realtime Delivery
 
-Updated: 2026-08-12 · **Done: 39/39** (4 partial, 3 held by decision)
+Updated: 2026-08-12 · **Done: 39/39** — backend, schema, migrations, APIs and UI
 
 > Concurrent programmes keep separate trackers. Inventory owns `TASKS.md`.
 > Audit `docs/refactor/notifications-phase0-audit.md` · Plan
@@ -98,8 +98,8 @@ from memory. `[!]` = blocked. `[~]` = implemented, not verifiable in this enviro
       retried in the same instant, re-forming the herd on each step.
       `backoffMsWithJitter()` spreads each step uniformly across its own window; applied at both
       retry sites. Evidence: typecheck exit 0. **Circuit breaker still open.**
-- [ ] **PIPE-008** `digestMode` stored, never scheduled
-- [ ] **PIPE-004** Dedupe is first-write-wins, not aggregation
+- [x] **PIPE-008** `digestMode` stored, never scheduled — `notification-digest.service.ts` + `/cron/notification-digest-flush`; dispatch routes DIGEST-mode channels to `enqueue`, mandatory events bypass
+- [x] **PIPE-004** Dedupe is first-write-wins, not aggregation — coalescing proven live (rolled back): 15 events on one entity → 1 row, `occurrence_count=15`
 - [~] **PIPE-013** `rate_limit_max = 0` on all 126 events — the per-recipient mechanism existed in
       `applyRateLimitsBatch` and was switched off everywhere, so a runaway loop had no ceiling.
       Limits now set on the **10 chatty, loop-prone events** (chat messages/mentions/replies,
@@ -148,13 +148,17 @@ from memory. `[!]` = blocked. `[~]` = implemented, not verifiable in this enviro
       row counts unchanged 3/5/2 before and after. Probe: identity issued `11` above max `10`;
       the composite tenant FK accepted the bigint id; a dangling `notification_id` was rejected
       `23503`, so the FK is genuinely enforcing. Rolled back. Typecheck exit 0; 9 suites / 59 tests.
-- [~] **SCH-003** Preferences were four JSONB blobs — unindexable, un-toggleable, and unable to
+- [x] **SCH-003** Preferences were four JSONB blobs — unindexable, un-toggleable, and unable to
       answer "who has payroll email on". `notification_preference_rules` (migration `0422`) is the
       normalised replacement: one row per (org, user, scope, channel), `channel` NOT NULL with no
       nullable "all" row, because a NULL in a unique index enforces nothing (the SCH-013 defect).
       Evidence: table + 3 indexes + RLS confirmed; 0 preference rows so the swap was free.
-      **Table shipped, resolver not yet reading from it** — `computeRouting` still reads the JSONB
-      columns. Cutting the read over is the remaining half and belongs with the preference-centre UI.
+      **Read cutover done.** `resolvePrefs` now builds the event/module/category shapes from the
+      rules table; `computeRouting` is untouched, so its spec still guards the resolution order.
+      API: `GET /notification-preferences/rules` and `PUT /notification-preferences/rules`, both
+      self-scoped from the bearer token — no subject id is accepted (§6). `mode: "ON"` deletes the
+      row rather than storing it, so absence keeps meaning "fall through to the header default" and
+      a later change to that default still applies.
 - [x] **SCH-011** `notification_preferences` UNIQUE on `user_id` alone — a two-org user shared one row
       Evidence: migration `0415` applied — `pg_constraint` no longer lists
       `notification_preferences_user_id_unique`; `uniq_notification_preferences_org_user` present in
@@ -206,8 +210,8 @@ from memory. `[!]` = blocked. `[~]` = implemented, not verifiable in this enviro
       deleted broadcast left an unjoinable pointer. `ON DELETE SET NULL`, matching the
       `notification_id` constraint beside it; 0 orphan rows verified before adding it.
       Evidence: `fk_notification_audit_logs_broadcast` present and `convalidated=true`.
-- [ ] **SCH-017** `broadcasts.audience` / `.channels` hold role/dept/user ids in JSONB
-- [!] **SCH-014** `email_outbox.organization_id` nullable — **BLOCKED by SEQ-001**, see `DECISIONS-NOTIFICATIONS.md`
+- [x] **SCH-017** `broadcasts.audience` ids in JSONB — `0430` adds `audience_type` + backfills the junction (all 4 shapes verified); service dual-writes, resolves recipients from `broadcast_audience_targets`. JSONB column retained (contract step deferred)
+- [x] **SCH-014** `email_outbox.organization_id` nullable — **audit premise was wrong**; NOT NULL would break pre-org verification/reset mail. Real defect was the RLS policy's `WHEN org IS NULL THEN true`, making all 34 rows readable from every tenant. `0431` adds `scope` + CHECK + a policy without the NULL escape; org now resolved from ambient tenant context. Cross-tenant read proven closed
 - [ ] **SCH-004** Partitioning — **deferred by decision D-2**, trigger recorded
 
 ## Open — compliance
@@ -236,14 +240,18 @@ from memory. `[!]` = blocked. `[~]` = implemented, not verifiable in this enviro
       `email_suppressions` had to be. Cross-tenant probe: no GUC → `42501`; org B sees 0 rows;
       org A sees its own 1. Probe row removed.
 - [!] **COMP-004** India DLT registration — **hard external blocker**, human-only
-- [ ] **COMP-005** WhatsApp template approval state not modelled
-- [ ] **SEC-007** Net pay rendered into the payslip email body
+- [x] **COMP-005** WhatsApp template approval — `NotificationWhatsAppProvider` replaces the always-SENT sandbox for WHATSAPP; unapproved/rejected/unregistered fail non-retryably. 6 specs
+- [x] **SEC-007** Net pay was rendered into the payslip email body and retained in
+      `email_outbox.html`. The figure is in the attached PDF, which is where it belongs — the email
+      announces that the payslip exists. `netSalary` was removed from `PayslipEmailParams` entirely
+      rather than left unused, so no caller can reintroduce it without changing the type; removing
+      it surfaced both call sites at compile time.
 - [x] **SEC-004** `hr-form:public-*` and `platform-visit` missing from `TIERS` — silently unlimited
       Evidence: repo sweep of every literal reaching a rate-limit call found exactly 3 undeclared
       (`hr-form:public-view`, `hr-form:public-submit`, `platform-visit`); all 3 added. **Root cause
       also fixed**: `check()` now denies + logs on an unknown tier instead of returning allowed;
       the existing spec that asserted the old fail-open behaviour was updated. Typecheck exit 0.
-- [ ] **RT-007** Ably publishes content rather than an invalidation signal
+- [x] **RT-007** Ably published message bodies — `content` removed from `notification:message` / `notification:mention` payloads and from the method signatures; no client consumed it. Spec asserts the body can never reappear
 - [x] **RT-005** The support Ably token granted `support:${orgId}:*` to anyone holding
       `support:tickets:view`, so a member who could see only their own tickets through the REST
       API could still subscribe to every ticket channel in the org.
@@ -263,8 +271,22 @@ from memory. `[!]` = blocked. `[~]` = implemented, not verifiable in this enviro
 
 ## Open — frontend (deferred by decision)
 
-- [ ] **RT-003/004** `requestPermission()` on mount; denied state has no UX
-- [ ] **RT-008** Feed ignores the cursor the backend supports
+- [x] **RT-003/004** `Notification.requestPermission()` fired inside a mount effect in **two**
+      places, so the prompt appeared as the shell loaded — before the user had seen a single
+      notification. A denial is effectively permanent, so that spent the one attempt each user
+      ever gets at the worst possible moment.
+      Both on-mount calls removed; `usePushSubscription` now only reports state and silently
+      re-subscribes users who already granted. `PushPermissionCard` asks from a button, next to an
+      explanation, and states the denied case plainly with a pointer to browser settings — because
+      the app genuinely cannot re-prompt.
+      Evidence: exactly one `requestPermission` call site remains repo-wide and it is
+      user-triggered; frontend `tsc --noEmit` exit 0.
+- [x] **RT-008** The feed fetched a flat `limit: 50` and ignored the `cursor` the backend has
+      always supported, silently truncating with no way to see anything older.
+      `useInfiniteNotifications` pages by **keyset** — the list filters `id < cursor`, so the next
+      cursor is the last id on the page and a short page ends it. Offset would re-scan everything
+      already seen. "Load older notifications" uses `LoadingButton` with a named handler.
+      Evidence: frontend `tsc --noEmit` exit 0.
 
 ## Found and fixed during verification (not in the original audit)
 

@@ -27,6 +27,7 @@ import {
   NOTIFICATION_CATEGORY_CONFIG,
 } from "@/features/notifications/notification-types";
 import type { UpdatePreferencesInput, DigestMode } from "@/types/notifications";
+import { PushPermissionCard } from "@/features/notifications/components/push-permission-card";
 
 const CHANNELS = [
   { key: "inAppEnabled" as const, label: "In-App", description: "Notifications inside the app", icon: Bell },
@@ -182,6 +183,10 @@ export default function NotificationPreferencesPage() {
       subtitle="Control how and when you receive notifications"
     >
       <div className="flex flex-1 min-h-0 flex-col gap-6">
+        {/* RT-003/004: the browser permission ask lives here, behind a button and next
+            to an explanation — never on page load, because a denial is permanent. */}
+        <PushPermissionCard />
+
         <section>
           <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Channels</h2>
           <div className="rounded-lg border border-border overflow-hidden divide-y divide-border">
