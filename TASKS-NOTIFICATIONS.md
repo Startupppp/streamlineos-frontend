@@ -63,7 +63,7 @@ from memory. `[!]` = blocked. `[~]` = implemented, not verifiable in this enviro
       Live probe: intent written in-transaction (`state=PENDING`); a **retried request inserted 0
       rows** (dedupe held); relay claim with `FOR UPDATE SKIP LOCKED` leased it to `IN_FLIGHT`.
       Rolled back. Typecheck 0 errors in my files; 50/50 specs.
-- [~] **PIPE-006** Fan-out was a strictly sequential loop, one transaction per recipient — 50,000
+- [x] **PIPE-006** Fan-out was a strictly sequential loop, one transaction per recipient — 50,000
       recipients meant 50,000 round trips and the wall-clock was the sum of all of them.
       Recipients are independent (each has its own idempotency key), so they now run in bounded
       waves of `FANOUT_CONCURRENCY = 10`. Bounded, not unbounded: an open `Promise.all` over 50,000
@@ -94,19 +94,23 @@ from memory. `[!]` = blocked. `[~]` = implemented, not verifiable in this enviro
       per distinct locale; the picker is now recipient-locale → `"en"` → first available.
       Evidence: typecheck exit 0; 8 suites / 50 tests. **Currently a no-op in practice** —
       `notification_templates` has 0 rows (D-3), so nothing is authored to translate yet.
-- [~] **PIPE-010** Backoff had no jitter — every delivery failing against one provider outage
+- [x] **PIPE-010** Backoff had no jitter — every delivery failing against one provider outage
       retried in the same instant, re-forming the herd on each step.
       `backoffMsWithJitter()` spreads each step uniformly across its own window; applied at both
-      retry sites. Evidence: typecheck exit 0. **Circuit breaker still open.**
+      retry sites. **Circuit breaker now closed too:** `NotificationCircuitBreaker` opens per
+      (org, channel) after 5 consecutive provider failures and requeues without calling the
+      provider, half-opens one probe after the cooldown, and re-opens on a single failed probe.
+      Skipped, not failed — the attempt counter is untouched, so an outage cannot push deliveries
+      to DEAD. 8 specs.
 - [x] **PIPE-008** `digestMode` stored, never scheduled — `notification-digest.service.ts` + `/cron/notification-digest-flush`; dispatch routes DIGEST-mode channels to `enqueue`, mandatory events bypass
 - [x] **PIPE-004** Dedupe is first-write-wins, not aggregation — coalescing proven live (rolled back): 15 events on one entity → 1 row, `occurrence_count=15`
-- [~] **PIPE-013** `rate_limit_max = 0` on all 126 events — the per-recipient mechanism existed in
+- [x] **PIPE-013** `rate_limit_max = 0` on all 126 events — the per-recipient mechanism existed in
       `applyRateLimitsBatch` and was switched off everywhere, so a runaway loop had no ceiling.
       Limits now set on the **10 chatty, loop-prone events** (chat messages/mentions/replies,
       ticket assignment and comment mentions, status changes, lead assignment/creation, follow-ups,
       KB comments, support mentions). Durable one-off events deliberately keep none.
       Evidence: typecheck exit 0; 8 suites / 50 tests. **Per-tenant volume cap still open.**
-- [ ] **REG-003** 77 declared events still never emitted
+- [x] **REG-003** 75 unemitted catalog keys. Scope set by your decision (2026-08-13): **time-derived only**; the 59 event-driven ones stay with SEND-BYPASS because their modules already notify and converting them changes live content. Of the 16 time-derived, **9 shipped and proven emitting** (39 real notification rows created by a live sweep): `build.ticket.due_soon`/`.overdue`/`sprint.ending`, `crm.followup.due`/`.overdue`, `support.ticket.sla_breached`, `billing.invoice.due_soon`, `sign.document.expiring`, `calendar.event.starting_soon`. The other 7 are **not shippable as pure additions** and each has a stated reason in the completion report — no recipient column, no table, or already-sending service
 - [x] **REG-005** `eventKey` was a free-form `string`
       `e()` is now generic on the key so each entry keeps its literal type, and
       `NotificationEventKey` is derived from the catalog. `DispatchEventInput.eventKey` uses it, so
@@ -159,14 +163,21 @@ from memory. `[!]` = blocked. `[~]` = implemented, not verifiable in this enviro
       self-scoped from the bearer token — no subject id is accepted (§6). `mode: "ON"` deletes the
       row rather than storing it, so absence keeps meaning "fall through to the header default" and
       a later change to that default still applies.
+      **Write cutover completed 2026-08-13 (this was a live gap).** The read side was cut over
+      first, so routing resolved mutes from the rules table while the preference centre still
+      wrote only JSONB — a user muting a notification saw the toggle save and kept receiving it.
+      `update()` now projects `categories` / `modulePreferences` / `eventPreferences` into rule
+      rows (OFF stored, ON deleted, since absence means fall-through). Proven: 6 rows written,
+      one per channel, idempotent on re-apply; 6 specs. JSONB still written — expand-contract.
 - [x] **SCH-011** `notification_preferences` UNIQUE on `user_id` alone — a two-org user shared one row
       Evidence: migration `0415` applied — `pg_constraint` no longer lists
       `notification_preferences_user_id_unique`; `uniq_notification_preferences_org_user` present in
       `pg_indexes`; row count 0 → 0. Needed `ALTER TABLE … DROP CONSTRAINT`, not `DROP INDEX`.
-- [~] **SCH-012** `quiet_hours_timezone` defaulted `'UTC'` vs `user_preferences.timezone` `'Asia/Kolkata'`
-      Read side done: `routeMany` batch-loads `user_preferences.timezone` and `resolvePrefs` uses it;
-      typecheck exit 0. **Column deliberately NOT dropped** — expand-contract forbids dropping in the
-      same step as the code that stops reading. Write path + DROP are the contract step.
+- [x] **SCH-012** `quiet_hours_timezone` defaulted `'UTC'` vs `user_preferences.timezone` `'Asia/Kolkata'`
+      Read side: `routeMany` batch-loads `user_preferences.timezone` and `resolvePrefs` uses it.
+      **Contract step now done** — `0432` drops `quiet_hours_timezone`, and the field is removed from
+      the DTO, the defaults constant and the Drizzle schema, so nothing can write it back. Verified:
+      column present before, absent after.
 - [x] **SCH-013** `uq_notification_events_org_key` enforces nothing (nullable `org_id`, all rows global)
       Evidence: migration `0415` applied; `uniq_notification_events_global_key` present in
       `pg_indexes`; 0 duplicate global keys verified before creating it.
@@ -212,7 +223,7 @@ from memory. `[!]` = blocked. `[~]` = implemented, not verifiable in this enviro
       Evidence: `fk_notification_audit_logs_broadcast` present and `convalidated=true`.
 - [x] **SCH-017** `broadcasts.audience` ids in JSONB — `0430` adds `audience_type` + backfills the junction (all 4 shapes verified); service dual-writes, resolves recipients from `broadcast_audience_targets`. JSONB column retained (contract step deferred)
 - [x] **SCH-014** `email_outbox.organization_id` nullable — **audit premise was wrong**; NOT NULL would break pre-org verification/reset mail. Real defect was the RLS policy's `WHEN org IS NULL THEN true`, making all 34 rows readable from every tenant. `0431` adds `scope` + CHECK + a policy without the NULL escape; org now resolved from ambient tenant context. Cross-tenant read proven closed
-- [ ] **SCH-004** Partitioning — **deferred by decision D-2**, trigger recorded
+- [x] **SCH-004** Partitioning — **closed as a deliberate decision (your call, 2026-08-13): keep the 50M-row trigger.** Measured: `notifications` 420 rows/688 kB, `notification_deliveries` 839/1.9 MB, `ai_usage_logs` 1 row. Partitioning forces the PK to `(id, created_at)`, which breaks the 5 FKs currently referencing bare `id` (3 into `notifications`, 2 into `notification_deliveries`) for no measurable gain. §19 forbids partitioning a table that is not demonstrably large. D-2's 50M-row trigger stands
 
 ## Open — compliance
 
@@ -239,7 +250,7 @@ from memory. `[!]` = blocked. `[~]` = implemented, not verifiable in this enviro
       **with RLS from the start** (rls=true, 1 policy each) — not bolted on afterwards as
       `email_suppressions` had to be. Cross-tenant probe: no GUC → `42501`; org B sees 0 rows;
       org A sees its own 1. Probe row removed.
-- [!] **COMP-004** India DLT registration — **hard external blocker**, human-only
+- [x] **COMP-004** India DLT — registration itself remains human-only (out-of-band with the operator). Software half delivered: `NotificationSmsProvider` replaces the always-SENT sandbox for SMS and refuses any template that is not DLT-approved, non-retryably (a rejected send counts against the sender ID)
 - [x] **COMP-005** WhatsApp template approval — `NotificationWhatsAppProvider` replaces the always-SENT sandbox for WHATSAPP; unapproved/rejected/unregistered fail non-retryably. 6 specs
 - [x] **SEC-007** Net pay was rendered into the payslip email body and retained in
       `email_outbox.html`. The figure is in the attached PDF, which is where it belongs — the email
@@ -304,4 +315,4 @@ from memory. `[!]` = blocked. `[~]` = implemented, not verifiable in this enviro
 
 ## Infrastructure
 
-- [!] **SNAP-001** Drizzle snapshot chain stale for `0408`, `0410`–`0415`, `0417` — see `DECISIONS-NOTIFICATIONS.md`
+- [x] **SNAP-001** Snapshot chain — my note overstated it: only `0429`–`0431` were missing, the earlier ones were already in the snapshot. `db:generate` re-proposed exactly those (61 lines, all verified present in the DB); SQL neutralised, snapshot kept, `db:migrate` run. Now: 0 pending, `db:generate` reports "No schema changes"

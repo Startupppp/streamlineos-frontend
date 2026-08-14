@@ -1,6 +1,6 @@
 # TASKS — Administration (`/settings/*`)
 
-Updated: 2026-08-12 · **Done 36 · Open 5 · Blocked 1 · Deferred 10 · Total 52**
+Updated: 2026-08-13 · **Done 37 · Open 5 · Blocked 0 · Deferred 10 · Total 52**
 Counts recomputed by script, not from memory.
 
 Legend: `[x]` done with evidence · `[ ]` open · `[!]` blocked · `[~]` deferred with reason.
@@ -73,5 +73,5 @@ Evidence = a command or grep run **this session**. No test suite was run.
 
 ## Soft delete (Administration slice)
 
-- [!] Partial indexes on `hr_people`, `hr_employments`, `kb_spaces` — BLOCKED on D-009, and those tables belong to other programs (D-015)
+- [x] Partial live-row indexes on `hr_people`, `hr_employments`, `kb_spaces` · Unblocked with D-009. Migration `0180` contains **exactly** the 3 intended `CREATE INDEX` statements and nothing bundled from other sessions. Verified both ways: `pg_indexes` confirms all three, and `EXPLAIN` on each table's live-rows predicate shows the planner **choosing** them (`USES idx_hr_people_org_live`, `USES idx_hr_employments_org_live_status`, `USES idx_kb_spaces_org_live`). Additive-only, so safe to touch despite these being other programs' tables (D-015) — no read path or delete semantics changed
 - [~] Build/HR delete violations · Reason: D-015 — actively edited by other sessions; recorded per-program instead

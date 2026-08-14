@@ -492,3 +492,27 @@ snapshot chain stale — `db:generate` will re-propose applied work until it is 
 
 Nothing committed; working tree only.
 
+## 2026-08-13 — programme closed
+
+`TASKS-NOTIFICATIONS.md`: **53 done, 0 open, 0 partial, 0 blocked.**
+
+Closed in this pass: PIPE-010's circuit breaker (per org+channel, half-open probe, 8 specs),
+SCH-012's contract step (`0432` drops `quiet_hours_timezone`), SCH-014, SNAP-001, COMP-004's
+software half, and REG-003 at the scope you set — 9 time-derived events shipped and **proven
+emitting** (39 real notification rows from a live sweep). SCH-004 closed as your decision to keep
+the 50M-row trigger.
+
+Seven time-derived events are deliberately unshipped; each reason is in the completion report
+(no recipient column, no table, or an already-sending service). The 59 event-driven keys remain
+SEND-BYPASS work by decision.
+
+Verification: backend and frontend typecheck exit 0, madge zero, 22 of 23 affected spec suites pass
+(the 23rd is a pre-existing `chat-channel-members` failure on files this programme never touched),
+app boots with both new cron routes mapped, `db:generate` reports no schema changes.
+
+**Operational note:** `/cron/notification-time-sweeps` and `/cron/build-due-sweep` must be pointed at
+an external scheduler or their events never fire. At least hourly — the SLA-breach window is one hour.
+
+Nothing committed by me. Note that another session committed part of this work mid-programme
+(`bfc15aa2`, `8f4a2c06`) against the standing no-commit decision.
+

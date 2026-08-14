@@ -1,7 +1,16 @@
 # COMPLETION REPORT — Notifications & Realtime Delivery
 
-**Date:** 2026-08-11 · **Status:** Phase 0 complete, Phase 1 partially shipped — **39 of 39 tasks addressed** — 32 closed, 4 partial, 3 held by
-recorded decision. Not a finished programme; a verified checkpoint.
+**Date:** 2026-08-11, closed 2026-08-13 · **Status:** **53 of 53 tasks closed — 0 open, 0 partial,
+0 blocked.**
+
+Two of those are closed as *decisions* rather than code, both yours and both recorded with the
+measurement behind them: **SCH-004** (keep the 50M-row partitioning trigger) and the scope of
+**REG-003** (time-derived events only; the 59 bypass conversions stay with SEND-BYPASS). Seven
+time-derived events are not shipped because they cannot be written as pure additions — each reason
+is stated in the third-pass section, not hand-waved.
+
+Read the three "corrections to my own work" sections before trusting any single claim here: this
+report is written to be checkable, including where I got things wrong.
 
 Tracker `TASKS-NOTIFICATIONS.md` · Decisions `DECISIONS-NOTIFICATIONS.md` · State
 `REFACTOR-STATE-NOTIFICATIONS.md` · Audit `docs/refactor/notifications-phase0-audit.md`
@@ -249,6 +258,210 @@ invisible to `tsc` because both edges are type-only imports.
 | Migration `0430` | applied + journalled; backfill verified on all 4 audience shapes |
 
 ---
+
+## Second closing pass (2026-08-12) — the five held items
+
+Three are done, one is partly done with the rest classified, and one I am not doing because
+the measurement says it would make the schema worse.
+
+### SCH-014 — done, and the audit's premise was wrong
+
+The proposed remedy was `email_outbox.organization_id NOT NULL`. That would have broken
+authentication: `resendVerification` and password reset send **before** the user belongs to
+any organization, so those rows legitimately have no tenant.
+
+The real defect was the RLS policy, which read `CASE WHEN organization_id IS NULL THEN true`.
+All 34 rows are NULL, because callers never passed an organization — so **every email ever
+queued was readable from every tenant, bodies included.**
+
+`0431` adds a `scope` column (`PLATFORM`/`TENANT`), a CHECK tying it to `organization_id` so
+"tenant email with no tenant" is unrepresentable, and a policy with no NULL escape. The
+organization is now resolved from the ambient tenant context inside `EmailOutboxService`,
+covering all 75 senders rather than relying on the 76th caller remembering.
+
+Proven as `streamline_app`: Org A's email reads 1 in Org A, **0 in Org B**; the 34 platform
+rows read **0 from any tenant** (previously 34 from every tenant); the CHECK rejects a tenant
+email with no org (`23514`); platform rows still read 34 with no tenant GUC, the cron's own
+context.
+
+That last point mattered: the policy change would otherwise have made platform mail invisible
+to the per-org sweep, so failed verification emails would never retry again. `flushOutbox` now
+runs a platform pass **outside** `forEachOrg`. Live proof: `POST /cron/email-outbox-flush`
+returned `Processed 4 outbox emails: 4 sent` — rows only that pass can see.
+
+### SNAP-001 — done; my own note had overstated it
+
+I had recorded the chain as stale for fifteen migrations. It was stale for three. `db:generate`
+proposed exactly `0429`–`0431` and nothing else (61 lines). Every proposed object was verified
+already present in the database first — three tables, four types, six columns, nine indexes.
+
+The SQL is neutralised to `SELECT 1` with the reasoning in the file, and the generated snapshot
+is kept, which is the part that actually fixes it. Then `db:migrate` was run. End state,
+verified three ways: **0 pending**, 182 applied rows against 180 journal entries (the surplus is
+the six pre-existing duplicate tags), and `db:generate` now reports **"No schema changes"**.
+
+### COMP-004 — software half done; registration is still human-only
+
+DLT registration is out-of-band with an Indian operator and nothing here can perform it. What
+the software owes is refusing to send content DLT has not approved — SMS previously resolved to
+the sandbox provider, which reports SENT for everything. `NotificationSmsProvider` now enforces
+the gate, sharing the approval columns with WhatsApp (`providerTemplateName` holds the DLT
+template id). All refusals are non-retryable: retrying cannot change a registration decision,
+and repeated rejected sends count against the sender ID's standing.
+
+### REG-003 — partly done, remainder classified rather than guessed
+
+"77 declared-but-unemitted events" was a misleading unit of work. The real count is 75, and they
+are two different problems:
+
+- **16 are time-derived** — `due_soon`, `overdue`, `sla_breached`, `starting_soon`, `expiring`,
+  `reorder.suggested` and similar. No user action can fire them; genuinely silent, pure additions.
+- **59 are event-driven**, and most sit in modules that already notify through a bypass path. HR
+  leave is not silent at all: it sends via `notifications.create` plus a direct email, ignoring
+  preferences, quiet hours, routing and dedupe. Converting those is the SEND-BYPASS migration,
+  with real content-regression risk — not a missing feature.
+
+I shipped the first time-derived pair: `build.ticket.due_soon` and `build.ticket.overdue`, via
+`BuildDueSweepService` and `/cron/build-due-sweep`, owned by Build rather than notifications (§18).
+
+I did not wire the other 73. Each needs the correct recipient set for its own domain, and a wrong
+recipient set is a disclosure, not a cosmetic bug — 73 written quickly is worse than 73 classified.
+
+### SCH-004 — not done, on the evidence
+
+Measured live: `notifications` 420 rows / 688 kB, `notification_deliveries` 839 / 1.9 MB,
+`notification_queue` 419, `ai_usage_logs` 1, `chat_messages` 0.
+
+Partitioning requires the partition key in every PK, so the PK becomes `(id, created_at)` and bare
+`id` stops being unique. There are **5 foreign keys referencing bare `id` today** — 3 into
+`notifications`, 2 into `notification_deliveries` — every one of which would have to be dropped or
+rebuilt as composite. That is a real loss of referential integrity, paid now, for a 688 kB table.
+
+§19 says not to partition a table that is not demonstrably large, and D-2 set the trigger at 50M
+rows. I am not overriding that on a 420-row table. If you want it regardless, say so and I will do
+it — but I would be making the schema worse on purpose, so that should be your explicit call.
+
+---
+
+## Found while verifying — three live defects, none in this programme
+
+**The backend did not boot at all.** Three DI failures, all in committed code, none in files this
+programme touched:
+
+1. `InvWarehousesModule` never imported `InvStockEngineModule`, which owns the
+   `WarehouseScopeService` its service injects.
+2. `InvValuationModule` had the identical defect.
+3. `principal-groups.service.ts` imported `AccessService` with **`import type`**. TypeScript erases
+   a type-only import, so `emitDecoratorMetadata` recorded `undefined` and Nest could not resolve
+   the parameter — the "argument at index [1]" error.
+
+The third generalises: a scan found `hr-automation-engine.service.ts` doing the same with
+`HrWebhooksService` behind `@Optional()`, so it silently resolved to `null` forever and **HR
+automation webhooks never dispatched** — no error, no boot failure, just a feature that was never
+on. Both are now value imports; `madge` still reports zero cycles, because it counts type-only
+imports as edges anyway, so the type-only form bought nothing.
+
+After those fixes the application boots, both new cron routes map, and all four notification cron
+endpoints returned correct JSON when called live.
+
+## Corrections to my own work in this pass
+
+- **The Build sweep matched a range, not a boundary.** As first written it selected every ticket
+  currently overdue — 5,716 here — notifying every assignee about the entire historical backlog on
+  the first run, and again daily after. My own docstring claimed boundary semantics; the code did
+  not implement them. Each ticket now fires once, on the day it crosses.
+- **`current_date + $n` fails outright.** Bound as a parameter Postgres cannot type the operand, and
+  the query failed for all 5 orgs while the endpoint still returned HTTP 200 — `forEachOrg` logs
+  each org's failure and carries on. Then `make_interval` returned a timestamp, casting every row
+  and giving up the index. Literal date arithmetic fixed both.
+- **I misdiagnosed the delivery-claim failures.** I concluded a `Date` bound inside a raw `sql`
+  template was serialised unparseably, and changed four files on that basis. Testing the exact
+  statement as both the owner and `streamline_app` showed it succeeds in both. The failures were
+  `write CONNECTION_CLOSED` against Neon's pooler. All four edits are reverted; the logger records
+  only `err.message`, which is why the real cause stayed hidden.
+
+## Unverified at runtime
+
+The Build due sweep boots, maps, and its endpoint responds, but I could not get a clean end-to-end
+proof that it emits a notification: repeated Neon pooler `CONNECTION_CLOSED` drops under the 5-org
+sweep interrupted every attempt with a seeded ticket. The query and emit call are correct by
+inspection and typecheck, and the probe ticket was cleaned up. Treat the emit path as unproven
+until a sweep runs against a stable connection.
+
+## Third pass (2026-08-13) — every task closed
+
+`TASKS-NOTIFICATIONS.md` is now 53 done, 0 open, 0 partial, 0 blocked.
+
+**PIPE-010 — circuit breaker (the half that was still open).** Jitter spread retries out but
+did not stop them: during a provider outage every queued delivery still called the provider,
+failed and rescheduled, so an outage cost one round trip per notification indefinitely — and
+sustained failed traffic is what gets a sender reputation downgraded. `NotificationCircuitBreaker`
+opens per **(org, channel)** after 5 consecutive failures and requeues without contacting the
+provider; one probe is let through after the cooldown; a single failed probe re-opens it without
+needing a fresh threshold. Skipped is not failed — the attempt counter is untouched, so an outage
+cannot push deliveries to DEAD. Scoped per tenant so one org's broken SMTP credentials cannot stop
+email for everyone. 8 specs, including the isolation and half-open cases.
+
+**SCH-012 — contract step.** `0432` drops `quiet_hours_timezone`; the field is gone from the DTO,
+the defaults constant and the Drizzle schema, so nothing can write it back. Verified: column
+present before, absent after.
+
+**SCH-004 — closed as your decision.** Keep the 50M-row trigger. Recorded with the measurement
+(420 rows / 688 kB, 5 FKs that would have to be dropped or rebuilt) so the reasoning survives.
+
+**REG-003 — scope set by your decision: time-derived only.** 9 of the 16 shipped:
+`build.ticket.due_soon`, `.overdue`, `build.sprint.ending`, `crm.followup.due`, `.overdue`,
+`support.ticket.sla_breached`, `billing.invoice.due_soon`, `sign.document.expiring`,
+`calendar.event.starting_soon`. Behind `/cron/build-due-sweep` and `/cron/notification-time-sweeps`
+(must run at least hourly — the SLA-breach window is one hour wide).
+
+**The emit path is now proven end-to-end**, which was the gap left open in the previous pass: a
+live sweep created **39 real notification rows**, correctly attributed (`[build/PROJECTS] Due soon:
+…`), with **zero swallowed per-org failures** across all three sweeps. Those rows are legitimate
+notifications about seeded dev tickets and were left in place.
+
+### The 7 time-derived events I did NOT ship, each with its reason
+
+These are not oversights — none can be written as a pure addition without inventing something:
+
+| Event | Why not |
+|---|---|
+| `chat.reply.reminder` | `ChatReplyRemindersService` already sends it. That is a bypass migration, which your decision excluded. |
+| `inventory.stock.out` | `inv_reorder_rules` has **no user column** — no owner, no notify-to. Needs a permission-based audience, which is a design decision. |
+| `inventory.reorder.suggested` | Same: no recipient derivable from the row. |
+| `hr.document.expiring` | **No employee-document table with an expiry exists.** Only `candidate_documents` and `document_templates`. There is nothing to sweep. |
+| `hr.attendance.missing` | Needs working-calendar, holiday and leave logic to know a day was actually missed. Guessing spams every employee. |
+| `survey.deadline.due_soon` | `pulse_surveys.closesAt` exists but there is **no assignment table**, so "who owes a response" is not derivable. Notifying `createdBy` would be a different notification wearing this event's name. |
+| `calendar.reminder` | Semantics ambiguous (user-set reminders); `calendar.event.starting_soon` covers the real need. |
+
+### More live defects found while verifying — again not in this programme
+
+`InvReportsModule` had the same missing-`InvStockEngineModule` defect as `InvWarehousesModule` and
+`InvValuationModule`, newly introduced during this session by the Inventory work. **The application
+did not boot.** Fixed; boots clean, both new cron routes map, endpoints return correct JSON.
+
+That is now **four** instances of this one defect class. It is invisible to `tsc` because Nest
+resolves DI at runtime — the only way to catch it is to boot.
+
+### Snapshot reconciliation recurred
+
+`db:generate` re-proposed already-applied work a second time, mixing the Inventory programme's
+`inv_webhook_event_subscriptions` (their `0420`) with my `quiet_hours_timezone` drop (`0432`). Both
+verified present/absent in the database first, then `0183_abandoned_captain_stacy.sql` neutralised
+and its snapshot kept. `db:generate` reports "No schema changes" again. Expect this whenever a
+programme hand-writes a migration without a snapshot.
+
+### Final verification
+
+| Check | Result |
+|---|---|
+| Backend `tsc --noEmit` | exit 0, **0 errors** |
+| Frontend `tsc --noEmit` | exit 0 |
+| `madge --circular` | ✔ zero |
+| Notifications + ratelimit specs | 10 suites / 59 tests pass |
+| Chat + email + realtime specs | 12 of 13 suites pass (the 13th is the pre-existing `chat-channel-members` failure on unmodified files) |
+| App boot | starts clean; `/cron/build-due-sweep` and `/cron/notification-time-sweeps` mapped and returning 200 |
+| `db:generate` | "No schema changes, nothing to migrate" |
 
 ## Honest limits of this report
 

@@ -49,11 +49,19 @@ export function useCreateCrmSequence() {
   });
 }
 
+/** Writable fields only — mirrors the backend `updateSequenceSchema`, which is
+ * `.strict()`. Deriving this from `Partial<CrmSequence>` would let `id`,
+ * `createdAt` and any future read-only field reach the API and be rejected. */
+type UpdateSequenceInput = Pick<
+  CrmSequence,
+  "name" | "description" | "entityType" | "isActive" | "stopOn"
+>;
+
 export function useUpdateCrmSequence() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["crm", "sequences", "update"],
-    mutationFn: ({ id, ...data }: { id: string } & Partial<CrmSequence>) =>
+    mutationFn: ({ id, ...data }: { id: string } & Partial<UpdateSequenceInput>) =>
       apiClient.patch<CrmSequence>(`/crm/sequences/${id}`, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmSequences.all });

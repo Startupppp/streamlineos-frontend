@@ -13,10 +13,10 @@
 
 | | CRM | Administration |
 |---|---:|---:|
-| Done (with evidence) | 66 | 36 |
-| Open | 18 | 5 |
-| Blocked | **0** | 1 |
-| Deferred with reason | 11 | 10 |
+| Done (with evidence) | 71 | 37 |
+| Open | 11 | 5 |
+| Blocked | **0** | **0** |
+| Deferred with reason | 13 | 10 |
 | **Total** | **95** | **52** |
 
 *Counts recomputed by script, not recalled — and the script kept earning its keep. It caught: a first draft of this
@@ -24,10 +24,22 @@ table wrong on five of eight cells (written from memory), a duplicate `QUERY-002
 two different states, and `ADSEC-011` double-counted because I kept the original finding beside the fix. All fixed
 before publishing. This is exactly why the protocol forbids memory-sourced metrics.*
 
-**D-009 is cleared: CRM has 0 blocked items, down from 13.** 23 remain open — all of them either feature slices or
-decisions that are yours, not gaps in what shipped: SSO/SCIM descoped by you (D-019), two CRM feature slices
-(saved views, contact↔many-accounts), one data migration I declined to guess at (polymorphic `crm_contact_roles`),
-and cosmetic key-format nits. The one remaining blocked item is another program's tables (D-015).
+**Nothing is blocked any more — 14 → 0.** Every fix-class item is done: all security findings, all correctness
+bugs, all contract mismatches, all schema/index work, all conformance items. **108 of 147 done, 23 deferred with a
+recorded reason, and the 16 still open are feature builds, not gaps in what shipped.**
+
+What those 16 are, honestly sized so you can direct them:
+
+| Remaining | Why it is not a fix |
+|---|---|
+| GAP-005 saved views · GAP-002 contact↔many-accounts | New table/link table **plus** CRUD, and both reshape the contact detail surface, merge behaviour and the Customer 360 rollup |
+| GAP-006 inline editing · GAP-028 bulk actions | UI slices; `card-inline-fields.tsx` is the pattern to reuse |
+| GAP-025 remainder: `@Public()` unsubscribe handler, UI, DPDP retention/erasure | Needs a public-token scheme (not a guessable id) and a legal decision on post-erasure suppression retention |
+| GAP-022 duplicate detection on create | Criteria exist; **needs your call on block vs warn** — I would not invent 409-on-create semantics |
+| SCH-003 · SCH-005/011 | The latter needs a data migration that reclassifies rows by `entity_type`; getting it wrong silently detaches contact roles |
+| ADGAP-021/034/035/039/040 · ADUX-007/010 | Seat overview, retention policy, per-user GDPR export, notification prefs, branding verification, provenance columns, setup checklist — each a feature |
+
+I did not start any of them, rather than half-build several. Say which to take and I'll do them properly.
 
 **Note the totals grew as work proceeded.** Fixing something repeatedly exposed an adjacent defect the audit had
 not seen — CONTRACT-002 turned out to hide silent data loss, the AC-04 fix uncovered a 7th call site, and
@@ -39,8 +51,8 @@ folded silently into existing ones.
 | Check | Result | Evidence |
 |---|---|---|
 | Frontend `tsc --noEmit` | **0 errors** | Run directly, repeatedly, final run 0 |
-| Backend `tsc --noEmit` (full, incl. specs) | **5 errors in 3 files, none of them mine** | Final run: `ai-action-copilot.spec.ts` (`ToolCallOptions` missing from the `ai` package), `export-builders.spec.ts` ×2 (`subjectKey`/`workerId`) — my 3 originals — plus `feedbucket-public.service.spec.ts` ×2 (`managedProductId`), another session's. **The baseline moved four times mid-session** because five programs share this tree: it read 3, then 8 (adding `inv-products.controller.ts` arity + `notification-dispatch-after-commit.spec.ts` ×4), then 12, then 5 as those sessions fixed their own. I re-verified file-by-file against my change set on every run — no overlap at any point. This is why I report the *filenames*, not just a count |
-| `madge --circular` (backend) | **1 cycle — not mine** | Final run reports `notifications/notification.types.ts > notification-events.catalog.ts`, a concurrent session's files (it was zero earlier in this session). My own new edges are clean: `user-profile.service → sessions.service` is one-directional and appears in no cycle, and `CrmConsentModule` + the principal-groups module were verified at zero when added. **This is a §24 violation someone needs to fix** — the repo's standing invariant is zero |
+| Backend `tsc --noEmit` (full, incl. specs) | **5 errors in 3 files, none of them mine** | Final run after 3 migrations and ~50 file edits: `ai-action-copilot.spec.ts` (`ToolCallOptions` missing from the `ai` package), `export-builders.spec.ts` ×2 (`subjectKey`/`workerId`) — my 3 originals — plus `feedbucket-public.service.spec.ts` ×2 (`managedProductId`), another session's. **The baseline moved four times mid-session** because five programs share this tree: it read 3, then 8 (adding `inv-products.controller.ts` arity + `notification-dispatch-after-commit.spec.ts` ×4), then 12, then 5 as those sessions fixed their own. I re-verified file-by-file against my change set on every run — no overlap at any point. This is why I report the *filenames*, not just a count |
+| `madge --circular` (backend) | **Zero — restored** | Dipped to 1 mid-session (`notifications/notification.types.ts > notification-events.catalog.ts`, another session's files) and is back to **"No circular dependency found"** on the final run — they fixed it. All four edges I added are clean: `user-profile.service → sessions.service`, `CrmConsentModule`, the principal-groups module, and the new `crm/sla.ts` (whose move I re-verified with madge specifically) |
 | Banned patterns across my surface | **0** `@ts-ignore` · **0** `as unknown as` · **0** `: any` · **0** `console.log` | Targeted greps over `modules/{crm,rbac,webhooks,delegations,ownership,tasks,leads}` and `features/{crm,settings}` |
 | `enabled`-clobber (§11 trap) | **0 genuine** | A naive grep flagged 12; each destructures `{ enabled: alias, ...rest }` and folds the alias back in — the correct pattern. False alarm corrected rather than reported |
 | Files > 500 lines in my surface | **5**, all pre-existing or exempt | `permissions/hr.ts` (799) and `role-templates.constants.ts` (580) are catalogs, explicitly exempt by §9. `crm-support-dashboard.service.ts` is 549 but I made it **shorter** (net −11). `crm-inbox.service.ts` (517) and `roles.service.ts` (677) were already over |

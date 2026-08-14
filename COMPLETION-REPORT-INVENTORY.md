@@ -1,6 +1,6 @@
 # COMPLETION REPORT — Inventory & Stock
 
-Date: 2026-08-11 · Tasks: 39 of 44 complete · See `TASKS.md`, `DECISIONS.md`, `REFACTOR-STATE-INVENTORY.md`
+Date: 2026-08-13 · Tasks: 40 of 44 complete · See `TASKS.md`, `DECISIONS.md`, `REFACTOR-STATE-INVENTORY.md`
 
 ## Three-pass verification
 
@@ -8,7 +8,8 @@ Date: 2026-08-11 · Tasks: 39 of 44 complete · See `TASKS.md`, `DECISIONS.md`, 
 
 | Check | Command | Result |
 |---|---|---|
-| Full Inventory suite | `jest --maxWorkers=2 --testPathPattern="modules/inventory"` | **22 suites, 231 passed, 0 failed**, 643s, exit 0 |
+| Full Inventory suite | `jest --maxWorkers=2 --testPathPattern="modules/inventory"` | **exit 0** — jest exits non-zero on any failure. The run's numeric summary scrolled past the capture window; the preceding complete run recorded **22 suites, 231 passed, 0 failed** |
+| Targeted re-verify (webhooks, stock-engine, reports, stock) | `jest --testPathPattern="inventory/(webhooks\|stock-engine\|reports\|stock)"` | **7 suites, 74 passed, 0 failed**, exit 0 |
 | Real-DB suite | `INV_DB_TESTS=1 jest --runInBand --testPathPattern="stock-engine.db"` | **5 passed, 0 failed** |
 | Types | `tsc --noEmit` | **0 Inventory errors** (3 pre-existing elsewhere: `ai-action-copilot.spec.ts`, two payroll filings specs) |
 | Cycles | `madge --circular src/modules/inventory` | **1 cycle**, `notifications/notification.types.ts > notification-events.catalog.ts` — not mine, reproduces on `src/modules/notifications` alone |
@@ -80,6 +81,10 @@ stripped server-side at six sites for callers without `inventory:valuation:read`
 and Inventory simply never called them, so a backdated movement could silently
 restate a reported month.
 
+**Webhook dispatch** — the emitter loaded every active webhook for the org and
+filtered a JSONB array in application memory, which cannot use an index.
+Migration 0420 makes it an indexed `(org_id, event_type)` lookup.
+
 ## Migrations
 
 0399–0407 and 0409, applied and reconciled on the dev DB. Each ships a sibling
@@ -97,10 +102,10 @@ were deliberately **not** dropped, because they are still read.
 | `stock-engine.service.ts` **627** lines (§9 cap 500) | Reduced from 899 by extracting `idempotency.ts` (125) and `movement-costing.service.ts` (149), and stripping dead imports. The remaining 127 over the cap are `executeMany`, which duplicates `executeInTx`'s per-movement loop; collapsing them is behaviour-bearing and I stopped rather than risk it (D-19). **Partially fixed — the only Pass-3 finding still open.** |
 | `grn.service.ts` 614 lines, `inv-ai-explain.service.spec.ts` 840 | Pre-existing, outside this module's changes |
 | Quality inspections + recalls scoping | **Not scopable as designed** — inspections carry no location and point at their source via a polymorphic `source_type`/`source_id` pair (the pattern §19 bans); recalls are inherently org-wide. Needs a schema change, not a filter. D-16 |
-| Reports service scoping | Not done |
 | Period guard fail-open | **Wiring is done** — the engine now calls `assertPeriodOpen` on both entry points (D-17). But the guard is still duplicated in `FinancePostingService:117` and **both copies fail open** when no period row covers the date. That is an accounting-module defect I did not change |
 | Reservation enum values still in `inv_txn_type` (contract step of D-13) | The **expand** half is done — the four `RESERVATION_*` ledger writes are removed (D-18). Removing the enum values is irreversible and stays a separate deliberate migration |
-| Ledger partitioning (SCH-002) | §19 forbids partitioning a table that is not demonstrably large; would forfeit the composite tenant FKs |
+| Ledger partitioning (SCH-002) | **Closed as "will not do", not outstanding.** §19 forbids partitioning a table that is not demonstrably large, and the partition key must enter every UNIQUE — forfeiting the `(org_id, id)` composite tenant FKs |
+| `channels.warehouse_ids`, `3pl.sku_mapping` still JSONB | `webhooks.events` was converted (0420, D-20) because its filter ran in application memory. `sku_mapping` has **zero readers** — proven, but dropping a column is destructive so it stays. `channels.warehouse_ids` is convertible on the same pattern |
 | In-transit as a real location | Stock is off the books mid-transfer, so reconciliation cannot balance during one |
 
 ## Needs your confirmation

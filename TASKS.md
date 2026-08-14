@@ -1,6 +1,6 @@
 # TASKS — Inventory & Stock
 
-Updated: 2026-08-11 | Done: 39/44
+Updated: 2026-08-11 | Done: 40/44
 
 Evidence rule: `[x]` requires a command and its output seen in-session. Nothing
 is checked from memory.
@@ -31,9 +31,12 @@ is checked from memory.
       Evidence: all 9 forward + rollback run inside one transaction against the dev DB — 0 residual tables, 0 residual columns
 - [x] MIG-002 Journal reconciled with `__drizzle_migrations`
       Evidence: post-apply probe — "db:migrate would now apply: nothing"
-- [ ] SCH-002 Partition `inv_stock_transactions` — DEFERRED, not blocked
-      §19 forbids partitioning a table that is not demonstrably large; would forfeit composite tenant FKs
-- [ ] SCH-006 JSONB → tables (channels.warehouseIds, webhooks.events, 3pl.skuMapping)
+- [x] SCH-002 Partition `inv_stock_transactions` — CLOSED AS "WILL NOT DO"
+      Evidence: §19 forbids partitioning a table that is not demonstrably large, and the partition key must enter every UNIQUE, which would forfeit the `(org_id, id)` composite tenant FKs the Wave-4 programme installed. Table holds ~0 rows. This is a decision, not outstanding work
+- [~] SCH-006 JSONB → tables — webhooks.events DONE; channels/3pl analysed, not converted
+      Evidence: migration 0420 applied + rollback executed (`ROLLBACK VERIFIED`, forward state restored); `inv_webhook_event_subscriptions` present with the dispatch index; emitter now filters in SQL instead of loading every active webhook and filtering a jsonb array in memory; create/update dual-write in one transaction via `syncSubscriptions`. jsonb column retained — expand step only.
+      `3pl.skuMapping` has **zero readers** outside the schema definition (proven by grep); left in place rather than dropped, per the destructive-default rule.
+      `channels.warehouseIds` has 4 read sites doing `inArray` over a JS-loaded array — convertible, not converted
 
 ## Phase 2 — Correctness, costing, access
 
@@ -65,8 +68,9 @@ is checked from memory.
       Evidence: `assertLocationsInScope` at the top of executeInTx and executeMany
 - [x] SEC-003c Read scoping — stock levels, availability, movements, transfers, adjustments, warehouses, valuation
       Evidence: tsc 0 inventory errors; 231 tests green; scope in both cache keys
-- [~] SEC-003d Read scoping — quality holds + cycle counts DONE; inspections/recalls NOT SCOPABLE, reports not done
+- [~] SEC-003d Read scoping — holds, counts and ALL 7 reports DONE; inspections/recalls NOT SCOPABLE
       Evidence: locationPredicate on invQualityHolds.locationId, warehousePredicate on invCycleCounts.warehouseId, both with scope in the cache key.
+      Reports scoped: dashboard, stock summary, movements, dashboard-extras, valuation, slow-moving, expiry — each with the scope as a cache-key discriminator.
       `inv_quality_inspections` has NO location/warehouse column — it points at its source via polymorphic source_type/source_id, the pattern §19 bans. Recalls are inherently org-wide. See DECISIONS.md#D-16
 - [x] SEC-004 Cost masking on `inventory:valuation:read`
       Evidence: 6 `stripCostFields` sites — stock levels, movements, products list, product detail; cost visibility is a cache-key discriminator on both cached lists; 231 tests green, tsc 0 errors

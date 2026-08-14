@@ -308,3 +308,21 @@ The remaining 127 lines over the cap are `executeMany`, which duplicates
 refactor, and two regex-driven surgeries already went wrong in this session.
 **Default taken: the reversible one — stop, verify green, record the remainder.**
 Reversal cost: nil.
+
+## D-20 — SCH-006 done for webhooks only, and as expand-only
+`inv_webhooks.events` was the one JSONB array with a real cost: the emitter loaded
+every active webhook for the org and filtered the array in application memory,
+which cannot use an index. Migration 0420 adds
+`inv_webhook_event_subscriptions` with an `(org_id, event_type)` dispatch index,
+backfills from the column, and the emitter now joins. **The jsonb column is
+retained and still written** — expand step only, so the change is reversible; the
+contract step (dropping it) is separate.
+
+`inv_3pl_connections.sku_mapping` has **zero readers** outside the schema
+definition. The protocol default is "assume used, prove non-reference before
+deleting" — I proved non-reference but still did not drop it, because dropping a
+column is destructive and the reversible action is to leave it and report.
+
+`inv_channels.warehouse_ids` has four read sites doing `inArray` over a
+JS-loaded array. Convertible on the same pattern; not converted. Reversal cost of
+what was done: low (0420.down verified).
