@@ -39,7 +39,8 @@ export async function signInWithMagicToken(
 ): Promise<boolean> {
   if (!magicToken) return false;
   clearBackendTokenCache();
-  if (await attemptCredentialsSignIn(magicToken)) return true;
+  // Do not retry credentials sign-in with the same token: magic-link verify
+  // consumes it on first success, so a second attempt always fails.
   return attemptCredentialsSignIn(magicToken);
 }
 
