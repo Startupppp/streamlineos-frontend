@@ -463,6 +463,120 @@ programme hand-writes a migration without a snapshot.
 | App boot | starts clean; `/cron/build-due-sweep` and `/cron/notification-time-sweeps` mapped and returning 200 |
 | `db:generate` | "No schema changes, nothing to migrate" |
 
+## Fourth pass (2026-08-14) — two gates that were built without keys
+
+Continuing after the tracker hit 53/53, I audited whether the backend work is actually
+*reachable*. Two things were not, and both were my own doing.
+
+### SCH-003 write cutover — a live regression I had introduced
+
+I cut the READ path over to `notification_preference_rules` and never cut the WRITE path.
+`resolvePrefs` builds mutes, module preferences and category switches **exclusively** from
+the rules table, while the preference centre still wrote only the JSONB columns. The result:
+a user muting a notification would see the toggle save and keep receiving it, indefinitely.
+
+Both tables are empty on this database (0 rows each), so nothing was corrupted — but the
+first user to mute anything would have hit it.
+
+`update()` now projects `categories`, `modulePreferences` and `eventPreferences` into rule
+rows. OFF is stored; ON **deletes** the row, because absence means "fall through to the
+defaults" — persisting a default would freeze that user against any later change to it. An
+explicit per-channel map wins over a bare `muted`, and unknown channel keys in the free-form
+JSONB are skipped rather than becoming rows routing will never match.
+
+Proven against the live table (rolled back): 6 rule rows written, one per channel, all OFF,
+and re-applying the same projection leaves 6 — idempotent. 6 specs cover the projection,
+including that ON deletes rather than inserts, and that an unrelated field (`soundEnabled`)
+writes no rules at all. JSONB is still written: this is the expand half.
+
+### COMP-004 / COMP-005 — the approval gates could never be opened
+
+I built provider-approval gates for WhatsApp and SMS, then left no way to record an
+approval. `approval_status` defaults to `NOT_REQUIRED`, no endpoint wrote it, and both
+providers refuse anything that is not `APPROVED` — so every WhatsApp and SMS send would
+have failed forever, and the "fix" would have looked like a regression.
+
+Added end to end:
+- `PATCH /notification-templates/:templateId/approval`, gated on the existing
+  `notifications:templates:manage`, 404 on a cross-tenant id rather than 403.
+- Zod refinement rejecting `APPROVED` without a `providerTemplateName` — an approved
+  template with nothing to send under otherwise fails per message instead of once, here.
+- `useSetTemplateApproval` hook and `TemplateApprovalDialog`, labelled "DLT template ID"
+  for SMS and "Provider template name" for WhatsApp.
+- A **"Not approved" badge** on the template card, because a template can read *Active* and
+  still send nothing — the card was previously lying about that.
+
+### Verification
+
+| Check | Result |
+|---|---|
+| Backend `tsc --noEmit` | exit 0, 0 errors |
+| Frontend `tsc --noEmit` | exit 0 |
+| `madge --circular` backend | ✔ zero |
+| `madge --circular` frontend | ✔ zero |
+| Notifications specs | 9 suites / 57 pass, plus 6 new write-cutover specs |
+| Preference rule projection | verified against the live table, rolled back |
+
+## Fifth pass (2026-08-14) — the pipeline was never delivering anything
+
+The most serious defect of the whole programme, found by continuing to verify after the tracker
+was already green.
+
+**The delivery claim failed for every organization, on every tick.** `notification_queue` is
+claimed with a single `FOR UPDATE SKIP LOCKED` statement (SCH-016). That statement bound JS `Date`
+values into a drizzle `sql` template, which reaches postgres.js where a string is expected and
+dies with `ERR_INVALID_ARG_TYPE`. The claim never returned a row, so **no notification was ever
+actually sent** — everything upstream (dispatch, routing, digests, the new sweeps) worked and
+terminated in a queue that was never drained.
+
+It was invisible for three compounding reasons, each individually reasonable:
+1. `forEachOrg` logs a per-organization failure and continues, so one broken org cannot stop a sweep.
+2. The cron endpoint therefore still returns `200` with a success payload.
+3. Drizzle's error message is only `Failed query: <sql> params: <...>`; the actual reason lives on
+   the error's `cause`, which was not logged.
+
+`forEachOrg` now logs `cause` and the driver error code. That single change turned an undiagnosable
+"Failed query" into `TypeError: ... Received an instance of Date / ERR_INVALID_ARG_TYPE` on the
+first run.
+
+**Proven fixed:** delivery-claim failures **60 → 0** across a boot; `notification_queue` drained to
+**464 DONE with 0 pending or locked**; `notification_deliveries` 465 DELIVERED / 464 SENT — the
+backlog created by the new sweeps was delivered end to end. Four files shared the same pattern and
+were all corrected (`notification-delivery-worker`, `notification-outbox-relay`, `ai-jobs`,
+`payroll/run-lock`).
+
+### I had already found this once, and reverted the fix
+
+In the second pass I diagnosed exactly this, changed the same four files, then **reverted it** after
+a reproduction appeared to disprove it — I tested with postgres.js's own tagged template, which
+serialises `Date` correctly, rather than through drizzle's `sql` inside `.where()`, which does not.
+The reproduction did not exercise the failing path, so it proved nothing, and I trusted it over the
+symptom.
+
+The lesson is specific and worth keeping: **a reproduction that does not go through the real code
+path is not evidence.** The right move was to surface the underlying `cause` first — which is what
+finally resolved it in one step — rather than to reason about serialisation from the outside.
+
+## CRM follow-up coverage gap, found while auditing the cron inventory
+
+Enumerating all 41 `/cron/*` endpoints (the Phase 0 recon's "35" is stale) surfaced
+`crm-tasks-overdue-flush`, which already sweeps overdue CRM tasks — but it reads the `tasks` table
+and emits to the **automation-studio bus**, not the notification engine, so there is no duplicate
+notification.
+
+It did reveal that CRM follow-ups live on **two** tables: `lead_tasks` (against a lead) and `tasks`
+(against a deal or contact). My sweep covered only the first, which would have silently delivered
+about half the reminders — indistinguishable from the feature being broken. Both are now swept.
+
+## Operator documentation
+
+`docs/operations/notification-cron-schedule.md` records what must be scheduled and at what cadence,
+and — more usefully — **what silently breaks if each one is not**. The digest entry is the sharpest
+example: unscheduled, every user who selects a digest receives *nothing at all*, which is strictly
+worse than before the feature existed.
+
+It also documents the 200-with-failures trap above, so the next person does not lose the time I did.
+
 ## Honest limits of this report
 
 - **Three pre-existing spec failures are unrelated to this work and remain failing:**

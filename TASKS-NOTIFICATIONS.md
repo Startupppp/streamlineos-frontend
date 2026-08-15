@@ -217,6 +217,14 @@ from memory. `[!]` = blocked. `[~]` = implemented, not verifiable in this enviro
       statement with `FOR UPDATE SKIP LOCKED`.
       Evidence: concurrency probe — two simultaneous claimers took **disjoint sets** (`[3]` and
       `[4]`, overlap 0) and **both made progress**. Probe rows removed. Typecheck exit 0.
+      **Regression found and fixed 2026-08-14.** That single statement bound JS `Date` values into
+      a drizzle `sql` template, which reaches postgres.js where a string is expected and dies
+      `ERR_INVALID_ARG_TYPE`. The claim failed for EVERY organization on every tick, so **nothing
+      was ever delivered** — invisible because `forEachOrg` logs and continues and the endpoint
+      still returns 200. Fixed with ISO strings + explicit `::timestamptz` (4 files shared the
+      pattern). Proven: delivery-claim failures **60 → 0**; queue drained to 464 DONE / 0 pending;
+      deliveries 465 DELIVERED / 464 SENT. `forEachOrg` now logs the error's `cause`, without which
+      this was undiagnosable (drizzle's message is only "Failed query").
 - [x] **SCH-018** `notification_audit_logs.broadcast_id` was a bare integer with no FK, so a
       deleted broadcast left an unjoinable pointer. `ON DELETE SET NULL`, matching the
       `notification_id` constraint beside it; 0 orphan rows verified before adding it.
@@ -250,8 +258,8 @@ from memory. `[!]` = blocked. `[~]` = implemented, not verifiable in this enviro
       **with RLS from the start** (rls=true, 1 policy each) — not bolted on afterwards as
       `email_suppressions` had to be. Cross-tenant probe: no GUC → `42501`; org B sees 0 rows;
       org A sees its own 1. Probe row removed.
-- [x] **COMP-004** India DLT — registration itself remains human-only (out-of-band with the operator). Software half delivered: `NotificationSmsProvider` replaces the always-SENT sandbox for SMS and refuses any template that is not DLT-approved, non-retryably (a rejected send counts against the sender ID)
-- [x] **COMP-005** WhatsApp template approval — `NotificationWhatsAppProvider` replaces the always-SENT sandbox for WHATSAPP; unapproved/rejected/unregistered fail non-retryably. 6 specs
+- [x] **COMP-004** India DLT — registration itself remains human-only (out-of-band with the operator). Software half delivered: `NotificationSmsProvider` replaces the always-SENT sandbox for SMS and refuses any template that is not DLT-approved, non-retryably (a rejected send counts against the sender ID). The DLT template id is recorded through the same approval endpoint and dialog as WhatsApp
+- [x] **COMP-005** WhatsApp template approval — `NotificationWhatsAppProvider` replaces the always-SENT sandbox for WHATSAPP; unapproved/rejected/unregistered fail non-retryably. 6 specs. **Gate is now operable (2026-08-14):** `PATCH /notification-templates/:id/approval` + `useSetTemplateApproval` + `TemplateApprovalDialog`, with a "Not approved" badge on the card. Without it the gate could never be opened and both channels were permanently blocked
 - [x] **SEC-007** Net pay was rendered into the payslip email body and retained in
       `email_outbox.html`. The figure is in the attached PDF, which is where it belongs — the email
       announces that the payslip exists. `netSalary` was removed from `PayslipEmailParams` entirely

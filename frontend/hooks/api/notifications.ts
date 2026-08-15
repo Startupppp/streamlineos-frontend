@@ -10,6 +10,7 @@ import type {
   UnreadCount,
   NotificationListParams,
   NotificationTemplate,
+  SetTemplateApprovalInput,
   CreateTemplateInput,
   UpdateTemplateInput,
   TemplatePreviewResult,
@@ -408,6 +409,24 @@ export const useUpdateNotificationTemplate = () => {
     mutationKey: ["notifications", "templates", "update"],
     mutationFn: ({ id, ...dto }) =>
       apiClient.patch<NotificationTemplate>(`/notification-templates/${id}`, dto),
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.templates() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.template(vars.id) });
+    },
+  });
+};
+
+/**
+ * COMP-004 / COMP-005. Records the provider's approval decision for a template.
+ * Without this the WhatsApp and SMS gates can never be opened from the product —
+ * `approvalStatus` defaults to NOT_REQUIRED and every send is refused.
+ */
+export const useSetTemplateApproval = () => {
+  const queryClient = useQueryClient();
+  return useMutation<NotificationTemplate, Error, { id: number } & SetTemplateApprovalInput>({
+    mutationKey: ["notifications", "templates", "approval"],
+    mutationFn: ({ id, ...dto }) =>
+      apiClient.patch<NotificationTemplate>(`/notification-templates/${id}/approval`, dto),
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.templates() });
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.template(vars.id) });

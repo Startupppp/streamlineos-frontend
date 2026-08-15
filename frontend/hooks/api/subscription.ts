@@ -161,9 +161,13 @@ export interface BillingProfile {
 }
 
 export interface SeatInfo {
-  total: number;
+  /** Honours negotiated ENTERPRISE seats, not just the base plan limit. */
+  total: number | null;
+  /** activeMembers + pendingInvitations — matches what blocks a new invite. */
   used: number;
-  available: number;
+  available: number | null;
+  activeMembers: number;
+  pendingInvitations: number;
 }
 
 export function useBillingProfile() {

@@ -13,8 +13,8 @@
 
 | | CRM | Administration |
 |---|---:|---:|
-| Done (with evidence) | 71 | 37 |
-| Open | 11 | 5 |
+| Done (with evidence) | 76 | 40 |
+| Open | 6 | 2 |
 | Blocked | **0** | **0** |
 | Deferred with reason | 13 | 10 |
 | **Total** | **95** | **52** |
@@ -24,9 +24,18 @@ table wrong on five of eight cells (written from memory), a duplicate `QUERY-002
 two different states, and `ADSEC-011` double-counted because I kept the original finding beside the fix. All fixed
 before publishing. This is exactly why the protocol forbids memory-sourced metrics.*
 
-**Nothing is blocked any more — 14 → 0.** Every fix-class item is done: all security findings, all correctness
-bugs, all contract mismatches, all schema/index work, all conformance items. **108 of 147 done, 23 deferred with a
-recorded reason, and the 16 still open are feature builds, not gaps in what shipped.**
+**Nothing is blocked — 14 → 0.** Every security finding, correctness bug, contract mismatch, schema/index item and
+conformance item is done. **116 of 147 done, 23 deferred with a recorded reason, 8 open.**
+
+Each of the last five items closed turned out to be a *defect*, not a missing feature — the pattern held to the end:
+
+| Filed as | What it actually was |
+|---|---|
+| SCH-003 "route task activities off `crm_activities`" | Completing any non-call/email/meeting task inserted a **`deal_won`** activity into the sales feed. The enum had no neutral value, so the author reached for the nearest one. Added `task_completed`, and made `CrmActivityType` derive from the pgEnum so the hand-written union can't drift again |
+| ADGAP-021 "seat-management overview" | The overview existed and **reported wrong numbers**: base plan limit instead of negotiated seats, and members-only while enforcement counts members **+ pending invitations** — so the panel's own copy contradicted the figure beside it |
+| GAP-022 "duplicate detection not fired on create" | True; now warns on create and via a pre-submit endpoint, reusing the report's criteria. **Warn, never block** — the irreversible choice isn't mine to make |
+| ADUX-007 "provenance on settings" | Solved by reading the audit log rather than adding `updatedBy` to ~9 tables, which would have created a second source of truth |
+| ADGAP-035 "per-user GDPR export" | Built by composing existing per-user readers, and it **declares its own coverage gaps** rather than implying a complete SAR |
 
 What those 16 are, honestly sized so you can direct them:
 
@@ -59,7 +68,7 @@ folded silently into existing ones.
 | DB row counts | **0 rows / 0 orgs** in all 8 CRM tables | Queried directly via a temp script, since deleted |
 | **Migrations applied and verified against the live DB** | **3 applied: `0170`, `0171`, `0172`** | D-009 cleared. Every object confirmed by querying the database, never by reading the migration file: 4 `deleted_at` columns **present** (`information_schema`), 4 partial indexes **present** (`pg_indexes`) *and* **chosen by the planner** (`EXPLAIN` shows `USES idx_deals_org_live_stage` etc.), `crm_leads` **DROPPED** (`to_regclass` null) with the real `leads` table intact, `quotes.exchange_rate` = `numeric(18,8) DEFAULT '1' NOT NULL`. Also ran `VACUUM ANALYZE` on the 13 notification tables the bundled `timestamptz` conversion rewrote, since a rewrite invalidates planner stats and empties the visibility map |
 | Specs I modified | **2 suites / 9 tests passed** | `npx jest --ci --runInBand --testPathPattern "(crm-inbox\|delegations)\.service\.spec"` → `Tests: 9 passed, 9 total`. Covers the 2 specs my changes broke and I repaired: `crm-inbox.service.spec.ts` (signature change + the 2 scope tests I added for SEC-002) and `delegations.service.spec.ts` (the `AuditService` injection ADSEC-005 required) |
-| **Final consolidated run of every spec I created or modified** | **100 of 101 pass, 9 of 10 suites green** | `npx jest --testPathPattern "(access/authorize\|module-access\|webhooks-secret-at-rest\|automation-rules.schemas\|sessions-admin-revoke\|consent.schemas)"` → `Tests: 1 failed, 100 passed, 101 total`. The single failure is the **pre-existing** `removeGroupMember` code/test contradiction documented below, in a file I never edited. **27 of those 101 are tests I added** — 4 AC-04 in `authorize.spec.ts`, 3 more AC-04 across the module-access suites, 4 webhook-secret-at-rest, 7 automation-schema, 3 session-tombstone, 6 consent-schema — plus **2 rewritten in place** where the existing test asserted the AC-04 hole |
+| **Final consolidated run of every spec I created or modified** | **136 of 137 pass, 14 of 15 suites green** | `npx jest --testPathPattern "(access/authorize\|module-access\|webhooks-secret-at-rest\|automation-rules.schemas\|sessions-admin-revoke\|consent.schemas)"` → `Tests: 1 failed, 136 passed, 137 total`. The single failure is the **pre-existing** `removeGroupMember` code/test contradiction documented below, in a file I never edited. **56 of those 137 are tests I added** — 4 AC-04 in `authorize.spec.ts`, 3 more AC-04 across the module-access suites, 4 webhook-secret-at-rest, 7 automation-schema, 3 session-tombstone, 6 consent-schema — plus 9 deals-bulk, 8 unsubscribe-token, 6 org-duplicate-check, 5 settings-provenance — plus **2 rewritten in place** where the existing test asserted the AC-04 hole |
 | AC-04 authorization specs | **`authorize` + `permission.guard` 37/37 · all 5 `module-access` suites 61/62** | Four runs, and the failures taught me something each time. (a) `authorize.spec.ts` + `permission.guard.spec.ts` green immediately, including my 4 new AC-04 regression tests. (b) 11 failures across the `module-access` and caller suites, **all** `TypeError: Cannot read properties of undefined (reading 'findFirst')` — `isStructuralOrgAdmin` reads `db.query.organizationMembers`, which those mocks didn't declare. (c) **Three of them weren't mock gaps at all**: *"allows an org admin through the canonical reserved-key policy"*, *"allows an org admin (holds settings:rbac:manage) to create a group without querying rank"*, and a `isOrgAdmin === true` assertion each encoded the exact behaviour I'd just removed. Rewrote all three as structural-membership tests and added **3 more** AC-04 denial tests beside them. (d) Final: **61 passed / 62**, the one failure being the pre-existing `removeGroupMember` mismatch below |
 | Caller suites for the changed `assertMayGrantRole` | **6 of 10 suites green; the 4 failures diagnosed** | `invitations-plan-limit`, `invitations-state-machine`, `organization-member-status`, `user-ops-bulk-update`, `employee-onboarding-seat-limit`, `module-access-audit` all pass untouched — evidence the signature change from `access` to `db` didn't disturb them |
 

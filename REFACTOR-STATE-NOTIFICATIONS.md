@@ -516,3 +516,25 @@ an external scheduler or their events never fire. At least hourly — the SLA-br
 Nothing committed by me. Note that another session committed part of this work mid-programme
 (`bfc15aa2`, `8f4a2c06`) against the standing no-commit decision.
 
+## 2026-08-14 — reachability pass
+
+After the tracker hit 53/53 I checked whether the backend work is actually *reachable* from the
+product. Two things were not, both mine:
+
+- **SCH-003 write cutover.** I had cut the READ path over to `notification_preference_rules` and
+  left the WRITE path on JSONB, so a user muting a notification would have seen the toggle save
+  and kept receiving it. `update()` now projects categories/modules/events into rule rows (OFF
+  stored, ON deleted). Both tables were empty, so no data was affected. 6 specs; projection
+  verified against the live table and rolled back.
+- **COMP-004/005 approval gates could never be opened.** No endpoint wrote `approval_status`, so
+  every WhatsApp and SMS send would have been refused forever. Added
+  `PATCH /notification-templates/:id/approval` (RBAC-gated, 404 cross-tenant, rejects APPROVED
+  without a provider template name), the `useSetTemplateApproval` hook, `TemplateApprovalDialog`,
+  and a "Not approved" badge — a template could previously read *Active* while sending nothing.
+
+Verified: both repos typecheck exit 0, madge zero in both, 9 notification suites / 57 tests pass,
+app boots, the approval route maps and returns 401 unauthenticated, sweeps still healthy.
+
+Lesson worth keeping: "the task is closed" and "a user can reach it" are different claims. The
+tracker was at 53/53 while two features were unreachable.
+

@@ -121,9 +121,26 @@ export interface NotificationTemplate {
   variables: string[];
   version: number;
   isActive: boolean;
+  /**
+   * COMP-004 / COMP-005. WhatsApp and SMS refuse to send a template the provider has not
+   * approved, so this is the only thing that makes those channels usable. Approval itself
+   * happens out-of-band (Meta, or an Indian DLT operator); we record the outcome.
+   */
+  approvalStatus: TemplateApprovalStatus;
+  providerTemplateName: string | null;
+  approvalCheckedAt: Date | string | null;
+  approvalRejectionReason: string | null;
   createdBy: string;
   createdAt: Date | string;
   updatedAt: Date | string;
+}
+
+export type TemplateApprovalStatus = "NOT_REQUIRED" | "PENDING" | "APPROVED" | "REJECTED";
+
+export interface SetTemplateApprovalInput {
+  approvalStatus: TemplateApprovalStatus;
+  providerTemplateName?: string | null;
+  approvalRejectionReason?: string | null;
 }
 
 export interface CreateTemplateInput {
