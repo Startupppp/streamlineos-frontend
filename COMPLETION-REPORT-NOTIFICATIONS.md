@@ -189,9 +189,14 @@ point of running them.
 2. **`#D-5` — retention is the one irreversible decision here.** 90-day body purge destroys data.
    Nothing runs until an external scheduler is pointed at `/cron/notifications-retention-sweep`.
 3. **`#D-7` — chat push previews are gone.** Users will notice. Reversible by restoring a field.
-4. **`#SNAP-001` — the Drizzle snapshot chain is stale** for `0408`, `0410`–`0415`, `0417`. The next
-   `db:generate` will re-propose applied work. I did not hand-craft snapshot JSON because a subtly
-   wrong one bakes the error in.
+4. ~~`#SNAP-001` — Drizzle snapshot chain stale.~~ **Resolved 2026-08-13/14.** `db:generate` now
+   reports "No schema changes"; journal and DB agree (0 pending). Expect it to recur whenever a
+   programme hand-writes a migration without a snapshot — the reconciliation procedure is in the
+   third-pass section.
+5. **Scheduling — nothing below runs until an external scheduler calls it.** Five endpoints added by
+   this programme have never been scheduled anywhere; see
+   `docs/operations/notification-cron-schedule.md`. Most urgent: with `notification-digest-flush`
+   unscheduled, every user who selects a digest receives **nothing at all**.
 
 ---
 
