@@ -118,9 +118,9 @@ function PreviewPanel() {
                 <span className="text-muted-foreground">No territory matched this lead</span>
               </div>
             )}
-            {preview.data.assignedReps.length > 0 && (
+            {preview.data.assignedRepNames.length > 0 && (
               <div className="text-muted-foreground">
-                Assigned reps: {preview.data.assignedReps.join(", ")}
+                Assigned reps: {preview.data.assignedRepNames.join(", ")}
               </div>
             )}
           </div>

@@ -84,9 +84,13 @@ export function SeatsBlock() {
     );
   }
 
+  // `total`/`available` are null on an unlimited plan; treat that as "no cap"
+  // rather than coercing to 0, which would render 100% utilisation.
   const total = seatInfo?.total ?? 0;
   const used = seatInfo?.used ?? 0;
   const available = seatInfo?.available ?? 0;
+  const activeMembers = seatInfo?.activeMembers ?? 0;
+  const pendingInvitations = seatInfo?.pendingInvitations ?? 0;
   const utilizationPercent = total > 0 ? Math.round((used / total) * 100) : 0;
   const planName = subscriptionData?.subscription?.plan ?? "STARTER";
   const isEnterprise = planName === "ENTERPRISE";
@@ -112,7 +116,11 @@ export function SeatsBlock() {
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-xs text-muted-foreground">
-            {used} of {total} seats in use · {available} seat{available !== 1 ? "s" : ""} available
+            {used} of {total} seats in use · {activeMembers} member{activeMembers !== 1 ? "s" : ""}
+            {pendingInvitations > 0
+              ? ` · ${pendingInvitations} pending invitation${pendingInvitations !== 1 ? "s" : ""}`
+              : ""}{" "}
+            · {available} seat{available !== 1 ? "s" : ""} available
           </span>
           <span className={cn("text-xs font-semibold", utilizationColor(utilizationPercent))}>
             {utilizationPercent}%

@@ -2,7 +2,6 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
-import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
 import { queryKeys } from "@/lib/query-keys";
@@ -162,9 +161,13 @@ export interface BillingProfile {
 }
 
 export interface SeatInfo {
-  total: number;
+  /** Honours negotiated ENTERPRISE seats, not just the base plan limit. */
+  total: number | null;
+  /** activeMembers + pendingInvitations — matches what blocks a new invite. */
   used: number;
-  available: number;
+  available: number | null;
+  activeMembers: number;
+  pendingInvitations: number;
 }
 
 export function useBillingProfile() {
@@ -185,10 +188,7 @@ export function useUpdateBillingProfile() {
       apiClient.patch<BillingProfile>("/billing/profile", data),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.billing.profile() });
-      toast.success("Billing profile updated");
     },
-    onError: (e: Error) =>
-      toast.error(e.message),
   });
 }
 

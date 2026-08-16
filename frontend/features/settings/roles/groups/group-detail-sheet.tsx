@@ -210,7 +210,7 @@ export function GroupDetailSheet({ group, open, onOpenChange }: GroupDetailSheet
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="members" className="flex min-h-0 flex-1 flex-col gap-3 px-5 pb-5 pt-3">
+          <TabsContent value="members" className="gap-3 px-5 pb-5 pt-3">
             {!!groupId && <MemberSearch groupId={groupId} existingIds={memberUserIds} />}
             <ScrollArea className="flex-1">
               {membersLoading ? (
@@ -261,7 +261,7 @@ export function GroupDetailSheet({ group, open, onOpenChange }: GroupDetailSheet
             </ScrollArea>
           </TabsContent>
 
-          <TabsContent value="roles" className="flex min-h-0 flex-1 flex-col gap-3 px-5 pb-5 pt-3">
+          <TabsContent value="roles" className="gap-3 px-5 pb-5 pt-3">
             {!!groupId && <RoleSearch groupId={groupId} existingIds={roleIds} />}
             <ScrollArea className="flex-1">
               {rolesLoading ? (

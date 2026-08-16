@@ -4,6 +4,11 @@ export const metadata = {
   title: "All Work | Projects",
 };
 
-export default function AllWorkRoute() {
-  return <AllWorkPage />;
+interface Props {
+  params: Promise<{ pmWorkspaceId: string }>;
+}
+
+export default async function AllWorkRoute({ params }: Props) {
+  const { pmWorkspaceId } = await params;
+  return <AllWorkPage pmWorkspaceId={pmWorkspaceId} />;
 }

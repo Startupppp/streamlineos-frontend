@@ -473,3 +473,68 @@ immediate silent outage of every transactional email.
 - Per-type registry cross-check (declared-but-never-emitted, emitted-but-undeclared)
 - Load measurement of the unread-count query at realistic row counts (3 rows today proves nothing)
 - Ably channel/capability re-verification — deferred to the Access program which owns AC-02
+
+## 2026-08-12 — closing pass
+
+All work items are closed except those held by an explicit decision or a hard blocker.
+
+- **PIPE-008 / PIPE-004** digest queue wired, cron endpoint live, coalescing proven on Neon.
+- **SCH-017** migration `0430`; audience reads/writes cut over to `broadcast_audience_targets`.
+  JSONB column retained — the contract step is a separate decision.
+- **COMP-005** `NotificationWhatsAppProvider` enforces template approval before any send.
+- **RT-007** message bodies removed from Ably payloads.
+- Fixed a type-only import cycle I introduced with REG-005; `madge --circular` is back to zero.
+
+Still open, each by decision rather than omission: **REG-003** (77 declared-but-unemitted events —
+held as the Phase 2 spec), **SCH-004** (partitioning, deferred by D-2 until 50M rows),
+**SCH-014** (blocked by SEQ-001), **COMP-004** (India DLT, human-only), **SNAP-001** (Drizzle
+snapshot chain stale — `db:generate` will re-propose applied work until it is rebuilt).
+
+Nothing committed; working tree only.
+
+## 2026-08-13 — programme closed
+
+`TASKS-NOTIFICATIONS.md`: **53 done, 0 open, 0 partial, 0 blocked.**
+
+Closed in this pass: PIPE-010's circuit breaker (per org+channel, half-open probe, 8 specs),
+SCH-012's contract step (`0432` drops `quiet_hours_timezone`), SCH-014, SNAP-001, COMP-004's
+software half, and REG-003 at the scope you set — 9 time-derived events shipped and **proven
+emitting** (39 real notification rows from a live sweep). SCH-004 closed as your decision to keep
+the 50M-row trigger.
+
+Seven time-derived events are deliberately unshipped; each reason is in the completion report
+(no recipient column, no table, or an already-sending service). The 59 event-driven keys remain
+SEND-BYPASS work by decision.
+
+Verification: backend and frontend typecheck exit 0, madge zero, 22 of 23 affected spec suites pass
+(the 23rd is a pre-existing `chat-channel-members` failure on files this programme never touched),
+app boots with both new cron routes mapped, `db:generate` reports no schema changes.
+
+**Operational note:** `/cron/notification-time-sweeps` and `/cron/build-due-sweep` must be pointed at
+an external scheduler or their events never fire. At least hourly — the SLA-breach window is one hour.
+
+Nothing committed by me. Note that another session committed part of this work mid-programme
+(`bfc15aa2`, `8f4a2c06`) against the standing no-commit decision.
+
+## 2026-08-14 — reachability pass
+
+After the tracker hit 53/53 I checked whether the backend work is actually *reachable* from the
+product. Two things were not, both mine:
+
+- **SCH-003 write cutover.** I had cut the READ path over to `notification_preference_rules` and
+  left the WRITE path on JSONB, so a user muting a notification would have seen the toggle save
+  and kept receiving it. `update()` now projects categories/modules/events into rule rows (OFF
+  stored, ON deleted). Both tables were empty, so no data was affected. 6 specs; projection
+  verified against the live table and rolled back.
+- **COMP-004/005 approval gates could never be opened.** No endpoint wrote `approval_status`, so
+  every WhatsApp and SMS send would have been refused forever. Added
+  `PATCH /notification-templates/:id/approval` (RBAC-gated, 404 cross-tenant, rejects APPROVED
+  without a provider template name), the `useSetTemplateApproval` hook, `TemplateApprovalDialog`,
+  and a "Not approved" badge — a template could previously read *Active* while sending nothing.
+
+Verified: both repos typecheck exit 0, madge zero in both, 9 notification suites / 57 tests pass,
+app boots, the approval route maps and returns 401 unauthenticated, sweeps still healthy.
+
+Lesson worth keeping: "the task is closed" and "a user can reach it" are different claims. The
+tracker was at 53/53 while two features were unreachable.
+

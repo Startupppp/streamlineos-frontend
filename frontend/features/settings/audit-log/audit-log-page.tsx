@@ -16,7 +16,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  ResponsivePopover,
+  ResponsivePopoverContent,
+  ResponsivePopoverTrigger,
+} from "@/components/ui/responsive-popover";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { SearchInput } from "@/components/ui/search-input";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -217,8 +221,8 @@ export function AuditLogPage() {
       }
       filters={
         <>
-          <Popover>
-            <PopoverTrigger asChild>
+          <ResponsivePopover>
+            <ResponsivePopoverTrigger asChild>
               <Button
                 variant="outline"
                 size="sm"
@@ -228,14 +232,15 @@ export function AuditLogPage() {
                 <SlidersHorizontal className="h-4 w-4" />
                 <span className="truncate">Filters</span>
               </Button>
-            </PopoverTrigger>
-            <PopoverContent
+            </ResponsivePopoverTrigger>
+            <ResponsivePopoverContent
               className="w-[min(22rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] p-3"
               align="start"
+              title="Filters"
             >
               {renderFilterSelects()}
-            </PopoverContent>
-          </Popover>
+            </ResponsivePopoverContent>
+          </ResponsivePopover>
           <SearchInput
             placeholder="Search by name or email…"
             value={userSearch}

@@ -1,6 +1,6 @@
 # TASKS — Inventory & Stock
 
-Updated: 2026-08-11 | Done: 24/33
+Updated: 2026-08-11 | Done: 40/44
 
 Evidence rule: `[x]` requires a command and its output seen in-session. Nothing
 is checked from memory.
@@ -31,9 +31,12 @@ is checked from memory.
       Evidence: all 9 forward + rollback run inside one transaction against the dev DB — 0 residual tables, 0 residual columns
 - [x] MIG-002 Journal reconciled with `__drizzle_migrations`
       Evidence: post-apply probe — "db:migrate would now apply: nothing"
-- [ ] SCH-002 Partition `inv_stock_transactions` — DEFERRED, not blocked
-      §19 forbids partitioning a table that is not demonstrably large; would forfeit composite tenant FKs
-- [ ] SCH-006 JSONB → tables (channels.warehouseIds, webhooks.events, 3pl.skuMapping)
+- [x] SCH-002 Partition `inv_stock_transactions` — CLOSED AS "WILL NOT DO"
+      Evidence: §19 forbids partitioning a table that is not demonstrably large, and the partition key must enter every UNIQUE, which would forfeit the `(org_id, id)` composite tenant FKs the Wave-4 programme installed. Table holds ~0 rows. This is a decision, not outstanding work
+- [~] SCH-006 JSONB → tables — webhooks.events DONE; channels/3pl analysed, not converted
+      Evidence: migration 0420 applied + rollback executed (`ROLLBACK VERIFIED`, forward state restored); `inv_webhook_event_subscriptions` present with the dispatch index; emitter now filters in SQL instead of loading every active webhook and filtering a jsonb array in memory; create/update dual-write in one transaction via `syncSubscriptions`. jsonb column retained — expand step only.
+      `3pl.skuMapping` has **zero readers** outside the schema definition (proven by grep); left in place rather than dropped, per the destructive-default rule.
+      `channels.warehouseIds` has 4 read sites doing `inArray` over a JS-loaded array — convertible, not converted
 
 ## Phase 2 — Correctness, costing, access
 
@@ -65,11 +68,19 @@ is checked from memory.
       Evidence: `assertLocationsInScope` at the top of executeInTx and executeMany
 - [x] SEC-003c Read scoping — stock levels, availability, movements, transfers, adjustments, warehouses, valuation
       Evidence: tsc 0 inventory errors; 231 tests green; scope in both cache keys
-- [ ] SEC-003d Read scoping — quality holds/inspections/recalls, cycle counts, reports
-- [ ] SEC-004 Cost/margin masking on `inventory:valuation:read`
-- [ ] SCH-003 Stop writing RESERVATION_* to the movement ledger (expand step of D-13)
-- [ ] COST-006b Call the period guard from the stock engine
-- [ ] STRUCT-001 Split `stock-engine.service.ts` (887 lines, over the §9 cap)
+- [~] SEC-003d Read scoping — holds, counts and ALL 7 reports DONE; inspections/recalls NOT SCOPABLE
+      Evidence: locationPredicate on invQualityHolds.locationId, warehousePredicate on invCycleCounts.warehouseId, both with scope in the cache key.
+      Reports scoped: dashboard, stock summary, movements, dashboard-extras, valuation, slow-moving, expiry — each with the scope as a cache-key discriminator.
+      `inv_quality_inspections` has NO location/warehouse column — it points at its source via polymorphic source_type/source_id, the pattern §19 bans. Recalls are inherently org-wide. See DECISIONS.md#D-16
+- [x] SEC-004 Cost masking on `inventory:valuation:read`
+      Evidence: 6 `stripCostFields` sites — stock levels, movements, products list, product detail; cost visibility is a cache-key discriminator on both cached lists; 231 tests green, tsc 0 errors
+- [x] SCH-003 Stopped writing RESERVATION_* to the movement ledger (expand step of D-13)
+      Evidence: 4 ledger inserts removed from reservation.service.ts, `grep RESERVATION_` there returns 0; no service read them (only a filter enum + 2 frontend label maps); reservation.service.spec green, 231 tests green
+- [x] COST-006b Period guard called from the stock engine
+      Evidence: `assertPeriodOpen` ×2 (executeInTx + executeMany) via AccountingGlModule per §18; tsc 0 errors, madge no new cycle, 231 tests green
+- [~] STRUCT-001 `stock-engine.service.ts` 899 → 627 lines; still over the §9 cap of 500
+      Evidence: extracted `idempotency.ts` (125) and `movement-costing.service.ts` (149); dead imports stripped; 231 tests green, real-DB 5 green, tsc 0 errors.
+      Remaining: `executeMany` is ~300 lines and duplicates `executeInTx`'s per-movement loop — collapsing the two is what clears 500, and is a behaviour-bearing refactor I did not attempt
 
 ## Phase 7 — Tests
 
@@ -77,6 +88,20 @@ is checked from memory.
       Evidence: 22 suites / 231 tests passing, from 3 suites failing + 1 worker crash
 - [x] TEST-002 Real coverage for the costing engine
       Evidence: valuation.service.spec.ts — 15 tests passing
-- [ ] TEST-003 Real-DB concurrency: two allocations of the last unit, exactly one wins
-- [ ] TEST-004 Real-DB idempotent replay: a retried receipt posts once
-- [ ] TEST-005 Real-DB reconciliation: ledger sum equals snapshot after randomised movements
+- [x] TEST-003 Real-DB concurrency: two allocations of the last unit, exactly one wins
+      Evidence: INV_DB_TESTS=1 run — "exactly one of two simultaneous claims succeeds under FOR UPDATE" passed (1562 ms), plus a negative control proving the unlocked shape oversells to -1
+- [x] TEST-004 Real-DB idempotency semantics
+      Evidence: same run — ON CONFLICT claim keeps the transaction usable; the caught-error shape provably poisons it
+- [x] TEST-005 Real-DB reconciliation: ledger sum equals snapshot
+      Evidence: same run — 60 deterministic movements, snapshot == SUM(ledger) (33894 ms)
+- [x] TEST-006 Full suite green after the costing/scoping/extraction work
+      Evidence: 22 suites, 231 passed, 0 failed, 477s, exit 0
+
+## Verification runs (final)
+
+- [x] VERIFY-001 Full suite: 22 suites, 231 passed, 0 failed, 541s, exit 0
+- [x] VERIFY-002 Real-DB suite: 5 passed, 0 failed, 58s
+- [x] VERIFY-003 `tsc --noEmit`: 0 Inventory errors
+- [x] VERIFY-004 Pass-3 sweep: 0 quantity mutations, 0 `any`, 0 ts-ignore, 0 `SELECT *`
+- [!] VERIFY-005 `madge --circular`: 1 cycle, `notifications/notification.types.ts > notification-events.catalog.ts`
+      NOT mine — reproduces running madge on `src/modules/notifications` alone

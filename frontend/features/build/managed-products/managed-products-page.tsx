@@ -170,7 +170,7 @@ export function ManagedProductsPage() {
 
   function handleDeleteConfirm() {
     if (!deleteTarget) return;
-    deleteProduct.mutate(deleteTarget.managedProductId, {
+    deleteProduct.mutate(deleteTarget.id, {
       onSuccess: () => {
         toast.success("Managed product deleted");
         setDeleteTarget(null);
@@ -236,7 +236,7 @@ export function ManagedProductsPage() {
       className: TABLE_TITLE_CELL,
       cell: (row) => (
         <Link
-          href={`/build/managed-products/${row.managedProductId}`}
+          href={`/build/managed-products/${row.id}`}
           className={cn("font-medium text-foreground hover:text-primary hover:underline", TEXT_ONE_LINE)}
           title={row.name}
         >
@@ -355,7 +355,7 @@ export function ManagedProductsPage() {
               <DataTable
                 data={displayed}
                 columns={columns}
-                getRowKey={(row) => row.managedProductId}
+                getRowKey={(row) => row.id}
                 minWidth="720px"
                 className={PM_FILL_PANEL}
               />

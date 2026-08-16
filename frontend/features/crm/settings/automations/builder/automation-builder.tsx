@@ -143,13 +143,9 @@ export function AutomationBuilder({ automationId }: AutomationBuilderProps) {
       conditions: state.conditions.map((c) => ({ field: c.field, operator: "equals" as const, value: c.value })),
       actions,
       isActive: state.isActive,
-      executionCount: 0,
-      lastRunAt: null,
-      version: 1,
       isDraft: false,
       graph: serializeToGraph(state.nodes),
       cooldownMinutes: 0,
-      createdAt: null,
     };
     if (isNew) {
       createRule.mutate(payload, {

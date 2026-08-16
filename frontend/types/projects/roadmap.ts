@@ -31,6 +31,8 @@ export interface FeedbackPost {
   submittedByName: string | null;
   submittedByEmail: string | null;
   linkedRoadmapItemId: number | null;
+  duplicateOfId: number | null;
+  mergedAt: string | null;
   createdBy: string | null;
   createdAt: string;
   updatedAt: string;

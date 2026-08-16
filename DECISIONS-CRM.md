@@ -115,6 +115,41 @@ strips IPv6 zone ids, blocks `ff00::/8` and `192.0.0.0/24`, returns a typed reje
 reason, my file is deleted, 0 references remain, BE typecheck unchanged at 3 pre-existing errors.
 **Reversal cost:** none. **Lesson:** list the shared utility folder before writing a helper (§0.2).
 
+## D-017 · AC-04 fixed structurally — *owner-confirmed 2026-08-11*
+
+Org-admin standing is now decided **only** by an active `organizationMembers` row that is owner or `ORG_ADMIN`
+(`common/rbac/is-structural-org-admin.ts`), never by holding `settings:manage` / `settings:rbac:manage`.
+**What made this safe:** `access.service.ts:657-658` already returns `allCatalogScopes()` — every key at scope
+`all` — structurally for owners and ORG_ADMIN, so a genuine admin was never relying on the short-circuit. It was
+pure redundancy for real admins and pure escalation surface for everyone else, so `authorize.ts` needed the
+branch **deleted**, not replaced: no new query, no per-request cost.
+**Wider than first scoped:** the original 6 sites were `grantsOrgAdmin` call sites; a 7th, `assert-may-grant-role.ts`,
+used `ORG_ADMIN_PERMISSION_KEY` directly and so was invisible to that grep. It gates **who may grant the
+ORG_ADMIN role**, across invitations, employee onboarding, org membership, settings and users — meaning a custom
+role carrying `settings:manage` could promote others to admin. Its signature now takes `db` instead of `access`;
+all 7 callers updated.
+`grantsOrgAdmin()` is **deleted** rather than deprecated, so the unsafe path is unrepresentable (§20).
+`RESERVED_PROPAGATION_KEYS`/`ORG_ADMIN_PERMISSION_KEY` remain for `rbac.service.ts:314,321`, which legitimately
+asks "may this actor propagate this key", not "is this actor an admin".
+**Reversal cost:** low — one helper, one deleted branch.
+
+## D-018 · Migrations: owner runs `db:generate` — *owner-confirmed*
+
+D-009 stands. The 12 blocked tasks stay blocked until `pnpm -C backend db:generate` is run interactively; I do
+**not** hand-author SQL, which would desync `migrations/meta` and make the next generate re-propose applied work.
+**Read the emitted SQL before `db:migrate`** — 7 schema files staged by concurrent sessions will be bundled in.
+
+## D-019 · SAML SSO and SCIM are out of scope — *owner-confirmed*
+
+ADGAP-011/012 stay as documented enterprise backlog. Each is a program, not a fix, and SSO touches the auth path,
+so it needs its own verification pass. Every other tracker item remains in scope.
+
+## D-020 · Money stays `decimal` — *owner-confirmed*
+
+CLAUDE.md §19 wants integer cents; only `crm_pricebook_entries.unit_price_cents` conforms. Blocked by D-009
+regardless, and the change touches every financial read, write and aggregate. Recorded as a **known deviation**
+rather than half-migrated. **Reversal cost of deferring:** low; of a partial migration: high.
+
 ## D-015 · Violations outside CRM/Administration recorded, not fixed
 
 Over half the soft-delete violations sit in `build/**` and `hr/**`, actively edited by other sessions (7 staged

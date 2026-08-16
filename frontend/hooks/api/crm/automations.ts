@@ -26,8 +26,23 @@ interface TestRuleResult {
   nodes: Array<{ nodeId: string; type: string; result: string }>;
 }
 
-type CreateRuleInput = Omit<CrmAutomationRule, "id">;
-type UpdateRuleInput = { id: number } & Partial<Omit<CrmAutomationRule, "id">>;
+/**
+ * Mirrors the backend write contract, which is now `.strict()`. Deriving this
+ * from the READ type (`Omit<CrmAutomationRule, "id">`) forced callers to send
+ * server-owned fields — `executionCount`, `lastRunAt`, `version`, `createdAt` —
+ * which the API would reject.
+ */
+type CreateRuleInput = {
+  name: string;
+  trigger: string;
+  conditions: CrmAutomationRule["conditions"];
+  actions: CrmAutomationRule["actions"];
+  isActive?: boolean;
+  graph?: CrmAutomationRule["graph"];
+  isDraft?: boolean;
+  cooldownMinutes?: number;
+};
+type UpdateRuleInput = { id: number } & Partial<CreateRuleInput>;
 
 export function useAutomationEvents() {
   const canManage = useCan("crm:automations:manage");

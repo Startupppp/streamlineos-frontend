@@ -10,6 +10,8 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
+import { BadgeCheck } from "lucide-react";
+import { TemplateApprovalDialog } from "@/features/notifications/components/template-approval-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import {
@@ -36,19 +38,28 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 import { cn } from "@/lib/utils";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import {
-  EyeIcon,
-  UserPenIcon,
-  Trash2Icon,
-} from "@animateicons/react/lucide";
+import { EyeIcon, UserPenIcon, Trash2Icon } from "@animateicons/react/lucide";
 import {
   useNotificationTemplates,
   useCreateNotificationTemplate,
@@ -60,8 +71,14 @@ import {
   NOTIFICATION_CATEGORIES,
   NOTIFICATION_CATEGORY_CONFIG,
 } from "@/features/notifications/notification-types";
-import { templateSchema, type TemplateFormValues } from "@/features/notifications/template-schema";
-import type { NotificationTemplate, NotificationChannel } from "@/types/notifications";
+import {
+  templateSchema,
+  type TemplateFormValues,
+} from "@/features/notifications/template-schema";
+import type {
+  NotificationTemplate,
+  NotificationChannel,
+} from "@/types/notifications";
 
 const NO_CATEGORY = "none";
 
@@ -103,9 +120,17 @@ function TemplateSheet({
 
   function handleSubmit(values: TemplateFormValues) {
     const variables = values.variables
-      ? values.variables.split(",").map((v) => v.trim()).filter(Boolean)
+      ? values.variables
+          .split(",")
+          .map((v) => v.trim())
+          .filter(Boolean)
       : [];
-    const payload = { ...values, variables, subject: values.subject || undefined, category: values.category === NO_CATEGORY ? undefined : values.category };
+    const payload = {
+      ...values,
+      variables,
+      subject: values.subject || undefined,
+      category: values.category === NO_CATEGORY ? undefined : values.category,
+    };
 
     if (isEdit && template) {
       update.mutate(
@@ -141,7 +166,11 @@ function TemplateSheet({
         </SheetHeader>
         <SheetBody className="px-6 py-4">
           <Form {...form}>
-            <form id="template-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            <form
+              id="template-form"
+              onSubmit={form.handleSubmit(handleSubmit)}
+              className="space-y-4"
+            >
               <FormField
                 control={form.control}
                 name="templateKey"
@@ -149,7 +178,11 @@ function TemplateSheet({
                   <FormItem>
                     <FormLabel>Template Key</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g. invoice.payment.due" disabled={isEdit} {...field} />
+                      <Input
+                        placeholder="e.g. invoice.payment.due"
+                        disabled={isEdit}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -175,13 +208,20 @@ function TemplateSheet({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Channel</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
                         <FormControl>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           {CHANNELS.map((c) => (
-                            <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                            <SelectItem key={c.value} value={c.value}>
+                              {c.label}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -195,14 +235,21 @@ function TemplateSheet({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Category</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
                         <FormControl>
-                          <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                          <SelectTrigger>
+                            <SelectValue placeholder="None" />
+                          </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           <SelectItem value={NO_CATEGORY}>None</SelectItem>
                           {NOTIFICATION_CATEGORIES.map((cat) => (
-                            <SelectItem key={cat} value={cat}>{NOTIFICATION_CATEGORY_CONFIG[cat].label}</SelectItem>
+                            <SelectItem key={cat} value={cat}>
+                              {NOTIFICATION_CATEGORY_CONFIG[cat].label}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -267,9 +314,14 @@ function TemplateSheet({
                   <FormItem>
                     <FormLabel>Variables</FormLabel>
                     <FormControl>
-                      <Input placeholder="invoiceNumber, amount, dueDate" {...field} />
+                      <Input
+                        placeholder="invoiceNumber, amount, dueDate"
+                        {...field}
+                      />
                     </FormControl>
-                    <p className="text-[11px] text-muted-foreground">Comma-separated variable names.</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      Comma-separated variable names.
+                    </p>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -278,7 +330,12 @@ function TemplateSheet({
           </Form>
         </SheetBody>
         <SheetFooter className="px-6 py-4 justify-end">
-          <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            disabled={isPending}
+          >
             Cancel
           </Button>
           <LoadingButton
@@ -305,12 +362,17 @@ function PreviewDialog({
   onClose: () => void;
 }) {
   const preview = usePreviewTemplate();
-  const [result, setResult] = useState<{ subject: string | null; body: string } | null>(null);
+  const [result, setResult] = useState<{
+    subject: string | null;
+    body: string;
+  } | null>(null);
 
   function handlePreview() {
     if (!template) return;
     const vars: Record<string, string> = {};
-    template.variables.forEach((v) => { vars[v] = `{{${v}}}`; });
+    template.variables.forEach((v) => {
+      vars[v] = `{{${v}}}`;
+    });
     preview.mutate(
       { id: template.id, variables: vars },
       {
@@ -321,7 +383,10 @@ function PreviewDialog({
   }
 
   function handleOpenChange(v: boolean) {
-    if (!v) { setResult(null); onClose(); }
+    if (!v) {
+      setResult(null);
+      onClose();
+    }
   }
 
   return (
@@ -335,12 +400,16 @@ function PreviewDialog({
             <>
               {result.subject && (
                 <div className="space-y-1">
-                  <p className="text-xs font-medium text-muted-foreground uppercase">Subject</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase">
+                    Subject
+                  </p>
                   <p className="text-sm font-medium">{result.subject}</p>
                 </div>
               )}
               <div className="space-y-1">
-                <p className="text-xs font-medium text-muted-foreground uppercase">Body</p>
+                <p className="text-xs font-medium text-muted-foreground uppercase">
+                  Body
+                </p>
                 <div className="rounded-lg border bg-muted/30 p-3 text-sm whitespace-pre-wrap">
                   {result.body}
                 </div>
@@ -349,9 +418,14 @@ function PreviewDialog({
           ) : (
             <div className="rounded-lg border bg-muted/30 p-3">
               <p className="text-xs text-muted-foreground">
-                Variables: <span className="font-mono">{template?.variables.join(", ") || "none"}</span>
+                Variables:{" "}
+                <span className="font-mono">
+                  {template?.variables.join(", ") || "none"}
+                </span>
               </p>
-              <div className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">{template?.body}</div>
+              <div className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">
+                {template?.body}
+              </div>
             </div>
           )}
           <LoadingButton
@@ -369,29 +443,61 @@ function PreviewDialog({
   );
 }
 
-function TemplateRow({ template, idx, onPreview, onEdit, onDelete }: {
+/** Only these channels gate sending on a provider-approved template. */
+function requiresApproval(template: NotificationTemplate): boolean {
+  return template.channel === "WHATSAPP" || template.channel === "SMS";
+}
+
+function TemplateRow({
+  template,
+  idx,
+  onPreview,
+  onEdit,
+  onDelete,
+  onApproval,
+}: {
   template: NotificationTemplate;
   idx: number;
   onPreview: (t: NotificationTemplate) => void;
   onEdit: (t: NotificationTemplate) => void;
   onDelete: (t: NotificationTemplate) => void;
+  onApproval: (t: NotificationTemplate) => void;
 }) {
   const shouldReduceMotion = useReducedMotion();
   const previewAnim = useAnimatedIcon();
   const editAnim = useAnimatedIcon();
   const deleteAnim = useAnimatedIcon();
 
-  const catConfig = template.category ? NOTIFICATION_CATEGORY_CONFIG[template.category] : null;
+  const catConfig = template.category
+    ? NOTIFICATION_CATEGORY_CONFIG[template.category]
+    : null;
 
-  const handlePreviewClick = useCallback(() => onPreview(template), [onPreview, template]);
-  const handleEditClick = useCallback(() => onEdit(template), [onEdit, template]);
-  const handleDeleteClick = useCallback(() => onDelete(template), [onDelete, template]);
+  const handlePreviewClick = useCallback(
+    () => onPreview(template),
+    [onPreview, template],
+  );
+  const handleEditClick = useCallback(
+    () => onEdit(template),
+    [onEdit, template],
+  );
+  const handleDeleteClick = useCallback(
+    () => onDelete(template),
+    [onDelete, template],
+  );
+  const handleApprovalClick = useCallback(
+    () => onApproval(template),
+    [onApproval, template],
+  );
 
   return (
     <motion.div
       initial={shouldReduceMotion ? false : { opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2, delay: Math.min(idx, 10) * 0.04, ease: "easeOut" }}
+      transition={{
+        duration: 0.2,
+        delay: Math.min(idx, 10) * 0.04,
+        ease: "easeOut",
+      }}
       className="group flex items-start gap-3 px-3 py-2.5 hover:bg-muted/30 transition-colors"
     >
       <div className="flex-1 min-w-0">
@@ -401,7 +507,10 @@ function TemplateRow({ template, idx, onPreview, onEdit, onDelete }: {
             {template.channel}
           </Badge>
           {catConfig && (
-            <Badge variant="secondary" className="text-[10px] h-4 px-1.5 shrink-0">
+            <Badge
+              variant="secondary"
+              className="text-[10px] h-4 px-1.5 shrink-0"
+            >
               {catConfig.label}
             </Badge>
           )}
@@ -409,13 +518,30 @@ function TemplateRow({ template, idx, onPreview, onEdit, onDelete }: {
             variant="outline"
             className={cn(
               "text-[10px] h-4 px-1.5 shrink-0",
-              template.isActive ? "border-emerald-300 text-emerald-600" : "text-muted-foreground",
+              template.isActive
+                ? "border-emerald-300 text-emerald-600"
+                : "text-muted-foreground",
             )}
           >
             {template.isActive ? "Active" : "Inactive"}
           </Badge>
+          {/* COMP-004/005: WhatsApp and SMS refuse an unapproved template, so a template
+              that looks Active can still send nothing. Say so on the card. */}
+          {requiresApproval(template) &&
+            template.approvalStatus !== "APPROVED" && (
+              <Badge
+                variant="outline"
+                className="text-[10px] h-4 px-1.5 shrink-0 border-amber-300 text-amber-600 dark:border-amber-500/30 dark:text-amber-300"
+              >
+                {template.approvalStatus === "REJECTED"
+                  ? "Rejected"
+                  : "Not approved"}
+              </Badge>
+            )}
         </div>
-        <p className="mt-0.5 text-[11px] font-mono text-muted-foreground/70">{template.templateKey}</p>
+        <p className="mt-0.5 text-[11px] font-mono text-muted-foreground/70">
+          {template.templateKey}
+        </p>
         {template.subject && (
           <p className="mt-0.5 text-xs text-muted-foreground truncate">
             Subject: {template.subject}
@@ -434,7 +560,11 @@ function TemplateRow({ template, idx, onPreview, onEdit, onDelete }: {
           title="Preview"
           {...previewAnim.hoverHandlers}
         >
-          <EyeIcon ref={previewAnim.iconRef} size={12} className="text-muted-foreground" />
+          <EyeIcon
+            ref={previewAnim.iconRef}
+            size={12}
+            className="text-muted-foreground"
+          />
         </Button>
         <Button
           variant="ghost"
@@ -444,8 +574,23 @@ function TemplateRow({ template, idx, onPreview, onEdit, onDelete }: {
           title="Edit"
           {...editAnim.hoverHandlers}
         >
-          <UserPenIcon ref={editAnim.iconRef} size={12} className="text-muted-foreground" />
+          <UserPenIcon
+            ref={editAnim.iconRef}
+            size={12}
+            className="text-muted-foreground"
+          />
         </Button>
+        {requiresApproval(template) && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6"
+            onClick={handleApprovalClick}
+            title="Provider approval"
+          >
+            <BadgeCheck size={12} className="text-muted-foreground" />
+          </Button>
+        )}
         <Button
           variant="ghost"
           size="icon"
@@ -454,7 +599,11 @@ function TemplateRow({ template, idx, onPreview, onEdit, onDelete }: {
           title="Delete"
           {...deleteAnim.hoverHandlers}
         >
-          <Trash2Icon ref={deleteAnim.iconRef} size={12} className="text-muted-foreground" />
+          <Trash2Icon
+            ref={deleteAnim.iconRef}
+            size={12}
+            className="text-muted-foreground"
+          />
         </Button>
       </div>
     </motion.div>
@@ -463,11 +612,27 @@ function TemplateRow({ template, idx, onPreview, onEdit, onDelete }: {
 
 export default function NotificationTemplatesPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [editTarget, setEditTarget] = useState<NotificationTemplate | null>(null);
-  const [previewTarget, setPreviewTarget] = useState<NotificationTemplate | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<NotificationTemplate | null>(null);
+  const [editTarget, setEditTarget] = useState<NotificationTemplate | null>(
+    null,
+  );
+  const [previewTarget, setPreviewTarget] =
+    useState<NotificationTemplate | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<NotificationTemplate | null>(
+    null,
+  );
+  const [approvalTarget, setApprovalTarget] =
+    useState<NotificationTemplate | null>(null);
 
-  const { data: templates, isLoading, isError, refetch } = useNotificationTemplates();
+  const handleApprovalOpenChange = useCallback((open: boolean) => {
+    if (!open) setApprovalTarget(null);
+  }, []);
+
+  const {
+    data: templates,
+    isLoading,
+    isError,
+    refetch,
+  } = useNotificationTemplates();
   const deleteTemplate = useDeleteNotificationTemplate();
 
   const handleCreate = useCallback(() => {
@@ -496,9 +661,14 @@ export default function NotificationTemplatesPage() {
     });
   }, [deleteTarget, deleteTemplate]);
 
-  const handleSetDeleteTarget = useCallback((t: NotificationTemplate) => setDeleteTarget(t), []);
+  const handleSetDeleteTarget = useCallback(
+    (t: NotificationTemplate) => setDeleteTarget(t),
+    [],
+  );
 
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   return (
     <PageWrapper
@@ -547,13 +717,18 @@ export default function NotificationTemplatesPage() {
                 onPreview={setPreviewTarget}
                 onEdit={handleEdit}
                 onDelete={handleSetDeleteTarget}
+                onApproval={setApprovalTarget}
               />
             ))}
           </div>
         )}
       </div>
 
-      <TemplateSheet open={sheetOpen} template={editTarget} onClose={handleSheetClose} />
+      <TemplateSheet
+        open={sheetOpen}
+        template={editTarget}
+        onClose={handleSheetClose}
+      />
 
       <PreviewDialog
         open={!!previewTarget}
@@ -561,12 +736,25 @@ export default function NotificationTemplatesPage() {
         onClose={() => setPreviewTarget(null)}
       />
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={(v) => !v && setDeleteTarget(null)}>
+      {approvalTarget && (
+        <TemplateApprovalDialog
+          template={approvalTarget}
+          open={!!approvalTarget}
+          onOpenChange={handleApprovalOpenChange}
+        />
+      )}
+
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(v) => !v && setDeleteTarget(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete template?</AlertDialogTitle>
             <AlertDialogDescription>
-              &ldquo;{deleteTarget?.name}&rdquo; will be permanently deleted. Notifications using this template will continue with their last rendered content.
+              &ldquo;{deleteTarget?.name}&rdquo; will be permanently deleted.
+              Notifications using this template will continue with their last
+              rendered content.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

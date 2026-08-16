@@ -168,7 +168,11 @@ function NewProjectTrigger({
   );
 }
 
-export function ProjectsPage() {
+interface ProjectsPageProps {
+  pmWorkspaceId?: string;
+}
+
+export function ProjectsPage({ pmWorkspaceId }: ProjectsPageProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -296,6 +300,7 @@ export function ProjectsPage() {
       | "COMPLETED"
       | "ARCHIVED"
       | undefined,
+    ...(pmWorkspaceId ? { pmWorkspaceId } : {}),
   });
 
   const handleRetry = useCallback(() => {

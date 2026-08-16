@@ -68,7 +68,7 @@ export interface UpdateAssignmentRuleInput {
 }
 
 interface ReorderAssignmentRulesInput {
-  rules: { id: number; priority: number }[];
+  ruleIds: number[];
 }
 
 interface ScoringRule {
@@ -436,7 +436,7 @@ interface CreateTerritoryInput {
   criteria?: TerritoryCriteria;
   priority?: number;
   isActive?: boolean;
-  assignedRepUserIds?: string[];
+  assignedReps?: number[];
 }
 
 interface UpdateTerritoryInput {
@@ -446,12 +446,14 @@ interface UpdateTerritoryInput {
   criteria?: TerritoryCriteria;
   priority?: number;
   isActive?: boolean;
-  assignedRepUserIds?: string[];
+  assignedReps?: number[];
 }
 
 export interface TerritoryPreviewResult {
   matchedTerritory: Territory | null;
+  /** Raw `crmPersonId` values — for logic only. Render `assignedRepNames` (§15). */
   assignedReps: number[];
+  assignedRepNames: string[];
 }
 
 export function useTerritories() {
@@ -510,7 +512,7 @@ export function usePreviewTerritory() {
       industry?: string;
     }) =>
       apiClient.post<TerritoryPreviewResult>("/crm/territories/preview", {
-        sampleLead,
+        sample: sampleLead,
       }),
   });
 }
