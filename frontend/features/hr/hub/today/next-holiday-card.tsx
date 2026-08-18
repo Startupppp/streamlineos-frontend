@@ -3,16 +3,21 @@
 import { useMemo } from "react";
 import { differenceInCalendarDays, format } from "date-fns";
 import { Umbrella } from "lucide-react";
-import { useHrHolidaysForYear } from "@/hooks/api/hr";
 import { HrPanel, HrSectionHeader } from "@/features/hr/shared/hr-ui";
+import {
+  hubSectionData,
+  hubSectionError,
+  type HrHubCardProps,
+} from "@/hooks/api/hr/hub";
 import { SkeletonRows, ErrorRetry } from "./today-card";
 
-export function NextHolidayCard() {
-  const currentYear = new Date().getFullYear();
-  const { data, isLoading, isError, error, refetch } =
-    useHrHolidaysForYear(currentYear);
-
-  const handleRetry = () => { void refetch(); };
+export function NextHolidayCard({
+  section,
+  isLoading,
+  onRetry,
+}: HrHubCardProps<"holidays">) {
+  const data = hubSectionData(section);
+  const error = hubSectionError(section);
 
   const todayStr = new Date().toISOString().slice(0, 10);
   const next = useMemo(
@@ -32,8 +37,8 @@ export function NextHolidayCard() {
       <HrSectionHeader title="Next holiday" />
       {isLoading ? (
         <SkeletonRows />
-      ) : isError ? (
-        <ErrorRetry error={error} onRetry={handleRetry} />
+      ) : error ? (
+        <ErrorRetry error={error} onRetry={onRetry} />
       ) : !next ? (
         <p className="text-xs text-muted-foreground">No holidays remaining this year.</p>
       ) : (

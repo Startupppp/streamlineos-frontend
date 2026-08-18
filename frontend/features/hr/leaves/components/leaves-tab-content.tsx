@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { PAGE_BODY_EMPTY_CLASS } from "@/components/ui/content-fill-panel";
 
 const LeaveBalanceDonut = dynamic(
@@ -32,6 +33,9 @@ interface LeavesTabContentProps {
   approvedLeavesThisWeek?: ApprovedLeave[];
   compact?: boolean;
   onRequestLeave?: () => void;
+  hasMore?: boolean;
+  isLoadingMore?: boolean;
+  onLoadMore?: () => void;
 }
 
 export function LeavesTabContent({
@@ -40,6 +44,9 @@ export function LeavesTabContent({
   approvedLeavesThisWeek = [],
   compact = false,
   onRequestLeave,
+  hasMore = false,
+  isLoadingMore = false,
+  onLoadMore,
 }: LeavesTabContentProps) {
   const isAdmin = useCan("hr:employees:manage");
   const { data: policy } = useLeavePolicy();
@@ -331,6 +338,18 @@ export function LeavesTabContent({
             minWidth="600px"
             className="min-h-0 w-full flex-1"
           />
+          {hasMore && onLoadMore ? (
+            <div className="flex justify-center border-t border-border/70 py-3">
+              <LoadingButton
+                variant="outline"
+                size="sm"
+                isPending={isLoadingMore}
+                onClick={onLoadMore}
+              >
+                Load older requests
+              </LoadingButton>
+            </div>
+          ) : null}
         </div>
       )}
     </div>

@@ -8,7 +8,7 @@ import {
   useHrPendingWfhRequests,
   useHrLeaveContext,
   useHrLeaveApprovals,
-  useHrMyLeaveRequests,
+  useHrMyLeaveRequestsInfinite,
   useHrLeavesThisWeek,
 } from "@/hooks/api/hr";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
@@ -117,12 +117,15 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
     refetch: refetchContext,
   } = useHrLeaveContext();
   const {
-    data: myData,
+    data: myPages,
     isLoading: myLoading,
     isError: myError,
     error: myErrorValue,
     refetch: refetchMy,
-  } = useHrMyLeaveRequests();
+    hasNextPage: hasMoreMyRequests,
+    isFetchingNextPage: isLoadingMoreMyRequests,
+    fetchNextPage: fetchMoreMyRequests,
+  } = useHrMyLeaveRequestsInfinite();
   const { data: approvalsData, isLoading: approvalsLoading } =
     useHrLeaveApprovals({
       enabled: isAdmin,
@@ -159,7 +162,8 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
   const approvers = (contextData?.approvers ?? []) as Approver[];
   const joiningDate = contextData?.joiningDate ?? null;
 
-  const myLeaveRequests = (myData?.requests ?? []) as LeaveRequest[];
+  const myLeaveRequests = (myPages?.pages.flatMap((page) => page.data) ??
+    []) as LeaveRequest[];
   const incomingLeaveRequests = (approvalsData?.pending ??
     []) as LeaveRequest[];
   const allIncomingLeaveRequests = (approvalsData?.all ?? []) as LeaveRequest[];
@@ -428,6 +432,9 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
                 approvedLeavesThisWeek={selfService ? [] : approvedLeavesThisWeek}
                 compact={selfService}
                 onRequestLeave={handleOpenLeaveSheet}
+                hasMore={hasMoreMyRequests}
+                isLoadingMore={isLoadingMoreMyRequests}
+                onLoadMore={() => void fetchMoreMyRequests()}
               />
             </TabsContent>
 

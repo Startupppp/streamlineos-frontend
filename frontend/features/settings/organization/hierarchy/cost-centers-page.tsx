@@ -41,14 +41,11 @@ import { PlusIcon } from "@animateicons/react/lucide";
 import { Textarea } from "@/components/ui/textarea";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared/error-state";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import type { OrgCostCenter } from "@/types/org-hierarchy";
 import { HierarchyArchiveDialog } from "./hierarchy-archive-dialog";
 import { useHierarchyArchive } from "./use-hierarchy-archive";
-import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
-import {
-  useHierarchyListState,
-  useHierarchyPageBounds,
-} from "./use-hierarchy-list-state";
+import { useHierarchyListState } from "./use-hierarchy-list-state";
 import { RequireModule } from "@/components/auth/require-module";
 import { useCan } from "@/hooks/api/access";
 
@@ -146,7 +143,8 @@ export function OrgCostCentersPage() {
     search,
     serverSearch,
     showArchived,
-    setPage,
+    nextPage,
+    previousPage,
     setPageSize,
     setSearch,
     setStatus,
@@ -159,12 +157,6 @@ export function OrgCostCentersPage() {
     error,
     refetch,
   } = useOrgCostCenters(query);
-  const isCorrectingPage = useHierarchyPageBounds({
-    page,
-    pageSize,
-    total: isError ? undefined : costCenters?.total,
-    setPage,
-  });
   const create = useCreateOrgCostCenter();
   const update = useUpdateOrgCostCenter();
   const canManage = useCan("settings:organization:manage");
@@ -379,20 +371,24 @@ export function OrgCostCentersPage() {
           data={displayed}
           columns={columns}
           getRowKey={(c) => c.id}
-          isLoading={isLoading || isCorrectingPage}
+          isLoading={isLoading}
           emptyState={emptyState}
           rowClassName={(c) => cn(c.status === "ARCHIVED" && "opacity-60")}
           minWidth="580px"
           className="flex-1 min-h-0"
-          pagination={{
-            mode: "server",
-            page,
-            pageSize,
-            total: costCenters?.total ?? 0,
-            onPageChange: setPage,
-            onPageSizeChange: setPageSize,
-            pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
-          }}
+          footer={
+            page > 1 || costCenters?.pageInfo.hasMore ? (
+              <CursorPageControls
+                page={page}
+                hasNext={costCenters?.pageInfo.hasMore ?? false}
+                disabled={isLoading}
+                onPrevious={previousPage}
+                onNext={() => nextPage(costCenters?.pageInfo.nextCursor)}
+                pageSize={pageSize}
+                onPageSizeChange={setPageSize}
+              />
+            ) : undefined
+          }
         />
       )}
 

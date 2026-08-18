@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared/error-state";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import {
   Sheet,
   SheetContent,
@@ -50,11 +51,7 @@ import { PlusIcon } from "@animateicons/react/lucide";
 import type { OrgLocation, LocationType } from "@/types/org-hierarchy";
 import { HierarchyArchiveDialog } from "./hierarchy-archive-dialog";
 import { useHierarchyArchive } from "./use-hierarchy-archive";
-import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
-import {
-  useHierarchyListState,
-  useHierarchyPageBounds,
-} from "./use-hierarchy-list-state";
+import { useHierarchyListState } from "./use-hierarchy-list-state";
 import { RequireModule } from "@/components/auth/require-module";
 import { useCan } from "@/hooks/api/access";
 
@@ -168,7 +165,8 @@ export function OrgLocationsPage() {
     search,
     serverSearch,
     showArchived,
-    setPage,
+    nextPage,
+    previousPage,
     setPageSize,
     setSearch,
     setStatus,
@@ -181,12 +179,6 @@ export function OrgLocationsPage() {
     error,
     refetch,
   } = useOrgLocations(query);
-  const isCorrectingPage = useHierarchyPageBounds({
-    page,
-    pageSize,
-    total: isError ? undefined : locations?.total,
-    setPage,
-  });
   const create = useCreateOrgLocation();
   const update = useUpdateOrgLocation();
   const canManage = useCan("settings:organization:manage");
@@ -399,20 +391,24 @@ export function OrgLocationsPage() {
           data={displayed}
           columns={columns}
           getRowKey={(l) => l.id}
-          isLoading={isLoading || isCorrectingPage}
+          isLoading={isLoading}
           emptyState={emptyState}
           rowClassName={(l) => cn(l.status === "ARCHIVED" && "opacity-60")}
           minWidth="620px"
           className="flex-1 min-h-0"
-          pagination={{
-            mode: "server",
-            page,
-            pageSize,
-            total: locations?.total ?? 0,
-            onPageChange: setPage,
-            onPageSizeChange: setPageSize,
-            pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
-          }}
+          footer={
+            page > 1 || locations?.pageInfo.hasMore ? (
+              <CursorPageControls
+                page={page}
+                hasNext={locations?.pageInfo.hasMore ?? false}
+                disabled={isLoading}
+                onPrevious={previousPage}
+                onNext={() => nextPage(locations?.pageInfo.nextCursor)}
+                pageSize={pageSize}
+                onPageSizeChange={setPageSize}
+              />
+            ) : undefined
+          }
         />
       )}
 

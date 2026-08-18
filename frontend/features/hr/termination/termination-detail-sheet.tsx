@@ -210,12 +210,12 @@ export function TerminationDetailSheet({
                 Reasons
               </p>
               <div className="flex flex-wrap gap-1.5">
-                {(reviewRecord.reasons ?? []).map((r) => (
+                {(reviewRecord.reasons ?? []).map((terminationReason) => (
                   <span
-                    key={r}
+                    key={terminationReason}
                     className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-800"
                   >
-                    {r}
+                    {terminationReason}
                   </span>
                 ))}
               </div>

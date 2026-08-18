@@ -17,18 +17,17 @@ const LIFECYCLE_PAGES = [
 
 describe("organization hierarchy lifecycle UI", () => {
   it.each(LIFECYCLE_PAGES)(
-    "%s uses shared URL-backed server pagination",
+    "%s uses shared bounded cursor pagination",
     (fileName) => {
       const source = readFileSync(join(HIERARCHY_DIR, fileName), "utf8");
 
       expect(source).toContain("useHierarchyListState()");
-      expect(source).toContain("useHierarchyPageBounds({");
-      expect(source).toContain('mode: "server"');
-      expect(source).toContain(
-        "pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS",
-      );
-      expect(source).toContain("onPageSizeChange: setPageSize");
-      expect(source).toContain("isLoading || isCorrectingPage");
+      expect(source).toContain("<CursorPageControls");
+      expect(source).toContain(".pageInfo.hasMore");
+      expect(source).toContain(".pageInfo.nextCursor");
+      expect(source).toContain("onPageSizeChange={setPageSize}");
+      expect(source).not.toContain('mode: "server"');
+      expect(source).not.toContain(".total");
       expect(source).toContain("<ErrorState");
       expect(source).toContain("description={getErrorMessage(error)}");
       expect(source).toContain("onRetry={handleRetry}");
@@ -68,12 +67,17 @@ describe("organization hierarchy lifecycle UI", () => {
   );
 
   it.each([
-    "branches-page.tsx",
-    "departments-page.tsx",
-    "teams-page.tsx",
-  ])("%s excludes unavailable parents from assignment selectors", (fileName) => {
-    const source = readFileSync(join(HIERARCHY_DIR, fileName), "utf8");
+    ["branches-page.tsx", "branch-form.tsx"],
+    ["departments-page.tsx", "department-form.tsx"],
+    ["teams-page.tsx", "team-form.tsx"],
+  ])(
+    "%s uses the shared server-search parent selector",
+    (_pageFileName, formFileName) => {
+      const source = readFileSync(join(HIERARCHY_DIR, formFileName), "utf8");
 
-    expect(source).toContain(".filter(isAssignableHierarchyParent)");
-  });
+      expect(source).toContain("<HierarchyParentSelector");
+      expect(source).toContain("selectedLabel=");
+      expect(source).not.toContain(".filter(isAssignableHierarchyParent)");
+    },
+  );
 });

@@ -79,7 +79,6 @@ export interface CheckInInput {
     lng: number;
     address?: string;
   } | null;
-  localDate?: string;
 }
 
 export interface RequestLeaveInput {
@@ -88,7 +87,6 @@ export interface RequestLeaveInput {
   endDate: string;
   reason?: string;
   priority?: "LOW" | "MEDIUM" | "HIGH";
-  approverId?: string;
   attachmentUrl?: string;
   isHalfDay?: boolean;
   halfDayPeriod?: "AM" | "PM";

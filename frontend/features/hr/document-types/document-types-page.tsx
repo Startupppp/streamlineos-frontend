@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useCallback, useTransition } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { keepPreviousData } from "@tanstack/react-query";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";
 import { Plus, AlertCircle } from "lucide-react";
@@ -18,30 +16,15 @@ import {
   type DocumentTypeFormData,
 } from "@/features/hr/document-types/document-type-form-dialog";
 
-import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
-
-interface DocumentType {
-  id: number;
-  name: string;
-  slug: string;
-  description: string | null;
-  isMandatory: boolean | null;
-  isActive: boolean | null;
-  sortOrder: number | null;
-  applicableRoles: string[] | null;
-  createdAt: string | null;
-}
-
-interface PaginatedDocumentTypes {
-  data: DocumentType[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
+import {
+  useCreateHrDocumentType,
+  useDeactivateHrDocumentType,
+  useHrDocumentTypesPage,
+  useUpdateHrDocumentType,
+  type HrDocumentType,
+} from "@/hooks/api/hr/document-types";
 
 const LIMIT_OPTIONS = [10, 20, 50] as const;
 type LimitOption = (typeof LIMIT_OPTIONS)[number];
@@ -50,63 +33,8 @@ function isValidLimit(n: number): n is LimitOption {
   return (LIMIT_OPTIONS as readonly number[]).includes(n);
 }
 
-function useDocumentTypes(page: number, limit: number) {
-  return useQuery<PaginatedDocumentTypes>({
-    queryKey: [...queryKeys.hr.documentTypes(), { page, limit }] as const,
-    queryFn: () =>
-      apiClient.get<PaginatedDocumentTypes>("/hr/document-types", { page, limit }),
-    staleTime: 30_000,
-    placeholderData: keepPreviousData,
-  });
-}
-
-function useCreateDocumentType() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "documentTypes", "create"],
-    mutationFn: (body: DocumentTypeFormData) =>
-      apiClient.post("/hr/document-types", {
-        name: body.name,
-        description: body.description,
-        isMandatory: body.isMandatory,
-        sortOrder: body.sortOrder,
-        applicableRoles: body.applicableRoles,
-      }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.documentTypes() });
-    },
-  });
-}
-
-function useUpdateDocumentType() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "documentTypes", "update"],
-    mutationFn: ({
-      id,
-      ...body
-    }: { id: number } & Partial<DocumentTypeFormData>) =>
-      apiClient.patch(`/hr/document-types/${id}`, body),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.documentTypes() });
-    },
-  });
-}
-
-function useDeleteDocumentType() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "documentTypes", "delete"],
-    mutationFn: (id: number) =>
-      apiClient.patch(`/hr/document-types/${id}`, { isActive: false }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.documentTypes() });
-    },
-  });
-}
-
 export function DocumentTypesPage() {
-  const canManageEmployees = useCan("hr:employees:manage");
+  const canManageDocuments = useCan("hr:documents:manage");
 
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -117,15 +45,15 @@ export function DocumentTypesPage() {
   const limitParam = Number(searchParams.get("limit"));
   const limit: LimitOption = isValidLimit(limitParam) ? limitParam : 20;
 
-  const { data, isLoading, isError, refetch } = useDocumentTypes(page, limit);
-  const createMutation = useCreateDocumentType();
-  const updateMutation = useUpdateDocumentType();
-  const deleteMutation = useDeleteDocumentType();
+  const { data, isLoading, isError, refetch } = useHrDocumentTypesPage(page, limit);
+  const createMutation = useCreateHrDocumentType();
+  const updateMutation = useUpdateHrDocumentType();
+  const deactivateMutation = useDeactivateHrDocumentType();
 
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [editTarget, setEditTarget] = useState<DocumentType | null>(null);
-  const [deactivateTarget, setDeactivateTarget] = useState<DocumentType | null>(null);
-  const [reactivateTarget, setReactivateTarget] = useState<DocumentType | null>(null);
+  const [editTarget, setEditTarget] = useState<HrDocumentType | null>(null);
+  const [deactivateTarget, setDeactivateTarget] = useState<HrDocumentType | null>(null);
+  const [reactivateTarget, setReactivateTarget] = useState<HrDocumentType | null>(null);
 
   const pushParams = useCallback(
     (updates: Record<string, string | null>) => {
@@ -161,8 +89,8 @@ export function DocumentTypesPage() {
     setSheetOpen(true);
   }, []);
 
-  const openEdit = useCallback((dt: DocumentType) => {
-    setEditTarget(dt);
+  const openEdit = useCallback((documentType: HrDocumentType) => {
+    setEditTarget(documentType);
     setSheetOpen(true);
   }, []);
 
@@ -178,7 +106,7 @@ export function DocumentTypesPage() {
     (formData: DocumentTypeFormData) => {
       if (editTarget) {
         updateMutation.mutate(
-          { id: editTarget.id, ...formData },
+          { documentTypeId: editTarget.id, ...formData },
           {
             onSuccess: () => {
               toast.success("Document type updated");
@@ -202,19 +130,19 @@ export function DocumentTypesPage() {
 
   const handleDeactivate = useCallback(() => {
     if (!deactivateTarget) return;
-    deleteMutation.mutate(deactivateTarget.id, {
+    deactivateMutation.mutate(deactivateTarget.id, {
       onSuccess: () => {
         toast.success("Document type deactivated");
         setDeactivateTarget(null);
       },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
-  }, [deactivateTarget, deleteMutation]);
+  }, [deactivateTarget, deactivateMutation]);
 
   const handleReactivate = useCallback(() => {
     if (!reactivateTarget) return;
     updateMutation.mutate(
-      { id: reactivateTarget.id, isActive: true },
+      { documentTypeId: reactivateTarget.id, isActive: true },
       {
         onSuccess: () => {
           toast.success("Document type reactivated");
@@ -283,7 +211,7 @@ export function DocumentTypesPage() {
       title="Document Types"
       subtitle="Configure required onboarding documents"
       actions={
-        canManageEmployees ? (
+        canManageDocuments ? (
           <Button size="sm" onClick={openCreate}>
             <Plus className="h-3.5 w-3.5 mr-1" />
             Add Document Type
@@ -294,7 +222,7 @@ export function DocumentTypesPage() {
       <div className="flex flex-1 min-h-0 flex-col">
         <DocumentTypeList
           items={list}
-          canManageEmployees={canManageEmployees}
+          canManageDocuments={canManageDocuments}
           onEdit={openEdit}
           onDeactivate={setDeactivateTarget}
           onReactivate={setReactivateTarget}
@@ -329,7 +257,7 @@ export function DocumentTypesPage() {
         confirmLabel="Deactivate"
         destructive
         onConfirm={handleDeactivate}
-        isPending={deleteMutation.isPending}
+        isPending={deactivateMutation.isPending}
       />
 
       <ConfirmSheet

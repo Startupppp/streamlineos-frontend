@@ -8,7 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { Card, CardContent } from "@/components/ui/card";
+import { ErrorState } from "@/components/shared/error-state";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +18,8 @@ import { useProbationList, type ProbationReview } from "@/hooks/api/hr/probation
 import { ProbationConfirmSheet } from "@/features/hr/onboarding/components/probation-confirm-sheet";
 import { ProbationExtendSheet } from "@/features/hr/onboarding/components/probation-extend-sheet";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { useCan } from "@/hooks/api/access";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 type StatusConfig = {
   label: string;
@@ -73,11 +77,12 @@ function ProbationSkeletons() {
 
 interface ProbationRowProps {
   review: ProbationReview;
+  canManage: boolean;
   onExtend: (review: ProbationReview) => void;
   onConfirm: (review: ProbationReview) => void;
 }
 
-function ProbationRow({ review, onExtend, onConfirm }: ProbationRowProps) {
+function ProbationRow({ review, canManage, onExtend, onConfirm }: ProbationRowProps) {
   const config = getStatusConfig(review.status);
   const canAct = review.status === "review_due" || review.status === "in_probation" || review.status === "extended";
   const effectiveEndDate = review.extendedUntil ?? review.probationEndDate;
@@ -119,7 +124,7 @@ function ProbationRow({ review, onExtend, onConfirm }: ProbationRowProps) {
           </div>
         </div>
 
-        {canAct && (
+        {canManage && canAct && (
           <div className="flex items-center gap-1.5 shrink-0">
             <Button
               size="sm"
@@ -144,8 +149,29 @@ function ProbationRow({ review, onExtend, onConfirm }: ProbationRowProps) {
 }
 
 export default function ProbationPage() {
-  const { data, isLoading, isError, refetch } = useProbationList();
+  const [cursor, setCursor] = useState<string | undefined>();
+  const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([]);
+  const canManage = useCan("hr:probation:manage");
+  const { data, isLoading, isFetching, error, isError, refetch } = useProbationList({
+    cursor,
+    limit: 20,
+  });
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+
+  const handleNext = useCallback(() => {
+    const nextCursor = data?.pageInfo.nextCursor;
+    if (!nextCursor) return;
+    setCursorHistory((history) => [...history, cursor]);
+    setCursor(nextCursor);
+  }, [cursor, data?.pageInfo.nextCursor]);
+
+  const handlePrevious = useCallback(() => {
+    setCursorHistory((history) => {
+      if (history.length === 0) return history;
+      setCursor(history.at(-1));
+      return history.slice(0, -1);
+    });
+  }, []);
 
   const [extendTarget, setExtendTarget] = useState<ProbationReview | null>(null);
   const [confirmTarget, setConfirmTarget] = useState<ProbationReview | null>(null);
@@ -183,17 +209,16 @@ export default function ProbationPage() {
   if (isError) {
     return (
       <PageWrapper title="Probation Reviews" subtitle="Employees due for review or confirmation" backHref="/hr/onboarding">
-        <EmptyState
-          illustrationPreset="alert"
+        <ErrorState
           title="Failed to load probation reviews"
-          description="Something went wrong. Please try again."
-          action={{ label: "Retry", onClick: handleRetry }}
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
         />
       </PageWrapper>
     );
   }
 
-  const reviews = data ?? [];
+  const reviews = data?.data ?? [];
 
   return (
     <PageWrapper
@@ -214,11 +239,23 @@ export default function ProbationPage() {
             <ProbationRow
               key={review.id}
               review={review}
+              canManage={canManage}
               onExtend={handleExtend}
               onConfirm={handleConfirm}
             />
           ))}
         </div>
+      )}
+
+      {(cursorHistory.length > 0 || data?.pageInfo.hasMore) && (
+        <CursorPageControls
+          className="mt-4"
+          page={cursorHistory.length + 1}
+          hasNext={data?.pageInfo.hasMore ?? false}
+          disabled={isFetching}
+          onPrevious={handlePrevious}
+          onNext={handleNext}
+        />
       )}
 
       <ProbationExtendSheet

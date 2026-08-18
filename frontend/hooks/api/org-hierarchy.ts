@@ -1,6 +1,11 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -18,18 +23,70 @@ import type {
   OrgUnitKind,
 } from "@/types/org-hierarchy";
 
-interface PaginatedResponse<T> {
+interface CursorResponse<T> {
   data: T[];
-  total: number;
-  page: number;
-  limit: number;
+  pageInfo: {
+    limit: number;
+    hasMore: boolean;
+    nextCursor: string | null;
+  };
 }
 
 interface ListQuery extends Record<string, unknown> {
-  page?: number;
+  cursor?: string;
   limit?: number;
   search?: string;
   status?: "ACTIVE" | "DISABLED" | "ARCHIVED" | "CURRENT";
+}
+
+export type HierarchyParentKind =
+  | "BUSINESS_UNIT"
+  | "BRANCH"
+  | "DEPARTMENT";
+
+export interface HierarchyParentRecord {
+  id: string;
+  name: string;
+  status: string;
+  deletedAt: string | null;
+}
+
+const HIERARCHY_PARENT_ENDPOINTS: Record<HierarchyParentKind, string> = {
+  BUSINESS_UNIT: "/org-hierarchy/business-units",
+  BRANCH: "/org-hierarchy/branches",
+  DEPARTMENT: "/org-hierarchy/departments",
+};
+
+const HIERARCHY_PARENT_PAGE_SIZE = 25;
+
+export function useHierarchyParentOptions(
+  parentKind: HierarchyParentKind,
+  search: string,
+  enabled = true,
+) {
+  const canView = useCan("settings:view");
+  const normalizedSearch = search.trim();
+
+  return useInfiniteQuery({
+    queryKey: queryKeys.hierarchy.parentOptions(parentKind, normalizedSearch),
+    queryFn: ({ pageParam: cursor }) =>
+      apiClient.get<CursorResponse<HierarchyParentRecord>>(
+        HIERARCHY_PARENT_ENDPOINTS[parentKind],
+        {
+          ...(cursor ? { cursor } : {}),
+          limit: String(HIERARCHY_PARENT_PAGE_SIZE),
+          ...(normalizedSearch ? { search: normalizedSearch } : {}),
+          status: "ACTIVE",
+        },
+      ),
+    initialPageParam: "",
+    getNextPageParam: (lastPage) =>
+      lastPage.pageInfo.hasMore
+        ? (lastPage.pageInfo.nextCursor ?? undefined)
+        : undefined,
+    staleTime: 60_000,
+    enabled: canView && enabled,
+  });
 }
 
 export function getOrgUnitDependencyPreview(
@@ -71,8 +128,8 @@ export function useBusinessUnits(query?: ListQuery) {
   return useQuery({
     queryKey: queryKeys.hierarchy.businessUnits(query),
     queryFn: () =>
-      apiClient.get<PaginatedResponse<OrgBusinessUnit>>("/org-hierarchy/business-units", {
-        page: String(query?.page ?? 1),
+      apiClient.get<CursorResponse<OrgBusinessUnit>>("/org-hierarchy/business-units", {
+        ...(query?.cursor ? { cursor: query.cursor } : {}),
         limit: String(query?.limit ?? 100),
         ...(query?.search ? { search: query.search } : {}),
         ...(query?.status ? { status: query.status } : {}),
@@ -105,14 +162,14 @@ export function useUpdateBusinessUnit() {
 
 export function useOrgBranches(
   query?: ListQuery,
-  options?: Omit<UseQueryOptions<PaginatedResponse<OrgBranch>, Error>, "queryKey" | "queryFn">,
+  options?: Omit<UseQueryOptions<CursorResponse<OrgBranch>, Error>, "queryKey" | "queryFn">,
 ) {
   const canView = useCan("settings:view");
   return useQuery({
     queryKey: queryKeys.hierarchy.orgBranches(query),
     queryFn: () =>
-      apiClient.get<PaginatedResponse<OrgBranch>>("/org-hierarchy/branches", {
-        page: String(query?.page ?? 1),
+      apiClient.get<CursorResponse<OrgBranch>>("/org-hierarchy/branches", {
+        ...(query?.cursor ? { cursor: query.cursor } : {}),
         limit: String(query?.limit ?? 100),
         ...(query?.search ? { search: query.search } : {}),
         ...(query?.status ? { status: query.status } : {}),
@@ -137,8 +194,8 @@ export function useUpdateOrgBranch() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["update", "org", "branch"],
-    mutationFn: ({ id, ...data }: { id: string } & Record<string, unknown>) =>
-      apiClient.patch<OrgBranch>(`/org-hierarchy/branches/${id}`, data),
+    mutationFn: ({ branchId, ...data }: { branchId: string } & Record<string, unknown>) =>
+      apiClient.patch<OrgBranch>(`/org-hierarchy/branches/${branchId}`, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.all }),
   });
 }
@@ -147,14 +204,14 @@ export function useUpdateOrgBranch() {
 
 export function useOrgDepartments(
   query?: ListQuery,
-  options?: Omit<UseQueryOptions<PaginatedResponse<OrgDepartment>, Error>, "queryKey" | "queryFn">,
+  options?: Omit<UseQueryOptions<CursorResponse<OrgDepartment>, Error>, "queryKey" | "queryFn">,
 ) {
   const canView = useCan("settings:view");
   return useQuery({
     queryKey: queryKeys.hierarchy.departments(query),
     queryFn: () =>
-      apiClient.get<PaginatedResponse<OrgDepartment>>("/org-hierarchy/departments", {
-        page: String(query?.page ?? 1),
+      apiClient.get<CursorResponse<OrgDepartment>>("/org-hierarchy/departments", {
+        ...(query?.cursor ? { cursor: query.cursor } : {}),
         limit: String(query?.limit ?? 100),
         ...(query?.search ? { search: query.search } : {}),
         ...(query?.status ? { status: query.status } : {}),
@@ -179,8 +236,8 @@ export function useUpdateOrgDepartment() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["update", "org", "department"],
-    mutationFn: ({ id, ...data }: { id: string } & Record<string, unknown>) =>
-      apiClient.patch<OrgDepartment>(`/org-hierarchy/departments/${id}`, data),
+    mutationFn: ({ departmentId, ...data }: { departmentId: string } & Record<string, unknown>) =>
+      apiClient.patch<OrgDepartment>(`/org-hierarchy/departments/${departmentId}`, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.all }),
   });
 }
@@ -192,8 +249,8 @@ export function useOrgTeams(query?: ListQuery) {
   return useQuery({
     queryKey: queryKeys.hierarchy.teams(query),
     queryFn: () =>
-      apiClient.get<PaginatedResponse<OrgTeam>>("/org-hierarchy/teams", {
-        page: String(query?.page ?? 1),
+      apiClient.get<CursorResponse<OrgTeam>>("/org-hierarchy/teams", {
+        ...(query?.cursor ? { cursor: query.cursor } : {}),
         limit: String(query?.limit ?? 100),
         ...(query?.search ? { search: query.search } : {}),
         ...(query?.status ? { status: query.status } : {}),
@@ -218,8 +275,8 @@ export function useUpdateOrgTeam() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["update", "org", "team"],
-    mutationFn: ({ id, ...data }: { id: string } & Record<string, unknown>) =>
-      apiClient.patch<OrgTeam>(`/org-hierarchy/teams/${id}`, data),
+    mutationFn: ({ teamId, ...data }: { teamId: string } & Record<string, unknown>) =>
+      apiClient.patch<OrgTeam>(`/org-hierarchy/teams/${teamId}`, data),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: queryKeys.hierarchy.all }),
   });
@@ -231,8 +288,8 @@ export function useOrgLocations(query?: ListQuery) {
   return useQuery({
     queryKey: queryKeys.hierarchy.locations(query),
     queryFn: () =>
-      apiClient.get<PaginatedResponse<OrgLocation>>("/org-hierarchy/locations", {
-        page: String(query?.page ?? 1),
+      apiClient.get<CursorResponse<OrgLocation>>("/org-hierarchy/locations", {
+        ...(query?.cursor ? { cursor: query.cursor } : {}),
         limit: String(query?.limit ?? 100),
         ...(query?.search ? { search: query.search } : {}),
         ...(query?.status ? { status: query.status } : {}),
@@ -267,10 +324,10 @@ export function useOrgCostCenters(query?: ListQuery) {
   return useQuery({
     queryKey: queryKeys.hierarchy.costCenters(query),
     queryFn: () =>
-      apiClient.get<PaginatedResponse<OrgCostCenter>>(
+      apiClient.get<CursorResponse<OrgCostCenter>>(
         "/org-hierarchy/cost-centers",
         {
-          page: String(query?.page ?? 1),
+          ...(query?.cursor ? { cursor: query.cursor } : {}),
           limit: String(query?.limit ?? 100),
           ...(query?.search ? { search: query.search } : {}),
           ...(query?.status ? { status: query.status } : {}),

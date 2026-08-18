@@ -40,7 +40,7 @@ export function useDashboardAccess(): DashboardAccess {
 
   return useMemo(() => {
     const moduleOn = (name: string) =>
-      enabledModules.length === 0 || matchesOrgModule(enabledModules, name);
+      matchesOrgModule(enabledModules, name);
     const owner = data?.isOrgOwner ?? false;
     const permissions = data?.permissions ?? [];
     const can = (key: PermissionKey) => owner || permissions.includes(key);

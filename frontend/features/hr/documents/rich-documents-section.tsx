@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { useRichDocuments, useDeleteRichDocument } from "@/hooks/api/hr";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCan } from "@/hooks/api/access";
 
 interface RichDocumentRowProps {
   doc: {
@@ -21,11 +22,12 @@ interface RichDocumentRowProps {
     isPublished: boolean | null;
     updatedAt: Date | string | null;
   };
-  onDelete: (id: number) => void;
+  onDelete: (documentId: number) => void;
   isDeletePending: boolean;
+  canManage: boolean;
 }
 
-function RichDocumentRow({ doc, onDelete, isDeletePending }: RichDocumentRowProps) {
+function RichDocumentRow({ doc, onDelete, isDeletePending, canManage }: RichDocumentRowProps) {
   const handleDelete = useCallback(() => onDelete(doc.id), [onDelete, doc.id]);
 
   return (
@@ -56,7 +58,7 @@ function RichDocumentRow({ doc, onDelete, isDeletePending }: RichDocumentRowProp
           </div>
         </div>
       </div>
-      <div className="flex items-center gap-1 shrink-0">
+      {canManage ? <div className="flex items-center gap-1 shrink-0">
         <Button
           variant="ghost"
           size="icon"
@@ -77,13 +79,14 @@ function RichDocumentRow({ doc, onDelete, isDeletePending }: RichDocumentRowProp
         >
           {!isDeletePending && <Trash2 className="h-3.5 w-3.5" />}
         </LoadingButton>
-      </div>
+      </div> : null}
     </div>
   );
 }
 
 export function RichDocumentsSection() {
   const [page, setPage] = useState(1);
+  const canManage = useCan("hr:documents:manage");
   const { data, isLoading } = useRichDocuments({ page, limit: 20 });
   const deleteMutation = useDeleteRichDocument();
 
@@ -91,8 +94,8 @@ export function RichDocumentsSection() {
   const total = data?.pagination.total ?? 0;
   const totalPages = data?.pagination.totalPages ?? 1;
 
-  const handleDelete = useCallback((id: number) => {
-    deleteMutation.mutate(id, {
+  const handleDelete = useCallback((documentId: number) => {
+    deleteMutation.mutate(documentId, {
       onSuccess: () => toast.success("Document deleted"),
       onError: (e) => toast.error(getErrorMessage(e)),
     });
@@ -147,6 +150,7 @@ export function RichDocumentsSection() {
               doc={doc}
               onDelete={handleDelete}
               isDeletePending={deleteMutation.isPending}
+              canManage={canManage}
             />
           ))}
         </div>

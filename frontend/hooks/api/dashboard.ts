@@ -22,12 +22,12 @@ export interface PublicDoc {
   id: number;
   orgId: string;
   userId: string | null;
-  departmentId: number | null;
+  departmentId: string | null;
   name: string;
   description: string | null;
   type: string;
   category: string | null;
-  fileUrl: string;
+  hasFile: boolean;
   fileName: string | null;
   fileSize: number | null;
   mimeType: string | null;

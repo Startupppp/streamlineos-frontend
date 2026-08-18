@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/select";
 import { useOrgBranches, useOrgDepartments } from "@/hooks/api/org-hierarchy";
 import { useBulkUpdateUsers } from "@/hooks/api/users";
+import { useCanManageOrganizationMembership } from "@/hooks/api/access";
 import type { BulkUpdatePayload } from "@/hooks/api/users";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
@@ -61,6 +62,7 @@ export function UserBulkAssignDialog({
   const { data: branchesData } = useOrgBranches();
   const { data: departmentsData } = useOrgDepartments();
   const { mutate: bulkUpdate, isPending } = useBulkUpdateUsers();
+  const canManageMembership = useCanManageOrganizationMembership();
 
   const form = useForm<BulkAssignValues>({
     resolver: zodResolver(bulkAssignSchema),
@@ -80,7 +82,9 @@ export function UserBulkAssignDialog({
   function handleSubmit(values: BulkAssignValues) {
     const payload: BulkUpdatePayload = {
       userIds: Array.from(selectedIds),
-      ...(values.role !== KEEP ? { role: values.role } : {}),
+      ...(canManageMembership && values.role !== KEEP
+        ? { role: values.role }
+        : {}),
       ...(values.branchId !== KEEP ? { branchId: values.branchId } : {}),
       ...(values.departmentId !== KEEP ? { departmentId: values.departmentId } : {}),
     };
@@ -95,44 +99,47 @@ export function UserBulkAssignDialog({
   }
 
   const values = form.watch();
+  const roleUnchanged = !canManageMembership || values.role === KEEP;
   const nothingSelected =
-    values.role === KEEP && values.branchId === KEEP && values.departmentId === KEEP;
+    roleUnchanged && values.branchId === KEEP && values.departmentId === KEEP;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-[95vw] sm:max-w-sm">
         <DialogHeader>
           <DialogTitle className="text-sm">
-            Assign role — {selectedIds.size} user(s)
+            Assign organization details — {selectedIds.size} user(s)
           </DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3">
-            <FormField
-              control={form.control}
-              name="role"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-xs font-medium">Role</FormLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Keep unchanged" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value={KEEP}>Keep unchanged</SelectItem>
-                      {USER_INVITE_ROLES.map((role) => (
-                        <SelectItem key={role.value} value={role.value}>
-                          {role.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {canManageMembership ? (
+              <FormField
+                control={form.control}
+                name="role"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-medium">Role</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Keep unchanged" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value={KEEP}>Keep unchanged</SelectItem>
+                        {USER_INVITE_ROLES.map((role) => (
+                          <SelectItem key={role.value} value={role.value}>
+                            {role.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ) : null}
             <FormField
               control={form.control}
               name="branchId"

@@ -10,15 +10,12 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import {
   DEFAULT_PAGE_SIZE,
-  getLastPage,
-  parsePage,
   parsePageSize,
 } from "@/lib/list-pagination";
 
 type HierarchyListStatus = "CURRENT" | "ARCHIVED";
 
 type HierarchyListParamUpdates = Partial<{
-  page: string | null;
   search: string | null;
   size: string | null;
   status: string | null;
@@ -35,32 +32,12 @@ export function applyHierarchyListParamUpdates(
   updates: HierarchyListParamUpdates,
 ): string {
   const params = new URLSearchParams(current);
+  params.delete("page");
   for (const [key, value] of Object.entries(updates)) {
     if (value === null) params.delete(key);
     else if (value !== undefined) params.set(key, value);
   }
   return params.toString();
-}
-
-export function useHierarchyPageBounds({
-  page,
-  pageSize,
-  total,
-  setPage,
-}: {
-  page: number;
-  pageSize: number;
-  total: number | undefined;
-  setPage: (page: number) => void;
-}): boolean {
-  const lastPage = total === undefined ? page : getLastPage(total, pageSize);
-  const isCorrectingPage = total !== undefined && page > lastPage;
-
-  useEffect(() => {
-    if (isCorrectingPage) setPage(lastPage);
-  }, [isCorrectingPage, lastPage, setPage]);
-
-  return isCorrectingPage;
 }
 
 export function useHierarchyListState() {
@@ -70,12 +47,20 @@ export function useHierarchyListState() {
   const [, startTransition] = useTransition();
   const paramsSnapshot = searchParams.toString();
 
-  const page = parsePage(searchParams.get("page"));
   const pageSize = parsePageSize(searchParams.get("size"));
   const status = hierarchyStatusFromParam(searchParams.get("status"));
   const serverSearch = (searchParams.get("search") ?? "").trim();
   const [search, setSearch] = useState(serverSearch);
   const debouncedSearch = useDebouncedValue(search, 300);
+  const cursorResetKey = `${pageSize}\u0000${status}\u0000${serverSearch}`;
+  const [cursorState, setCursorState] = useState<{
+    key: string;
+    history: Array<string | undefined>;
+  }>({ key: cursorResetKey, history: [undefined] });
+  const cursorHistory =
+    cursorState.key === cursorResetKey ? cursorState.history : [undefined];
+  const cursor = cursorHistory.at(-1);
+  const page = cursorHistory.length;
 
   const updateParams = useCallback(
     (updates: HierarchyListParamUpdates) => {
@@ -98,16 +83,32 @@ export function useHierarchyListState() {
     if (normalizedSearch === serverSearch) return;
     updateParams({
       search: normalizedSearch || null,
-      page: null,
     });
   }, [debouncedSearch, serverSearch, updateParams]);
 
-  const setPage = useCallback(
-    (nextPage: number) => {
-      updateParams({ page: nextPage <= 1 ? null : String(nextPage) });
+  const nextPage = useCallback(
+    (nextCursor: string | null | undefined) => {
+      if (!nextCursor) return;
+      setCursorState((current) => {
+        const history =
+          current.key === cursorResetKey ? current.history : [undefined];
+        if (history.at(-1) === nextCursor) return { key: cursorResetKey, history };
+        return { key: cursorResetKey, history: [...history, nextCursor] };
+      });
     },
-    [updateParams],
+    [cursorResetKey],
   );
+
+  const previousPage = useCallback(() => {
+    setCursorState((current) => {
+      const history =
+        current.key === cursorResetKey ? current.history : [undefined];
+      return {
+        key: cursorResetKey,
+        history: history.length > 1 ? history.slice(0, -1) : history,
+      };
+    });
+  }, [cursorResetKey]);
 
   const setPageSize = useCallback(
     (nextPageSize: number) => {
@@ -117,7 +118,6 @@ export function useHierarchyListState() {
           validPageSize === DEFAULT_PAGE_SIZE
             ? null
             : String(validPageSize),
-        page: null,
       });
     },
     [updateParams],
@@ -127,7 +127,6 @@ export function useHierarchyListState() {
     (nextStatus: HierarchyListStatus) => {
       updateParams({
         status: nextStatus === "ARCHIVED" ? "archived" : null,
-        page: null,
       });
     },
     [updateParams],
@@ -145,12 +144,13 @@ export function useHierarchyListState() {
     search,
     serverSearch,
     setSearch,
-    setPage,
+    nextPage,
+    previousPage,
     setPageSize,
     setStatus,
     toggleArchived,
     query: {
-      page,
+      cursor,
       limit: pageSize,
       search: serverSearch || undefined,
       status,

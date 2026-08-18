@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef } from "react";
+import { forwardRef, useState } from "react";
 import {
   Download,
   Eye,
@@ -19,10 +19,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { viewFile, downloadFile } from "@/hooks/common/use-file-url";
+import {
+  downloadProtectedFile,
+  viewProtectedFile,
+} from "@/hooks/common/use-file-url";
 import { toast } from "sonner";
 import { useCan } from "@/hooks/api/access";
 import type { Document } from "@/types/hr";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface DocumentRowActionsProps {
   doc: Document;
@@ -35,8 +39,11 @@ export const DocumentRowActions = forwardRef<
   HTMLDivElement,
   DocumentRowActionsProps
 >(function DocumentRowActions({ doc, onDelete, onEdit, onSendForSignature }, ref) {
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const canManageDocs = useCan("hr:documents:manage");
-  const hasFileUrl = !!doc.fileUrl;
+  const canCreateEnvelope = useCan("sign:envelope:create");
+  const hasFileUrl = doc.hasFile;
 
   function handleView(e: React.MouseEvent) {
     e.stopPropagation();
@@ -44,7 +51,7 @@ export const DocumentRowActions = forwardRef<
       toast.error("No file attached to this document.");
       return;
     }
-    viewFile(doc.fileUrl);
+    void viewProtectedFile(`/hr/documents/${doc.id}/file`);
   }
 
   function handleDownload(e: React.MouseEvent) {
@@ -53,7 +60,10 @@ export const DocumentRowActions = forwardRef<
       toast.error("No file attached to this document.");
       return;
     }
-    downloadFile(doc.fileUrl, doc.fileName ?? doc.name);
+    void downloadProtectedFile(
+      `/hr/documents/${doc.id}/file`,
+      doc.fileName ?? doc.name,
+    );
   }
 
   function handleVersionHistory(e: React.MouseEvent) {
@@ -63,7 +73,19 @@ export const DocumentRowActions = forwardRef<
 
   function handleDelete(e: React.MouseEvent) {
     e.stopPropagation();
-    void onDelete(doc.id);
+    setDeleteOpen(true);
+  }
+
+  async function handleConfirmDelete() {
+    setIsDeleting(true);
+    try {
+      await onDelete(doc.id);
+      setDeleteOpen(false);
+    } catch {
+      return;
+    } finally {
+      setIsDeleting(false);
+    }
   }
 
   function handleEdit(e: React.MouseEvent) {
@@ -83,7 +105,7 @@ export const DocumentRowActions = forwardRef<
   return (
     <div
       ref={ref}
-      className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+      className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-200"
     >
       <Button
         variant="ghost"
@@ -105,15 +127,17 @@ export const DocumentRowActions = forwardRef<
       >
         <Download className="h-3.5 w-3.5" />
       </Button>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="w-7 text-muted-foreground hover:text-foreground"
-        onClick={handleEdit}
-        aria-label="Edit document"
-      >
-        <Pencil className="h-3.5 w-3.5" />
-      </Button>
+      {canManageDocs ? (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="w-7 text-muted-foreground hover:text-foreground"
+          onClick={handleEdit}
+          aria-label="Edit document"
+        >
+          <Pencil className="h-3.5 w-3.5" />
+        </Button>
+      ) : null}
       <DropdownMenu>
         <DropdownMenuTrigger asChild onClick={handleMenuTriggerClick}>
           <AnimatedIconButton
@@ -133,14 +157,18 @@ export const DocumentRowActions = forwardRef<
             <Download className="mr-2 h-3.5 w-3.5" />
             Download
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={handleEdit}>
-            <Pencil className="mr-2 h-3.5 w-3.5" />
-            Edit details
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={handleSendForSignature}>
-            <FileSignature className="mr-2 h-3.5 w-3.5" />
-            Send for e-signature
-          </DropdownMenuItem>
+          {canManageDocs ? (
+            <DropdownMenuItem onClick={handleEdit}>
+              <Pencil className="mr-2 h-3.5 w-3.5" />
+              Edit details
+            </DropdownMenuItem>
+          ) : null}
+          {canCreateEnvelope ? (
+            <DropdownMenuItem onClick={handleSendForSignature}>
+              <FileSignature className="mr-2 h-3.5 w-3.5" />
+              Send for e-signature
+            </DropdownMenuItem>
+          ) : null}
           {(doc.version ?? 1) > 1 && (
             <DropdownMenuItem onClick={handleVersionHistory}>
               <History className="mr-2 h-3.5 w-3.5" />
@@ -159,6 +187,17 @@ export const DocumentRowActions = forwardRef<
           )}
         </DropdownMenuContent>
       </DropdownMenu>
+      <ConfirmDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title={`Remove “${doc.name}”?`}
+        description="The document will no longer be available in HRMS. Its audit history is preserved."
+        confirmLabel="Remove document"
+        destructive
+        keepOpenOnConfirm
+        isPending={isDeleting}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 });

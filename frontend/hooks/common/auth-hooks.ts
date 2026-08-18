@@ -93,6 +93,7 @@ export function useResendVerificationEmail() {
 
 export function useSignOut() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ["auth", "sign-out"],
     mutationFn: async () => {
@@ -100,6 +101,7 @@ export function useSignOut() {
         await apiClient.post("/auth/logout", undefined);
       } catch {}
       clearBackendTokenCache();
+      queryClient.clear();
       return signOut({ redirect: false });
     },
     onSuccess: () => {

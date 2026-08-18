@@ -10,6 +10,7 @@ const REQUEST_TIMEOUT_MS = 8_000;
 const DENIED: AccessResponse = {
   permissions: [],
   isOrgOwner: false,
+  canManageOrganizationMembership: false,
   modules: {},
   mfa: { enforced: false, satisfied: true },
 };

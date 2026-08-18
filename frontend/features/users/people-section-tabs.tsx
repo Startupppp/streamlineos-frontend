@@ -2,12 +2,12 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useCan } from "@/hooks/api/access";
+import { useCanManageOrganizationMembership } from "@/hooks/api/access";
 
 export function PeopleSectionTabs() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const canManageInvitations = useCan("settings:organization:manage");
+  const canManageInvitations = useCanManageOrganizationMembership();
   const active =
     canManageInvitations && searchParams.get("view") === "invitations"
       ? "invitations"

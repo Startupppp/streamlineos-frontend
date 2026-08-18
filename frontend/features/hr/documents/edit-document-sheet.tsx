@@ -13,6 +13,7 @@ import { hrDocumentListPrefix } from "@/hooks/api/hr/documents";
 import { formSchema, type DocumentFormData, DocumentFormFields } from "@/features/hr/documents/document-form-fields";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { Document } from "@/types/hr";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 
 interface EditDocumentSheetProps {
   open: boolean;
@@ -24,7 +25,7 @@ interface EditDocumentSheetProps {
     icon: React.ComponentType<{ className?: string }>;
   }[];
   categories: string[];
-  isAdmin: boolean;
+  canAssignEmployee: boolean;
 }
 
 export function EditDocumentSheet({
@@ -33,13 +34,19 @@ export function EditDocumentSheet({
   document,
   documentTypes,
   categories,
-  isAdmin,
+  canAssignEmployee,
 }: EditDocumentSheetProps) {
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
+  const [employeeSearch, setEmployeeSearch] = useState("");
 
   const qc = useQueryClient();
-  const { employees } = useHrEmployeeOptions();
+  const debouncedEmployeeSearch = useDebouncedValue(employeeSearch, 300);
+  const { employees, isFetching: employeesLoading } = useHrEmployeeOptions({
+    limit: 20,
+    search: debouncedEmployeeSearch || undefined,
+    enabled: open && canAssignEmployee,
+  });
   const updateDocument = useUpdateDocument();
 
   const filteredCategories = useMemo(
@@ -177,7 +184,9 @@ export function EditDocumentSheet({
           filteredDocumentTypes={filteredDocumentTypes}
           filteredCategories={filteredCategories}
           filteredEmployees={filteredEmployees}
-          isAdmin={isAdmin}
+          canAssignEmployee={canAssignEmployee}
+          onEmployeeSearchChange={setEmployeeSearch}
+          employeesLoading={employeesLoading}
           filesCount={1}
           tags={tags}
           tagInput={tagInput}

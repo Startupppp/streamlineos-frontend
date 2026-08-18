@@ -4,52 +4,90 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { Document, DocumentType } from "@/types/hr";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
 
 export interface HrDocumentListParams {
-  page?: number;
+  cursor?: string;
   limit?: number;
   userId?: string;
   type?: DocumentType;
+  search?: string;
+  category?: string;
 }
 
 export interface HrDocumentListResponse {
   data: Document[];
-  pagination: { page: number; limit: number; total: number; totalPages: number };
+  pageInfo: { limit: number; hasMore: boolean; nextCursor: string | null };
 }
 
-export const hrDocumentListPrefix = [...queryKeys.hr.all, "documents"] as const;
+export const hrDocumentListPrefix = queryKeys.hr.documentsAll;
 
 export function useHrDocumentList(params?: HrDocumentListParams) {
   const canDocs = useCan("hr:documents:view");
+  const hrEnabled = useModuleEnabled("hr");
   const queryParams: Record<string, unknown> = {
-    page: params?.page ?? 1,
     limit: params?.limit ?? 20,
+    ...(params?.cursor ? { cursor: params.cursor } : {}),
     ...(params?.userId ? { userId: params.userId } : {}),
     ...(params?.type ? { type: params.type } : {}),
+    ...(params?.search ? { search: params.search } : {}),
+    ...(params?.category && params.category !== "All Files"
+      ? { category: params.category }
+      : {}),
   };
   return useQuery({
     queryKey: queryKeys.hr.documents(queryParams),
     queryFn: () => apiClient.get<HrDocumentListResponse>("/hr/documents", queryParams),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
-    enabled: canDocs,
+    enabled: hrEnabled && canDocs,
   });
 }
 
 export interface HrDocumentStats {
   total: number;
   byType: Record<string, number>;
+  publicCount: number;
+  storageBytes: number;
   expiringIn30Days: number;
 }
 
 export function useHrDocumentStats(options?: { enabled?: boolean }) {
   const canDocs = useCan("hr:documents:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.documentsStats(),
     queryFn: () => apiClient.get<HrDocumentStats>("/hr/documents/stats"),
     staleTime: 2 * 60_000,
-    enabled: canDocs && (options?.enabled ?? true),
+    enabled: hrEnabled && canDocs && (options?.enabled ?? true),
+  });
+}
+
+interface HrExpiringCertification {
+  id: number;
+  name: string;
+  expiryDate: string | null;
+  user?: { id: string; name: string | null } | null;
+}
+
+export interface HrDocumentExpiryResponse {
+  expiringDocuments: Document[];
+  expiringCertifications: HrExpiringCertification[];
+  totalExpiring: number;
+}
+
+export function useHrDocumentExpiry(
+  days = 30,
+  options?: { enabled?: boolean },
+) {
+  const canDocs = useCan("hr:documents:view");
+  const hrEnabled = useModuleEnabled("hr");
+  return useQuery({
+    queryKey: queryKeys.hr.documentsExpiry(days),
+    queryFn: () =>
+      apiClient.get<HrDocumentExpiryResponse>("/hr/document-expiry", { days }),
+    staleTime: 2 * 60_000,
+    enabled: hrEnabled && canDocs && (options?.enabled ?? true),
   });
 }
 

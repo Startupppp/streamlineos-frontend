@@ -1,7 +1,7 @@
 # HRMS core Phase 1 expand-contract migration plan
 
 Date: 2026-08-10
-Status: **proposed, not authored, not journaled, not applied**
+Status: **approved and authored as a review-only SQL-managed bundle; not rehearsed, journaled into the root Drizzle chain, or applied**
 Applies to: live-tenant HRMS core only
 
 ## Non-negotiable safety rules
@@ -9,7 +9,7 @@ Applies to: live-tenant HRMS core only
 1. Expand before backfill; backfill before validation; validate before read cutover; contract only under a later approval.
 2. Never mutate the production primary for load testing. Rehearse on a point-in-time branch or anonymized production-size fixture.
 3. Each database migration is short, restartable, and paired with an explicit compensating migration. Data rollback is feature-flag/read-path rollback; migrated facts are not destructively deleted.
-4. Migration files receive the next available journal IDs only after rebasing and locking the migration journal. The current audited journal ends at `0398`; this plan intentionally does not reserve numbers while other work may advance it.
+4. This SQL-managed bundle remains outside the drifted root Drizzle journal. Promotion requires the approved hash-bound bundle runner, an exact dependency on root migration `0398`, its own applied-operation ledger, and a separately approved production manifest; never copy the pending journal or placeholder snapshots into the root chain.
 5. Never use unbounded `SET statement_timeout=0`. Use short lock timeout, bounded statement timeout, keyset batches, and operator checkpoints.
 6. No plaintext PII in SQL output, logs, checkpoints, audit diffs, or reconciliation files.
 7. No Payroll calculation, finalized run, payslip amount, statutory figure, or historical subject row is recalculated.
@@ -97,6 +97,7 @@ Forward:
 - synchronize Drizzle declarations for the live `org_id` columns, composite FKs, indexes, and RLS-visible fields on `roster_entries` and `onboarding_template_steps`;
 - register live SQL-only constraints such as `excl_worker_engagements_overlap` and effective-date exclusions in schema-vs-live tests;
 - create a migration-preflight view or read-only script that reports missing/duplicate constraints by OID/name/definition;
+- keep every SQL-managed Phase 1 table behind the explicit `hrms-phase1-sql-managed.ts` barrel, outside the normal Drizzle generation barrel; execute the reviewed bundle only through its hash-allowlisted runner with root-0398 dependency, catalog fingerprints, and a separate applied-state ledger;
 - do not recreate already-present production objects.
 
 Rollback:
@@ -127,7 +128,7 @@ Online mechanics:
 
 - add metadata-safe constant defaults only where PostgreSQL can avoid a rewrite;
 - otherwise add nullable, backfill, set default, add `CHECK (column IS NOT NULL) NOT VALID`, validate it separately, promote to `NOT NULL`, then remove the helper check; this avoids an avoidable second heap scan on supported PostgreSQL versions;
-- use ordinary transactional indexes under bounded statement/lock timeouts for this first wave: audited HR tables are tiny and new target tables are empty. Current migration-integrity tests explicitly reject `CREATE INDEX CONCURRENTLY` inside journaled migrations;
+- use ordinary transactional indexes under bounded statement/lock timeouts for this first wave: audited HR tables are tiny and new target tables are empty. Current migration-integrity tests explicitly reject `CREATE INDEX CONCURRENTLY` inside any transaction-managed bundle;
 - writer-readiness deploy precedes `NOT VALID` FKs.
 
 Rollback:
@@ -188,7 +189,7 @@ Forward schema:
 - add composite FKs and tenant/date indexes;
 - add nullable canonical worker/engagement links to legacy requests where needed.
 
-Before backfill, a bounded read-only preflight records source min/max effective dates and the exact distinct source months, applies the approved date registry, and creates/verifies every required historical fact partition; out-of-policy ranges or excessive partition counts require a new operator approval. Also create the current and next three monthly partitions before enabling writers. A least-privilege scheduled partition operator creates the next partition from an allowlisted template, then verifies bounds, RLS, composite FKs, append-only guards, and grants before use. Alert when fewer than two future partitions remain. There is no default partition: an uncovered date fails closed with stable code `HRMS_PARTITION_NOT_READY` instead of silently bypassing controls. Fixed hash partitions are created with their parent in the journaled migration.
+Before backfill, a bounded read-only preflight records source min/max effective dates and the exact distinct source months, applies the approved date registry, and creates/verifies every required historical fact partition; out-of-policy ranges or excessive partition counts require a new operator approval. Also create the current and next three monthly partitions before enabling writers. A least-privilege scheduled partition operator creates the next partition from an allowlisted recipe, then verifies bounds, RLS, composite FKs, semantic and mutation triggers, and effective grants before use. Alert when fewer than two future partitions remain. There is no default partition: an uncovered date fails closed with stable code `HRMS_PARTITION_NOT_READY` instead of silently bypassing controls. Fixed hash partitions are created with their parent in the reviewed SQL bundle; range leaves come only from the signed explicit-month manifest.
 
 Backfill:
 
@@ -208,9 +209,9 @@ Rollback:
 
 Forward schema:
 
-- create monthly partitions for `attendance_events`/`attendance_event_evidence` and hash-partitioned `attendance_event_locators` exactly as defined in the schema proposal;
+- create monthly partitions for `attendance_events`/`attendance_event_evidence`, hash-partitioned `attendance_event_locators`/`attendance_correction_links`, and normalized `attendance_evidence_legal_holds` exactly as defined in the schema proposal;
 - each event uses composite key `(organization_id,business_date,event_id)` plus a transactionally inserted locator whose command/source key parts are all `NOT NULL`; reciprocal deferred FKs prevent locator/fact orphans, while evidence stores the event ID/date and references the immutable fact;
-- corrections append a new event with an all-or-none `corrects_event_id/corrects_business_date`; deferred checks require exactly one target for `CORRECTION`, none otherwise, the same tenant/worker, and a non-correction original, thereby forbidding self-links and correction chains/cycles. Originals are byte-immutable. Evidence may expire independently but cannot outlive or re-parent its event;
+- corrections append a new event with an all-or-none `corrects_event_id/corrects_business_date`; the hash link enforces at most one direct correction per original and deferred checks require exactly one target for `CORRECTION`, none otherwise, the same tenant/worker/engagement, and a non-correction original, thereby forbidding self-links and correction chains/cycles. Originals are byte-immutable. Evidence is unique per event, may expire independently, and cannot outlive or re-parent its event;
 - create session and daily projections;
 - create partial unique open-session invariant;
 - add canonical worker/engagement links to compatibility attendance rows;
@@ -218,7 +219,7 @@ Forward schema:
 
 After timezone-registry resolution and before backfill, a bounded read-only preflight records source min/max business timestamps/dates and exact derived months, then creates/verifies every required historical event/evidence partition; ambiguity, out-of-policy range, or excessive partition count blocks for operator approval. Also create current plus the next three monthly partitions before enabling writers. The same least-privilege scheduled operator/template contract verifies bounds, RLS, FKs, evidence-retention rules, append-only guards, and grants before use; alert below two future partitions. Do not create a default partition. Missing coverage fails closed as `HRMS_PARTITION_NOT_READY`; fixed hash locator partitions are created with the parent.
 
-Decision 4 adopts this privacy-first evidence policy: raw geolocation collection is off by default; when an explicitly enabled tenant policy has a documented attendance purpose and employee notice, the durable attendance fact stores only geofence ID, pass/fail, accuracy bucket, and distance bucket. Optional dispute evidence may retain encrypted coordinates rounded to at most four decimal places plus device/source metadata for 30 days; tenants may shorten but not lengthen that default. A legal hold can pause purge for a named case only through two distinct `AccessService`-authorized approvers, a reason, expiry/review date, and immutable audit, and must be reviewed at least every 90 days. Raw evidence requires exact view capability, has no bulk export by default, and every view/reveal is purpose-bound and audited. A daily purge deletes expired evidence only and alerts on backlog; statutory attendance facts/totals follow their separate jurisdictional retention schedule.
+Decision 4 adopts this privacy-first evidence policy: raw geolocation collection is off by default; when an explicitly enabled tenant policy has a documented attendance purpose and employee notice, the durable attendance fact stores only geofence ID, pass/fail, fixed accuracy bucket, and fixed distance bucket. Optional dispute evidence may retain encrypted coordinates rounded to at most four decimal places plus device/source metadata for 30 days; tenants may shorten but not lengthen that default. A normalized legal-hold aggregate can pause purge for a named case only through two distinct `AccessService`-authorized approvers, a reason, expiry/review date, optimistic row version, and immutable audit, and must be reviewed at least every 90 days. Raw evidence and legal holds receive no broad application grants in the base wave; exact KMS/reveal/retention/hold functions activate only after the separate ADR. Raw evidence has no bulk export by default, and every view/reveal is purpose-bound and audited. A daily purge deletes expired evidence plus expired hold control only and alerts on backlog; statutory attendance facts/totals and audit history follow their separate retention schedule.
 
 Backfill:
 
@@ -239,7 +240,7 @@ Forward schema:
 - create `org_unit_closure` and its ancestor index;
 - backfill reflexive and ancestor/descendant rows in tenant-scoped batches;
 - introduce the locked move command; all active legacy `/hr/org` team/location writes must delegate to it, legacy hard-delete becomes canonical archive, and shadow compare recursive CTE vs closure;
-- create monthly `hr_audit_events` partitions, restrictive grants, future-partition procedure/template, and mutation-rejection triggers; Batch D exclusively owns `hr_sensitive_access_events`;
+- create hash-partitioned `hr_audit_event_sources` plus monthly `hr_audit_events` partitions, reciprocal deferred FKs, restrictive grants, future-partition recipes, and mutation-rejection triggers; Batch D exclusively owns `hr_sensitive_access_events`;
 - copy legacy audit rows using deterministic legacy keys and redacted diffs.
 
 Before copying legacy audits, a bounded read-only preflight records source min/max timestamps and exact source months and creates/verifies every required historical HR-audit partition; out-of-policy ranges or excessive partition counts require operator approval. Also precreate current plus the next three monthly partitions. The scheduled owner/template verifies bounds, RLS, grants, and mutation guards before use and alerts below two future partitions; no default partition exists. A command whose transactionally required audit partition is missing fails closed as `HRMS_AUDIT_PARTITION_NOT_READY`.
@@ -285,7 +286,7 @@ Only then may old columns/tables be renamed, guarded read-only, and eventually d
 
 1. **Observability first:** correlation IDs, migration-profile metrics, shadow mismatch counters, DB query timing, and PII-free migration telemetry.
 2. **Source parity:** Batch A plus clean-rebuild/catalog tests.
-3. **Schema expansion:** create all approved non-sensitive B/C/E/F/G tables, constraints, locators, empty partitions, and audit guards with every profile still at legacy defaults. Batch D remains blocked on its KMS ADR; no read or writer switches occur.
+3. **Schema expansion:** create all approved non-sensitive B/C/E/F/G parents, fixed hash leaves, constraints, locators, and guards with every profile still at legacy defaults; then create exact range leaves from the hash-bound approval manifest before any writer. The hash proves exact manifest identity and is not a digital signature. Batch D remains blocked on its KMS ADR; no read or writer switches occur.
 4. **API and compatible-writer wave:** introduce the Workforce command boundary, permanent source uniqueness, tenant reference validation, conditional versions, transactional outbox/audit, and compatibility projectors. Remove the SEC-030 write-on-read; enforce SEC-031 DataScope; split SEC-032/SEC-060 DTOs; make SEC-036 termination tenant-only; require tenant employment proof for SEC-037; make SEC-045 dependencies fail closed; use one stable error mapper.
 5. **Caching wave:** ship bootstrap/profile/access/scope revisions, V1/V2-separated actor/tenant query namespaces, exact mutation invalidation, cancellation, logout/401/org-switch clearing, and sensitive no-store/purge behavior.
 6. **UI wave:** use the backend capability manifest for exact server routes, sidebar/actions/query gates and safe entitlement states; provide self-service `/me/*`, shared responsive/accessibility/list/error/confirmation conventions, and remove direct duplicate data layers.
@@ -453,21 +454,21 @@ Subjects are processed tenant-by-tenant with a zero-error rule: any failed or am
 | Timestamp conversion | Semantic corruption | Sidecar/new table and explicit conversion registry |
 | Partition creation/attachment | Parent lock | Precreate future partitions and validate bounds |
 | RLS/`FORCE RLS` | Traffic denial if context wrong | Policy integration tests and application-role canary |
-| Cascade→restrict | Existing orphans/blockers | Add/validate restrictive FK before removing old FK |
+| Cascade to restrict | Existing orphans/blockers | Add/validate restrictive FK before removing old FK |
 
 ## Online DDL boundary
 
-Journaled Drizzle migrations are transactional, and `backend/src/db/migration-integrity.spec.ts:42` explicitly forbids `CREATE INDEX CONCURRENTLY`. The first expansion uses ordinary indexes because audited existing HR tables are tiny and target tables are empty. Any future large existing-table online index is blocked until separately approved.
+The existing Drizzle migration integrity test forbids `CREATE INDEX CONCURRENTLY`. SQL-managed Phase 1 files are also transactional through their separate hash-allowlisted runner and use ordinary indexes because audited existing HR tables are tiny and target tables are empty. They never write or copy placeholder metadata into the Drizzle journal. Any future large existing-table online index is blocked until separately approved.
 
 That future operation must use a crash-safe non-Drizzle runner with an allowlisted exact SQL hash, advisory lock, bounded timeouts, autocommit per online statement, and its own `online_ddl_operations` record (`operation_id`, object, SQL hash, expected catalog definition, state, attempts, timestamps, last error, operator/approver manifest). It verifies before/after catalog state, resumes `PLANNED/RUNNING/VERIFYING` work, detects/cleans only its own invalid index, and marks `COMPLETE` only after definition validation. It never writes the Drizzle journal; a later short journaled migration may attach a verified index-backed constraint.
 
-## Proposed migration artifacts after approval
+## Authored migration artifacts after approval
 
-Each database forward SQL has a companion `.down.sql` or an explicit refusal guard where reversal would discard data. The implementation session will create and review these artifacts in deployment order; only database migrations receive journal IDs, while operator CLIs remain separately versioned and audited:
+Each database forward SQL has a companion `.down.sql` or an explicit refusal guard where reversal would discard data. The approved implementation wave authors and reviews these artifacts in deployment order. The SQL-managed HRMS bundle never writes the Drizzle journal; operator CLIs have their own hash-bound manifests and operation records:
 
 1. schema/live parity declaration tests;
 2. migration profile, workforce links/maps/reconciliation, and version columns;
-3. assignment/reporting/state-event schema plus `command_fences` integration and permanent state-event uniqueness;
+3. assignment/reporting/state-event schema plus permanent command/source uniqueness; expiring `command_fences` remain an optional snapshot reference rather than a historical FK;
 4. leave ledger/locator/projection partitions and their future-partition operator;
 5. attendance event/locator/evidence/projection partitions and their future-partition operator;
 6. hierarchy closure and immutable HR audit;
@@ -475,8 +476,10 @@ Each database forward SQL has a companion `.down.sql` or an explicit refusal gua
 8. tenant FK/check validation migrations;
 9. operator CLIs and validation reports.
 
+Forward application and rollback use separate strict approval manifests. A rollback manifest binds every applied file's exact operation ID, forward SQL hash, original apply-manifest hash, root/database/role/server identity, every down-file hash, and one contiguous rollback endpoint. The runner holds the bundle advisory lock, rejects unbound active or complete operations, and processes only the approved reverse suffix, one transaction per file. Each down file validates and locks its exact `COMPLETE` operation before any DDL, changes it to `ROLLED_BACK` only after all DDL succeeds, and verifies both the retained ledger and the rolled-back catalog before commit. Reapplication advances that exact identity through `ROLLED_BACK -> RUNNING -> VERIFYING -> COMPLETE` with an incremented attempt; a failed reapplication is durably `FAILED` and requires renewed approval.
+
 The exact SQL and rollback are reviewed batch-by-batch before production execution. Approval of all eight decisions permits authoring the non-sensitive additive first wave; Batch D still waits for its named KMS ADR. No approval here permits running migrations against production without showing the generated SQL, dry-run result, backup/restore evidence, and target cohort.
 
 ## Stop gate
 
-No migration file or application code has been created by this phase. The next action is explicit approval of all eight decisions above; Batch D remains blocked until its named KMS ADR is separately accepted. Production mutation status remains **none**.
+The additive schema source, review-only `0000-0004` SQL bundle and rollbacks, catalog preflights, schema-bundle runner, partition planner, and signed leave-opening verification tooling were authored after the eight-decision approval. They remain non-executable against production until a disposable production-size clone passes forward, rollback/refusal, partition, RLS, privilege, resume, reconciliation, and restore rehearsals and the exact production manifests receive separate approval. Batch D remains blocked until its named KMS ADR is separately accepted. Production mutation status remains **none**.

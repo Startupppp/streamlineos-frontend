@@ -29,7 +29,6 @@ export interface Employee {
   isActive: boolean;
   joiningDate: string | null;
   reportingTo: string | null;
-  monthlySalary: string | null;
   bio: string | null;
   linkedinUrl: string | null;
   twitterUrl: string | null;
@@ -50,16 +49,13 @@ export interface PaginatedEmployees {
   pagination: Pagination;
 }
 
-export interface OrgChartNode {
-  id: string;
-  name: string | null;
-  email: string;
-  role: string;
-  designation: string | null;
-  image: string | null;
-  departmentId: string | number | null;
-  departmentName: string | null;
-  reportingTo: string | null;
+export interface EmployeeCursorPage {
+  data: Employee[];
+  pageInfo: {
+    limit: number;
+    hasMore: boolean;
+    nextCursor: string | null;
+  };
 }
 
 export interface EmployeeAttendanceSummaryData {
@@ -103,12 +99,12 @@ export interface Document {
   id: number;
   orgId: string;
   userId: string | null;
-  departmentId: number | null;
+  departmentId: string | null;
   name: string;
   description: string | null;
   type: DocumentType;
   category: string | null;
-  fileUrl: string;
+  hasFile: boolean;
   fileName: string | null;
   fileSize: number | null;
   mimeType: string | null;
@@ -171,15 +167,6 @@ export interface UpdateProfileInput {
   skills?: string[];
   role?: string;
   gender?: "MALE" | "FEMALE" | "OTHER";
-  taxId?: string;
-  monthlySalary?: number;
-  bankDetails?: {
-    accountNumber?: string;
-    bankName?: string;
-    branch?: string;
-    ifsc?: string;
-    accountHolder?: string;
-  };
   joiningDate?: string;
   reportingTo?: string | null;
 }

@@ -26,6 +26,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Separator } from "@/components/ui/separator";
 import { SheetBody, SheetFooter } from "@/components/ui/sheet";
 import { useUpdateUser } from "@/hooks/api/users";
+import { useCanManageOrganizationMembership } from "@/hooks/api/access";
 import type { User } from "@/hooks/api/users";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
@@ -60,6 +61,7 @@ const RELATIONS = ["Spouse", "Parent", "Sibling", "Child", "Friend", "Other"];
 
 export function UserEditForm({ user, onSuccess, onCancel }: UserEditFormProps) {
   const { mutate: updateUser, isPending } = useUpdateUser();
+  const canManageMembership = useCanManageOrganizationMembership();
 
   const isOwner = user.role === ORG_OWNER_ROLE;
 
@@ -98,7 +100,7 @@ export function UserEditForm({ user, onSuccess, onCancel }: UserEditFormProps) {
           lastName: values.lastName,
           designation: values.designation,
           phone: values.phone,
-          role: values.role,
+          ...(canManageMembership ? { role: values.role } : {}),
           bio: values.bio,
           emergencyContact,
         },
@@ -178,40 +180,42 @@ export function UserEditForm({ user, onSuccess, onCancel }: UserEditFormProps) {
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="role"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Role <span className="text-destructive">*</span></FormLabel>
-              <Select
-                onValueChange={field.onChange}
-                value={field.value}
-                disabled={isOwner}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {isOwner ? (
-                    <SelectItem value={ORG_OWNER_ROLE} disabled>
-                      Owner — transfer ownership to change
-                    </SelectItem>
-                  ) : (
-                    ROLES.map((r) => (
-                      <SelectItem key={r.value} value={r.value}>
-                        {r.label}
+        {canManageMembership ? (
+          <FormField
+            control={form.control}
+            name="role"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Role <span className="text-destructive">*</span></FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value}
+                  disabled={isOwner}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {isOwner ? (
+                      <SelectItem value={ORG_OWNER_ROLE} disabled>
+                        Owner — transfer ownership to change
                       </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                    ) : (
+                      ROLES.map((roleOption) => (
+                        <SelectItem key={roleOption.value} value={roleOption.value}>
+                          {roleOption.label}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        ) : null}
 
         <FormField
           control={form.control}
@@ -262,8 +266,10 @@ export function UserEditForm({ user, onSuccess, onCancel }: UserEditFormProps) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {RELATIONS.map((r) => (
-                      <SelectItem key={r} value={r}>{r}</SelectItem>
+                    {RELATIONS.map((relation) => (
+                      <SelectItem key={relation} value={relation}>
+                        {relation}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

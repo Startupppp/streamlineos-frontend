@@ -1,8 +1,8 @@
 # HRMS core Phase 1 target schema proposal
 
 Date: 2026-08-10
-Status: **proposal only — awaiting approval**
-Implementation gate: no application/schema/production mutation is authorized by this document
+Status: **all eight decisions approved for additive authoring on 2026-08-11; database execution remains separately gated**
+Execution gate: this document authorizes additive source and migration authoring only; it does not authorize database execution, application activation, tenant cutover, or production mutation
 
 ## Executive decision
 
@@ -150,7 +150,7 @@ command_fence_id nullable, migration_batch_id nullable
 recorded_at timestamptz, actor membership/user snapshot
 ```
 
-The table has `PRIMARY KEY (organization_id,event_id)`, permanent `UNIQUE (organization_id,command_scope,command_id,effect_ordinal)` and `UNIQUE (organization_id,source_type,source_id,source_ordinal)` keys, non-negative ordinal checks, a tenant FK to the engagement, and a partial unique index on `(organization_id,worker_engagement_id,event_kind) WHERE event_kind = 'LEGACY_SNAPSHOT'`. No permanent key component is nullable; a command without an external source uses `source_type = 'COMMAND'`, its canonical command ID, and the effect ordinal. Expansion seeds one deterministic `LEGACY_SNAPSHOT` event for every existing engagement (including the current `CANCELLED` and `PLANNED` rows), with `from_status = NULL`, the observed status, the engagement row as its non-null source key, and a non-null migration batch. `worker_engagements.status` is then a rebuilt/current-state projection. Rehire creates a new engagement rather than rewinding terminal history.
+The table has `PRIMARY KEY (organization_id,event_id)`, permanent `UNIQUE (organization_id,command_scope,command_id,effect_ordinal)` and `UNIQUE (organization_id,source_type,source_id,source_ordinal)` keys, non-negative ordinal checks, a tenant FK to the engagement, and a partial unique index on `(organization_id,worker_engagement_id,event_kind) WHERE event_kind = 'LEGACY_SNAPSHOT'`. No permanent key component is nullable; a command without an external source uses `source_type = 'COMMAND'`, its canonical command ID, and the effect ordinal. The base expansion leaves this table empty and `worker_engagements.last_state_event_id` nullable so the legacy writer remains compatible. After the compatible command writer is deployed, a separately approved deterministic backfill inserts one `LEGACY_SNAPSHOT` for every existing engagement (including observed `CANCELLED` and `PLANNED` rows), with `from_status = NULL`, the observed status, the engagement row as its non-null source key, and a non-null migration batch, then advances the projection atomically. Event effective dates cannot move backwards; created engagements start `PLANNED` or `ACTIVE`; subsequent transitions are only `PLANNED -> ACTIVE/CANCELLED` or `ACTIVE -> COMPLETED/TERMINATED`. `COMPLETED`, `TERMINATED`, and `CANCELLED` are terminal, so rehire creates a new engagement. A deferred projection check requires every non-null current pointer/status to equal the latest event and forbids clearing a canonical pointer.
 
 ### Compatibility and reconciliation
 
@@ -215,7 +215,8 @@ Replace mutable attendance truth and JSON breaks with:
 - `attendance_events`: append-only `CHECK_IN`, `CHECK_OUT`, `BREAK_START`, `BREAK_END`, `AUTO_CHECKOUT`, `CORRECTION`;
 - `attendance_session_projections`: rebuildable current session with partial unique `(org,worker) WHERE closed_at IS NULL`;
 - `attendance_daily_projections`: rebuildable daily totals;
-- `attendance_event_evidence`: separately protected device/geolocation evidence with retention expiry.
+- `attendance_event_evidence`: separately protected, at-most-one-per-event device/geolocation evidence with retention expiry;
+- `attendance_evidence_legal_holds`: separately mutable hold control linked to evidence, reachable only through a two-person, row-versioned, audit-coupled command.
 
 Each event stores worker/engagement IDs, `business_date date`, `occurred_at timestamptz`, `recorded_at timestamptz`, organization timezone snapshot, source, and a deterministic command key. The server derives business date; the client never chooses it (`API-018`). A `CORRECTION` also stores the original `(business_date,event_id)` plus a typed compensating payload; replay applies the compensation and never changes the original bytes.
 
@@ -235,9 +236,9 @@ attendance_event_locators(
 
 All permanent command/source key components are `NOT NULL`, ordinals are non-negative, and all locator uniqueness includes the hash key, so PostgreSQL can enforce it across locator partitions. A command without an external source uses the reserved `COMMAND` source type, canonical command ID, and effect ordinal. Locator and event use reciprocal `DEFERRABLE INITIALLY DEFERRED` composite FKs between locator `(organization_id,event_id,business_date)` and event `(organization_id,business_date,event_id)`, so neither can commit orphaned. Evidence and a correction’s original-event reference store the date resolved through the locator and FK directly to the range-partitioned event PK. Locator and fact insert in one transaction; IDs are exposed to TypeScript as strings. This supplies an enforceable stable locator without pretending `event_id` alone is unique on the time-partitioned event parent.
 
-Correction columns have a named check requiring `(corrects_business_date,corrects_event_id)` to be both non-null exactly when `event_kind = 'CORRECTION'` and both null otherwise, plus a self-target check. The target FK is `MATCH FULL DEFERRABLE INITIALLY DEFERRED`. A deferred constraint trigger requires the target to be a non-`CORRECTION` event for the same worker and engagement and validates the typed compensating payload. Because corrections may target only original, non-correction facts, correction chains and cycles cannot commit; originals remain byte-immutable.
+Correction columns have a named check requiring `(corrects_business_date,corrects_event_id)` to be both non-null exactly when `event_kind = 'CORRECTION'` and both null otherwise, plus a self-target check. The target FK uses the default `MATCH SIMPLE` and is `DEFERRABLE INITIALLY DEFERRED`; `MATCH FULL` is invalid for this shape because the tenant key is always non-null while the two target columns are optional, so the named check owns their all-or-none rule. Hash-partitioned `attendance_correction_links` has primary key `(organization_id,original_event_id)` and unique `(organization_id,correction_event_id)`, so one original has at most one direct correction and one correction cannot serve two originals across range partitions. Deferred fact/link triggers require the target to be a non-`CORRECTION` event for the same worker and engagement and validate the typed compensating payload. Correction chains and cycles cannot commit; originals remain byte-immutable.
 
-The current attendance row remains a dual-written projection through rollback. Raw geolocation is off by default. An explicitly enabled tenant policy with documented purpose and employee notice persists only geofence result and accuracy/distance buckets in the durable fact; optional dispute evidence stores encrypted coordinates rounded to at most four decimals for 30 days. Tenants may shorten but not lengthen that default. A longer hold needs a named case, two distinct `AccessService`-authorized approvers, immutable audit, and review at least every 90 days. Evidence has no bulk export by default, every reveal is purpose-bound/audited, and expiry deletes evidence without deleting the locator or attendance fact.
+The current attendance row remains a dual-written projection through rollback. Raw geolocation is off by default. An explicitly enabled tenant policy with documented purpose and employee notice persists only geofence result and fixed accuracy/distance enum buckets in the durable fact; optional dispute evidence stores encrypted coordinates rounded to at most four decimals for 30 days. Tenants may shorten but not lengthen that default. A legal hold is not an update to immutable evidence: the separate hold aggregate names the case, two distinct `AccessService`-authorized approvers, reason, expiry/review date, and row version. Its only writer is a two-person command that appends the immutable audit before changing the aggregate, and review is required at least every 90 days. Evidence has no bulk export by default, every reveal is purpose-bound/audited, and expiry deletes evidence plus expired hold control without deleting the locator, attendance fact, or audit history.
 
 ## Leave target
 
@@ -294,7 +295,7 @@ No new `hr_command_receipts` table is introduced. HTTP/command lifecycle reuses 
 
 ### Database-enforced immutability
 
-`worker_engagement_state_events`, attendance locators/events, leave locators/ledger/reversal links, and audit/access events are owned by dedicated fact-writer roles. Runtime roles receive only `INSERT` and authorized `SELECT`; `UPDATE`, `DELETE`, and `TRUNCATE` are revoked on parents and every partition. Parent-level defensive triggers reject update/delete and are verified on newly attached partitions. Corrections, reversals, evidence expiry, and pseudonymization use their explicitly permitted append/retention commands rather than generic table mutation. Integration tests execute as the non-owner application role and prove mutation fails.
+`worker_engagement_state_events`, attendance locators/events, leave locators/ledger/reversal links, and audit/access events are owned by dedicated fact-writer roles. The base expansion grants the ordinary application role no fact, projection, raw-evidence, legal-hold, map, or reconciliation writes; those privileges activate only with their reviewed API/canary migration. Activated dedicated roles receive only the exact command privileges and authorized readers receive only the exact view privileges; `UPDATE`, `DELETE`, and `TRUNCATE` remain revoked on append-only parents and every partition. Parent-level defensive triggers reject mutation and are verified on newly attached partitions. Corrections, reversals, evidence expiry, and pseudonymization use their explicitly permitted append/retention commands rather than generic table mutation. Integration tests execute as the non-owner roles and prove all unapproved access fails.
 
 ## Hierarchy target
 
@@ -313,7 +314,9 @@ Effective reporting lines remain the manager truth; a rebuildable current report
 
 ## Audit, lifecycle, and temporal policy
 
-Create partitioned append-only `hr_audit_events` and `hr_sensitive_access_events` with tenant, actor snapshot, entity/action, request/correlation ID, redacted diff, and `occurred_at timestamptz`. A dedicated role can insert and authorized readers can select; application roles cannot update/delete/truncate. A defensive trigger rejects mutation. Audit JSON is allowed only as an immutable redacted diff.
+Create partitioned append-only `hr_audit_events` and `hr_sensitive_access_events` with tenant, actor snapshot, entity/action, request/correlation ID, redacted diff, and `occurred_at timestamptz`. Hash-partitioned `hr_audit_event_sources` permanently owns `(organization_id,source_type,source_id,source_ordinal)` and maps it to the range fact through reciprocal deferred FKs, so a retry with a changed timestamp cannot create another immutable audit row. A dedicated audited writer can insert only after API activation and authorized readers can select; the broad application role has no direct audit-table access. Defensive triggers reject mutation. Audit JSON is allowed only as an immutable redacted diff.
+
+Partitioned parents, reciprocal deferred FKs, exclusion constraints, and per-leaf triggers are SQL-managed objects. They live behind `backend/src/db/schema/hrms-phase1-sql-managed.ts`, which is intentionally excluded from the normal Drizzle generation barrel. The reviewed SQL bundle uses its own hashes, dependency on migration 0398, catalog fingerprints, apply ledger, and partition manifest; its placeholder metadata is never copied into the Drizzle journal.
 
 Mutable aggregate roots get `row_version integer NOT NULL DEFAULT 1 CHECK(row_version > 0)`: person, worker, engagement, org unit, assignment/reporting period, leave request, onboarding case/task, document metadata, and rebuildable projections. Updates require the expected version; zero rows becomes a conflict. Append-only facts do not get versions.
 
@@ -382,4 +385,4 @@ All `API-*`, `SEC-*`, `UI-*`, `COST-*`, and `DEAD-*` findings remain open after 
 
 ## Approval gate
 
-Only explicit approval of all eight decisions permits authoring the additive expansion and verification wave described in the companion migration plan. It does not authorize production execution. Contract/deletion remains a separate irreversible approval. Until approval, production mutation status is **none**.
+All eight decisions were explicitly approved on 2026-08-11 under `HRMS-P1-APPROVAL-2026-08-11-v1`, permitting authoring of the additive expansion and verification wave described in the companion migration plan. That approval does not authorize database execution. Clone rehearsal, production execution, tenant activation, KMS/private data, and contract/deletion retain their separate gates. Production mutation status is **none**.

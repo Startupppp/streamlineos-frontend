@@ -1,8 +1,37 @@
 import type { ReactNode } from "react";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { resolveNavRouteAccess } from "@/components/layout/sidebar/sidebar-nav-items";
 import { HrProvider } from "@/features/hr/shared/hr-context";
 import { HrPathTracker } from "@/features/hr/shared/hr-path-tracker";
+import {
+  requireModulePermission,
+  requirePermission,
+  requireSession,
+} from "@/lib/rbac/require-permission";
+import { resolveRequestPath } from "@/lib/rbac/request-path";
 
-export default function HrLayout({ children }: { children: ReactNode }) {
+export default async function HrLayout({ children }: { children: ReactNode }) {
+  const requestHeaders = await headers();
+  const pathname = resolveRequestPath(requestHeaders) ?? "/hr";
+  const routeAccess = resolveNavRouteAccess(pathname);
+
+  if (!routeAccess.matched) {
+    const params = new URLSearchParams({
+      required: "hr:route:configured",
+      from: pathname,
+    });
+    redirect(`/access-denied?${params.toString()}`);
+  }
+
+  if (routeAccess.module === "hrms") {
+    await requireModulePermission("hr", routeAccess.requiredPermission);
+  } else if (routeAccess.requiredPermission) {
+    await requirePermission(routeAccess.requiredPermission);
+  } else {
+    await requireSession();
+  }
+
   return (
     <HrProvider>
       <div className="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden">

@@ -14,38 +14,15 @@ import { Save } from "lucide-react";
 import { useRoles } from "@/hooks/api/roles";
 import { PersonalInfoSection } from "@/features/hr/employees/detail/personal-info-section";
 import { ProfessionalInfoSection } from "@/features/hr/employees/detail/professional-info-section";
-import { BankDetailsSection } from "@/features/hr/employees/detail/bank-details-section";
 import { UnsavedChangesDialog } from "@/components/ui/unsaved-changes-dialog";
 import { useUnsavedChangesGuard } from "@/hooks/common/use-unsaved-changes-guard";
 import {
   employeeFormSchema,
   type EmployeeFormValues,
 } from "@/features/hr/employees/detail/employee-form-schema";
+import type { EmployeeData } from "@/features/hr/employees/detail/employee-data";
 
-export interface EmployeeData {
-  id: string;
-  firstName: string | null;
-  lastName: string | null;
-  email: string;
-  role: string | null;
-  designation: string | null;
-  orgDepartmentId: string | null;
-  phone: string | null;
-  gender: "MALE" | "FEMALE" | "OTHER" | null;
-  joiningDate: string | Date | null;
-  skills?: { name: string; level: number }[] | null;
-  taxId: string | null;
-  monthlySalary: string | number | null;
-  isActive: boolean | null;
-  bankDetails: {
-    accountNumber?: string;
-    bankName?: string;
-    branch?: string;
-    ifsc?: string;
-    accountHolder?: string;
-  } | null;
-  [key: string]: unknown;
-}
+export type { EmployeeData } from "@/features/hr/employees/detail/employee-data";
 
 interface EditEmployeeFormProps {
   employee: EmployeeData;
@@ -78,19 +55,10 @@ export function EditEmployeeForm({
       designation: employee.designation || "",
       departmentId: employee.orgDepartmentId || undefined,
       phone: employee.phone || "",
-      gender: employee.gender || "MALE",
+      gender: employee.gender ?? undefined,
       joiningDate: employee.joiningDate
         ? new Date(employee.joiningDate)
         : undefined,
-      taxId: employee.taxId || "",
-      monthlySalary: employee.monthlySalary
-        ? Number(employee.monthlySalary)
-        : undefined,
-      bankAccount: employee.bankDetails?.accountNumber || "",
-      bankName: employee.bankDetails?.bankName || "",
-      branch: employee.bankDetails?.branch || "",
-      ifsc: employee.bankDetails?.ifsc || "",
-      accountHolder: employee.bankDetails?.accountHolder || "",
     }),
     [employee],
   );
@@ -118,17 +86,6 @@ export function EditEmployeeForm({
         phone: values.phone,
         gender: values.gender,
         joiningDate: values.joiningDate?.toISOString().slice(0, 10),
-        taxId: values.taxId,
-        monthlySalary: values.monthlySalary,
-        bankDetails: values.bankAccount
-          ? {
-              accountNumber: values.bankAccount,
-              bankName: values.bankName || "",
-              branch: values.branch || "",
-              ifsc: values.ifsc || "",
-              accountHolder: values.accountHolder || "",
-            }
-          : undefined,
       });
       form.reset(values);
       router.refresh();
@@ -181,10 +138,6 @@ export function EditEmployeeForm({
           <Separator />
           <div className="p-5">
             <ProfessionalInfoSection assignableRoles={assignableRoles} />
-          </div>
-          <Separator />
-          <div className="p-5">
-            <BankDetailsSection />
           </div>
           <div className="flex shrink-0 justify-end gap-2 border-t border-border bg-muted/30 px-5 py-3.5">
             <Button

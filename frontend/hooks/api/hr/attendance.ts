@@ -10,7 +10,7 @@ import type { UseMutationOptions } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import type {
   AttendanceStatusResult,
   AttendanceLog,
@@ -200,7 +200,7 @@ export function useHrCheckIn(
 
 export function useHrCheckOut(
   options?: Omit<
-    UseMutationOptions<{ success: boolean }, Error, { localDate?: string }>,
+    UseMutationOptions<{ success: boolean }, Error, void>,
     "mutationFn"
   >,
 ) {
@@ -210,8 +210,8 @@ export function useHrCheckOut(
   const statusKey = queryKeys.hr.attendanceStatus(orgId);
   return useMutation({
     mutationKey: ["hr", "attendance", "check-out"],
-    mutationFn: (data: { localDate?: string }) =>
-      apiClient.post<{ success: boolean }>("/me/attendance/check-out", data),
+    mutationFn: () =>
+      apiClient.post<{ success: boolean }>("/me/attendance/check-out", {}),
     onMutate: async () => {
       await qc.cancelQueries({ queryKey: statusKey, exact: true });
       const previous = qc.getQueryData<AttendanceStatusResult>(statusKey);
@@ -294,6 +294,7 @@ export function useHrToggleBreak(
 export function useHrMonthlyAttendance(params: GetMonthlyAttendanceInput) {
   const canSelf = useCan("self:attendance");
   const canManage = useCan("hr:attendance:view");
+  const hrEnabled = useModuleEnabled("hr");
   const isOtherUser = params.userId !== undefined;
   return useQuery({
     queryKey: queryKeys.hr.monthlyAttendance(params),
@@ -307,7 +308,7 @@ export function useHrMonthlyAttendance(params: GetMonthlyAttendanceInput) {
         },
       ),
     staleTime: 2 * 60_000,
-    enabled: isOtherUser ? canManage : canSelf,
+    enabled: isOtherUser ? hrEnabled && canManage : canSelf,
   });
 }
 
@@ -339,6 +340,7 @@ export function useAttendanceHeatmap(params: { year: number }) {
 
 export function useGetWorkLogs(input: GetWorkLogsInput) {
   const canAttendance = useCan("hr:attendance:view");
+  const hrEnabled = useModuleEnabled("hr");
   const params: Record<string, unknown> = {
     year: input.year,
     quarter: input.quarter,
@@ -352,7 +354,7 @@ export function useGetWorkLogs(input: GetWorkLogsInput) {
     queryKey: queryKeys.hr.workLogs(params),
     queryFn: () => apiClient.get<WorkLog[]>("/hr/work-logs", params),
     staleTime: 2 * 60_000,
-    enabled: canAttendance,
+    enabled: hrEnabled && canAttendance,
   });
 }
 
@@ -380,6 +382,7 @@ export function useHrTeamAttendanceStatus(params?: TeamAttendanceStatusQuery) {
   const { data: session } = useSession();
   const orgId = session?.orgId;
   const canAttendance = useCan("hr:attendance:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [
       ...queryKeys.hr.all,
@@ -396,7 +399,7 @@ export function useHrTeamAttendanceStatus(params?: TeamAttendanceStatusQuery) {
     refetchInterval: 60_000,
     refetchIntervalInBackground: false,
     placeholderData: (prev) => prev,
-    enabled: !!orgId && canAttendance,
+    enabled: !!orgId && hrEnabled && canAttendance,
   });
 }
 

@@ -32,6 +32,7 @@ function FileRowAction({ icon: Icon, label, onClick, destructive }: FileRowActio
 export type DocumentFileRowProps = {
   fileName: string;
   viewHref: string | null;
+  onView?: () => void;
   pending?: boolean;
   onReplace?: () => void;
   onRemove?: () => void;
@@ -40,14 +41,20 @@ export type DocumentFileRowProps = {
 export function DocumentFileRow({
   fileName,
   viewHref,
+  onView,
   pending = false,
   onReplace,
   onRemove,
 }: DocumentFileRowProps) {
   const handleView = useCallback(() => {
-    if (!viewHref) return;
-    window.open(viewHref, "_blank", "noopener,noreferrer");
-  }, [viewHref]);
+    if (onView) {
+      onView();
+      return;
+    }
+    if (viewHref) window.open(viewHref, "_blank", "noopener,noreferrer");
+  }, [onView, viewHref]);
+
+  const canView = Boolean(onView || viewHref);
 
   return (
     <div className="mt-1 flex min-w-0 items-center gap-1.5 rounded-md border border-border/60 bg-muted/30 px-2 py-1">
@@ -63,7 +70,7 @@ export function DocumentFileRow({
         </span>
       ) : null}
       <div className="flex shrink-0 items-center divide-x divide-border/60">
-        {viewHref ? (
+        {canView ? (
           <FileRowAction icon={Eye} label="View" onClick={handleView} />
         ) : null}
         {onReplace ? (

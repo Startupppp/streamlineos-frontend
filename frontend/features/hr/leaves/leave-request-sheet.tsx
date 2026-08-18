@@ -65,7 +65,6 @@ export function LeaveRequestSheet({
       halfDayPeriod: "AM" as const,
       priority: "MEDIUM",
       reason: "",
-      approverId: "",
     },
   });
 
@@ -150,7 +149,6 @@ export function LeaveRequestSheet({
         toast.error(leaveDayLimitError);
         return;
       }
-      const approverId = data.approverId || approvers[0]?.id;
       requestLeaveMutation.mutate(
         {
           leaveTypeId: parseInt(data.leaveTypeId),
@@ -158,7 +156,6 @@ export function LeaveRequestSheet({
           endDate: data.endDate,
           reason: data.reason,
           priority: data.priority,
-          approverId: approverId || undefined,
           attachmentUrl: attachmentUrl || undefined,
           isHalfDay: data.halfDay,
           halfDayPeriod: data.halfDay ? data.halfDayPeriod : undefined,
@@ -174,7 +171,7 @@ export function LeaveRequestSheet({
         },
       );
     },
-    [leaveDayLimitError, approvers, attachmentUrl, form, onOpenChange, requestLeaveMutation],
+    [leaveDayLimitError, attachmentUrl, form, onOpenChange, requestLeaveMutation],
   );
 
   const { isValid, isDirty } = form.formState;
@@ -186,9 +183,13 @@ export function LeaveRequestSheet({
       title="Request Leave"
       description="Fill in the details to submit a leave request"
       onSubmit={form.handleSubmit(onSubmit)}
-      submitLabel="Submit Request"
+      submitLabel={approvers.length === 0 ? "No approver available" : "Submit Request"}
       isPending={requestLeaveMutation.isPending}
-      submitDisabled={(!isValid && isDirty) || leaveTypes.length === 0}
+      submitDisabled={
+        (!isValid && isDirty) ||
+        leaveTypes.length === 0 ||
+        approvers.length === 0
+      }
       isDirty={isDirty}
       onDiscard={() => form.reset()}
     >

@@ -8,29 +8,27 @@ import {
   Clock as ClockIcon,
   ClipboardList as ClipboardListIcon,
 } from "lucide-react";
-import {
-  useHrDashboardMetrics,
-  useHrPendingWfhRequests,
-  useProbationList,
-  useResignations,
-  useHrOnboardingStatus,
-  useHrDocumentStats,
-} from "@/hooks/api/hr";
 import { HrSectionHeader } from "@/features/hr/shared/hr-ui";
-import { HUB_RESIGNATIONS_PARAMS, type HrHubAccess } from "./use-hr-hub-access";
+import {
+  hubSectionData,
+  hubSectionError,
+  type HrHubViewProps,
+} from "@/hooks/api/hr/hub";
 import { HrQueueCard, OpsInboxCard, resolveQueueTone } from "./queues/queue-cards";
 
-interface HrHubQueuesProps {
-  access: HrHubAccess;
-}
-
-export function HrHubQueues({ access }: HrHubQueuesProps) {
-  const metrics = useHrDashboardMetrics();
-  const wfh = useHrPendingWfhRequests({ enabled: access.canAttendanceManage });
-  const probation = useProbationList();
-  const resignations = useResignations(HUB_RESIGNATIONS_PARAMS);
-  const docStats = useHrDocumentStats({ enabled: access.canDocuments });
-  const onboarding = useHrOnboardingStatus();
+export function HrHubQueues({
+  access,
+  snapshot,
+  isLoading,
+  onRetry,
+}: HrHubViewProps) {
+  const sections = snapshot?.sections;
+  const metrics = hubSectionData(sections?.dashboardMetrics);
+  const wfh = hubSectionData(sections?.pendingWfh);
+  const probation = hubSectionData(sections?.probation);
+  const resignations = hubSectionData(sections?.resignations);
+  const docStats = hubSectionData(sections?.documentStats);
+  const onboarding = hubSectionData(sections?.onboardingStatus);
 
   const hasAnyQueue =
     (access.canAnalytics && access.canLeavesApprove) ||
@@ -43,24 +41,24 @@ export function HrHubQueues({ access }: HrHubQueuesProps) {
 
   if (!hasAnyQueue) return null;
 
-  const probationDue = (probation.data ?? []).filter(p => p.status === "review_due").length;
-  const pendingLeaves = metrics.data?.pendingLeaveRequests ?? 0;
-  const wfhCount = (wfh.data ?? []).length;
-  const resignationCount = resignations.data?.pagination.total ?? 0;
-  const docsExpiring = docStats.data?.expiringIn30Days ?? 0;
-  const onboardingInProgress = onboarding.data?.inProgress ?? 0;
-
-  const handleMetricsRetry = () => { void metrics.refetch(); };
-  const handleWfhRetry = () => { void wfh.refetch(); };
-  const handleProbationRetry = () => { void probation.refetch(); };
-  const handleResignationsRetry = () => { void resignations.refetch(); };
-  const handleDocStatsRetry = () => { void docStats.refetch(); };
-  const handleOnboardingRetry = () => { void onboarding.refetch(); };
+  const probationDue = (probation?.data ?? []).filter(
+    (review) => review.status === "review_due",
+  ).length;
+  const pendingLeaves = metrics?.pendingLeaveRequests ?? 0;
+  const wfhCount = (wfh ?? []).length;
+  const resignationCount = resignations?.pagination.total ?? 0;
+  const docsExpiring = docStats?.expiringIn30Days ?? 0;
+  const onboardingInProgress = onboarding?.inProgress ?? 0;
 
   return (
     <div className="space-y-2.5">
       <HrSectionHeader title="Needs you" description="Items waiting for your action" />
-      <OpsInboxCard access={access} />
+      <OpsInboxCard
+        access={access}
+        section={sections?.opsInbox}
+        isLoading={isLoading}
+        onRetry={onRetry}
+      />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
         {access.canAnalytics && access.canLeavesApprove && (
           <HrQueueCard
@@ -69,9 +67,9 @@ export function HrHubQueues({ access }: HrHubQueuesProps) {
             count={pendingLeaves}
             context="Awaiting approval"
             href="/hr/leaves"
-            isLoading={metrics.isLoading}
-            isError={metrics.isError}
-            onRetry={handleMetricsRetry}
+            isLoading={isLoading}
+            isError={Boolean(hubSectionError(sections?.dashboardMetrics))}
+            onRetry={onRetry}
             tone={resolveQueueTone(pendingLeaves)}
           />
         )}
@@ -82,9 +80,9 @@ export function HrHubQueues({ access }: HrHubQueuesProps) {
             count={wfhCount}
             context="Requests to approve"
             href="/hr/attendance"
-            isLoading={wfh.isLoading}
-            isError={wfh.isError}
-            onRetry={handleWfhRetry}
+            isLoading={isLoading}
+            isError={Boolean(hubSectionError(sections?.pendingWfh))}
+            onRetry={onRetry}
             tone={resolveQueueTone(wfhCount)}
           />
         )}
@@ -95,9 +93,9 @@ export function HrHubQueues({ access }: HrHubQueuesProps) {
             count={probationDue}
             context="Require confirmation"
             href="/hr/onboarding/probation"
-            isLoading={probation.isLoading}
-            isError={probation.isError}
-            onRetry={handleProbationRetry}
+            isLoading={isLoading}
+            isError={Boolean(hubSectionError(sections?.probation))}
+            onRetry={onRetry}
             tone={resolveQueueTone(probationDue, probationDue > 3)}
           />
         )}
@@ -108,9 +106,9 @@ export function HrHubQueues({ access }: HrHubQueuesProps) {
             count={resignationCount}
             context="In exit pipeline"
             href="/hr/exit"
-            isLoading={resignations.isLoading}
-            isError={resignations.isError}
-            onRetry={handleResignationsRetry}
+            isLoading={isLoading}
+            isError={Boolean(hubSectionError(sections?.resignations))}
+            onRetry={onRetry}
             tone={resolveQueueTone(resignationCount)}
           />
         )}
@@ -121,9 +119,9 @@ export function HrHubQueues({ access }: HrHubQueuesProps) {
             count={docsExpiring}
             context="Within 30 days"
             href="/hr/documents"
-            isLoading={docStats.isLoading}
-            isError={docStats.isError}
-            onRetry={handleDocStatsRetry}
+            isLoading={isLoading}
+            isError={Boolean(hubSectionError(sections?.documentStats))}
+            onRetry={onRetry}
             tone={resolveQueueTone(docsExpiring, docsExpiring > 5)}
           />
         )}
@@ -134,9 +132,9 @@ export function HrHubQueues({ access }: HrHubQueuesProps) {
             count={onboardingInProgress}
             context="New hires on track"
             href="/hr/onboarding"
-            isLoading={onboarding.isLoading}
-            isError={onboarding.isError}
-            onRetry={handleOnboardingRetry}
+            isLoading={isLoading}
+            isError={Boolean(hubSectionError(sections?.onboardingStatus))}
+            onRetry={onRetry}
             tone="neutral"
           />
         )}

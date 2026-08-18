@@ -33,7 +33,7 @@ export function TemplateLifecycleActions({ template }: TemplateLifecycleActionsP
 
   function handleTransition(to: HrTemplateStatus) {
     transition.mutate(
-      { id: template.id, to },
+      { templateId: template.id, to },
       {
         onSuccess: () => {
           toast.success(`Template moved to ${to}`);

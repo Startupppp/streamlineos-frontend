@@ -3,7 +3,7 @@
 import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
 
 export interface Resignation {
   id: number;
@@ -14,7 +14,7 @@ export interface Resignation {
   lastWorkingDate: string | null;
   noticePeriodDays: number | null;
   status: "SUBMITTED" | "PENDING_HR" | "HR_APPROVED" | "FINAL_APPROVED" | "IN_PROGRESS" | "APPROVED" | "WITHDRAWN" | "COMPLETED" | "REJECTED" | null;
-  resignationLetterUrl: string | null;
+  hasResignationLetter: boolean;
   approvedBy: string | null;
   approvedAt: Date | string | null;
   hrReviewedBy: string | null;
@@ -65,11 +65,13 @@ interface ResignationListParams {
 const exitKeys = {
   all: [...queryKeys.hr.all, "exit"] as const,
   list: () => [...exitKeys.all, "list"] as const,
-  progress: (id: number) => [...exitKeys.all, "progress", id] as const,
+  progress: (resignationId: number) =>
+    [...exitKeys.all, "progress", resignationId] as const,
 };
 
 export function useResignations(params?: ResignationListParams) {
   const canExit = useCan("hr:exit:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...exitKeys.list(), params] as const,
     queryFn: () => {
@@ -82,7 +84,7 @@ export function useResignations(params?: ResignationListParams) {
     },
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
-    enabled: canExit,
+    enabled: hrEnabled && canExit,
   });
 }
 
@@ -133,12 +135,18 @@ export function useWithdrawResignation() {
   });
 }
 
-export function useResignationProgress(id: number, enabled: boolean) {
+export function useResignationProgress(
+  resignationId: number,
+  enabled: boolean,
+) {
+  const canView = useCan("hr:exit:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: exitKeys.progress(id),
-    queryFn: () => apiClient.get<ResignationProgress>(`/hr/exit/${id}/progress`),
+    queryKey: exitKeys.progress(resignationId),
+    queryFn: () =>
+      apiClient.get<ResignationProgress>(`/hr/exit/${resignationId}/progress`),
     staleTime: 2 * 60_000,
-    enabled,
+    enabled: hrEnabled && canView && resignationId > 0 && enabled,
   });
 }
 

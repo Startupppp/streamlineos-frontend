@@ -59,8 +59,8 @@ export function ResignationFormSheet({ open, onOpenChange }: ResignationFormShee
     [resetForm, onOpenChange],
   );
 
-  const handleUploadComplete = useCallback((url: string) => {
-    setResignationLetterUrl(url);
+  const handleUploadComplete = useCallback((_url: string, key: string) => {
+    setResignationLetterUrl(key);
   }, []);
 
   const handleRemoveLetterUrl = useCallback(() => {

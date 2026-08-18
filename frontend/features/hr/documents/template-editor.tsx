@@ -189,7 +189,7 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
 
       if (isEdit && template) {
         updateMutation.mutate(
-          { id: template.id, ...payload },
+          { templateId: template.id, ...payload },
           {
             onSuccess: () => {
               toast.success("Template updated");

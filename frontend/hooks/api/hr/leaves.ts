@@ -1,10 +1,15 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { useCan } from "@/hooks/api/access";
+import { useAccess, useCan, useModuleEnabled } from "@/hooks/api/access";
 import type {
   RequestLeaveInput,
   AddHolidayInput,
@@ -12,7 +17,6 @@ import type {
   UpdateHolidayInput,
   Holiday,
 } from "@/types/hr";
-
 
 interface HrLeaveAnalytics {
   year: number;
@@ -79,16 +83,54 @@ function useInvalidateLeaveDashboard() {
   };
 }
 
+interface LeaveRequestsPage {
+  data: unknown[];
+  pageInfo: {
+    limit: number;
+    hasMore: boolean;
+    nextCursor: number | null;
+  };
+}
+
+function useLeaveQueryIdentity() {
+  const { data: session } = useSession();
+  const { data: access } = useAccess();
+  return {
+    orgId: session?.orgId ?? "",
+    userId: session?.user?.id ?? "",
+    accessVersion: access?.version ?? 0,
+  };
+}
+
+type LeaveIdentity = ReturnType<typeof useLeaveQueryIdentity>;
+
+function leaveContextKey(identity: LeaveIdentity) {
+  return queryKeys.hr.leaves(identity.orgId, identity.userId, identity.accessVersion);
+}
+
+function leaveTeamKey(identity: LeaveIdentity) {
+  return queryKeys.hr.leavesTeam(identity.orgId, identity.userId, identity.accessVersion);
+}
+
+function leaveThisWeekKey(identity: LeaveIdentity) {
+  return queryKeys.hr.leavesThisWeek(identity.orgId, identity.userId, identity.accessVersion);
+}
+
+function leaveMyRequestsKey(identity: LeaveIdentity) {
+  return queryKeys.hr.leavesMyRequests(identity.orgId, identity.userId, identity.accessVersion);
+}
+
 export function useRequestLeave() {
   const qc = useQueryClient();
+  const identity = useLeaveQueryIdentity();
   const invalidateLeaveDashboard = useInvalidateLeaveDashboard();
   return useMutation({
     mutationKey: ["hr", "leaves", "request"],
     mutationFn: (data: RequestLeaveInput) =>
       apiClient.post<{ success: boolean }>("/me/time-off", data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() });
-      qc.invalidateQueries({ queryKey: queryKeys.hr.leavesMyRequests() });
+      qc.invalidateQueries({ queryKey: leaveContextKey(identity) });
+      qc.invalidateQueries({ queryKey: leaveMyRequestsKey(identity) });
       invalidateLeaveDashboard();
     },
   });
@@ -96,6 +138,7 @@ export function useRequestLeave() {
 
 export function useApproveLeaveDedicated() {
   const qc = useQueryClient();
+  const identity = useLeaveQueryIdentity();
   const invalidateLeaveDashboard = useInvalidateLeaveDashboard();
   return useMutation({
     mutationKey: ["hr", "leaves", "approve"],
@@ -104,10 +147,10 @@ export function useApproveLeaveDedicated() {
         comment,
       }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() });
-      qc.invalidateQueries({ queryKey: queryKeys.hr.leavesTeam() });
-      qc.invalidateQueries({ queryKey: queryKeys.hr.leavesMyRequests() });
-      qc.invalidateQueries({ queryKey: queryKeys.hr.leavesThisWeek() });
+      qc.invalidateQueries({ queryKey: leaveContextKey(identity) });
+      qc.invalidateQueries({ queryKey: leaveTeamKey(identity) });
+      qc.invalidateQueries({ queryKey: leaveMyRequestsKey(identity) });
+      qc.invalidateQueries({ queryKey: leaveThisWeekKey(identity) });
       invalidateLeaveDashboard();
     },
   });
@@ -115,6 +158,7 @@ export function useApproveLeaveDedicated() {
 
 export function useRejectLeaveDedicated() {
   const qc = useQueryClient();
+  const identity = useLeaveQueryIdentity();
   const invalidateLeaveDashboard = useInvalidateLeaveDashboard();
   return useMutation({
     mutationKey: ["hr", "leaves", "reject"],
@@ -132,9 +176,9 @@ export function useRejectLeaveDedicated() {
         comment,
       }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() });
-      qc.invalidateQueries({ queryKey: queryKeys.hr.leavesTeam() });
-      qc.invalidateQueries({ queryKey: queryKeys.hr.leavesMyRequests() });
+      qc.invalidateQueries({ queryKey: leaveContextKey(identity) });
+      qc.invalidateQueries({ queryKey: leaveTeamKey(identity) });
+      qc.invalidateQueries({ queryKey: leaveMyRequestsKey(identity) });
       invalidateLeaveDashboard();
     },
   });
@@ -142,14 +186,15 @@ export function useRejectLeaveDedicated() {
 
 export function useCancelLeave() {
   const qc = useQueryClient();
+  const identity = useLeaveQueryIdentity();
   const invalidateLeaveDashboard = useInvalidateLeaveDashboard();
   return useMutation({
     mutationKey: ["hr", "leaves", "cancel"],
     mutationFn: (leaveId: number) =>
       apiClient.patch<{ success: boolean }>(`/me/time-off/${leaveId}/cancel`, {}),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() });
-      qc.invalidateQueries({ queryKey: queryKeys.hr.leavesMyRequests() });
+      qc.invalidateQueries({ queryKey: leaveContextKey(identity) });
+      qc.invalidateQueries({ queryKey: leaveMyRequestsKey(identity) });
       invalidateLeaveDashboard();
     },
   });
@@ -157,6 +202,7 @@ export function useCancelLeave() {
 
 export function useRevertLeave() {
   const qc = useQueryClient();
+  const identity = useLeaveQueryIdentity();
   const invalidateLeaveDashboard = useInvalidateLeaveDashboard();
   return useMutation({
     mutationKey: ["hr", "leaves", "revert"],
@@ -165,9 +211,9 @@ export function useRevertLeave() {
         status: "PENDING",
       }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() });
-      qc.invalidateQueries({ queryKey: queryKeys.hr.leavesTeam() });
-      qc.invalidateQueries({ queryKey: queryKeys.hr.leavesMyRequests() });
+      qc.invalidateQueries({ queryKey: leaveContextKey(identity) });
+      qc.invalidateQueries({ queryKey: leaveTeamKey(identity) });
+      qc.invalidateQueries({ queryKey: leaveMyRequestsKey(identity) });
       invalidateLeaveDashboard();
     },
   });
@@ -183,54 +229,60 @@ export interface HrLeaveType {
 const LEAVE_TYPES_KEY = [...queryKeys.hr.all, "leaveTypesAdmin"] as const;
 
 export function useLeaveTypesAdmin(options?: { enabled?: boolean }) {
+  const canView = useCan("hr:leaves:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: LEAVE_TYPES_KEY,
     queryFn: () => apiClient.get<HrLeaveType[]>("/hr/leaves/types"),
     staleTime: 2 * 60_000,
-    enabled: options?.enabled ?? true,
+    enabled: hrEnabled && canView && (options?.enabled ?? true),
   });
 }
 
 export function useSeedLeaveTypes() {
   const qc = useQueryClient();
+  const identity = useLeaveQueryIdentity();
   return useMutation({
     mutationKey: ["hr", "leaves", "seed-types"],
     mutationFn: () =>
       apiClient.post<{ seeded: number; skipped: number }>("/hr/leaves/types/seed-defaults"),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: LEAVE_TYPES_KEY });
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() });
+      void qc.invalidateQueries({ queryKey: leaveContextKey(identity) });
     },
   });
 }
 
 export function useUpdateLeaveType() {
   const qc = useQueryClient();
+  const identity = useLeaveQueryIdentity();
   return useMutation({
     mutationKey: ["hr", "leaves", "update-type"],
     mutationFn: ({ id, ...patch }: { id: number; name?: string; daysPerYear?: number; carryForward?: boolean }) =>
       apiClient.patch<HrLeaveType>(`/hr/leaves/types/${id}`, patch),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: LEAVE_TYPES_KEY });
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() });
+      void qc.invalidateQueries({ queryKey: leaveContextKey(identity) });
     },
   });
 }
 
 export function useDeleteLeaveType() {
   const qc = useQueryClient();
+  const identity = useLeaveQueryIdentity();
   return useMutation({
     mutationKey: ["hr", "leaves", "delete-type"],
     mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/hr/leaves/types/${id}`),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: LEAVE_TYPES_KEY });
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() });
+      void qc.invalidateQueries({ queryKey: leaveContextKey(identity) });
     },
   });
 }
 
 export function useCreateLeaveType() {
   const qc = useQueryClient();
+  const identity = useLeaveQueryIdentity();
   return useMutation({
     mutationKey: ["hr", "leaves", "create-type"],
     mutationFn: (data: { name: string; daysPerYear: number; carryForward?: boolean }) =>
@@ -240,56 +292,89 @@ export function useCreateLeaveType() {
       ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: LEAVE_TYPES_KEY });
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() });
+      void qc.invalidateQueries({ queryKey: leaveContextKey(identity) });
     },
   });
 }
 
 export function useHrLeaveContext() {
   const canSelf = useCan("self:leaves");
+  const identity = useLeaveQueryIdentity();
   return useQuery({
-    queryKey: queryKeys.hr.leaves(),
+    queryKey: leaveContextKey(identity),
     queryFn: () => apiClient.get<LeaveContextResult>("/me/time-off"),
     staleTime: 2 * 60_000,
-    enabled: canSelf,
+    enabled: Boolean(identity.orgId && identity.userId) && canSelf,
   });
 }
 
 export function useHrLeaveApprovals(options?: { enabled?: boolean }) {
   const canLeaves = useCan("hr:leaves:view");
+  const hrEnabled = useModuleEnabled("hr");
+  const identity = useLeaveQueryIdentity();
   return useQuery({
-    queryKey: queryKeys.hr.leavesTeam(),
+    queryKey: leaveTeamKey(identity),
     queryFn: () => apiClient.get<LeaveApprovalsResult>("/hr/leaves/team"),
     staleTime: 2 * 60_000,
-    enabled: canLeaves && (options?.enabled ?? true),
+    enabled:
+      Boolean(identity.orgId && identity.userId) &&
+      hrEnabled &&
+      canLeaves &&
+      (options?.enabled ?? true),
   });
 }
 
 export function useHrLeavesThisWeek(options?: { enabled?: boolean }) {
   const canSelf = useCan("self:leaves");
+  const identity = useLeaveQueryIdentity();
   return useQuery({
-    queryKey: queryKeys.hr.leavesThisWeek(),
+    queryKey: leaveThisWeekKey(identity),
     queryFn: () => apiClient.get<unknown[]>("/me/time-off/team-calendar"),
     staleTime: 2 * 60_000,
-    enabled: canSelf && (options?.enabled ?? true),
+    enabled:
+      Boolean(identity.orgId && identity.userId) &&
+      canSelf &&
+      (options?.enabled ?? true),
   });
 }
 
 export function useHrMyLeaveRequests(enabled = true) {
   const canSelf = useCan("self:leaves");
+  const identity = useLeaveQueryIdentity();
   return useQuery({
-    queryKey: queryKeys.hr.leavesMyRequests(),
+    queryKey: leaveMyRequestsKey(identity),
     queryFn: () =>
-      apiClient.get<{ requests: unknown[]; balances: unknown[] }>(
+      apiClient.get<LeaveRequestsPage>(
         "/me/time-off/requests",
+        { limit: 100 },
       ),
+    select: (response) => ({ requests: response.data }),
     staleTime: 2 * 60_000,
-    enabled: canSelf && enabled,
+    enabled: Boolean(identity.orgId && identity.userId) && canSelf && enabled,
+  });
+}
+
+export function useHrMyLeaveRequestsInfinite(enabled = true) {
+  const canSelf = useCan("self:leaves");
+  const identity = useLeaveQueryIdentity();
+  const key = leaveMyRequestsKey(identity);
+  return useInfiniteQuery({
+    queryKey: [...key, "pages"] as const,
+    queryFn: ({ pageParam }) =>
+      apiClient.get<LeaveRequestsPage>("/me/time-off/requests", {
+        limit: 50,
+        ...(pageParam ? { cursor: pageParam } : {}),
+      }),
+    initialPageParam: null as number | null,
+    getNextPageParam: (lastPage) => lastPage.pageInfo.nextCursor ?? undefined,
+    staleTime: 2 * 60_000,
+    enabled: Boolean(identity.orgId && identity.userId) && canSelf && enabled,
   });
 }
 
 export function useHrHolidaysForYear(year: number) {
   const canAttendance = useCan("hr:attendance:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.holidaysYear(year),
     queryFn: () =>
@@ -298,7 +383,7 @@ export function useHrHolidaysForYear(year: number) {
         unknown
       >),
     staleTime: 2 * 60_000,
-    enabled: canAttendance,
+    enabled: hrEnabled && canAttendance,
   });
 }
 
@@ -307,6 +392,7 @@ export function useHrHolidaysForCalendar(params: {
   month: number;
 }) {
   const canAttendance = useCan("hr:attendance:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.holidaysCalendar(params),
     queryFn: () =>
@@ -315,7 +401,7 @@ export function useHrHolidaysForCalendar(params: {
         params as Record<string, unknown>,
       ),
     staleTime: 2 * 60_000,
-    enabled: canAttendance,
+    enabled: hrEnabled && canAttendance,
   });
 }
 
@@ -364,8 +450,9 @@ export function useUpdateLegacyHoliday() {
   });
 }
 
-
 export function useHrLeaveAnalytics(year?: number) {
+  const canView = useCan("hr:leaves:view");
+  const hrEnabled = useModuleEnabled("hr");
   const y = year ?? new Date().getFullYear();
   return useQuery({
     queryKey: [...queryKeys.hr.all, "leaveAnalytics", y] as const,
@@ -374,10 +461,9 @@ export function useHrLeaveAnalytics(year?: number) {
         year: String(y),
       }),
     staleTime: 120_000,
+    enabled: hrEnabled && canView,
   });
 }
-
-
 
 export interface LeavePolicyType {
   name: string;
@@ -392,9 +478,11 @@ export interface LeavePolicyResponse {
 }
 
 export function useLeavePolicy() {
+  const canView = useCan("hr:leaves:view");
   return useQuery({
     queryKey: queryKeys.hr.leavePolicy(),
     queryFn: () => apiClient.get<LeavePolicyResponse>("/hr/leave-policy"),
     staleTime: 10 * 60 * 1000,
+    enabled: canView,
   });
 }

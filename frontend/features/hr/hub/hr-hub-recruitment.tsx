@@ -6,24 +6,51 @@ import { isToday, isPast } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useInterviews, useAllOffers, useJobRequisitions, useRecruitmentStats } from "@/hooks/api/hr";
 import { HrSectionHeader } from "@/features/hr/shared/hr-ui";
-import type { HrHubAccess } from "./use-hr-hub-access";
+import {
+  hubSectionData,
+  hubSectionError,
+  type HrHubViewProps,
+} from "@/hooks/api/hr/hub";
+import { ErrorRetry } from "./today/today-card";
 
 interface RecruitmentCountCardProps {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   count: number | undefined;
   isLoading: boolean;
+  isError: boolean;
+  onRetry: () => void;
   href: string;
   tone?: "amber" | "default";
 }
 
-function RecruitmentCountCard({ icon: Icon, label, count, isLoading, href, tone = "default" }: RecruitmentCountCardProps) {
+function RecruitmentCountCard({
+  icon: Icon,
+  label,
+  count,
+  isLoading,
+  isError,
+  onRetry,
+  href,
+  tone = "default",
+}: RecruitmentCountCardProps) {
   const toneClasses = {
     amber: "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10",
     default: "text-primary/70 bg-primary/10",
   };
+
+  if (isError) {
+    return (
+      <div className="rounded-xl border border-border/70 bg-card p-3.5">
+        <p className="mb-2 text-xs font-medium text-foreground">{label}</p>
+        <ErrorRetry
+          error={new Error("This section is temporarily unavailable.")}
+          onRetry={onRetry}
+        />
+      </div>
+    );
+  }
 
   return (
     <Link
@@ -46,18 +73,18 @@ function RecruitmentCountCard({ icon: Icon, label, count, isLoading, href, tone 
   );
 }
 
-interface HrHubRecruitmentProps {
-  access: HrHubAccess;
-}
-
-export function HrHubRecruitment({ access }: HrHubRecruitmentProps) {
-  const interviews = useInterviews(
-    { relevant: true, pageSize: 50 },
-    { enabled: access.canInterviews },
-  );
-  const offers = useAllOffers({ status: "PENDING_APPROVAL", pageSize: 1 });
-  const requisitions = useJobRequisitions("PENDING_APPROVAL");
-  const stats = useRecruitmentStats();
+export function HrHubRecruitment({
+  access,
+  snapshot,
+  isLoading,
+  onRetry,
+}: HrHubViewProps) {
+  const sections = snapshot?.sections;
+  const interviewsResponse = hubSectionData(sections?.interviews);
+  const interviews = interviewsResponse?.items ?? [];
+  const offers = hubSectionData(sections?.pendingOffers);
+  const requisitions = hubSectionData(sections?.pendingRequisitions);
+  const stats = hubSectionData(sections?.recruitmentStats);
 
   const hasAnyRecruitmentAccess =
     access.canInterviews || access.canOffers || access.canRequisitions;
@@ -70,43 +97,48 @@ export function HrHubRecruitment({ access }: HrHubRecruitmentProps) {
 
   if (!hasAnyRecruitmentAccess) return null;
 
-  const interviewsToday = (interviews.data ?? []).filter(
+  const interviewsToday = interviews.filter(
     (i) => isToday(new Date(i.scheduledAt)),
   ).length;
 
-  const awaitingScorecard = (interviews.data ?? []).filter(
+  const awaitingScorecard = interviews.filter(
     (i) => i.result === "PENDING" && isPast(new Date(i.scheduledAt)) && !isToday(new Date(i.scheduledAt)),
   ).length;
 
-  const pendingOffers = offers.data?.total ?? 0;
-  const pendingRequisitions = (requisitions.data ?? []).length;
-  const openRoles = stats.data?.openJobs ?? 0;
+  const pendingOffers = offers?.total ?? 0;
+  const pendingRequisitions = (requisitions ?? []).length;
+  const openRoles = stats?.openJobs ?? 0;
 
   return (
     <div className="space-y-2.5">
       <HrSectionHeader
         title="Recruitment"
         description={
-          stats.data
-            ? `${openRoles} open role${openRoles !== 1 ? "s" : ""} · ${stats.data.newCandidates ?? 0} new applicants`
+          stats
+            ? `${openRoles} open role${openRoles !== 1 ? "s" : ""} · ${stats.newCandidates ?? 0} new applicants`
             : "Hiring pipeline status"
         }
         action={{ label: "View recruitment", href: recruitmentHref }}
       />
 
-      {stats.isLoading ? (
+      {isLoading ? (
         <div className="flex items-center gap-2 py-1">
           <Skeleton className="h-5 w-24 rounded-full" />
           <Skeleton className="h-5 w-20 rounded-full" />
         </div>
-      ) : stats.data && openRoles > 0 ? (
+      ) : hubSectionError(sections?.recruitmentStats) ? (
+        <ErrorRetry
+          error={hubSectionError(sections?.recruitmentStats)}
+          onRetry={onRetry}
+        />
+      ) : stats && openRoles > 0 ? (
         <div className="flex flex-wrap items-center gap-2 mb-1">
           <span className="text-[10px] font-medium px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
-            {stats.data.hiredThisMonth ?? 0} hired this month
+            {stats.hiredThisMonth ?? 0} hired this month
           </span>
-          {(stats.data.avgTimeToHireDays ?? 0) > 0 && (
+          {(stats.avgTimeToHireDays ?? 0) > 0 && (
             <span className="text-[10px] font-medium px-2.5 py-1 rounded-full bg-muted text-muted-foreground">
-              {stats.data.avgTimeToHireDays}d avg to hire
+              {stats.avgTimeToHireDays}d avg to hire
             </span>
           )}
           <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2 text-blue-600 dark:text-blue-400 ml-auto" asChild>
@@ -123,7 +155,9 @@ export function HrHubRecruitment({ access }: HrHubRecruitmentProps) {
             icon={Calendar}
             label="Interviews today"
             count={interviewsToday}
-            isLoading={interviews.isLoading}
+            isLoading={isLoading}
+            isError={Boolean(hubSectionError(sections?.interviews))}
+            onRetry={onRetry}
             href="/hr/recruitment/interviews"
             tone={interviewsToday > 0 ? "default" : "default"}
           />
@@ -133,7 +167,9 @@ export function HrHubRecruitment({ access }: HrHubRecruitmentProps) {
             icon={TrendingUp}
             label="Awaiting scorecard"
             count={awaitingScorecard}
-            isLoading={interviews.isLoading}
+            isLoading={isLoading}
+            isError={Boolean(hubSectionError(sections?.interviews))}
+            onRetry={onRetry}
             href="/hr/recruitment/interviews"
             tone={awaitingScorecard > 0 ? "amber" : "default"}
           />
@@ -143,7 +179,9 @@ export function HrHubRecruitment({ access }: HrHubRecruitmentProps) {
             icon={FileCheck}
             label="Offers pending"
             count={pendingOffers}
-            isLoading={offers.isLoading}
+            isLoading={isLoading}
+            isError={Boolean(hubSectionError(sections?.pendingOffers))}
+            onRetry={onRetry}
             href="/hr/recruitment/offers"
             tone={pendingOffers > 0 ? "amber" : "default"}
           />
@@ -153,7 +191,9 @@ export function HrHubRecruitment({ access }: HrHubRecruitmentProps) {
             icon={Briefcase}
             label="Requisitions pending"
             count={pendingRequisitions}
-            isLoading={requisitions.isLoading}
+            isLoading={isLoading}
+            isError={Boolean(hubSectionError(sections?.pendingRequisitions))}
+            onRetry={onRetry}
             href="/hr/recruitment/requisitions"
             tone={pendingRequisitions > 0 ? "amber" : "default"}
           />

@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
 
 export interface Geofence {
   id: number;
@@ -14,10 +15,13 @@ export interface Geofence {
 }
 
 export function useGeofences() {
+  const canView = useCan("hr:attendance:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "geofences"],
     queryFn: () => apiClient.get<Geofence[]>("/hr/geofencing"),
     staleTime: 5 * 60_000,
+    enabled: hrEnabled && canView,
   });
 }
 

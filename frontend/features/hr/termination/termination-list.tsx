@@ -39,21 +39,21 @@ function statusLabel(status: TerminationStatus | null): string {
 
 interface TerminationCardProps {
   record: Termination;
-  isHR: boolean;
+  canManageExit: boolean;
   canApproveExit: boolean;
   onView: (record: Termination) => void;
-  onSubmit: (id: number) => void;
-  onApprove: (id: number) => void;
-  onReject: (id: number) => void;
+  onSubmit: (terminationId: number) => void;
+  onApprove: (terminationId: number) => void;
+  onReject: (terminationId: number) => void;
   onSendEmail: (record: Termination) => void;
-  onComplete: (id: number) => void;
+  onComplete: (terminationId: number) => void;
   isSubmitting: boolean;
   isCompleting: boolean;
 }
 
 function TerminationCard({
   record,
-  isHR,
+  canManageExit,
   canApproveExit,
   onView,
   onSubmit,
@@ -128,9 +128,9 @@ function TerminationCard({
 
             {reasonsList.length > 0 && (
               <div className="flex items-center gap-1 mt-1.5 flex-wrap">
-                {visibleReasons.map((r) => (
-                  <Badge key={r} variant="outline" className="text-[9px] py-0 h-4 font-semibold">
-                    {r}
+                {visibleReasons.map((terminationReason) => (
+                  <Badge key={terminationReason} variant="outline" className="text-[9px] py-0 h-4 font-semibold">
+                    {terminationReason}
                   </Badge>
                 ))}
                 {extraCount > 0 && (
@@ -154,7 +154,7 @@ function TerminationCard({
               View
             </Button>
 
-            {isHR && status === "DRAFT" && (
+            {canManageExit && status === "DRAFT" && (
               <Button
                 size="sm"
                 variant="outline"
@@ -168,7 +168,7 @@ function TerminationCard({
               </Button>
             )}
 
-            {isHR && status === "REJECTED" && (
+            {canManageExit && status === "REJECTED" && (
               <Button
                 size="sm"
                 variant="outline"
@@ -207,7 +207,7 @@ function TerminationCard({
               </>
             )}
 
-            {isHR && status === "APPROVED" && (
+            {canManageExit && status === "APPROVED" && (
               <Button
                 size="sm"
                 variant="outline"
@@ -220,7 +220,7 @@ function TerminationCard({
               </Button>
             )}
 
-            {isHR && status === "SENT" && (
+            {canManageExit && status === "SENT" && (
               <Button
                 size="sm"
                 variant="outline"
@@ -250,9 +250,9 @@ type StatusFilter = "ALL" | TerminationStatus;
 
 const STATUS_FILTER_OPTIONS: { value: StatusFilter; label: string }[] = [
   { value: "ALL", label: "All" },
-  ...TERMINATION_STATUSES.map((s) => ({
-    value: s as StatusFilter,
-    label: TERMINATION_STATUS_LABELS[s],
+  ...TERMINATION_STATUSES.map((terminationStatus) => ({
+    value: terminationStatus as StatusFilter,
+    label: TERMINATION_STATUS_LABELS[terminationStatus],
   })),
 ];
 
@@ -261,16 +261,16 @@ interface TerminationListProps {
   statusCounts?: Record<string, number>;
   pagination?: TerminationPagination;
   onPageChange: (page: number) => void;
-  isHR: boolean;
+  canManageExit: boolean;
   canApproveExit: boolean;
   statusFilter: StatusFilter;
   onStatusFilterChange: (value: StatusFilter) => void;
   onView: (record: Termination) => void;
-  onSubmit: (id: number) => void;
-  onApprove: (id: number) => void;
-  onReject: (id: number) => void;
+  onSubmit: (terminationId: number) => void;
+  onApprove: (terminationId: number) => void;
+  onReject: (terminationId: number) => void;
   onSendEmail: (record: Termination) => void;
-  onComplete: (id: number) => void;
+  onComplete: (terminationId: number) => void;
   isSubmitting: boolean;
   isCompleting: boolean;
 }
@@ -280,7 +280,7 @@ export function TerminationList({
   statusCounts,
   pagination,
   onPageChange,
-  isHR,
+  canManageExit,
   canApproveExit,
   statusFilter,
   onStatusFilterChange,
@@ -335,7 +335,7 @@ export function TerminationList({
             <TerminationCard
               key={record.id}
               record={record}
-              isHR={isHR}
+              canManageExit={canManageExit}
               canApproveExit={canApproveExit}
               onView={onView}
               onSubmit={onSubmit}

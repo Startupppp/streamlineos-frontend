@@ -46,15 +46,23 @@ export function ChecklistEditor({ items, onChange }: ChecklistEditorProps) {
   }, [items, onChange]);
 
   const handleRemove = useCallback(
-    (id: string) => {
-      onChange(items.filter((item) => item.id !== id).map((item, i) => ({ ...item, order: i })));
+    (checklistItemId: string) => {
+      onChange(
+        items
+          .filter((item) => item.id !== checklistItemId)
+          .map((item, index) => ({ ...item, order: index })),
+      );
     },
     [items, onChange],
   );
 
   const handleChange = useCallback(
-    (id: string, patch: Partial<ChecklistItem>) => {
-      onChange(items.map((item) => (item.id === id ? { ...item, ...patch } : item)));
+    (checklistItemId: string, patch: Partial<ChecklistItem>) => {
+      onChange(
+        items.map((item) =>
+          item.id === checklistItemId ? { ...item, ...patch } : item,
+        ),
+      );
     },
     [items, onChange],
   );

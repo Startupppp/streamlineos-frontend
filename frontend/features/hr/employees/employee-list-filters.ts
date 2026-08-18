@@ -22,7 +22,6 @@ export type EmployeeListFilters = {
   departmentId: string | undefined;
   status: EmployeeStatusFilter;
   role: string; // "all" or role key e.g. ENGINEERING
-  page: number;
   size: number;
 };
 
@@ -50,7 +49,6 @@ export function parseEmployeeListFilters(
   const sizeDefault = defaults?.size ?? DEFAULT_PAGE_SIZE;
   const statusDefault = defaults?.status ?? DEFAULT_STATUS;
 
-  const page = Math.max(1, Number(searchParams.get("page")) || 1);
   const sizeRaw = Number(searchParams.get("size") || searchParams.get("limit"));
   const size =
     Number.isFinite(sizeRaw) && sizeRaw > 0 && sizeRaw <= 100
@@ -72,7 +70,6 @@ export function parseEmployeeListFilters(
     departmentId: parseDepartmentId(searchParams.get("dept")),
     status,
     role,
-    page,
     size,
   };
 }
@@ -82,7 +79,6 @@ export function toHrEmployeesApiParams(
   filters: EmployeeListFilters,
 ): HrEmployeesParams {
   return {
-    page: filters.page,
     limit: filters.size,
     search: filters.q.trim() || undefined,
     departmentId: filters.departmentId,
@@ -125,7 +121,6 @@ export function employeeFiltersToUrlUpdates(
     status?: EmployeeStatusFilter | null;
     role?: string | null;
     departmentId?: string | null;
-    page?: number | null;
     size?: number | null;
   },
   defaults?: { size?: number; status?: EmployeeStatusFilter },
@@ -147,9 +142,6 @@ export function employeeFiltersToUrlUpdates(
   }
   if ("role" in next) {
     out.role = !next.role || next.role === "all" ? null : next.role;
-  }
-  if ("page" in next) {
-    out.page = !next.page || next.page <= 1 ? null : String(next.page);
   }
   if ("size" in next) {
     out.size =

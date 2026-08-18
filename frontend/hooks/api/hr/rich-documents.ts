@@ -3,6 +3,7 @@
 import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
 
 export interface RichDocument {
   id: number;
@@ -35,10 +36,13 @@ const richDocKeys = {
   all: [...queryKeys.hr.all, "richDocuments"] as const,
   lists: () => [...richDocKeys.all, "list"] as const,
   list: (params: Record<string, unknown>) => [...richDocKeys.all, "list", params] as const,
-  detail: (id: number) => [...richDocKeys.all, "detail", id] as const,
+  detail: (documentId: number) =>
+    [...richDocKeys.all, "detail", documentId] as const,
 };
 
 export function useRichDocuments(params?: RichDocumentListParams) {
+  const canView = useCan("hr:documents:view");
+  const hrEnabled = useModuleEnabled("hr");
   const queryParams: Record<string, unknown> = {
     page: params?.page ?? 1,
     limit: params?.limit ?? 20,
@@ -49,15 +53,19 @@ export function useRichDocuments(params?: RichDocumentListParams) {
     queryFn: () => apiClient.get<RichDocumentListResponse>("/hr/rich-documents", queryParams),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
+    enabled: hrEnabled && canView,
   });
 }
 
-export function useRichDocument(id: number) {
+export function useRichDocument(documentId: number) {
+  const canView = useCan("hr:documents:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: richDocKeys.detail(id),
-    queryFn: () => apiClient.get<RichDocument>(`/hr/rich-documents/${id}`),
+    queryKey: richDocKeys.detail(documentId),
+    queryFn: () =>
+      apiClient.get<RichDocument>(`/hr/rich-documents/${documentId}`),
     staleTime: 2 * 60_000,
-    enabled: !!id,
+    enabled: hrEnabled && documentId > 0 && canView,
   });
 }
 
@@ -75,11 +83,11 @@ export function useUpdateRichDocument() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["hr", "rich-documents", "update"],
-    mutationFn: ({ id, ...data }: { id: number; title?: string; contentJson?: unknown }) =>
-      apiClient.patch<{ success: boolean }>(`/hr/rich-documents/${id}`, data),
-    onSuccess: (_, vars) => {
+    mutationFn: ({ documentId, ...data }: { documentId: number; title?: string; contentJson?: unknown }) =>
+      apiClient.patch<{ success: boolean }>(`/hr/rich-documents/${documentId}`, data),
+    onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: richDocKeys.lists() });
-      qc.invalidateQueries({ queryKey: richDocKeys.detail(vars.id) });
+      qc.invalidateQueries({ queryKey: richDocKeys.detail(variables.documentId) });
     },
   });
 }
@@ -88,8 +96,8 @@ export function useDeleteRichDocument() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["hr", "rich-documents", "delete"],
-    mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/rich-documents/${id}`),
+    mutationFn: (documentId: number) =>
+      apiClient.delete<{ success: boolean }>(`/hr/rich-documents/${documentId}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: richDocKeys.lists() }),
   });
 }
@@ -98,11 +106,11 @@ export function usePublishRichDocument() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["hr", "rich-documents", "publish"],
-    mutationFn: (id: number) =>
-      apiClient.patch<{ success: boolean }>(`/hr/rich-documents/${id}/publish`),
-    onSuccess: (_, id) => {
+    mutationFn: (documentId: number) =>
+      apiClient.patch<{ success: boolean }>(`/hr/rich-documents/${documentId}/publish`),
+    onSuccess: (_, documentId) => {
       qc.invalidateQueries({ queryKey: richDocKeys.lists() });
-      qc.invalidateQueries({ queryKey: richDocKeys.detail(id) });
+      qc.invalidateQueries({ queryKey: richDocKeys.detail(documentId) });
     },
   });
 }

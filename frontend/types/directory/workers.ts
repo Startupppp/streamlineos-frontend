@@ -59,20 +59,20 @@ export interface WorkerEngagement {
   terminationReason: string | null;
   terminationNotes: string | null;
   createdBy: string | null;
+  rowVersion: number;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface WorkerPagination {
-  page: number;
+export interface WorkerPageInfo {
   limit: number;
-  total: number;
-  totalPages: number;
+  hasMore: boolean;
+  nextCursor: string | null;
 }
 
 export interface WorkersPage {
   data: Worker[];
-  pagination: WorkerPagination;
+  pageInfo: WorkerPageInfo;
 }
 
 type CreateWorkerSubject =
@@ -96,6 +96,7 @@ export interface CreateEngagementInput {
 export interface UpdateEngagementInput {
   workerId: string;
   workerEngagementId: string;
+  expectedVersion: number;
   startsOn?: string;
   endsOn?: string | null;
   workerType?: WorkerType;
@@ -104,6 +105,7 @@ export interface UpdateEngagementInput {
 }
 
 export interface TerminateEngagementInput {
+  expectedVersion: number;
   terminationReason?: string;
   terminationNotes?: string;
   endsOn?: string;

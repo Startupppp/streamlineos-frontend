@@ -1,0 +1,132 @@
+"use client";
+
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { UseQueryOptions } from "@tanstack/react-query";
+import { useCanManageOrganizationMembership } from "@/hooks/api/access";
+import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
+import { invalidatePersonAccountAccess } from "./cache";
+import type {
+  InvitationsResponse,
+  InviteUserPayload,
+} from "./types";
+
+export const useInviteUser = () => {
+  const queryClient = useQueryClient();
+  return useMutation<
+    { success: boolean; invitationId: string; resent: boolean },
+    Error,
+    InviteUserPayload
+  >({
+    mutationKey: ["users", "invite"],
+    mutationFn: (invitation) =>
+      apiClient.post<{ success: boolean; invitationId: string; resent: boolean }>(
+        "/users/invite",
+        invitation,
+      ),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.invitations() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.stats() });
+      invalidatePersonAccountAccess(queryClient);
+    },
+  });
+};
+
+export const useBulkInviteUsers = () => {
+  const queryClient = useQueryClient();
+  return useMutation<
+    { results: Array<{ email: string; success: boolean; invitationId?: string; error?: string }> },
+    Error,
+    { emails: string[]; role: string }
+  >({
+    mutationKey: ["users", "bulk-invite"],
+    mutationFn: (invitationBatch) =>
+      apiClient.post<{
+        results: Array<{
+          email: string;
+          success: boolean;
+          invitationId?: string;
+          error?: string;
+        }>;
+      }>("/users/bulk-invite", invitationBatch),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.invitations() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.stats() });
+      invalidatePersonAccountAccess(queryClient);
+    },
+  });
+};
+
+export const useInvitations = (
+  params?: {
+    page?: number;
+    limit?: number;
+    includeAccepted?: boolean;
+    status?: "pending" | "accepted" | "expired" | "revoked";
+    q?: string;
+  },
+  options?: Omit<UseQueryOptions<InvitationsResponse, Error>, "queryKey" | "queryFn">,
+) => {
+  const canView = useCanManageOrganizationMembership();
+  return useQuery<InvitationsResponse, Error>({
+    queryKey: queryKeys.users.invitations(params as Record<string, unknown> | undefined),
+    queryFn: () =>
+      apiClient.get<InvitationsResponse>("/users/invitations", {
+        ...(params?.page ? { page: String(params.page) } : {}),
+        ...(params?.limit ? { limit: String(params.limit) } : {}),
+        ...(params?.includeAccepted ? { includeAccepted: "true" } : {}),
+        ...(params?.status ? { status: params.status } : {}),
+        ...(params?.q ? { q: params.q } : {}),
+      }),
+    staleTime: 30_000,
+    refetchOnWindowFocus: "always",
+    ...options,
+    enabled: canView && (options?.enabled ?? true),
+  });
+};
+
+export const useResendInvite = () => {
+  const queryClient = useQueryClient();
+  return useMutation<{ success: boolean }, Error, string>({
+    mutationKey: ["resend", "invite"],
+    mutationFn: (invitationId) =>
+      apiClient.post<{ success: boolean }>(`/users/invitations/${invitationId}/resend`, {}),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.invitations() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.stats() });
+      invalidatePersonAccountAccess(queryClient);
+    },
+  });
+};
+
+export const useChangeInvitationRole = () => {
+  const queryClient = useQueryClient();
+  return useMutation<{ success: boolean }, Error, { invitationId: string; role: string }>({
+    mutationKey: ["change", "invitation-role"],
+    mutationFn: ({ invitationId, role }) =>
+      apiClient.patch<{ success: boolean }>(
+        `/users/invitations/${invitationId}/role`,
+        { role },
+      ),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.invitations() });
+      invalidatePersonAccountAccess(queryClient);
+    },
+  });
+};
+
+export const useCancelInvitation = () => {
+  const queryClient = useQueryClient();
+  return useMutation<{ success: boolean }, Error, string>({
+    mutationKey: ["cancel", "invitation"],
+    mutationFn: (invitationId) =>
+      apiClient.delete<{ success: boolean }>(`/users/invitations/${invitationId}`),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.invitations() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.stats() });
+      invalidatePersonAccountAccess(queryClient);
+    },
+  });
+};

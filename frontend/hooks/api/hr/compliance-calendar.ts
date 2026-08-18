@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 export interface ComplianceCalendarEvent {
   date: string;
@@ -19,6 +20,7 @@ export interface ComplianceCalendarResponse {
 }
 
 export function useComplianceCalendar(year: number, month: number) {
+  const canManage = useCan("hr:compliance:manage");
   return useQuery<ComplianceCalendarResponse>({
     queryKey: queryKeys.hr.complianceCalendar(year, month),
     queryFn: () =>
@@ -27,5 +29,6 @@ export function useComplianceCalendar(year: number, month: number) {
         month: String(month),
       }),
     staleTime: 5 * 60_000,
+    enabled: canManage,
   });
 }

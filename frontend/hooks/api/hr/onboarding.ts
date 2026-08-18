@@ -3,7 +3,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { invalidateHrWorkforceQueries } from "@/lib/hr-workforce-cache";
 
 export interface OnboardingStatus {
   userId: string;
@@ -27,31 +28,39 @@ export interface OnboardingTask {
   completedAt: string | null;
   completedBy: string | null;
   createdAt: string | null;
+  /** Computed by the API from the task owner and the caller's effective permissions/scope. */
+  canComplete: boolean;
 }
 
 export function useOnboardingStatus() {
+  const canManage = useCan("hr:onboarding:manage");
   return useQuery<OnboardingStatus[]>({
     queryKey: queryKeys.hr.onboardingStatus(),
     queryFn: () => apiClient.get<OnboardingStatus[]>("/onboarding"),
     staleTime: 2 * 60_000,
+    enabled: canManage,
   });
 }
 
 
 export function useUserOnboarding(userId: string) {
+  const canViewTasks = useCan("hr:onboarding:tasks:view");
   return useQuery<OnboardingTask[]>({
     queryKey: queryKeys.hr.onboardingUser(userId),
     queryFn: () => apiClient.get<OnboardingTask[]>(`/onboarding/${userId}`),
-    enabled: !!userId,
+    enabled: !!userId && canViewTasks,
     staleTime: 60_000,
   });
 }
 
 export function useMyOnboarding() {
+  const canViewOwnTasks = useCan("self:onboarding-tasks");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery<OnboardingTask[]>({
     queryKey: queryKeys.hr.onboardingUser("me"),
     queryFn: () => apiClient.get<OnboardingTask[]>("/onboarding/me"),
     staleTime: 60_000,
+    enabled: hrEnabled && canViewOwnTasks,
   });
 }
 
@@ -75,9 +84,7 @@ export function useInitiateOnboarding() {
     mutationKey: ["onboarding", "initiate"],
     mutationFn: (userId: string) =>
       apiClient.post<{ success: boolean; tasksCreated: number }>("/onboarding", { userId }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.onboardingStatus() });
-    },
+    onSuccess: (_, userId) => invalidateHrWorkforceQueries(qc, userId),
   });
 }
 
@@ -130,10 +137,12 @@ export function useOnboardingTemplateDepartments() {
 // useOnboardingTemplates/useCreateOnboardingTemplate (a different feature: CRM client
 // onboarding, /clients/onboarding/templates — unrelated to employee onboarding plans).
 export function useHrOnboardingTemplates() {
+  const canManage = useCan("hr:onboarding:manage");
   return useQuery<OnboardingTemplate[]>({
     queryKey: queryKeys.hr.onboardingTemplates(),
     queryFn: () => apiClient.get<OnboardingTemplate[]>("/onboarding/templates"),
     staleTime: 2 * 60_000,
+    enabled: canManage,
   });
 }
 

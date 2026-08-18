@@ -18,6 +18,8 @@ import {
   getFileIconConfig,
 } from "./document-table-constants";
 import { DocumentRowActions } from "./document-row-actions";
+import { getProtectedFileUrl } from "@/hooks/common/use-file-url";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 
 export interface FolderItem {
   name: string;
@@ -26,15 +28,16 @@ export interface FolderItem {
 }
 
 export interface DocumentTableProps {
-  paginatedDocuments: Document[];
-  allFilteredDocuments: Document[];
+  documents: Document[];
   folders: FolderItem[];
   page: number;
-  pageSize: number;
-  totalFiltered: number;
+  hasNext: boolean;
+  isFetching: boolean;
   selectedCategory: string;
   searchTerm: string;
-  onPageChange: (page: number) => void;
+  canManageDocs: boolean;
+  onPreviousPage: () => void;
+  onNextPage: () => void;
   onDelete: (documentId: number) => Promise<void>;
   onEdit: (doc: Document) => void;
   onOpenUpload: () => void;
@@ -42,15 +45,16 @@ export interface DocumentTableProps {
 }
 
 export function DocumentTable({
-  paginatedDocuments,
-  allFilteredDocuments,
+  documents,
   folders,
   page,
-  pageSize,
-  totalFiltered,
+  hasNext,
+  isFetching,
   selectedCategory,
   searchTerm,
-  onPageChange,
+  canManageDocs,
+  onPreviousPage,
+  onNextPage,
   onDelete,
   onEdit,
   onOpenUpload,
@@ -58,7 +62,7 @@ export function DocumentTable({
 }: DocumentTableProps) {
   const [isZipping, setIsZipping] = useState(false);
 
-  const filesWithUrl = allFilteredDocuments.filter((d) => !!d.fileUrl);
+  const filesWithUrl = documents.filter((document) => document.hasFile);
 
   const handleDownloadZip = useCallback(async () => {
     if (filesWithUrl.length === 0) return;
@@ -68,14 +72,18 @@ export function DocumentTable({
       const zip = new JSZip();
       const results = await Promise.allSettled(
         filesWithUrl.map(async (doc) => {
-          const response = await fetch(doc.fileUrl);
+          const response = await fetch(
+            await getProtectedFileUrl(`/hr/documents/${doc.id}/file`),
+          );
           if (!response.ok)
             throw new Error(`Failed to fetch ${doc.fileName ?? doc.name}`);
           const blob = await response.blob();
           zip.file(doc.fileName ?? `${doc.name}.bin`, blob);
         }),
       );
-      const failed = results.filter((r) => r.status === "rejected").length;
+      const failed = results.filter(
+        (downloadResult) => downloadResult.status === "rejected",
+      ).length;
       const zipBlob = await zip.generateAsync({ type: "blob" });
       const url = URL.createObjectURL(zipBlob);
       const anchor = document.createElement("a");
@@ -209,16 +217,17 @@ export function DocumentTable({
       illustration={<Upload className="w-8 text-muted-foreground" />}
       title="No documents found"
       description="Upload your first document to get started"
-      action={{
-        label: "Upload Document",
-        onClick: onOpenUpload,
-      }}
+      action={
+        canManageDocs
+          ? { label: "Upload Document", onClick: onOpenUpload }
+          : undefined
+      }
       actionVariant="outline"
     />
   );
 
   const footer =
-    totalFiltered > 0 && filesWithUrl.length > 0 ? (
+    filesWithUrl.length > 0 ? (
       <div className="flex items-center gap-2.5">
         <LoadingButton
           variant="outline"
@@ -229,7 +238,7 @@ export function DocumentTable({
           loadingText="Zipping..."
         >
           <Download className="h-3 w-3" />
-          ZIP ({filesWithUrl.length})
+          ZIP this page ({filesWithUrl.length})
         </LoadingButton>
       </div>
     ) : undefined;
@@ -238,6 +247,7 @@ export function DocumentTable({
     <div
       className="flex flex-col flex-1 min-h-0 overflow-hidden rounded-2xl border border-border/70 bg-card/90 shadow-sm"
       aria-live="polite"
+      aria-busy={isFetching}
     >
       {showFolders && folders.length > 0 && (
         <div className="px-5 pt-4 pb-3 border-b border-border/50 shrink-0">
@@ -275,21 +285,24 @@ export function DocumentTable({
       )}
 
       <DataTable
-        data={paginatedDocuments}
+        data={documents}
         columns={columns}
         getRowKey={(doc) => doc.id}
-        pagination={{
-          mode: "server",
-          page,
-          pageSize,
-          total: totalFiltered,
-          onPageChange,
-        }}
         emptyState={emptyState}
         footer={footer}
         minWidth="640px"
         className="flex-1 min-h-0 border-0 rounded-none"
       />
+      {page > 1 || hasNext ? (
+        <CursorPageControls
+          page={page}
+          hasNext={hasNext}
+          disabled={isFetching}
+          onPrevious={onPreviousPage}
+          onNext={onNextPage}
+          className="m-2"
+        />
+      ) : null}
     </div>
   );
 }

@@ -20,6 +20,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
+import { Combobox } from "@/components/ui/combobox";
 
 export const formSchema = z.object({
   name: z
@@ -60,8 +61,16 @@ function TagRemoveButton({ tag, onClick }: { tag: string; onClick: (e: React.Mou
 interface DocumentFormFieldsProps {
   filteredDocumentTypes: { value: string; label: string }[];
   filteredCategories: string[];
-  filteredEmployees: { id: string; firstName: string | null; lastName: string | null }[];
-  isAdmin: boolean;
+  filteredEmployees: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    email: string;
+    designation?: string | null;
+  }[];
+  canAssignEmployee: boolean;
+  onEmployeeSearchChange: (value: string) => void;
+  employeesLoading: boolean;
   filesCount: number;
   tags: string[];
   tagInput: string;
@@ -76,7 +85,9 @@ export function DocumentFormFields({
   filteredDocumentTypes,
   filteredCategories,
   filteredEmployees,
-  isAdmin,
+  canAssignEmployee,
+  onEmployeeSearchChange,
+  employeesLoading,
   filesCount,
   tags,
   tagInput,
@@ -171,7 +182,7 @@ export function DocumentFormFields({
         />
       </div>
 
-      {isAdmin && filteredEmployees.length > 0 && (
+      {canAssignEmployee && (
         <FormField
           control={form.control}
           name="userId"
@@ -180,24 +191,26 @@ export function DocumentFormFields({
               <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
                 Associate with Employee
               </FormLabel>
-              <Select
-                onValueChange={(value) => field.onChange(value === "none" ? "" : value)}
-                value={field.value ?? "none"}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select employee (optional)" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-                  <SelectItem value="none">No specific employee</SelectItem>
-                  {filteredEmployees.map((emp) => (
-                    <SelectItem key={emp.id} value={emp.id}>
-                      {emp.firstName} {emp.lastName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FormControl>
+                <Combobox
+                  options={[
+                    { value: "none", label: "No specific employee" },
+                    ...filteredEmployees.map((employee) => ({
+                      value: employee.id,
+                      label:
+                        `${employee.firstName ?? ""} ${employee.lastName ?? ""}`.trim() ||
+                        employee.email,
+                      sublabel: employee.designation ?? employee.email,
+                    })),
+                  ]}
+                  value={field.value || "none"}
+                  onChange={(value) => field.onChange(value === "none" ? "" : value)}
+                  onSearchChange={onEmployeeSearchChange}
+                  searchPlaceholder="Search employees..."
+                  emptyText={employeesLoading ? "Loading employees..." : "No employees found."}
+                  placeholder="Select employee (optional)"
+                />
+              </FormControl>
               <FormDescription className="text-[11px]">Leave empty for company-wide documents</FormDescription>
               <FormMessage />
             </FormItem>

@@ -95,7 +95,7 @@ export function DeleteConfirm({
   isPending,
 }: {
   template: DocumentTemplate;
-  onDelete: (id: number) => void;
+  onDelete: (templateId: number) => void;
   isPending: boolean;
 }) {
   const handleDelete = useCallback(
@@ -140,7 +140,7 @@ export function DeleteConfirm({
 interface DefaultStarButtonProps {
   template: DocumentTemplate;
   currentDefault: DocumentTemplate | undefined;
-  onSetDefault: (id: number, isDefault: boolean) => void;
+  onSetDefault: (templateId: number, isDefault: boolean) => void;
   isPending: boolean;
 }
 

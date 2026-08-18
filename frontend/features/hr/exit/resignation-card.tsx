@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { ProgressTimeline } from "./progress-timeline";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { viewProtectedFile } from "@/hooks/common/use-file-url";
 
 function statusBadgeClass(status: string | null): string {
   if (!status)
@@ -97,6 +98,9 @@ export function ResignationCard({
     () => onViewLetter?.(r.id),
     [r.id, onViewLetter],
   );
+  const handleViewUploadedLetter = useCallback(() => {
+    void viewProtectedFile(`/hr/exit/${r.id}/file`);
+  }, [r.id]);
 
   return (
     <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden border-l-4 border-l-rose-400">
@@ -216,17 +220,16 @@ export function ResignationCard({
             </Button>
           )}
 
-          {r.resignationLetterUrl && (
-            <a
-              href={r.resignationLetterUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+          {r.hasResignationLetter && (
+            <button
+              type="button"
+              onClick={handleViewUploadedLetter}
               className="inline-flex items-center gap-1 h-7 px-2 rounded-md border border-border text-xs text-muted-foreground hover:text-foreground hover:bg-accent transition-colors duration-200"
-              title="Download uploaded resignation letter"
+              title="View uploaded resignation letter"
             >
               <ExternalLink className="h-3 w-3" />
               <span className="hidden sm:inline">Letter</span>
-            </a>
+            </button>
           )}
 
           {onViewLetter && (

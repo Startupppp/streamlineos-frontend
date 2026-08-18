@@ -1,8 +1,10 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAccess, useCan, useModuleEnabled } from "@/hooks/api/access";
 
 export type HrImportEntity =
   | "employees"
@@ -86,10 +88,46 @@ export interface PaginatedJobs {
   };
 }
 
+export type HrExportJobStatus =
+  | "pending"
+  | "running"
+  | "completed"
+  | "failed"
+  | "expired";
+
+export interface HrEmployeeExportFilters {
+  search?: string;
+  departmentId?: string;
+  isActive?: "true" | "false" | "all";
+  role?: string;
+}
+
+export interface HrEmployeeExportJob {
+  id: string;
+  entity: "employees";
+  status: HrExportJobStatus;
+  processedRows: number;
+  rowCount: number | null;
+  fileName: string | null;
+  errorCode: string | null;
+  errorMessage: string | null;
+  createdAt: string;
+  updatedAt: string;
+  completedAt: string | null;
+  expiresAt: string | null;
+}
+
+export interface CreateHrEmployeeExportJobInput {
+  filters: HrEmployeeExportFilters;
+  idempotencyKey: string;
+}
+
 export function useHrImportJobs(
   entity?: HrImportEntity,
   pagination?: { page?: number; limit?: number },
 ) {
+  const canImport = useCan("hr:import:manage");
+  const hrEnabled = useModuleEnabled("hr");
   const page = pagination?.page ?? 1;
   const limit = pagination?.limit ?? 20;
   return useQuery<PaginatedJobs>({
@@ -101,15 +139,18 @@ export function useHrImportJobs(
         ...(entity ? { entity } : {}),
       }),
     staleTime: 30_000,
+    enabled: hrEnabled && canImport,
   });
 }
 
 export function useHrImportJob(jobId: string | null) {
+  const canImport = useCan("hr:import:manage");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery<HrImportJobDetail>({
     queryKey: queryKeys.hr.importJob(jobId ?? ""),
     queryFn: () =>
       apiClient.get<HrImportJobDetail>(`/hr/import/jobs/${jobId}`),
-    enabled: !!jobId,
+    enabled: hrEnabled && canImport && !!jobId,
     staleTime: 10_000,
   });
 }
@@ -148,6 +189,68 @@ export function useRollbackImportJob() {
     onSuccess: (_, { jobId }) => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.importJobs() });
       qc.invalidateQueries({ queryKey: queryKeys.hr.importJob(jobId) });
+    },
+  });
+}
+
+export function useCreateHrEmployeeExportJob() {
+  const canExport = useCan("hr:export:manage");
+  const hrEnabled = useModuleEnabled("hr");
+  return useMutation<
+    HrEmployeeExportJob,
+    Error,
+    CreateHrEmployeeExportJobInput
+  >({
+    mutationKey: ["hr", "employee-export", "create"],
+    mutationFn: ({ filters, idempotencyKey }) => {
+      if (!hrEnabled || !canExport)
+        return Promise.reject(new Error("Employee export access is required"));
+      return apiClient.post<HrEmployeeExportJob>(
+        "/hr/export/jobs",
+        { filters },
+        { headers: { "Idempotency-Key": idempotencyKey } },
+      );
+    },
+  });
+}
+
+export function useHrEmployeeExportJob(exportJobId: string | null) {
+  const { data: session } = useSession();
+  const { data: access } = useAccess();
+  const canExport = useCan("hr:export:manage");
+  const hrEnabled = useModuleEnabled("hr");
+  const orgId = session?.orgId ?? "";
+  const actorUserId = session?.user?.id ?? "";
+  const accessVersion = access?.version ?? 0;
+
+  return useQuery<HrEmployeeExportJob, Error>({
+    queryKey: queryKeys.hr.employeeExportJob(
+      orgId,
+      actorUserId,
+      accessVersion,
+      exportJobId ?? "",
+    ),
+    queryFn: () =>
+      apiClient.get<HrEmployeeExportJob>(`/hr/export/jobs/${exportJobId}`),
+    enabled:
+      hrEnabled && canExport && Boolean(orgId && actorUserId && exportJobId),
+    staleTime: 1_000,
+    refetchInterval: (query) => {
+      const status = query.state.data?.status;
+      return status === "pending" || status === "running" ? 3_000 : false;
+    },
+  });
+}
+
+export function useDownloadHrEmployeeExportJob() {
+  const canExport = useCan("hr:export:manage");
+  const hrEnabled = useModuleEnabled("hr");
+  return useMutation<Blob, Error, string>({
+    mutationKey: ["hr", "employee-export", "download"],
+    mutationFn: (exportJobId) => {
+      if (!hrEnabled || !canExport)
+        return Promise.reject(new Error("Employee export access is required"));
+      return apiClient.download(`/hr/export/jobs/${exportJobId}/download`);
     },
   });
 }

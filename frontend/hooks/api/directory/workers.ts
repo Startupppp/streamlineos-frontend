@@ -15,7 +15,7 @@ import type {
 } from "@/types/directory/workers";
 
 export interface UseWorkersParams {
-  page?: number;
+  cursor?: string;
   limit?: number;
   status?: string;
   search?: string;
@@ -24,8 +24,8 @@ export interface UseWorkersParams {
 
 export function useWorkers(params: UseWorkersParams = {}) {
   const canView = useCan("workforce:workers:view");
-  const { page = 1, limit = 20, status, search, organizationPersonId } = params;
-  const queryParams: Record<string, unknown> = { page, limit };
+  const { cursor, limit = 20, status, search, organizationPersonId } = params;
+  const queryParams: Record<string, unknown> = { cursor, limit };
   if (status) queryParams.status = status;
   if (search) queryParams.search = search;
   if (organizationPersonId) queryParams.organizationPersonId = organizationPersonId;
@@ -34,9 +34,9 @@ export function useWorkers(params: UseWorkersParams = {}) {
     queryKey: queryKeys.directory.workers(queryParams),
     queryFn: () => {
       const searchParams = new URLSearchParams({
-        page: String(page),
         limit: String(limit),
       });
+      if (cursor) searchParams.set("cursor", cursor);
       if (status) searchParams.set("status", status);
       if (search) searchParams.set("search", search);
       if (organizationPersonId) searchParams.set("organizationPersonId", organizationPersonId);
@@ -132,6 +132,7 @@ export function useTerminateEngagement() {
     mutationKey: ["directory", "engagements", "terminate"],
     mutationFn: ({
       workerEngagementId,
+      workerId: _workerId,
       ...input
     }: TerminateEngagementInput & { workerEngagementId: string; workerId: string }) =>
       apiClient.post<WorkerEngagement>(

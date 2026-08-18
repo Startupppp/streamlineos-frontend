@@ -21,7 +21,10 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyPublicDocsIllustration } from "@/components/illustrations";
 import { usePublicDocuments, type PublicDoc } from "@/hooks/api/dashboard";
 import { format } from "date-fns";
-import { viewFile, downloadFile } from "@/hooks/common/use-file-url";
+import {
+  downloadProtectedFile,
+  viewProtectedFile,
+} from "@/hooks/common/use-file-url";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useCan } from "@/hooks/api/access";
 import { useDashboardAccess } from "@/features/dashboard/use-dashboard-access";
@@ -93,14 +96,17 @@ interface DocumentItemProps {
 }
 
 function DocumentItem({ doc }: DocumentItemProps) {
-  const handleView = () => viewFile(doc.fileUrl);
+  const handleView = () => viewProtectedFile(`/hr/documents/${doc.id}/file`);
   const handleViewClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    viewFile(doc.fileUrl);
+    void viewProtectedFile(`/hr/documents/${doc.id}/file`);
   };
   const handleDownload = (e: React.MouseEvent) => {
     e.stopPropagation();
-    downloadFile(doc.fileUrl, doc.fileName || doc.name);
+    void downloadProtectedFile(
+      `/hr/documents/${doc.id}/file`,
+      doc.fileName || doc.name,
+    );
   };
 
   return (

@@ -1,3 +1,5 @@
+import { clearRegisteredQueryCache } from "@/lib/query-cache-control";
+
 if (!process.env.NEXT_PUBLIC_API_URL)
   throw new Error("NEXT_PUBLIC_API_URL is not set");
 
@@ -144,6 +146,7 @@ export async function authedFetch(
         typeof window !== "undefined" &&
         !autoSignOutSuppressed
       ) {
+        clearRegisteredQueryCache();
         void import("next-auth/react").then(({ signOut }) => {
           void signOut({ callbackUrl: "/signin" });
         });

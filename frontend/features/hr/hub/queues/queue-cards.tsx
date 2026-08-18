@@ -11,9 +11,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useServiceDeliveryOpsInbox } from "@/hooks/api/hr/service-delivery";
 import { HrIconWell } from "@/features/hr/shared/hr-ui";
-import type { HrHubAccess } from "../use-hr-hub-access";
+import {
+  hubSectionData,
+  type HrHubAccess,
+  type HrHubSections,
+} from "@/hooks/api/hr/hub";
 
 export type QueueTone = "red" | "amber" | "neutral";
 
@@ -115,10 +118,19 @@ export function HrQueueCard({
   );
 }
 
-export function OpsInboxCard({ access }: { access: HrHubAccess }) {
-  const { data, isLoading, isError, refetch } = useServiceDeliveryOpsInbox(access.canCases);
-
-  const handleRetry = () => { void refetch(); };
+export function OpsInboxCard({
+  access,
+  section,
+  isLoading,
+  onRetry,
+}: {
+  access: HrHubAccess;
+  section: HrHubSections["opsInbox"] | undefined;
+  isLoading: boolean;
+  onRetry: () => void;
+}) {
+  const data = hubSectionData(section);
+  const isError = section?.status === "error";
 
   if (!access.canCases) return null;
 
@@ -141,7 +153,7 @@ export function OpsInboxCard({ access }: { access: HrHubAccess }) {
         <p className="text-xs text-muted-foreground flex-1">
           {getErrorMessage(new Error("Ops inbox unavailable"))}
         </p>
-        <Button size="sm" variant="ghost" onClick={handleRetry} className="h-7 text-xs">
+        <Button size="sm" variant="ghost" onClick={onRetry} className="h-7 text-xs">
           Retry
         </Button>
       </div>

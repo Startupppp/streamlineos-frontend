@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
 
 export interface ShiftTemplate {
   id: number;
@@ -41,11 +41,12 @@ export interface ShiftSwap {
 
 export function useHrShifts() {
   const canView = useCan("hr:attendance:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "shifts"],
     queryFn: () => apiClient.get<ShiftTemplate[]>("/hr/shifts"),
     staleTime: 2 * 60_000,
-    enabled: canView,
+    enabled: hrEnabled && canView,
   });
 }
 
@@ -80,21 +81,23 @@ export function useDeleteShift() {
 
 export function useShiftAssignments() {
   const canView = useCan("hr:attendance:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "shiftAssignments"],
     queryFn: () => apiClient.get<ShiftAssignment[]>("/hr/shifts/assignments"),
     staleTime: 2 * 60_000,
-    enabled: canView,
+    enabled: hrEnabled && canView,
   });
 }
 
 export function useShiftSwaps() {
   const canView = useCan("hr:attendance:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "shiftSwaps"],
     queryFn: () => apiClient.get<ShiftSwap[]>("/hr/shifts/swaps"),
     staleTime: 30_000,
-    enabled: canView,
+    enabled: hrEnabled && canView,
   });
 }
 
