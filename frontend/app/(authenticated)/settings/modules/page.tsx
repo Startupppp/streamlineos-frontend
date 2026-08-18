@@ -117,7 +117,7 @@ function ModulesContent() {
             toast.success(
               `${entry.label} ${enabled ? "enabled" : "disabled"}`,
             ),
-          onError: (err) => toast.error(getErrorMessage(err)),
+          onError: (toggleError) => toast.error(getErrorMessage(toggleError)),
         },
       );
     },
@@ -136,8 +136,8 @@ function ModulesContent() {
       <div className="flex flex-1 flex-col min-h-0">
         {isLoading ? (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 12 }).map((_, i) => (
-              <ModuleCardSkeleton key={i} />
+            {Array.from({ length: 12 }).map((_, skeletonIndex) => (
+              <ModuleCardSkeleton key={skeletonIndex} />
             ))}
           </div>
         ) : isError ? (
@@ -155,15 +155,16 @@ function ModulesContent() {
           />
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {modules.map((mod) => (
+            {modules.map((organizationModule) => (
               <ModuleCard
-                key={mod.moduleKey}
-                moduleKey={mod.moduleKey}
-                enabled={mod.enabled}
+                key={organizationModule.moduleKey}
+                moduleKey={organizationModule.moduleKey}
+                enabled={organizationModule.enabled}
                 isPending={
-                  toggleModule.isPending && pendingModuleKey === mod.moduleKey
+                  toggleModule.isPending &&
+                  pendingModuleKey === organizationModule.moduleKey
                 }
-                core={mod.core}
+                core={organizationModule.core}
                 onToggle={handleToggle}
               />
             ))}

@@ -174,7 +174,7 @@ export function TemplateUpsertSheet({ open, onClose, template }: TemplateUpsertS
 
       if (isEdit && template) {
         update.mutate(
-          { id: template.id, ...payload },
+          { templateId: template.id, ...payload },
           {
             onSuccess: () => { toast.success("Template updated"); onClose(); },
             onError: (e) => toast.error(getErrorMessage(e)),

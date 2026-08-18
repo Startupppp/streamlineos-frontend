@@ -308,5 +308,17 @@ Backend is 0 errors outright.
    - **API-008 / API-005** blocked on RPT-002, not on effort — the rollup plan is already index-optimal,
      so the only fix is a materialised aggregate and there is no scheduler to refresh one.
    - **API-009** is the LEAKPROOF operator action above, not a code change.
-   Remaining P3s are cosmetic (SEC-003 two-segment key name, PM-011/014 `serial` PKs and PK naming,
-   UI-004 a BOM) and not worth a change on their own.
+Remaining P3s are cosmetic (SEC-003 two-segment key name, PM-011/014 `serial` PKs and PK naming,
+UI-004 a BOM) and not worth a change on their own.
+
+## HRMS core review (merged 2026-08-18)
+
+The HRMS core schema, API/security, caching, UI, pagination, hierarchy, attendance, leave,
+onboarding, lifecycle, and file-cap refactors from the review worktree are merged into the
+primary repositories. Production databases and migrations were not executed.
+
+Remaining gates are intentionally explicit: disposable production-size clone rehearsal and
+approval manifests; managed-KMS ADR/activation; signed leave-opening classifications; and
+activation of canonical APIs only after the catalog/RLS/tenant/security canary gates pass.
+Termination email delivery still needs durable deduplication/claim semantics with a truthful
+SENT transition, and onboarding reminders still need a durable resumable job/status boundary.

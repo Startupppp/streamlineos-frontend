@@ -2,12 +2,14 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { queryKeys } from "@/lib/query-keys";
 
 export interface LetterRender {
   id: number;
   templateId: number;
   templateVersion: number;
-  renderedForEmployeeId: number | null;
+  renderedForEmploymentId: number | null;
   renderedBy: string;
   createdAt: string;
   templateName: string;
@@ -23,31 +25,39 @@ export interface RenderLetterPreview {
   outputHtml: string;
   variables: string[];
   contextSnapshot: Record<string, string>;
-  employeeId?: number;
+  employmentId?: number;
 }
 
 export interface RenderLetterInput {
   templateId: number;
-  employeeId?: number;
+  employmentId?: number;
+  employeeUserId?: string;
   extraContext?: Record<string, string>;
 }
 
 export interface SaveLetterInput {
   templateId: number;
   templateVersion: number;
-  employeeId?: number;
+  employmentId?: number;
+  employeeUserId?: string;
   outputHtml: string;
   contextSnapshot?: Record<string, unknown>;
 }
 
-const LETTERS_KEY = ["streamlineos", "hr", "letters"] as const;
+const LETTERS_KEY = [...queryKeys.hr.all, "letters"] as const;
 
-export function useLetters(employeeId?: string) {
+export function useLetters(employmentId?: number) {
+  const canView = useCan("hr:documents:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery<LetterRender[]>({
-    queryKey: [...LETTERS_KEY, { employeeId }],
+    queryKey: [...LETTERS_KEY, { employmentId }],
     queryFn: () =>
-      apiClient.get<LetterRender[]>("/hr/documents/letters", employeeId ? { employeeId } : undefined),
+      apiClient.get<LetterRender[]>(
+        "/hr/documents/letters",
+        employmentId ? { employmentId } : undefined,
+      ),
     staleTime: 60_000,
+    enabled: hrEnabled && canView,
   });
 }
 

@@ -19,6 +19,7 @@ import {
 } from "@/features/hr/documents/document-form-fields";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 
 interface UploadDocumentDialogProps {
   open: boolean;
@@ -26,7 +27,7 @@ interface UploadDocumentDialogProps {
   onSuccess: () => void;
   documentTypes: { value: string; label: string; icon: React.ComponentType<{ className?: string }> }[];
   categories: string[];
-  isAdmin: boolean;
+  canAssignEmployee: boolean;
 }
 
 function getFileTypeConfig(file: File): { icon: React.ComponentType<{ className?: string }>; bg: string; text: string; badge: string } {
@@ -80,7 +81,7 @@ export function UploadDocumentDialog({
   onSuccess,
   documentTypes,
   categories,
-  isAdmin,
+  canAssignEmployee,
 }: UploadDocumentDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
@@ -89,9 +90,15 @@ export function UploadDocumentDialog({
   const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [employeeSearch, setEmployeeSearch] = useState("");
   const titleAutoPopulated = useRef(false);
 
-  const { employees } = useHrEmployeeOptions();
+  const debouncedEmployeeSearch = useDebouncedValue(employeeSearch, 300);
+  const { employees, isFetching: employeesLoading } = useHrEmployeeOptions({
+    limit: 20,
+    search: debouncedEmployeeSearch || undefined,
+    enabled: open && canAssignEmployee,
+  });
   const createDocumentMutation = useCreateDocument();
   const uploadFileMutation = useUploadFile();
 
@@ -130,6 +137,7 @@ export function UploadDocumentDialog({
       setFiles([]);
       setTags([]);
       setTagInput("");
+      setEmployeeSearch("");
       titleAutoPopulated.current = false;
     }
   }, [open, form]);
@@ -233,8 +241,8 @@ export function UploadDocumentDialog({
     async (file: File): Promise<{ url: string; size: number; mimeType: string } | null> => {
       try {
         setUploading(true);
-        const result = await uploadFileMutation.mutateAsync({ file, folder: "documents" });
-        return { url: result.url, size: result.size, mimeType: result.mimeType };
+        const result = await uploadFileMutation.mutateAsync({ file, folder: "hr-documents" });
+        return { url: result.key, size: result.size, mimeType: result.mimeType };
       } catch (error) {
         toast.error(getErrorMessage(error));
         return null;
@@ -405,7 +413,9 @@ export function UploadDocumentDialog({
               filteredDocumentTypes={filteredDocumentTypes}
               filteredCategories={filteredCategories}
               filteredEmployees={filteredEmployees}
-              isAdmin={isAdmin}
+              canAssignEmployee={canAssignEmployee}
+              onEmployeeSearchChange={setEmployeeSearch}
+              employeesLoading={employeesLoading}
               filesCount={files.length}
               tags={tags}
               tagInput={tagInput}

@@ -2,11 +2,13 @@
 
 import { useMemo } from "react";
 import {
+  AlertCircle,
   UserPlus,
   Briefcase,
   ClipboardCheck,
   Banknote,
   Megaphone,
+  RefreshCcw,
 } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import {
@@ -15,7 +17,10 @@ import {
   HrQuickAction,
 } from "@/features/hr/shared/hr-ui";
 import { cn } from "@/lib/utils";
-import { useHrHubAccess } from "./use-hr-hub-access";
+import {
+  EMPTY_HR_HUB_ACCESS,
+  useHrHubSnapshot,
+} from "@/hooks/api/hr/hub";
 import { HrHubQueues } from "./hr-hub-queues";
 import { HrHubMetrics } from "./hr-hub-metrics";
 import { HrHubRecruitment } from "./hr-hub-recruitment";
@@ -24,7 +29,7 @@ import { HrHubActivity } from "./hr-hub-activity";
 
 const ALL_QUICK_ACTIONS = [
   {
-    key: "add-employee" as const,
+    actionKey: "add-employee" as const,
     href: "/hr/onboarding",
     icon: UserPlus,
     label: "Add employee",
@@ -33,7 +38,7 @@ const ALL_QUICK_ACTIONS = [
     permKey: "canOnboarding" as const,
   },
   {
-    key: "post-job" as const,
+    actionKey: "post-job" as const,
     href: "/hr/recruitment/jobs",
     icon: Briefcase,
     label: "Post job",
@@ -42,7 +47,7 @@ const ALL_QUICK_ACTIONS = [
     permKey: "canRequisitionsManage" as const,
   },
   {
-    key: "approvals" as const,
+    actionKey: "approvals" as const,
     href: "/hr/approvals",
     icon: ClipboardCheck,
     label: "Approvals",
@@ -51,7 +56,7 @@ const ALL_QUICK_ACTIONS = [
     permKey: "canWorkflowsApprove" as const,
   },
   {
-    key: "run-payroll" as const,
+    actionKey: "run-payroll" as const,
     href: "/payroll/runs",
     icon: Banknote,
     label: "Run payroll",
@@ -60,7 +65,7 @@ const ALL_QUICK_ACTIONS = [
     permKey: "canPayrollRunsCreate" as const,
   },
   {
-    key: "announce" as const,
+    actionKey: "announce" as const,
     href: "/hr/announcements",
     icon: Megaphone,
     label: "Announce",
@@ -71,7 +76,11 @@ const ALL_QUICK_ACTIONS = [
 ] as const;
 
 export function HrHubPage() {
-  const access = useHrHubAccess();
+  const hub = useHrHubSnapshot();
+  const access = hub.data?.capabilities ?? EMPTY_HR_HUB_ACCESS;
+  const handleRetry = () => {
+    void hub.refetch();
+  };
 
   const visibleActions = useMemo(
     () => ALL_QUICK_ACTIONS.filter((a) => access[a.permKey]),
@@ -99,7 +108,7 @@ export function HrHubPage() {
               >
                 {visibleActions.map((action) => (
                   <HrQuickAction
-                    key={action.key}
+                    key={action.actionKey}
                     href={action.href}
                     icon={action.icon}
                     label={action.label}
@@ -111,11 +120,54 @@ export function HrHubPage() {
             </HrHero>
           ) : null}
 
-          <HrHubQueues access={access} />
-          <HrHubRecruitment access={access} />
-          <HrHubToday access={access} />
-          <HrHubActivity access={access} />
-          <HrHubMetrics access={access} />
+          {hub.isError ? (
+            <div
+              role="alert"
+              className="flex items-center gap-2 rounded-xl border border-border/70 bg-card p-4 text-sm text-muted-foreground"
+            >
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span className="flex-1">The HR hub is temporarily unavailable.</span>
+              <button
+                type="button"
+                onClick={handleRetry}
+                className="flex shrink-0 items-center gap-1 text-blue-600 hover:underline dark:text-blue-400"
+              >
+                <RefreshCcw className="h-3.5 w-3.5" />
+                Retry
+              </button>
+            </div>
+          ) : null}
+
+          <HrHubQueues
+            access={access}
+            snapshot={hub.data}
+            isLoading={hub.isLoading}
+            onRetry={handleRetry}
+          />
+          <HrHubRecruitment
+            access={access}
+            snapshot={hub.data}
+            isLoading={hub.isLoading}
+            onRetry={handleRetry}
+          />
+          <HrHubToday
+            access={access}
+            snapshot={hub.data}
+            isLoading={hub.isLoading}
+            onRetry={handleRetry}
+          />
+          <HrHubActivity
+            access={access}
+            snapshot={hub.data}
+            isLoading={hub.isLoading}
+            onRetry={handleRetry}
+          />
+          <HrHubMetrics
+            access={access}
+            snapshot={hub.data}
+            isLoading={hub.isLoading}
+            onRetry={handleRetry}
+          />
         </HrPageContent>
       </div>
     </PageWrapper>

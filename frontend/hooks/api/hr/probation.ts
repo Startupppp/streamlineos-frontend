@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
 
 export type ProbationStatus = "in_probation" | "review_due" | "extended" | "confirmed" | "terminated";
 
@@ -25,16 +25,36 @@ export interface ProbationReview {
 
 const probationKeys = {
   all: [...queryKeys.hr.all, "probation"] as const,
-  list: () => [...queryKeys.hr.all, "probation", "list"] as const,
+  list: (params: ProbationListParams) => [...queryKeys.hr.all, "probation", "list", params] as const,
 };
 
-export function useProbationList() {
+export interface ProbationListParams {
+  cursor?: string;
+  limit?: number;
+}
+
+export interface ProbationListResponse {
+  data: ProbationReview[];
+  pageInfo: {
+    limit: number;
+    hasMore: boolean;
+    nextCursor: string | null;
+  };
+}
+
+export function useProbationList(params: ProbationListParams = {}) {
   const canProbation = useCan("hr:probation:view");
-  return useQuery<ProbationReview[]>({
-    queryKey: probationKeys.list(),
-    queryFn: () => apiClient.get<ProbationReview[]>("/hr/probation"),
+  const hrEnabled = useModuleEnabled("hr");
+  return useQuery<ProbationListResponse>({
+    queryKey: probationKeys.list(params),
+    queryFn: () => {
+      const searchParams = new URLSearchParams();
+      searchParams.set("limit", String(params.limit ?? 20));
+      if (params.cursor) searchParams.set("cursor", params.cursor);
+      return apiClient.get<ProbationListResponse>(`/hr/probation?${searchParams.toString()}`);
+    },
     staleTime: 60_000,
-    enabled: canProbation,
+    enabled: hrEnabled && canProbation,
   });
 }
 
@@ -56,7 +76,7 @@ export function useExtendProbation() {
         reason,
       }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: probationKeys.list() });
+      qc.invalidateQueries({ queryKey: probationKeys.all });
     },
   });
 }
@@ -79,7 +99,7 @@ export function useConfirmProbation() {
         notes,
       }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: probationKeys.list() });
+      qc.invalidateQueries({ queryKey: probationKeys.all });
     },
   });
 }

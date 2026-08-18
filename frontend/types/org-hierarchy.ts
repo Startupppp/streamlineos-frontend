@@ -39,6 +39,7 @@ export interface OrgBranch {
   id: string;
   orgId: string;
   businessUnitId: string | null;
+  businessUnitName?: string | null;
   managerUserId: string | null;
   name: string;
   code: string;
@@ -59,6 +60,7 @@ export interface OrgDepartment {
   id: string;
   orgId: string;
   branchId: string | null;
+  branchName?: string | null;
   headUserId: string | null;
   name: string;
   code: string;
@@ -73,6 +75,7 @@ export interface OrgTeam {
   id: string;
   orgId: string;
   departmentId: string | null;
+  departmentName?: string | null;
   leadUserId: string | null;
   name: string;
   code: string;

@@ -3,11 +3,10 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { LayoutGrid, List, UserPlus, Download } from "lucide-react";
+import { LayoutGrid, List, UserPlus } from "lucide-react";
 import {
-  useHrEmployees,
+  useInfiniteHrEmployees,
   useHrDepartments,
-  unwrapEmployees,
 } from "@/hooks/api/hr";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useCan } from "@/hooks/api/access";
@@ -16,10 +15,11 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ViewToggle } from "@/components/ui/view-toggle";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { TablePagination } from "@/components/ui/table-pagination";
+import { ErrorState } from "@/components/shared/error-state";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { EmployeeCard } from "@/features/hr/employees/employee-card";
 import { EmployeesDirectoryStats } from "@/features/hr/employees/employees-directory-stats";
+import { EmployeeExportAction } from "@/features/hr/employees/employee-export-action";
 import {
   EmployeesFilters,
   type Department,
@@ -36,9 +36,9 @@ import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { resolveImageUrl, cn } from "@/lib/utils";
 import type { Employee } from "@/types/hr";
 import { HrPanel, HrStatusBadge } from "@/features/hr/shared/hr-ui";
-import { toast } from "sonner";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { PAGE_BODY_EMPTY_CLASS } from "@/components/ui/content-fill-panel";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 type ViewMode = "grid" | "list";
 
@@ -141,14 +141,19 @@ export function EmployeesListPage() {
     [searchParams],
   );
 
-  const [search, setSearch] = useState(filters.q);
+  const [searchDraft, setSearchDraft] = useState({
+    sourceQuery: filters.q,
+    value: filters.q,
+  });
+  const search =
+    searchDraft.sourceQuery === filters.q ? searchDraft.value : filters.q;
+  const updateSearch = useCallback(
+    (value: string) => setSearchDraft({ sourceQuery: filters.q, value }),
+    [filters.q],
+  );
   const [view, setView] = useState<ViewMode>(
     (searchParams.get("view") as ViewMode) || "grid",
   );
-
-  useEffect(() => {
-    setSearch(filters.q);
-  }, [filters.q]);
 
   const debouncedSearch = useDebouncedValue(search, 300);
   const { data: departments } = useHrDepartments();
@@ -163,12 +168,22 @@ export function EmployeesListPage() {
     [filters, debouncedSearch],
   );
 
-  const { data: pageData, isLoading, isFetching, isError, refetch } = useHrEmployees(apiParams);
+  const {
+    data: employeePages,
+    error,
+    isLoading,
+    isFetching,
+    isFetchingNextPage,
+    isError,
+    hasNextPage,
+    fetchNextPage,
+    refetch,
+  } = useInfiniteHrEmployees(apiParams);
 
-  const employees = useMemo(() => unwrapEmployees(pageData), [pageData]);
-  const pagination = pageData?.pagination;
-  const total = pagination?.total ?? 0;
-  const page = filters.page;
+  const employees = useMemo(
+    () => employeePages?.pages.flatMap((page) => page.data) ?? [],
+    [employeePages],
+  );
 
   const updateParams = useCallback(
     (updates: Record<string, string | null>) => {
@@ -182,19 +197,12 @@ export function EmployeesListPage() {
     [searchParams, router, pathname],
   );
 
-  const handlePageChange = useCallback(
-    (nextPage: number) => {
-      updateParams({ page: nextPage <= 1 ? null : String(nextPage) });
-    },
-    [updateParams],
-  );
-
   useEffect(() => {
     const current = searchParams.get("q") || "";
     if (debouncedSearch === current) return;
     updateParams(
       employeeFiltersToUrlUpdates(
-        { q: debouncedSearch, page: 1 },
+        { q: debouncedSearch },
         { size: PAGE_SIZE, status: "all" },
       ),
     );
@@ -203,7 +211,7 @@ export function EmployeesListPage() {
   const hasFilters = hasActiveEmployeeFilters(filters, { status: "all" });
 
   const clearFilters = useCallback(() => {
-    setSearch("");
+    updateSearch("");
     updateParams({
       q: null,
       dept: null,
@@ -211,38 +219,9 @@ export function EmployeesListPage() {
       role: null,
       page: null,
     });
-  }, [updateParams]);
+  }, [updateParams, updateSearch]);
 
   const getDept = (emp: Employee) => emp.department?.name ?? null;
-
-  const handleExport = useCallback(async () => {
-    try {
-      const { downloadXlsx } = await import("@/lib/export/xlsx-utils");
-      const {
-        fetchAllEmployeesForExport,
-        mapEmployeesToExportRows,
-        EMPLOYEE_EXPORT_COLUMNS,
-      } = await import("@/features/hr/employees/export-employees");
-      const rows = mapEmployeesToExportRows(
-        await fetchAllEmployeesForExport({
-          search: apiParams.search,
-          departmentId: apiParams.departmentId,
-          isActive: apiParams.isActive,
-          role: apiParams.role,
-        }),
-      );
-      await downloadXlsx(`directory-${new Date().toISOString().slice(0, 10)}.xlsx`, [
-        {
-          name: "Employees",
-          columns: [...EMPLOYEE_EXPORT_COLUMNS],
-          rows,
-        },
-      ]);
-      toast.success(`Exported ${rows.length} employee${rows.length === 1 ? "" : "s"}`);
-    } catch {
-      toast.error("Export failed");
-    }
-  }, [apiParams]);
 
   if (isLoading) {
     return (
@@ -257,8 +236,6 @@ export function EmployeesListPage() {
       </PageWrapper>
     );
   }
-
-  const showPagination = !isError && (employees.length > 0 || total > 0);
 
   return (
     <PageWrapper
@@ -282,15 +259,14 @@ export function EmployeesListPage() {
             size="sm"
           />
           {canExport && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 flex-1 gap-1.5 sm:flex-none"
-              onClick={() => void handleExport()}
-            >
-              <Download className="h-3.5 w-3.5" />
-              Export
-            </Button>
+            <EmployeeExportAction
+              filters={{
+                search: apiParams.search,
+                departmentId: apiParams.departmentId,
+                isActive: apiParams.isActive,
+                role: apiParams.role,
+              }}
+            />
           )}
           {canOnboard && (
             <Button size="sm" className="h-8 flex-1 gap-1.5 shadow-sm sm:flex-none" asChild>
@@ -311,11 +287,11 @@ export function EmployeesListPage() {
           status={filters.status}
           departments={deptList}
           hasFilters={hasFilters}
-          onSearchChange={setSearch}
+          onSearchChange={updateSearch}
           onDepartmentIdChange={(id) =>
             updateParams(
               employeeFiltersToUrlUpdates(
-                { departmentId: id, page: 1 },
+                { departmentId: id },
                 { size: PAGE_SIZE, status: "all" },
               ),
             )
@@ -323,7 +299,7 @@ export function EmployeesListPage() {
           onStatusChange={(s) =>
             updateParams(
               employeeFiltersToUrlUpdates(
-                { status: s, page: 1 },
+                { status: s },
                 { size: PAGE_SIZE, status: "all" },
               ),
             )
@@ -335,20 +311,19 @@ export function EmployeesListPage() {
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
         <div className="min-h-0 flex-1 overflow-y-auto scrollbar-hide md:flex md:flex-col md:gap-3 md:overflow-hidden">
           <div className="mb-3 shrink-0 md:mb-0">
-            <EmployeesDirectoryStats matchingTotal={total} />
+            <EmployeesDirectoryStats
+              loadedCount={employees.length}
+              hasMore={Boolean(hasNextPage)}
+            />
           </div>
 
           <div className="md:min-h-0 md:flex-1 md:overflow-y-auto md:scrollbar-hide">
             {isError ? (
-              <HrPanel className="py-10 text-center">
-                <p className="text-sm font-semibold">Couldn&apos;t load directory</p>
-                <p className="mb-4 mt-1 text-xs text-muted-foreground">
-                  Something went wrong while fetching employees.
-                </p>
-                <Button size="sm" onClick={() => void refetch()}>
-                  Retry
-                </Button>
-              </HrPanel>
+              <ErrorState
+                title="Couldn&apos;t load directory"
+                description={getErrorMessage(error)}
+                onRetry={() => void refetch()}
+              />
             ) : employees.length === 0 ? (
               <EmptyState
                 illustrationPreset="team"
@@ -396,15 +371,17 @@ export function EmployeesListPage() {
           </div>
         </div>
 
-        {showPagination ? (
-          <TablePagination
-            page={page}
-            pageSize={PAGE_SIZE}
-            total={total}
-            onPageChange={handlePageChange}
-            disabled={isFetching}
-            className="rounded-xl border border-border/70"
-          />
+        {!isError && hasNextPage ? (
+          <div className="flex shrink-0 justify-center rounded-xl border border-border/70 p-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={isFetchingNextPage}
+              onClick={() => void fetchNextPage()}
+            >
+              {isFetchingNextPage ? "Loading..." : "Load more employees"}
+            </Button>
+          </div>
         ) : null}
       </div>
     </PageWrapper>

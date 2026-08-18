@@ -14,6 +14,7 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { formatShortDate } from "@/lib/date-utils";
 import type { HrDocumentType } from "@/hooks/api/hr/document-types";
+import { viewProtectedFile } from "@/hooks/common/use-file-url";
 
 import { DocumentFileRow } from "./onboarding-document-file-row";
 import {
@@ -30,7 +31,7 @@ export interface OnboardingDoc {
   documentTypeId: number;
   documentTypeName: string;
   isMandatory: boolean;
-  fileUrl: string;
+  hasFile: boolean;
   fileName: string;
   fileSize: number | null;
   status: DocStatus;
@@ -87,7 +88,7 @@ export function DocumentChecklistRow({
 }: DocumentChecklistRowProps) {
   const isApproved = submission?.status === "APPROVED";
   const status = submission?.status ?? "PENDING";
-  const showFileRow = Boolean(pendingFile) || Boolean(submission?.fileUrl);
+  const showFileRow = Boolean(pendingFile) || Boolean(submission?.hasFile);
   const showUploadAction = canUpload(submission?.status) && !showFileRow;
   const blobUrl = useBlobPreviewUrl(isWizard && pendingFile ? pendingFile : null);
 
@@ -111,8 +112,13 @@ export function DocumentChecklistRow({
     onOpenUpload(docType, submission);
   }, [docType, isWizard, onOpenUpload, onPickFile, submission]);
 
+  const handleViewSubmitted = useCallback(() => {
+    if (!submission) return;
+    void viewProtectedFile(`/hr/onboarding-docs/me/${submission.id}/file`);
+  }, [submission]);
+
   const fileName = pendingFile?.name ?? submission?.fileName ?? "";
-  const viewHref = pendingFile ? blobUrl : submission?.fileUrl ?? null;
+  const viewHref = pendingFile ? blobUrl : null;
   const canReplace = canUpload(submission?.status) && !isApproved;
 
   return (
@@ -191,6 +197,7 @@ export function DocumentChecklistRow({
               <DocumentFileRow
                 fileName={fileName}
                 viewHref={viewHref}
+                onView={!pendingFile && submission ? handleViewSubmitted : undefined}
                 pending={Boolean(isWizard && pendingFile)}
                 onReplace={canReplace ? handleReplace : undefined}
                 onRemove={isWizard && pendingFile ? handleRemovePending : undefined}

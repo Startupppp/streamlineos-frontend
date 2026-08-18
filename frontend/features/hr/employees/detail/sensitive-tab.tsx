@@ -30,6 +30,15 @@ const emptyOrValid = (schema: z.ZodString) =>
   schema.or(z.literal(""));
 
 const sensitiveSchema = z.object({
+  salaryAmount: emptyOrValid(
+    z
+      .string()
+      .regex(/^\d{1,12}(?:\.\d{1,2})?$/, "Use an amount with at most 2 decimals"),
+  ),
+  salaryCurrency: emptyOrValid(
+    z.string().regex(/^[A-Za-z]{3}$/, "Use a 3-letter ISO currency code"),
+  ),
+  salaryFrequency: emptyOrValid(z.string().trim().min(1).max(30)),
   bankAccountNumber: emptyOrValid(
     z.string().refine(
       (v) => /^\d{9,18}$/.test(v),
@@ -56,8 +65,24 @@ const sensitiveSchema = z.object({
 
 type FormValues = z.infer<typeof sensitiveSchema>;
 
+function salaryCentsToInput(cents: number | null | undefined): string {
+  if (cents == null) return "";
+  const whole = Math.floor(cents / 100);
+  const fraction = String(cents % 100).padStart(2, "0");
+  return `${whole}.${fraction}`;
+}
+
+function salaryInputToCents(value: string): number | null {
+  if (value === "") return null;
+  const [whole, fraction = ""] = value.split(".");
+  return Number(whole) * 100 + Number(fraction.padEnd(2, "0"));
+}
+
 function sensitiveToForm(data: HrSensitiveData | undefined): FormValues {
   return {
+    salaryAmount: salaryCentsToInput(data?.salaryAmountCents),
+    salaryCurrency: data?.salaryCurrency ?? "",
+    salaryFrequency: data?.salaryFrequency ?? "",
     bankAccountNumber: data?.bankDetails?.accountNumber ?? "",
     bankName: data?.bankDetails?.bankName ?? "",
     ifscCode: data?.bankDetails?.ifsc ?? "",
@@ -72,6 +97,9 @@ function sensitiveToForm(data: HrSensitiveData | undefined): FormValues {
 
 function formToSensitive(values: FormValues, existing: HrSensitiveData | undefined): Partial<HrSensitiveData> {
   return {
+    salaryAmountCents: salaryInputToCents(values.salaryAmount),
+    salaryCurrency: values.salaryCurrency === "" ? null : values.salaryCurrency.toUpperCase(),
+    salaryFrequency: values.salaryFrequency === "" ? null : values.salaryFrequency,
     bankDetails: {
       ...existing?.bankDetails,
       accountNumber: values.bankAccountNumber || undefined,
@@ -115,6 +143,7 @@ function MaskedField({ label, value, editMode, fieldName, control }: MaskedField
                 {...field}
                 className="text-sm font-mono"
                 placeholder={`Enter ${label}`}
+                inputMode={fieldName === "salaryAmount" ? "decimal" : undefined}
               />
             ) : (
               <div className="flex items-center gap-2">
@@ -222,6 +251,9 @@ export function EmployeeSensitiveTab({ userId }: Props) {
   const displayValues = sensitiveToForm(sensitive);
 
   const fields: Array<{ label: string; key: keyof FormValues }> = [
+    { label: "Salary Amount", key: "salaryAmount" },
+    { label: "Salary Currency", key: "salaryCurrency" },
+    { label: "Salary Frequency", key: "salaryFrequency" },
     { label: "Bank Account Number", key: "bankAccountNumber" },
     { label: "Bank Name", key: "bankName" },
     { label: "IFSC / Routing Code", key: "ifscCode" },

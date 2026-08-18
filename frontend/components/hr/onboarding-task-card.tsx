@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { CheckCircle2, ChevronDown, ChevronUp, Circle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -90,13 +90,27 @@ export function OnboardingTaskCard({ task, onToggle, isToggling }: OnboardingTas
     >
       <CardContent className="p-3">
         <div className="flex items-start gap-3">
-          <Checkbox
-            checked={isCompleted}
-            onCheckedChange={handleToggle}
-            disabled={isToggling}
-            aria-label={isCompleted ? `Mark "${task.title}" as pending` : `Complete "${task.title}"`}
-            className="mt-0.5 shrink-0"
-          />
+          {task.canComplete ? (
+            <Checkbox
+              checked={isCompleted}
+              onCheckedChange={handleToggle}
+              disabled={isToggling}
+              aria-label={isCompleted ? `Mark "${task.title}" as pending` : `Complete "${task.title}"`}
+              className="mt-0.5 shrink-0"
+            />
+          ) : (
+            <span
+              className="mt-0.5 shrink-0 text-muted-foreground"
+              aria-label={isCompleted ? "Completed" : `Assigned to ${ownerBadgeLabel(task.ownerRole)}`}
+              role="img"
+            >
+              {isCompleted ? (
+                <CheckCircle2 className="h-4 w-4 text-green-600" />
+              ) : (
+                <Circle className="h-4 w-4" />
+              )}
+            </span>
+          )}
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">

@@ -3,9 +3,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
 
-interface HrDashboardMetrics {
+export interface HrDashboardMetrics {
   totalEmployees: number;
   activeEmployees: number;
   onLeaveToday: number;
@@ -23,7 +23,7 @@ interface HrDashboardMetrics {
   }[];
 }
 
-interface HrLeaveCalendarEntry {
+export interface HrLeaveCalendarEntry {
   id: number;
   userId: string;
   userName: string;
@@ -36,11 +36,12 @@ interface HrLeaveCalendarEntry {
 
 export function useHrDashboardMetrics() {
   const canView = useCan("hr:analytics:read");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.dashboardMetrics(),
     queryFn: () => apiClient.get<HrDashboardMetrics>("/hr/dashboard/metrics"),
     staleTime: 60_000,
-    enabled: canView,
+    enabled: hrEnabled && canView,
   });
 }
 
@@ -60,7 +61,7 @@ export function useHrLeaveCalendar(month?: number, year?: number) {
   });
 }
 
-interface HrOnboardingStatus {
+export interface HrOnboardingStatus {
   inProgress: number;
   completed: number;
   total: number;
@@ -76,10 +77,11 @@ interface HrOnboardingStatus {
 
 export function useHrOnboardingStatus() {
   const canView = useCan("hr:analytics:read");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.dashboardOnboardingStatus(),
     queryFn: () => apiClient.get<HrOnboardingStatus>("/hr/dashboard/onboarding-status"),
     staleTime: 60_000,
-    enabled: canView,
+    enabled: hrEnabled && canView,
   });
 }

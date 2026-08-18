@@ -19,6 +19,26 @@ function extractNamesFromSource(source: string): string[] {
   return [...source.matchAll(/^\s*name:\s*["'`]([^"'`]+)["'`]/gm)].map((m) => m[1]);
 }
 
+function readPermissionKeyValues(): Set<string> {
+  const permissionDirectory = path.resolve(__dirname, "..");
+  const permissionTypeFiles = fs
+    .readdirSync(permissionDirectory)
+    .filter(
+      (fileName) =>
+        fileName === "types.ts" || fileName.startsWith("permission-key-"),
+    );
+  const source = permissionTypeFiles
+    .map((fileName) =>
+      fs.readFileSync(path.join(permissionDirectory, fileName), "utf8"),
+    )
+    .join("\n");
+  return new Set(
+    [...source.matchAll(/\|\s*["']([^"']+)["']/gm)].map(
+      (match) => match[1],
+    ),
+  );
+}
+
 describe("permission catalog sync", () => {
   let backendNames: Set<string>;
   let backendAvailable: boolean;
@@ -55,18 +75,12 @@ describe("permission catalog sync", () => {
 
   it("exposes every backend permission in the frontend PermissionKey type", () => {
     if (!backendAvailable) return;
-    const content = fs.readFileSync(path.resolve(__dirname, "../types.ts"), "utf8");
-    const unionValues = new Set(
-      [...content.matchAll(/\|\s*["']([^"']+)["']/gm)].map((match) => match[1]),
-    );
+    const unionValues = readPermissionKeyValues();
     expect([...backendNames].filter((name) => !unionValues.has(name))).toEqual([]);
   });
 
   it("every frontend PERMISSIONS name appears in the PermissionKey union type", () => {
-    const content = fs.readFileSync(path.resolve(__dirname, "../types.ts"), "utf8");
-    const unionValues = new Set(
-      [...content.matchAll(/\|\s*["']([^"']+)["']/gm)].map((m) => m[1]),
-    );
+    const unionValues = readPermissionKeyValues();
     const missingFromUnion = PERMISSIONS.map((p) => p.name).filter(
       (name) => !unionValues.has(name),
     );

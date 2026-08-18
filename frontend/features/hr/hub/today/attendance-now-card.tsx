@@ -1,17 +1,21 @@
 "use client";
 
-import { useHrTeamAttendanceStatus } from "@/hooks/api/hr";
 import { cn } from "@/lib/utils";
 import { HrPanel, HrSectionHeader } from "@/features/hr/shared/hr-ui";
+import {
+  hubSectionData,
+  hubSectionError,
+  type HrHubCardProps,
+} from "@/hooks/api/hr/hub";
 import { SkeletonRows, ErrorRetry } from "./today-card";
 
-export function AttendanceNowCard() {
-  const { data, isLoading, isError, error, refetch } =
-    useHrTeamAttendanceStatus();
-
-  const handleRetry = () => {
-    void refetch();
-  };
+export function AttendanceNowCard({
+  section,
+  isLoading,
+  onRetry,
+}: HrHubCardProps<"attendanceStatus">) {
+  const data = hubSectionData(section);
+  const error = hubSectionError(section);
 
   const counts = data?.counts;
   const present = counts?.PRESENT ?? 0;
@@ -26,8 +30,8 @@ export function AttendanceNowCard() {
       />
       {isLoading ? (
         <SkeletonRows />
-      ) : isError ? (
-        <ErrorRetry error={error} onRetry={handleRetry} />
+      ) : error ? (
+        <ErrorRetry error={error} onRetry={onRetry} />
       ) : (
         <div className="space-y-2">
           <div className="flex items-baseline gap-1.5">

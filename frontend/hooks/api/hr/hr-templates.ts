@@ -3,6 +3,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import type {
   HrTemplate,
   HrTemplateKind,
@@ -21,29 +22,37 @@ interface ListParams {
 }
 
 export function useHrTemplates(params?: ListParams) {
+  const canView = useCan("hr:templates:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.hrTemplates(params as Record<string, unknown> | undefined),
     queryFn: () =>
       apiClient.get<TemplateListResponse>("/hr/templates", params as Record<string, unknown> | undefined),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
+    enabled: hrEnabled && canView,
   });
 }
 
-export function useHrTemplate(id: number) {
+export function useHrTemplate(templateId: number) {
+  const canView = useCan("hr:templates:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: queryKeys.hr.hrTemplate(id),
-    queryFn: () => apiClient.get<HrTemplate>(`/hr/templates/${id}`),
+    queryKey: queryKeys.hr.hrTemplate(templateId),
+    queryFn: () => apiClient.get<HrTemplate>(`/hr/templates/${templateId}`),
     staleTime: 60_000,
-    enabled: !!id,
+    enabled: hrEnabled && canView && !!templateId,
   });
 }
 
 export function useHrTemplateVariables() {
+  const canView = useCan("hr:templates:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.hrTemplateVariables(),
     queryFn: () => apiClient.get<TemplateVariable[]>("/hr/templates/variables"),
     staleTime: 10 * 60_000,
+    enabled: hrEnabled && canView,
   });
 }
 
@@ -67,7 +76,7 @@ export function useCreateHrTemplate() {
 }
 
 interface UpdateTemplateInput {
-  id: number;
+  templateId: number;
   name?: string;
   description?: string;
   content?: Record<string, unknown>;
@@ -79,11 +88,11 @@ export function useUpdateHrTemplate() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["hr", "templates", "update"],
-    mutationFn: ({ id, ...data }: UpdateTemplateInput) =>
-      apiClient.patch<HrTemplate>(`/hr/templates/${id}`, data),
-    onSuccess: (_, { id }) => {
+    mutationFn: ({ templateId, ...data }: UpdateTemplateInput) =>
+      apiClient.patch<HrTemplate>(`/hr/templates/${templateId}`, data),
+    onSuccess: (_, { templateId }) => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.hrTemplates() });
-      qc.invalidateQueries({ queryKey: queryKeys.hr.hrTemplate(id) });
+      qc.invalidateQueries({ queryKey: queryKeys.hr.hrTemplate(templateId) });
     },
   });
 }
@@ -92,11 +101,11 @@ export function useTransitionHrTemplate() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["hr", "templates", "transition"],
-    mutationFn: ({ id, to }: { id: number; to: HrTemplateStatus }) =>
-      apiClient.post<HrTemplate>(`/hr/templates/${id}/transition`, { to }),
-    onSuccess: (_, { id }) => {
+    mutationFn: ({ templateId, to }: { templateId: number; to: HrTemplateStatus }) =>
+      apiClient.post<HrTemplate>(`/hr/templates/${templateId}/transition`, { to }),
+    onSuccess: (_, { templateId }) => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.hrTemplates() });
-      qc.invalidateQueries({ queryKey: queryKeys.hr.hrTemplate(id) });
+      qc.invalidateQueries({ queryKey: queryKeys.hr.hrTemplate(templateId) });
     },
   });
 }

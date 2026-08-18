@@ -32,15 +32,17 @@ export function DocumentEditorPage() {
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (doc) {
+    if (!doc) return;
+    const timeoutId = window.setTimeout(() => {
       setTitle(doc.title);
       setContentJson(doc.contentJson);
-    }
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
   }, [doc]);
 
   const handleSave = useCallback(async () => {
     if (!isDirty) return;
-    await updateDoc.mutateAsync({ id: documentId, title, contentJson });
+    await updateDoc.mutateAsync({ documentId, title, contentJson });
     setIsDirty(false);
     toast.success("Document saved");
   }, [documentId, title, contentJson, isDirty, updateDoc]);

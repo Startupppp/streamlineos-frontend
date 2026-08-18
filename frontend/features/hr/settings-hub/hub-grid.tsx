@@ -30,8 +30,14 @@ const CARD_GROUPS: CardGroup[] = [
         permission: "settings:organization:manage",
       },
       {
-        title: "Locations & Departments",
-        description: "Structure, reporting lines",
+        title: "Organization Structure",
+        description: "Departments, teams, locations, and reporting lines",
+        href: "/settings/organization/structure",
+        permission: "settings:view",
+      },
+      {
+        title: "Job Architecture",
+        description: "Job roles and levels used by HR records",
         href: "/hr/org",
         permission: "hr:employees:view",
       },

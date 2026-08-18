@@ -7,11 +7,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { useSkillsMatrix } from "@/hooks/api/hr";
 import { useCan } from "@/hooks/api/access";
 import { getInitials } from "@/lib/format-utils";
 import { EmptyTeamIllustration } from "@/components/illustrations";
-import { LayoutGrid, Table2, AlertCircle } from "lucide-react";
+import { LayoutGrid, Table2 } from "lucide-react";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 const LEVEL_COLORS: Record<number, string> = {
@@ -33,13 +35,41 @@ const LEVEL_LABELS: Record<number, string> = {
 
 export default function SkillsMatrixPage() {
   const canReadEmployees = useCan("hr:employees:view");
-  const { data, isLoading, isError, refetch } = useSkillsMatrix({
+  const [cursorHistory, setCursorHistory] = useState<(string | undefined)[]>([
+    undefined,
+  ]);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const { data, isLoading, isFetching, isError, refetch } = useSkillsMatrix({
+    cursor: cursorHistory[page - 1],
+    limit: pageSize,
     enabled: canReadEmployees,
   });
   const [compact, setCompact] = useState(false);
 
-  const toggleCompact = useCallback(() => setCompact((c) => !c), []);
+  const toggleCompact = useCallback(
+    () => setCompact((currentCompact) => !currentCompact),
+    [],
+  );
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handlePreviousPage = useCallback(() => {
+    setPage((currentPage) => Math.max(1, currentPage - 1));
+  }, []);
+  const handleNextPage = useCallback(() => {
+    const nextCursor = data?.pageInfo.nextCursor;
+    if (!nextCursor) return;
+    setCursorHistory((currentHistory) => {
+      const retainedHistory = currentHistory.slice(0, page);
+      retainedHistory[page] = nextCursor;
+      return retainedHistory;
+    });
+    setPage((currentPage) => currentPage + 1);
+  }, [data?.pageInfo.nextCursor, page]);
+  const handlePageSizeChange = useCallback((nextPageSize: number) => {
+    setPageSize(nextPageSize);
+    setCursorHistory([undefined]);
+    setPage(1);
+  }, []);
 
   if (isLoading) {
     return (
@@ -47,18 +77,18 @@ export default function SkillsMatrixPage() {
         <div className="rounded-xl border border-border overflow-hidden">
           <div className="flex border-b bg-muted/40 px-3 py-2 gap-4">
             <Skeleton className="h-4 w-32" />
-            {Array.from({ length: 10 }).map((_, i) => (
-              <Skeleton key={i} className="h-4 w-16" />
+            {Array.from({ length: 10 }).map((_, columnSkeletonIndex) => (
+              <Skeleton key={columnSkeletonIndex} className="h-4 w-16" />
             ))}
           </div>
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="flex items-center border-b last:border-0 px-3 py-2.5 gap-4">
+          {Array.from({ length: 5 }).map((_, rowSkeletonIndex) => (
+            <div key={rowSkeletonIndex} className="flex items-center border-b last:border-0 px-3 py-2.5 gap-4">
               <div className="flex items-center gap-2 w-40 shrink-0">
                 <Skeleton className="h-6 w-6 rounded-full" />
                 <Skeleton className="h-4 w-24" />
               </div>
-              {Array.from({ length: 10 }).map((_, j) => (
-                <Skeleton key={j} className="h-5 w-16 rounded" />
+              {Array.from({ length: 10 }).map((_, cellSkeletonIndex) => (
+                <Skeleton key={cellSkeletonIndex} className="h-5 w-16 rounded" />
               ))}
             </div>
           ))}
@@ -70,14 +100,11 @@ export default function SkillsMatrixPage() {
   if (isError) {
     return (
       <PageWrapper title="Skills Matrix" subtitle="Cross-reference of employees and their skill levels across the org">
-        <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
-          <AlertCircle className="w-8 text-destructive" />
-          <div>
-            <p className="text-sm font-medium text-foreground">Failed to load skills matrix</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Something went wrong. Please try again.</p>
-          </div>
-          <Button size="sm" variant="outline" onClick={handleRetry}>Try again</Button>
-        </div>
+        <ErrorState
+          title="Failed to load skills matrix"
+          description="Something went wrong. Please try again."
+          onRetry={handleRetry}
+        />
       </PageWrapper>
     );
   }
@@ -130,21 +157,21 @@ export default function SkillsMatrixPage() {
                 </tr>
               </thead>
               <tbody>
-                {employees.map((emp) => {
-                  const skillCount = Object.keys(emp.skills).length;
+                {employees.map((employeeRecord) => {
+                  const skillCount = Object.keys(employeeRecord.skills).length;
                   return (
-                    <tr key={emp.userId} className="hover:bg-muted/30">
+                    <tr key={employeeRecord.userId} className="hover:bg-muted/30">
                       <td className="sticky left-0 z-10 bg-card border-b border-r border-border px-3 py-2">
                         <div className="flex items-center gap-2">
                           <Avatar className="h-6 w-6 shrink-0">
-                            <AvatarImage src={emp.image ?? undefined} />
-                            <AvatarFallback className="text-[9px]">{getInitials(emp.name)}</AvatarFallback>
+                            <AvatarImage src={employeeRecord.image ?? undefined} />
+                            <AvatarFallback className="text-[9px]">{getInitials(employeeRecord.name)}</AvatarFallback>
                           </Avatar>
-                          <TruncatedText text={emp.name ?? ""} className="font-medium max-w-[110px]" />
+                          <TruncatedText text={employeeRecord.name ?? ""} className="font-medium max-w-[110px]" />
                         </div>
                       </td>
                       {skills.map((skill) => {
-                        const level = emp.skills[skill];
+                        const level = employeeRecord.skills[skill];
                         return (
                           <td key={skill} className="border-b border-r px-1 py-1 text-center">
                             {level ? (
@@ -168,17 +195,31 @@ export default function SkillsMatrixPage() {
             </table>
 
             <div className="flex items-center gap-4 mt-4 px-1 flex-wrap">
-              {Object.entries(LEVEL_LABELS).map(([lvl, lbl]) => (
-                <div key={lvl} className="flex items-center gap-1.5">
-                  <span className={`inline-block rounded px-1.5 py-0.5 text-[10px] font-semibold ${LEVEL_COLORS[Number(lvl)]}`}>
-                    {lvl}
+              {Object.entries(LEVEL_LABELS).map(([levelNumber, levelLabel]) => (
+                <div key={levelNumber} className="flex items-center gap-1.5">
+                  <span className={`inline-block rounded px-1.5 py-0.5 text-[10px] font-semibold ${LEVEL_COLORS[Number(levelNumber)]}`}>
+                    {levelNumber}
                   </span>
-                  <span className="text-xs text-muted-foreground">{lvl} – {lbl}</span>
+                  <span className="text-xs text-muted-foreground">{levelNumber} - {levelLabel}</span>
                 </div>
               ))}
             </div>
           </div>
         </ScrollArea>
+      )}
+
+      {(page > 1 || data?.pageInfo.hasMore) && (
+        <CursorPageControls
+          page={page}
+          hasNext={data?.pageInfo.hasMore ?? false}
+          disabled={isFetching}
+          onPrevious={handlePreviousPage}
+          onNext={handleNextPage}
+          pageSize={pageSize}
+          onPageSizeChange={handlePageSizeChange}
+          pageSizeOptions={[10, 20, 50]}
+          className="mt-4"
+        />
       )}
     </PageWrapper>
   );

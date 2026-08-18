@@ -43,6 +43,17 @@ export function useCan(permissionKey: PermissionKey): boolean {
   return data.permissions.includes(permissionKey);
 }
 
+export function canManageOrganizationMembership(
+  access: AccessResponse | undefined,
+): boolean {
+  return access?.canManageOrganizationMembership === true;
+}
+
+export function useCanManageOrganizationMembership(): boolean {
+  const { data } = useAccess();
+  return canManageOrganizationMembership(data);
+}
+
 /**
  * Module enablement is org configuration, not a permission — owners and
  * platform admins are gated by it too (they can turn a module on in
@@ -50,8 +61,8 @@ export function useCan(permissionKey: PermissionKey): boolean {
  */
 export function useModuleEnabled(moduleKey: string): boolean {
   const { data } = useAccess();
-  if (!data) return true;
-  return data.modules[normalizeOrgModuleKey(moduleKey)] !== false;
+  if (!data) return false;
+  return data.modules[normalizeOrgModuleKey(moduleKey)] === true;
 }
 
 export const usePermissionCatalog = (

@@ -1,21 +1,29 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 export interface HrDocumentType {
   id: number;
   name: string;
+  slug?: string;
   description: string | null;
   countryCode: string | null;
   isMandatory: boolean | null;
   isActive: boolean | null;
   sortOrder: number | null;
   applicableRoles: string[] | null;
+  createdAt?: string | null;
 }
 
-interface PaginatedDocumentTypes {
+export interface PaginatedHrDocumentTypes {
   data: HrDocumentType[];
   total: number;
   page: number;
@@ -24,7 +32,7 @@ interface PaginatedDocumentTypes {
 }
 
 function unwrapDocumentTypes(
-  res: PaginatedDocumentTypes | HrDocumentType[] | null | undefined,
+  res: PaginatedHrDocumentTypes | HrDocumentType[] | null | undefined,
 ): HrDocumentType[] {
   if (Array.isArray(res)) return res;
   if (res && typeof res === "object" && Array.isArray(res.data)) return res.data;
@@ -32,19 +40,101 @@ function unwrapDocumentTypes(
 }
 
 export function useHrDocumentTypes(options?: { enabled?: boolean }) {
+  const canManageDocuments = useCan("hr:documents:manage");
+  const canViewDocuments = useCan("hr:documents:view");
+  const canViewOwnDocuments = useCan("self:onboarding-docs");
   return useQuery<HrDocumentType[]>({
-    enabled: options?.enabled ?? true,
+    enabled:
+      (canManageDocuments || canViewDocuments || canViewOwnDocuments) &&
+      (options?.enabled ?? true),
     queryKey: [...queryKeys.hr.documentTypes(), "all"] as const,
     queryFn: async () => {
-      const res = await apiClient.get<PaginatedDocumentTypes | HrDocumentType[]>(
-        "/hr/document-types",
-        {
-          page: 1,
-          limit: 100,
-        },
-      );
+      const res = await apiClient.get<
+        PaginatedHrDocumentTypes | HrDocumentType[]
+      >("/hr/document-types", { page: 1, limit: 100 });
       return unwrapDocumentTypes(res);
     },
     staleTime: 5 * 60_000,
+  });
+}
+
+export function useHrDocumentTypesPage(page: number, limit: number) {
+  const canManageDocuments = useCan("hr:documents:manage");
+  return useQuery<PaginatedHrDocumentTypes>({
+    queryKey: [...queryKeys.hr.documentTypes(), { page, limit }] as const,
+    queryFn: () =>
+      apiClient.get<PaginatedHrDocumentTypes>("/hr/document-types", {
+        page,
+        limit,
+      }),
+    enabled: canManageDocuments,
+    staleTime: 30_000,
+    placeholderData: keepPreviousData,
+  });
+}
+
+export interface HrDocumentTypeMutationInput {
+  name?: string;
+  description?: string;
+  isMandatory?: boolean;
+  isActive?: boolean;
+  sortOrder?: number;
+  applicableRoles?: string[];
+}
+
+export function useCreateHrDocumentType() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["hr", "documentTypes", "create"],
+    mutationFn: ({
+      name,
+      description,
+      isMandatory,
+      sortOrder,
+      applicableRoles,
+    }: Required<Pick<HrDocumentTypeMutationInput, "name">> &
+      HrDocumentTypeMutationInput) =>
+      apiClient.post("/hr/document-types", {
+        name,
+        description,
+        isMandatory,
+        sortOrder,
+        applicableRoles,
+      }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.hr.documentTypes(),
+      }),
+  });
+}
+
+export function useUpdateHrDocumentType() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["hr", "documentTypes", "update"],
+    mutationFn: ({
+      documentTypeId,
+      ...documentType
+    }: HrDocumentTypeMutationInput & { documentTypeId: number }) =>
+      apiClient.patch(`/hr/document-types/${documentTypeId}`, documentType),
+    onSuccess: () =>
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.hr.documentTypes(),
+      }),
+  });
+}
+
+export function useDeactivateHrDocumentType() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["hr", "documentTypes", "deactivate"],
+    mutationFn: (documentTypeId: number) =>
+      apiClient.patch(`/hr/document-types/${documentTypeId}`, {
+        isActive: false,
+      }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.hr.documentTypes(),
+      }),
   });
 }

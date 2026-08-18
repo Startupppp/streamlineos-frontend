@@ -1,8 +1,9 @@
 "use client";
 
-import { type ChangeEvent } from "react";
-import { useForm } from "react-hook-form";
+import type { ChangeEvent } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { HierarchyParentSelector } from "@/components/organization/hierarchy-parent-selector";
 import {
   Form,
   FormControl,
@@ -11,52 +12,29 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { UserCombobox } from "@/components/ui/user-combobox";
 import {
   branchFormSchema,
-  NO_BUSINESS_UNIT,
+  EMPTY_BRANCH_FORM_VALUES,
   type BranchFormValues,
-} from "./branches-schema";
-
-const EMPTY: BranchFormValues = {
-  name: "",
-  code: "",
-  businessUnitId: NO_BUSINESS_UNIT,
-  managerUserId: "",
-  city: "",
-  state: "",
-  country: "",
-  postalCode: "",
-  address: "",
-  phone: "",
-  email: "",
-};
+} from "./branch-form-schema";
 
 interface BranchFormProps {
   defaultValues?: BranchFormValues;
-  businessUnits: { id: string; name: string }[];
-  onSubmit: (v: BranchFormValues) => void;
-  isPending: boolean;
+  selectedBusinessUnitName?: string | null;
+  onSubmit: (values: BranchFormValues) => void;
 }
 
 export function BranchForm({
   defaultValues,
-  businessUnits,
+  selectedBusinessUnitName,
   onSubmit,
-  isPending: _,
 }: BranchFormProps) {
   const form = useForm<BranchFormValues>({
     resolver: zodResolver(branchFormSchema),
-    defaultValues: defaultValues ?? EMPTY,
+    defaultValues: defaultValues ?? EMPTY_BRANCH_FORM_VALUES,
   });
 
   return (
@@ -84,9 +62,10 @@ export function BranchForm({
             control={form.control}
             name="code"
             render={({ field }) => {
-              function handleCodeChange(e: ChangeEvent<HTMLInputElement>) {
-                field.onChange(e.target.value.toUpperCase());
+              function handleCodeChange(event: ChangeEvent<HTMLInputElement>) {
+                field.onChange(event.target.value.toUpperCase());
               }
+
               return (
                 <FormItem>
                   <FormLabel>Code</FormLabel>
@@ -108,21 +87,19 @@ export function BranchForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Business Unit</FormLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="None" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value={NO_BUSINESS_UNIT}>None</SelectItem>
-                    {businessUnits.map((bu) => (
-                      <SelectItem key={bu.id} value={bu.id}>
-                        {bu.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <HierarchyParentSelector
+                    parentKind="BUSINESS_UNIT"
+                    value={field.value ?? ""}
+                    onValueChange={field.onChange}
+                    label="Business unit"
+                    placeholder="Select a business unit"
+                    searchPlaceholder="Search business unitsâ€¦"
+                    emptyText="No active business units found."
+                    selectedLabel={selectedBusinessUnitName}
+                    optionalLabel="No business unit"
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -137,7 +114,7 @@ export function BranchForm({
                   <UserCombobox
                     value={field.value ?? ""}
                     onChange={field.onChange}
-                    placeholder="Select manager…"
+                    placeholder="Select managerâ€¦"
                   />
                 </FormControl>
                 <FormMessage />

@@ -36,8 +36,7 @@ function ModuleDisabledState({ module }: { module: string }) {
 
 export function RequireModule({ module, children }: RequireModuleProps) {
   const enabledModules = useEnabledModules();
-  const isEnabled =
-    enabledModules.length === 0 || matchesOrgModule(enabledModules, module);
+  const isEnabled = matchesOrgModule(enabledModules, module);
 
   if (!isEnabled) return <ModuleDisabledState module={module} />;
 

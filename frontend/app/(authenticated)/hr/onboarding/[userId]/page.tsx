@@ -68,19 +68,33 @@ function TaskCard({
     <Card className={done ? "opacity-70" : undefined}>
       <CardContent className="p-3">
         <div className="flex items-start gap-3">
-          <button
-            type="button"
-            onClick={handleClick}
-            disabled={isPending}
-            aria-label={done ? `Mark "${task.title}" as pending` : `Mark "${task.title}" as complete`}
-            className="mt-0.5 shrink-0 transition-opacity hover:opacity-75 disabled:opacity-50"
-          >
-            {done ? (
-              <CheckCircle2 className="h-5 w-5 text-green-600" />
-            ) : (
-              <Circle className="h-5 w-5 text-muted-foreground" />
-            )}
-          </button>
+          {task.canComplete ? (
+            <button
+              type="button"
+              onClick={handleClick}
+              disabled={isPending}
+              aria-label={done ? `Mark "${task.title}" as pending` : `Mark "${task.title}" as complete`}
+              className="mt-0.5 shrink-0 transition-opacity hover:opacity-75 disabled:opacity-50"
+            >
+              {done ? (
+                <CheckCircle2 className="h-5 w-5 text-green-600" />
+              ) : (
+                <Circle className="h-5 w-5 text-muted-foreground" />
+              )}
+            </button>
+          ) : (
+            <span
+              className="mt-0.5 shrink-0 text-muted-foreground"
+              aria-label={done ? "Completed" : `Assigned to ${task.ownerRole.replace("_", " ")}`}
+              role="img"
+            >
+              {done ? (
+                <CheckCircle2 className="h-5 w-5 text-green-600" />
+              ) : (
+                <Circle className="h-5 w-5" />
+              )}
+            </span>
+          )}
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
@@ -120,15 +134,17 @@ function TaskCard({
             </div>
           </div>
 
-          <LoadingButton
-            size="sm"
-            variant={done ? "outline" : "default"}
-            className="shrink-0 h-7 text-xs"
-            isPending={isPending}
-            onClick={handleClick}
-          >
-            {done ? "Mark Pending" : "Mark Complete"}
-          </LoadingButton>
+          {task.canComplete && (
+            <LoadingButton
+              size="sm"
+              variant={done ? "outline" : "default"}
+              className="shrink-0 h-7 text-xs"
+              isPending={isPending}
+              onClick={handleClick}
+            >
+              {done ? "Mark Pending" : "Mark Complete"}
+            </LoadingButton>
+          )}
         </div>
       </CardContent>
     </Card>

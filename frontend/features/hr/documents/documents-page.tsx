@@ -8,9 +8,8 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useHrDocumentList,
+  useHrDocumentStats,
   useDeleteDocument,
-  useHrEmployees,
-  unwrapEmployees,
 } from "@/hooks/api/hr";
 import { hrDocumentListPrefix } from "@/hooks/api/hr/documents";
 import { CreateEnvelopeDialog } from "@/features/sign";
@@ -28,6 +27,8 @@ import { RichDocumentsSection } from "@/features/hr/documents/rich-documents-sec
 import { DocumentsExtendedSection } from "@/features/hr/documents/documents-extended-section";
 import { DocumentPageActions } from "@/features/hr/documents/document-page-actions";
 import { DocumentLibrarySkeleton, DocumentLibraryError } from "@/features/hr/documents/document-page-states";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const DOCUMENT_CATEGORIES = [
   "Personal Documents", "Employment", "Compliance",
@@ -50,99 +51,95 @@ export function DocumentsPage() {
   const [editingDocument, setEditingDocument] = useState<Document | null>(null);
   const [signatureDocument, setSignatureDocument] = useState<Document | null>(null);
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
-  const [page, setPage] = useState(1);
+  const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([
+    undefined,
+  ]);
   const pageSize = 20;
 
-  const isAdmin = useCan("hr:employees:manage");
   const canManageDocs = useCan("hr:documents:manage");
   const [isLetterGenOpen, setIsLetterGenOpen] = useState(false);
-
-  const { data: employeesRaw } = useHrEmployees({ limit: 100 });
-  const employees = useMemo(() => unwrapEmployees(employeesRaw), [employeesRaw]);
 
   const foldersKey = session?.orgId ? `hr-doc-folders-${session.orgId}` : null;
 
   useEffect(() => {
-    if (!foldersKey) return;
+    let nextFolders: string[] = [];
     try {
-      const stored = localStorage.getItem(foldersKey);
+      const stored = foldersKey ? localStorage.getItem(foldersKey) : null;
       if (stored) {
         const parsed: unknown = JSON.parse(stored);
         if (Array.isArray(parsed)) {
-          setCustomFolders(parsed.filter((item): item is string => typeof item === "string"));
+          nextFolders = parsed.filter(
+            (item): item is string => typeof item === "string",
+          );
         }
       }
     } catch { }
+    const timeoutId = window.setTimeout(() => setCustomFolders(nextFolders), 0);
+    return () => window.clearTimeout(timeoutId);
   }, [foldersKey]);
 
   const typeFilter = selectedType !== "all" ? (selectedType as Document["type"]) : undefined;
+  const debouncedSearch = useDebouncedValue(searchTerm, 300);
+  const cursor = cursorHistory.at(-1);
+  const page = cursorHistory.length;
   const qc = useQueryClient();
 
-  const { data: documentsPage, isLoading, isError, refetch } = useHrDocumentList({
-    page,
+  const { data: documentsPage, isLoading, isFetching, isError, refetch } = useHrDocumentList({
+    cursor,
     limit: pageSize,
     type: typeFilter,
+    search: debouncedSearch || undefined,
+    category: selectedCategory,
   });
-  const { data: policiesPage } = useHrDocumentList({ type: "POLICY", limit: 100 });
+  const { data: documentStats } = useHrDocumentStats();
   const deleteMutation = useDeleteDocument();
 
   const documents = useMemo(() => documentsPage?.data ?? [], [documentsPage]);
-  const policies = useMemo(
-    () => (policiesPage?.data ?? []).filter((d) => d.isPublic),
-    [policiesPage],
-  );
-  const totalDocuments = documentsPage?.pagination.total ?? 0;
+  const totalDocuments = documentStats?.total ?? 0;
   const categoryTabs = useMemo(() => [...DEFAULT_CATEGORY_TABS, ...customFolders], [customFolders]);
 
-  const filteredDocuments = useMemo(() => {
-    return documents.filter((doc) => {
-      const matchesSearch =
-        searchTerm === "" ||
-        doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        doc.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        doc.tags?.some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase()));
-
-      if (selectedCategory !== "All Files") {
-        const builtInMatch =
-          (selectedCategory === "Contracts" && (doc.type === "CONTRACT" || doc.type === "OFFER_LETTER")) ||
-          (selectedCategory === "Policies" && doc.type === "POLICY") ||
-          (selectedCategory === "Tax Forms" && (doc.type === "ID_PROOF" || doc.tags?.some((t) => t.toLowerCase().includes("tax")))) ||
-          (selectedCategory === "Templates" && doc.tags?.some((t) => t.toLowerCase().includes("template"))) ||
-          (selectedCategory === "Payroll" && doc.type === "PAYSLIP");
-        const customFolderMatch =
-          customFolders.includes(selectedCategory) &&
-          (doc.category?.toLowerCase() === selectedCategory.toLowerCase() ||
-            doc.tags?.some((t) => t.toLowerCase() === selectedCategory.toLowerCase()));
-        if (!builtInMatch && !customFolderMatch) return false;
-      }
-      return matchesSearch;
-    });
-  }, [documents, searchTerm, selectedCategory, customFolders]);
-
-  const totalFiltered = totalDocuments;
-
   const folders: FolderItem[] = useMemo(() => [
-    { name: "Employee Contracts", count: documents.filter((d) => d.type === "CONTRACT" || d.type === "OFFER_LETTER").length, colorIdx: 0 },
-    { name: "Company Policies", count: policies.length, colorIdx: 1 },
-    { name: "Tax Documents", count: documents.filter((d) => d.type === "ID_PROOF" || d.tags?.some((t) => t.toLowerCase().includes("tax"))).length, colorIdx: 2 },
-    { name: "Archives", count: documents.filter((d) => d.type === "OTHER").length, colorIdx: 3 },
-  ], [documents, policies]);
+    {
+      name: "Employee Contracts",
+      count:
+        (documentStats?.byType.CONTRACT ?? 0) +
+        (documentStats?.byType.OFFER_LETTER ?? 0),
+      colorIdx: 0,
+    },
+    { name: "Company Policies", count: documentStats?.byType.POLICY ?? 0, colorIdx: 1 },
+    { name: "Tax Documents", count: documentStats?.byType.ID_PROOF ?? 0, colorIdx: 2 },
+    { name: "Archives", count: documentStats?.byType.OTHER ?? 0, colorIdx: 3 },
+  ], [documentStats]);
 
-  const totalStorageBytes = documents.reduce((acc, doc) => acc + (doc.fileSize ?? 0), 0);
+  const totalStorageBytes = documentStats?.storageBytes ?? 0;
   const maxStorageGB = 20;
   const storagePercent = Math.min(100, Math.round((totalStorageBytes / (1024 * 1024 * 1024) / maxStorageGB) * 100));
 
   const handleDelete = useCallback(async (documentId: number) => {
     await toast.promise(
       deleteMutation.mutateAsync(documentId),
-      { loading: "Deleting document...", success: "Document deleted", error: "Failed to delete document" },
+      {
+        loading: "Removing document...",
+        success: "Document removed",
+        error: (error) => getErrorMessage(error),
+      },
     );
     void qc.invalidateQueries({ queryKey: hrDocumentListPrefix });
   }, [deleteMutation, qc]);
 
-  const handleSearchChange = useCallback((value: string) => { setSearchTerm(value); setPage(1); }, []);
-  const handleTypeChange = useCallback((value: string) => { setSelectedType(value); setPage(1); }, []);
-  const handleCategoryChange = useCallback((value: string) => { setSelectedCategory(value); setPage(1); }, []);
+  const resetCursor = useCallback(() => setCursorHistory([undefined]), []);
+  const handleSearchChange = useCallback((value: string) => { setSearchTerm(value); resetCursor(); }, [resetCursor]);
+  const handleTypeChange = useCallback((value: string) => { setSelectedType(value); resetCursor(); }, [resetCursor]);
+  const handleCategoryChange = useCallback((value: string) => { setSelectedCategory(value); resetCursor(); }, [resetCursor]);
+  const handleNextPage = useCallback(() => {
+    const nextCursor = documentsPage?.pageInfo.nextCursor;
+    if (nextCursor) setCursorHistory((history) => [...history, nextCursor]);
+  }, [documentsPage?.pageInfo.nextCursor]);
+  const handlePreviousPage = useCallback(() => {
+    setCursorHistory((history) =>
+      history.length > 1 ? history.slice(0, -1) : history,
+    );
+  }, []);
   const handleOpenUpload = useCallback(() => setIsUploadOpen(true), []);
   const handleOpenNewFolder = useCallback(() => setIsNewFolderOpen(true), []);
   const handleViewList = useCallback(() => setViewMode("list"), []);
@@ -168,10 +165,11 @@ export function DocumentsPage() {
       return updated;
     });
     setSelectedCategory(name);
+    resetCursor();
     setNewFolderName("");
     setIsNewFolderOpen(false);
     toast.success(`Folder "${name}" created`);
-  }, [foldersKey]);
+  }, [foldersKey, resetCursor]);
 
   if (isLoading) return <DocumentLibrarySkeleton />;
   if (isError) return <DocumentLibraryError onRetry={handleRetry} />;
@@ -213,19 +211,20 @@ export function DocumentsPage() {
             icon={HardDrive}
             color={storagePercent > 80 ? "red" : storagePercent > 50 ? "gold" : "green"}
           />
-          <StatCard label="Public Documents" value={documents.filter((d) => d.isPublic).length} icon={Star} color="blue" />
+          <StatCard label="Public Documents" value={documentStats?.publicCount ?? 0} icon={Star} color="blue" />
         </StatCardGrid>
 
         <DocumentTable
-          paginatedDocuments={filteredDocuments}
-          allFilteredDocuments={filteredDocuments}
+          documents={documents}
           folders={folders}
           page={page}
-          pageSize={pageSize}
-          totalFiltered={totalFiltered}
+          hasNext={documentsPage?.pageInfo.hasMore ?? false}
+          isFetching={isFetching}
           selectedCategory={selectedCategory}
           searchTerm={searchTerm}
-          onPageChange={setPage}
+          canManageDocs={canManageDocs}
+          onPreviousPage={handlePreviousPage}
+          onNextPage={handleNextPage}
           onDelete={handleDelete}
           onEdit={handleEdit}
           onOpenUpload={handleOpenUpload}
@@ -241,7 +240,7 @@ export function DocumentsPage() {
           onSuccess={handleUploadSuccess}
           documentTypes={DOCUMENT_TYPES}
           categories={[...DOCUMENT_CATEGORIES, ...customFolders]}
-          isAdmin={isAdmin}
+          canAssignEmployee={canManageDocs}
         />
         <NewFolderDialog
           open={isNewFolderOpen}
@@ -257,7 +256,7 @@ export function DocumentsPage() {
           document={editingDocument}
           documentTypes={DOCUMENT_TYPES}
           categories={[...DOCUMENT_CATEGORIES, ...customFolders]}
-          isAdmin={isAdmin}
+          canAssignEmployee={canManageDocs}
         />
         <CreateEnvelopeDialog
           open={!!signatureDocument}
@@ -272,7 +271,6 @@ export function DocumentsPage() {
         <LetterGenerationSheet
           open={isLetterGenOpen}
           onOpenChange={setIsLetterGenOpen}
-          employees={employees}
           onSaved={handleLetterSaved}
         />
       </div>

@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
 
 export interface OvertimeRequest {
   id: number;
@@ -30,6 +31,8 @@ export interface OvertimeRequestsResponse {
 }
 
 export function useOvertimeRequests(params?: { page?: number; pageSize?: number }) {
+  const canView = useCan("hr:attendance:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "overtimeRequests", params ?? {}],
     queryFn: () =>
@@ -39,6 +42,7 @@ export function useOvertimeRequests(params?: { page?: number; pageSize?: number 
       ),
     staleTime: 30_000,
     placeholderData: (prev) => prev,
+    enabled: hrEnabled && canView,
   });
 }
 
@@ -71,9 +75,12 @@ export function useRejectOvertime() {
 }
 
 export function useCompOffBalance() {
+  const canView = useCan("hr:attendance:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "compOffBalance"],
     queryFn: () => apiClient.get<CompOffBalance[]>("/hr/overtime/comp-off"),
     staleTime: 2 * 60_000,
+    enabled: hrEnabled && canView,
   });
 }

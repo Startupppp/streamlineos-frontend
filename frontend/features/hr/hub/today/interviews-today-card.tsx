@@ -3,18 +3,22 @@
 import { useMemo } from "react";
 import { isToday, format } from "date-fns";
 import { CalendarClock } from "lucide-react";
-import { useInterviews } from "@/hooks/api/hr";
 import { getUserDisplayName } from "@/features/build/shared/resolve-user-name";
 import { HrPanel, HrSectionHeader } from "@/features/hr/shared/hr-ui";
+import {
+  hubSectionData,
+  hubSectionError,
+  type HrHubCardProps,
+} from "@/hooks/api/hr/hub";
 import { SkeletonRows, ErrorRetry } from "./today-card";
 
-export function InterviewsTodayCard({ enabled }: { enabled: boolean }) {
-  const { data, isLoading, isError, error, refetch } = useInterviews(
-    { relevant: true, pageSize: 10 },
-    { enabled },
-  );
-
-  const handleRetry = () => { void refetch(); };
+export function InterviewsTodayCard({
+  section,
+  isLoading,
+  onRetry,
+}: HrHubCardProps<"interviews">) {
+  const data = hubSectionData(section)?.items;
+  const error = hubSectionError(section);
 
   const todayInterviews = useMemo(
     () =>
@@ -32,8 +36,8 @@ export function InterviewsTodayCard({ enabled }: { enabled: boolean }) {
       />
       {isLoading ? (
         <SkeletonRows />
-      ) : isError ? (
-        <ErrorRetry error={error} onRetry={handleRetry} />
+      ) : error ? (
+        <ErrorRetry error={error} onRetry={onRetry} />
       ) : todayInterviews.length === 0 ? (
         <p className="text-xs text-muted-foreground">
           No interviews scheduled today.

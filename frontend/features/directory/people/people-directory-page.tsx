@@ -18,7 +18,7 @@ import type { DataTableColumn } from "@/components/ui/data-table";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { TablePagination } from "@/components/ui/table-pagination";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
 import { SemanticBadge } from "@/components/ui/semantic-badge";
@@ -120,7 +120,9 @@ export function PeopleDirectoryPage({
   const canUpdate = useCan("directory:people:update");
   const canDelete = useCan("directory:people:delete");
 
-  const [page, setPage] = useState(1);
+  const [cursorHistory, setCursorHistory] = useState<(string | undefined)[]>([
+    undefined,
+  ]);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 300);
   const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } =
@@ -129,7 +131,7 @@ export function PeopleDirectoryPage({
   const [deleteTarget, setDeleteTarget] = useState<OrganizationPerson | null>(null);
 
   const { data, isLoading, isError, refetch } = usePeople({
-    page,
+    cursor: cursorHistory.at(-1),
     limit: PAGE_SIZE,
     search: debouncedSearch || undefined,
   });
@@ -140,7 +142,7 @@ export function PeopleDirectoryPage({
 
   function handleSearchChange(value: string) {
     setSearch(value);
-    setPage(1);
+    setCursorHistory([undefined]);
   }
 
   const handleOpenCreate = useCallback(() => {
@@ -262,7 +264,7 @@ export function PeopleDirectoryPage({
   ];
 
   const rows = data?.data ?? [];
-  const pagination = data?.pagination;
+  const pageInfo = data?.pageInfo;
   const isFiltered = !!debouncedSearch.trim();
 
   const filtersBar = (
@@ -315,13 +317,22 @@ export function PeopleDirectoryPage({
                 minWidth="760px"
                 className={CONTENT_FILL_PANEL}
               />
-              {pagination && pagination.totalPages > 1 ? (
-                <TablePagination
-                  page={pagination.page}
-                  pageSize={pagination.limit}
-                  total={pagination.total}
-                  onPageChange={setPage}
-                  className="mt-2 px-1"
+              {cursorHistory.length > 1 || pageInfo?.hasMore ? (
+                <CursorPageControls
+                  page={cursorHistory.length}
+                  hasNext={pageInfo?.hasMore ?? false}
+                  onPrevious={() =>
+                    setCursorHistory((current) => current.slice(0, -1))
+                  }
+                  onNext={() => {
+                    if (pageInfo?.nextCursor) {
+                      setCursorHistory((current) => [
+                        ...current,
+                        pageInfo.nextCursor ?? undefined,
+                      ]);
+                    }
+                  }}
+                  className="mt-2"
                 />
               ) : null}
             </>

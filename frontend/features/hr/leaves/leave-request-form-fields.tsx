@@ -247,36 +247,26 @@ export function LeaveRequestFormFields({
         )}
       />
 
-      {approvers.length > 1 && (
-        <FormField
-          control={form.control}
-          name="approverId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
-                Approver
-              </FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger className="text-sm">
-                    <SelectValue placeholder="Select approver" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-                  {approvers.map((u) => (
-                    <SelectItem key={u.id} value={u.id}>
-                      {u.name ||
-                        `${u.firstName || ""} ${u.lastName || ""}`.trim() ||
-                        u.email}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      )}
+      <div className="rounded-lg border border-border bg-muted/30 px-3 py-2.5">
+        <p className="text-xs font-semibold uppercase tracking-wider text-foreground/80">
+          Approver
+        </p>
+        {approvers[0] ? (
+          <p className="mt-1 text-sm text-foreground">
+            {approvers[0].name ||
+              `${approvers[0].firstName || ""} ${approvers[0].lastName || ""}`.trim() ||
+              approvers[0].email}
+            <span className="ml-1 text-xs text-muted-foreground">
+              (assigned automatically)
+            </span>
+          </p>
+        ) : (
+          <p className="mt-1 text-xs leading-relaxed text-destructive">
+            No authorized approver is configured. Ask an organization
+            administrator to assign a leave approver before submitting.
+          </p>
+        )}
+      </div>
 
       <FormField
         control={form.control}

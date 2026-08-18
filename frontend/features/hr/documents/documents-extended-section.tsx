@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Mail, AlertTriangle, CalendarCheck } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,21 +8,21 @@ import { LettersHistoryTable } from "./letters-history-table";
 import { ComplianceCalendar } from "./compliance-calendar";
 import { ExpiringDocumentsTable } from "./expiring-documents-table";
 import { useLetters } from "@/hooks/api/hr/letters";
-import { useHrDocumentList } from "@/hooks/api/hr";
+import { useHrDocumentExpiry } from "@/hooks/api/hr";
+import { useCan } from "@/hooks/api/access";
 
 export function DocumentsExtendedSection() {
+  const [activeTab, setActiveTab] = useState("letters");
+  const canManageCompliance = useCan("hr:compliance:manage");
   const { data: letters = [], isLoading: lettersLoading } = useLetters();
-  const { data: allDocsPage, isLoading: docsLoading } = useHrDocumentList({ limit: 100 });
-  const allDocs = allDocsPage?.data ?? [];
-
-  const expiringDocs = allDocs.filter(
-    (d) => d.expiryDate && new Date(d.expiryDate) <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-  );
+  const { data: expiry, isLoading: expiryLoading } = useHrDocumentExpiry(30, {
+    enabled: activeTab === "expiring",
+  });
 
   return (
     <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
       <CardContent className="p-4">
-        <Tabs defaultValue="letters">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-4">
             <TabsTrigger value="letters" className="gap-1.5">
               <Mail className="h-3 w-3" />
@@ -31,10 +32,12 @@ export function DocumentsExtendedSection() {
               <AlertTriangle className="h-3 w-3" />
               Expiring
             </TabsTrigger>
-            <TabsTrigger value="compliance" className="gap-1.5">
-              <CalendarCheck className="h-3 w-3" />
-              Calendar
-            </TabsTrigger>
+            {canManageCompliance ? (
+              <TabsTrigger value="compliance" className="gap-1.5">
+                <CalendarCheck className="h-3 w-3" />
+                Calendar
+              </TabsTrigger>
+            ) : null}
           </TabsList>
 
           <TabsContent value="letters" className="mt-0">
@@ -43,21 +46,31 @@ export function DocumentsExtendedSection() {
 
           <TabsContent value="expiring" className="mt-0">
             <ExpiringDocumentsTable
-              expiringDocuments={expiringDocs.map((d) => ({
-                id: d.id,
-                name: d.name,
-                type: d.type ?? "",
-                expiryDate: d.expiryDate ?? "",
-                userId: d.userId ?? null,
-              }))}
-              expiringCertifications={[]}
-              isLoading={docsLoading}
+              expiringDocuments={(expiry?.expiringDocuments ?? []).flatMap((document) =>
+                document.expiryDate
+                  ? [{
+                      id: document.id,
+                      name: document.name,
+                      type: document.type,
+                      expiryDate: document.expiryDate,
+                      userId: document.userId,
+                    }]
+                  : [],
+              )}
+              expiringCertifications={(expiry?.expiringCertifications ?? []).flatMap((certification) =>
+                certification.expiryDate
+                  ? [{ ...certification, expiryDate: certification.expiryDate }]
+                  : [],
+              )}
+              isLoading={expiryLoading}
             />
           </TabsContent>
 
-          <TabsContent value="compliance" className="mt-0">
-            <ComplianceCalendar />
-          </TabsContent>
+          {canManageCompliance ? (
+            <TabsContent value="compliance" className="mt-0">
+              <ComplianceCalendar />
+            </TabsContent>
+          ) : null}
         </Tabs>
       </CardContent>
     </Card>

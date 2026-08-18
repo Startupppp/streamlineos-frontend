@@ -252,12 +252,11 @@ export const TimerCard = memo(function TimerCard({
   const handleCheckIn = useCallback(() => {
     checkInMutation.mutate({
       location: undefined,
-      localDate: format(new Date(), "yyyy-MM-dd"),
     });
   }, [checkInMutation]);
 
   const handleCheckOut = useCallback(() => {
-    checkOutMutation.mutate({ localDate: format(new Date(), "yyyy-MM-dd") });
+    checkOutMutation.mutate();
   }, [checkOutMutation]);
 
   const handleBreakToggle = useCallback(() => {

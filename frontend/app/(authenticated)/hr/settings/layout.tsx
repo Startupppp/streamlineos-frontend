@@ -4,19 +4,44 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useHrSettingsMode } from "@/features/hr/settings-hub/use-hr-settings-mode";
+import { useAccess } from "@/hooks/api/access";
+import type { PermissionKey } from "@/lib/rbac/permissions";
 
-const TABS: { label: string; href: string; advanced?: boolean }[] = [
-  { label: "Overview", href: "/hr/settings" },
-  { label: "Policies", href: "/hr/settings/policies" },
-  { label: "Workflows", href: "/hr/settings/workflows", advanced: true },
-  { label: "Automations", href: "/hr/settings/automations", advanced: true },
-  { label: "Templates", href: "/hr/settings/templates" },
-  { label: "Forms", href: "/hr/settings/forms", advanced: true },
-  { label: "Custom Fields", href: "/hr/settings/custom-fields", advanced: true },
-  { label: "Import / Export", href: "/hr/settings/import-export" },
-  { label: "Integrations", href: "/hr/settings/integrations", advanced: true },
-  { label: "Preview", href: "/hr/settings/preview", advanced: true },
-  { label: "Versions", href: "/hr/settings/versions", advanced: true },
+const SETTINGS_OVERVIEW_PERMISSIONS: PermissionKey[] = [
+  "settings:organization:manage",
+  "settings:rbac:manage",
+  "notifications:providers:view",
+  "settings:webhooks:manage",
+  "hr:import:manage",
+  "hr:export:manage",
+  "hr:integrations:manage",
+  "hr:policies:view",
+  "hr:policies:manage",
+  "hr:workflows:view",
+  "hr:templates:view",
+  "hr:forms:view",
+  "settings:custom-fields:manage",
+  "hr:automations:view",
+];
+
+const TABS: {
+  label: string;
+  href: string;
+  permission: PermissionKey | PermissionKey[];
+  advanced?: boolean;
+}[] = [
+  { label: "Overview", href: "/hr/settings", permission: SETTINGS_OVERVIEW_PERMISSIONS },
+  { label: "Company", href: "/hr/settings/company", permission: "settings:organization:manage" },
+  { label: "Policies", href: "/hr/settings/policies", permission: "hr:policies:view" },
+  { label: "Workflows", href: "/hr/settings/workflows", permission: "hr:workflows:view", advanced: true },
+  { label: "Automations", href: "/hr/settings/automations", permission: "hr:automations:view", advanced: true },
+  { label: "Templates", href: "/hr/settings/templates", permission: "hr:templates:view" },
+  { label: "Forms", href: "/hr/settings/forms", permission: "hr:forms:view", advanced: true },
+  { label: "Custom Fields", href: "/hr/settings/custom-fields", permission: "settings:custom-fields:manage", advanced: true },
+  { label: "Import / Export", href: "/hr/settings/import-export", permission: ["hr:import:manage", "hr:export:manage"] },
+  { label: "Integrations", href: "/hr/settings/integrations", permission: "hr:integrations:manage", advanced: true },
+  { label: "Preview", href: "/hr/settings/preview", permission: "hr:policies:view", advanced: true },
+  { label: "Versions", href: "/hr/settings/versions", permission: "hr:policies:view", advanced: true },
 ];
 
 function isTabActive(tabHref: string, pathname: string): boolean {
@@ -31,8 +56,20 @@ export default function HrSettingsLayout({
 }) {
   const pathname = usePathname();
   const [isAdvanced] = useHrSettingsMode();
+  const { data: access } = useAccess();
+  const canOpen = (tab: (typeof TABS)[number]) => {
+    if (access?.isOrgOwner) return true;
+    const required = Array.isArray(tab.permission)
+      ? tab.permission
+      : [tab.permission];
+    return required.some((permission) =>
+      access?.permissions.includes(permission),
+    );
+  };
   const visibleTabs = TABS.filter(
-    (tab) => isAdvanced || !tab.advanced || isTabActive(tab.href, pathname),
+    (tab) =>
+      canOpen(tab) &&
+      (isAdvanced || !tab.advanced || isTabActive(tab.href, pathname)),
   );
 
   return (

@@ -2,19 +2,23 @@
 
 import { useMemo } from "react";
 import { format } from "date-fns";
-import { useHrLeaveCalendar } from "@/hooks/api/hr";
 import { HrPanel, HrSectionHeader } from "@/features/hr/shared/hr-ui";
+import {
+  hubSectionData,
+  hubSectionError,
+  type HrHubCardProps,
+} from "@/hooks/api/hr/hub";
 import { SkeletonRows, ErrorRetry, AvatarInitials } from "./today-card";
 
-export function OutTodayCard() {
+export function OutTodayCard({
+  section,
+  isLoading,
+  onRetry,
+}: HrHubCardProps<"leaveCalendar">) {
   const now = new Date();
   const todayStr = now.toISOString().slice(0, 10);
-  const { data, isLoading, isError, error, refetch } = useHrLeaveCalendar(
-    now.getMonth() + 1,
-    now.getFullYear(),
-  );
-
-  const handleRetry = () => { void refetch(); };
+  const data = hubSectionData(section);
+  const error = hubSectionError(section);
 
   const outToday = useMemo(
     () =>
@@ -37,8 +41,8 @@ export function OutTodayCard() {
       />
       {isLoading ? (
         <SkeletonRows />
-      ) : isError ? (
-        <ErrorRetry error={error} onRetry={handleRetry} />
+      ) : error ? (
+        <ErrorRetry error={error} onRetry={onRetry} />
       ) : outToday.length === 0 ? (
         <p className="text-xs text-muted-foreground">Nobody&apos;s out today.</p>
       ) : (

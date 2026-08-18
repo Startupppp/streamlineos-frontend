@@ -1,641 +1,62 @@
 "use client";
 
-import { useCallback, useMemo, useState, type ComponentType } from "react";
-import Link from "next/link";
-import {
-  Boxes,
-  BriefcaseBusiness,
-  LockKeyhole,
-  Mail,
-  Phone,
-  Pencil,
-  UserPlus,
-} from "lucide-react";
-import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Tabs, TabsContent, TabsList, TabsTrigger, TABS_CONTENT_PAGE_BODY_CLASS } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Separator } from "@/components/ui/separator";
-import { EmptyState } from "@/components/ui/empty-state";
+import { useCallback, useMemo, useState } from "react";
+import { Pencil } from "lucide-react";
 import { ErrorState } from "@/components/shared/error-state";
-import { SemanticBadge } from "@/components/ui/semantic-badge";
-import { DataTable } from "@/components/ui/data-table";
-import type { DataTableColumn } from "@/components/ui/data-table";
-import { usePerson } from "@/hooks/api/directory/people";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import {
-  useWorkerEngagements,
-  useWorkers,
-} from "@/hooks/api/directory/workers";
-import { useUser } from "@/hooks/api/users";
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  TABS_CONTENT_PAGE_BODY_CLASS,
+} from "@/components/ui/tabs";
 import { useCan } from "@/hooks/api/access";
-import { PersonFormDialog } from "./person-form-dialog";
-import { WorkerFormDialog } from "../workers/worker-form-dialog";
-import { UserInviteDialog } from "@/features/users/user-invite-dialog";
-import { UserMembershipSection } from "@/features/users/user-membership-section";
-import { UserModuleAccessSection } from "@/features/users/user-module-access-section";
-import { UserStatusBadge } from "@/features/users/user-status-badge";
-import { formatRoleLabel } from "@/features/users/user-invite-roles";
-import type {
-  OrganizationPerson,
-  PersonAccountAccess,
-} from "@/types/directory/people";
-import type { Worker, WorkerEngagement } from "@/types/directory/workers";
+import { usePerson } from "@/hooks/api/directory/people";
 import { cn } from "@/lib/utils";
-import { TEXT_ONE_LINE } from "@/lib/text-overflow";
+import { getPersonAccessBadge } from "./person-account-access";
+import { getPersonDisplayName } from "./person-detail-formatters";
+import { PersonMembershipTab } from "./person-membership-tab";
+import { PersonModulesTab } from "./person-modules-tab";
 import {
-  getInvitationManagementHref,
-  getPersonAccessBadge,
-  getPersonAccessBadgeTone,
-  getPersonAccountAccess,
-} from "./person-account-access";
+  PersonDetailSkeleton,
+  PersonProfileTab,
+} from "./person-profile-tab";
+import { PersonWorkerTab } from "./person-worker-tab";
+import { PersonFormDialog } from "./person-form-dialog";
 
 interface PersonDetailPageProps {
   organizationPersonId: string;
   directoryBasePath?: string;
 }
 
-function displayName(person: OrganizationPerson): string {
-  if (person.displayName) return person.displayName;
-  return `${person.firstName} ${person.lastName}`.trim();
-}
-
-function personInitials(person: OrganizationPerson): string {
-  const name = displayName(person);
-  const parts = name.split(" ").filter(Boolean);
-  if (parts.length >= 2) {
-    return `${parts[0]?.[0] ?? ""}${parts[1]?.[0] ?? ""}`.toUpperCase();
-  }
-  return name.slice(0, 2).toUpperCase();
-}
-
-function formatDate(iso: string): string {
-  return new Intl.DateTimeFormat("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  }).format(new Date(iso));
-}
-
-interface PersonTabStateProps {
-  icon: ComponentType<{ className?: string }>;
-  title: string;
-  description: string;
-  action?:
-    | { label: string; href: string; onClick?: never }
-    | { label: string; onClick: () => void; href?: never };
-}
-
-function PersonTabState({
-  icon: Icon,
-  title,
-  description,
-  action,
-}: PersonTabStateProps) {
-  const actionButton = action?.href ? (
-    <Button size="sm" asChild>
-      <Link href={action.href}>{action.label}</Link>
-    </Button>
-  ) : action?.onClick ? (
-    <Button size="sm" onClick={action.onClick}>
-      {action.label}
-    </Button>
-  ) : null;
-
-  return (
-    <div className="rounded-lg border border-border bg-muted/20 p-4 sm:p-5">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground shadow-sm">
-          <Icon className="size-4" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <h3 className="text-sm font-semibold text-foreground">{title}</h3>
-          <p className="mt-1 max-w-2xl text-sm leading-5 text-muted-foreground">
-            {description}
-          </p>
-        </div>
-        {actionButton ? <div className="shrink-0">{actionButton}</div> : null}
-      </div>
-    </div>
-  );
-}
-
-type InvitedAccountAccess = Extract<
-  PersonAccountAccess,
-  { state: "INVITED" }
->;
-
-function PersonInvitationTabState({
-  access,
-  surface,
-  canManage,
-}: {
-  access: InvitedAccountAccess;
-  surface: "membership" | "modules";
-  canManage: boolean;
-}) {
-  const expired = access.invitationStatus === "EXPIRED";
-  const role = formatRoleLabel(access.role);
-  const manageHref = getInvitationManagementHref(access);
-  const description =
-    surface === "membership"
-      ? expired
-        ? `The invitation for ${role} access sent to ${access.email} expired on ${formatDate(access.expiresAt)}. Resend or cancel it before sending another invitation.`
-        : `An invitation for ${role} access is awaiting acceptance from ${access.email} and expires on ${formatDate(access.expiresAt)}. They are not a member until they accept.`
-      : expired
-        ? `The invitation for ${access.email} has expired. Resend it before assigning modules. Worker setup remains available separately.`
-        : `Module access can be assigned after ${access.email} accepts the pending invitation. Worker setup remains available separately.`;
-
-  return (
-    <PersonTabState
-      icon={surface === "membership" ? Mail : Boxes}
-      title={expired ? "Invitation expired" : "Invitation pending"}
-      description={description}
-      action={
-        canManage && manageHref
-          ? { label: "Manage invitation", href: manageHref }
-          : undefined
-      }
-    />
-  );
-}
-
-function TabContentSkeleton() {
-  return (
-    <div className="p-4 sm:p-5">
-      <div className="grid gap-4 sm:grid-cols-2">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="space-y-1">
-            <Skeleton className="h-3 w-24" />
-            <Skeleton className="h-4 w-40" />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function DetailSkeleton() {
-  return (
-    <div className="flex min-h-0 flex-1 flex-col gap-0 overflow-hidden rounded-lg border border-border bg-card">
-      <div className="shrink-0 overflow-x-auto border-b border-border bg-muted/20 p-2">
-        <div className="flex gap-1">
-          <Skeleton className="h-8 w-20 rounded-md" />
-          <Skeleton className="h-8 w-20 rounded-md" />
-          <Skeleton className="h-8 w-20 rounded-md" />
-          <Skeleton className="h-8 w-20 rounded-md" />
-        </div>
-      </div>
-      <div className="p-4 sm:p-5">
-        <div className="mb-4 flex items-start gap-3">
-          <Skeleton className="h-14 w-14 shrink-0 rounded-full" />
-          <div className="space-y-2">
-            <Skeleton className="h-5 w-40" />
-            <Skeleton className="h-4 w-56" />
-          </div>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="space-y-1">
-              <Skeleton className="h-3 w-24" />
-              <Skeleton className="h-4 w-40" />
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ProfileFields({ person }: { person: OrganizationPerson }) {
-  const rows: { label: string; value: string | null }[] = [
-    { label: "Work email", value: person.workEmail },
-    { label: "Personal email", value: person.personalEmail },
-    { label: "Phone", value: person.phone },
-    { label: "WhatsApp", value: person.whatsappNumber },
-    { label: "Timezone", value: person.timezone },
-    { label: "Preferred name", value: person.preferredName },
-  ];
-
-  return (
-    <div className="space-y-3">
-      {rows.map(({ label, value }) =>
-        value ? (
-          <div key={label} className="flex flex-col gap-0.5 border-b border-border/60 py-2 last:border-0">
-            <span className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</span>
-            <span className={cn("text-sm text-foreground", TEXT_ONE_LINE)}>{value}</span>
-          </div>
-        ) : null,
-      )}
-      {person.bio ? (
-        <div className="pt-2">
-          <span className="text-[11px] uppercase tracking-wide text-muted-foreground">Bio</span>
-          <p className="mt-1 text-sm text-muted-foreground leading-relaxed">{person.bio}</p>
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-function PersonMembershipTab({
-  person,
-  onRefresh,
-}: {
-  person: OrganizationPerson;
-  onRefresh: () => void;
-}) {
-  const canViewMembers = useCan("settings:view");
-  const canInvite = useCan("settings:organization:manage");
-  const [inviteOpen, setInviteOpen] = useState(false);
-  const accountAccess = getPersonAccountAccess(person);
-  const linkedUserId =
-    accountAccess.state === "MEMBER" ? person.userId : null;
-  const { data: user, isLoading } = useUser(linkedUserId ?? "", {
-    enabled: !!linkedUserId && canViewMembers,
-  });
-
-  const handleOpenInvite = useCallback(() => {
-    setInviteOpen(true);
-  }, []);
-
-  const handleInviteOpenChange = useCallback((open: boolean) => {
-    setInviteOpen(open);
-  }, []);
-
-  if (!canViewMembers) {
-    return (
-      <PersonTabState
-        icon={LockKeyhole}
-        title="Membership details unavailable"
-        description="You need organization settings access to view login and role information."
-      />
-    );
-  }
-
-  if (accountAccess.state === "INVITED") {
-    return (
-      <PersonInvitationTabState
-        access={accountAccess}
-        surface="membership"
-        canManage={canInvite}
-      />
-    );
-  }
-
-  if (accountAccess.state === "NONE") {
-    return (
-      <>
-        <PersonTabState
-          icon={UserPlus}
-          title="Directory-only person"
-          description="No application account is linked. That is valid for contractors, payees, and other people who do not need StreamlineOS access. Invite them only when they need to sign in."
-          action={
-            canInvite
-              ? { label: "Invite as member", onClick: handleOpenInvite }
-              : undefined
-          }
-        />
-        {inviteOpen ? (
-          <UserInviteDialog
-            open={inviteOpen}
-            onOpenChange={handleInviteOpenChange}
-            defaultEmail={person.workEmail ?? person.personalEmail ?? undefined}
-          />
-        ) : null}
-      </>
-    );
-  }
-
-  if (!linkedUserId) {
-    return (
-      <PersonTabState
-        icon={LockKeyhole}
-        title="Linked account unavailable"
-        description="This person already has an organization membership, so another invitation cannot be sent. Refresh to load the linked account."
-        action={{ label: "Refresh person", onClick: onRefresh }}
-      />
-    );
-  }
-
-  if (isLoading) {
-    return <TabContentSkeleton />;
-  }
-
-  if (!user) {
-    return (
-      <PersonTabState
-        icon={LockKeyhole}
-        title="Linked account unavailable"
-        description="The linked account could not be loaded. Refresh before making any access changes."
-        action={{ label: "Refresh person", onClick: onRefresh }}
-      />
-    );
-  }
-
-  const isActive = user.userStatus ? user.userStatus === "active" : user.isActive;
-
-  return (
-    <div className="min-h-0 flex-1 space-y-4 overflow-y-auto">
-      <div className="flex flex-wrap items-center gap-2">
-        <Badge variant="secondary" className="text-[10px] h-5 px-1.5">
-          {formatRoleLabel(user.role)}
-        </Badge>
-        <UserStatusBadge
-          isActive={isActive}
-          isDeleted={user.userStatus === "archived"}
-        />
-      </div>
-      <div className="space-y-2 text-sm">
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Mail className="h-3.5 w-3.5 shrink-0" />
-          <span className="truncate text-foreground">{user.email}</span>
-        </div>
-        {user.phone ? (
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Phone className="h-3.5 w-3.5 shrink-0" />
-            <span className="text-foreground">{user.phone}</span>
-          </div>
-        ) : null}
-      </div>
-      <Separator />
-      <UserMembershipSection userId={user.id} />
-      {canInvite ? (
-        <Button variant="outline" size="sm" className="text-xs" asChild>
-          <Link href="/settings/users">Open in Members</Link>
-        </Button>
-      ) : null}
-    </div>
-  );
-}
-
-function PersonWorkerTab({ person }: { person: OrganizationPerson }) {
-  const canViewWorkers = useCan("workforce:workers:view");
-  const canManageWorkers = useCan("workforce:workers:manage");
-  const [createWorkerOpen, setCreateWorkerOpen] = useState(false);
-
-  const { data: workersPage, isLoading: workersLoading } = useWorkers({
-    page: 1,
-    limit: 1,
-    organizationPersonId: person.organizationPersonId,
-  });
-
-  const worker = useMemo(
-    () =>
-      (workersPage?.data ?? []).find(
-        (row) => row.organizationPersonId === person.organizationPersonId,
-      ) ?? null,
-    [workersPage?.data, person.organizationPersonId],
-  );
-
-  const { data: engagements, isLoading: engagementsLoading } = useWorkerEngagements(
-    worker?.workerId ?? "",
-  );
-
-  const engagementColumns: DataTableColumn<WorkerEngagement>[] = [
-    {
-      key: "type",
-      header: "Type",
-      cell: (row) => (
-        <span className="text-sm capitalize">{row.workerType.replace(/_/g, " ").toLowerCase()}</span>
-      ),
-    },
-    {
-      key: "status",
-      header: "Status",
-      cell: (row) => (
-        <SemanticBadge tone={row.status === "ACTIVE" ? "success" : "neutral"} label={row.status} />
-      ),
-    },
-    {
-      key: "period",
-      header: "Period",
-      cell: (row) => (
-        <span className="text-sm text-muted-foreground tabular-nums">
-          {formatDate(row.startsOn)}
-          {row.endsOn ? ` – ${formatDate(row.endsOn)}` : " – present"}
-        </span>
-      ),
-    },
-    {
-      key: "designation",
-      header: "Designation",
-      cell: (row) => (
-        <span className={cn("text-sm text-muted-foreground", TEXT_ONE_LINE)}>
-          {row.designation ?? "—"}
-        </span>
-      ),
-    },
-  ];
-
-  const handleOpenCreateWorker = useCallback(() => {
-    setCreateWorkerOpen(true);
-  }, []);
-
-  const handleCreateWorkerChange = useCallback((open: boolean) => {
-    setCreateWorkerOpen(open);
-  }, []);
-
-  if (!canViewWorkers) {
-    return (
-      <PersonTabState
-        icon={LockKeyhole}
-        title="Workforce access required"
-        description="You need workforce permissions to view worker records and engagements."
-      />
-    );
-  }
-
-  if (workersLoading) {
-    return <TabContentSkeleton />;
-  }
-
-  if (!worker) {
-    return (
-      <div className="flex min-h-0 flex-1 flex-col">
-        <PersonTabState
-          icon={BriefcaseBusiness}
-          title="No worker record"
-          description="Create a worker record only when this person participates in payroll, HR, attendance, or another workforce process. Their directory record remains independent."
-          action={
-            canManageWorkers
-              ? { label: "Add worker", onClick: handleOpenCreateWorker }
-              : undefined
-          }
-        />
-        {createWorkerOpen ? (
-          <WorkerFormDialog
-            open={createWorkerOpen}
-            onOpenChange={handleCreateWorkerChange}
-            defaultOrganizationPersonId={person.organizationPersonId}
-          />
-        ) : null}
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-0 flex-1 space-y-4 overflow-y-auto">
-      <WorkerSummary worker={worker} />
-      <Separator />
-      <div className="space-y-2">
-        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          Engagements
-        </p>
-        {engagementsLoading ? (
-          <Skeleton className="h-32 w-full" />
-        ) : (engagements ?? []).length === 0 ? (
-          <p className="text-sm text-muted-foreground">No engagements recorded yet.</p>
-        ) : (
-          <DataTable
-            data={engagements ?? []}
-            columns={engagementColumns}
-            getRowKey={(row) => row.workerEngagementId}
-            minWidth="520px"
-          />
-        )}
-      </div>
-    </div>
-  );
-}
-
-function WorkerSummary({ worker }: { worker: Worker }) {
-  return (
-    <div className="flex flex-wrap items-center gap-2 text-sm">
-      <SemanticBadge tone={worker.status === "ACTIVE" ? "success" : "neutral"} label={worker.status} />
-      {worker.workerNumber ? (
-        <span className="text-muted-foreground">#{worker.workerNumber}</span>
-      ) : null}
-      {worker.isPayee ? (
-        <Badge variant="outline" className="text-[10px]">
-          Payee
-        </Badge>
-      ) : null}
-    </div>
-  );
-}
-
-function PersonModulesTab({
-  person,
-  onRefresh,
-}: {
-  person: OrganizationPerson;
-  onRefresh: () => void;
-}) {
-  const canViewMembers = useCan("settings:view");
-  const canInvite = useCan("settings:organization:manage");
-  const [inviteOpen, setInviteOpen] = useState(false);
-  const accountAccess = getPersonAccountAccess(person);
-  const linkedUserId =
-    accountAccess.state === "MEMBER" ? person.userId : null;
-  const { data: user, isLoading } = useUser(linkedUserId ?? "", {
-    enabled: !!linkedUserId && canViewMembers,
-  });
-
-  const handleOpenInvite = useCallback(() => {
-    setInviteOpen(true);
-  }, []);
-
-  const handleInviteOpenChange = useCallback((open: boolean) => {
-    setInviteOpen(open);
-  }, []);
-
-  if (!canViewMembers) {
-    return (
-      <PersonTabState
-        icon={LockKeyhole}
-        title="Module assignments unavailable"
-        description="Organization settings access is required to manage module assignments."
-      />
-    );
-  }
-
-  if (accountAccess.state === "INVITED") {
-    return (
-      <PersonInvitationTabState
-        access={accountAccess}
-        surface="modules"
-        canManage={canInvite}
-      />
-    );
-  }
-
-  if (accountAccess.state === "NONE") {
-    return (
-      <>
-        <PersonTabState
-          icon={Boxes}
-          title="No module access"
-          description="Modules can only be assigned to members who can sign in. If this person needs application access, invite them as a member first."
-          action={
-            canInvite
-              ? { label: "Invite as member", onClick: handleOpenInvite }
-              : undefined
-          }
-        />
-        {inviteOpen ? (
-          <UserInviteDialog
-            open={inviteOpen}
-            onOpenChange={handleInviteOpenChange}
-            defaultEmail={person.workEmail ?? person.personalEmail ?? undefined}
-          />
-        ) : null}
-      </>
-    );
-  }
-
-  if (!linkedUserId) {
-    return (
-      <PersonTabState
-        icon={LockKeyhole}
-        title="Linked account unavailable"
-        description="This person already has an organization membership, so another invitation cannot be sent. Refresh to load the linked account before assigning modules."
-        action={{ label: "Refresh person", onClick: onRefresh }}
-      />
-    );
-  }
-
-  if (isLoading) {
-    return <TabContentSkeleton />;
-  }
-
-  if (!user) {
-    return (
-      <PersonTabState
-        icon={Boxes}
-        title="Linked account unavailable"
-        description="The linked account could not be loaded. Refresh before assigning modules."
-        action={{ label: "Refresh person", onClick: onRefresh }}
-      />
-    );
-  }
-
-  const isActive = user.userStatus ? user.userStatus === "active" : user.isActive;
-
-  return (
-    <div className="min-h-0 flex-1 overflow-y-auto">
-      <UserModuleAccessSection userId={user.id} isMemberActive={isActive} />
-    </div>
-  );
-}
-
 export function PersonDetailPage({
   organizationPersonId,
   directoryBasePath = "/directory",
 }: PersonDetailPageProps) {
-  const canUpdate = useCan("directory:people:update");
+  const canUpdatePerson = useCan("directory:people:update");
   const canViewMembers = useCan("settings:view");
   const canViewWorkers = useCan("workforce:workers:view");
-  const [editOpen, setEditOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
-  const { data: person, isLoading, isError, refetch } = usePerson(organizationPersonId);
+  const {
+    data: person,
+    isLoading,
+    isError,
+    refetch,
+  } = usePerson(organizationPersonId);
 
   const tabs = useMemo(() => {
-    const items = [{ value: "profile", label: "Profile" }];
-    if (canViewMembers) items.push({ value: "membership", label: "Membership" });
-    if (canViewWorkers) items.push({ value: "worker", label: "Worker" });
-    if (canViewMembers) items.push({ value: "modules", label: "Modules" });
-    return items;
+    const availableTabs = [{ value: "profile", label: "Profile" }];
+    if (canViewMembers)
+      availableTabs.push({ value: "membership", label: "Membership" });
+    if (canViewWorkers)
+      availableTabs.push({ value: "worker", label: "Worker" });
+    if (canViewMembers)
+      availableTabs.push({ value: "modules", label: "Modules" });
+    return availableTabs;
   }, [canViewMembers, canViewWorkers]);
 
   const handleRetry = useCallback(() => {
@@ -643,14 +64,14 @@ export function PersonDetailPage({
   }, [refetch]);
 
   const handleOpenEdit = useCallback(() => {
-    setEditOpen(true);
+    setEditDialogOpen(true);
   }, []);
 
-  const handleEditChange = useCallback((open: boolean) => {
-    setEditOpen(open);
+  const handleEditDialogOpenChange = useCallback((nextOpen: boolean) => {
+    setEditDialogOpen(nextOpen);
   }, []);
 
-  const title = person ? displayName(person) : "Person";
+  const title = person ? getPersonDisplayName(person) : "Person";
 
   return (
     <PageWrapper
@@ -660,7 +81,7 @@ export function PersonDetailPage({
       backHref={directoryBasePath}
       noInternalScroll
       actions={
-        canUpdate && person ? (
+        canUpdatePerson && person ? (
           <Button onClick={handleOpenEdit}>
             <Pencil className="h-3.5 w-3.5" />
             Edit profile
@@ -669,7 +90,7 @@ export function PersonDetailPage({
       }
     >
       {isLoading ? (
-        <DetailSkeleton />
+        <PersonDetailSkeleton />
       ) : isError ? (
         <ErrorState onRetry={handleRetry} />
       ) : !person ? (
@@ -686,9 +107,13 @@ export function PersonDetailPage({
         >
           <div className="shrink-0 overflow-x-auto border-b border-border bg-muted/20 p-2">
             <TabsList className="w-max min-w-full justify-start border-0 bg-transparent p-0 shadow-none sm:min-w-0">
-              {tabs.map(({ value, label }) => (
-                <TabsTrigger key={value} value={value} className="min-w-fit">
-                  {label}
+              {tabs.map((personTab) => (
+                <TabsTrigger
+                  key={personTab.value}
+                  value={personTab.value}
+                  className="min-w-fit"
+                >
+                  {personTab.label}
                 </TabsTrigger>
               ))}
             </TabsList>
@@ -696,42 +121,22 @@ export function PersonDetailPage({
 
           <TabsContent
             value="profile"
-            className={cn(TABS_CONTENT_PAGE_BODY_CLASS, "overflow-y-auto p-4 sm:p-5")}
+            className={cn(
+              TABS_CONTENT_PAGE_BODY_CLASS,
+              "overflow-y-auto p-4 sm:p-5",
+            )}
           >
-            <div className="flex min-h-0 flex-1 flex-col">
-              <div className="flex items-start gap-3 shrink-0">
-                <Avatar className="h-14 w-14 shrink-0">
-                  <AvatarImage src={person.avatarUrl ?? undefined} alt={title} />
-                  <AvatarFallback className="text-sm font-semibold">
-                    {personInitials(person)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="min-w-0 flex-1">
-                  <p className="font-semibold text-base truncate">{displayName(person)}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Added {formatDate(person.createdAt)}
-                  </p>
-                  <div className="flex flex-wrap gap-1.5 mt-2">
-                    <SemanticBadge
-                      tone={getPersonAccessBadgeTone(person)}
-                      label={getPersonAccessBadge(person)}
-                      size="xs"
-                    />
-                  </div>
-                </div>
-              </div>
-              <Separator className="my-5 shrink-0" />
-              <div className="min-h-0 flex-1 overflow-y-auto">
-                <ProfileFields person={person} />
-              </div>
-            </div>
+            <PersonProfileTab person={person} />
           </TabsContent>
 
           {canViewMembers ? (
             <TabsContent
               value="membership"
               id="membership"
-              className={cn(TABS_CONTENT_PAGE_BODY_CLASS, "overflow-y-auto p-4 sm:p-5")}
+              className={cn(
+                TABS_CONTENT_PAGE_BODY_CLASS,
+                "overflow-y-auto p-4 sm:p-5",
+              )}
             >
               <PersonMembershipTab person={person} onRefresh={handleRetry} />
             </TabsContent>
@@ -740,7 +145,10 @@ export function PersonDetailPage({
           {canViewWorkers ? (
             <TabsContent
               value="worker"
-              className={cn(TABS_CONTENT_PAGE_BODY_CLASS, "overflow-y-auto p-4 sm:p-5")}
+              className={cn(
+                TABS_CONTENT_PAGE_BODY_CLASS,
+                "overflow-y-auto p-4 sm:p-5",
+              )}
             >
               <PersonWorkerTab person={person} />
             </TabsContent>
@@ -749,7 +157,10 @@ export function PersonDetailPage({
           {canViewMembers ? (
             <TabsContent
               value="modules"
-              className={cn(TABS_CONTENT_PAGE_BODY_CLASS, "overflow-y-auto p-4 sm:p-5")}
+              className={cn(
+                TABS_CONTENT_PAGE_BODY_CLASS,
+                "overflow-y-auto p-4 sm:p-5",
+              )}
             >
               <PersonModulesTab person={person} onRefresh={handleRetry} />
             </TabsContent>
@@ -757,10 +168,10 @@ export function PersonDetailPage({
         </Tabs>
       )}
 
-      {editOpen && person ? (
+      {editDialogOpen && person ? (
         <PersonFormDialog
-          open={editOpen}
-          onOpenChange={handleEditChange}
+          open={editDialogOpen}
+          onOpenChange={handleEditDialogOpenChange}
           mode="edit"
           defaultValues={person}
         />

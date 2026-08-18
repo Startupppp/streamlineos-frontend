@@ -34,7 +34,6 @@ describe("hierarchy list URL state", () => {
   it("preserves unrelated URL state while applying list updates", () => {
     expect(
       applyHierarchyListParamUpdates("tab=details&page=4&size=50", {
-        page: null,
         search: "north",
       }),
     ).toBe("tab=details&size=50&search=north");
@@ -48,14 +47,26 @@ describe("hierarchy list URL state", () => {
     const { result } = renderHook(() => useHierarchyListState());
 
     expect(result.current.query).toEqual({
-      page: 3,
+      cursor: undefined,
       limit: 50,
       search: "North",
       status: "ARCHIVED",
     });
   });
 
-  it("resets the page when status or page size changes", () => {
+  it("keeps an in-memory cursor history for previous and next navigation", () => {
+    const { result } = renderHook(() => useHierarchyListState());
+
+    act(() => result.current.nextPage("opaque-cursor"));
+    expect(result.current.page).toBe(2);
+    expect(result.current.query.cursor).toBe("opaque-cursor");
+
+    act(() => result.current.previousPage());
+    expect(result.current.page).toBe(1);
+    expect(result.current.query.cursor).toBeUndefined();
+  });
+
+  it("removes legacy offset state when status or page size changes", () => {
     mockSearchParams = new URLSearchParams("page=4&size=50&tab=details");
     const { result } = renderHook(() => useHierarchyListState());
 
@@ -74,7 +85,7 @@ describe("hierarchy list URL state", () => {
     expect(params.get("size")).toBe("100");
   });
 
-  it("debounces server search and resets the page", () => {
+  it("debounces server search and removes legacy offset state", () => {
     jest.useFakeTimers();
     mockSearchParams = new URLSearchParams("page=4&size=50");
     const { result } = renderHook(() => useHierarchyListState());

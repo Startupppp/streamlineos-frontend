@@ -1,15 +1,20 @@
 "use client";
 
-import { useHrOnboardingStatus } from "@/hooks/api/hr";
 import { HrPanel, HrSectionHeader } from "@/features/hr/shared/hr-ui";
+import {
+  hubSectionData,
+  hubSectionError,
+  type HrHubCardProps,
+} from "@/hooks/api/hr/hub";
 import { SkeletonRows, ErrorRetry, AvatarInitials } from "./today-card";
 
-export function JoiningSoonCard() {
-  const { data, isLoading, isError, error, refetch } = useHrOnboardingStatus();
-
-  const handleRetry = () => {
-    void refetch();
-  };
+export function JoiningSoonCard({
+  section,
+  isLoading,
+  onRetry,
+}: HrHubCardProps<"onboardingStatus">) {
+  const data = hubSectionData(section);
+  const error = hubSectionError(section);
 
   const hires = (data?.newHires ?? []).slice(0, 5);
 
@@ -21,8 +26,8 @@ export function JoiningSoonCard() {
       />
       {isLoading ? (
         <SkeletonRows />
-      ) : isError ? (
-        <ErrorRetry error={error} onRetry={handleRetry} />
+      ) : error ? (
+        <ErrorRetry error={error} onRetry={onRetry} />
       ) : hires.length === 0 ? (
         <p className="text-xs text-muted-foreground">No active onboarding.</p>
       ) : (

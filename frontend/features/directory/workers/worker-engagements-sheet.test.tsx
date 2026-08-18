@@ -85,6 +85,7 @@ const plannedEngagement: WorkerEngagement = {
   terminationReason: null,
   terminationNotes: null,
   createdBy: null,
+  rowVersion: 1,
   createdAt: "2026-08-08T00:00:00.000Z",
   updatedAt: "2026-08-08T00:00:00.000Z",
 };
@@ -193,6 +194,7 @@ describe("WorkerEngagementsSheet", () => {
       {
         workerId: "worker-1",
         workerEngagementId: "engagement-1",
+        expectedVersion: 1,
         startsOn: "2026-08-19",
         endsOn: "2026-09-30",
         workerType: "FULL_TIME",

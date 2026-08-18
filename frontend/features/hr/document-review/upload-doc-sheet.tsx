@@ -153,7 +153,7 @@ export function UploadDocSheet({
       });
       await uploadDocMutation.mutateAsync({
         documentTypeId: Number(uploadDocTypeId),
-        fileUrl: uploaded.url,
+        fileUrl: uploaded.key,
         fileName: uploadFile.name,
         fileSize: uploaded.size,
         mimeType: uploaded.mimeType,

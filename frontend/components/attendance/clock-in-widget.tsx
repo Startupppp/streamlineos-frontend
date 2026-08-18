@@ -63,11 +63,10 @@ export function ClockInWidget() {
   const isInCooldown = localCooldown > 0;
 
   const handleClockAction = useCallback(() => {
-    const localDate = new Date().toLocaleDateString("en-CA");
     if (isCheckedIn || isOnBreak) {
-      checkOutMutation.mutate({ localDate });
+      checkOutMutation.mutate();
     } else if (!isInCooldown) {
-      checkInMutation.mutate({ location: undefined, localDate });
+      checkInMutation.mutate({ location: undefined });
     }
   }, [isCheckedIn, isOnBreak, isInCooldown, checkOutMutation, checkInMutation]);
 

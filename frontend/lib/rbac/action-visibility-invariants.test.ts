@@ -63,7 +63,7 @@ describe("permissioned action visibility", () => {
     const requisitions = source(
       "app/(authenticated)/hr/recruitment/requisitions/page.tsx",
     );
-    const hrHubAccess = source("features/hr/hub/use-hr-hub-access.ts");
+    const hrHub = source("features/hr/hub/hr-hub-page.tsx");
     const employeeList = source(
       "features/hr/employees/employees-list-page.tsx",
     );
@@ -76,15 +76,17 @@ describe("permissioned action visibility", () => {
     const account = source(
       "app/(authenticated)/accounting/coa/[accountId]/page.tsx",
     );
+    const attendanceEmail = source(
+      "features/hr/attendance/attendance-email-dialog.tsx",
+    );
 
     expect(epicsPage).toContain('useCan("build:tickets:create")');
     expect(epicCard).toContain('useCan("build:tickets:create")');
     expect(epicCard).toContain('useCan("build:tickets:update")');
     expect(epicCard).toContain('useCan("build:tickets:delete")');
     expect(requisitions).toContain('useCan("hr:requisitions:manage")');
-    expect(hrHubAccess).toContain('useCan("hr:onboarding:manage")');
-    expect(hrHubAccess).toContain('useCan("hr:requisitions:manage")');
-    expect(hrHubAccess).toContain('useCan("payroll:runs:create")');
+    expect(hrHub).toContain("hub.data?.capabilities");
+    expect(hrHub).toContain("EMPTY_HR_HUB_ACCESS");
     expect(employeeList).toContain('useCan("hr:onboarding:manage")');
     expect(employeeList).toContain('useCan("hr:export:manage")');
     expect(employeeTable).toContain('useCan("hr:employees:update")');
@@ -93,6 +95,8 @@ describe("permissioned action visibility", () => {
     expect(onboarding).toContain('useCan("hr:documents:manage")');
     expect(onboarding).toContain('useCan("hr:documents:view")');
     expect(onboarding).toContain('useCan("hr:probation:view")');
+    expect(attendanceEmail).toContain('useCan("hr:attendance:manage")');
+    expect(attendanceEmail).toContain("MAX_REPORT_RECIPIENTS = 10");
     expect(account).toContain('useCan("accounting:accounts:update")');
     expect(account).toContain('useCan("accounting:journal:manage")');
   });

@@ -7,26 +7,27 @@ import {
   RefreshCcw,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useServiceDeliveryOpsInbox } from "@/hooks/api/hr/service-delivery";
-import { useProbationList } from "@/hooks/api/hr";
-import { useResignations } from "@/hooks/api/hr";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { HUB_RESIGNATIONS_PARAMS } from "./use-hr-hub-access";
 import { HrPanel, HrSectionHeader } from "@/features/hr/shared/hr-ui";
-import type { HrHubAccess } from "./use-hr-hub-access";
+import {
+  hubSectionData,
+  hubSectionError,
+  type HrHubViewProps,
+} from "@/hooks/api/hr/hub";
 import { buildActivityRows, type ActivityRow } from "./activity/activity-rows";
 import { ActivityRowItem } from "./activity/activity-row";
 
-interface HrHubActivityProps {
-  access: HrHubAccess;
-}
-
-export function HrHubActivity({ access }: HrHubActivityProps) {
+export function HrHubActivity({
+  access,
+  snapshot,
+  isLoading,
+  onRetry,
+}: HrHubViewProps) {
   const hasAny = access.canCases || access.canProbation || access.canExit;
-
-  const opsInbox = useServiceDeliveryOpsInbox(access.canCases);
-  const probation = useProbationList();
-  const resignations = useResignations(HUB_RESIGNATIONS_PARAMS);
+  const sections = snapshot?.sections;
+  const opsInbox = hubSectionData(sections?.opsInbox);
+  const probation = hubSectionData(sections?.probation);
+  const resignations = hubSectionData(sections?.resignations);
 
   const rows = useMemo<ActivityRow[]>(
     () =>
@@ -34,42 +35,26 @@ export function HrHubActivity({ access }: HrHubActivityProps) {
         canCases: access.canCases,
         canProbation: access.canProbation,
         canExit: access.canExit,
-        opsItems: opsInbox.data?.items ?? [],
-        probationItems: probation.data ?? [],
-        resignationItems: resignations.data?.data ?? [],
+        opsItems: opsInbox?.items ?? [],
+        probationItems: probation?.data ?? [],
+        resignationItems: resignations?.data ?? [],
       }),
     [
       access.canCases,
       access.canProbation,
       access.canExit,
-      opsInbox.data,
-      probation.data,
-      resignations.data,
+      opsInbox,
+      probation,
+      resignations,
     ],
   );
 
   if (!hasAny) return null;
 
-  const isLoading =
-    (access.canCases && opsInbox.isLoading) ||
-    (access.canProbation && probation.isLoading) ||
-    (access.canExit && resignations.isLoading);
-
   const firstError: Error | null =
-    (access.canCases && opsInbox.isError ? opsInbox.error : null) ??
-    (access.canProbation && probation.isError ? probation.error : null) ??
-    (access.canExit && resignations.isError ? resignations.error : null);
-
-  const handleRetryOps = () => { void opsInbox.refetch(); };
-  const handleRetryProbation = () => { void probation.refetch(); };
-  const handleRetryResignations = () => { void resignations.refetch(); };
-
-  const handleRetry =
-    access.canCases && opsInbox.isError
-      ? handleRetryOps
-      : access.canProbation && probation.isError
-        ? handleRetryProbation
-        : handleRetryResignations;
+    (access.canCases ? hubSectionError(sections?.opsInbox) : null) ??
+    (access.canProbation ? hubSectionError(sections?.probation) : null) ??
+    (access.canExit ? hubSectionError(sections?.resignations) : null);
 
   return (
     <div className="space-y-2.5">
@@ -93,7 +78,7 @@ export function HrHubActivity({ access }: HrHubActivityProps) {
             </span>
             <button
               type="button"
-              onClick={handleRetry}
+              onClick={onRetry}
               className="shrink-0 flex items-center gap-0.5 text-blue-600 dark:text-blue-400 hover:underline"
             >
               <RefreshCcw className="h-3 w-3" />

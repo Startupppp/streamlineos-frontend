@@ -3,60 +3,22 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import type {
-  HrLocation,
   HrJobRole,
   HrJobLevel,
-  HrTeam,
   HrHeadcountGroup,
   OrgCatalogInput,
-  LocationInput,
 } from "@/types/hr/core";
 
-export function useOrgLocations(options?: { enabled?: boolean }) {
-  return useQuery({
-    queryKey: queryKeys.hr.orgLocations(),
-    queryFn: () => apiClient.get<HrLocation[]>("/hr/org/locations"),
-    staleTime: 5 * 60_000,
-    enabled: options?.enabled ?? true,
-  });
-}
-
-export function useCreateLocation() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "org", "location", "create"],
-    mutationFn: (data: LocationInput) => apiClient.post<HrLocation>("/hr/org/locations", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.orgLocations() }),
-  });
-}
-
-export function useUpdateLocation() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "org", "location", "update"],
-    mutationFn: ({ id, ...data }: LocationInput & { id: number }) =>
-      apiClient.patch<HrLocation>(`/hr/org/locations/${id}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.orgLocations() }),
-  });
-}
-
-export function useDeleteLocation() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "org", "location", "delete"],
-    mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/hr/org/locations/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.orgLocations() }),
-  });
-}
-
 export function useOrgJobRoles(options?: { enabled?: boolean }) {
+  const canView = useCan("hr:employees:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.orgRoles(),
     queryFn: () => apiClient.get<HrJobRole[]>("/hr/org/roles"),
     staleTime: 5 * 60_000,
-    enabled: options?.enabled ?? true,
+    enabled: hrEnabled && canView && (options?.enabled ?? true),
   });
 }
 
@@ -73,8 +35,8 @@ export function useUpdateJobRole() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["hr", "org", "role", "update"],
-    mutationFn: ({ id, ...data }: OrgCatalogInput & { id: number }) =>
-      apiClient.patch<HrJobRole>(`/hr/org/roles/${id}`, data),
+    mutationFn: ({ jobRoleId, ...jobRole }: OrgCatalogInput & { jobRoleId: number }) =>
+      apiClient.patch<HrJobRole>(`/hr/org/roles/${jobRoleId}`, jobRole),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.orgRoles() }),
   });
 }
@@ -83,17 +45,20 @@ export function useDeleteJobRole() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["hr", "org", "role", "delete"],
-    mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/hr/org/roles/${id}`),
+    mutationFn: (jobRoleId: number) =>
+      apiClient.delete<{ success: boolean }>(`/hr/org/roles/${jobRoleId}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.orgRoles() }),
   });
 }
 
 export function useOrgJobLevels(options?: { enabled?: boolean }) {
+  const canView = useCan("hr:employees:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.orgLevels(),
     queryFn: () => apiClient.get<HrJobLevel[]>("/hr/org/levels"),
     staleTime: 5 * 60_000,
-    enabled: options?.enabled ?? true,
+    enabled: hrEnabled && canView && (options?.enabled ?? true),
   });
 }
 
@@ -110,8 +75,8 @@ export function useUpdateJobLevel() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["hr", "org", "level", "update"],
-    mutationFn: ({ id, ...data }: OrgCatalogInput & { id: number }) =>
-      apiClient.patch<HrJobLevel>(`/hr/org/levels/${id}`, data),
+    mutationFn: ({ jobLevelId, ...jobLevel }: OrgCatalogInput & { jobLevelId: number }) =>
+      apiClient.patch<HrJobLevel>(`/hr/org/levels/${jobLevelId}`, jobLevel),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.orgLevels() }),
   });
 }
@@ -120,54 +85,19 @@ export function useDeleteJobLevel() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["hr", "org", "level", "delete"],
-    mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/hr/org/levels/${id}`),
+    mutationFn: (jobLevelId: number) =>
+      apiClient.delete<{ success: boolean }>(`/hr/org/levels/${jobLevelId}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.orgLevels() }),
-  });
-}
-
-export function useOrgTeams(options?: { enabled?: boolean }) {
-  return useQuery({
-    queryKey: queryKeys.hr.orgTeams(),
-    queryFn: () => apiClient.get<HrTeam[]>("/hr/org/teams"),
-    staleTime: 5 * 60_000,
-    enabled: options?.enabled ?? true,
-  });
-}
-
-export function useCreateTeam() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "org", "team", "create"],
-    mutationFn: (data: OrgCatalogInput) => apiClient.post<HrTeam>("/hr/org/teams", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.orgTeams() }),
-  });
-}
-
-export function useUpdateTeam() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "org", "team", "update"],
-    mutationFn: ({ id, ...data }: OrgCatalogInput & { id: number }) =>
-      apiClient.patch<HrTeam>(`/hr/org/teams/${id}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.orgTeams() }),
-  });
-}
-
-export function useDeleteTeam() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "org", "team", "delete"],
-    mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/hr/org/teams/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.orgTeams() }),
   });
 }
 
 export function useOrgHeadcount(groupBy: "department" | "location" | "role" = "department") {
   const canEmployees = useCan("hr:employees:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.orgHeadcount(groupBy),
     queryFn: () => apiClient.get<HrHeadcountGroup[]>("/hr/org/headcount", { groupBy }),
     staleTime: 5 * 60_000,
-    enabled: canEmployees,
+    enabled: hrEnabled && canEmployees,
   });
 }

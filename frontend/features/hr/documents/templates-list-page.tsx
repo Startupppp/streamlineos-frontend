@@ -43,6 +43,7 @@ import {
 } from "@/hooks/api/hr/document-templates";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { useCan } from "@/hooks/api/access";
 import {
   VariableChips,
   PreviewDialog,
@@ -139,8 +140,8 @@ function TemplatesPageSkeleton() {
 
 function buildTemplateColumns(
   currentDefault: DocumentTemplate | undefined,
-  onDelete: (id: number) => void,
-  onSetDefault: (id: number, isDefault: boolean) => void,
+  onDelete: (templateId: number) => void,
+  onSetDefault: (templateId: number, isDefault: boolean) => void,
   isDeletePending: boolean,
   isSetDefaultPending: boolean,
   router: ReturnType<typeof useRouter>,
@@ -273,13 +274,14 @@ function buildTemplateColumns(
 
 export function TemplatesListPage() {
   const router = useRouter();
+  const canManage = useCan("hr:documents:manage");
   const { data: templates, isLoading, isError, refetch } = useDocumentTemplates();
   const deleteMutation = useDeleteDocumentTemplate();
   const setDefaultMutation = useSetDocumentTemplateDefault();
 
   const handleDelete = useCallback(
-    (id: number) => {
-      deleteMutation.mutate(id, {
+    (templateId: number) => {
+      deleteMutation.mutate(templateId, {
         onSuccess: () => toast.success("Template deleted"),
         onError: (e) => toast.error(getErrorMessage(e)),
       });
@@ -288,9 +290,9 @@ export function TemplatesListPage() {
   );
 
   const handleSetDefault = useCallback(
-    (id: number, isDefault: boolean) => {
+    (templateId: number, isDefault: boolean) => {
       setDefaultMutation.mutate(
-        { id, isDefault },
+        { templateId, isDefault },
         {
           onSuccess: () =>
             toast.success(isDefault ? "Template set as default" : "Default status removed"),
@@ -331,7 +333,7 @@ export function TemplatesListPage() {
   const ndaCount = list.filter((t) => t.type === "NDA").length;
   const offerCount = list.filter((t) => t.type === "OFFER_LETTER").length;
   const currentDefault = list.find((t) => t.isDefault);
-  const columns = buildTemplateColumns(
+  const allColumns = buildTemplateColumns(
     currentDefault,
     handleDelete,
     handleSetDefault,
@@ -339,19 +341,24 @@ export function TemplatesListPage() {
     setDefaultMutation.isPending,
     router,
   );
+  const columns = canManage
+    ? allColumns
+    : allColumns.filter(
+        (column) => column.key !== "star" && column.key !== "actions",
+      );
 
   return (
     <PageWrapper
       title="Document Templates"
       subtitle="Manage reusable HTML templates for offer letters, NDAs, and policies."
-      actions={
+      actions={canManage ? (
         <Button size="sm" className="gap-1.5" asChild>
           <Link href="/hr/documents/templates/new">
             <FilePlus2 className="h-3.5 w-3.5" />
             Add Template
           </Link>
         </Button>
-      }
+      ) : undefined}
     >
       <div className="flex flex-1 min-h-0 flex-col gap-4">
         <StatCardGrid cols={4}>
@@ -372,10 +379,10 @@ export function TemplatesListPage() {
               illustration={<EmptyDocumentsIllustration className="h-40 w-40" />}
               title="No templates yet"
               description="Create your first document template to automate offer letters, NDAs, and more."
-              action={{
+              action={canManage ? {
                 label: "Create your first template",
                 href: "/hr/documents/templates/new",
-              }}
+              } : undefined}
               actionVariant="outline"
             />
           }

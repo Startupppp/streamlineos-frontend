@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 export interface LeavePolicy {
   id: number;
@@ -37,10 +38,12 @@ interface CreateLeavePolicyInput {
 }
 
 export function useLeavePolicies() {
+  const canView = useCan("hr:leaves:view");
   return useQuery<LeavePolicy[]>({
     queryKey: queryKeys.hr.leavePolicies(),
     queryFn: () => apiClient.get<LeavePolicy[]>("/hr/leave-policies"),
     staleTime: 60_000,
+    enabled: canView,
   });
 }
 

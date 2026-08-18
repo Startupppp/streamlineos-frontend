@@ -1,6 +1,10 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import {
+  useState,
+  useMemo,
+  useCallback,
+} from "react";
 import { ChevronsUpDown, Check } from "lucide-react";
 import { MailIcon, XIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -32,11 +36,20 @@ import {
 } from "@/components/ui/command";
 import { DatePicker } from "@/components/ui/date-picker";
 import { toast } from "sonner";
-import { useHrEmployees,
-  unwrapEmployees} from "@/hooks/api/hr";
+import { useHrEmployees, unwrapEmployees } from "@/hooks/api/hr";
+import { useCan } from "@/hooks/api/access";
 import type { Employee } from "@/types/hr";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
+
+const MAX_REPORT_RECIPIENTS = 10;
+const MAX_REPORT_DAYS = 31;
+
+function getLocalToday(): string {
+  const now = new Date();
+  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60_000);
+  return local.toISOString().slice(0, 10);
+}
 
 interface UserOption {
   id: string;
@@ -51,7 +64,6 @@ interface MultiSelectFieldProps {
   onAdd: (email: string) => void;
   onRemove: (email: string) => void;
   options: UserOption[];
-  excludedEmails: string[];
 }
 
 function BadgeRemoveButton({ name, onClick }: { name: string; onClick: () => void }) {
@@ -113,16 +125,15 @@ function MultiSelectField({
   onAdd,
   onRemove,
   options,
-  excludedEmails,
 }: MultiSelectFieldProps) {
   const [open, setOpen] = useState(false);
 
   const available = useMemo(
     () =>
       options.filter(
-        (o) => !excludedEmails.includes(o.email) && !selected.includes(o.email),
+        (option) => !selected.includes(option.email),
       ),
-    [options, excludedEmails, selected],
+    [options, selected],
   );
 
   const selectedOptions = useMemo(
@@ -204,12 +215,10 @@ function MultiSelectField({
   );
 }
 
-export function AttendanceEmailDialog({ toolbar = false }: { toolbar?: boolean }) {
+function AttendanceEmailDialogContent({ toolbar = false }: { toolbar?: boolean }) {
   const [open, setOpen] = useState(false);
   const [isSending, setIsSending] = useState(false);
-  const [toEmails, setToEmails] = useState<string[]>([]);
-  const [ccEmails, setCcEmails] = useState<string[]>([]);
-  const [bccEmails, setBccEmails] = useState<string[]>([]);
+  const [recipientEmails, setRecipientEmails] = useState<string[]>([]);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
@@ -223,55 +232,54 @@ export function AttendanceEmailDialog({ toolbar = false }: { toolbar?: boolean }
       .map((e) => ({
         id: e.id,
         name: [e.firstName, e.lastName].filter(Boolean).join(" ") || e.email,
-        email: e.email,
+        email: e.email.trim().toLowerCase(),
       }));
   }, [employeesData]);
 
-  const toExcludedForCc = useMemo(() => toEmails, [toEmails]);
+  const totalCount = recipientEmails.length;
 
-  const addTo = useCallback(
-    (email: string) => setToEmails((prev) => [...prev, email]),
-    [],
+  const addRecipient = useCallback(
+    (email: string) => {
+      if (totalCount >= MAX_REPORT_RECIPIENTS) {
+        toast.error(`You can select up to ${MAX_REPORT_RECIPIENTS} recipients`);
+        return;
+      }
+      setRecipientEmails((previous) => [...previous, email]);
+    },
+    [totalCount],
   );
-  const removeTo = useCallback(
-    (email: string) => setToEmails((prev) => prev.filter((e) => e !== email)),
-    [],
-  );
-
-  const addCc = useCallback(
-    (email: string) => setCcEmails((prev) => [...prev, email]),
-    [],
-  );
-  const removeCc = useCallback(
-    (email: string) => setCcEmails((prev) => prev.filter((e) => e !== email)),
-    [],
-  );
-
-  const addBcc = useCallback(
+  const removeRecipient = useCallback(
     (email: string) =>
-      setBccEmails((prev) => [...prev.filter((e) => e !== email), email]),
-    [],
-  );
-  const removeBcc = useCallback(
-    (email: string) => setBccEmails((prev) => prev.filter((e) => e !== email)),
+      setRecipientEmails((previous) =>
+        previous.filter((candidate) => candidate !== email),
+      ),
     [],
   );
 
   const dateError = useMemo(() => {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = getLocalToday();
+    if (Boolean(startDate) !== Boolean(endDate))
+      return "Select both a start date and an end date";
     if (startDate && startDate > today)
       return "Start date cannot be in the future";
     if (endDate && endDate > today) return "End date cannot be in the future";
     if (startDate && endDate && startDate > endDate)
       return "Start date must be before end date";
+    if (startDate && endDate) {
+      const dayCount =
+        (Date.parse(`${endDate}T00:00:00Z`) -
+          Date.parse(`${startDate}T00:00:00Z`)) /
+          86_400_000 +
+        1;
+      if (dayCount > MAX_REPORT_DAYS)
+        return `Date range cannot exceed ${MAX_REPORT_DAYS} days`;
+    }
     return null;
   }, [startDate, endDate]);
 
   const handleClose = () => {
     setOpen(false);
-    setToEmails([]);
-    setCcEmails([]);
-    setBccEmails([]);
+    setRecipientEmails([]);
     setStartDate("");
     setEndDate("");
   };
@@ -282,8 +290,8 @@ export function AttendanceEmailDialog({ toolbar = false }: { toolbar?: boolean }
   };
 
   const handleSend = async () => {
-    if (toEmails.length === 0) {
-      toast.error("At least one To recipient is required");
+    if (recipientEmails.length === 0) {
+      toast.error("At least one recipient is required");
       return;
     }
     if (dateError) {
@@ -294,13 +302,11 @@ export function AttendanceEmailDialog({ toolbar = false }: { toolbar?: boolean }
     setIsSending(true);
     try {
       await apiClient.post("/hr/attendance/email-report", {
-        to: toEmails,
-        cc: ccEmails,
-        bcc: bccEmails,
+        to: recipientEmails,
         startDate: startDate || undefined,
         endDate: endDate || undefined,
       });
-      toast.success("Attendance report sent successfully");
+      toast.success("Attendance report queued for delivery");
       handleClose();
     } catch (err) {
       toast.error(getErrorMessage(err));
@@ -308,8 +314,6 @@ export function AttendanceEmailDialog({ toolbar = false }: { toolbar?: boolean }
       setIsSending(false);
     }
   };
-
-  const totalCount = [...toEmails, ...ccEmails, ...bccEmails].length;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -326,7 +330,8 @@ export function AttendanceEmailDialog({ toolbar = false }: { toolbar?: boolean }
             Email Attendance Report
           </DialogTitle>
           <DialogDescription className="text-xs text-muted-foreground">
-            Select recipients and an optional date range for the report.
+            Send up to {MAX_REPORT_DAYS} days of scoped attendance data to active
+            organization members.
           </DialogDescription>
         </DialogHeader>
 
@@ -366,61 +371,21 @@ export function AttendanceEmailDialog({ toolbar = false }: { toolbar?: boolean }
 
           <div className="border-t border-border pt-4 space-y-3">
             <MultiSelectField
-              label="To *"
+              label="Recipients *"
               placeholder="Select recipients..."
-              selected={toEmails}
-              onAdd={addTo}
-              onRemove={removeTo}
+              selected={recipientEmails}
+              onAdd={addRecipient}
+              onRemove={removeRecipient}
               options={allUsers}
-              excludedEmails={[...ccEmails, ...bccEmails]}
-            />
-
-            <MultiSelectField
-              label="CC"
-              placeholder="Add CC recipients..."
-              selected={ccEmails}
-              onAdd={addCc}
-              onRemove={removeCc}
-              options={allUsers}
-              excludedEmails={[...toExcludedForCc, ...bccEmails]}
-            />
-
-            <MultiSelectField
-              label="BCC"
-              placeholder="Add BCC recipients..."
-              selected={bccEmails}
-              onAdd={addBcc}
-              onRemove={removeBcc}
-              options={allUsers}
-              excludedEmails={[...new Set([...toEmails, ...ccEmails])]}
             />
           </div>
 
           {totalCount > 0 && (
             <p className="text-[11px] text-muted-foreground">
-              Sending to{" "}
-              <span className="font-semibold text-foreground">
-                {toEmails.length}
-              </span>{" "}
-              recipient(s)
-              {ccEmails.length > 0 && (
-                <>
-                  ,{" "}
-                  <span className="font-semibold text-foreground">
-                    {ccEmails.length}
-                  </span>{" "}
-                  CC
-                </>
-              )}
-              {bccEmails.length > 0 && (
-                <>
-                  ,{" "}
-                  <span className="font-semibold text-foreground">
-                    {bccEmails.length}
-                  </span>{" "}
-                  BCC
-                </>
-              )}
+              <span className="font-semibold text-foreground">{totalCount}</span>
+              {" of "}
+              {MAX_REPORT_RECIPIENTS} recipients selected. Each person receives a
+              private copy.
             </p>
           )}
         </div>
@@ -437,11 +402,17 @@ export function AttendanceEmailDialog({ toolbar = false }: { toolbar?: boolean }
           </Button>
           <SendReportButton
             isSending={isSending}
-            disabled={isSending || toEmails.length === 0 || !!dateError}
+            disabled={isSending || recipientEmails.length === 0 || !!dateError}
             onClick={handleSend}
           />
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
+}
+
+export function AttendanceEmailDialog({ toolbar = false }: { toolbar?: boolean }) {
+  const canEmailAttendanceReports = useCan("hr:attendance:manage");
+  if (!canEmailAttendanceReports) return null;
+  return <AttendanceEmailDialogContent toolbar={toolbar} />;
 }

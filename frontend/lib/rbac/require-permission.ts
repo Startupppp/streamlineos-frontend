@@ -9,6 +9,7 @@ import { getServerAccess } from "@/lib/rbac/get-server-access";
 import { resolveRequestPath } from "@/lib/rbac/request-path";
 import type { AccessResponse } from "@/types/access";
 import type { PermissionKey } from "@/lib/rbac/permissions";
+import { normalizeOrgModuleKey } from "@/lib/module-vocabulary";
 
 interface RequirePermissionResult {
   session: Session;
@@ -53,6 +54,37 @@ export async function requirePermission(
     const params = new URLSearchParams({ required: perms.join(",") });
     if (from) params.set("from", from);
     redirect(`/access-denied?${params.toString()}`);
+  }
+
+  return { session, access };
+}
+
+export async function requireModulePermission(
+  moduleKey: string,
+  permission?: PermissionKey | PermissionKey[],
+): Promise<RequirePermissionResult> {
+  const session = await requireSession();
+  const access = await getServerAccess();
+  const normalizedModule = normalizeOrgModuleKey(moduleKey);
+
+  if (access.modules[normalizedModule] !== true) {
+    const from = await getCurrentPath();
+    const params = new URLSearchParams({
+      required: `module:${normalizedModule}`,
+    });
+    if (from) params.set("from", from);
+    redirect(`/access-denied?${params.toString()}`);
+  }
+
+  if (permission) {
+    const required = Array.isArray(permission) ? permission : [permission];
+    const granted = new Set(access.permissions);
+    if (!access.isOrgOwner && !required.some((key) => granted.has(key))) {
+      const from = await getCurrentPath();
+      const params = new URLSearchParams({ required: required.join(",") });
+      if (from) params.set("from", from);
+      redirect(`/access-denied?${params.toString()}`);
+    }
   }
 
   return { session, access };

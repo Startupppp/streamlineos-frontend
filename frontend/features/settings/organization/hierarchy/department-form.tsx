@@ -1,8 +1,9 @@
 "use client";
 
-import { type ChangeEvent } from "react";
-import { useForm } from "react-hook-form";
+import type { ChangeEvent } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { HierarchyParentSelector } from "@/components/organization/hierarchy-parent-selector";
 import {
   Form,
   FormControl,
@@ -11,50 +12,35 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { UserCombobox } from "@/components/ui/user-combobox";
 import {
   departmentFormSchema,
-  NO_BRANCH,
+  EMPTY_DEPARTMENT_FORM_VALUES,
   type DepartmentFormValues,
-} from "./departments-schema";
+} from "./department-form-schema";
 
-interface DeptFormProps {
+interface DepartmentFormProps {
   defaultValues?: DepartmentFormValues;
-  branches: { id: string; name: string }[];
-  onSubmit: (v: DepartmentFormValues) => void;
-  isPending: boolean;
+  selectedBranchName?: string | null;
+  onSubmit: (values: DepartmentFormValues) => void;
 }
 
-export function DeptForm({
+export function DepartmentForm({
   defaultValues,
-  branches,
+  selectedBranchName,
   onSubmit,
-  isPending: _,
-}: DeptFormProps) {
+}: DepartmentFormProps) {
   const form = useForm<DepartmentFormValues>({
     resolver: zodResolver(departmentFormSchema),
-    defaultValues: defaultValues ?? {
-      name: "",
-      code: "",
-      branchId: NO_BRANCH,
-      headUserId: "",
-      description: "",
-    },
+    defaultValues: defaultValues ?? EMPTY_DEPARTMENT_FORM_VALUES,
   });
 
   return (
     <Form {...form}>
       <form
-        id="dept-form"
+        id="department-form"
         onSubmit={form.handleSubmit(onSubmit)}
         className="space-y-4"
       >
@@ -76,9 +62,10 @@ export function DeptForm({
             control={form.control}
             name="code"
             render={({ field }) => {
-              function handleCodeChange(e: ChangeEvent<HTMLInputElement>) {
-                field.onChange(e.target.value.toUpperCase());
+              function handleCodeChange(event: ChangeEvent<HTMLInputElement>) {
+                field.onChange(event.target.value.toUpperCase());
               }
+
               return (
                 <FormItem>
                   <FormLabel>Code</FormLabel>
@@ -100,21 +87,19 @@ export function DeptForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Branch</FormLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="None" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value={NO_BRANCH}>None</SelectItem>
-                    {branches.map((b) => (
-                      <SelectItem key={b.id} value={b.id}>
-                        {b.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <HierarchyParentSelector
+                    parentKind="BRANCH"
+                    value={field.value ?? ""}
+                    onValueChange={field.onChange}
+                    label="Branch"
+                    placeholder="Select a branch"
+                    searchPlaceholder="Search branchesâ€¦"
+                    emptyText="No active branches found."
+                    selectedLabel={selectedBranchName}
+                    optionalLabel="No branch"
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -130,7 +115,7 @@ export function DeptForm({
                 <UserCombobox
                   value={field.value ?? ""}
                   onChange={field.onChange}
-                  placeholder="Select head…"
+                  placeholder="Select headâ€¦"
                 />
               </FormControl>
               <FormMessage />
@@ -146,7 +131,7 @@ export function DeptForm({
               <FormControl>
                 <Textarea
                   rows={3}
-                  placeholder="Optional description…"
+                  placeholder="Optional descriptionâ€¦"
                   {...field}
                 />
               </FormControl>
