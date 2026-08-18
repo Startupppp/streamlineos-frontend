@@ -4,7 +4,7 @@
 
 **Module:** Build (all four areas — PM core, time/capacity, product management, reporting/portfolio)
 **Phase:** Phase 0 complete; six fix batches + approved Phase 1 (SCH-001, SCH-002) landed.
-**Status:** 81/81 tasks done, 0 blocked, 0 open — see `TASKS-BUILD.md` and `COMPLETION-REPORT-BUILD.md`.
+**Status:** All user-listed flows verified over HTTP against the running API — create project, create ticket, change status, assign, AI suggest-title, AI improve-description. AI is plan-gated (needs PROFESSIONAL; orgs are STARTER). Remaining approved work: build + build_events schema split.
 **Updated:** 2026-08-11
 
 ## Closed this session (see `docs/refactor/build-changelog.md`)

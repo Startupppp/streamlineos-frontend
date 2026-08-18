@@ -100,3 +100,35 @@ Every HRMS-core, sidebar, and shared production file touched by this work is
 split below 500 lines. Payroll's `payroll-inputs.service.ts` remains explicitly
 assigned to the later Payroll session so this HRMS-core change does not mix
 payroll calculation/input responsibilities into the current module.
+
+## B-32 — Ticket numbers moved to a counter table for CORRECTNESS, not speed
+I claimed `MAX(ticket_number)+1` was the module's worst insert bottleneck and that a counter would be
+the biggest throughput win. **I measured it and I was wrong:** the MAX is an `Index Scan Backward` on
+`uniq_tickets_project_number` costing 4 buffers / 0.052ms, it is O(log n) so it does not degrade at
+100M rows, and the counter `UPDATE` is 0.087ms — marginally slower. Both hold their lock until commit,
+so the serialised window per project is unchanged. Retracted in the migration header, the helper
+docblock and `docs/architecture/03`.
+
+The change is still correct, for the reasons that survived measurement:
+1. **A real race** — only 1 of 6 allocation sites held the advisory lock; epics, workspace intake,
+   ticket transfer, form submissions and meeting action items all did unlocked `MAX+1` and could
+   collide on `uniq_tickets_project_number`. Verified after: 20 concurrent allocations → 20 distinct,
+   contiguous numbers, 0 duplicates.
+2. **Advisory-lock key collision** — `pg_advisory_xact_lock(projectId)` uses Postgres' single global
+   bigint namespace, so any unrelated subsystem locking the same integer blocks ticket creation.
+3. **One mechanism** instead of six, so a new call site cannot reintroduce the race.
+
+Reversal cost: low — `0430`'s rollback drops the table and callers return to `MAX+1`.
+
+## B-33 — AI ticket assist already existed; the 402 is entitlement, not a defect
+I reported AI title/description generation as missing. It was not: `projects-ai.controller.ts` exposes
+`suggest-title`, `improve-description`, `suggest-fields` and `summarize`, with hooks in
+`hooks/api/build/ticket-ai.ts` and UI mounted in the create dialog, the title field, the description
+section and ticket detail. I had grepped the wrong names under the wrong module. It was broken by the
+Redis guard fault like everything else.
+
+With the org on STARTER both endpoints return `402 FEATURE_NOT_AVAILABLE`, because `ai.project-manager`
+and `ai.ticket-insights` require **PROFESSIONAL** in `feature-gates.ts`. Verified by temporarily setting
+one org to PROFESSIONAL — 201 with real generated content both times — then restoring STARTER. No code
+change made: gating AI by plan is deliberate product behaviour. If these orgs should have AI, the lever
+is the subscription plan.

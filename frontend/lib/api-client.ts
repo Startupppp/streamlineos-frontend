@@ -116,6 +116,17 @@ function requestHost(url: string): string {
   }
 }
 
+const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+
+function newIdempotencyKey(): string {
+  const c = globalThis.crypto;
+  if (c && typeof c.randomUUID === "function") return c.randomUUID();
+  const bytes = new Uint8Array(16);
+  if (c && typeof c.getRandomValues === "function") c.getRandomValues(bytes);
+  const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
 export async function authedFetch(
   url: string,
   init: RequestInit,
@@ -125,6 +136,11 @@ export async function authedFetch(
   const headers = new Headers(init.headers);
   const isPublic = isPublicPath(path);
   const combinedSignal = makeRequestSignal(signal);
+
+  if (!isPublic && MUTATING_METHODS.has((init.method ?? "GET").toUpperCase())) {
+    if (!headers.has("Idempotency-Key"))
+      headers.set("Idempotency-Key", newIdempotencyKey());
+  }
 
   if (!isPublic) {
     const token = await getBackendToken();
