@@ -164,7 +164,7 @@ export function useHrEmployees(params?: HrEmployeesParams, options?: { enabled?:
     queryFn: async (): Promise<EmployeeCursorPage> => {
       const res = await apiClient.get<Employee[] | EmployeeCursorPage>(
         "/hr/employees",
-        params as Record<string, unknown>,
+        params,
       );
       return normalizeEmployeeCursorResponse(res, limit);
     },
@@ -185,7 +185,7 @@ export function useInfiniteHrEmployees(
     queryFn: async ({ pageParam }): Promise<EmployeeCursorPage> => {
       const res = await apiClient.get<Employee[] | EmployeeCursorPage>(
         "/hr/employees",
-        { ...params, cursor: pageParam } as Record<string, unknown>,
+        { ...params, cursor: pageParam },
       );
       return normalizeEmployeeCursorResponse(res, limit);
     },

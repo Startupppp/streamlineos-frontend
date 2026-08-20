@@ -1,7 +1,4 @@
 now all these modules i used multiple coding agents now i want to review the code for this claude should act as experienced architect and full stack developer and it build tons of apps for Billions of users 
-
-
-
 now i want to review the entire code  and what are all the code changes it done 
 
 making sure all the schema are properly working, removed unnecessary schemas and field keys and added required keys and schemas and maintaining orgId for easy access 
@@ -34,43 +31,23 @@ never ask user to entire the id's or id example userId instead using the existin
 
 and accessing the env variables from the config zod validation instead of process.env 
 
-
-
 and everything should having the proper folder and file structer and when it is there in the rich text edior is there in the docs and build module then instead of making two you can maintain it at one place without changing the UI and UX it should and adding props based on the needs 
-
-
 
 proper error message to the  frontend and it should  access it properly and showcase it and in the backend it should send the proper error message 
 
-
-
 remove the unnecessary types/interfaces it is defend multiple times if they are common maintain it at one place 
-
-
 
 don't force the types and make sure everything is well typed 
 
-
-
 tabs at one page it is looking different at another place it is looking different so fix it not just this component all the components across the repo 
-
-
 
 for the search using the debouncing api call and without making multiple api call and without breaking the UI and UX like when user typed 10 it  is showing 2 items without this one 
 
-
-
 check the race conditions as well fix all of them as well 
-
-
 
 remove the unnecessary comments and add it needed only and that too at max of one line 
 
-
-
 make sure one module having there own schemas example products in build module is different and inventory is different so keep this in mind and check for all the schemas 
-
-
 
 before today what are the RBAC and permission were there those are correct don't change anything but fix if there are any issues in that and efficient issues and optimization issues etc 
 
