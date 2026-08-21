@@ -18,22 +18,10 @@ export const HOME_NAV_GROUPS: NavGroup[] = [
         requiredPermission: "mail:inbox:view",
       },
       {
-        label: "Mail Access",
-        href: "/mail/access",
-        icon: Inbox,
-        requiredPermission: "mail:access:view",
-      },
-      {
         label: "Calendar",
         href: "/calendar",
         icon: CalendarDays,
         requiredPermission: "calendar:read",
-      },
-      {
-        label: "Calendar Access",
-        href: "/calendar/access",
-        icon: CalendarDays,
-        requiredPermission: "calendar:access:view",
       },
       {
         label: "Chat",
@@ -41,13 +29,13 @@ export const HOME_NAV_GROUPS: NavGroup[] = [
         icon: MessageSquareText,
         requiredPermission: "chat:channels:read",
       },
-      {
-        label: "Chat Access",
-        href: "/chat/access",
-        icon: MessageSquareText,
-        requiredPermission: "chat:access:view",
-      },
       { label: "Notifications", href: "/notifications", icon: Bell },
+      {
+        label: "Home Access",
+        href: "/home/access",
+        icon: MessageSquareText,
+        requiredPermission: "home:access:view",
+      },
     ],
   },
   {
