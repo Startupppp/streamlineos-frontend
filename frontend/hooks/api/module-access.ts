@@ -65,11 +65,19 @@ export interface ModuleMemberGroup {
 }
 
 export interface ModuleMember {
+  membershipId: number;
   userId: string;
   displayName: string;
   email: string;
   avatarUrl?: string | null;
   groups: ModuleMemberGroup[];
+}
+
+export interface MemberGrant {
+  permissionKey: string;
+  scope: DataScope;
+  reason: string | null;
+  createdAt: string;
 }
 
 export interface Pagination {
@@ -539,5 +547,82 @@ export function useModuleAuditLog(
     enabled: canView && (options?.enabled ?? true),
     staleTime: 60_000,
     placeholderData: (prev) => prev,
+  });
+}
+
+export function useModuleMemberGrants(
+  moduleKey: string,
+  membershipId: number | null,
+  options?: { enabled?: boolean },
+) {
+  const canManage = useCan(manageKey(moduleKey));
+  return useQuery<{ grants: MemberGrant[] }, Error>({
+    queryKey: queryKeys.moduleAccess.memberGrants(moduleKey, membershipId ?? 0),
+    queryFn: () =>
+      apiClient.get<{ grants: MemberGrant[] }>(
+        `/module-access/${moduleKey}/members/${membershipId}/grants`,
+      ),
+    enabled: canManage && membershipId !== null && (options?.enabled ?? true),
+    staleTime: 30_000,
+  });
+}
+
+export function useSetModuleMemberGrants(moduleKey: string) {
+  const queryClient = useQueryClient();
+  return useMutation<
+    { success: true; granted: number },
+    Error,
+    {
+      membershipId: number;
+      userId: string;
+      items: { permissionKey: string; scope?: DataScope }[];
+      reason?: string;
+    }
+  >({
+    mutationKey: ["moduleAccess", moduleKey, "set-member-grants"],
+    mutationFn: ({ membershipId, items, reason }) =>
+      apiClient.put<{ success: true; granted: number }>(
+        `/module-access/${moduleKey}/members/${membershipId}/grants`,
+        { items, reason },
+      ),
+    onSuccess: (_, { membershipId }) => {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.moduleAccess.memberGrants(moduleKey, membershipId),
+        exact: true,
+      });
+      void queryClient.invalidateQueries({
+        queryKey: [...queryKeys.moduleAccess.all, moduleKey, "members"],
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.access.me(),
+      });
+    },
+  });
+}
+
+export function useDeleteModuleMemberGrant(moduleKey: string) {
+  const queryClient = useQueryClient();
+  return useMutation<
+    { success: true },
+    Error,
+    { membershipId: number; permissionKey: string }
+  >({
+    mutationKey: ["moduleAccess", moduleKey, "delete-member-grant"],
+    mutationFn: ({ membershipId, permissionKey }) =>
+      apiClient.delete<{ success: true }>(
+        `/module-access/${moduleKey}/members/${membershipId}/grants/${permissionKey}`,
+      ),
+    onSuccess: (_, { membershipId }) => {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.moduleAccess.memberGrants(moduleKey, membershipId),
+        exact: true,
+      });
+      void queryClient.invalidateQueries({
+        queryKey: [...queryKeys.moduleAccess.all, moduleKey, "members"],
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.access.me(),
+      });
+    },
   });
 }

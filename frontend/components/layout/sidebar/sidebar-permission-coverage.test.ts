@@ -27,7 +27,16 @@ const UNIVERSAL_HREF_PREFIXES = [
   "/jobs",
 ];
 
+/**
+ * Access administration is never universal, even under a universal prefix:
+ * /chat is everyone's, /chat/access governs who may administer it.
+ */
+function isAccessAdministration(href: string): boolean {
+  return href === "/access" || href.endsWith("/access");
+}
+
 function isUniversal(href: string): boolean {
+  if (isAccessAdministration(href)) return false;
   if (UNIVERSAL_HREFS.includes(href)) return true;
   return UNIVERSAL_HREF_PREFIXES.some(
     (prefix) => href === prefix || href.startsWith(`${prefix}/`),

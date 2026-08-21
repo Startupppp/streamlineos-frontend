@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { UserPlus, X, Pencil, Loader2 } from "lucide-react";
+import { UserPlus, X, Pencil, Loader2, KeyRound } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ import {
   EditGroupsDialog,
   ConfirmRemoveDialog,
 } from "@/features/module-access/components/member-dialogs";
+import { MemberGrantsSheet } from "@/features/module-access/components/member-grants-sheet";
 
 const PAGE_SIZE = 20;
 
@@ -54,13 +55,15 @@ interface MemberRowProps {
   canManage: boolean;
   onEdit: (member: ModuleMember) => void;
   onRemove: (member: ModuleMember) => void;
+  onManageGrants: (member: ModuleMember) => void;
   isRemoving: boolean;
 }
 
-function MemberRow({ member, canManage, onEdit, onRemove, isRemoving }: MemberRowProps) {
+function MemberRow({ member, canManage, onEdit, onRemove, onManageGrants, isRemoving }: MemberRowProps) {
   const displayName = resolveDisplayName(member);
   const handleEdit = useCallback(() => onEdit(member), [member, onEdit]);
   const handleRemove = useCallback(() => onRemove(member), [member, onRemove]);
+  const handleManageGrants = useCallback(() => onManageGrants(member), [member, onManageGrants]);
 
   return (
     <div className="flex items-center gap-3 px-4 py-3 border-b border-border/60 last:border-0">
@@ -86,6 +89,14 @@ function MemberRow({ member, canManage, onEdit, onRemove, isRemoving }: MemberRo
       </div>
       {canManage && (
         <div className="flex items-center gap-0.5 shrink-0">
+          <button
+            type="button"
+            onClick={handleManageGrants}
+            className="inline-flex h-7 w-7 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            aria-label={`Custom permissions for ${displayName}`}
+          >
+            <KeyRound className="h-3 w-3" />
+          </button>
           <button
             type="button"
             onClick={handleEdit}
@@ -134,6 +145,7 @@ export function ModuleMembersTab({
   const [internalAddOpen, setInternalAddOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<ModuleMember | null>(null);
   const [removeTarget, setRemoveTarget] = useState<ModuleMember | null>(null);
+  const [grantsTarget, setGrantsTarget] = useState<ModuleMember | null>(null);
 
   const addOpen = onAddOpenChange ? (addOpenProp ?? false) : internalAddOpen;
   const setAddOpen = onAddOpenChange ?? setInternalAddOpen;
@@ -204,6 +216,15 @@ export function ModuleMembersTab({
   const handleRemoveClose = useCallback((open: boolean) => {
     if (!open) setRemoveTarget(null);
   }, []);
+  const handleManageGrants = useCallback(
+    (member: ModuleMember) => {
+      if (canManage) setGrantsTarget(member);
+    },
+    [canManage],
+  );
+  const handleGrantsClose = useCallback((open: boolean) => {
+    if (!open) setGrantsTarget(null);
+  }, []);
   const handlePageChange = useCallback((p: number) => setPage(p), []);
 
   return (
@@ -257,6 +278,7 @@ export function ModuleMembersTab({
                   canManage={canManage}
                   onEdit={handleEditMember}
                   onRemove={handleRemoveMember}
+                  onManageGrants={handleManageGrants}
                   isRemoving={false}
                 />
               ))}
@@ -297,6 +319,14 @@ export function ModuleMembersTab({
             onOpenChange={handleRemoveClose}
             moduleKey={moduleKey}
             member={removeTarget}
+          />
+
+          <MemberGrantsSheet
+            open={grantsTarget !== null}
+            onOpenChange={handleGrantsClose}
+            moduleKey={moduleKey}
+            member={grantsTarget}
+            canManage={canManage}
           />
         </>
       ) : null}
