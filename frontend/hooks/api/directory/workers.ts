@@ -23,7 +23,7 @@ export interface UseWorkersParams {
 }
 
 export function useWorkers(params: UseWorkersParams = {}) {
-  const canView = useCan("workforce:workers:view");
+  const canView = useCan("directory:workers:view");
   const { cursor, limit = 20, status, search, organizationPersonId } = params;
   const queryParams: Record<string, unknown> = { cursor, limit };
   if (status) queryParams.status = status;
@@ -61,7 +61,7 @@ export function useCreateWorker() {
 }
 
 export function useWorkerEngagements(workerId: string) {
-  const canView = useCan("workforce:workers:view");
+  const canView = useCan("directory:workers:view");
   return useQuery({
     queryKey: queryKeys.directory.engagements(workerId),
     queryFn: () =>

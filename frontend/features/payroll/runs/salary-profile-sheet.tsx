@@ -98,7 +98,7 @@ export function SalaryProfileSheet({
   const isEdit = !!existingProfile;
   const workforceLabel = usePayrollWorkforceLabel();
   const hrEnabled = useModuleEnabled("hr");
-  const canViewWorkers = useCan("workforce:workers:view");
+  const canViewWorkers = useCan("directory:workers:view");
   const usePayeeDirectory = showPicker && !hrEnabled && canViewWorkers;
   const { data: policyData } = usePayrollPolicyCurrent();
   const policyCurrency = policyData?.policy?.currency ?? "INR";

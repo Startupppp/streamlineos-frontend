@@ -91,8 +91,8 @@ export function PersonWorkerTab({
 }: {
   person: OrganizationPerson;
 }) {
-  const canViewWorkers = useCan("workforce:workers:view");
-  const canManageWorkers = useCan("workforce:workers:manage");
+  const canViewWorkers = useCan("directory:workers:view");
+  const canManageWorkers = useCan("directory:workers:manage");
   const [createWorkerOpen, setCreateWorkerOpen] = useState(false);
 
   const { data: workersPage, isLoading: workersLoading } = useWorkers({

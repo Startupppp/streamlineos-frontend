@@ -49,6 +49,12 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
         requiredPermission: "directory:people:view",
       },
       {
+        label: "Directory Access",
+        icon: Contact2,
+        href: "/directory/access",
+        requiredPermission: "directory:access:view",
+      },
+      {
         label: "Members & Access",
         icon: UserCog,
         href: "/settings/users",

@@ -40,8 +40,8 @@ export function WorkerEngagementsSheet({
   onOpenChange,
   worker,
 }: WorkerEngagementsSheetProps) {
-  const canManage = useCan("workforce:workers:manage");
-  const canTerminate = useCan("workforce:workers:terminate");
+  const canManage = useCan("directory:workers:manage");
+  const canTerminate = useCan("directory:workers:terminate");
   const [editingEngagement, setEditingEngagement] =
     useState<WorkerEngagement | null>(null);
 

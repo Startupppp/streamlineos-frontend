@@ -38,7 +38,7 @@ export function PersonDetailPage({
 }: PersonDetailPageProps) {
   const canUpdatePerson = useCan("directory:people:update");
   const canViewMembers = useCan("settings:view");
-  const canViewWorkers = useCan("workforce:workers:view");
+  const canViewWorkers = useCan("directory:workers:view");
   const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const {

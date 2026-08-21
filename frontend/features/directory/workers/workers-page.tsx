@@ -116,7 +116,7 @@ function WorkerRowActions({
 }
 
 export function WorkersPage() {
-  const canManage = useCan("workforce:workers:manage");
+  const canManage = useCan("directory:workers:manage");
 
   const [cursorHistory, setCursorHistory] = useState<(string | undefined)[]>([
     undefined,

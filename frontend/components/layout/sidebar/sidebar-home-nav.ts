@@ -114,7 +114,7 @@ export const HOME_NAV_GROUPS: NavGroup[] = [
         label: "Workers",
         href: "/directory/workers",
         icon: Briefcase,
-        requiredPermission: "workforce:workers:view",
+        requiredPermission: "directory:workers:view",
         modulesAny: ["hrms", "payroll"],
       },
     ],

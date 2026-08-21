@@ -55,6 +55,12 @@ export const WORKFLOWS_NAV_GROUPS: NavGroup[] = [
         href: "/workflows/secrets",
         requiredPermission: "workflows:secrets:manage",
       },
+      {
+        label: "Access",
+        icon: Lock,
+        href: "/workflows/access",
+        requiredPermission: "workflows:access:view",
+      },
     ],
   },
 ];

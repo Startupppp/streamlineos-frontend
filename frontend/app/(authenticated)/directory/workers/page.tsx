@@ -7,6 +7,6 @@ export const metadata: Metadata = {
 };
 
 export default async function WorkersRoute() {
-  await requirePermission("workforce:workers:view");
+  await requirePermission("directory:workers:view");
   return <WorkersPage />;
 }
