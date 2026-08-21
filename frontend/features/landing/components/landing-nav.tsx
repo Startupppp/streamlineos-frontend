@@ -37,6 +37,10 @@ export function LandingNav() {
     return () => mq.removeEventListener("change", onChange);
   }, []);
 
+  function handleCloseMenu() {
+    setOpen(false);
+  }
+
   useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
@@ -99,12 +103,12 @@ export function LandingNav() {
 
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <Magnetic strength={reduce ? 0 : 0.28}>
-              <Link href="/signin">
+              <a href="#waitlist">
                 <Button size="sm" className="h-9 px-3 sm:px-4 text-xs sm:text-sm">
-                  Get started
+                  Join the waitlist
                   <ArrowRight className="ml-1 sm:ml-1.5 h-3.5 w-3.5" />
                 </Button>
-              </Link>
+              </a>
             </Magnetic>
             <button
               type="button"
@@ -131,20 +135,20 @@ export function LandingNav() {
                 <a
                   key={l.label}
                   href={l.href}
-                  onClick={() => setOpen(false)}
+                  onClick={handleCloseMenu}
                   className="block px-3 py-3 text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg"
                 >
                   {l.label}
                 </a>
               ))}
-              <Link
-                href="/signin"
-                onClick={() => setOpen(false)}
+              <a
+                href="#waitlist"
+                onClick={handleCloseMenu}
                 className="mt-1 flex items-center justify-center gap-1.5 rounded-lg bg-slate-900 px-3 py-3 text-sm font-semibold text-white hover:bg-slate-800"
               >
-                Get started
+                Join the waitlist
                 <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
+              </a>
             </motion.div>
           )}
         </AnimatePresence>

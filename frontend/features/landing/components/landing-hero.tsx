@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { motion, useReducedMotion, type Variants } from "framer-motion";
 import { ArrowRight, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -85,12 +84,12 @@ export function LandingHero() {
               className="flex flex-col sm:flex-row items-stretch sm:items-center lg:justify-start justify-center gap-3 w-full sm:w-auto max-w-sm sm:max-w-none mx-auto lg:mx-0"
             >
               <Magnetic strength={reduce ? 0 : 0.32} className="w-full sm:w-auto">
-                <Link href="/signin" className="block w-full sm:w-auto">
+                <a href="#waitlist" className="block w-full sm:w-auto">
                   <Button size="lg" className="h-12 w-full sm:w-auto px-7 text-[15px]">
-                    Start free
+                    Join the waitlist
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
-                </Link>
+                </a>
               </Magnetic>
               <a href="#apps" className="block w-full sm:w-auto">
                 <Button

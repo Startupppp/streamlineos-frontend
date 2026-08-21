@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { ArrowRight, ChevronDown } from "lucide-react";
 import { Marquee } from "./motion/marquee";
@@ -119,13 +118,13 @@ export function LandingApps() {
             whileHover={reduce ? undefined : { x: 4 }}
             transition={{ type: "spring", stiffness: 300 }}
           >
-            <Link
-              href="/signin"
+            <a
+              href="#waitlist"
               className="inline-flex items-center gap-1.5 mt-5 text-[13px] font-semibold text-brand-core hover:text-brand-deep focus-visible:outline-none focus-visible:underline"
             >
-              Start now — it&apos;s free
+              Join the waitlist
               <ArrowRight className="h-3.5 w-3.5" aria-hidden />
-            </Link>
+            </a>
           </motion.div>
         </MotionReveal>
       </div>
