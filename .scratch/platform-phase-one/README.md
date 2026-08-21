@@ -4,29 +4,28 @@ Fourteen tickets across four independent streams, numbered in dependency order (
 Derived from four PRDs in `docs/specs/`, every claim verified against the running API, the live
 database catalog, or a module-graph tool.
 
+**Five are done and their files deleted** — 01, 02, 03, 05 and 07. What each one actually changed,
+including the two tickets whose premises turned out to be wrong, is in the `PAGES.md` changelog and
+in the commits that closed them; the ticket files were working documents, not the record.
+
 ## Frontier — start immediately, no blockers
 
 | # | Ticket | Stream |
 |---|---|---|
-| ~~01~~ | ~~Project boards stop reading 100 MB per page view~~ — **done**, 3.3× | Build |
-| ~~02~~ | ~~My Work shows all of your work~~ — **done**, 12.8× | Build |
-| ~~03~~ | ~~Unknown Build URLs return 404~~ — **done**, + a 500 nobody had noticed | Build |
 | 04 | One database transaction per request | Access cost |
-| ~~05~~ | ~~Permission key grammar becomes a build failure~~ — **done**; unblocks 08–11 | Ladder |
 | 06 | Module owner and module admin answer one question | Ladder |
-| ~~07~~ | ~~One seam resolves every person~~ — **done**; unblocks 14 | Person |
+| 08 | A billing owner can run billing without global settings | Ladder |
+| 09 | HR custom fields move to the HR namespace | Ladder |
+| 10 | Chat, Mail and Calendar get real permission vocabularies | Ladder |
+| 11 | Notifications, Workflows, Blog and Directory get vocabularies | Ladder |
+| 14 | A person with no login can be paid | Person |
 
 ## Blocked
 
 | # | Ticket | Blocked by |
 |---|---|---|
-| 08 | A billing owner can run billing without global settings | 05 |
-| 09 | HR custom fields move to the HR namespace | 05 |
-| 10 | Chat, Mail and Calendar get real permission vocabularies | 05 |
-| 11 | Notifications, Workflows, Blog and Directory get vocabularies | 05 |
 | 12 | Chat, Mail and Calendar become delegatable | 06, 10 |
 | 13 | The remaining five modules become delegatable | 08, 11, 12 |
-| 14 | A person with no login can be paid | ~~07~~ — **unblocked** |
 
 ## Deliberately not ticketed
 
@@ -41,6 +40,9 @@ database catalog, or a module-graph tool.
   again. A fourth, on `build.ticket_assignees`, **was** accepted in ticket 01: on an RLS table an
   index-only scan is impossible unless `org_id` is a column of the index, so a covering index that
   omits it looks like "the index didn't help" when the planner simply refused it.
+- **The red test baseline** — the backend unit suite has ~46 failing suites (197 tests) that predate
+  this work; proved pre-existing by reverting a changed file to `HEAD` and re-running. One is an ESM
+  parse failure in the `ai` package. Needs its own ticket before "the suite is green" means anything.
 
 ## Caveats carried into the tickets
 
