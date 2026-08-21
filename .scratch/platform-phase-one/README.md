@@ -1,61 +1,51 @@
 # Platform phase one — ticket set
 
-Fourteen tickets across four independent streams, numbered in dependency order (blockers first).
-Derived from four PRDs in `docs/specs/`, every claim verified against the running API, the live
-database catalog, or a module-graph tool.
+Fifteen tickets across four streams, derived from four PRDs in `docs/specs/`, every claim verified
+against the running API, the live database catalog, or a module-graph tool.
 
-**Six are done and their files deleted** — 01, 02, 03, 05, 07 and 09. What each one actually changed,
-including the two tickets whose premises turned out to be wrong, is in the `PAGES.md` changelog and
-in the commits that closed them; the ticket files were working documents, not the record.
+**Fourteen are done and their files retired** — 01, 02, 03, 05, 06, 07, 08, 09, 10, 11, 12, 13, 14
+and 15. Each was ticked criterion by criterion and committed in that state *before* deletion, so the
+finished ticket is durable in git rather than existing only between two commits. What each one
+actually changed — including the premises that turned out to be wrong — is in `PAGES.md` and in the
+commits that closed them.
 
-## Frontier — start immediately, no blockers
+## Still open
 
-| # | Ticket | Stream |
+| # | Ticket | Why it is not done |
 |---|---|---|
-| 04 | One database transaction per request | Access cost |
-| 06 | Module owner and module admin answer one question | Ladder |
-| 08 | A billing owner can run billing without global settings | Ladder |
-| 10 | Chat, Mail and Calendar get real permission vocabularies | Ladder |
-| 11 | Notifications, Workflows, Blog and Directory get vocabularies | Ladder |
-| 14 | A person with no login can be paid | Person |
-| 15 | An owner grants one person a specific set of permissions | Ladder |
+| 04 | One database transaction per request | **Cannot be accepted until the Upstash quota is restored.** The code change exists and typechecks, but with the cache down the same endpoints measure 4–9× worse, so no number is trustworthy. Measure as `streamline_app` with the tenant GUC, in buffers, not milliseconds. |
 
-## Blocked
+## Decisions taken during the work
 
-| # | Ticket | Blocked by |
-|---|---|---|
-| 12 | Chat, Mail and Calendar become delegatable | 06, 10, 15 |
-| 13 | The remaining five modules become delegatable | 08, 11, 12 |
-
-## Access model (confirmed by the user, 2026-08-21)
-
-**Exactly six standings, no custom roles:** org owner · org admin · org member, and per module
-owner · admin · member. A module owner, module admin, org admin or org owner may attach specific
-permissions to one person — member or admin — and may change their role; that person can then do
-only what they hold and sees only those screens. **Per-person grants do not exist yet** — ticket 15.
-Written into `backend/CLAUDE.md` §5. Tickets 06, 12 and 13 predate this and should be re-read
-against it before being picked up.
+- **Six standings, no custom roles.** Org owner · admin · member, and per module owner · admin ·
+  member. Per-person grants (`user_permission_grants`, ticket 15) narrow capability without
+  inventing a role, and fold into `AccessService` so every existing gate honours them unchanged.
+- **Platform billing is never delegated.** Org owner and org admins only; `assertPermissionsGrantable`
+  refuses the whole `billing:` namespace on every path including the owner's own. Billing must not
+  join `MODULE_CATALOG` or `ACCESS_MANAGED_MODULES`. The org's own customer invoicing is accounting
+  and is unaffected.
+- **Chat, mail, calendar and notifications are Home.** One ladder, one access screen. Keys keep their
+  namespaces; `namespacesForModule` maps Home to them.
+- **Universal means ungated, not defaulted.** A member default is revocable; a §8 guarantee is not.
 
 ## Deliberately not ticketed
 
-- **Payroll schema-folder convergence** — 23 tables move from the HR folder to the payroll folder.
-  A genuine wide refactor needing expand–contract across many batches, delivering no user-visible
-  behaviour. Scope separately rather than forcing it into a tracer bullet.
+- **Payroll schema-folder convergence** — 23 tables move from the HR folder to the payroll folder. A
+  genuine wide refactor needing expand–contract across many batches, delivering no user-visible
+  behaviour.
 - **Any schema deletion** — nothing proved safe. All 95 empty HR tables are referenced by live
   services, and the 11 files a module-graph tool flags as unused are a deliberate SQL-managed
   arrangement guarded by a spec.
-- **Build index changes on `tickets`** — three were created, measured and rejected. One was 7.3×
-  worse in I/O while appearing faster on a warm cache. See the Build PRD appendix before trying
-  again. A fourth, on `build.ticket_assignees`, **was** accepted in ticket 01: on an RLS table an
-  index-only scan is impossible unless `org_id` is a column of the index, so a covering index that
-  omits it looks like "the index didn't help" when the planner simply refused it.
-- **The red test baseline** — the backend unit suite has ~46 failing suites (197 tests) that predate
-  this work; proved pre-existing by reverting a changed file to `HEAD` and re-running. One is an ESM
-  parse failure in the `ai` package. Needs its own ticket before "the suite is green" means anything.
+- **Build index changes on `tickets`** — three were created, measured and rejected; one was 7.3×
+  worse in I/O while appearing faster on a warm cache.
 
-## Caveats carried into the tickets
+## Known-red, needing its own ticket
 
-- **Ticket 04 cannot be accepted** until the Upstash quota is restored; with the cache down, the
-  same endpoints measure 4–9× worse and no number is trustworthy.
-- **Measure in buffers, not milliseconds**, and as the RLS-enforced application role with the
-  tenant GUC set. The owner role bypasses row-level security and its plans hide the costs that matter.
+- The backend unit suite has ~46 failing suites that predate this work. Proven pre-existing by
+  reverting a changed file to `HEAD` and re-running. Distinct causes seen: an ESM parse failure in
+  `@openrouter/ai-sdk-provider` and `@composio/core` (which also blocks **every** `pnpm test:e2e`
+  run, so no e2e assertion in this programme is executed coverage), db mocks lacking `transaction`
+  or `tx.execute`, and value-equality specs that predate a catalog expansion.
+- `blog:ai:use` gates no route — a phantom key.
+- **Workflows has no execution engine**: triggering inserts a `pending` row nothing consumes.
+- `permissions.is_delegable` exists in the schema and is enforced nowhere.
