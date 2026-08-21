@@ -60,18 +60,18 @@ export function PermissionScopeSelector({
 
     for (const permission of data ?? []) {
       if (term && !permission.name.toLowerCase().includes(term)) continue;
-      const module = moduleOf(permission.name);
-      const bucket = byModule.get(module);
+      const moduleKey = moduleOf(permission.name);
+      const bucket = byModule.get(moduleKey);
       const entry = {
         name: permission.name,
         description: permission.description,
       };
       if (bucket) bucket.push(entry);
-      else byModule.set(module, [entry]);
+      else byModule.set(moduleKey, [entry]);
     }
 
     return [...byModule.entries()]
-      .map(([module, keys]) => ({ module, keys }))
+      .map(([moduleKey, keys]) => ({ module: moduleKey, keys }))
       .sort((a, b) => a.module.localeCompare(b.module));
   }, [data, debouncedSearch]);
 

@@ -114,7 +114,7 @@ function QuotaExceededState({
           compact ? "text-xs" : "text-sm mt-1.5",
         )}
       >
-        You've used {used} of {limit} {label.toLowerCase()}.
+        You&apos;ve used {used} of {limit} {label.toLowerCase()}.
         Upgrade your plan to add more.
       </p>
 
