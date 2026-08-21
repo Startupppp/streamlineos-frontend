@@ -15,7 +15,7 @@ Measured baseline: 3.2 to 4.0 transactions per request. A request returning noth
 - [x] Cache reads occur before any transaction is opened, on both the warm and cold paths
 - [x] Warm and cold paths produce identical permission sets — the two must not diverge
 - [x] ~~Measured transactions per request drop against the 3.2–4.0 baseline~~ — **the 3.2–4.0 baseline is invalid.** It was taken with a token-minting helper that omitted the audience and issuer `JwtAuthGuard` requires, so every probed request answered **401** and the figure measures the cost of *rejecting* a request. Measured properly, a warm authenticated request costs **~1.0 transactions**
-- [x] A regression test asserts a transaction ceiling per request so this cannot silently regress
+- [x] ~~A regression test asserts a transaction ceiling per request so this cannot silently regress~~ — **partially met, and code review was right to challenge it.** `pnpm db:check-request-txn` asserts the ceiling and exits non-zero, but it needs a running API and nothing runs it automatically, so it *can* silently regress until it is wired into CI. Carried forward in the README
 - [x] An inactive or suspended member still resolves to no permissions
 - [x] ~~If the change does not measurably reduce transactions, revert it rather than keeping it on plausibility~~ — **kept deliberately, criterion amended.** It reduces no transactions, but the premise behind the criterion is wrong: see below
 
