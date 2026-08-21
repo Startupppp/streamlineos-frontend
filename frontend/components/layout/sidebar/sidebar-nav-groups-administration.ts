@@ -145,14 +145,14 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
   },
 {
     label: "Billing",
-    requiredPermission: ["settings:manage", "billing:ai-credits:view"],
+    requiredPermission: ["billing:subscription:view", "billing:ai-credits:view"],
     routes: [
       {
         label: "Billing & Plan",
         icon: CreditCard,
         href: "/settings/billing",
         exact: true,
-        requiredPermission: "settings:manage",
+        requiredPermission: "billing:subscription:view",
       },
       {
         label: "AI Credits",

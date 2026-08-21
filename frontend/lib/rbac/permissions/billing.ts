@@ -1,6 +1,13 @@
 import type { Permission } from "./types";
 
 export const BILLING_PERMISSIONS: Permission[] = [
+  { name: "billing:subscription:view", resource: "billing:subscription", action: "view", description: "View subscription plan and payment status" },
+  { name: "billing:subscription:manage", resource: "billing:subscription", action: "manage", description: "Change subscription plan, complete checkout and verify payments" },
+  { name: "billing:profile:view", resource: "billing:profile", action: "view", description: "View billing profile and GST details" },
+  { name: "billing:seats:view", resource: "billing:seats", action: "view", description: "View seat usage and availability" },
+  { name: "billing:referrals:view", resource: "billing:referrals", action: "view", description: "View referrals sent from this organisation" },
+  { name: "billing:referrals:manage", resource: "billing:referrals", action: "manage", description: "Create and manage referrals" },
+  { name: "billing:coupons:manage", resource: "billing:coupons", action: "manage", description: "Create, update, delete and validate coupon codes" },
   { name: "billing:marketplace:view", resource: "billing:marketplace", action: "view", description: "View marketplace apps" },
   { name: "billing:marketplace:install", resource: "billing:marketplace", action: "install", description: "Install and uninstall marketplace apps" },
   { name: "billing:ai-credits:view", resource: "billing:ai-credits", action: "view", description: "View AI credits wallet and history" },

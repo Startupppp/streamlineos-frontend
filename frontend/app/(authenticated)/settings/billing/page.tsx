@@ -7,6 +7,6 @@ export const metadata: Metadata = {
 };
 
 export default async function BillingSettingsRoute() {
-  await requirePermission("settings:manage");
+  await requirePermission("billing:subscription:view");
   return <BillingSettingsPage />;
 }

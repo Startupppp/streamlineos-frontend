@@ -71,6 +71,7 @@ export type ExtendedPermissionKey =
   | "ai:executive-brief:generate"
   | "calendar:read"
   | "calendar:write"
+  | "calendar:events:export"
   | "support:reports:view"
   | "support:ai:view"
   | "support:ai:invoke"

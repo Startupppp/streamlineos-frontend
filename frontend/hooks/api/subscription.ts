@@ -73,12 +73,12 @@ interface VerifySubscriptionResponse {
 export function useSubscription() {
   const { data: session } = useSession();
   const orgId = session?.orgId;
-  const canViewBilling = useCan("settings:view");
+  const canViewSubscription = useCan("billing:subscription:view");
   return useQuery<SubscriptionResponse, Error>({
     queryKey: queryKeys.billing.subscription(),
     queryFn: () => apiClient.get<SubscriptionResponse>("/billing/razorpay"),
     staleTime: 5 * 60_000,
-    enabled: !!orgId && canViewBilling,
+    enabled: !!orgId && canViewSubscription,
   });
 }
 
@@ -171,12 +171,12 @@ export interface SeatInfo {
 }
 
 export function useBillingProfile() {
-  const canManageSettings = useCan("settings:manage");
+  const canViewProfile = useCan("billing:profile:view");
   return useQuery<BillingProfile>({
     queryKey: queryKeys.billing.profile(),
     queryFn: () => apiClient.get<BillingProfile>("/billing/profile"),
     staleTime: 5 * 60 * 1000,
-    enabled: canManageSettings,
+    enabled: canViewProfile,
   });
 }
 
@@ -193,11 +193,11 @@ export function useUpdateBillingProfile() {
 }
 
 export function useSeatInfo() {
-  const canManageSettings = useCan("settings:manage");
+  const canViewSeats = useCan("billing:seats:view");
   return useQuery<SeatInfo>({
     queryKey: queryKeys.billing.seats(),
     queryFn: () => apiClient.get<SeatInfo>("/billing/seats"),
     staleTime: 2 * 60 * 1000,
-    enabled: canManageSettings,
+    enabled: canViewSeats,
   });
 }

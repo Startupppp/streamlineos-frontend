@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
 
 const EXPECTED_NAVIGATION_INVENTORY_DIGEST =
-  "c1759e56404c4963d7d45a0ccc822856fac756b9d963a23b19f2a4f62f999746";
+  "810744611f101a95dd0460b3c47ce909d835618da07c2321c13531a6d8362e8f";
 
 function serializeNavigationRoute(route: NavRoute): unknown {
   return {
