@@ -86,4 +86,37 @@ describe("permission catalog sync", () => {
     );
     expect(missingFromUnion).toEqual([]);
   });
+
+  /**
+   * The reverse of the phantom check above, and the direction that was unguarded:
+   * a key in the union with no backing catalog entry type-checks everywhere and
+   * makes `useCan` false forever, silently hiding the control it gates.
+   * `*:access:*` keys are generated per managed module rather than declared.
+   */
+  it("has no union-only ghosts — every PermissionKey exists in the backend catalog", () => {
+    if (!backendAvailable) return;
+    const ghosts = [...readPermissionKeyValues()]
+      // The extractor matches every union literal in these files, including
+      // non-key unions such as baselineScope's "own" | "all". A permission key
+      // always contains a colon.
+      .filter((name) => name.includes(":"))
+      .filter(
+        (name) => !backendNames.has(name) && !/^[a-z0-9-]+:access:(view|manage)$/.test(name),
+      );
+    expect(ghosts).toEqual([]);
+  });
+
+  /**
+   * Arity is not fixed at three: 53 keys are two-segment (`surveys:create`) and some
+   * are four (`build:workspaces:members:manage`). What every key must have is a module
+   * segment and at least one more, because module scoping slices on the first segment.
+   */
+  it("every key parses into a module segment plus at least one more", () => {
+    if (!backendAvailable) return;
+    const unparseable = [...backendNames].filter((name) => {
+      const parts = name.split(":");
+      return parts.length < 2 || parts.some((segment) => segment.length === 0);
+    });
+    expect(unparseable).toEqual([]);
+  });
 });

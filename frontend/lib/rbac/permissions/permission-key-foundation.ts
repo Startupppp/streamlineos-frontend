@@ -71,7 +71,6 @@ export type FoundationPermissionKey =
   | "crm:clients:update"
   | "crm:incentives:read"
   | "crm:incentives:approve"
-  | "crm:incentives:config"
   | "accounting:view"
   | "accounting:manage"
   | "accounting:report"
