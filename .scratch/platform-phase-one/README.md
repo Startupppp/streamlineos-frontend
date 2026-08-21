@@ -3,17 +3,21 @@
 Fifteen tickets across four streams, derived from four PRDs in `docs/specs/`, every claim verified
 against the running API, the live database catalog, or a module-graph tool.
 
-**Fourteen are done and their files retired** — 01, 02, 03, 05, 06, 07, 08, 09, 10, 11, 12, 13, 14
-and 15. Each was ticked criterion by criterion and committed in that state *before* deletion, so the
+**All fifteen are done and their files retired.** Each was ticked criterion by criterion and committed in that state *before* deletion, so the
 finished ticket is durable in git rather than existing only between two commits. What each one
 actually changed — including the premises that turned out to be wrong — is in `PAGES.md` and in the
 commits that closed them.
 
-## Still open
+## Carried forward — real gaps, not finished work
 
-| # | Ticket | Why it is not done |
-|---|---|---|
-| 04 | One database transaction per request | **Cannot be accepted until the Upstash quota is restored.** The code change exists and typechecks, but with the cache down the same endpoints measure 4–9× worse, so no number is trustworthy. Measure as `streamline_app` with the tenant GUC, in buffers, not milliseconds. |
+- **The transaction ceiling is a manual gate, not a regression test.** `pnpm db:check-request-txn`
+  needs a running API and a seeded database, and nothing runs it automatically, so the ceiling
+  *can* silently regress. Ticket 04's criterion said it could not. Wiring it into CI is the honest
+  fix and is not done.
+- **Migration snapshots are stale repo-wide** — 27 snapshots for 202 migrations, highest `0185`.
+  The eight added here follow that existing state rather than breaking new ground, but a future
+  `db:generate` diffs against `0185` and will re-propose everything since. That predates this work
+  and needs its own ticket.
 
 ## Decisions taken during the work
 
@@ -27,6 +31,14 @@ commits that closed them.
 - **Chat, mail, calendar and notifications are Home.** One ladder, one access screen. Keys keep their
   namespaces; `namespacesForModule` maps Home to them.
 - **Universal means ungated, not defaulted.** A member default is revocable; a §8 guarantee is not.
+
+## Deliberately not ticketed
+
+- **Measuring the guard chain.** Three traps, each of which produced a confidently wrong number
+  first: measure as a **non-owner** (`authorize` short-circuits an owner before permission
+  resolution, so the path under test never runs); count **in-process borrows**, not
+  `pg_stat_database` (whose background rate is the same magnitude as the signal); and issue
+  requests **concurrently** so background work cannot dominate the window.
 
 ## Deliberately not ticketed
 
