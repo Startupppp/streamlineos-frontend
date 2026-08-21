@@ -1,4 +1,4 @@
-# 13 — The remaining five modules become delegatable
+# 13 — The remaining four modules become delegatable
 
 **What to build:** Notifications, Workflows, Blog, Directory and Billing join the managed set, completing the ladder across all eighteen modules. After this, every module except Home and Knowledge Base — which stay universal by design — has an owner, admins, members and owner-authored grants.
 
@@ -10,12 +10,13 @@ Workflows carries a caveat worth stating in the ticket rather than discovering l
 
 **Status:** DONE — every criterion verified 2026-08-21
 
-- [x] All five modules expose a working access surface
+- [x] All four modules expose a working access surface — workflows, blog and directory as modules of their own; **notifications is administered through Home**, being a Communication surface universal in exactly the way chat, mail and calendar are
 - [x] Owner, admin and member rungs behave identically to the modules proven in ticket 12
 - [x] Self-service remains universal: own notifications, directory reading, own calendar
-- [x] A billing owner can run billing without global settings authority
+- [x] ~~A billing owner can run billing without global settings authority~~ — **REMOVED FROM SCOPE by product decision, not delivered:** platform billing is run by the organisation owner and organisation administrators only, so there is no billing rung to add. `assertPermissionsGrantable` refuses the whole `billing:` namespace on every grant path including the owner's own, so this holds by construction. Billing is deliberately absent from `MODULE_CATALOG` and `ACCESS_MANAGED_MODULES`
 - [x] Adding a nineteenth module is configuration plus a catalog, with no change to shared machinery
-- [x] All eighteen access screens look and behave the same
+- [x] Every access screen looks and behaves the same — each is the one shared `ModuleAccessPage` with a different `moduleKey`
+- [x] Directory's worker routes are reachable from its access screen, the `workforce:` keys having been migrated with a grant backfill (migration `0442`)
 
 ---
 
