@@ -1,8 +1,8 @@
 "use client";
 
-import { type ChangeEvent } from "react";
-import { useForm } from "react-hook-form";
+import type { ChangeEvent } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 import {
   Form,
   FormControl,
@@ -15,29 +15,28 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   businessUnitFormSchema,
+  EMPTY_BUSINESS_UNIT_FORM_VALUES,
   type BusinessUnitFormValues,
-} from "./business-units-schema";
+} from "./business-unit-form-schema";
 
-interface BuFormProps {
+interface BusinessUnitFormProps {
   defaultValues?: BusinessUnitFormValues;
-  onSubmit: (v: BusinessUnitFormValues) => void;
-  isPending: boolean;
+  onSubmit: (values: BusinessUnitFormValues) => void;
 }
 
-export function BuForm({
+export function BusinessUnitForm({
   defaultValues,
   onSubmit,
-  isPending: _,
-}: BuFormProps) {
+}: BusinessUnitFormProps) {
   const form = useForm<BusinessUnitFormValues>({
     resolver: zodResolver(businessUnitFormSchema),
-    defaultValues: defaultValues ?? { name: "", code: "", description: "" },
+    defaultValues: defaultValues ?? EMPTY_BUSINESS_UNIT_FORM_VALUES,
   });
 
   return (
     <Form {...form}>
       <form
-        id="bu-form"
+        id="business-unit-form"
         onSubmit={form.handleSubmit(onSubmit)}
         className="space-y-4"
       >
@@ -58,9 +57,10 @@ export function BuForm({
           control={form.control}
           name="code"
           render={({ field }) => {
-            function handleCodeChange(e: ChangeEvent<HTMLInputElement>) {
-              field.onChange(e.target.value.toUpperCase());
+            function handleCodeChange(event: ChangeEvent<HTMLInputElement>) {
+              field.onChange(event.target.value.toUpperCase());
             }
+
             return (
               <FormItem>
                 <FormLabel>Code</FormLabel>

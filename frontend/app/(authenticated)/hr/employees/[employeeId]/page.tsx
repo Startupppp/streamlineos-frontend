@@ -1,5 +1,8 @@
 import { EmployeeDetailsView } from "@/features/hr/employees/detail/employee-details-view";
-import type { EmployeeData } from "@/features/hr/employees/detail/edit-employee-form";
+import {
+  employeeDataSchema,
+  type EmployeeData,
+} from "@/features/hr/employees/detail/employee-data";
 import { notFound } from "next/navigation";
 import { requirePermission } from "@/lib/rbac/require-permission";
 import { serverApiClient } from "@/lib/api/server-client";
@@ -16,7 +19,10 @@ export default async function EditEmployeePage({
 
   let employee: EmployeeData | null = null;
   try {
-    employee = await serverApiClient.get<EmployeeData>(`/hr/employees/${employeeId}`);
+    const response = await serverApiClient.get<unknown>(
+      `/hr/employees/${employeeId}`,
+    );
+    employee = employeeDataSchema.parse(response);
   } catch {
     return notFound();
   }

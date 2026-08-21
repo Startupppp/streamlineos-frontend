@@ -12,6 +12,7 @@ export interface MfaState {
 export interface AccessResponse {
   permissions: string[];
   isOrgOwner: boolean;
+  canManageOrganizationMembership: boolean;
   modules: Record<string, boolean>;
   mfa?: MfaState;
   enabledModules?: string[];

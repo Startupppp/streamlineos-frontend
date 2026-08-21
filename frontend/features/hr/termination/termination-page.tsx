@@ -5,17 +5,15 @@ import { useSearchParams } from "next/navigation";
 import { useCan } from "@/hooks/api/access";
 import { isToday, isFuture, parseISO } from "date-fns";
 import { toast } from "sonner";
-import { Plus, AlertCircle } from "lucide-react";
-
+import { Plus } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-
+import { ErrorState } from "@/components/shared/error-state";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { TerminationList } from "./termination-list";
 import { TerminationFormSheet } from "./termination-form-sheet";
 import { TerminationDetailSheet } from "./termination-detail-sheet";
-
 import {
   useTerminations,
   useCreateTermination,
@@ -28,18 +26,15 @@ import {
   type TerminationStatus,
 } from "@/hooks/api/hr";
 import type { Employee } from "@/types/hr";
-
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TERMINATION_REASON_OTHER } from "@/lib/constants/hr-separation";
 
 type StatusFilter = "ALL" | TerminationStatus;
-
 export function TerminationPage() {
   const canApproveExit = useCan("hr:exit:approve");
   const searchParams = useSearchParams();
-  const employeeIdParam = searchParams.get("employeeId");
-
-  const isHR = useCan("hr:exit:manage");
+  const employeeUserIdParam = searchParams.get("employeeId");
+  const canManageExit = useCan("hr:exit:manage");
 
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
@@ -59,10 +54,9 @@ export function TerminationPage() {
   const finalReview = useFinalReviewTermination();
   const sendEmail = useSendTerminationEmail();
   const completeTermination = useCompleteTermination();
-
-  const [createOpen, setCreateOpen] = useState(() => Boolean(employeeIdParam));
-  const [selectedUserId, setSelectedUserId] = useState(
-    () => employeeIdParam ?? "",
+  const [createOpen, setCreateOpen] = useState(() => Boolean(employeeUserIdParam));
+  const [selectedEmployeeUserId, setSelectedEmployeeUserId] = useState(
+    () => employeeUserIdParam ?? "",
   );
   const [selectedReason, setSelectedReason] = useState("");
   const [remarks, setRemarks] = useState("");
@@ -70,19 +64,15 @@ export function TerminationPage() {
   const [noticePeriodWaived, setNoticePeriodWaived] = useState(false);
   const [severanceAmount, setSeveranceAmount] = useState("");
   const [internalNotes, setInternalNotes] = useState("");
-
-  const [submitId, setSubmitId] = useState<number | null>(null);
-
+  const [submitTerminationId, setSubmitTerminationId] = useState<number | null>(null);
   const [reviewRecord, setReviewRecord] = useState<Termination | null>(null);
   const [reviewDecision, setReviewDecision] = useState<
     "approve" | "reject" | null
   >(null);
   const [finalRemarks, setFinalRemarks] = useState("");
   const [finalSheetOpen, setFinalSheetOpen] = useState(false);
-
   const [emailRecord, setEmailRecord] = useState<Termination | null>(null);
-  const [completeId, setCompleteId] = useState<number | null>(null);
-
+  const [completeTerminationId, setCompleteTerminationId] = useState<number | null>(null);
   const [viewRecord, setViewRecord] = useState<Termination | null>(null);
   const [viewSheetOpen, setViewSheetOpen] = useState(false);
 
@@ -94,7 +84,7 @@ export function TerminationPage() {
   }, [employeesData]);
 
   const resetCreateForm = useCallback(() => {
-    setSelectedUserId("");
+    setSelectedEmployeeUserId("");
     setSelectedReason("");
     setRemarks("");
     setEffectiveDate("");
@@ -115,18 +105,20 @@ export function TerminationPage() {
   const isOtherReason = selectedReason === TERMINATION_REASON_OTHER;
 
   const canSubmitCreate =
-    !!selectedUserId &&
+    !!selectedEmployeeUserId &&
     !!selectedReason &&
     !!effectiveDate &&
     (!isOtherReason || remarks.trim().length >= 10);
 
   const handleCreateSubmit = useCallback(() => {
-    if (!selectedUserId) {
+    if (!selectedEmployeeUserId) {
       toast.error("Please select an employee");
       return;
     }
 
-    const targetEmployee = employees.find((e) => e.id === selectedUserId);
+    const targetEmployee = employees.find(
+      (employee) => employee.id === selectedEmployeeUserId,
+    );
     if (targetEmployee && !targetEmployee.isActive) {
       toast.error("This employee has already been terminated or is inactive");
       return;
@@ -160,7 +152,7 @@ export function TerminationPage() {
         return;
       }
       if (numSeverance > 9999999) {
-        toast.error("Severance amount cannot exceed ₹99,99,999");
+        toast.error("Severance amount cannot exceed INR 99,99,999");
         return;
       }
     }
@@ -171,7 +163,7 @@ export function TerminationPage() {
 
     createTermination.mutate(
       {
-        userId: selectedUserId,
+        employeeUserId: selectedEmployeeUserId,
         reasons: [selectedReason],
         detailedExplanation: remarks.trim(),
         effectiveDate,
@@ -185,11 +177,11 @@ export function TerminationPage() {
           setCreateOpen(false);
           resetCreateForm();
         },
-        onError: (e) => toast.error(getErrorMessage(e)),
+        onError: (mutationError) => toast.error(getErrorMessage(mutationError)),
       },
     );
   }, [
-    selectedUserId,
+    selectedEmployeeUserId,
     employees,
     selectedReason,
     isOtherReason,
@@ -203,15 +195,15 @@ export function TerminationPage() {
   ]);
 
   const handleSubmitForApproval = useCallback(() => {
-    if (!submitId) return;
-    submitTermination.mutate(submitId, {
+    if (!submitTerminationId) return;
+    submitTermination.mutate(submitTerminationId, {
       onSuccess: () => {
         toast.success("Submitted for FINAL approval");
-        setSubmitId(null);
+        setSubmitTerminationId(null);
       },
-      onError: (e) => toast.error(getErrorMessage(e)),
+      onError: (mutationError) => toast.error(getErrorMessage(mutationError)),
     });
-  }, [submitId, submitTermination]);
+  }, [submitTerminationId, submitTermination]);
 
   const handleOpenFinalReview = useCallback(
     (record: Termination, decision: "approve" | "reject") => {
@@ -227,7 +219,7 @@ export function TerminationPage() {
     if (!reviewRecord || !reviewDecision) return;
     finalReview.mutate(
       {
-        id: reviewRecord.id,
+        terminationId: reviewRecord.id,
         decision: reviewDecision,
         remarks: finalRemarks.trim() || undefined,
       },
@@ -243,7 +235,7 @@ export function TerminationPage() {
           setReviewDecision(null);
           setFinalRemarks("");
         },
-        onError: (e) => toast.error(getErrorMessage(e)),
+        onError: (mutationError) => toast.error(getErrorMessage(mutationError)),
       },
     );
   }, [reviewRecord, reviewDecision, finalRemarks, finalReview]);
@@ -263,38 +255,42 @@ export function TerminationPage() {
         toast.success("Termination email sent successfully");
         setEmailRecord(null);
       },
-      onError: (e) => {
-        toast.error(`Failed to send email: ${getErrorMessage(e)}`);
+      onError: (mutationError) => {
+        toast.error(`Failed to send email: ${getErrorMessage(mutationError)}`);
         setEmailRecord(null);
       },
     });
   }, [emailRecord, sendEmail]);
 
   const handleCompleteConfirm = useCallback(() => {
-    if (!completeId) return;
-    completeTermination.mutate(completeId, {
+    if (!completeTerminationId) return;
+    completeTermination.mutate(completeTerminationId, {
       onSuccess: () => {
         toast.success(
           "Termination completed. Employee deactivated, FnF and asset return initiated.",
         );
-        setCompleteId(null);
+        setCompleteTerminationId(null);
       },
-      onError: (e) => toast.error(getErrorMessage(e)),
+      onError: (mutationError) => toast.error(getErrorMessage(mutationError)),
     });
-  }, [completeId, completeTermination]);
+  }, [completeTerminationId, completeTermination]);
 
   const handleApprove = useCallback(
-    (id: number) => {
-      const r = (terminations ?? []).find((t) => t.id === id);
-      if (r) handleOpenFinalReview(r, "approve");
+    (terminationId: number) => {
+      const terminationRecord = terminations.find(
+        (termination) => termination.id === terminationId,
+      );
+      if (terminationRecord) handleOpenFinalReview(terminationRecord, "approve");
     },
     [terminations, handleOpenFinalReview],
   );
 
   const handleReject = useCallback(
-    (id: number) => {
-      const r = (terminations ?? []).find((t) => t.id === id);
-      if (r) handleOpenFinalReview(r, "reject");
+    (terminationId: number) => {
+      const terminationRecord = terminations.find(
+        (termination) => termination.id === terminationId,
+      );
+      if (terminationRecord) handleOpenFinalReview(terminationRecord, "reject");
     },
     [terminations, handleOpenFinalReview],
   );
@@ -328,13 +324,17 @@ export function TerminationPage() {
     }
   }, []);
 
-  const handleSetSubmitId = useCallback((id: number) => setSubmitId(id), []);
-  const handleSetCompleteId = useCallback(
-    (id: number) => setCompleteId(id),
+  const handleSetSubmitTerminationId = useCallback(
+    (terminationId: number) => setSubmitTerminationId(terminationId),
+    [],
+  );
+  const handleSetCompleteTerminationId = useCallback(
+    (terminationId: number) => setCompleteTerminationId(terminationId),
     [],
   );
   const handleRemarksChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => setRemarks(e.target.value),
+    (inputEvent: React.ChangeEvent<HTMLTextAreaElement>) =>
+      setRemarks(inputEvent.target.value),
     [],
   );
   const handleEffectiveDateChange = useCallback(
@@ -342,65 +342,49 @@ export function TerminationPage() {
     [],
   );
   const handleSeveranceAmountChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) =>
-      setSeveranceAmount(e.target.value),
+    (inputEvent: React.ChangeEvent<HTMLInputElement>) =>
+      setSeveranceAmount(inputEvent.target.value),
     [],
   );
   const handleInternalNotesChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) =>
-      setInternalNotes(e.target.value),
+    (inputEvent: React.ChangeEvent<HTMLTextAreaElement>) =>
+      setInternalNotes(inputEvent.target.value),
     [],
   );
   const handleFinalRemarksChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) =>
-      setFinalRemarks(e.target.value),
+    (inputEvent: React.ChangeEvent<HTMLTextAreaElement>) =>
+      setFinalRemarks(inputEvent.target.value),
     [],
   );
   const handleSubmitConfirmClose = useCallback((open: boolean) => {
-    if (!open) setSubmitId(null);
+    if (!open) setSubmitTerminationId(null);
   }, []);
   const handleEmailRecordClose = useCallback((open: boolean) => {
     if (!open) setEmailRecord(null);
   }, []);
-  const handleCompleteIdClose = useCallback((open: boolean) => {
-    if (!open) setCompleteId(null);
+  const handleCompleteSheetOpenChange = useCallback((open: boolean) => {
+    if (!open) setCompleteTerminationId(null);
   }, []);
 
-  if (isLoading) {
+  if (isLoading || isError) {
     return (
       <PageWrapper
         title="Termination Management"
         subtitle="Manage employee terminations"
       >
-        <div className="flex flex-1 min-h-0 flex-col gap-3">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <Skeleton key={i} className="h-20 rounded-2xl" />
-          ))}
-        </div>
-      </PageWrapper>
-    );
-  }
-
-  if (isError) {
-    return (
-      <PageWrapper
-        title="Termination Management"
-        subtitle="Manage employee terminations"
-      >
-        <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
-          <AlertCircle className="w-8 text-destructive" />
-          <div>
-            <p className="text-sm font-medium text-foreground">
-              Failed to load terminations
-            </p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Something went wrong. Please try again.
-            </p>
+        {isLoading ? (
+          <div className="flex min-h-0 flex-1 flex-col gap-3">
+            {Array.from({ length: 10 }).map((_, skeletonIndex) => (
+              <Skeleton key={skeletonIndex} className="h-20 rounded-2xl" />
+            ))}
           </div>
-          <Button size="sm" variant="outline" onClick={handleRetry}>
-            Try again
-          </Button>
-        </div>
+        ) : (
+          <ErrorState
+            title="Failed to load terminations"
+            description="Something went wrong. Please try again."
+            onRetry={handleRetry}
+          />
+        )}
       </PageWrapper>
     );
   }
@@ -410,7 +394,7 @@ export function TerminationPage() {
       title="Termination Management"
       subtitle="Manage employee terminations"
       actions={
-        isHR || canApproveExit ? (
+        canManageExit ? (
           <Button size="sm" onClick={handleCreateOpen} className="gap-1.5">
             <Plus className="h-3.5 w-3.5" />
             New Termination
@@ -423,16 +407,16 @@ export function TerminationPage() {
         statusCounts={terminationsData?.statusCounts}
         pagination={terminationsData?.pagination}
         onPageChange={setPage}
-        isHR={isHR}
+        canManageExit={canManageExit}
         canApproveExit={canApproveExit}
         statusFilter={statusFilter}
         onStatusFilterChange={handleStatusFilterChange}
         onView={handleViewRecord}
-        onSubmit={handleSetSubmitId}
+        onSubmit={handleSetSubmitTerminationId}
         onApprove={handleApprove}
         onReject={handleReject}
         onSendEmail={handleSendEmailOpen}
-        onComplete={handleSetCompleteId}
+        onComplete={handleSetCompleteTerminationId}
         isSubmitting={submitTermination.isPending}
         isCompleting={completeTermination.isPending}
       />
@@ -445,8 +429,8 @@ export function TerminationPage() {
         submitDisabled={!canSubmitCreate}
         onSubmit={handleCreateSubmit}
         employees={employees}
-        selectedUserId={selectedUserId}
-        onSelectedUserIdChange={setSelectedUserId}
+        selectedEmployeeUserId={selectedEmployeeUserId}
+        onSelectedEmployeeUserIdChange={setSelectedEmployeeUserId}
         selectedReason={selectedReason}
         onSelectedReasonChange={setSelectedReason}
         remarks={remarks}
@@ -462,7 +446,7 @@ export function TerminationPage() {
       />
 
       <ConfirmSheet
-        open={submitId !== null}
+        open={submitTerminationId !== null}
         onOpenChange={handleSubmitConfirmClose}
         title="Submit for FINAL Approval"
         description="Are you sure you want to submit this termination record for FINAL approval? The record will move to PENDING_FINAL status."
@@ -500,8 +484,8 @@ export function TerminationPage() {
       />
 
       <ConfirmSheet
-        open={completeId !== null}
-        onOpenChange={handleCompleteIdClose}
+        open={completeTerminationId !== null}
+        onOpenChange={handleCompleteSheetOpenChange}
         title="Complete Termination"
         description="This will deactivate the employee's account, initiate Full & Final settlement, and create asset return records. This action cannot be undone."
         confirmLabel="Complete Termination"

@@ -8,13 +8,14 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { viewProtectedFile } from "@/hooks/common/use-file-url";
 
 export interface OnboardingDoc {
   id: number;
   documentTypeId: number;
   documentTypeName: string;
   isMandatory: boolean;
-  fileUrl: string;
+  hasFile: boolean;
   fileName: string;
   fileSize: number | null;
   mimeType: string | null;
@@ -78,20 +79,22 @@ export function formatBytes(bytes: number | null): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function DocFileLink({ href, fileName, ariaLabel }: { href: string; fileName: string; ariaLabel: string }) {
+function DocFileLink({ docId, fileName, ariaLabel }: { docId: number; fileName: string; ariaLabel: string }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
+  const handleClick = useCallback(() => {
+    void viewProtectedFile(`/hr/onboarding-docs/${docId}/file`);
+  }, [docId]);
   return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
+    <button
+      type="button"
+      onClick={handleClick}
       className="inline-flex items-center gap-0.5 text-primary hover:text-primary/80 hover:underline transition-colors duration-200"
       aria-label={ariaLabel}
       {...hoverHandlers}
     >
       {fileName}
       <ExternalLinkIcon ref={iconRef} size={12} className="ml-0.5" />
-    </a>
+    </button>
   );
 }
 
@@ -125,7 +128,13 @@ export function DocCard({ doc, canReview, onApprove, onRequestReupload }: DocCar
               )}
             </div>
             <div className="flex items-center gap-3 mt-1 flex-wrap text-[11px] text-muted-foreground">
-              <DocFileLink href={doc.fileUrl} fileName={doc.fileName} ariaLabel={`Download ${doc.fileName}`} />
+              {doc.hasFile ? (
+                <DocFileLink
+                  docId={doc.id}
+                  fileName={doc.fileName}
+                  ariaLabel={`View ${doc.fileName}`}
+                />
+              ) : null}
               {doc.fileSize != null && <span>{formatBytes(doc.fileSize)}</span>}
               {doc.version != null && <span>v{doc.version}</span>}
             </div>

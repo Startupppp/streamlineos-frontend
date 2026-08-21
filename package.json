@@ -1,0 +1,21 @@
+{
+  "name": "streamlineos-root",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "node scripts/run.mjs dev",
+    "build": "node scripts/run.mjs build",
+    "start": "node scripts/run.mjs start",
+    "typecheck": "node scripts/run.mjs typecheck",
+    "dev:api": "pnpm -C backend start:dev",
+    "dev:web": "pnpm -C frontend dev",
+    "build:api": "pnpm -C backend build",
+    "build:web": "pnpm -C frontend build",
+    "typecheck:api": "pnpm -C backend typecheck",
+    "typecheck:web": "pnpm -C frontend type-check",
+    "install:all": "pnpm -C backend install && pnpm -C frontend install"
+  }
+}

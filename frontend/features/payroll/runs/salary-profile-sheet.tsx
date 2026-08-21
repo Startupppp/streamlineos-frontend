@@ -115,7 +115,6 @@ export function SalaryProfileSheet({
   });
 
   const { data: payeesData } = useWorkers({
-    page: 1,
     limit: 100,
     status: "ACTIVE",
   });

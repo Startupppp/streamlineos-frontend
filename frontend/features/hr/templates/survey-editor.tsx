@@ -38,15 +38,23 @@ export function SurveyEditor({ questions, onChange }: SurveyEditorProps) {
   }, [questions, onChange]);
 
   const handleRemove = useCallback(
-    (id: string) => {
-      onChange(questions.filter((q) => q.id !== id).map((q, i) => ({ ...q, order: i })));
+    (questionId: string) => {
+      onChange(
+        questions
+          .filter((question) => question.id !== questionId)
+          .map((question, index) => ({ ...question, order: index })),
+      );
     },
     [questions, onChange],
   );
 
   const handleChange = useCallback(
-    (id: string, patch: Partial<SurveyQuestion>) => {
-      onChange(questions.map((q) => (q.id === id ? { ...q, ...patch } : q)));
+    (questionId: string, patch: Partial<SurveyQuestion>) => {
+      onChange(
+        questions.map((question) =>
+          question.id === questionId ? { ...question, ...patch } : question,
+        ),
+      );
     },
     [questions, onChange],
   );

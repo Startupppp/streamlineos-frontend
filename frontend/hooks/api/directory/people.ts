@@ -12,18 +12,18 @@ import type {
 } from "@/types/directory/people";
 
 export interface UsePeopleParams {
-  page?: number;
+  cursor?: string;
   limit?: number;
   search?: string;
 }
 
 function isPeoplePage(value: unknown): value is PeoplePage {
   if (typeof value !== "object" || value === null) return false;
-  if (!("data" in value) || !("pagination" in value)) return false;
+  if (!("data" in value) || !("pageInfo" in value)) return false;
   return (
     Array.isArray(value.data) &&
-    typeof value.pagination === "object" &&
-    value.pagination !== null
+    typeof value.pageInfo === "object" &&
+    value.pageInfo !== null
   );
 }
 
@@ -43,17 +43,17 @@ export function usePerson(
 
 export function usePeople(params: UsePeopleParams = {}) {
   const canView = useCan("directory:people:view");
-  const { page = 1, limit = 20, search } = params;
-  const queryParams: Record<string, unknown> = { page, limit };
+  const { cursor, limit = 20, search } = params;
+  const queryParams: Record<string, unknown> = { cursor, limit };
   if (search) queryParams.search = search;
 
   return useQuery({
     queryKey: queryKeys.directory.people(queryParams),
     queryFn: () => {
       const searchParams = new URLSearchParams({
-        page: String(page),
         limit: String(limit),
       });
+      if (cursor) searchParams.set("cursor", cursor);
       if (search) searchParams.set("search", search);
       return apiClient.get<PeoplePage>(`/directory/people?${searchParams.toString()}`);
     },
@@ -136,17 +136,11 @@ export function useDeletePerson() {
             )
           )
             return old;
-          const total = Math.max(0, old.pagination.total - 1);
           return {
             ...old,
             data: old.data.filter(
               (p) => p.organizationPersonId !== organizationPersonId,
             ),
-            pagination: {
-              ...old.pagination,
-              total,
-              totalPages: Math.max(1, Math.ceil(total / old.pagination.limit)),
-            },
           };
         },
       );

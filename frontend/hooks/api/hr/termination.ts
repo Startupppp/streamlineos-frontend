@@ -3,7 +3,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { invalidateHrWorkforceQueries } from "@/lib/hr-workforce-cache";
 
 interface TerminationEmployee {
   id: string;
@@ -56,7 +57,7 @@ export interface Termination {
 }
 
 interface CreateTerminationInput {
-  userId: string;
+  employeeUserId: string;
   reasons: string[];
   detailedExplanation: string;
   effectiveDate: string;
@@ -91,11 +92,13 @@ const terminationKeys = {
       status: string;
     },
   ) => [...terminationKeys.all, "list", params] as const,
-  detail: (id: number) => [...terminationKeys.all, "detail", id] as const,
+  detail: (terminationId: number) =>
+    [...terminationKeys.all, "detail", terminationId] as const,
 };
 
 export function useTerminations(params: UseTerminationsParams = {}) {
   const canView = useCan("hr:exit:manage");
+  const hrEnabled = useModuleEnabled("hr");
   const page = params.page ?? 1;
   const limit = params.limit ?? 20;
   const search = new URLSearchParams({
@@ -113,7 +116,7 @@ export function useTerminations(params: UseTerminationsParams = {}) {
       apiClient.get<TerminationListResponse>(
         `/hr/termination?${search.toString()}`,
       ),
-    enabled: canView,
+    enabled: hrEnabled && canView,
     staleTime: 2 * 60_000,
   });
 }
@@ -122,8 +125,11 @@ export function useCreateTermination() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: [...terminationKeys.all, "create"],
-    mutationFn: (data: CreateTerminationInput) =>
-      apiClient.post<Termination>("/hr/termination", data),
+    mutationFn: ({ employeeUserId, ...terminationInput }: CreateTerminationInput) =>
+      apiClient.post<Termination>("/hr/termination", {
+        ...terminationInput,
+        userId: employeeUserId,
+      }),
     onSuccess: () => qc.invalidateQueries({ queryKey: terminationKeys.all }),
   });
 }
@@ -132,11 +138,15 @@ export function useSubmitTermination() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: [...terminationKeys.all, "submit"],
-    mutationFn: (id: number) =>
-      apiClient.patch<{ success: boolean }>(`/hr/termination/${id}/submit`),
-    onSuccess: (_, id) => {
+    mutationFn: (terminationId: number) =>
+      apiClient.patch<{ success: boolean }>(
+        `/hr/termination/${terminationId}/submit`,
+      ),
+    onSuccess: (_, terminationId) => {
       void qc.invalidateQueries({ queryKey: terminationKeys.all });
-      void qc.invalidateQueries({ queryKey: terminationKeys.detail(id) });
+      void qc.invalidateQueries({
+        queryKey: terminationKeys.detail(terminationId),
+      });
     },
   });
 }
@@ -146,24 +156,27 @@ export function useFinalReviewTermination() {
   return useMutation({
     mutationKey: [...terminationKeys.all, "final-review"],
     mutationFn: ({
-      id,
+      terminationId,
       decision,
       remarks,
     }: {
-      id: number;
+      terminationId: number;
       decision: "approve" | "reject";
       remarks?: string;
     }) =>
       apiClient.patch<{ success: boolean }>(
-        `/hr/termination/${id}/final-review`,
+        `/hr/termination/${terminationId}/final-review`,
         {
           decision,
           remarks,
         },
       ),
-    onSuccess: (_, { id }) => {
+    onSuccess: (_, { terminationId }) => {
       void qc.invalidateQueries({ queryKey: terminationKeys.all });
-      void qc.invalidateQueries({ queryKey: terminationKeys.detail(id) });
+      void qc.invalidateQueries({
+        queryKey: terminationKeys.detail(terminationId),
+      });
+      void invalidateHrWorkforceQueries(qc);
     },
   });
 }
@@ -172,14 +185,16 @@ export function useSendTerminationEmail() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: [...terminationKeys.all, "send-email"],
-    mutationFn: (id: number) =>
+    mutationFn: (terminationId: number) =>
       apiClient.post<{ success: boolean }>(
-        `/hr/termination/${id}/send-email`,
+        `/hr/termination/${terminationId}/send-email`,
         {},
       ),
-    onSuccess: (_, id) => {
+    onSuccess: (_, terminationId) => {
       void qc.invalidateQueries({ queryKey: terminationKeys.all });
-      void qc.invalidateQueries({ queryKey: terminationKeys.detail(id) });
+      void qc.invalidateQueries({
+        queryKey: terminationKeys.detail(terminationId),
+      });
     },
   });
 }
@@ -188,11 +203,16 @@ export function useCompleteTermination() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: [...terminationKeys.all, "complete"],
-    mutationFn: (id: number) =>
-      apiClient.patch<{ success: boolean }>(`/hr/termination/${id}/complete`),
-    onSuccess: (_, id) => {
+    mutationFn: (terminationId: number) =>
+      apiClient.patch<{ success: boolean }>(
+        `/hr/termination/${terminationId}/complete`,
+      ),
+    onSuccess: (_, terminationId) => {
       void qc.invalidateQueries({ queryKey: terminationKeys.all });
-      void qc.invalidateQueries({ queryKey: terminationKeys.detail(id) });
+      void qc.invalidateQueries({
+        queryKey: terminationKeys.detail(terminationId),
+      });
+      void invalidateHrWorkforceQueries(qc);
     },
   });
 }

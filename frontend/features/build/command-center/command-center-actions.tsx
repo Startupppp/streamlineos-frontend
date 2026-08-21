@@ -94,7 +94,6 @@ function isOrgModuleEnabled(
   moduleKey: string | undefined,
 ): boolean {
   if (!moduleKey) return true;
-  if (enabledModules.length === 0) return true;
   return matchesOrgModule(enabledModules, moduleKey);
 }
 

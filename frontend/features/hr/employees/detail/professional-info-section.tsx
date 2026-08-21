@@ -39,7 +39,7 @@ export function ProfessionalInfoSection({
           Professional Information
         </h3>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <FormField
           control={control}
           name="designation"
@@ -104,7 +104,7 @@ export function ProfessionalInfoSection({
               <FormControl>
                 <DepartmentCombobox
                   value={field.value ?? null}
-                  onValueChange={(val) => field.onChange(val ?? undefined)}
+                  onValueChange={(value) => field.onChange(value ?? undefined)}
                   placeholder="Select Department"
                 />
               </FormControl>
@@ -128,28 +128,8 @@ export function ProfessionalInfoSection({
                       ? new Date(field.value).toISOString().split("T")[0]
                       : ""
                   }
-                  onChange={(v) => field.onChange(v ? new Date(v) : undefined)}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={control}
-          name="monthlySalary"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Monthly Salary (₹)</FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  placeholder="0"
-                  value={field.value ?? ""}
-                  onChange={(e) =>
-                    field.onChange(
-                      e.target.value ? parseFloat(e.target.value) : undefined,
-                    )
+                  onChange={(value) =>
+                    field.onChange(value ? new Date(value) : undefined)
                   }
                 />
               </FormControl>

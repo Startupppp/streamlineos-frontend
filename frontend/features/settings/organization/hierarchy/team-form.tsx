@@ -1,8 +1,9 @@
 "use client";
 
-import { type ChangeEvent } from "react";
-import { useForm } from "react-hook-form";
+import type { ChangeEvent } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { HierarchyParentSelector } from "@/components/organization/hierarchy-parent-selector";
 import {
   Form,
   FormControl,
@@ -11,41 +12,31 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { UserCombobox } from "@/components/ui/user-combobox";
-import { teamFormSchema, type TeamFormValues } from "./teams-schema";
+import {
+  EMPTY_TEAM_FORM_VALUES,
+  teamFormSchema,
+  type TeamFormValues,
+} from "./team-form-schema";
 
 interface TeamFormProps {
   defaultValues?: Partial<TeamFormValues>;
-  departments: { id: string; name: string }[];
-  onSubmit: (v: TeamFormValues) => void;
-  isPending: boolean;
+  selectedDepartmentName?: string | null;
+  onSubmit: (values: TeamFormValues) => void;
 }
 
 export function TeamForm({
   defaultValues,
-  departments,
+  selectedDepartmentName,
   onSubmit,
-  isPending: _,
 }: TeamFormProps) {
   const form = useForm<TeamFormValues>({
     resolver: zodResolver(teamFormSchema),
     reValidateMode: "onChange",
     defaultValues: {
-      name: "",
-      code: "",
-      departmentId: "",
-      leadUserId: "",
-      description: "",
-      capacity: "",
+      ...EMPTY_TEAM_FORM_VALUES,
       ...defaultValues,
     },
   });
@@ -75,9 +66,10 @@ export function TeamForm({
             control={form.control}
             name="code"
             render={({ field }) => {
-              function handleCodeChange(e: ChangeEvent<HTMLInputElement>) {
-                field.onChange(e.target.value.toUpperCase());
+              function handleCodeChange(event: ChangeEvent<HTMLInputElement>) {
+                field.onChange(event.target.value.toUpperCase());
               }
+
               return (
                 <FormItem className="min-w-0">
                   <FormLabel>Code</FormLabel>
@@ -118,20 +110,18 @@ export function TeamForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Department</FormLabel>
-              <Select value={field.value} onValueChange={field.onChange}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a department" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {departments.map((d) => (
-                    <SelectItem key={d.id} value={d.id}>
-                      {d.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FormControl>
+                <HierarchyParentSelector
+                  parentKind="DEPARTMENT"
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  label="Department"
+                  placeholder="Select a department"
+                  searchPlaceholder="Search departmentsâ€¦"
+                  emptyText="No active departments found."
+                  selectedLabel={selectedDepartmentName}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -146,7 +136,7 @@ export function TeamForm({
                 <UserCombobox
                   value={field.value ?? ""}
                   onChange={field.onChange}
-                  placeholder="Select team lead…"
+                  placeholder="Select team leadâ€¦"
                 />
               </FormControl>
               <FormMessage />
@@ -162,7 +152,7 @@ export function TeamForm({
               <FormControl>
                 <Textarea
                   rows={3}
-                  placeholder="Optional description…"
+                  placeholder="Optional descriptionâ€¦"
                   {...field}
                 />
               </FormControl>

@@ -42,7 +42,6 @@ const HOVER_CLOSE_DELAY_MS = 200
 
 function isModuleEnabled(enabledModules: string[], moduleKey?: string): boolean {
   if (!moduleKey) return true
-  if (enabledModules.length === 0) return true
   return matchesOrgModule(enabledModules, moduleKey)
 }
 

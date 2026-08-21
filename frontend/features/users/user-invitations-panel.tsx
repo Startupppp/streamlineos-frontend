@@ -1,19 +1,16 @@
 "use client";
 
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useState, useCallback, useTransition, useEffect } from "react";
+import { useState, useCallback, useTransition, useEffect, useMemo } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { format, isPast } from "date-fns";
-import { RefreshCw } from "lucide-react";
-import { MailIcon, XIcon } from "@animateicons/react/lucide";
+import { MailIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { useCan } from "@/hooks/api/access";
+import { useCanManageOrganizationMembership } from "@/hooks/api/access";
 import { SearchInput } from "@/components/ui/search-input";
-import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -25,18 +22,15 @@ import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { DataTable } from "@/components/ui/data-table";
 import { UserInviteDialog } from "@/features/users/user-invite-dialog";
-import { USER_INVITE_ROLES, formatRoleLabel } from "@/features/users/user-invite-roles";
 import {
   useInvitations,
   useResendInvite,
   useCancelInvitation,
   useChangeInvitationRole,
 } from "@/hooks/api/users";
-import type { Invitation } from "@/hooks/api/users";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { LoadingButton } from "@/components/ui/loading-button";
 import { PeopleSectionTabs } from "./people-section-tabs";
 import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 import {
@@ -46,75 +40,15 @@ import {
   parsePageSize,
   STANDARD_PAGE_SIZE_OPTIONS,
 } from "@/lib/list-pagination";
+import {
+  getInvitationColumns,
+  type InvitationStatusFilter,
+} from "./user-invitation-columns";
 
-type InvStatus = "pending" | "accepted" | "expired" | "revoked";
-type StatusFilter = "all" | InvStatus;
-
-const STATUS_CLASSES: Record<InvStatus, string> = {
-  pending:
-    "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  accepted:
-    "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  expired:
-    "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
-  revoked:
-    "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-500/30",
-};
-
-function getStatus(inv: Invitation): InvStatus {
-  if (inv.status === "REVOKED") return "revoked";
-  if (inv.acceptedAt || inv.status === "ACCEPTED") return "accepted";
-  if (isPast(new Date(inv.expiresAt))) return "expired";
-  return "pending";
-}
-
-export function isInvitationResendPending(
-  isPending: boolean,
-  pendingInvitationId: string | undefined,
-  invitationId: string,
-): boolean {
-  return isPending && pendingInvitationId === invitationId;
-}
-
-export function isInvitationRoleChangePending(
-  isPending: boolean,
-  pendingInvitationId: string | undefined,
-  invitationId: string,
-): boolean {
-  return isPending && pendingInvitationId === invitationId;
-}
-
-function InvitationRoleSelect({
-  invitationId,
-  role,
-  disabled,
-  onChange,
-}: {
-  invitationId: string;
-  role: string;
-  disabled: boolean;
-  onChange: (invitationId: string, role: string) => void;
-}) {
-  const handleValueChange = useCallback(
-    (value: string) => onChange(invitationId, value),
-    [invitationId, onChange],
-  );
-
-  return (
-    <Select value={role} onValueChange={handleValueChange} disabled={disabled}>
-      <SelectTrigger className="h-6 w-fit min-w-[7rem] border-input bg-card text-[11px]">
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-        {USER_INVITE_ROLES.map((r) => (
-          <SelectItem key={r.value} value={r.value}>
-            {r.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  );
-}
+export {
+  isInvitationResendPending,
+  isInvitationRoleChangePending,
+} from "./user-invitation-columns";
 
 export function UserInvitationsPanel() {
   const searchParams = useSearchParams();
@@ -126,24 +60,25 @@ export function UserInvitationsPanel() {
     onOpenChange: setInviteOpen,
     setOpen: openInvite,
   } = useQueryParamOpen("create");
-  const [cancelId, setCancelId] = useState<string | null>(null);
-  const canViewInvitations = useCan("settings:organization:manage");
-  const canInvite = useCan("settings:organization:manage");
-  const canCancelInvitation = useCan("settings:organization:manage");
+  const [cancellationInvitationId, setCancellationInvitationId] = useState<string | null>(null);
+  const canManageMembership = useCanManageOrganizationMembership();
+  const canViewInvitations = canManageMembership;
+  const canInvite = canManageMembership;
+  const canCancelInvitation = canManageMembership;
 
-  const q = searchParams.get("q") ?? "";
-  const status = (searchParams.get("status") ?? "all") as StatusFilter;
+  const searchQuery = searchParams.get("q") ?? "";
+  const status = (searchParams.get("status") ?? "all") as InvitationStatusFilter;
   const page = parsePage(searchParams.get("page"));
   const pageSize = parsePageSize(searchParams.get("size"));
 
-  const [localSearch, setLocalSearch] = useState(q);
+  const [localSearch, setLocalSearch] = useState(searchQuery);
   const debouncedLocalSearch = useDebouncedValue(localSearch, 300);
 
   const { data, isLoading, isError, error, refetch } = useInvitations(
     {
       page,
       limit: pageSize,
-      q: q || undefined,
+      q: searchQuery || undefined,
       status: status === "all" ? undefined : status,
       includeAccepted: status === "all" ? true : undefined,
     },
@@ -182,9 +117,9 @@ export function UserInvitationsPanel() {
   );
 
   useEffect(() => {
-    if (debouncedLocalSearch === q) return;
+    if (debouncedLocalSearch === searchQuery) return;
     updateParams({ q: debouncedLocalSearch || null, page: null });
-  }, [debouncedLocalSearch, q, updateParams]);
+  }, [debouncedLocalSearch, searchQuery, updateParams]);
 
   const handleSearchChange = useCallback(
     (value: string) => setLocalSearch(value),
@@ -198,8 +133,8 @@ export function UserInvitationsPanel() {
   );
 
   const handleResend = useCallback(
-    (id: string, kind: "resend" | "reinvite" = "resend") =>
-      resend(id, {
+    (invitationId: string, kind: "resend" | "reinvite" = "resend") =>
+      resend(invitationId, {
         onSuccess: () =>
           toast.success(kind === "reinvite" ? "Invitation re-sent" : "Invitation resent"),
         onError: (e) => {
@@ -214,7 +149,10 @@ export function UserInvitationsPanel() {
     [resend],
   );
 
-  const handleCancelRequest = useCallback((id: string) => setCancelId(id), []);
+  const handleCancelRequest = useCallback(
+    (invitationId: string) => setCancellationInvitationId(invitationId),
+    [],
+  );
 
   const handleRoleChange = useCallback(
     (invitationId: string, role: string) => {
@@ -230,11 +168,11 @@ export function UserInvitationsPanel() {
   );
 
   const handleCancelConfirm = useCallback(() => {
-    if (!cancelId) return;
-    cancel(cancelId, {
+    if (!cancellationInvitationId) return;
+    cancel(cancellationInvitationId, {
       onSuccess: () => {
         toast.success("Invitation cancelled");
-        setCancelId(null);
+        setCancellationInvitationId(null);
       },
       onError: (e) => {
         const message = getErrorMessage(e);
@@ -243,13 +181,13 @@ export function UserInvitationsPanel() {
             ? "This invitation can no longer be cancelled."
             : message,
         );
-        setCancelId(null);
+        setCancellationInvitationId(null);
       },
     });
-  }, [cancel, cancelId]);
+  }, [cancel, cancellationInvitationId]);
 
   const handleCancelDialogChange = useCallback((open: boolean) => {
-    if (!open) setCancelId(null);
+    if (!open) setCancellationInvitationId(null);
   }, []);
   const handleOpenInvite = useCallback(() => openInvite(), [openInvite]);
   const handleInviteChange = useCallback(
@@ -264,7 +202,8 @@ export function UserInvitationsPanel() {
     updateParams({ q: null, status: null, page: null });
   }, [updateParams]);
   const handlePageChange = useCallback(
-    (p: number) => updateParams({ page: p <= 1 ? null : String(p) }),
+    (nextPage: number) =>
+      updateParams({ page: nextPage <= 1 ? null : String(nextPage) }),
     [updateParams],
   );
   const handlePageSizeChange = useCallback(
@@ -285,143 +224,35 @@ export function UserInvitationsPanel() {
     if (page > lastPage) handlePageChange(lastPage);
   }, [handlePageChange, page, pageSize, pagination]);
 
-  const hasFilters = !!q || status !== "all";
+  const hasFilters = !!searchQuery || status !== "all";
 
-  const columns: DataTableColumn<Invitation>[] = [
-    {
-      key: "email",
-      header: "Email",
-      cell: (inv) => inv.email,
-    },
-    {
-      key: "role",
-      header: "Role",
-      cell: (inv) => {
-        const status = getStatus(inv);
-        const editable = (status === "pending" || status === "expired") && canInvite;
-        if (!editable) {
-          return (
-            <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0">
-              {formatRoleLabel(inv.role)}
-            </Badge>
-          );
-        }
-        return (
-          <InvitationRoleSelect
-            invitationId={inv.id}
-            role={inv.role}
-            disabled={isInvitationRoleChangePending(
-              isChangingRole,
-              changingRoleVariables?.invitationId,
-              inv.id,
-            )}
-            onChange={handleRoleChange}
-          />
-        );
-      },
-    },
-    {
-      key: "invited",
-      header: "Invited",
-      className: "font-mono tabular-nums text-muted-foreground",
-      cell: (inv) => format(new Date(inv.createdAt), "MMM d, yyyy"),
-    },
-    {
-      key: "expires",
-      header: "Expires",
-      className: "font-mono tabular-nums text-muted-foreground",
-      cell: (inv) => format(new Date(inv.expiresAt), "MMM d, yyyy"),
-    },
-    {
-      key: "status",
-      header: "Status",
-      cell: (inv) => {
-        const s = getStatus(inv);
-        const showDeliveryFailed = inv.deliveryFailed && (s === "pending" || s === "expired");
-        return (
-          <div className="flex items-center gap-1">
-            <Badge
-              variant="outline"
-              className={`h-4 text-[9px] px-1.5 py-0 capitalize ${STATUS_CLASSES[s]}`}
-            >
-              {s}
-            </Badge>
-            {showDeliveryFailed ? (
-              <Badge
-                variant="outline"
-                className="h-4 text-[9px] px-1.5 py-0 bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30"
-                title="The invitation email could not be delivered. Resend to try again."
-              >
-                Email failed
-              </Badge>
-            ) : null}
-          </div>
-        );
-      },
-    },
-    {
-      key: "actions",
-      header: "",
-      headerClassName: "w-[110px]",
-      className: "w-[110px]",
-      cell: (inv) => {
-        const s = getStatus(inv);
-        const isResendingRow = isInvitationResendPending(
-          isResending,
-          resendingInvitationId,
-          inv.id,
-        );
-        const isActionable = s === "pending" || s === "expired";
-        const canResend = isActionable && canInvite;
-        const canReinvite = s === "revoked" && canInvite;
-        const canCancel = isActionable && canCancelInvitation;
-        if (!canResend && !canReinvite && !canCancel) return null;
-        return (
-          <div className="flex items-center gap-0.5">
-            {canResend && (
-              <LoadingButton
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7"
-                onClick={() => handleResend(inv.id, "resend")}
-                isPending={isResendingRow}
-                disabled={isCancelling}
-                aria-label="Resend invitation"
-              >
-                <RefreshCw className="h-4 w-4" />
-              </LoadingButton>
-            )}
-            {canReinvite && (
-              <LoadingButton
-                variant="ghost"
-                size="sm"
-                className="h-7 px-2 text-xs"
-                onClick={() => handleResend(inv.id, "reinvite")}
-                isPending={isResendingRow}
-                disabled={isCancelling}
-                aria-label="Re-invite"
-              >
-                <RefreshCw className="h-3.5 w-3.5 mr-1" />
-                Re-invite
-              </LoadingButton>
-            )}
-            {canCancel && (
-              <AnimatedIconButton
-                icon={XIcon}
-                iconSize={16}
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 text-destructive hover:text-destructive"
-                onClick={() => handleCancelRequest(inv.id)}
-                disabled={isResendingRow || isCancelling}
-                aria-label="Cancel invitation"
-              />
-            )}
-          </div>
-        );
-      },
-    },
-  ];
+  const columns = useMemo(
+    () =>
+      getInvitationColumns({
+        canInvite,
+        canCancelInvitation,
+        isChangingRole,
+        changingInvitationId: changingRoleVariables?.invitationId,
+        isResending,
+        resendingInvitationId,
+        isCancelling,
+        onRoleChange: handleRoleChange,
+        onResend: handleResend,
+        onCancelRequest: handleCancelRequest,
+      }),
+    [
+      canCancelInvitation,
+      canInvite,
+      changingRoleVariables?.invitationId,
+      handleCancelRequest,
+      handleResend,
+      handleRoleChange,
+      isCancelling,
+      isChangingRole,
+      isResending,
+      resendingInvitationId,
+    ],
+  );
 
   const emptyState = (
     <EmptyState
@@ -504,7 +335,7 @@ export function UserInvitationsPanel() {
               className="flex-1 min-h-0"
               data={rows}
               columns={columns}
-              getRowKey={(inv) => inv.id}
+              getRowKey={(invitation) => invitation.id}
               isLoading={isLoading || isPageOutOfRange}
               emptyState={emptyState}
               pagination={{
@@ -521,9 +352,11 @@ export function UserInvitationsPanel() {
         </div>
       </PageWrapper>
 
-      <UserInviteDialog open={inviteOpen} onOpenChange={handleInviteChange} />
+      {canManageMembership ? (
+        <UserInviteDialog open={inviteOpen} onOpenChange={handleInviteChange} />
+      ) : null}
       <ConfirmDialog
-        open={cancelId !== null}
+        open={cancellationInvitationId !== null}
         onOpenChange={handleCancelDialogChange}
         title="Cancel invitation"
         description="This will revoke the invitation. The recipient will no longer be able to join using this link."

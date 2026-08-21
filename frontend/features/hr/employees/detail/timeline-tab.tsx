@@ -3,7 +3,10 @@
 import { useEmployeeEmployment, useEmployeeTimeline } from "@/hooks/api/hr/employees";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/shared/error-state";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
@@ -27,10 +30,11 @@ interface Props {
 }
 
 export function EmployeeTimelineTab({ userId }: Props) {
-  const { data: employment, isLoading: empLoading } = useEmployeeEmployment(userId);
-  const { data: timeline, isLoading: timelineLoading } = useEmployeeTimeline(employment?.id);
+  const employmentQuery = useEmployeeEmployment(userId);
+  const timelineQuery = useEmployeeTimeline(employmentQuery.data?.id);
+  const employment = employmentQuery.data;
 
-  const isLoading = empLoading || timelineLoading;
+  const isLoading = employmentQuery.isLoading || timelineQuery.isLoading;
 
   if (isLoading) {
     return (
@@ -39,6 +43,21 @@ export function EmployeeTimelineTab({ userId }: Props) {
           <Skeleton key={i} className="h-16 w-full rounded-xl" />
         ))}
       </div>
+    );
+  }
+
+  if (employmentQuery.isError || timelineQuery.isError) {
+    const error = employmentQuery.error ?? timelineQuery.error;
+    return (
+      <ErrorState
+        title="Failed to load employee timeline"
+        description={getErrorMessage(error)}
+        onRetry={() => {
+          void employmentQuery.refetch();
+          if (employment) void timelineQuery.refetch();
+        }}
+        compact
+      />
     );
   }
 
@@ -51,7 +70,7 @@ export function EmployeeTimelineTab({ userId }: Props) {
     );
   }
 
-  const entries = timeline?.data ?? [];
+  const entries = timelineQuery.data?.pages.flatMap((page) => page.data) ?? [];
 
   if (entries.length === 0) {
     return (
@@ -106,6 +125,18 @@ export function EmployeeTimelineTab({ userId }: Props) {
           </motion.div>
         );
       })}
+      {timelineQuery.hasNextPage && (
+        <div className="flex justify-center pt-2">
+          <LoadingButton
+            variant="outline"
+            size="sm"
+            isPending={timelineQuery.isFetchingNextPage}
+            onClick={() => void timelineQuery.fetchNextPage()}
+          >
+            Load older events
+          </LoadingButton>
+        </div>
+      )}
     </div>
   );
 }

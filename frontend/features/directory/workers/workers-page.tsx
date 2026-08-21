@@ -11,7 +11,7 @@ import type { DataTableColumn } from "@/components/ui/data-table";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { TablePagination } from "@/components/ui/table-pagination";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
 import {
@@ -118,7 +118,9 @@ function WorkerRowActions({
 export function WorkersPage() {
   const canManage = useCan("workforce:workers:manage");
 
-  const [page, setPage] = useState(1);
+  const [cursorHistory, setCursorHistory] = useState<(string | undefined)[]>([
+    undefined,
+  ]);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<WorkerStatus | "ALL">("ALL");
@@ -126,7 +128,7 @@ export function WorkersPage() {
   const [engagementsTarget, setEngagementsTarget] = useState<Worker | null>(null);
 
   const { data, isLoading, isError, refetch } = useWorkers({
-    page,
+    cursor: cursorHistory.at(-1),
     limit: PAGE_SIZE,
     search: debouncedSearch || undefined,
     status: statusFilter === "ALL" ? undefined : statusFilter,
@@ -134,13 +136,13 @@ export function WorkersPage() {
 
   function handleSearchChange(value: string) {
     setSearch(value);
-    setPage(1);
+    setCursorHistory([undefined]);
     setDebouncedSearch(value);
   }
 
   function handleStatusChange(value: string) {
     setStatusFilter(value as WorkerStatus | "ALL");
-    setPage(1);
+    setCursorHistory([undefined]);
   }
 
   function handleOpenCreate() {
@@ -244,7 +246,7 @@ export function WorkersPage() {
   ];
 
   const rows = data?.data ?? [];
-  const pagination = data?.pagination;
+  const pageInfo = data?.pageInfo;
   const isFiltered = !!debouncedSearch.trim() || statusFilter !== "ALL";
 
   const filtersBar = (
@@ -313,13 +315,22 @@ export function WorkersPage() {
                 minWidth="640px"
                 className={CONTENT_FILL_PANEL}
               />
-              {pagination && pagination.totalPages > 1 ? (
-                <TablePagination
-                  page={pagination.page}
-                  pageSize={pagination.limit}
-                  total={pagination.total}
-                  onPageChange={setPage}
-                  className="mt-2 px-1"
+              {cursorHistory.length > 1 || pageInfo?.hasMore ? (
+                <CursorPageControls
+                  page={cursorHistory.length}
+                  hasNext={pageInfo?.hasMore ?? false}
+                  onPrevious={() =>
+                    setCursorHistory((current) => current.slice(0, -1))
+                  }
+                  onNext={() => {
+                    if (pageInfo?.nextCursor) {
+                      setCursorHistory((current) => [
+                        ...current,
+                        pageInfo.nextCursor ?? undefined,
+                      ]);
+                    }
+                  }}
+                  className="mt-2"
                 />
               ) : null}
             </>

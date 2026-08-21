@@ -8,12 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useCan } from "@/hooks/api/access";
 import { OrgCatalogTable } from "./org-catalog-table";
 import { HeadcountStats } from "./headcount-stats";
-import { DepartmentsTab } from "./departments-tab";
 import {
-  useOrgLocations,
-  useCreateLocation,
-  useUpdateLocation,
-  useDeleteLocation,
   useOrgJobRoles,
   useCreateJobRole,
   useUpdateJobRole,
@@ -22,20 +17,11 @@ import {
   useCreateJobLevel,
   useUpdateJobLevel,
   useDeleteJobLevel,
-  useOrgTeams,
-  useCreateTeam,
-  useUpdateTeam,
-  useDeleteTeam,
 } from "@/hooks/api/hr/hr-org";
-import { Building2, MapPin, Briefcase, Layers, Users } from "lucide-react";
-import type { HrLocation, HrJobRole, HrJobLevel, HrTeam, OrgCatalogInput } from "@/types/hr/core";
-import type { UseMutationResult } from "@tanstack/react-query";
+import { Briefcase, Layers } from "lucide-react";
+import type { HrJobRole, HrJobLevel, OrgCatalogInput } from "@/types/hr/core";
 
-type CatalogMutation<T> = UseMutationResult<T, Error, OrgCatalogInput>;
-type CatalogUpdateMutation<T> = UseMutationResult<T, Error, OrgCatalogInput & { id: number }>;
-type DeleteMutation<T> = UseMutationResult<T, Error, number>;
-
-const VALID_TABS = ["departments", "teams", "locations", "roles", "levels"] as const;
+const VALID_TABS = ["roles", "levels"] as const;
 
 export function OrgHubClient() {
   const canManage = useCan("hr:employees:manage");
@@ -43,13 +29,8 @@ export function OrgHubClient() {
   const requestedTab = searchParams.get("tab");
   const initialTab = (VALID_TABS as readonly string[]).includes(requestedTab ?? "")
     ? (requestedTab as (typeof VALID_TABS)[number])
-    : "departments";
+    : "roles";
   const [activeTab, setActiveTab] = useState<string>(initialTab);
-
-  const locations = useOrgLocations({ enabled: activeTab === "locations" });
-  const createLocation = useCreateLocation();
-  const updateLocation = useUpdateLocation();
-  const deleteLocation = useDeleteLocation();
 
   const roles = useOrgJobRoles({ enabled: activeTab === "roles" });
   const createRole = useCreateJobRole();
@@ -61,104 +42,49 @@ export function OrgHubClient() {
   const updateLevel = useUpdateJobLevel();
   const deleteLevel = useDeleteJobLevel();
 
-  const teams = useOrgTeams({ enabled: activeTab === "teams" });
-  const createTeam = useCreateTeam();
-  const updateTeam = useUpdateTeam();
-  const deleteTeam = useDeleteTeam();
+  function handleCreateJobRole(jobRole: OrgCatalogInput) {
+    return createRole.mutateAsync(jobRole);
+  }
+
+  function handleUpdateJobRole(jobRoleId: number, jobRole: OrgCatalogInput) {
+    return updateRole.mutateAsync({ jobRoleId, ...jobRole });
+  }
+
+  function handleDeleteJobRole(jobRoleId: number) {
+    return deleteRole.mutateAsync(jobRoleId);
+  }
+
+  function handleCreateJobLevel(jobLevel: OrgCatalogInput) {
+    return createLevel.mutateAsync(jobLevel);
+  }
+
+  function handleUpdateJobLevel(jobLevelId: number, jobLevel: OrgCatalogInput) {
+    return updateLevel.mutateAsync({ jobLevelId, ...jobLevel });
+  }
+
+  function handleDeleteJobLevel(jobLevelId: number) {
+    return deleteLevel.mutateAsync(jobLevelId);
+  }
 
   return (
     <PageWrapper
-      title="Organisation Structure"
-      subtitle="Manage departments, teams, locations, and job catalog"
+      title="Job Architecture"
+      subtitle="Manage the job roles and levels used by HR records"
       noInternalScroll
       contentClassName="flex flex-col gap-4 sm:gap-5"
     >
       <HeadcountStats groupBy="department" />
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
-        <TabsList>
-          <TabsTrigger value="departments" className="gap-1.5">
-            <Building2 className="h-3 w-3" />
-            Departments
-          </TabsTrigger>
-          <TabsTrigger value="teams" className="gap-1.5">
-            <Users className="h-3 w-3" />
-            Teams
-          </TabsTrigger>
-          <TabsTrigger value="locations" className="gap-1.5">
-            <MapPin className="h-3 w-3" />
-            Locations
-          </TabsTrigger>
-          <TabsTrigger value="roles" className="gap-1.5">
+        <TabsList className="w-full sm:w-auto">
+          <TabsTrigger value="roles" className="flex-1 gap-1.5 sm:flex-none">
             <Briefcase className="h-3 w-3" />
             Job Roles
           </TabsTrigger>
-          <TabsTrigger value="levels" className="gap-1.5">
+          <TabsTrigger value="levels" className="flex-1 gap-1.5 sm:flex-none">
             <Layers className="h-3 w-3" />
             Job Levels
           </TabsTrigger>
         </TabsList>
-
-        <TabsContent
-          value="departments"
-          className="flex-1 min-h-0 mt-3 flex flex-col overflow-hidden"
-        >
-          <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
-            <div className="flex min-h-full flex-1 flex-col overscroll-contain">
-              <DepartmentsTab canManage={canManage} />
-            </div>
-          </ScrollArea>
-        </TabsContent>
-
-        <TabsContent
-          value="teams"
-          className="flex-1 min-h-0 mt-3 flex flex-col overflow-hidden"
-        >
-          <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
-            <div className="flex min-h-full flex-1 flex-col overscroll-contain">
-              <OrgCatalogTable<HrTeam>
-                title="Team"
-                items={teams.data}
-                isLoading={teams.isLoading}
-                canManage={canManage}
-                onCreate={createTeam as CatalogMutation<HrTeam>}
-                onUpdate={updateTeam as CatalogUpdateMutation<HrTeam>}
-                onDelete={deleteTeam as DeleteMutation<{ success: boolean }>}
-                illustrationPreset="team"
-              />
-            </div>
-          </ScrollArea>
-        </TabsContent>
-
-        <TabsContent
-          value="locations"
-          className="flex-1 min-h-0 mt-3 flex flex-col overflow-hidden"
-        >
-          <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
-            <div className="flex min-h-full flex-1 flex-col overscroll-contain">
-              <OrgCatalogTable<HrLocation>
-                title="Location"
-                items={locations.data}
-                isLoading={locations.isLoading}
-                canManage={canManage}
-                onCreate={createLocation as CatalogMutation<HrLocation>}
-                onUpdate={updateLocation as CatalogUpdateMutation<HrLocation>}
-                onDelete={deleteLocation as DeleteMutation<{ success: boolean }>}
-                illustrationPreset="travel"
-                extraColumns={[
-                  {
-                    label: "Type",
-                    render: (item) =>
-                      item.type ? (
-                        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-muted border border-border">
-                          {item.type}
-                        </span>
-                      ) : null,
-                  },
-                ]}
-              />
-            </div>
-          </ScrollArea>
-        </TabsContent>
 
         <TabsContent
           value="roles"
@@ -170,10 +96,14 @@ export function OrgHubClient() {
                 title="Job Role"
                 items={roles.data}
                 isLoading={roles.isLoading}
+                isError={roles.isError}
+                onRetry={() => void roles.refetch()}
                 canManage={canManage}
-                onCreate={createRole as CatalogMutation<HrJobRole>}
-                onUpdate={updateRole as CatalogUpdateMutation<HrJobRole>}
-                onDelete={deleteRole as DeleteMutation<{ success: boolean }>}
+                onCreate={handleCreateJobRole}
+                onUpdate={handleUpdateJobRole}
+                onDelete={handleDeleteJobRole}
+                isCreating={createRole.isPending}
+                isUpdating={updateRole.isPending}
                 illustrationPreset="person"
               />
             </div>
@@ -190,10 +120,14 @@ export function OrgHubClient() {
                 title="Job Level"
                 items={levels.data}
                 isLoading={levels.isLoading}
+                isError={levels.isError}
+                onRetry={() => void levels.refetch()}
                 canManage={canManage}
-                onCreate={createLevel as CatalogMutation<HrJobLevel>}
-                onUpdate={updateLevel as CatalogUpdateMutation<HrJobLevel>}
-                onDelete={deleteLevel as DeleteMutation<{ success: boolean }>}
+                onCreate={handleCreateJobLevel}
+                onUpdate={handleUpdateJobLevel}
+                onDelete={handleDeleteJobLevel}
+                isCreating={createLevel.isPending}
+                isUpdating={updateLevel.isPending}
                 illustrationPreset="chart"
               />
             </div>

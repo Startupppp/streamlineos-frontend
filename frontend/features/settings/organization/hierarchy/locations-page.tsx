@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Pencil, Archive, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -16,40 +19,139 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared/error-state";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetClose,
+  SheetBody,
+} from "@/components/ui/sheet";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PlusIcon } from "@animateicons/react/lucide";
 import type { OrgLocation, LocationType } from "@/types/org-hierarchy";
 import { HierarchyArchiveDialog } from "./hierarchy-archive-dialog";
 import { useHierarchyArchive } from "./use-hierarchy-archive";
-import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
-import {
-  useHierarchyListState,
-  useHierarchyPageBounds,
-} from "./use-hierarchy-list-state";
+import { useHierarchyListState } from "./use-hierarchy-list-state";
+import { RequireModule } from "@/components/auth/require-module";
 import { useCan } from "@/hooks/api/access";
-import { LocationForm } from "./location-form";
-import { HierarchyFormSheet } from "./hierarchy-form-sheet";
-import { type LocationFormValues } from "./locations-schema";
+
+const LOCATION_TYPE_ENUM = ["OFFICE", "WAREHOUSE", "STORE", "FACTORY", "REMOTE"] as const;
+
+const formSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, "Name is required")
+    .max(100)
+    .refine((v) => /[\p{L}\p{N}]/u.test(v), "Name must contain at least one letter or number"),
+  type: z.enum(LOCATION_TYPE_ENUM),
+  address: z.string().trim().max(500).optional(),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
+function LocationForm({
+  defaultValues,
+  onSubmit,
+  isPending: _,
+}: {
+  defaultValues?: FormValues;
+  onSubmit: (v: FormValues) => void;
+  isPending: boolean;
+}) {
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: defaultValues ?? { name: "", type: "OFFICE" as const, address: "" },
+  });
+
+  return (
+    <Form {...form}>
+      <form id="location-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Name</FormLabel>
+              <FormControl>
+                <Input placeholder="e.g. Mumbai Office" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="type"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Type</FormLabel>
+              <Select value={field.value} onValueChange={field.onChange}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {LOCATION_TYPE_ENUM.map((t) => (
+                    <SelectItem key={t} value={t}>
+                      {t.charAt(0) + t.slice(1).toLowerCase()}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="address"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Address</FormLabel>
+              <FormControl>
+                <Input placeholder="Full address" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </form>
+    </Form>
+  );
+}
 
 function TypeBadge({ type }: { type: LocationType }) {
   const colors: Record<LocationType, string> = {
-    OFFICE:
-      "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400",
-    WAREHOUSE:
-      "bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400",
-    STORE:
-      "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-    FACTORY:
-      "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400",
-    REMOTE:
-      "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400",
+    OFFICE: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400",
+    WAREHOUSE: "bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400",
+    STORE: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+    FACTORY: "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400",
+    REMOTE: "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400",
   };
   return (
-    <Badge
-      variant="outline"
-      className={cn("h-4 px-1.5 py-0 text-[9px]", colors[type])}
-    >
+    <Badge variant="outline" className={cn("h-4 px-1.5 py-0 text-[9px]", colors[type])}>
       {type.charAt(0) + type.slice(1).toLowerCase()}
     </Badge>
   );
@@ -63,7 +165,8 @@ export function OrgLocationsPage() {
     search,
     serverSearch,
     showArchived,
-    setPage,
+    nextPage,
+    previousPage,
     setPageSize,
     setSearch,
     setStatus,
@@ -76,12 +179,6 @@ export function OrgLocationsPage() {
     error,
     refetch,
   } = useOrgLocations(query);
-  const isCorrectingPage = useHierarchyPageBounds({
-    page,
-    pageSize,
-    total: isError ? undefined : locations?.total,
-    setPage,
-  });
   const create = useCreateOrgLocation();
   const update = useUpdateOrgLocation();
   const canManage = useCan("settings:organization:manage");
@@ -99,13 +196,9 @@ export function OrgLocationsPage() {
   const displayed = locations?.data ?? [];
 
   const handleCreate = useCallback(
-    (values: LocationFormValues) => {
+    (values: FormValues) => {
       create.mutate(
-        {
-          name: values.name,
-          type: values.type,
-          address: values.address || undefined,
-        },
+        { name: values.name, type: values.type, address: values.address || undefined },
         {
           onSuccess: () => {
             toast.success("Location created");
@@ -119,15 +212,10 @@ export function OrgLocationsPage() {
   );
 
   const handleUpdate = useCallback(
-    (values: LocationFormValues) => {
+    (values: FormValues) => {
       if (!editing) return;
       update.mutate(
-        {
-          id: editing.id,
-          name: values.name,
-          type: values.type,
-          address: values.address || null,
-        },
+        { id: editing.id, name: values.name, type: values.type, address: values.address || null },
         {
           onSuccess: () => {
             toast.success("Location updated");
@@ -157,25 +245,17 @@ export function OrgLocationsPage() {
   );
 
   const handleOpenCreate = useCallback(() => setShowCreate(true), []);
+  const handleSearchChange = useCallback((v: string) => setSearch(v), [setSearch]);
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
 
-  function handleSearchChange(value: string) {
-    setSearch(value);
-  }
-  function makeRestoreHandler(loc: OrgLocation) {
-    return () => handleRestore(loc);
-  }
-  function makeArchiveHandler(loc: OrgLocation) {
-    return () => archiveFlow.requestArchive(loc);
-  }
-  function makeSetEditingHandler(loc: OrgLocation) {
-    return () => setEditing(loc);
-  }
-  function handleEditSheetOpenChange(open: boolean) {
-    if (!open) setEditing(null);
-  }
+  function handleSearchInputChange(value: string) { handleSearchChange(value); }
+
+  function makeRestoreHandler(loc: OrgLocation) { return () => handleRestore(loc); }
+  function makeArchiveHandler(loc: OrgLocation) { return () => archiveFlow.requestArchive(loc); }
+  function makeSetEditingHandler(loc: OrgLocation) { return () => setEditing(loc); }
+  function handleEditSheetOpenChange(open: boolean) { if (!open) setEditing(null); }
 
   const columns: DataTableColumn<OrgLocation>[] = [
     {
@@ -224,42 +304,22 @@ export function OrgLocationsPage() {
       header: "",
       headerClassName: "w-28",
       cell: (l) =>
-        canManage ? (
-          <div className="flex items-center gap-1">
-            {l.status === "ARCHIVED" ? (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={makeRestoreHandler(l)}
-                title="Restore"
-                aria-label="Restore location"
-              >
-                <RotateCcw className="h-4 w-4 text-primary" />
+        canManage ? <div className="flex items-center gap-1">
+          {l.status === "ARCHIVED" ? (
+            <Button variant="ghost" size="sm" onClick={makeRestoreHandler(l)} title="Restore">
+              <RotateCcw className="h-4 w-4 text-primary" />
+            </Button>
+          ) : (
+            <>
+              <Button variant="ghost" size="sm" onClick={makeSetEditingHandler(l)} title="Edit">
+                <Pencil className="h-4 w-4" />
               </Button>
-            ) : (
-              <>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={makeSetEditingHandler(l)}
-                  title="Edit"
-                  aria-label="Edit location"
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={makeArchiveHandler(l)}
-                  title="Archive"
-                  aria-label="Archive location"
-                >
-                  <Archive className="h-4 w-4 text-muted-foreground" />
-                </Button>
-              </>
-            )}
-          </div>
-        ) : null,
+              <Button variant="ghost" size="sm" onClick={makeArchiveHandler(l)} title="Archive">
+                <Archive className="h-4 w-4 text-muted-foreground" />
+              </Button>
+            </>
+          )}
+        </div> : null,
     },
   ];
 
@@ -269,29 +329,26 @@ export function OrgLocationsPage() {
       title={`No locations matching "${serverSearch}"`}
       description="Try a different search term."
       compact
-      className="flex-1 min-h-0"
+      className="min-h-[200px]"
     />
   ) : showArchived ? (
     <EmptyState
       illustrationPreset="archive"
       title="No archived locations"
       compact
-      className="flex-1 min-h-0"
+      className="min-h-[200px]"
     />
   ) : (
     <EmptyState
       illustrationPreset="companies"
       title="No locations yet"
       description="Create your first location to get started."
-      action={
-        canManage
-          ? { label: "Add Location", onClick: handleOpenCreate }
-          : undefined
-      }
+      action={canManage ? { label: "Add Location", onClick: handleOpenCreate } : undefined}
     />
   );
 
   return (
+    <RequireModule module="hr">
     <PageWrapper
       title="Locations"
       subtitle="Physical work locations and offices."
@@ -306,26 +363,20 @@ export function OrgLocationsPage() {
             <Archive className="h-4 w-4 mr-1.5" />
             {showArchived ? "Show current" : "View archived"}
           </Button>
-          {canManage ? (
-            <AnimatedIconButton
-              icon={PlusIcon}
-              iconSize={16}
-              iconClassName="mr-1.5"
-              size="sm"
-              className="flex-1 sm:flex-none"
-              onClick={handleOpenCreate}
-            >
-              Add Location
-            </AnimatedIconButton>
-          ) : null}
+          {canManage ? <AnimatedIconButton
+            icon={PlusIcon}
+            iconSize={16}
+            iconClassName="mr-1.5"
+            size="sm"
+            className="flex-1 sm:flex-none"
+            onClick={handleOpenCreate}
+          >
+            Add Location
+          </AnimatedIconButton> : null}
         </div>
       }
       filters={
-        <SearchInput
-          placeholder="Search locations…"
-          value={search}
-          onValueChange={handleSearchChange}
-        />
+        <SearchInput placeholder="Search locations…" value={search} onValueChange={handleSearchInputChange} />
       }
     >
       {isError ? (
@@ -340,54 +391,76 @@ export function OrgLocationsPage() {
           data={displayed}
           columns={columns}
           getRowKey={(l) => l.id}
-          isLoading={isLoading || isCorrectingPage}
+          isLoading={isLoading}
           emptyState={emptyState}
           rowClassName={(l) => cn(l.status === "ARCHIVED" && "opacity-60")}
           minWidth="620px"
           className="flex-1 min-h-0"
-          pagination={{
-            mode: "server",
-            page,
-            pageSize,
-            total: locations?.total ?? 0,
-            onPageChange: setPage,
-            onPageSizeChange: setPageSize,
-            pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
-          }}
+          footer={
+            page > 1 || locations?.pageInfo.hasMore ? (
+              <CursorPageControls
+                page={page}
+                hasNext={locations?.pageInfo.hasMore ?? false}
+                disabled={isLoading}
+                onPrevious={previousPage}
+                onNext={() => nextPage(locations?.pageInfo.nextCursor)}
+                pageSize={pageSize}
+                onPageSizeChange={setPageSize}
+              />
+            ) : undefined
+          }
         />
       )}
 
-      <HierarchyFormSheet
-        open={showCreate}
-        onOpenChange={setShowCreate}
-        title="New Location"
-        formId="location-form"
-        isPending={create.isPending}
-      >
-        {showCreate && (
-          <LocationForm onSubmit={handleCreate} isPending={create.isPending} />
-        )}
-      </HierarchyFormSheet>
+      <Sheet open={showCreate} onOpenChange={setShowCreate}>
+        <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md">
+          <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
+            <SheetTitle>New Location</SheetTitle>
+          </SheetHeader>
+          <SheetBody className="px-6 py-5">
+            {showCreate && (
+              <LocationForm onSubmit={handleCreate} isPending={create.isPending} />
+            )}
+          </SheetBody>
+          <div className="shrink-0 px-6 py-4 border-t">
+            <div className="grid grid-cols-2 gap-2">
+              <SheetClose asChild>
+                <Button variant="outline" size="sm" className="w-full">Cancel</Button>
+              </SheetClose>
+              <LoadingButton size="sm" type="submit" form="location-form" isPending={create.isPending} loadingText="Saving…" className="w-full">Save</LoadingButton>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
 
-      <HierarchyFormSheet
-        open={!!editing}
-        onOpenChange={handleEditSheetOpenChange}
-        title="Edit Location"
-        formId="location-form"
-        isPending={update.isPending}
-      >
-        {editing && (
-          <LocationForm
-            defaultValues={{
-              name: editing.name,
-              type: editing.type,
-              address: editing.address ?? "",
-            }}
-            onSubmit={handleUpdate}
-            isPending={update.isPending}
-          />
-        )}
-      </HierarchyFormSheet>
+      <Sheet open={!!editing} onOpenChange={handleEditSheetOpenChange}>
+        <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md">
+          <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
+            <SheetTitle>Edit Location</SheetTitle>
+          </SheetHeader>
+          <SheetBody className="px-6 py-5">
+            {editing && (
+              <LocationForm
+                defaultValues={{
+                  name: editing.name,
+                  type: editing.type,
+                  address: editing.address ?? "",
+                }}
+                onSubmit={handleUpdate}
+                isPending={update.isPending}
+              />
+            )}
+          </SheetBody>
+          <div className="shrink-0 px-6 py-4 border-t">
+            <div className="grid grid-cols-2 gap-2">
+              <SheetClose asChild>
+                <Button variant="outline" size="sm" className="w-full">Cancel</Button>
+              </SheetClose>
+              <LoadingButton size="sm" type="submit" form="location-form" isPending={update.isPending} loadingText="Saving…" className="w-full">Save</LoadingButton>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
 
       <HierarchyArchiveDialog
         open={!!archiveFlow.target}
@@ -403,5 +476,6 @@ export function OrgLocationsPage() {
         onOpenChange={archiveFlow.handleOpenChange}
       />
     </PageWrapper>
+    </RequireModule>
   );
 }

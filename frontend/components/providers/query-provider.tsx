@@ -2,9 +2,11 @@
 
 import "@/lib/dom-mutation-guard";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { isApiError } from "@/lib/api-client";
+import { registerQueryCacheClearer } from "@/lib/query-cache-control";
 
 const MAX_QUERY_RETRIES = 1;
 
@@ -24,7 +26,7 @@ function shouldRetryQuery(failureCount: number, error: unknown): boolean {
   return true;
 }
 
-export function createAppQueryClient(): QueryClient {
+export function createAppQueryClient(scope = "unscoped"): QueryClient {
   return new QueryClient({
     defaultOptions: {
       queries: {
@@ -32,6 +34,7 @@ export function createAppQueryClient(): QueryClient {
         gcTime: 1000 * 60 * 10,
         refetchOnWindowFocus: false,
         retry: shouldRetryQuery,
+        queryKeyHashFn: (queryKey) => JSON.stringify([scope, queryKey]),
       },
       mutations: {
         retry: 0,
@@ -40,8 +43,19 @@ export function createAppQueryClient(): QueryClient {
   });
 }
 
-export function QueryProvider({ children }: { children: React.ReactNode }) {
-  const [queryClient] = useState(createAppQueryClient);
+function ScopedQueryProvider({
+  children,
+  scope,
+}: {
+  children: React.ReactNode;
+  scope: string;
+}) {
+  const [queryClient] = useState(() => createAppQueryClient(scope));
+
+  useEffect(
+    () => registerQueryCacheClearer(() => queryClient.clear()),
+    [queryClient],
+  );
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -49,5 +63,23 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
         {children}
       </TooltipProvider>
     </QueryClientProvider>
+  );
+}
+
+export function QueryProvider({ children }: { children: React.ReactNode }) {
+  const { data: session, status } = useSession();
+  const userId = session?.user?.id ?? "";
+  const orgId = session?.orgId ?? "";
+  const scope =
+    status === "authenticated"
+      ? `authenticated:${orgId}:${userId}`
+      : status === "loading"
+        ? "loading"
+        : "unauthenticated";
+
+  return (
+    <ScopedQueryProvider key={scope} scope={scope}>
+      {children}
+    </ScopedQueryProvider>
   );
 }

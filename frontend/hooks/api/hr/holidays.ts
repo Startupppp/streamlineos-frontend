@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 export interface Holiday {
   id: string;
@@ -19,10 +20,12 @@ interface CreateHolidayInput {
 }
 
 export function useHolidays() {
+  const canView = useCan("self:attendance");
   return useQuery<Holiday[]>({
     queryKey: queryKeys.hr.holidays(),
     queryFn: () => apiClient.get<Holiday[]>("/me/attendance/holidays"),
     staleTime: 300_000,
+    enabled: canView,
   });
 }
 

@@ -1,70 +1,32 @@
 "use client";
 
-import { LoadingButton } from "@/components/ui/loading-button";
 import { useState, useCallback, useMemo, useTransition, useEffect } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { keepPreviousData } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ErrorState } from "@/components/shared/error-state";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { DataTable } from "@/components/ui/data-table";
 import {
   useUsers,
   useExportUsers,
-  useBulkSuspend,
-  useBulkArchive,
-  useBulkRestore,
 } from "@/hooks/api/users";
 import type { User } from "@/hooks/api/users";
 import { useOrgBranches, useOrgDepartments } from "@/hooks/api/org-hierarchy";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { UserStatusBadge } from "./user-status-badge";
 import { UserDetailSheet } from "./user-detail-sheet";
 import { UserInviteDialog } from "./user-invite-dialog";
 import { UserBulkInviteDialog } from "./user-bulk-invite-dialog";
 import { UserImportDialog } from "./user-import-dialog";
-import { UserActionsMenu } from "./user-actions-menu";
 import { UserBulkAssignDialog } from "./user-bulk-assign-dialog";
 import { UserStatsCards } from "./user-stats-cards";
-import { toast } from "sonner";
-import { Users,
-  ShieldOff,
-  UserX,
-  RefreshCw,
-  UserCog,
-  UserPlus,
-  Download,
-  Upload,
-} from "lucide-react";
-import { EllipsisIcon } from "@animateicons/react/lucide";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { formatDistanceToNow } from "date-fns";
-import { TruncatedText } from "@/components/ui/truncated-text";
-import { getUserDisplayName, getUserInitials } from "@/features/build/shared/resolve-user-name";
-import { useCan } from "@/hooks/api/access";
-import { USER_STRUCTURAL_ROLES, formatRoleLabel } from "@/features/users/user-invite-roles";
-import { resolveOrgUnitName } from "./resolve-org-unit-name";
+import {
+  useCan,
+  useCanManageOrganizationMembership,
+} from "@/hooks/api/access";
 import { PeopleSectionTabs } from "./people-section-tabs";
 import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 import {
@@ -74,38 +36,14 @@ import {
   parsePageSize,
   STANDARD_PAGE_SIZE_OPTIONS,
 } from "@/lib/list-pagination";
-
-type BulkAction = "suspend" | "archive" | "restore";
-
-function assertNever(value: never): never {
-  throw new Error(`Unhandled bulk action: ${String(value)}`);
-}
-
-function getBulkActionCopy(action: BulkAction, count: number) {
-  const subject = `${count} user${count === 1 ? "" : "s"}`;
-  switch (action) {
-    case "suspend":
-      return {
-        title: `Suspend ${subject}?`,
-        description: `${subject} will lose access immediately. Their data and membership are retained and they can be reactivated at any time. Organization owners and module owners in the selection will be skipped.`,
-        confirmLabel: "Suspend",
-      };
-    case "archive":
-      return {
-        title: `Archive ${subject}?`,
-        description: `${subject} will be archived and lose access. Their data and membership are retained and they can be restored at any time. Organization owners and module owners in the selection will be skipped.`,
-        confirmLabel: "Archive",
-      };
-    case "restore":
-      return {
-        title: `Restore ${subject}?`,
-        description: `${subject} will regain access to this organization immediately. It will appear in each user's workspace switcher after their session refreshes.`,
-        confirmLabel: "Restore",
-      };
-    default:
-      return assertNever(action);
-  }
-}
+import { UserBulkActionsBar } from "./user-bulk-actions-bar";
+import {
+  getUserBulkActionCopy,
+} from "./user-bulk-action-copy";
+import { UserDirectoryFilters } from "./user-directory-filters";
+import { getUserTableColumns } from "./user-table-columns";
+import { UserDirectoryActions } from "./user-directory-actions";
+import { useUserBulkLifecycle } from "./use-user-bulk-lifecycle";
 
 export function UsersPage() {
   const router = useRouter();
@@ -113,7 +51,7 @@ export function UsersPage() {
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
 
-  const q = searchParams.get("search") ?? "";
+  const searchQuery = searchParams.get("search") ?? "";
   const status = searchParams.get("status") ?? "all";
   const role = searchParams.get("role") ?? "all";
   const departmentId = searchParams.get("departmentId") ?? "all";
@@ -123,7 +61,7 @@ export function UsersPage() {
   const page = parsePage(searchParams.get("page"));
   const pageSize = parsePageSize(searchParams.get("size"));
 
-  const [search, setSearch] = useState(q);
+  const [search, setSearch] = useState(searchQuery);
   const debouncedSearch = useDebouncedValue(search, 300);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -133,7 +71,7 @@ export function UsersPage() {
   const [bulkInviteOpen, setBulkInviteOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
 
   const pushParams = useCallback(
     (updates: Record<string, string | null>) => {
@@ -160,9 +98,9 @@ export function UsersPage() {
   );
 
   useEffect(() => {
-    if (debouncedSearch === (q || "")) return;
+    if (debouncedSearch === searchQuery) return;
     pushParams({ search: debouncedSearch || null, page: null });
-  }, [debouncedSearch, q, pushParams]);
+  }, [debouncedSearch, searchQuery, pushParams]);
 
   const handleSearchChange = useCallback(
     (value: string) => setSearch(value),
@@ -207,7 +145,7 @@ export function UsersPage() {
     {
       page,
       limit: pageSize,
-      search: q || undefined,
+      search: searchQuery || undefined,
       status:
         status !== "all"
           ? (status as "active" | "suspended" | "archived")
@@ -224,123 +162,38 @@ export function UsersPage() {
   const { data: branchesData } = useOrgBranches();
   const { data: departmentsData } = useOrgDepartments();
   const { mutate: exportUsers, isPending: isExporting } = useExportUsers();
-  const { mutate: bulkSuspend, isPending: isSuspending } = useBulkSuspend();
-  const { mutate: bulkArchive, isPending: isArchiving } = useBulkArchive();
-  const { mutate: bulkRestore, isPending: isRestoring } = useBulkRestore();
-  const [pendingBulkAction, setPendingBulkAction] = useState<BulkAction | null>(null);
-  const canCreate = useCan("settings:organization:manage");
+  const canCreate = useCanManageOrganizationMembership();
   const canManage = useCan("settings:organization:manage");
   const canExport = useCan("settings:organization:manage");
 
-  const branchMap = useMemo(() => {
-    const m = new Map<string, string>();
-    for (const b of branchesData?.data ?? []) m.set(String(b.id), b.name);
-    return m;
+  const branchNames = useMemo(() => {
+    const names = new Map<string, string>();
+    for (const branch of branchesData?.data ?? [])
+      names.set(String(branch.id), branch.name);
+    return names;
   }, [branchesData]);
 
-  const deptMap = useMemo(() => {
-    const m = new Map<string, string>();
-    for (const d of departmentsData?.data ?? []) m.set(String(d.id), d.name);
-    return m;
+  const departmentNames = useMemo(() => {
+    const names = new Map<string, string>();
+    for (const department of departmentsData?.data ?? [])
+      names.set(String(department.id), department.name);
+    return names;
   }, [departmentsData]);
 
   const users = data?.data ?? [];
   const pagination = data?.pagination;
   const isPageOutOfRange =
     !!pagination && page > getLastPage(pagination.total, pageSize);
-  const someSelected = selectedIds.size > 0;
-  const bulkIsPending = isSuspending || isArchiving || isRestoring;
+  const someSelected = selectedUserIds.size > 0;
 
   function handleRowClick(user: User) {
     setSelectedUserId(user.id);
     setSheetOpen(true);
   }
 
-  function handleRequestBulkSuspend() {
-    setPendingBulkAction("suspend");
-  }
-
-  function handleRequestBulkArchive() {
-    setPendingBulkAction("archive");
-  }
-
-  function handleRequestBulkRestore() {
-    setPendingBulkAction("restore");
-  }
-
-  function handleBulkDialogOpenChange(open: boolean) {
-    if (!open) setPendingBulkAction(null);
-  }
-
-  function handleConfirmBulkAction() {
-    if (pendingBulkAction === "suspend") handleBulkSuspend();
-    else if (pendingBulkAction === "archive") handleBulkArchive();
-    else if (pendingBulkAction === "restore") handleBulkRestore();
-    setPendingBulkAction(null);
-  }
-
-  function handleBulkSuspend() {
-    bulkSuspend(
-      { userIds: Array.from(selectedIds) },
-      {
-        onSuccess: (r) => {
-          if (r.failed > 0 && r.succeeded === 0) 
-            toast.error(`Failed to suspend ${r.failed} user(s)`);
-          else if (r.failed > 0) 
-            toast.warning(`${r.succeeded} user(s) suspended; ${r.failed} could not be updated`);
-          else 
-            toast.success(`${r.succeeded} user(s) suspended`);
-          
-          setSelectedIds(new Set());
-        },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      },
-    );
-  }
-
-  function handleBulkArchive() {
-    bulkArchive(
-      { userIds: Array.from(selectedIds) },
-      {
-        onSuccess: (r) => {
-          if (r.failed > 0 && r.succeeded === 0) {
-            toast.error(`Failed to archive ${r.failed} user(s)`);
-          } else if (r.failed > 0) {
-            toast.warning(`${r.succeeded} user(s) archived; ${r.failed} could not be updated`);
-          } else {
-            toast.success(`${r.succeeded} user(s) archived`);
-          }
-          setSelectedIds(new Set());
-        },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      },
-    );
-  }
-
-  function handleBulkRestore() {
-    bulkRestore(
-      { userIds: Array.from(selectedIds) },
-      {
-        onSuccess: (r) => {
-          if (r.failed > 0 && r.succeeded === 0) {
-            toast.error(`Failed to restore ${r.failed} user(s)`);
-          } else if (r.failed > 0) {
-            toast.warning(`${r.succeeded} user(s) restored; ${r.failed} could not be updated`);
-          } else {
-            toast.success(`${r.succeeded} user(s) restored`, {
-              description:
-                "Access is restored. This organization will appear in each user's workspace switcher after their session refreshes.",
-            });
-          }
-          setSelectedIds(new Set());
-        },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      },
-    );
-  }
-
   const handleSelectionChange = useCallback(
-    (sel: Set<string | number>) => setSelectedIds(new Set([...sel].map(String))),
+    (selectedRowIds: Set<string | number>) =>
+      setSelectedUserIds(new Set([...selectedRowIds].map(String))),
     [],
   );
 
@@ -355,12 +208,24 @@ export function UsersPage() {
   const handleExport = useCallback(() => exportUsers(), [exportUsers]);
   const handleOpenAssign = useCallback(() => setAssignOpen(true), []);
   const handleClearSelection = useCallback(() => {
-    setSelectedIds(new Set());
+    setSelectedUserIds(new Set());
   }, []);
+  const {
+    pendingBulkAction,
+    isSuspending,
+    isArchiving,
+    isRestoring,
+    handleRequestBulkSuspend,
+    handleRequestBulkArchive,
+    handleRequestBulkRestore,
+    handleBulkDialogOpenChange,
+    handleConfirmBulkAction,
+  } = useUserBulkLifecycle(selectedUserIds, handleClearSelection);
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
-  const handleAssignSuccess = useCallback(() => setSelectedIds(new Set()), []);
+  const handleAssignSuccess = useCallback(() => setSelectedUserIds(new Set()), []);
   const handlePageChange = useCallback(
-    (p: number) => pushParams({ page: p === 1 ? null : String(p) }),
+    (nextPage: number) =>
+      pushParams({ page: nextPage === 1 ? null : String(nextPage) }),
     [pushParams],
   );
   const handlePageSizeChange = useCallback(
@@ -378,187 +243,32 @@ export function UsersPage() {
     if (page > lastPage) handlePageChange(lastPage);
   }, [handlePageChange, isPlaceholderData, page, pageSize, pagination]);
 
-  const columns = useMemo<DataTableColumn<User>[]>(() => [
-    {
-      key: "name",
-      header: "User",
-      sortable: true,
-      cell: (user) => {
-        const displayName = getUserDisplayName(user);
-        return (
-          <div className="flex items-center gap-2">
-            <Avatar className="h-6 w-6 shrink-0">
-              <AvatarImage src={user.image ?? undefined} alt={displayName} />
-              <AvatarFallback className="text-[10px] font-semibold">
-                {getUserInitials(user)}
-              </AvatarFallback>
-            </Avatar>
-            <div className="min-w-0">
-              <TruncatedText text={displayName} className="text-[11px] font-medium leading-tight" />
-              {user.designation && (
-                <TruncatedText text={user.designation} className="text-[10px] text-muted-foreground" />
-              )}
-            </div>
-          </div>
-        );
-      },
-    },
-    {
-      key: "email",
-      header: "Email",
-      cell: (user) => (
-        <TruncatedText text={user.email} className="text-muted-foreground" />
-      ),
-    },
-    {
-      key: "role",
-      header: "Role",
-      cell: (user) => (
-        <Badge variant="secondary" className="text-[10px] h-4 px-1.5 font-normal">
-          {formatRoleLabel(user.role)}
-        </Badge>
-      ),
-    },
-    {
-      key: "status",
-      header: "Status",
-      sortable: true,
-      cell: (user) => (
-        <UserStatusBadge
-          isActive={user.userStatus ? user.userStatus === "active" : user.isActive}
-          isDeleted={user.userStatus === "archived"}
-        />
-      ),
-    },
-    {
-      key: "branch",
-      header: "Branch",
-      cell: (user) => (
-        <span className="text-muted-foreground">
-          {resolveOrgUnitName(
-            branchMap,
-            user.branchId === null ? null : String(user.branchId),
-            "Unknown branch",
-          )}
-        </span>
-      ),
-    },
-    {
-      key: "dept",
-      header: "Dept",
-      cell: (user) => (
-        <span className="text-muted-foreground">
-          {resolveOrgUnitName(
-            deptMap,
-            user.departmentId === null ? null : String(user.departmentId),
-            "Unknown department",
-          )}
-        </span>
-      ),
-    },
-    {
-      key: "joinedAt",
-      header: "Joined",
-      sortable: true,
-      className: "tabular-nums font-mono",
-      cell: (user) => (
-        <span className="text-muted-foreground">
-          {formatDistanceToNow(new Date(user.joinedAt ?? user.createdAt), { addSuffix: true })}
-        </span>
-      ),
-    },
-    {
-      key: "actions",
-      header: "",
-      className: "w-8",
-      cell: (user) => (
-        <div onClick={(e) => e.stopPropagation()}>
-          <UserActionsMenu
-            user={user}
-            onView={() => {
-              setSelectedUserId(user.id);
-              setSheetOpen(true);
-            }}
-          />
-        </div>
-      ),
-    },
-  ], [branchMap, deptMap]);
+  const handleViewUser = useCallback((userId: string) => {
+    setSelectedUserId(userId);
+    setSheetOpen(true);
+  }, []);
+
+  const columns = useMemo(
+    () => getUserTableColumns(branchNames, departmentNames, handleViewUser),
+    [branchNames, departmentNames, handleViewUser],
+  );
 
   const emptyStateNode = (
     <EmptyState
       illustrationPreset="team"
       title="No members found"
       description={
-        q || status !== "all" || role !== "all"
+        searchQuery || status !== "all" || role !== "all"
           ? "Try adjusting your search or filters."
           : "Invite your first team member to get started."
       }
       action={
-        !q && status === "all" && role === "all" && canCreate
+        !searchQuery && status === "all" && role === "all" && canCreate
           ? { label: "Invite User", onClick: handleOpenInvite }
           : undefined
       }
     />
   );
-
-  function renderFilterSelects() {
-    const selectTriggerClass = `w-full lg:w-fit lg:min-w-32 ${FILTER_SELECT_TRIGGER}`;
-    return (
-      <>
-        <Select value={status} onValueChange={handleStatusChange}>
-          <SelectTrigger className={selectTriggerClass}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-            <SelectItem value="all">All statuses</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="suspended">Suspended</SelectItem>
-            <SelectItem value="archived">Archived</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={role} onValueChange={handleRoleChange}>
-          <SelectTrigger className={selectTriggerClass}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-            <SelectItem value="all">All roles</SelectItem>
-            {USER_STRUCTURAL_ROLES.map((role) => (
-              <SelectItem key={role.value} value={role.value}>
-                {role.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={departmentId} onValueChange={handleDeptChange}>
-          <SelectTrigger className={selectTriggerClass}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-            <SelectItem value="all">All departments</SelectItem>
-            {(departmentsData?.data ?? []).map((d) => (
-              <SelectItem key={d.id} value={String(d.id)}>
-                {d.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={branchId} onValueChange={handleBranchChange}>
-          <SelectTrigger className={selectTriggerClass}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-            <SelectItem value="all">All branches</SelectItem>
-            {(branchesData?.data ?? []).map((b) => (
-              <SelectItem key={b.id} value={String(b.id)}>
-                {b.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </>
-    );
-  }
 
   return (
     <>
@@ -566,52 +276,15 @@ export function UsersPage() {
         title="Members & access"
         subtitle="Manage people who can sign in, their roles, and organization access."
         actions={
-          <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-nowrap sm:justify-end">
-            {(canExport || canCreate) && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <AnimatedIconButton
-                    icon={EllipsisIcon}
-                    iconClassName="mr-1.5"
-                    variant="outline"
-                    size="sm"
-                    className="w-full sm:w-auto"
-                  >
-                    More
-                  </AnimatedIconButton>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-44">
-                  {canExport && (
-                    <DropdownMenuItem onClick={handleExport} disabled={isExporting}>
-                      <Download className="h-3.5 w-3.5 mr-2" />
-                      Export CSV
-                    </DropdownMenuItem>
-                  )}
-                  {canCreate && (
-                    <DropdownMenuItem onClick={handleOpenImport}>
-                      <Upload className="h-3.5 w-3.5 mr-2" />
-                      Import CSV
-                    </DropdownMenuItem>
-                  )}
-                  {canCreate && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={handleOpenBulkInvite}>
-                        <Users className="h-3.5 w-3.5 mr-2" />
-                        Bulk Invite
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-            {canCreate && (
-              <Button size="sm" className="w-full sm:w-auto" onClick={handleOpenInvite}>
-                <UserPlus className="h-3.5 w-3.5 mr-1.5" />
-                Invite User
-              </Button>
-            )}
-          </div>
+          <UserDirectoryActions
+            canCreate={canCreate}
+            canExport={canExport}
+            isExporting={isExporting}
+            onExport={handleExport}
+            onImport={handleOpenImport}
+            onBulkInvite={handleOpenBulkInvite}
+            onInvite={handleOpenInvite}
+          />
         }
         filters={
           <PageTabsToolbar
@@ -624,7 +297,20 @@ export function UsersPage() {
                 onValueChange={handleSearchChange}
               />
             }
-            filters={renderFilterSelects}
+            filters={
+              <UserDirectoryFilters
+                status={status}
+                role={role}
+                departmentId={departmentId}
+                branchId={branchId}
+                departments={departmentsData?.data ?? []}
+                branches={branchesData?.data ?? []}
+                onStatusChange={handleStatusChange}
+                onRoleChange={handleRoleChange}
+                onDepartmentChange={handleDeptChange}
+                onBranchChange={handleBranchChange}
+              />
+            }
           />
         }
       >
@@ -632,72 +318,18 @@ export function UsersPage() {
           <UserStatsCards />
 
           {someSelected && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-muted/60 border text-xs flex-wrap">
-              <span className="font-medium text-muted-foreground">
-                {selectedIds.size} selected
-              </span>
-              <div className="flex items-center gap-1.5 ml-auto flex-wrap">
-                {canManage && (
-                  <LoadingButton
-                    variant="outline"
-                    size="sm"
-                    className="h-7 text-xs"
-                    onClick={handleRequestBulkSuspend}
-                    isPending={isSuspending}
-                    disabled={bulkIsPending}
-                  >
-                    <ShieldOff className="h-3 w-3 mr-1" />
-                    Suspend
-                  </LoadingButton>
-                )}
-                {canManage && (
-                  <LoadingButton
-                    variant="outline"
-                    size="sm"
-                    className="h-7 text-xs"
-                    onClick={handleRequestBulkArchive}
-                    isPending={isArchiving}
-                    disabled={bulkIsPending}
-                  >
-                    <UserX className="h-3 w-3 mr-1" />
-                    Archive
-                  </LoadingButton>
-                )}
-                {canManage && (
-                  <LoadingButton
-                    variant="outline"
-                    size="sm"
-                    className="h-7 text-xs"
-                    onClick={handleRequestBulkRestore}
-                    isPending={isRestoring}
-                    disabled={bulkIsPending}
-                  >
-                    <RefreshCw className="h-3 w-3 mr-1" />
-                    Restore
-                  </LoadingButton>
-                )}
-                {canManage && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 text-xs"
-                    onClick={handleOpenAssign}
-                    disabled={bulkIsPending}
-                  >
-                    <UserCog className="h-3 w-3 mr-1" />
-                    Assign
-                  </Button>
-                )}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 text-xs"
-                  onClick={handleClearSelection}
-                >
-                  Clear
-                </Button>
-              </div>
-            </div>
+            <UserBulkActionsBar
+              selectedUserCount={selectedUserIds.size}
+              canManage={canManage}
+              isSuspending={isSuspending}
+              isArchiving={isArchiving}
+              isRestoring={isRestoring}
+              onSuspend={handleRequestBulkSuspend}
+              onArchive={handleRequestBulkArchive}
+              onRestore={handleRequestBulkRestore}
+              onAssign={handleOpenAssign}
+              onClear={handleClearSelection}
+            />
           )}
 
           {isError ? (
@@ -716,7 +348,7 @@ export function UsersPage() {
               isLoading={isLoading || isPageOutOfRange}
               emptyState={emptyStateNode}
               selection={{
-                selected: selectedIds,
+                selected: selectedUserIds,
                 onChange: handleSelectionChange,
                 isRowSelectable: (user) => !user.isOwner,
               }}
@@ -744,28 +376,32 @@ export function UsersPage() {
         open={sheetOpen}
         onOpenChange={handleSheetChange}
       />
-      <UserInviteDialog open={inviteOpen} onOpenChange={handleInviteChange} />
-      <UserBulkInviteDialog
-        open={bulkInviteOpen}
-        onOpenChange={handleBulkInviteChange}
-      />
-      <UserImportDialog open={importOpen} onOpenChange={handleImportChange} />
+      {canCreate ? (
+        <>
+          <UserInviteDialog open={inviteOpen} onOpenChange={handleInviteChange} />
+          <UserBulkInviteDialog
+            open={bulkInviteOpen}
+            onOpenChange={handleBulkInviteChange}
+          />
+          <UserImportDialog open={importOpen} onOpenChange={handleImportChange} />
+        </>
+      ) : null}
       <UserBulkAssignDialog
         open={assignOpen}
         onOpenChange={handleAssignChange}
-        selectedIds={selectedIds}
+        selectedIds={selectedUserIds}
         onSuccess={handleAssignSuccess}
       />
       {pendingBulkAction !== null && (
         <ConfirmDialog
           open
           onOpenChange={handleBulkDialogOpenChange}
-          title={getBulkActionCopy(pendingBulkAction, selectedIds.size).title}
+          title={getUserBulkActionCopy(pendingBulkAction, selectedUserIds.size).title}
           description={
-            getBulkActionCopy(pendingBulkAction, selectedIds.size).description
+            getUserBulkActionCopy(pendingBulkAction, selectedUserIds.size).description
           }
           confirmLabel={
-            getBulkActionCopy(pendingBulkAction, selectedIds.size).confirmLabel
+            getUserBulkActionCopy(pendingBulkAction, selectedUserIds.size).confirmLabel
           }
           isPending={
             pendingBulkAction === "suspend"

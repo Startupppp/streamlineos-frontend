@@ -43,6 +43,7 @@ function engagement(
     terminationReason: null,
     terminationNotes: null,
     createdBy: null,
+    rowVersion: 1,
     createdAt: "2026-08-08T00:00:00.000Z",
     updatedAt: "2026-08-08T00:00:00.000Z",
     ...overrides,
@@ -76,6 +77,7 @@ describe("directory engagement mutations", () => {
       await result.current.mutateAsync({
         workerId: "worker-1",
         workerEngagementId: "engagement-1",
+        expectedVersion: 1,
       });
     });
 
@@ -125,6 +127,7 @@ describe("directory engagement mutations", () => {
     expect(mockedPatch).toHaveBeenCalledWith(
       "/directory/engagements/engagement-1",
       {
+        expectedVersion: 1,
         startsOn: "2026-08-19",
         endsOn: "2026-09-30",
         designation: "Senior Engineer",

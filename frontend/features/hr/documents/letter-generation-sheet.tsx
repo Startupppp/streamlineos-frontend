@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useHrTemplates } from "@/hooks/api/hr";
+import { useHrEmployees, useHrTemplates } from "@/hooks/api/hr";
 import { useRenderLetter, useSaveLetter } from "@/hooks/api/hr/letters";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -12,25 +12,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Combobox } from "@/components/ui/combobox";
-import type { Employee } from "@/types/hr";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 
 interface LetterGenerationSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  employees: Employee[];
   onSaved?: () => void;
 }
 
-function buildEmployeeOptions(employees: Employee[]) {
-  return employees.map((e) => ({
-    value: e.id,
-    label: `${e.firstName ?? ""} ${e.lastName ?? ""}`.trim() || e.email,
-    sublabel: e.designation ?? e.email,
-  }));
-}
-
-export function LetterGenerationSheet({ open, onOpenChange, employees, onSaved }: LetterGenerationSheetProps) {
+export function LetterGenerationSheet({ open, onOpenChange, onSaved }: LetterGenerationSheetProps) {
   const [employeeId, setEmployeeId] = useState("");
+  const [employeeSearch, setEmployeeSearch] = useState("");
   const [templateId, setTemplateId] = useState("");
   const [extraContext, setExtraContext] = useState<Record<string, string>>({});
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
@@ -39,6 +31,15 @@ export function LetterGenerationSheet({ open, onOpenChange, employees, onSaved }
   const [extraVal, setExtraVal] = useState("");
 
   const { data: templatesData } = useHrTemplates({ kind: "letter" });
+  const debouncedEmployeeSearch = useDebouncedValue(employeeSearch, 300);
+  const employeesQuery = useHrEmployees(
+    {
+      limit: 20,
+      search: debouncedEmployeeSearch || undefined,
+      isActive: "true",
+    },
+    { enabled: open },
+  );
   const renderLetter = useRenderLetter();
   const saveLetter = useSaveLetter();
 
@@ -53,7 +54,7 @@ export function LetterGenerationSheet({ open, onOpenChange, employees, onSaved }
     renderLetter.mutate(
       {
         templateId: parseInt(templateId, 10),
-        employeeId: employeeId ? parseInt(employeeId, 10) : undefined,
+        employeeUserId: employeeId || undefined,
         extraContext: Object.keys(extraContext).length ? extraContext : undefined,
       },
       {
@@ -69,6 +70,7 @@ export function LetterGenerationSheet({ open, onOpenChange, employees, onSaved }
   const handleClose = useCallback((open: boolean) => {
     if (!open) {
       setEmployeeId("");
+      setEmployeeSearch("");
       setTemplateId("");
       setExtraContext({});
       setPreviewHtml(null);
@@ -82,7 +84,7 @@ export function LetterGenerationSheet({ open, onOpenChange, employees, onSaved }
       {
         templateId: parseInt(templateId, 10),
         templateVersion: previewTemplateVersion,
-        employeeId: employeeId ? parseInt(employeeId, 10) : undefined,
+        employeeUserId: employeeId || undefined,
         outputHtml: previewHtml,
         contextSnapshot: extraContext,
       },
@@ -107,7 +109,17 @@ export function LetterGenerationSheet({ open, onOpenChange, employees, onSaved }
   const handleExtraKeyChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setExtraKey(e.target.value), []);
   const handleExtraValChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setExtraVal(e.target.value), []);
 
-  const empOptions = buildEmployeeOptions(employees);
+  const employeeOptions = useMemo(
+    () =>
+      (employeesQuery.data?.data ?? []).map((employee) => ({
+        value: employee.id,
+        label:
+          `${employee.firstName ?? ""} ${employee.lastName ?? ""}`.trim() ||
+          employee.email,
+        sublabel: employee.designation ?? employee.email,
+      })),
+    [employeesQuery.data],
+  );
 
   return (
     <HrSheet
@@ -121,11 +133,13 @@ export function LetterGenerationSheet({ open, onOpenChange, employees, onSaved }
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Employee</label>
           <Combobox
-            options={empOptions}
+            options={employeeOptions}
             value={employeeId}
             onChange={setEmployeeId}
             placeholder="Select employee (optional)..."
             searchPlaceholder="Search employees..."
+            emptyText={employeesQuery.isLoading ? "Loading employees..." : "No employees found."}
+            onSearchChange={setEmployeeSearch}
           />
         </div>
 

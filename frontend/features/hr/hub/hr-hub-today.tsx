@@ -1,7 +1,7 @@
 "use client";
 
 import { HrSectionHeader } from "@/features/hr/shared/hr-ui";
-import type { HrHubAccess } from "./use-hr-hub-access";
+import type { HrHubViewProps } from "@/hooks/api/hr/hub";
 import { OutTodayCard } from "./today/out-today-card";
 import { JoiningSoonCard } from "./today/joining-soon-card";
 import { InterviewsTodayCard } from "./today/interviews-today-card";
@@ -9,13 +9,15 @@ import { CelebrationsCard } from "./today/celebrations-card";
 import { NextHolidayCard } from "./today/next-holiday-card";
 import { AttendanceNowCard } from "./today/attendance-now-card";
 
-interface HrHubTodayProps {
-  access: HrHubAccess;
-}
-
-export function HrHubToday({ access }: HrHubTodayProps) {
+export function HrHubToday({
+  access,
+  snapshot,
+  isLoading,
+  onRetry,
+}: HrHubViewProps) {
+  const sections = snapshot?.sections;
   const hasAny =
-    access.canLeaves ||
+    access.canLeaveCalendar ||
     access.canAnalytics ||
     access.canInterviews ||
     access.canAttendanceView;
@@ -30,14 +32,48 @@ export function HrHubToday({ access }: HrHubTodayProps) {
         size="lg"
       />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-        {access.canLeaves && <OutTodayCard />}
-        {access.canAnalytics && <JoiningSoonCard />}
-        {access.canInterviews && (
-          <InterviewsTodayCard enabled={access.canInterviews} />
+        {access.canLeaveCalendar && (
+          <OutTodayCard
+            section={sections?.leaveCalendar}
+            isLoading={isLoading}
+            onRetry={onRetry}
+          />
         )}
-        {access.canAnalytics && <CelebrationsCard />}
-        {access.canAttendanceView && <NextHolidayCard />}
-        {access.canAttendanceView && <AttendanceNowCard />}
+        {access.canAnalytics && (
+          <JoiningSoonCard
+            section={sections?.onboardingStatus}
+            isLoading={isLoading}
+            onRetry={onRetry}
+          />
+        )}
+        {access.canInterviews && (
+          <InterviewsTodayCard
+            section={sections?.interviews}
+            isLoading={isLoading}
+            onRetry={onRetry}
+          />
+        )}
+        {access.canAnalytics && (
+          <CelebrationsCard
+            section={sections?.dashboardMetrics}
+            isLoading={isLoading}
+            onRetry={onRetry}
+          />
+        )}
+        {access.canAttendanceView && (
+          <NextHolidayCard
+            section={sections?.holidays}
+            isLoading={isLoading}
+            onRetry={onRetry}
+          />
+        )}
+        {access.canAttendanceView && (
+          <AttendanceNowCard
+            section={sections?.attendanceStatus}
+            isLoading={isLoading}
+            onRetry={onRetry}
+          />
+        )}
       </div>
     </div>
   );

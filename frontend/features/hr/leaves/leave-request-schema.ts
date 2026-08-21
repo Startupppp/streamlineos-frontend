@@ -13,7 +13,6 @@ export const leaveFormSchema = z
       .trim()
       .min(10, "Reason must be at least 10 characters")
       .max(500, "Reason must be at most 500 characters"),
-    approverId: z.string().optional(),
   })
   .superRefine((data, ctx) => {
     if (data.startDate && data.endDate) {

@@ -183,10 +183,10 @@ export const EmployeeDocumentsTab = forwardRef<
       const fd = new FormData();
       fd.append("file", file);
       fd.append("folder", "onboarding-docs");
-      const uploadResult = await apiClient.upload<{ url: string }>("/storage/upload", fd);
+      const uploadResult = await apiClient.upload<{ key: string }>("/storage/upload", fd);
       await apiClient.post("/hr/onboarding-docs", {
         documentTypeId,
-        fileUrl: uploadResult.url,
+        fileUrl: uploadResult.key,
         fileName: file.name,
       });
     }

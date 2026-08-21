@@ -52,3 +52,4 @@ export * from "./safety";
 export * from "./helpdesk";
 export * from "./hr-calendar";
 export * from "./import-export";
+export * from "./hub";

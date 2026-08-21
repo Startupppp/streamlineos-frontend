@@ -28,10 +28,10 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { EntityFormSheet } from "@/components/shared/entity-form-sheet";
 import type { StateIllustrationPreset } from "@/components/illustrations/state-illustration";
 import type { OrgCatalogInput } from "@/types/hr/core";
-import type { UseMutationResult } from "@tanstack/react-query";
 
 interface CatalogItem {
   id: number;
@@ -44,10 +44,14 @@ interface OrgCatalogTableProps<T extends CatalogItem> {
   title: string;
   items: T[] | undefined;
   isLoading: boolean;
+  isError: boolean;
+  onRetry: () => void;
   canManage: boolean;
-  onCreate: UseMutationResult<unknown, Error, OrgCatalogInput>;
-  onUpdate: UseMutationResult<unknown, Error, OrgCatalogInput & { id: number }>;
-  onDelete: UseMutationResult<unknown, Error, number>;
+  onCreate: (catalog: OrgCatalogInput) => Promise<unknown>;
+  onUpdate: (catalogItemId: number, catalog: OrgCatalogInput) => Promise<unknown>;
+  onDelete: (catalogItemId: number) => Promise<unknown>;
+  isCreating: boolean;
+  isUpdating: boolean;
   extraColumns?: Array<{ label: string; render: (item: T) => React.ReactNode }>;
   illustrationPreset?: StateIllustrationPreset;
 }
@@ -84,13 +88,17 @@ function UpsertSheet({
   initial,
   onCreate,
   onUpdate,
+  isCreating,
+  isUpdating,
 }: {
   open: boolean;
-  onOpenChange: (o: boolean) => void;
+  onOpenChange: (open: boolean) => void;
   title: string;
   initial?: CatalogItem;
-  onCreate: UseMutationResult<unknown, Error, OrgCatalogInput>;
-  onUpdate: UseMutationResult<unknown, Error, OrgCatalogInput & { id: number }>;
+  onCreate: (catalog: OrgCatalogInput) => Promise<unknown>;
+  onUpdate: (catalogItemId: number, catalog: OrgCatalogInput) => Promise<unknown>;
+  isCreating: boolean;
+  isUpdating: boolean;
 }) {
   const isEdit = initial?.id !== undefined;
   const defaultValues = useMemo(
@@ -108,15 +116,15 @@ function UpsertSheet({
     };
     try {
       if (isEdit && initial) {
-        await onUpdate.mutateAsync({ ...payload, id: initial.id });
+        await onUpdate(initial.id, payload);
         toast.success(`${title} updated`);
       } else {
-        await onCreate.mutateAsync(payload);
+        await onCreate(payload);
         toast.success(`${title} created`);
       }
       onOpenChange(false);
-    } catch (err) {
-      toast.error(getErrorMessage(err));
+    } catch (mutationError) {
+      toast.error(getErrorMessage(mutationError));
     }
   }
 
@@ -133,7 +141,7 @@ function UpsertSheet({
       resolver={zodResolver(catalogFormSchema)}
       defaultValues={defaultValues}
       onSubmit={handleSubmit}
-      isSubmitting={isEdit ? onUpdate.isPending : onCreate.isPending}
+      isSubmitting={isEdit ? isUpdating : isCreating}
       submitLabel={isEdit ? "Save" : "Create"}
       className="sm:max-w-md"
       resetOnOpen
@@ -189,10 +197,14 @@ export function OrgCatalogTable<T extends CatalogItem>({
   title,
   items,
   isLoading,
+  isError,
+  onRetry,
   canManage,
   onCreate,
   onUpdate,
   onDelete,
+  isCreating,
+  isUpdating,
   extraColumns = [],
   illustrationPreset = "default",
 }: OrgCatalogTableProps<T>) {
@@ -210,18 +222,20 @@ export function OrgCatalogTable<T extends CatalogItem>({
     setUpsertOpen(true);
   }, []);
   const handleDeleteClick = useCallback(
-    (id: number) => {
-      onDelete.mutate(id, {
-        onSuccess: () => toast.success(`${title} deleted`),
-        onError: (err) => toast.error(getErrorMessage(err)),
-      });
+    async (catalogItemId: number) => {
+      try {
+        await onDelete(catalogItemId);
+        toast.success(`${title} deleted`);
+      } catch (error) {
+        toast.error(getErrorMessage(error));
+      }
     },
     [onDelete, title],
   );
 
-  const handleUpsertOpenChange = useCallback((o: boolean) => {
-    setUpsertOpen(o);
-    if (!o) setEditing(null);
+  const handleUpsertOpenChange = useCallback((open: boolean) => {
+    setUpsertOpen(open);
+    if (!open) setEditing(null);
   }, []);
 
   const filtered = (items ?? []).filter((item) =>
@@ -231,10 +245,20 @@ export function OrgCatalogTable<T extends CatalogItem>({
   if (isLoading) {
     return (
       <div className="space-y-2">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="h-10 w-full rounded-lg" />
+        {Array.from({ length: 5 }).map((_, skeletonIndex) => (
+          <Skeleton key={skeletonIndex} className="h-10 w-full rounded-lg" />
         ))}
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        title={`Failed to load ${title.toLowerCase()}s`}
+        description="Something went wrong. Please try again."
+        onRetry={onRetry}
+      />
     );
   }
 
@@ -287,12 +311,12 @@ export function OrgCatalogTable<T extends CatalogItem>({
                       </p>
                     )}
                   </div>
-                  {extraColumns.map((col, i) => (
+                  {extraColumns.map((extraColumn, columnIndex) => (
                     <div
-                      key={i}
+                      key={columnIndex}
                       className="shrink-0 text-xs text-muted-foreground"
                     >
-                      {col.render(item)}
+                      {extraColumn.render(item)}
                     </div>
                   ))}
                   {canManage && (
@@ -336,6 +360,8 @@ export function OrgCatalogTable<T extends CatalogItem>({
         initial={editing ?? undefined}
         onCreate={onCreate}
         onUpdate={onUpdate}
+        isCreating={isCreating}
+        isUpdating={isUpdating}
       />
     </>
   );

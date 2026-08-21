@@ -218,8 +218,7 @@ export function ModuleAutomationsSettings({ config }: { config: ModuleAutomation
   const [runsTarget, setRunsTarget] = useState<AutomationRule | null>(null);
   const [togglingId, setTogglingId] = useState<number | null>(null);
 
-  const moduleEnabled =
-    enabledModules.length === 0 || matchesOrgModule(enabledModules, moduleEnabledKey);
+  const moduleEnabled = matchesOrgModule(enabledModules, moduleEnabledKey);
 
   const moduleRules = (automationsData?.data ?? []).filter(
     (r) => getModuleForTrigger(r.triggerEvent) === sectionModule,

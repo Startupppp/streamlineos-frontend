@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
 
 export interface BiometricDevice {
   id: number;
@@ -25,10 +26,13 @@ export interface BiometricLog {
 }
 
 export function useBiometricDevices() {
+  const canManage = useCan("hr:attendance:manage");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "biometricDevices"],
     queryFn: () => apiClient.get<BiometricDevice[]>("/hr/biometric/devices"),
     staleTime: 5 * 60_000,
+    enabled: hrEnabled && canManage,
   });
 }
 
@@ -53,9 +57,12 @@ export function useUpdateBiometricDevice() {
 }
 
 export function useBiometricLogs() {
+  const canView = useCan("hr:attendance:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "biometricLogs"],
     queryFn: () => apiClient.get<BiometricLog[]>("/hr/biometric/logs"),
     staleTime: 30_000,
+    enabled: hrEnabled && canView,
   });
 }

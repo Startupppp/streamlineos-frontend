@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
 
 export interface Roster {
   id: number;
@@ -25,10 +26,13 @@ export interface RosterEntry {
 }
 
 export function useRosters() {
+  const canView = useCan("hr:attendance:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "rosters"],
     queryFn: () => apiClient.get<Roster[]>("/hr/rosters"),
     staleTime: 2 * 60_000,
+    enabled: hrEnabled && canView,
   });
 }
 
@@ -43,11 +47,13 @@ export function useCreateRoster() {
 }
 
 export function useRosterEntries(rosterId: number) {
+  const canView = useCan("hr:attendance:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "rosterEntries", rosterId],
     queryFn: () => apiClient.get<RosterEntry[]>(`/hr/rosters/${rosterId}/entries`),
     staleTime: 30_000,
-    enabled: rosterId > 0,
+    enabled: hrEnabled && canView && rosterId > 0,
   });
 }
 
@@ -55,7 +61,8 @@ export function usePublishRoster() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["hr", "rosters", "publish"],
-    mutationFn: (id: number) => apiClient.patch<Roster>(`/hr/rosters/${id}/publish`, {}),
+    mutationFn: (rosterId: number) =>
+      apiClient.patch<Roster>(`/hr/rosters/${rosterId}/publish`, {}),
     onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "rosters"] }),
   });
 }

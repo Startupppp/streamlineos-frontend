@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
 
 
 export interface DocumentTemplate {
@@ -38,6 +38,7 @@ export interface UpdateDocumentTemplateInput {
 
 export function useDocumentTemplates(type?: string) {
   const canView = useCan("hr:documents:view");
+  const hrEnabled = useModuleEnabled("hr");
   const params = type ? { type } : undefined;
   return useQuery({
     queryKey: queryKeys.hr.documentTemplates(params as Record<string, unknown> | undefined),
@@ -47,16 +48,19 @@ export function useDocumentTemplates(type?: string) {
         params as Record<string, unknown> | undefined
       ),
     staleTime: 2 * 60_000,
-    enabled: canView,
+    enabled: hrEnabled && canView,
   });
 }
 
-export function useDocumentTemplate(id: number) {
+export function useDocumentTemplate(templateId: number) {
+  const canView = useCan("hr:documents:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: queryKeys.hr.documentTemplate(id),
-    queryFn: () => apiClient.get<DocumentTemplate>(`/hr/documents/templates/${id}`),
+    queryKey: queryKeys.hr.documentTemplate(templateId),
+    queryFn: () =>
+      apiClient.get<DocumentTemplate>(`/hr/documents/templates/${templateId}`),
     staleTime: 2 * 60_000,
-    enabled: !!id,
+    enabled: hrEnabled && templateId > 0 && canView,
   });
 }
 
@@ -74,11 +78,11 @@ export function useUpdateDocumentTemplate() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["hr", "document-templates", "update"],
-    mutationFn: ({ id, ...data }: UpdateDocumentTemplateInput & { id: number }) =>
-      apiClient.put<DocumentTemplate>(`/hr/documents/templates/${id}`, data),
+    mutationFn: ({ templateId, ...data }: UpdateDocumentTemplateInput & { templateId: number }) =>
+      apiClient.put<DocumentTemplate>(`/hr/documents/templates/${templateId}`, data),
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.documentTemplates() });
-      qc.invalidateQueries({ queryKey: queryKeys.hr.documentTemplate(variables.id) });
+      qc.invalidateQueries({ queryKey: queryKeys.hr.documentTemplate(variables.templateId) });
     },
   });
 }
@@ -87,8 +91,8 @@ export function useDeleteDocumentTemplate() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["hr", "document-templates", "delete"],
-    mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/documents/templates/${id}`),
+    mutationFn: (templateId: number) =>
+      apiClient.delete<{ success: boolean }>(`/hr/documents/templates/${templateId}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.documentTemplates() }),
   });
 }
@@ -97,8 +101,8 @@ export function useSetDocumentTemplateDefault() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["hr", "document-templates", "set-default"],
-    mutationFn: ({ id, isDefault }: { id: number; isDefault: boolean }) =>
-      apiClient.patch<DocumentTemplate>(`/hr/documents/templates/${id}`, { isDefault }),
+    mutationFn: ({ templateId, isDefault }: { templateId: number; isDefault: boolean }) =>
+      apiClient.patch<DocumentTemplate>(`/hr/documents/templates/${templateId}`, { isDefault }),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.documentTemplates() }),
   });
 }
@@ -117,6 +121,8 @@ export interface DocumentTemplateVersion {
 }
 
 export function useDocumentTemplateVersions(templateId: number) {
+  const canView = useCan("hr:documents:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...queryKeys.hr.documentTemplate(templateId), "versions"],
     queryFn: () =>
@@ -124,7 +130,7 @@ export function useDocumentTemplateVersions(templateId: number) {
         `/hr/documents/templates/${templateId}/versions`
       ),
     staleTime: 2 * 60_000,
-    enabled: !!templateId,
+    enabled: hrEnabled && !!templateId && canView,
   });
 }
 

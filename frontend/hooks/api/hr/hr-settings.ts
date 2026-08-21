@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import type {
   Asset,
   Document,
@@ -55,8 +55,11 @@ export function useCreateDocument() {
     mutationKey: ["hr", "documents", "create"],
     mutationFn: (data: CreateDocumentInput) =>
       apiClient.post<Document>("/hr/documents", data),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.documents() }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.documentsAll });
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.documentsStats() });
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.documentsExpiryAll });
+    },
   });
 }
 
@@ -67,8 +70,9 @@ export function useUpdateDocument() {
     mutationFn: ({ id, ...data }: { id: number; name?: string; description?: string | null; type?: string; category?: string | null; userId?: string | null; isPublic?: boolean; tags?: string[]; expiryDate?: string | null }) =>
       apiClient.patch<Document>(`/hr/documents/${id}`, data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.documents() });
-      qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "documentStats"] });
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.documentsAll });
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.documentsStats() });
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.documentsExpiryAll });
     },
   });
 }
@@ -80,15 +84,16 @@ export function useDeleteDocument() {
     mutationFn: (documentId: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/documents/${documentId}`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.documents() });
-      qc.invalidateQueries({
-        queryKey: [...queryKeys.hr.all, "documentStats"],
-      });
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.documentsAll });
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.documentsStats() });
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.documentsExpiryAll });
     },
   });
 }
 
 export function useHrPerformanceReviews(userId?: string) {
+  const canView = useCan("hr:performance:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.performanceReviews(userId),
     queryFn: () =>
@@ -97,6 +102,7 @@ export function useHrPerformanceReviews(userId?: string) {
         userId ? { userId } : undefined,
       ),
     staleTime: 2 * 60_000,
+    enabled: hrEnabled && canView,
   });
 }
 
@@ -126,11 +132,12 @@ export function useHrWfhRequests() {
 
 export function useHrPendingWfhRequests(options?: { enabled?: boolean }) {
   const canAttendance = useCan("hr:attendance:manage");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.pendingWfhRequests(),
     queryFn: () => apiClient.get<WfhRequest[]>("/hr/wfh/pending"),
     staleTime: 2 * 60_000,
-    enabled: canAttendance && (options?.enabled ?? true),
+    enabled: hrEnabled && canAttendance && (options?.enabled ?? true),
   });
 }
 

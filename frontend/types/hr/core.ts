@@ -28,11 +28,10 @@ export interface HrTimelineEntry {
 
 export interface HrTimelineResponse {
   data: HrTimelineEntry[];
-  pagination: {
-    page: number;
+  pageInfo: {
     limit: number;
-    total: number;
-    totalPages: number;
+    hasMore: boolean;
+    nextCursor: string | null;
   };
 }
 
@@ -66,16 +65,6 @@ export interface HrSensitiveData {
   bgvStatus: string | null;
 }
 
-export interface HrLocation {
-  id: number;
-  orgId: string;
-  name: string;
-  code: string | null;
-  type: string;
-  address: Record<string, string | undefined> | null;
-  deletedAt: string | null;
-}
-
 export interface HrJobRole {
   id: number;
   orgId: string;
@@ -95,16 +84,6 @@ export interface HrJobLevel {
   isActive: boolean;
 }
 
-export interface HrTeam {
-  id: number;
-  orgId: string;
-  name: string;
-  code: string | null;
-  description: string | null;
-  isActive: boolean;
-  deletedAt: string | null;
-}
-
 export interface HrHeadcountGroup {
   groupId: number | string | null;
   groupName: string | null;
@@ -115,17 +94,4 @@ export type OrgCatalogInput = {
   name: string;
   code?: string;
   description?: string;
-};
-
-export type LocationInput = OrgCatalogInput & {
-  type?: string;
-  address?: {
-    line1?: string;
-    line2?: string;
-    city?: string;
-    state?: string;
-    country?: string;
-    postalCode?: string;
-    timezone?: string;
-  };
 };

@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useMemo, useState, useCallback } from "react";
+import { memo, useEffect, useMemo, useState, useCallback } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SearchInput } from "@/components/ui/search-input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { DataTablePagination } from "@/components/shared/data-table-pagination";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
@@ -18,13 +20,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Users, Wifi, WifiOff, Coffee, LogOut } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useHrTeamAttendanceStatus, useHrDepartments } from "@/hooks/api/hr";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { resolveImageUrl, cn } from "@/lib/utils";
 import { getInitials } from "@/lib/format-utils";
 import type { TeamAttendanceEntry } from "@/types/hr";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 type StatusFilter = TeamAttendanceEntry["status"] | "ALL";
 
@@ -129,7 +131,7 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
   const [page, setPage] = useState(1);
   const debouncedSearch = useDebouncedValue(search.trim(), 300);
 
-  const { data, isLoading } = useHrTeamAttendanceStatus({
+  const { data, error, isLoading, refetch } = useHrTeamAttendanceStatus({
     page,
     limit: PAGE_SIZE,
     search: debouncedSearch || undefined,
@@ -150,8 +152,6 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
     setStatusFilter((prev) => (prev === status ? "ALL" : status));
     setPage(1);
   }, []);
-  const handlePrevPage = useCallback(() => setPage((p) => Math.max(1, p - 1)), []);
-  const handleNextPage = useCallback(() => setPage((p) => p + 1), []);
 
   const departments = useMemo(
     () => [...(departmentsData ?? [])].sort((a, b) => a.name.localeCompare(b.name)),
@@ -162,6 +162,17 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
   const counts = data?.counts;
   const pagination = data?.pagination;
   const totalPages = pagination?.totalPages ?? 1;
+
+  useEffect(() => {
+    if (isLoading || page <= totalPages) return;
+    let correctionActive = true;
+    queueMicrotask(() => {
+      if (correctionActive) setPage(totalPages);
+    });
+    return () => {
+      correctionActive = false;
+    };
+  }, [isLoading, page, totalPages]);
 
   const listMaxClass = expanded ? "max-h-[min(70dvh,36rem)]" : "max-h-72";
 
@@ -180,8 +191,11 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
 
         {isLoading ? (
           <div className="mt-2 grid grid-cols-2 gap-2 rounded-xl bg-muted/30 p-3 md:grid-cols-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="flex flex-col items-center gap-1.5 py-1">
+            {Array.from({ length: 4 }).map((_, skeletonIndex) => (
+              <div
+                key={skeletonIndex}
+                className="flex flex-col items-center gap-1.5 py-1"
+              >
                 <Skeleton className="h-5 w-8" />
                 <Skeleton className="h-2.5 w-12" />
               </div>
@@ -254,10 +268,20 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
 
         {isLoading ? (
           <div className="space-y-2">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-14 w-full rounded-lg" />
+            {Array.from({ length: 5 }).map((_, skeletonIndex) => (
+              <Skeleton
+                key={skeletonIndex}
+                className="h-14 w-full rounded-lg"
+              />
             ))}
           </div>
+        ) : error ? (
+          <ErrorState
+            title="Unable to load team attendance"
+            description={getErrorMessage(error)}
+            onRetry={() => void refetch()}
+            compact
+          />
         ) : entries.length === 0 ? (
           <EmptyState
             illustrationPreset="team"
@@ -278,35 +302,15 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
                 ))}
               </div>
             </ScrollArea>
-            {pagination && totalPages > 1 && (
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-xs text-muted-foreground tabular-nums">
-                  {(pagination.page - 1) * pagination.limit + 1}–
-                  {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
-                  {pagination.total}
-                </p>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8"
-                    disabled={pagination.page <= 1}
-                    onClick={handlePrevPage}
-                  >
-                    Previous
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8"
-                    disabled={pagination.page >= totalPages}
-                    onClick={handleNextPage}
-                  >
-                    Next
-                  </Button>
-                </div>
-              </div>
-            )}
+            {pagination ? (
+              <DataTablePagination
+                page={pagination.page}
+                totalPages={totalPages}
+                total={pagination.total}
+                limit={pagination.limit}
+                onPageChange={setPage}
+              />
+            ) : null}
           </>
         )}
       </CardContent>

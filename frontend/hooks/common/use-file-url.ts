@@ -23,6 +23,40 @@ export async function getSignedFileUrl(fileUrl: string): Promise<string> {
   return data.url;
 }
 
+export async function getProtectedFileUrl(endpoint: string): Promise<string> {
+  const data = await apiClient.get<{ url: string }>(endpoint);
+  return data.url;
+}
+
+export async function viewProtectedFile(endpoint: string): Promise<void> {
+  try {
+    window.open(await getProtectedFileUrl(endpoint), "_blank", "noopener,noreferrer");
+  } catch (err) {
+    toast.error(getErrorMessage(err) || "Failed to open file");
+  }
+}
+
+export async function downloadProtectedFile(
+  endpoint: string,
+  fileName: string,
+): Promise<void> {
+  try {
+    const response = await fetch(await getProtectedFileUrl(endpoint));
+    if (!response.ok) throw new Error("Failed to download file");
+    const blobUrl = window.URL.createObjectURL(await response.blob());
+    const link = document.createElement("a");
+    link.href = blobUrl;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(blobUrl);
+    toast.success("Download started");
+  } catch (err) {
+    toast.error(getErrorMessage(err) || "Failed to download file");
+  }
+}
+
 export async function viewFile(fileUrl: string): Promise<void> {
   try {
     const url = await getSignedFileUrl(fileUrl);

@@ -28,7 +28,10 @@ import {
 } from "lucide-react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { useAccess, useCan } from "@/hooks/api/access";
+import {
+  useCan,
+  useCanManageOrganizationMembership,
+} from "@/hooks/api/access";
 import { useRemoveOrgMember } from "@/hooks/api/organization";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { UserChangeRoleDialog } from "./user-change-role-dialog";
@@ -54,9 +57,7 @@ export function UserActionsMenu({ user, onView }: UserActionsMenuProps) {
     useSendSigninLink();
   const { mutate: removeMember, isPending: isRemoving } = useRemoveOrgMember();
   const canManage = useCan("settings:organization:manage");
-  const { data: accessData } = useAccess();
-  const canChangeRole =
-    useCan("settings:rbac:manage") && accessData?.isOrgOwner === true;
+  const canChangeRole = useCanManageOrganizationMembership();
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(
     null,
   );
@@ -303,11 +304,13 @@ export function UserActionsMenu({ user, onView }: UserActionsMenuProps) {
         isPending={dialogConfig?.isPending}
         onConfirm={dialogConfig?.onConfirm ?? noOp}
       />
-      <UserChangeRoleDialog
-        open={isChangeRoleOpen}
-        onOpenChange={handleChangeRoleOpenChange}
-        user={user}
-      />
+      {canChangeRole ? (
+        <UserChangeRoleDialog
+          open={isChangeRoleOpen}
+          onOpenChange={handleChangeRoleOpenChange}
+          user={user}
+        />
+      ) : null}
     </>
   );
 }

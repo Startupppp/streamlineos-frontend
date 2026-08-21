@@ -80,20 +80,20 @@ interface TerminationFormSheetProps {
   submitDisabled?: boolean;
   onSubmit: () => void;
   employees: Employee[];
-  selectedUserId: string;
-  onSelectedUserIdChange: (value: string) => void;
+  selectedEmployeeUserId: string;
+  onSelectedEmployeeUserIdChange: (employeeUserId: string) => void;
   selectedReason: string;
   onSelectedReasonChange: (value: string) => void;
   remarks: string;
-  onRemarksChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  onRemarksChange: (inputEvent: React.ChangeEvent<HTMLTextAreaElement>) => void;
   effectiveDate: string;
   onEffectiveDateChange: (value: string) => void;
   noticePeriodWaived: boolean;
   onNoticePeriodWaivedChange: (checked: boolean) => void;
   severanceAmount: string;
-  onSeveranceAmountChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onSeveranceAmountChange: (inputEvent: React.ChangeEvent<HTMLInputElement>) => void;
   internalNotes: string;
-  onInternalNotesChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  onInternalNotesChange: (inputEvent: React.ChangeEvent<HTMLTextAreaElement>) => void;
 }
 
 export function TerminationFormSheet({
@@ -104,8 +104,8 @@ export function TerminationFormSheet({
   submitDisabled = false,
   onSubmit,
   employees,
-  selectedUserId,
-  onSelectedUserIdChange,
+  selectedEmployeeUserId,
+  onSelectedEmployeeUserIdChange,
   selectedReason,
   onSelectedReasonChange,
   remarks,
@@ -122,20 +122,30 @@ export function TerminationFormSheet({
   const isOtherReason = selectedReason === TERMINATION_REASON_OTHER;
 
   const selectedEmployee = useMemo(
-    () => employees.find((e) => e.id === selectedUserId) ?? null,
-    [employees, selectedUserId]
+    () =>
+      employees.find(
+        (employeeRecord) => employeeRecord.id === selectedEmployeeUserId,
+      ) ?? null,
+    [employees, selectedEmployeeUserId]
   );
 
   const employeeOptions = useMemo(
     () =>
       employees
-        .filter((emp) => emp.role !== "FINAL" && emp.isActive)
-        .map((emp) => {
+        .filter(
+          (employeeRecord) =>
+            employeeRecord.role !== "FINAL" && employeeRecord.isActive,
+        )
+        .map((employeeRecord) => {
           const label =
-            emp.firstName && emp.lastName
-              ? `${emp.firstName} ${emp.lastName}`
-              : (emp.name ?? emp.email);
-          return { value: emp.id, label, sublabel: emp.designation ?? emp.email };
+            employeeRecord.firstName && employeeRecord.lastName
+              ? `${employeeRecord.firstName} ${employeeRecord.lastName}`
+              : (employeeRecord.name ?? employeeRecord.email);
+          return {
+            value: employeeRecord.id,
+            label,
+            sublabel: employeeRecord.designation ?? employeeRecord.email,
+          };
         }),
     [employees]
   );
@@ -188,8 +198,8 @@ export function TerminationFormSheet({
           </Label>
           <Combobox
             options={employeeOptions}
-            value={selectedUserId}
-            onChange={onSelectedUserIdChange}
+            value={selectedEmployeeUserId}
+            onChange={onSelectedEmployeeUserIdChange}
             placeholder="Select an employee…"
             searchPlaceholder="Search by name…"
           />

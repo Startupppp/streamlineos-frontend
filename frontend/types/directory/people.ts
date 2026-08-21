@@ -52,16 +52,15 @@ export interface OrganizationPerson {
   updatedAt: string;
 }
 
-export interface PeoplePagination {
-  page: number;
+export interface PeoplePageInfo {
   limit: number;
-  total: number;
-  totalPages: number;
+  hasMore: boolean;
+  nextCursor: string | null;
 }
 
 export interface PeoplePage {
   data: OrganizationPerson[];
-  pagination: PeoplePagination;
+  pageInfo: PeoplePageInfo;
 }
 
 export interface CreatePersonInput {

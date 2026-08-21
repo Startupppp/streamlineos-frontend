@@ -10,11 +10,13 @@ import { useCan } from "@/hooks/api/access";
 import { useHrCommandCenter } from "@/hooks/api/hr";
 
 interface EmployeesDirectoryStatsProps {
-  matchingTotal: number;
+  loadedCount: number;
+  hasMore: boolean;
 }
 
 export function EmployeesDirectoryStats({
-  matchingTotal,
+  loadedCount,
+  hasMore,
 }: EmployeesDirectoryStatsProps) {
   const canAnalytics = useCan("hr:analytics:read");
   const commandCenter = useHrCommandCenter();
@@ -31,11 +33,11 @@ export function EmployeesDirectoryStats({
   return (
     <StatCardGrid>
       <StatCard
-        label="Total"
-        value={matchingTotal}
+        label="Loaded"
+        value={loadedCount}
         icon={Users}
         tone="default"
-        hint="Current filters"
+        hint={hasMore ? "More results available" : "Current filters"}
       />
       {showOrgStatus ? (
         <>

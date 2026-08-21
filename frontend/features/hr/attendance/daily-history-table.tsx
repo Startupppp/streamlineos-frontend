@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { PAGE_BODY_EMPTY_CLASS } from "@/components/ui/content-fill-panel";
 import { useHrAttendanceHistory } from "@/hooks/api/hr";
@@ -15,6 +16,7 @@ import { DownloadIcon } from "@animateicons/react/lucide";
 import { AttendanceEmailDialog } from "./attendance-email-dialog";
 import { formatDuration } from "./attendance-utils";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/get-error-message";
 import type { AttendanceLog } from "@/types/hr";
 
 const statusBadgeClasses: Record<string, string> = {
@@ -166,13 +168,23 @@ export const DailyHistoryTable = memo(function DailyHistoryTable({
 }) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const { data, isLoading } = useHrAttendanceHistory(page, pageSize);
+  const { data, error, isLoading, refetch } = useHrAttendanceHistory(
+    page,
+    pageSize,
+  );
   const logs = data?.data ?? [];
   const total = data?.pagination.total ?? 0;
   const totalPages = Math.max(1, data?.pagination.totalPages ?? 1);
 
   useEffect(() => {
-    if (!isLoading && page > totalPages) setPage(totalPages);
+    if (isLoading || page <= totalPages) return;
+    let correctionActive = true;
+    queueMicrotask(() => {
+      if (correctionActive) setPage(totalPages);
+    });
+    return () => {
+      correctionActive = false;
+    };
   }, [isLoading, page, totalPages]);
 
   const handlePageChange = useCallback((nextPage: number) => {
@@ -207,6 +219,16 @@ export const DailyHistoryTable = memo(function DailyHistoryTable({
   );
 
   if (!chrome) {
+    if (error) {
+      return (
+        <ErrorState
+          title="Unable to load attendance history"
+          description={getErrorMessage(error)}
+          onRetry={() => void refetch()}
+        />
+      );
+    }
+
     if (!isLoading && logs.length === 0) {
       return (
         <div className="flex min-h-0 flex-1 flex-col" aria-live="polite">
@@ -266,16 +288,25 @@ export const DailyHistoryTable = memo(function DailyHistoryTable({
         className={cn("p-0", fill && "min-h-0 flex-1 overflow-auto")}
         aria-live="polite"
       >
-        <DataTable
-          data={logs}
-          columns={columns}
-          getRowKey={getRowKey}
-          rowClassName={getRowClassName}
-          isLoading={isLoading}
-          minWidth="640px"
-          emptyState={emptyState}
-          pagination={pagination}
-        />
+        {error ? (
+          <ErrorState
+            title="Unable to load attendance history"
+            description={getErrorMessage(error)}
+            onRetry={() => void refetch()}
+            compact
+          />
+        ) : (
+          <DataTable
+            data={logs}
+            columns={columns}
+            getRowKey={getRowKey}
+            rowClassName={getRowClassName}
+            isLoading={isLoading}
+            minWidth="640px"
+            emptyState={emptyState}
+            pagination={pagination}
+          />
+        )}
       </CardContent>
     </Card>
   );

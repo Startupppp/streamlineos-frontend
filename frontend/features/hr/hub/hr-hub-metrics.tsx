@@ -13,19 +13,27 @@ import {
   StatCardGrid,
   StatCardGridSkeleton,
 } from "@/components/ui/stat-card";
-import { useHrCommandCenter } from "@/hooks/api/hr";
-import type { HrHubAccess } from "./use-hr-hub-access";
+import {
+  hubSectionData,
+  hubSectionError,
+  type HrHubViewProps,
+} from "@/hooks/api/hr/hub";
+import { ErrorRetry } from "./today/today-card";
 
-interface HrHubMetricsProps {
-  access: HrHubAccess;
-}
-
-export function HrHubMetrics({ access }: HrHubMetricsProps) {
-  const { data, isLoading } = useHrCommandCenter();
+export function HrHubMetrics({
+  access,
+  snapshot,
+  isLoading,
+  onRetry,
+}: HrHubViewProps) {
+  const section = snapshot?.sections.commandCenter;
+  const data = hubSectionData(section);
+  const error = hubSectionError(section);
 
   if (!access.canAnalytics) return null;
 
   if (isLoading) return <StatCardGridSkeleton cols={6} count={6} />;
+  if (error) return <ErrorRetry error={error} onRetry={onRetry} />;
   if (!data) return null;
 
   const attritionPct = `${data.attritionRate12mo.toFixed(1)}%`;

@@ -8,6 +8,19 @@ import {
 import { queryKeys } from "./query-keys";
 
 describe("query request policies", () => {
+  it("hashes identical logical keys into separate tenant and actor scopes", () => {
+    const first = createAppQueryClient("authenticated:org-a:user-a");
+    const second = createAppQueryClient("authenticated:org-b:user-a");
+    const key = ["streamlineos", "hr", "employees"] as const;
+
+    first.setQueryData(key, "a");
+    second.setQueryData(key, "b");
+
+    expect(first.getQueryCache().getAll()[0]?.queryHash).not.toBe(
+      second.getQueryCache().getAll()[0]?.queryHash,
+    );
+  });
+
   it("does not refetch every stale query on focus", () => {
     const client = createAppQueryClient();
 
