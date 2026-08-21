@@ -26,7 +26,7 @@ const ENTITY_TYPES = [
 export default function HrCustomFieldsPage() {
   const [entityType, setEntityType] = useState("employee");
   const [open, setOpen] = useState(false);
-  const canManage = useCan("settings:custom-fields:manage");
+  const canManage = useCan("hr:custom-fields:manage");
   const { data: fields, isLoading, isError, refetch } = useHrCustomFields(entityType, {
     enabled: canManage,
   });
@@ -59,7 +59,7 @@ export default function HrCustomFieldsPage() {
     return (
       <PageWrapper title="Custom Fields" subtitle="Define additional fields for HR entities">
         <NoPermissionState
-          permission="settings:custom-fields:manage"
+          permission="hr:custom-fields:manage"
           title="Access Restricted"
           description="You don't have permission to view custom field definitions."
         />

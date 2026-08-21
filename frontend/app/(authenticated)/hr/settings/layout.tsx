@@ -20,7 +20,7 @@ const SETTINGS_OVERVIEW_PERMISSIONS: PermissionKey[] = [
   "hr:workflows:view",
   "hr:templates:view",
   "hr:forms:view",
-  "settings:custom-fields:manage",
+  "hr:custom-fields:manage",
   "hr:automations:view",
 ];
 
@@ -37,7 +37,7 @@ const TABS: {
   { label: "Automations", href: "/hr/settings/automations", permission: "hr:automations:view", advanced: true },
   { label: "Templates", href: "/hr/settings/templates", permission: "hr:templates:view" },
   { label: "Forms", href: "/hr/settings/forms", permission: "hr:forms:view", advanced: true },
-  { label: "Custom Fields", href: "/hr/settings/custom-fields", permission: "settings:custom-fields:manage", advanced: true },
+  { label: "Custom Fields", href: "/hr/settings/custom-fields", permission: "hr:custom-fields:manage", advanced: true },
   { label: "Import / Export", href: "/hr/settings/import-export", permission: ["hr:import:manage", "hr:export:manage"] },
   { label: "Integrations", href: "/hr/settings/integrations", permission: "hr:integrations:manage", advanced: true },
   { label: "Preview", href: "/hr/settings/preview", permission: "hr:policies:view", advanced: true },

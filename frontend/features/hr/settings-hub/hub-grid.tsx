@@ -126,7 +126,7 @@ const CARD_GROUPS: CardGroup[] = [
         title: "Custom Fields",
         description: "Employee attribute extensions",
         href: "/hr/settings/custom-fields",
-        permission: "settings:custom-fields:manage",
+        permission: "hr:custom-fields:manage",
         advanced: true,
       },
     ],

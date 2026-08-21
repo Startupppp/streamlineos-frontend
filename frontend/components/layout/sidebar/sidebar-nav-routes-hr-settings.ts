@@ -1,5 +1,24 @@
 import { LayoutDashboard, FileText, ClipboardList, History, Building2, SlidersHorizontal, Sliders, FileSearch, LayoutTemplate, Workflow, Plug } from "lucide-react";
 import type { NavRoute } from "./sidebar-nav-types";
+import type { PermissionKey } from "@/lib/rbac/permissions";
+
+const HR_SETTINGS_PERMISSIONS: PermissionKey[] = [
+  "settings:organization:manage",
+  "settings:rbac:manage",
+  "notifications:providers:view",
+  "settings:webhooks:manage",
+  "hr:import:manage",
+  "hr:export:manage",
+  "hr:integrations:manage",
+  "hr:policies:view",
+  "hr:policies:manage",
+  "hr:workflows:view",
+  "hr:templates:view",
+  "hr:forms:view",
+  "hr:custom-fields:manage",
+  "hr:automations:view",
+];
+
 
 export const HR_SETTINGS_ROUTES: NavRoute[] = [
 {
@@ -7,28 +26,14 @@ export const HR_SETTINGS_ROUTES: NavRoute[] = [
         icon: SlidersHorizontal,
         href: "/hr/settings",
         exact: true,
-        requiredPermission: [
-          "settings:organization:manage",
-          "settings:rbac:manage",
-          "notifications:providers:view",
-          "settings:webhooks:manage",
-          "hr:import:manage",
-          "hr:export:manage",
-          "hr:integrations:manage",
-          "hr:policies:view",
-          "hr:policies:manage",
-          "hr:workflows:view",
-          "hr:templates:view",
-          "hr:forms:view",
-          "settings:custom-fields:manage",
-          "hr:automations:view",
-        ],
+        requiredPermission: HR_SETTINGS_PERMISSIONS,
         children: [
           {
             label: "Overview",
             icon: LayoutDashboard,
             href: "/hr/settings",
             exact: true,
+            requiredPermission: HR_SETTINGS_PERMISSIONS,
           },
           {
             label: "Company",
@@ -76,7 +81,7 @@ export const HR_SETTINGS_ROUTES: NavRoute[] = [
             label: "Custom Fields",
             icon: Sliders,
             href: "/hr/settings/custom-fields",
-            requiredPermission: "settings:custom-fields:manage",
+            requiredPermission: "hr:custom-fields:manage",
           },
           {
             label: "Preview",
