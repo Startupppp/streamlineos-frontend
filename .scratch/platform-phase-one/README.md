@@ -4,7 +4,7 @@ Fourteen tickets across four independent streams, numbered in dependency order (
 Derived from four PRDs in `docs/specs/`, every claim verified against the running API, the live
 database catalog, or a module-graph tool.
 
-**Five are done and their files deleted** — 01, 02, 03, 05 and 07. What each one actually changed,
+**Six are done and their files deleted** — 01, 02, 03, 05, 07 and 09. What each one actually changed,
 including the two tickets whose premises turned out to be wrong, is in the `PAGES.md` changelog and
 in the commits that closed them; the ticket files were working documents, not the record.
 
@@ -15,17 +15,26 @@ in the commits that closed them; the ticket files were working documents, not th
 | 04 | One database transaction per request | Access cost |
 | 06 | Module owner and module admin answer one question | Ladder |
 | 08 | A billing owner can run billing without global settings | Ladder |
-| 09 | HR custom fields move to the HR namespace | Ladder |
 | 10 | Chat, Mail and Calendar get real permission vocabularies | Ladder |
 | 11 | Notifications, Workflows, Blog and Directory get vocabularies | Ladder |
 | 14 | A person with no login can be paid | Person |
+| 15 | An owner grants one person a specific set of permissions | Ladder |
 
 ## Blocked
 
 | # | Ticket | Blocked by |
 |---|---|---|
-| 12 | Chat, Mail and Calendar become delegatable | 06, 10 |
+| 12 | Chat, Mail and Calendar become delegatable | 06, 10, 15 |
 | 13 | The remaining five modules become delegatable | 08, 11, 12 |
+
+## Access model (confirmed by the user, 2026-08-21)
+
+**Exactly six standings, no custom roles:** org owner · org admin · org member, and per module
+owner · admin · member. A module owner, module admin, org admin or org owner may attach specific
+permissions to one person — member or admin — and may change their role; that person can then do
+only what they hold and sees only those screens. **Per-person grants do not exist yet** — ticket 15.
+Written into `backend/CLAUDE.md` §5. Tickets 06, 12 and 13 predate this and should be re-read
+against it before being picked up.
 
 ## Deliberately not ticketed
 

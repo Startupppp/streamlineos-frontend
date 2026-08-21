@@ -4,6 +4,7 @@ export type FoundationPermissionKey =
   | "hr:employees:update"
   | "hr:employees:delete"
   | "hr:employees:manage"
+  | "hr:custom-fields:manage"
   | "hr:interviews:view"
   | "hr:interviews:manage"
   | "hr:offers:view"

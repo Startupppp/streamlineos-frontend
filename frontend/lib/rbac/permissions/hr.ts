@@ -281,4 +281,5 @@ export const HR_PERMISSIONS: Permission[] = [
   { name: "hr:requisitions:manage", resource: "hr:requisitions", action: "manage", description: "Manage and approve job requisitions" },
   { name: "hr:sensitive:view", resource: "hr:sensitive", action: "view", description: "View employee sensitive fields (salary, bank, tax, government ID, medical)" },
   { name: "hr:sensitive:manage", resource: "hr:sensitive", action: "manage", description: "Manage employee sensitive fields" },
+  { name: "hr:custom-fields:manage", resource: "hr:custom-fields", action: "manage", description: "Manage HR custom field definitions" },
 ];
