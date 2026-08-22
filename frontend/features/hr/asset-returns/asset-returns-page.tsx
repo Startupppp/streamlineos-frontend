@@ -83,18 +83,6 @@ export function AssetReturnsPage() {
     [employees, resolvedUserId],
   );
 
-  const employeeOptions = useMemo<ComboboxOption[]>(
-    () =>
-      employees
-        .filter((e) => e.isActive)
-        .map((e) => ({
-          value: e.id,
-          label: getUserDisplayName(e),
-          sublabel: e.designation ?? e.email,
-        })),
-    [employees],
-  );
-
   const { data: items, isLoading, isError, refetch } = useQuery({
     queryKey: arKeys.list(),
     queryFn: () => apiClient.get<AssetReturn[]>("/hr/asset-returns"),
@@ -225,7 +213,6 @@ export function AssetReturnsPage() {
         open={sheetOpen}
         onOpenChange={handleSheetOpenChange}
         assetOptions={assetOptions}
-        employeeOptions={employeeOptions}
         allAssignedAssets={allAssignedAssets}
         selectedAssetId={selectedAssetId}
         resolvedUserId={resolvedUserId}

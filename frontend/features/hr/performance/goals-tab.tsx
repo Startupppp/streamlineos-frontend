@@ -18,7 +18,6 @@ import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Form } from "@/components/ui/form";
 import { HrSheet } from "@/features/hr/hr-sheet";
-import { EmployeePicker } from "@/features/hr/shared/employee-picker";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -374,10 +373,7 @@ export function GoalsTab() {
           <GoalFormFields
             form={goalForm}
             isEdit={!!editGoal}
-            employees={employees}
             watchedUserId={watchedUserId}
-            userPickerOpen={userPickerOpen}
-            onUserPickerOpenChange={setUserPickerOpen}
             startBounds={startBounds}
             endBounds={endBounds}
             onStartDateChange={handleStartDateChange}

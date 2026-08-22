@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
+import { EmployeePicker } from "@/features/hr/shared/employee-picker";
 import {
   Popover,
   PopoverContent,
@@ -34,10 +35,8 @@ type Employee = {
 type Objective = { objective: string; metric: string; deadline: string };
 
 interface PipFormFieldsProps {
-  employees: Employee[];
   hrEmployees: Employee[];
   pipUserId: string;
-  pipUserPickerOpen: boolean;
   hrRepId: string;
   hrRepPickerOpen: boolean;
   reason: string;
@@ -51,7 +50,6 @@ interface PipFormFieldsProps {
   pipStartBounds: { fromDate?: Date; fromYear?: number; toYear?: number };
   pipEndBounds: { fromDate?: Date; fromYear?: number; toYear?: number };
   objectiveDeadlineBounds: { fromDate?: Date; fromYear?: number; toYear?: number };
-  onPipUserPickerOpenChange: (open: boolean) => void;
   onHrRepPickerOpenChange: (open: boolean) => void;
   onSelectPipUser: (id: string) => void;
   onSelectHrRep: (id: string) => void;
@@ -76,10 +74,8 @@ function getEmployeeLabel(e: Employee): string {
 }
 
 export function PipFormFields({
-  employees,
   hrEmployees,
   pipUserId,
-  pipUserPickerOpen,
   hrRepId,
   hrRepPickerOpen,
   reason,
@@ -93,7 +89,6 @@ export function PipFormFields({
   pipStartBounds,
   pipEndBounds,
   objectiveDeadlineBounds,
-  onPipUserPickerOpenChange,
   onHrRepPickerOpenChange,
   onSelectPipUser,
   onSelectHrRep,
@@ -133,68 +128,12 @@ export function PipFormFields({
         <label className="text-sm font-medium">
           Employee <span className="text-destructive">*</span>
         </label>
-        <Popover
-          open={pipUserPickerOpen}
-          onOpenChange={(o) => {
-            if (!isEditing) onPipUserPickerOpenChange(o);
-          }}
-        >
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              role="combobox"
-              aria-expanded={pipUserPickerOpen}
-              className={cn(
-                "w-full justify-between font-normal",
-                fieldErrors.userId && "border-destructive",
-              )}
-              disabled={isEditing}
-            >
-              <span className="truncate">
-                {pipUserId
-                  ? (() => {
-                      const e = employees.find((x) => x.id === pipUserId);
-                      return e ? getEmployeeLabel(e) : "Select employee";
-                    })()
-                  : "Select employee"}
-              </span>
-              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent
-            className="w-[var(--radix-popover-trigger-width)] p-0"
-            align="start"
-          >
-            <Command>
-              <CommandInput placeholder="Search employees..." />
-              <CommandList className="max-h-48 overflow-y-auto">
-                <CommandEmpty>No employee found.</CommandEmpty>
-                <CommandGroup>
-                  {employees
-                    .filter((e) => e.isActive)
-                    .map((e) => {
-                      const label = getEmployeeLabel(e);
-                      return (
-                        <CommandItem
-                          key={e.id}
-                          value={`${label} ${e.email}`}
-                          onSelect={() => onSelectPipUser(e.id)}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              pipUserId === e.id ? "opacity-100" : "opacity-0",
-                            )}
-                          />
-                          {label}
-                        </CommandItem>
-                      );
-                    })}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
+        <EmployeePicker
+          value={pipUserId}
+          onChange={onSelectPipUser}
+          disabled={isEditing}
+          className={fieldErrors.userId ? "border-destructive" : undefined}
+        />
         {fieldErrors.userId && (
           <p className="text-xs text-destructive">{fieldErrors.userId}</p>
         )}

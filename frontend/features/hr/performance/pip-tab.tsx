@@ -18,7 +18,6 @@ import { EmptyApprovalIllustration } from "@/components/illustrations";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { HrSheet } from "@/features/hr/hr-sheet";
-import { EmployeePicker } from "@/features/hr/shared/employee-picker";
 import { toast } from "sonner";
 import { resolveImageUrl } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -277,7 +276,6 @@ export function PIPTab() {
 
   const handleSelectPipUser = useCallback((id: string) => {
     setPipUserId(id);
-    setPipUserPickerOpen(false);
     setFieldErrors((prev) => {
       const next = { ...prev };
       delete next.userId;
@@ -467,10 +465,8 @@ export function PIPTab() {
         isPending={createPIP.isPending || updatePIP.isPending}
       >
         <PipFormFields
-          employees={employees}
           hrEmployees={hrEmployees}
           pipUserId={pipUserId}
-          pipUserPickerOpen={pipUserPickerOpen}
           hrRepId={hrRepId}
           hrRepPickerOpen={hrRepPickerOpen}
           reason={reason}
@@ -484,7 +480,6 @@ export function PIPTab() {
           pipStartBounds={pipStartBounds}
           pipEndBounds={pipEndBounds}
           objectiveDeadlineBounds={objectiveDeadlineBounds}
-          onPipUserPickerOpenChange={setPipUserPickerOpen}
           onHrRepPickerOpenChange={setHrRepPickerOpen}
           onSelectPipUser={handleSelectPipUser}
           onSelectHrRep={handleSelectHrRep}
