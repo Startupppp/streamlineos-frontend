@@ -30,12 +30,6 @@ export const HOME_NAV_GROUPS: NavGroup[] = [
         requiredPermission: "chat:channels:read",
       },
       { label: "Notifications", href: "/notifications", icon: Bell },
-      {
-        label: "Home Access",
-        href: "/home/access",
-        icon: MessageSquareText,
-        requiredPermission: "home:access:view",
-      },
     ],
   },
   {
