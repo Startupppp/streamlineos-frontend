@@ -27,7 +27,6 @@ import { type AssignDialogState } from "@/features/hr/assets/asset-constants";
 import {
   AddAssetSheet,
   EditAssetSheet,
-  buildEmployeeOptions,
   useAssetForm,
   useEditAssetForm,
 } from "@/features/hr/assets/asset-form-sheet";
@@ -64,7 +63,6 @@ export function AssetsPage() {
   const { data: employeesRaw } = useHrEmployees(undefined);
 
   const employees = useMemo(() => unwrapEmployees(employeesRaw), [employeesRaw]);
-  const employeeOptions = useMemo(() => buildEmployeeOptions(employees), [employees]);
   const addForm = useAssetForm();
   const editForm = useEditAssetForm();
 
@@ -358,7 +356,6 @@ export function AssetsPage() {
         assignDialog={assignDialog}
         assignEmpId={assignEmpId}
         assignPending={assignPending}
-        employeeOptions={employeeOptions}
         onOpenChange={handleCloseAssign}
         onEmpChange={setAssignEmpId}
         onConfirmAssign={handleConfirmAssign}

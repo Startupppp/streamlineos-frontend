@@ -25,16 +25,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { assetFormSchema, type AssetFormValues } from "./asset-schema";
 import { ASSET_TYPES } from "./asset-constants";
-import type { Asset, Employee } from "@/types/hr";
-import type { ComboboxOption } from "@/components/ui/combobox";
-
-export function buildEmployeeOptions(employees: Employee[]): ComboboxOption[] {
-  return employees.map((emp) => ({
-    value: emp.id,
-    label: `${emp.firstName ?? ""} ${emp.lastName ?? ""}`.trim() || emp.email,
-    sublabel: emp.designation ?? emp.email,
-  }));
-}
+import type { Asset } from "@/types/hr";
 
 function AssetFormFields({
   form,

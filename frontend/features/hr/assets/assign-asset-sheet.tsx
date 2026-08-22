@@ -3,7 +3,6 @@
 import { Button } from "@/components/ui/button";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { EmployeePicker } from "@/features/hr/shared/employee-picker";
-import type { ComboboxOption } from "@/components/ui/combobox";
 import type { AssignDialogState } from "./asset-constants";
 
 export function AssignAssetSheet({
@@ -18,7 +17,6 @@ export function AssignAssetSheet({
   assignDialog: AssignDialogState | null;
   assignEmpId: string;
   assignPending: boolean;
-  employeeOptions?: ComboboxOption[];
   onOpenChange: (open: boolean) => void;
   onEmpChange: (id: string) => void;
   onConfirmAssign: () => void;

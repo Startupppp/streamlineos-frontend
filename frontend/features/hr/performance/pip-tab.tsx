@@ -467,6 +467,7 @@ export function PIPTab() {
         <PipFormFields
           hrEmployees={hrEmployees}
           pipUserId={pipUserId}
+          editingUserName={editingPip?.user?.name ?? null}
           hrRepId={hrRepId}
           hrRepPickerOpen={hrRepPickerOpen}
           reason={reason}

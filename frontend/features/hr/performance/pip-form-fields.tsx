@@ -37,6 +37,7 @@ type Objective = { objective: string; metric: string; deadline: string };
 interface PipFormFieldsProps {
   hrEmployees: Employee[];
   pipUserId: string;
+  editingUserName: string | null;
   hrRepId: string;
   hrRepPickerOpen: boolean;
   reason: string;
@@ -76,6 +77,7 @@ function getEmployeeLabel(e: Employee): string {
 export function PipFormFields({
   hrEmployees,
   pipUserId,
+  editingUserName,
   hrRepId,
   hrRepPickerOpen,
   reason,
@@ -128,12 +130,17 @@ export function PipFormFields({
         <label className="text-sm font-medium">
           Employee <span className="text-destructive">*</span>
         </label>
-        <EmployeePicker
-          value={pipUserId}
-          onChange={onSelectPipUser}
-          disabled={isEditing}
-          className={fieldErrors.userId ? "border-destructive" : undefined}
-        />
+        {isEditing ? (
+          <p className="border-input bg-muted/40 text-muted-foreground flex h-9 items-center rounded-md border px-3 text-sm">
+            {editingUserName ?? "Unknown employee"}
+          </p>
+        ) : (
+          <EmployeePicker
+            value={pipUserId}
+            onChange={onSelectPipUser}
+            className={fieldErrors.userId ? "border-destructive" : undefined}
+          />
+        )}
         {fieldErrors.userId && (
           <p className="text-xs text-destructive">{fieldErrors.userId}</p>
         )}
