@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { INVITE_ROLES } from "../lib/constants";
+import { useBillingPlans } from "@/hooks/api/subscription";
 import { formatRoleLabel } from "@/features/users/user-invite-roles";
 import type { Invitee, WizardData } from "../lib/wizard-data-schema";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -38,10 +39,18 @@ export function StepInviteLaunch({
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<string>(INVITE_ROLES[0] ?? "ORG_ADMIN");
   const [phase, setPhase] = useState<"form" | "pending" | "generating">("form");
+  const { data: plansData } = useBillingPlans();
+
+  const seatLimit =
+    plansData?.plans.find((p) => p.id === plansData.trialPlan)?.maxEmployees ??
+    null;
+  const inviteLimit = seatLimit === null ? null : Math.max(seatLimit - 1, 0);
+  const atLimit = inviteLimit !== null && data.invitees.length >= inviteLimit;
 
   function handleAdd() {
     const trimmed = email.trim();
     if (!trimmed || !trimmed.includes("@")) return;
+    if (atLimit) return;
     if (
       data.invitees.some((i) => i.email.toLowerCase() === trimmed.toLowerCase())
     )
@@ -91,6 +100,14 @@ export function StepInviteLaunch({
     >
       <p className="text-[13px] leading-relaxed text-muted-foreground">
         Invite teammates now, or skip and invite them later from People → Invitations.
+        {inviteLimit !== null && (
+          <>
+            {" "}
+            Your plan includes {seatLimit} seats, one of which is yours — you can
+            invite up to {inviteLimit} {inviteLimit === 1 ? "person" : "people"}{" "}
+            here.
+          </>
+        )}
       </p>
 
       <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-stretch">
@@ -100,7 +117,7 @@ export function StepInviteLaunch({
           onChange={(e) => setEmail(e.target.value)}
           placeholder="teammate@company.com"
           className="min-w-0 h-9 w-full flex-1 text-sm"
-          disabled={isPending}
+          disabled={isPending || atLimit}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();
@@ -127,13 +144,21 @@ export function StepInviteLaunch({
             variant="outline"
             className="size-9 shrink-0"
             onClick={handleAdd}
-            disabled={isPending}
+            disabled={isPending || atLimit}
             aria-label="Add invitee"
           >
             <Plus className="h-3.5 w-3.5" />
           </Button>
         </div>
       </div>
+
+      {atLimit && (
+        <p className="text-[13px] leading-relaxed text-amber-700 dark:text-amber-300">
+          You&apos;ve used all {inviteLimit} invitations available on your plan.
+          Remove one to invite someone else, or add more seats later from
+          Settings → Billing.
+        </p>
+      )}
 
       {data.invitees.length > 0 && (
         <ul className="min-w-0 space-y-1">

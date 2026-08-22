@@ -13,14 +13,54 @@ import {
   FormLabel,
   FormMessage,
 } from "../../ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../ui/select";
+import { useSalaryStructureTemplates } from "@/hooks/api/hr/salary-structures";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import {
+  DEFAULT_SALARY_SPLIT,
+  applySalarySplit,
+  splitFromTemplate,
+} from "@/lib/salary-split";
+import { formatINR } from "@/lib/format-utils";
 
 type FormValues = z.infer<typeof onboardEmployeeInputSchema>;
+
+const DEFAULT_TEMPLATE_VALUE = "default";
+
+function inr(value: number): string {
+  return formatINR(Math.round(value));
+}
 
 interface StepSkillsPayProps {
   form: UseFormReturn<FormValues>;
 }
 
 export function StepSkillsPay({ form }: StepSkillsPayProps) {
+  const payrollEnabled = useModuleEnabled("payroll");
+  const canViewSalary = useCan("hr:salary:view");
+  const canUseTemplates = payrollEnabled && canViewSalary;
+  const { data: templates } = useSalaryStructureTemplates({
+    enabled: canUseTemplates,
+  });
+
+  const monthlySalary = Number(form.watch("monthlySalary")) || 0;
+  const templateId = form.watch("salaryStructureTemplateId");
+  const selectedTemplate = templates?.find((t) => t.id === templateId);
+  const split = selectedTemplate
+    ? splitFromTemplate(selectedTemplate)
+    : DEFAULT_SALARY_SPLIT;
+  const breakdown = applySalarySplit(monthlySalary, split);
+  const breakdownPercents = {
+    basic: Math.round(split.basicPercent),
+    hra: Math.round(split.hraPercent),
+  };
+
   return (
     <div className="space-y-5">
       <FormField
@@ -68,27 +108,80 @@ export function StepSkillsPay({ form }: StepSkillsPayProps) {
                   />
                 </div>
               </FormControl>
-              <FormDescription>
-                Salary breakdown: Basic (50%) + HRA (25%) + Special Allowance (25%) - Professional Tax (&#8377;200)
-              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
-        {form.watch("monthlySalary") && Number(form.watch("monthlySalary")) > 0 && (
+
+        {canUseTemplates && templates && templates.length > 0 && (
+          <FormField
+            control={form.control}
+            name="salaryStructureTemplateId"
+            render={({ field }) => (
+              <FormItem className="mt-4">
+                <FormLabel>Salary Structure</FormLabel>
+                <Select
+                  value={field.value ? String(field.value) : DEFAULT_TEMPLATE_VALUE}
+                  onValueChange={(value) =>
+                    field.onChange(
+                      value === DEFAULT_TEMPLATE_VALUE ? undefined : Number(value),
+                    )
+                  }
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+                    <SelectItem value={DEFAULT_TEMPLATE_VALUE}>
+                      Organisation default
+                    </SelectItem>
+                    {templates.map((template) => (
+                      <SelectItem key={template.id} value={String(template.id)}>
+                        {template.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormDescription>
+                  Sets how this salary is split into components. Manage
+                  structures under Payroll → Salary Structures.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
+        {monthlySalary > 0 && (
           <div className="mt-4 p-4 bg-muted/40 rounded-lg border text-sm">
             <div className="grid grid-cols-2 gap-2">
-              <span className="text-muted-foreground">Basic Pay:</span>
-              <span className="font-medium">&#8377;{(Number(form.watch("monthlySalary")) * 0.5).toLocaleString()}</span>
-              <span className="text-muted-foreground">HRA:</span>
-              <span className="font-medium">&#8377;{(Number(form.watch("monthlySalary")) * 0.25).toLocaleString()}</span>
-              <span className="text-muted-foreground">Special Allowance:</span>
-              <span className="font-medium">&#8377;{(Number(form.watch("monthlySalary")) * 0.25).toLocaleString()}</span>
+              <span className="text-muted-foreground">
+                Basic Pay ({breakdownPercents.basic}% of CTC):
+              </span>
+              <span className="font-medium tabular-nums">{inr(breakdown.basic)}</span>
+              <span className="text-muted-foreground">
+                HRA ({breakdownPercents.hra}% of basic):
+              </span>
+              <span className="font-medium tabular-nums">{inr(breakdown.hra)}</span>
+              <span className="text-muted-foreground">Other allowances:</span>
+              <span className="font-medium tabular-nums">{inr(breakdown.balance)}</span>
               <span className="text-muted-foreground">Professional Tax:</span>
-              <span className="font-medium text-red-600">-&#8377;200</span>
-              <span className="text-muted-foreground font-semibold border-t pt-2">Net Salary:</span>
-              <span className="font-bold text-green-600 border-t pt-2">&#8377;{(Number(form.watch("monthlySalary")) - 200).toLocaleString()}</span>
+              <span className="font-medium text-red-600 tabular-nums">
+                -{inr(breakdown.professionalTax)}
+              </span>
+              <span className="text-muted-foreground font-semibold border-t pt-2">
+                Net Salary:
+              </span>
+              <span className="font-bold text-green-600 border-t pt-2 tabular-nums">
+                {inr(breakdown.net)}
+              </span>
             </div>
+            <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
+              Basic and HRA are saved exactly as shown. The remaining balance is
+              allocated across your organisation&apos;s payroll components.
+            </p>
           </div>
         )}
       </div>

@@ -126,7 +126,7 @@ export function MembersPage() {
     <>
       <PageWrapper
         title="Members"
-        subtitle="PM Workspace members and their roles."
+        subtitle="People who can access Build, and their roles."
         noInternalScroll
         filtersClassName="flex-col items-stretch gap-2 overflow-x-visible"
         filters={
@@ -186,8 +186,8 @@ export function MembersPage() {
                   q
                     ? "Try adjusting your search."
                     : canManage
-                      ? "Add the first member to this PM Workspace."
-                      : "PM Workspace members will appear here."
+                      ? "Add the first person who should have access to Build."
+                      : "People with access to Build will appear here."
                 }
                 action={
                   !q && canManage
@@ -216,8 +216,8 @@ export function MembersPage() {
         title="Remove member?"
         description={
           removeTarget
-            ? `${getUserDisplayName(removeTarget)} will be removed from this PM Workspace.`
-            : "This member will be removed from the PM Workspace."
+            ? `${getUserDisplayName(removeTarget)} will lose access to Build. They stay a member of your organization.`
+            : "This person will lose access to Build. They stay a member of your organization."
         }
         confirmLabel="Remove"
         cancelLabel="Cancel"

@@ -178,18 +178,14 @@ export async function authedFetch(
       throw new ApiError("Request was cancelled.", undefined, "ABORTED");
     }
     const host = requestHost(url);
-    if (host) {
-      throw new ApiError(
-        `Network error contacting ${host}. Check your connection and try again.`,
-        undefined,
-        "NETWORK_ERROR",
-      );
-    }
-    if (error instanceof Error) throw error;
+    const method = (init.method ?? "GET").toUpperCase();
+    const cause = error instanceof Error ? error.message : String(error);
+    const target = host ? `contacting ${host} ` : "";
     throw new ApiError(
-      "Network error. Check your connection and try again.",
+      `Network error ${target}(${method} ${path}). Check your connection and try again.`,
       undefined,
       "NETWORK_ERROR",
+      { method, path, host, cause },
     );
   }
 }

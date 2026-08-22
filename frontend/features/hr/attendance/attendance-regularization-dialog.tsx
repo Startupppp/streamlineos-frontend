@@ -17,13 +17,41 @@ import { EntityFormSheet } from "@/components/shared/entity-form-sheet";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateRegularization } from "@/hooks/api/hr/attendance";
+import { formatDateOnly, getTodayString } from "@/lib/date-utils";
 import { FilePen } from "lucide-react";
+
+export const REGULARIZATION_WINDOW_DAYS = 30;
+
+function shiftDays(iso: string, days: number): string {
+  const d = new Date(`${iso}T00:00:00`);
+  d.setDate(d.getDate() + days);
+  return formatDateOnly(d);
+}
+
+function isRealCalendarDate(iso: string): boolean {
+  const d = new Date(`${iso}T00:00:00`);
+  return !Number.isNaN(d.getTime()) && formatDateOnly(d) === iso;
+}
+
+function currentTimeHhMm(): string {
+  const d = new Date();
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
 
 const regularizationSchema = z
   .object({
     attendanceDate: z
       .string()
-      .regex(/^\d{4}-\d{2}-\d{2}$/, "Select a valid date"),
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "Select a valid date")
+      .refine(isRealCalendarDate, "That date does not exist")
+      .refine(
+        (v) => v <= getTodayString(),
+        "You cannot request a correction for a future date",
+      )
+      .refine(
+        (v) => v >= shiftDays(getTodayString(), -REGULARIZATION_WINDOW_DAYS),
+        `Corrections are only allowed within the last ${REGULARIZATION_WINDOW_DAYS} days`,
+      ),
     requestedCheckIn: z.string().optional(),
     requestedCheckOut: z.string().optional(),
     reason: z
@@ -49,6 +77,23 @@ const regularizationSchema = z
         message: "Check-out must be after check-in",
         path: ["requestedCheckOut"],
       });
+    }
+    if (values.attendanceDate === getTodayString()) {
+      const now = currentTimeHhMm();
+      if (checkIn && checkIn > now) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Check-in cannot be later than the current time",
+          path: ["requestedCheckIn"],
+        });
+      }
+      if (checkOut && checkOut > now) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Check-out cannot be later than the current time",
+          path: ["requestedCheckOut"],
+        });
+      }
     }
   });
 
@@ -79,7 +124,7 @@ export function AttendanceRegularizationDialog({
 
   const defaultValues = useMemo<RegularizationFormValues>(
     () => ({
-      attendanceDate: new Date().toISOString().slice(0, 10),
+      attendanceDate: getTodayString(),
       requestedCheckIn: "",
       requestedCheckOut: "",
       reason: "",
@@ -135,7 +180,7 @@ export function AttendanceRegularizationDialog({
         open={open}
         onOpenChange={setOpen}
         title="Request Attendance Correction"
-        description="Submit corrected check-in or check-out times for review."
+        description={`Submit corrected check-in or check-out times for review. You can request corrections for the last ${REGULARIZATION_WINDOW_DAYS} days.`}
         resolver={zodResolver(regularizationSchema)}
         defaultValues={defaultValues}
         onSubmit={onSubmit}
@@ -153,7 +198,15 @@ export function AttendanceRegularizationDialog({
                 <FormItem>
                   <FormLabel>Date</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <Input
+                      type="date"
+                      min={shiftDays(
+                        getTodayString(),
+                        -REGULARIZATION_WINDOW_DAYS,
+                      )}
+                      max={getTodayString()}
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

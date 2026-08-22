@@ -69,6 +69,12 @@ export const safeMax = (values: number[], fallback = 1): number => {
   return max > 0 ? max : fallback;
 };
 
+export function formatDayCount(value: number): string {
+  if (!Number.isFinite(value)) return "0";
+  const rounded = Math.round(value * 10) / 10;
+  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+}
+
 export const calcPercent = (value: number, total: number, decimals = 1): string => {
   if (total <= 0) return "0";
   return ((value / total) * 100).toFixed(decimals);
@@ -156,11 +162,15 @@ export function getGreeting(): string {
 
 export function getFirstName(
   session: { user?: { name?: string | null; email?: string | null } } | null,
-): string {
-  const name = session?.user?.name;
-  const email = session?.user?.email;
-  const userName = name || (email && email.includes("@") ? email.split("@")[0] : null) || "User";
-  return userName.split(" ")[0] || "User";
+): string | null {
+  const name = session?.user?.name?.trim() ?? "";
+  if (!name) return null;
+  const emailLocal =
+    session?.user?.email?.trim().split("@")[0]?.trim().toLowerCase() ?? "";
+  if (emailLocal && name.toLowerCase() === emailLocal) return null;
+  const first = name.split(/\s+/)[0] ?? "";
+  if (!first) return null;
+  return first.charAt(0).toUpperCase() + first.slice(1);
 }
 
 export function formatIpAddress(ip: string | null | undefined): string {

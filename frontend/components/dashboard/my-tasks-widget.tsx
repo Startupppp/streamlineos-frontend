@@ -20,6 +20,7 @@ const priorityColors: Record<string, string> = {
 export function MyTasksWidget() {
   const { data, isLoading, error } = usePersonalDashboard();
   const tasks = data?.myTasks ?? [];
+  const sourceFailed = data?.degraded?.includes("myTasks") ?? false;
 
   return (
     <WidgetCard
@@ -31,7 +32,10 @@ export function MyTasksWidget() {
         ariaLabel: "View all tasks",
       }}
       isLoading={isLoading}
-      error={error}
+      error={error || sourceFailed}
+      errorMessage={
+        !error && sourceFailed ? "Couldn't load your tasks." : undefined
+      }
       isEmpty={!tasks.length}
       empty={
         <EmptyState

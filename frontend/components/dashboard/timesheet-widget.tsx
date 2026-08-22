@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 export function TimesheetWidget() {
   const { data, isLoading, error } = usePersonalDashboard();
   const ts = data?.timesheetStatus;
+  const sourceFailed = data?.degraded?.includes("timesheet") ?? false;
 
   return (
     <WidgetCard
@@ -17,7 +18,10 @@ export function TimesheetWidget() {
       title="Timesheet"
       link={{ href: "/timesheets", label: "View all", ariaLabel: "Go to timesheets" }}
       isLoading={isLoading}
-      error={error}
+      error={error || sourceFailed}
+      errorMessage={
+        !error && sourceFailed ? "Couldn't load this week's hours." : undefined
+      }
       loadingRows={2}
     >
       {ts ? (

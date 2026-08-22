@@ -41,6 +41,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Users, CalendarCheck, Clock3, BadgeCheck } from "lucide-react";
 import { HouseIcon, PlusIcon, DownloadIcon } from "@animateicons/react/lucide";
 import { resolveImageUrl } from "@/lib/utils";
+import { formatDayCount } from "@/lib/format-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 import { ErrorState } from "@/components/shared";
@@ -55,12 +56,33 @@ import type {
   ApprovedLeave,
 } from "./leaves-shared";
 
+function buildAvailableHint(
+  balances: LeaveBalance[],
+  joiningDate: string | null,
+): string | undefined {
+  const perType = balances
+    .filter((b) => b.typeName)
+    .map((b) => `${b.typeName} ${formatDayCount(Number(b.balance ?? 0))}`)
+    .join(" · ");
+
+  const joined = joiningDate ? new Date(joiningDate) : null;
+  const prorated =
+    joined && !Number.isNaN(joined.getTime()) &&
+    joined.getFullYear() === new Date().getFullYear()
+      ? `Prorated from your joining date (${format(joined, "d MMM yyyy")}): ${12 - joined.getMonth()} of 12 months`
+      : "";
+
+  return [perType, prorated].filter(Boolean).join(" — ") || undefined;
+}
+
 const LeavesSummaryStrip = React.memo(function LeavesSummaryStrip({
   totalAvailable,
+  availableHint,
   pendingCount,
   approvedCount,
 }: {
   totalAvailable: number;
+  availableHint?: string;
   pendingCount: number;
   approvedCount: number;
 }) {
@@ -68,7 +90,8 @@ const LeavesSummaryStrip = React.memo(function LeavesSummaryStrip({
     <StatCardGrid cols={3}>
       <StatCard
         label="Available Days"
-        value={totalAvailable}
+        value={formatDayCount(totalAvailable)}
+        hint={availableHint}
         icon={CalendarCheck}
         color="green"
       />
@@ -176,6 +199,7 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
     (sum, b) => sum + Number(b.balance ?? 0),
     0,
   );
+  const availableHint = buildAvailableHint(balances, joiningDate);
   const pendingCount = myLeaveRequests.filter(
     (r) => r.status === "PENDING",
   ).length;
@@ -290,6 +314,7 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
             <>
               <LeavesSummaryStrip
                 totalAvailable={totalAvailable}
+                availableHint={availableHint}
                 pendingCount={pendingCount}
                 approvedCount={approvedCount}
               />

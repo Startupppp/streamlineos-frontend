@@ -123,10 +123,15 @@ export interface PlanDefinition {
   maxEmployees: number | null;
 }
 
+export interface BillingPlansResponse {
+  plans: PlanDefinition[];
+  trialPlan?: SubscriptionPlan;
+}
+
 export function useBillingPlans() {
-  return useQuery<{ plans: PlanDefinition[] }, Error>({
+  return useQuery<BillingPlansResponse, Error>({
     queryKey: queryKeys.billing.plans(),
-    queryFn: () => apiClient.get<{ plans: PlanDefinition[] }>("/billing/plans"),
+    queryFn: () => apiClient.get<BillingPlansResponse>("/billing/plans"),
     staleTime: 60 * 60_000,
   });
 }

@@ -153,7 +153,13 @@ export function StepGeneration({
       .catch((error: unknown) => getErrorMessage(error));
 
     const invitationRequests = groupInviteesByRole(invitees).map((group) =>
-      bulkInviteRef.current.mutateAsync(group),
+      bulkInviteRef.current.mutateAsync(group).catch((error: unknown) => ({
+        results: group.emails.map((email) => ({
+          email,
+          success: false,
+          error: getErrorMessage(error),
+        })),
+      })),
     );
     const [generationFailure, inviteResults] = await Promise.all([
       generation,

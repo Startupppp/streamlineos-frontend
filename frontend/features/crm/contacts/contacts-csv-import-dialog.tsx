@@ -14,6 +14,7 @@ import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { personNameSchema } from "@/lib/person-name-schema";
 import { CsvColumnMapper } from "@/features/crm/contacts/csv-column-mapper";
 import { CsvContactsPreview, isValidSource } from "@/features/crm/contacts/csv-contacts-preview";
 import type { ParsedContact } from "@/features/crm/contacts/csv-contacts-preview";
@@ -126,10 +127,17 @@ function applyMapping(
     }
     const lastName = get(row, "last_name");
     const name = lastName ? `${firstName} ${lastName}` : firstName;
+    const parsedName = personNameSchema.safeParse(name);
+    if (!parsedName.success) {
+      errors.push(
+        `Row ${i + 2}: "${name}" is not a valid name, skipped.`,
+      );
+      return;
+    }
     const rawSource = get(row, "source")?.toLowerCase();
 
     contacts.push({
-      name,
+      name: parsedName.data,
       email: get(row, "email"),
       phone: get(row, "phone"),
       company: get(row, "company"),

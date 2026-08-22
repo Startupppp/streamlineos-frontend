@@ -72,7 +72,7 @@ export function AddMemberDialog({ open, onOpenChange }: AddMemberDialogProps) {
         <DialogHeader>
           <DialogTitle>Add member</DialogTitle>
           <DialogDescription>
-            Pick an org member to add to this PM Workspace.
+            Pick someone from your organization to give access to Build.
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-3 py-1">
@@ -106,6 +106,11 @@ export function AddMemberDialog({ open, onOpenChange }: AddMemberDialogProps) {
                 <SelectItem value="admin">Admin</SelectItem>
               </SelectContent>
             </Select>
+            <p className="text-[11px] leading-relaxed text-muted-foreground">
+              {selectedRole === "admin"
+                ? "Admins can manage Build settings, projects and who has access."
+                : "Members can work on projects and issues they are given access to."}
+            </p>
           </div>
         </div>
         <DialogFooter>

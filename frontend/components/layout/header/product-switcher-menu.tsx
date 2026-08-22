@@ -129,7 +129,10 @@ function ProductTile({
         >
           {label}
         </p>
-        <p className="text-[11px] text-muted-foreground line-clamp-1">
+        <p
+          className="text-[11px] text-muted-foreground line-clamp-1"
+          title={description}
+        >
           {description}
         </p>
       </div>

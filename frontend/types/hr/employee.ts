@@ -250,6 +250,7 @@ export interface OnboardEmployeeInput {
   dateOfBirth?: Date | string;
   taxId?: string;
   monthlySalary?: number;
+  salaryStructureTemplateId?: number;
   bankDetails?: {
     accountNumber?: string;
     bankName?: string;

@@ -1,5 +1,6 @@
 const NETWORK_PATTERN = /failed to fetch|networkerror|network request failed|load failed|fetch failed/i;
 const HOST_IN_MESSAGE = /contacting\s+([a-z0-9-]+(?:\.[a-z0-9-]+)*)/i;
+const REQUEST_IN_MESSAGE = /\(((?:GET|POST|PUT|PATCH|DELETE)\s+[^)]+)\)/i;
 const CHUNK_PATTERN = /chunkloaderror|loading chunk \S+ failed|(?:failed|error) (?:to fetch|loading) dynamically imported module|importing a module script failed/i;
 const GENERIC_SERVER_PATTERN =
   /^(?:an unexpected error occurred|unexpected error|internal server error)$/i;
@@ -85,9 +86,12 @@ function extractStatus(error: unknown): number | undefined {
 
 function networkMessage(message: string): string {
   const hostMatch = HOST_IN_MESSAGE.exec(message);
-  if (hostMatch?.[1]) 
-    return `Network error contacting ${hostMatch[1]}. Check your connection and try again.`;
-  
+  if (hostMatch?.[1]) {
+    const request = REQUEST_IN_MESSAGE.exec(message);
+    const context = request?.[1] ? ` (${request[1]})` : "";
+    return `Network error contacting ${hostMatch[1]}${context}. Check your connection and try again.`;
+  }
+
   return "Network error. Check your connection and try again.";
 }
 

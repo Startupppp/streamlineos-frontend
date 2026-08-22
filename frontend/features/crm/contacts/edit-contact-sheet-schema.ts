@@ -1,8 +1,9 @@
 import { z } from "zod";
 import { isValidPhoneNumber } from "react-phone-number-input";
+import { personNameSchema } from "@/lib/person-name-schema";
 
 export const editContactSchema = z.object({
-  name: z.string().min(1, "Name is required").max(200),
+  name: personNameSchema,
   email: z.string().email("Invalid email").optional().or(z.literal("")),
   phone: z
     .string()

@@ -85,6 +85,18 @@ describe("getErrorMessage", () => {
     ).toBe("Network error contacting api.streamlineos.in. Check your connection and try again.");
   });
 
+  it("keeps the failing method and path so a network failure is diagnosable", () => {
+    expect(
+      getErrorMessage(
+        new Error(
+          "Network error contacting api.streamlineos.in (PATCH /me/expenses/1). Check your connection and try again.",
+        ),
+      ),
+    ).toBe(
+      "Network error contacting api.streamlineos.in (PATCH /me/expenses/1). Check your connection and try again.",
+    );
+  });
+
   it("reports a stale build rather than a network error for chunk failures", () => {
     expect(getErrorMessage(new Error("Loading chunk 483 failed."))).toBe(
       "A new version of the app is available. Please refresh the page and try again.",

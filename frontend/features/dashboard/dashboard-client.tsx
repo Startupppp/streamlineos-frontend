@@ -194,7 +194,9 @@ export function DashboardClient() {
   }, []);
 
   const pageTitle = headerClock
-    ? `${headerClock.greeting}, ${firstName}`
+    ? firstName
+      ? `${headerClock.greeting}, ${firstName}`
+      : headerClock.greeting
     : "Dashboard";
 
   const handleRefresh = useCallback(() => void refetch(), [refetch]);
