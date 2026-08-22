@@ -51,13 +51,26 @@ commits that closed them.
 - **Build index changes on `tickets`** — three were created, measured and rejected; one was 7.3×
   worse in I/O while appearing faster on a warm cache.
 
+## Test suite — fixed since, 2026-08-22
+
+Both red baselines above are closed.
+
+- **Unit: 520/520 suites, 4,313 tests, exit 0** (was 44 failing suites / 177 failing tests). Almost
+  every failure was a mock predating `runInTenantTransaction`; the rest was ordinary drift. Two real
+  defects fell out: a module owner could never remove themselves from their own module's group, and
+  an ownership-transfer nomination was dropped whenever there was no ambient tenant context.
+- **Controller e2e: 105/114 suites** (was 0 — the whole step crashed at import). For **Home, HRMS,
+  Build and Payroll it is 35/35 suites, 976 tests, exit 0.** The nine that remain are CRM, e-sign,
+  inventory and support cases that need seeded database rows.
+- Three live bugs surfaced: `/leads/ingest` 401'd every API-key client because nothing opted it out
+  of `JwtAuthGuard`; every 402 payload lost the fields the frontend reads, because
+  `AllExceptionsFilter` forwards only `details`; and a **locked payroll run's figures were immutable
+  in the service only** — `pg_trigger` had no entry for `payroll_run_employees` or
+  `payroll_line_items`, so a direct write could rewrite an approved or paid snapshot (migration
+  `0445`).
+
 ## Known-red, needing its own ticket
 
-- The backend unit suite has ~46 failing suites that predate this work. Proven pre-existing by
-  reverting a changed file to `HEAD` and re-running. Distinct causes seen: an ESM parse failure in
-  `@openrouter/ai-sdk-provider` and `@composio/core` (which also blocks **every** `pnpm test:e2e`
-  run, so no e2e assertion in this programme is executed coverage), db mocks lacking `transaction`
-  or `tx.execute`, and value-equality specs that predate a catalog expansion.
 - `blog:ai:use` gates no route — a phantom key.
 - **Workflows has no execution engine**: triggering inserts a `pending` row nothing consumes.
 - `permissions.is_delegable` exists in the schema and is enforced nowhere.
