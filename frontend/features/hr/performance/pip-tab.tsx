@@ -18,6 +18,7 @@ import { EmptyApprovalIllustration } from "@/components/illustrations";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { HrSheet } from "@/features/hr/hr-sheet";
+import { EmployeePicker } from "@/features/hr/shared/employee-picker";
 import { toast } from "sonner";
 import { resolveImageUrl } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -47,7 +48,6 @@ export function PIPTab() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingPip, setEditingPip] = useState<PIP | null>(null);
   const [pipUserId, setPipUserId] = useState("");
-  const [pipUserPickerOpen, setPipUserPickerOpen] = useState(false);
   const [hrRepPickerOpen, setHrRepPickerOpen] = useState(false);
   const [hrRepId, setHrRepId] = useState("");
   const [reason, setReason] = useState("");
@@ -291,6 +291,15 @@ export function PIPTab() {
     setFieldErrors((prev) => {
       const next = { ...prev };
       delete next.hrRepId;
+      return next;
+    });
+  }, []);
+
+  const handlePipUserIdChange = useCallback((id: string) => {
+    setPipUserId(id);
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next.userId;
       return next;
     });
   }, []);

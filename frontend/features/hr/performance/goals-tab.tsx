@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -8,8 +8,6 @@ import {
   useCreateGoal,
   useUpdateGoal,
   useDeleteGoal,
-  useHrEmployees,
-  unwrapEmployees,
   type HrGoal,
 } from "@/hooks/api/hr";
 import { Button } from "@/components/ui/button";
@@ -20,6 +18,7 @@ import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Form } from "@/components/ui/form";
 import { HrSheet } from "@/features/hr/hr-sheet";
+import { EmployeePicker } from "@/features/hr/shared/employee-picker";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -46,14 +45,12 @@ import { GoalFormFields } from "./goal-form-fields";
 
 export function GoalsTab() {
   const { data: goals, isLoading } = useHrGoals();
-  const { data: employeesRaw } = useHrEmployees({ limit: 100 });
   const createGoal = useCreateGoal();
   const updateGoal = useUpdateGoal();
   const deleteGoal = useDeleteGoal();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editGoal, setEditGoal] = useState<HrGoal | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
-  const [userPickerOpen, setUserPickerOpen] = useState(false);
   const isEditRef = useRef(false);
   isEditRef.current = !!editGoal;
 
@@ -74,11 +71,6 @@ export function GoalsTab() {
       endDate: "",
     },
   });
-
-  const employees = useMemo(
-    () => unwrapEmployees(employeesRaw).filter((e) => !!e.id),
-    [employeesRaw],
-  );
 
   const resetForm = useCallback(() => {
     goalForm.reset({
@@ -223,6 +215,11 @@ export function GoalsTab() {
   }, []);
 
   const watchedUserId = goalForm.watch("userId");
+
+  const handleUserIdChange = useCallback(
+    (id: string) => goalForm.setValue("userId", id, { shouldValidate: true }),
+    [goalForm],
+  );
 
   if (isLoading) {
     return <LoadingState variant="cards" rows={9} />;

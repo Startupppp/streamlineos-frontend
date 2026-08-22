@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
+import { EmployeePicker } from "@/features/hr/shared/employee-picker";
 
 const BGV_TYPES = ["Identity", "Education", "Employment", "Criminal", "Address", "Credit"] as const;
 
@@ -64,10 +64,9 @@ const EMPTY_VALUES: FormValues = {
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  employeeOptions: ComboboxOption[];
 }
 
-export function InitiateBgvSheet({ open, onOpenChange, employeeOptions }: Props) {
+export function InitiateBgvSheet({ open, onOpenChange }: Props) {
   const create = useCreateBackgroundVerification();
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -120,12 +119,10 @@ export function InitiateBgvSheet({ open, onOpenChange, employeeOptions }: Props)
                   Employee <span className="text-destructive">*</span>
                 </FormLabel>
                 <FormControl>
-                  <Combobox
-                    options={employeeOptions}
+                  <EmployeePicker
                     value={field.value}
                     onChange={field.onChange}
                     placeholder="Select employee…"
-                    searchPlaceholder="Search by name…"
                   />
                 </FormControl>
                 <FormMessage />

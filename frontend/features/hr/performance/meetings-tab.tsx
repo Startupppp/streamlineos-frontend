@@ -1,13 +1,11 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback } from "react";
 import {
   useOneOnOneMeetings,
   useCreateOneOnOne,
   useUpdateOneOnOne,
   useDeleteOneOnOne,
-  useHrEmployees,
-  unwrapEmployees,
 } from "@/hooks/api/hr";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,15 +17,14 @@ import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTeamIllustration } from "@/components/illustrations";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { HrSheet } from "@/features/hr/hr-sheet";
+import { EmployeePicker } from "@/features/hr/shared/employee-picker";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { resolveImageUrl, cn } from "@/lib/utils";
+import { resolveImageUrl } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { Plus, Clock, Trash2, ChevronsUpDown, Check } from "lucide-react";
+import { Plus, Clock, Trash2 } from "lucide-react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
@@ -40,24 +37,17 @@ import { zodFieldErrors } from "./zod-field-errors";
 
 export function MeetingsTab() {
   const { data: meetings, isLoading } = useOneOnOneMeetings();
-  const { data: employeesRaw } = useHrEmployees({ limit: 100 });
   const createMeeting = useCreateOneOnOne();
   const updateMeeting = useUpdateOneOnOne();
   const deleteMeeting = useDeleteOneOnOne();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [empId, setEmpId] = useState("");
-  const [empPickerOpen, setEmpPickerOpen] = useState(false);
   const [scheduledDate, setScheduledDate] = useState("");
   const [scheduledTime, setScheduledTime] = useState("10:00");
   const [duration, setDuration] = useState("30");
   const [agenda, setAgenda] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-
-  const employees = useMemo(
-    () => unwrapEmployees(employeesRaw).filter((e) => !!e.id),
-    [employeesRaw],
-  );
 
   const resetForm = useCallback(() => {
     setEmpId("");
@@ -161,6 +151,15 @@ export function MeetingsTab() {
     });
   }, []);
 
+  const handleEmpIdChange = useCallback((id: string) => {
+    setEmpId(id);
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next.employeeId;
+      return next;
+    });
+  }, []);
+
   if (isLoading) {
     return <LoadingState variant="list" rows={12} />;
   }
@@ -223,47 +222,12 @@ export function MeetingsTab() {
       <HrSheet open={sheetOpen} onOpenChange={(open) => { if (!open) resetForm(); setSheetOpen(open); }} title="Schedule 1-on-1" onSubmit={handleCreate} submitLabel="Schedule" isPending={createMeeting.isPending}>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Employee</label>
-          <Popover open={empPickerOpen} onOpenChange={setEmpPickerOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                role="combobox"
-                aria-expanded={empPickerOpen}
-                className={cn("w-full justify-between font-normal", fieldErrors.employeeId && "border-destructive")}
-              >
-                <span className="truncate">{employees.find((e) => e.id === empId)?.name ?? employees.find((e) => e.id === empId)?.email ?? "Select team member"}</span>
-                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
-              <Command>
-                <CommandInput placeholder="Search employees..." />
-                <CommandList className="max-h-48 overflow-y-auto">
-                  <CommandEmpty>No employee found.</CommandEmpty>
-                  <CommandGroup>
-                    {employees.map((e) => (
-                      <CommandItem
-                        key={e.id}
-                        value={`${e.name ?? ""} ${e.email}`}
-                        onSelect={() => {
-                          setEmpId(e.id);
-                          setEmpPickerOpen(false);
-                          setFieldErrors((prev) => {
-                            const next = { ...prev };
-                            delete next.employeeId;
-                            return next;
-                          });
-                        }}
-                      >
-                        <Check className={cn("mr-2 h-4 w-4", empId === e.id ? "opacity-100" : "opacity-0")} />
-                        {e.name ?? e.email}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
+          <EmployeePicker
+            value={empId}
+            onChange={handleEmpIdChange}
+            placeholder="Select team member"
+            className={fieldErrors.employeeId ? "border-destructive" : undefined}
+          />
           {fieldErrors.employeeId && <p className="text-xs text-destructive">{fieldErrors.employeeId}</p>}
         </div>
         <div className="grid grid-cols-2 gap-3">

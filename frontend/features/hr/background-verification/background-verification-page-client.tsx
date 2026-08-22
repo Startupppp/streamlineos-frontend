@@ -1,13 +1,11 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback } from "react";
 import {
   useBackgroundVerifications,
   useUpdateBackgroundVerification,
   type BackgroundVerification,
-  unwrapEmployees,
 } from "@/hooks/api/hr";
-import { useHrEmployees } from "@/hooks/api/hr";
 import { useBgvComplianceDashboard, type BgvComplianceRow } from "@/hooks/api/hr/recruitment";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -31,8 +29,6 @@ import {
   Clock,
   ShieldAlert,
 } from "lucide-react";
-import type { ComboboxOption } from "@/components/ui/combobox";
-import type { Employee } from "@/types/hr";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { getInitials } from "@/lib/format-utils";
@@ -280,25 +276,7 @@ export function BackgroundVerificationPageClient() {
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
-  const { data: employeesRaw } = useHrEmployees({ limit: 100 });
   const update = useUpdateBackgroundVerification();
-
-  const employees = useMemo<Employee[]>(() => {
-    return unwrapEmployees(employeesRaw);
-  }, [employeesRaw]);
-
-  const employeeOptions = useMemo<ComboboxOption[]>(
-    () =>
-      employees
-        .filter((e) => e.isActive)
-        .map((e) => ({
-          value: e.id,
-          label:
-            e.firstName && e.lastName ? `${e.firstName} ${e.lastName}` : (e.name ?? e.email),
-          sublabel: e.designation ?? e.email,
-        })),
-    [employees],
-  );
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editBgv, setEditBgv] = useState<BackgroundVerification | null>(null);
@@ -425,7 +403,6 @@ export function BackgroundVerificationPageClient() {
       <InitiateBgvSheet
         open={sheetOpen}
         onOpenChange={setSheetOpen}
-        employeeOptions={employeeOptions}
       />
 
       <EditVerificationSheet bgv={editBgv} onClose={handleCloseEdit} />

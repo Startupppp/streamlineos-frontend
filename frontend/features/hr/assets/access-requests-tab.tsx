@@ -8,7 +8,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { HrSheet } from "@/features/hr/hr-sheet";
-import { Combobox } from "@/components/ui/combobox";
+import { EmployeePicker } from "@/features/hr/shared/employee-picker";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -40,14 +40,6 @@ const STATUS_META: Record<string, { label: string; badge: string }> = {
 interface AccessRequestsTabProps {
   employees: Employee[];
   canManage: boolean;
-}
-
-function buildEmployeeOptions(employees: Employee[]) {
-  return employees.map((e) => ({
-    value: e.id,
-    label: `${e.firstName ?? ""} ${e.lastName ?? ""}`.trim() || e.email,
-    sublabel: e.designation ?? e.email,
-  }));
 }
 
 function getEmployeeName(employees: Employee[], id: string) {
@@ -115,8 +107,6 @@ export function AccessRequestsTab({ employees, canManage }: AccessRequestsTabPro
 
   const handleSystemNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSystemName(e.target.value), []);
   const handleAccessLevelChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setAccessLevel(e.target.value), []);
-
-  const empOptions = buildEmployeeOptions(employees);
 
   if (isLoading) {
     return (
@@ -219,12 +209,10 @@ export function AccessRequestsTab({ employees, canManage }: AccessRequestsTabPro
         <div className="space-y-4">
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Employee <span className="text-destructive">*</span></label>
-            <Combobox
-              options={empOptions}
+            <EmployeePicker
               value={employeeId}
               onChange={setEmployeeId}
               placeholder="Select employee..."
-              searchPlaceholder="Search employees..."
             />
           </div>
           <div className="space-y-1.5">
