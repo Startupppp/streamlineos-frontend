@@ -84,7 +84,6 @@ export function MemberGrantsSheet({
     setGrants.mutate(
       {
         membershipId: member.membershipId,
-        userId: member.userId,
         items,
         reason: reason.trim() || undefined,
       },

@@ -574,7 +574,6 @@ export function useSetModuleMemberGrants(moduleKey: string) {
     Error,
     {
       membershipId: number;
-      userId: string;
       items: { permissionKey: string; scope?: DataScope }[];
       reason?: string;
     }
@@ -600,29 +599,3 @@ export function useSetModuleMemberGrants(moduleKey: string) {
   });
 }
 
-export function useDeleteModuleMemberGrant(moduleKey: string) {
-  const queryClient = useQueryClient();
-  return useMutation<
-    { success: true },
-    Error,
-    { membershipId: number; permissionKey: string }
-  >({
-    mutationKey: ["moduleAccess", moduleKey, "delete-member-grant"],
-    mutationFn: ({ membershipId, permissionKey }) =>
-      apiClient.delete<{ success: true }>(
-        `/module-access/${moduleKey}/members/${membershipId}/grants/${permissionKey}`,
-      ),
-    onSuccess: (_, { membershipId }) => {
-      void queryClient.invalidateQueries({
-        queryKey: queryKeys.moduleAccess.memberGrants(moduleKey, membershipId),
-        exact: true,
-      });
-      void queryClient.invalidateQueries({
-        queryKey: [...queryKeys.moduleAccess.all, moduleKey, "members"],
-      });
-      void queryClient.invalidateQueries({
-        queryKey: queryKeys.access.me(),
-      });
-    },
-  });
-}
