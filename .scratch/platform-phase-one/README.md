@@ -71,6 +71,16 @@ Both red baselines above are closed.
 
 ## Known-red, needing its own ticket
 
-- `blog:ai:use` gates no route — a phantom key.
 - **Workflows has no execution engine**: triggering inserts a `pending` row nothing consumes.
-- `permissions.is_delegable` exists in the schema and is enforced nowhere.
+
+## Closed since, 2026-08-22
+
+- **`blog:ai:use` was never a phantom key** — the claim was wrong when written. It gates three routes
+  in `modules/ai/core/controllers/blog-ai.controller.ts` and is declared in both catalogs.
+- **`permissions.is_delegable` is now enforced.** Nothing had ever written the column, so it read
+  `true` for every key while the real policy lived only inside `assertPermissionsGrantable` — and
+  grantable-key discovery never applied that policy, so the delegation picker advertised every
+  `billing:*` key and the grant then 403'd. Delegability is now derived from the guard's own rule
+  (one source, so the column, discovery and the guard cannot disagree), written by catalog sync on
+  each boot, and filtered on in discovery. No template or role default carried a non-delegable key,
+  so there was no second instance.
