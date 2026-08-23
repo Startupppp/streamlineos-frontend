@@ -268,6 +268,7 @@ export function MessagePanel({
   const [ticketQuery, setTicketQuery] = useState("");
   const [ticketSelectedIndex, setTicketSelectedIndex] = useState(0);
   const pendingEntitiesRef = useRef<TicketEntityRef[]>([]);
+  const pendingMentionsRef = useRef<Map<string, string>>(new Map());
 
   const mentionCandidates = useMemo(() => {
     if (!orgUsers) return [];
@@ -547,7 +548,8 @@ export function MessagePanel({
   );
 
   const insertMention = useCallback(
-    (name: string) => {
+    (name: string, userId: string) => {
+      if (name) pendingMentionsRef.current.set(name, userId);
       const el = inputRef.current;
       if (!el) return;
       const text = messageInput;
@@ -613,11 +615,19 @@ export function MessagePanel({
     const attachments = [...pendingAttachments];
     const entities = [...pendingEntitiesRef.current];
     const metadata = entities.length > 0 ? { entities } : undefined;
+    const mentionedUserIds = [
+      ...new Set(
+        [...pendingMentionsRef.current.entries()]
+          .filter(([name]) => content.includes(`@${name}`))
+          .map(([, userId]) => userId),
+      ),
+    ];
     setMessageInput("");
     localStorage.removeItem(`chat:draft:${channelId}`);
     setReplyTo(null);
     setPendingAttachments([]);
     pendingEntitiesRef.current = [];
+    pendingMentionsRef.current = new Map();
     if (!isOnline) {
       messageQueue.current.push({
         content: content || "",
@@ -635,6 +645,7 @@ export function MessagePanel({
         replyToId: replyId,
         attachments: attachments.length > 0 ? attachments : undefined,
         metadata,
+        mentionedUserIds: mentionedUserIds.length > 0 ? mentionedUserIds : undefined,
       });
       markRead.mutate({ channelId });
       scrollToBottom("smooth");
@@ -769,7 +780,10 @@ export function MessagePanel({
         }
         if (e.key === "Enter" || e.key === "Tab") {
           e.preventDefault();
-          insertMention(filteredMentions[mentionIndex].name ?? "");
+          insertMention(
+            filteredMentions[mentionIndex].name ?? "",
+            filteredMentions[mentionIndex].id,
+          );
           return;
         }
         if (e.key === "Escape") {

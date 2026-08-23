@@ -208,6 +208,7 @@ export interface AttachmentInput {
 }
 
 export interface SendMessageInput {
+  mentionedUserIds?: string[];
   channelId: number;
   content?: string;
   replyToId?: number;
