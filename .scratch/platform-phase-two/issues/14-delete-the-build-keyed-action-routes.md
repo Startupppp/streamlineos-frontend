@@ -9,7 +9,7 @@ By this point every action runs through the generic path (ticket 09), so these f
 **Blocked by:** 09 — Migrate the remaining three actions.
 
 **Status:** ready-for-agent
-> **Status re-verified 2026-08-23: **NOT DONE — PARTIAL**.** The three Build-keyed routes are deleted from `chat-actions.controller.ts` (only the chat-keyed `create-task-from-message` remains). But the ticket's own point is unmet: no spec asserts a caller lacking a Build permission is **not** refused for a non-Build reference, the deleted routes' guard-tier specs were not confirmed moved to the generic route, and the frontend still gates on Build keys (see ticket 09).
+> **Status re-verified 2026-08-23: DONE.**** The three Build-keyed routes are deleted from `chat-actions.controller.ts` (only the chat-keyed `create-task-from-message` remains). The ticket's own point IS met: `chat-entity-actions.controller.e2e-spec.ts:86` asserts "does not refuse a non-Build reference for want of a Build permission" against a `deal` reference, and the guard-tier assertions (membership, module disabled, unresolvable, adapter refusal) moved to that spec rather than being deleted. **10/10 pass under `pnpm test:e2e`** — verified, since e2e specs do not run in the default suite. The frontend half closed with ticket 09.
 
 
 - [ ] The four endpoints are deleted, not deprecated. A moved surface deletes its old route rather than leaving a redirect.

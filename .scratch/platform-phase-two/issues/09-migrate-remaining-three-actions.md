@@ -7,7 +7,7 @@ Ticket 04 proved the path with one action. This one finishes the migration, so t
 **Blocked by:** 04 — Generic action path, one action end-to-end.
 
 **Status:** ready-for-agent
-> **Status re-verified 2026-08-23: **NOT DONE — PARTIAL**.** Backend is done and the two dialogs now post through `useSubmitEntityAction`, so nothing is broken. What remains is the point of the ticket: `POST /chat/entity-actions/available` has **zero frontend callers**, and `chat-bubble.tsx` still hardcodes `useCan("build:tickets:update"|":view"|":create"|":assign")` at lines 129, 264, 350, 351, 360. A CRM deal shared in chat therefore offers no actions to someone without Build permissions - the defect the seam exists to remove.
+> **Status re-verified 2026-08-23: DONE.**** Closed by `0cf8fe280`. Actions are now fetched from `POST /chat/entity-actions/available`, batched once per visible set of references through `features/chat/entity-actions-context.tsx`, and the three Build-key gates in `chat-bubble.tsx` are gone. Two `useCan("build:*")` calls remain deliberately: `canViewTickets` gates navigation rather than an action, and `canConvertToTask` gates `create-task-from-message`, which is chat-specific by design.
 
 
 - [ ] Assigning a ticket, setting a due date and creating a task from a message all work through the generic submit route.
