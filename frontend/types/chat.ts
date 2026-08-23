@@ -1,8 +1,23 @@
 
+/**
+ * Resolved for the reader at read time. A null card means the record is gone,
+ * or the reader may not see it — the two are deliberately indistinguishable.
+ */
+export interface EntityCard {
+  type: string;
+  id: string;
+  title: string;
+  subtitle: string | null;
+  status: string | null;
+  href: string;
+}
+
 export interface TicketEntityRef {
   type: "ticket";
   id: string;
-  projectId: number;
+  card?: EntityCard | null;
+  /** Snapshot fields on messages sent before references resolved at read time. */
+  projectId?: number;
   ticketNumber?: number;
   projectKey?: string;
   title?: string;

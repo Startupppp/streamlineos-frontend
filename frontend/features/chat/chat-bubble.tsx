@@ -3,7 +3,7 @@
 import React, { useCallback, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { ArrowDown, CalendarClock, CheckCheck, FileText, Forward, Link, ListPlus, Loader2, MessageSquare, Pencil, Pin, Smile, Ticket, Trash2 } from "lucide-react";
+import { ArrowDown, CalendarClock, CheckCheck, FileText, Forward, Link, ListPlus, Loader2, Lock, MessageSquare, Pencil, Pin, Smile, Ticket, Trash2 } from "lucide-react";
 import { ReplyIcon, BookmarkCheckIcon, BookmarkPlusIcon, CopyIcon, Trash2Icon, UserPlusIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useQuery } from "@tanstack/react-query";
@@ -107,20 +107,43 @@ const TICKET_STATUS_DISPLAY: Record<string, string> = {
   DONE: "Done",
 };
 
+/**
+ * The reader could not resolve the record — it is gone, or it was never theirs
+ * to see. Both look the same on purpose, so scrollback leaks neither.
+ */
+function UnresolvedPill({ label }: { label: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted/30 px-2.5 py-1.5 my-1 text-[11px] text-muted-foreground">
+      <Lock className="h-3 w-3 shrink-0 text-muted-foreground/60" />
+      {label}
+    </span>
+  );
+}
+
 function TicketPill({ entity, channelId }: { entity: TicketEntityRef; channelId: number }) {
   const router = useRouter();
-  const [currentStatus, setCurrentStatus] = useState(entity.status ?? "TODO");
+  const [currentStatus, setCurrentStatus] = useState(
+    entity.card?.status ?? entity.status ?? "TODO",
+  );
   const [isChangingStatus, setIsChangingStatus] = useState(false);
   const canUpdate = useCan("build:tickets:update");
 
-  const hasFullInfo = Boolean(entity.projectKey && entity.ticketNumber);
-  const ticketKey = hasFullInfo
-    ? `${entity.projectKey}-${entity.ticketNumber}`
-    : `Ticket #${entity.id}`;
+  const card = entity.card;
+  const ticketKey =
+    card?.subtitle ??
+    (entity.projectKey && entity.ticketNumber
+      ? `${entity.projectKey}-${entity.ticketNumber}`
+      : `Ticket #${entity.id}`);
+  const hasFullInfo = Boolean(card?.subtitle) || Boolean(entity.projectKey && entity.ticketNumber);
+  const ticketTitle = card?.title ?? entity.title;
 
   const handlePillClick = useCallback(() => {
-    router.push(`/build/${entity.projectId}?ticket=${entity.id}`);
-  }, [router, entity.projectId, entity.id]);
+    if (card?.href) {
+      router.push(card.href);
+      return;
+    }
+    if (entity.projectId) router.push(`/build/${entity.projectId}?ticket=${entity.id}`);
+  }, [router, card?.href, entity.projectId, entity.id]);
 
   const handleStatusChange = useCallback(
     async (nextStatus: string) => {
@@ -130,7 +153,6 @@ function TicketPill({ entity, channelId }: { entity: TicketEntityRef; channelId:
       try {
         await apiClient.post("/chat/actions/ticket-status", {
           channelId,
-          projectId: entity.projectId,
           ticketId: Number(entity.id),
           nextStatus,
         });
@@ -152,6 +174,8 @@ function TicketPill({ entity, channelId }: { entity: TicketEntityRef; channelId:
     },
     [currentStatus, channelId, entity],
   );
+
+  if (entity.card === null) return <UnresolvedPill label="A ticket you can't see" />;
 
   if (!hasFullInfo) {
     return (
@@ -180,13 +204,13 @@ function TicketPill({ entity, channelId }: { entity: TicketEntityRef; channelId:
         <Ticket className="h-3 w-3 shrink-0 text-muted-foreground/60" />
         {ticketKey}
       </button>
-      {entity.title && (
+      {ticketTitle && (
         <button
           type="button"
           onClick={handlePillClick}
           className="text-[12px] text-foreground/80 hover:underline max-w-[160px] min-w-0"
         >
-          <TruncatedText text={entity.title} />
+          <TruncatedText text={ticketTitle} />
         </button>
       )}
       {canUpdate ? (
