@@ -16,9 +16,11 @@ These are the candidates the earlier phases left uncovered. Phase two's four str
 
 **Stream E is complete.** Tickets 01, 02 and 03 are done and committed. Full web suite 77 suites / 438 tests green, `tsc --noEmit` 0, `madge --circular` clean across 3,146 files. One criterion is deliberately left unticked on ticket 03: nothing was verified by running the application.
 
-**Stream F: ticket 04 done** and committed to `streamlineos-api` as `be10e8c4`. Tickets 05, 06 and 07 open.
+**Stream F: ticket 04 done**, ticket 05 largely done. Nineteen reads have moved onto injected config across twilio, the notification worker, razorpay, contact, roadmap, platform, storage, KB, realtime and push. Ticket 06 (the import-time reads in `email/email.provider.ts`) is open and is the one part of this stream that is not a substitution — it constructs its provider clients from module-scope constants, so it needs a factory and a module-wiring change across Automation and Notifications, and its own criterion is to verify by sending mail.
 
-**Stream G: not started.** Its PRD predates this set and already carries the correction described below.
+**Stream G: two of three tickets were already shipped**, discovered while writing them. `directory/person-seam.ts` carries the three-way subject and resolves the person-record path on the link column, and payroll consumes it — so tickets 08 and 09 describe work that exists. They are marked SHIPPED with only the criteria actually re-verified ticked; the rest are left unchecked because they were not tested, not because they are known to fail. **Ticket 10, the contract step, is genuinely open**: `payroll/filings/filings.service.ts` and `payroll/lib/payroll-run-payee.ts` still import HR and directory schema directly.
+
+Writing a ticket for shipped work is cheap; the expensive mistake is the opposite, so the ticket is kept as the record of what was required rather than deleted.
 
 ## Three live defects this set found, all in Stream E
 

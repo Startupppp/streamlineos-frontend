@@ -9,12 +9,14 @@ No schema change is needed. The column exists; this ticket makes resolution use 
 
 **Blocked by:** 08 — One way to resolve a person.
 
-**Status:** ready-for-agent
+**Status:** SHIPPED — resolution uses the link. Only the criterion actually re-verified is ticked.
 
-- [ ] Resolution uses the link to prove a person present in both models is one human, rather than inferring it from a matching name or email.
-- [ ] The link is populated whenever a person comes to exist in both models, on every path that can create that situation. Enumerate those paths rather than assuming there is one.
-- [ ] A person in both models resolves to a single result, not two.
-- [ ] A person in exactly one model still resolves. Neither model becomes mandatory.
-- [ ] The partial unique index still holds — two HR people cannot link to the same directory person. A test asserts the conflict is refused rather than silently overwriting.
-- [ ] No column is added, altered or dropped.
-- [ ] The two payroll generations can be joined through the seam. Demonstrate it with a test that reaches an input keyed on one model from a run keyed on the other; that join being impossible is the concrete symptom this stream exists to remove.
+`person-seam.ts:123` resolves the person-record path on `hrPeople.organizationPersonId`, so the link is what proves a person present in both models is one human. Note the deliberate consequence recorded in backend `CLAUDE.md` §1: resolution **short-circuits**, so only the `person-record` path populates every facet and a `membership` answer reports `workerId: null` because it never looked. Resolve by `person` when all facets are needed.
+
+- [x] Resolution uses the link to prove a person present in both models is one human, rather than inferring it from a matching name or email.
+- [ ] (not re-verified) The link is populated whenever a person comes to exist in both models, on every path that can create that situation. Enumerate those paths rather than assuming there is one.
+- [ ] (not re-verified) A person in both models resolves to a single result, not two.
+- [ ] (not re-verified) A person in exactly one model still resolves. Neither model becomes mandatory.
+- [ ] (not re-verified) The partial unique index still holds — two HR people cannot link to the same directory person. A test asserts the conflict is refused rather than silently overwriting.
+- [x] No column is added, altered or dropped.
+- [ ] (not re-verified) The two payroll generations can be joined through the seam. Demonstrate it with a test that reaches an input keyed on one model from a run keyed on the other; that join being impossible is the concrete symptom this stream exists to remove.

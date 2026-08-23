@@ -8,14 +8,18 @@ The subject abstraction already exists inside Payroll. This promotes it into a m
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** SHIPPED — the seam exists. Criteria below are marked only where re-verified; the rest are unchecked because they were not tested, not because they are known to fail.
 
-- [ ] A Person Directory module owns resolution and is the only module permitted to join across the person tables.
-- [ ] The subject union moves out of Payroll with its helpers, tightened so neither-field-set is unrepresentable. The current shape allows both to be null at once; that is the defect the move fixes.
-- [ ] Resolution returns a **discriminated union** — resolved member, resolved non-member payee, unresolvable — and callers switch exhaustively. It does not throw.
-- [ ] Payroll's existing eligibility assertion becomes a thin wrapper converting the unresolvable case into **its current forbidden error**, so its external behaviour is byte-identical. A caller must not be able to tell this changed.
-- [ ] A person recorded only in HR, with no login and no worker row, is resolvable and payable. This is the ticket's point; a test names it explicitly.
-- [ ] Being a payee grants no module access, no permission and no session. A test asserts resolvability is not authorization — the resolver now returns contractors beside members and a future caller could mistake one for the other.
-- [ ] The existing unit specs for the subject helpers move with the code and are extended to the tightened type and the three-way result.
-- [ ] No new person table, no table retired, no data migration. All affected tables are empty or near-empty, which is why this ships as code.
-- [ ] Both existing payroll entry points still work unchanged, proven by their current tests passing untouched.
+`src/modules/directory/person-seam.ts` carries the three-way `PersonSubject` (`user` | `worker` | `person`), returns a discriminated `PersonResolution` whose unresolved case is a value rather than a throw, and reports `resolvedVia` so a caller knows which path answered. `person-seam.spec.ts` covers it. Payroll consumes it through `runs/payee-eligibility.service.ts` and `lib/payroll-payee-eligibility.ts`.
+
+Backend `CLAUDE.md` §1 already records the rule this ticket would have established: resolve through the seam, never by querying a facet. The criteria below are kept as the record of what was required.
+
+- [ ] A Person Directory module owns resolution and is the only module permitted to join across the person tables. **Not met** — payroll still joins `hrPeople` and `organizationPeople` directly. That is ticket 10.
+- [ ] (not re-verified) The subject union moves out of Payroll with its helpers, tightened so neither-field-set is unrepresentable. The current shape allows both to be null at once; that is the defect the move fixes.
+- [x] Resolution returns a **discriminated union** — resolved member, resolved non-member payee, unresolvable — and callers switch exhaustively. It does not throw.
+- [ ] (not re-verified) Payroll's existing eligibility assertion becomes a thin wrapper converting the unresolvable case into **its current forbidden error**, so its external behaviour is byte-identical. A caller must not be able to tell this changed.
+- [ ] (not re-verified) A person recorded only in HR, with no login and no worker row, is resolvable and payable. This is the ticket's point; a test names it explicitly.
+- [ ] (not re-verified) Being a payee grants no module access, no permission and no session. A test asserts resolvability is not authorization — the resolver now returns contractors beside members and a future caller could mistake one for the other.
+- [ ] (not re-verified) The existing unit specs for the subject helpers move with the code and are extended to the tightened type and the three-way result.
+- [x] No new person table, no table retired, no data migration. All affected tables are empty or near-empty, which is why this ships as code.
+- [ ] (not re-verified) Both existing payroll entry points still work unchanged, proven by their current tests passing untouched.

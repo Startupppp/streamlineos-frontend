@@ -4,9 +4,11 @@
 
 Ticket 08 built the seam and ticket 09 made its link trustworthy. Both left the direct table access in place so nothing had to change at once. This finishes the move — otherwise the seam sits beside the thing it replaced and the next person edits whichever they find first.
 
-**Blocked by:** 08 — One way to resolve a person. 09 — The link becomes load-bearing.
+**Blocked by:** Nothing — 08 and 09 turned out to be already shipped. This is the only open ticket in the stream.
 
 **Status:** ready-for-agent
+
+Verified still open 2026-08-23: `payroll/filings/filings.service.ts` joins `hrPeople` directly (lines 20, 460-476) and `payroll/lib/payroll-run-payee.ts` imports `organizationPeople` and `hrPeople` (lines 8-11).
 
 - [ ] Payroll no longer imports HR or directory schema directly; it calls the module. This is the existing repo rule on cross-module access, applied here.
 - [ ] Directory read endpoints serve the people directory through the seam, with contractors distinguishable from members in the response.
