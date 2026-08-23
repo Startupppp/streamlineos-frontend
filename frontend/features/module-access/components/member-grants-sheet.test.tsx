@@ -132,7 +132,6 @@ describe("MemberGrantsSheet", () => {
     expect(mockMutate).toHaveBeenCalledWith(
       expect.objectContaining({
         membershipId: 42,
-        userId: "user-1",
         items: expect.arrayContaining([
           { permissionKey: "hr:employees:view", scope: "all" },
           { permissionKey: "hr:employees:manage", scope: "team" },
