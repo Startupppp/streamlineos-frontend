@@ -46,5 +46,7 @@ export interface NavGroup {
   routes: NavRoute[];
   defaultCollapsed?: boolean;
   requiredPermission?: PermissionRequirement;
+  /** `product` picks the sidebar and is required; `module` gates entitlement and is not. */
+  product: ProductKey;
   module?: ProductKey;
 }

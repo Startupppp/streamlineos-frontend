@@ -4,6 +4,7 @@ import type { NavGroup } from "./sidebar-nav-types";
 export const PAYROLL_NAV_GROUPS: NavGroup[] = [
 {
     label: "Payroll",
+    product: "payroll",
     module: "payroll",
     requiredPermission: [
       "payroll:runs:view",

@@ -4,6 +4,7 @@ import type { NavGroup } from "./sidebar-nav-types";
 export const CRM_NAV_GROUPS: NavGroup[] = [
 {
     label: "CRM",
+    product: "crm",
     module: "crm",
     requiredPermission: [
       "crm:leads:view",

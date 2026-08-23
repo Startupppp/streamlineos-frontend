@@ -4,6 +4,7 @@ import type { NavGroup } from "./sidebar-nav-types";
 export const FINANCE_NAV_GROUPS: NavGroup[] = [
 {
     label: "Accounting & Finance",
+    product: "finance",
     module: "finance",
     requiredPermission: ["accounting:view", "payments:providers:view"],
     routes: [

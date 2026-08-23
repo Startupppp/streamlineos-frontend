@@ -4,6 +4,7 @@ import type { NavGroup } from "./sidebar-nav-types";
 export const INVENTORY_NAV_GROUPS: NavGroup[] = [
 {
     label: "Inventory",
+    product: "inventory",
     module: "inventory",
     requiredPermission: ["inventory:stock:read", "inventory:products:read"],
     routes: [

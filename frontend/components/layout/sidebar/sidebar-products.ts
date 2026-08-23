@@ -145,32 +145,6 @@ export const MODULE_ACCENTS: Record<ProductKey, ModuleAccent> = {
   },
 };
 
-export const PRODUCT_NAV_GROUP_LABELS: Record<ProductKey, string[]> = {
-  home: [],
-  crm: ["CRM"],
-  hrms: ["HR – People", "Recruitment"],
-  build: ["Product Management", "More"],
-  timesheets: ["Timesheets"],
-  inventory: ["Inventory"],
-  finance: ["Accounting & Finance"],
-  helpdesk: ["Support"],
-  documents: ["Knowledge"],
-  surveys: ["Surveys"],
-  administration: [
-    "Account",
-    "Workspace",
-    "People",
-    "Access",
-    "Organization",
-    "Modules",
-    "Billing",
-    "Security",
-    "Developer",
-  ],
-  payroll: ["Payroll"],
-  sign: ["SignOS"],
-};
-
 const PRODUCT_MODULE_KEY: Partial<Record<ProductKey, string>> = {
   crm: "crm",
   hrms: "hr",

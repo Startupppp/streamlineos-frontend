@@ -4,6 +4,7 @@ import type { NavGroup } from "./sidebar-nav-types";
 export const KNOWLEDGE_SUPPORT_NAV_GROUPS: NavGroup[] = [
 {
     label: "Support",
+    product: "helpdesk",
     module: "helpdesk",
     requiredPermission: [
       "build:tickets:view",
@@ -103,6 +104,7 @@ export const KNOWLEDGE_SUPPORT_NAV_GROUPS: NavGroup[] = [
   },
 {
     label: "SignOS",
+    product: "sign",
     module: "sign",
     requiredPermission: ["sign:envelope:view", "sign:template:manage"],
     routes: [
@@ -153,6 +155,7 @@ export const KNOWLEDGE_SUPPORT_NAV_GROUPS: NavGroup[] = [
   },
 {
     label: "Knowledge",
+    product: "documents",
     module: "documents",
     routes: [
       {
@@ -169,6 +172,7 @@ export const KNOWLEDGE_SUPPORT_NAV_GROUPS: NavGroup[] = [
   },
 {
     label: "Surveys",
+    product: "surveys",
     module: "surveys",
     requiredPermission: "surveys:view",
     routes: [

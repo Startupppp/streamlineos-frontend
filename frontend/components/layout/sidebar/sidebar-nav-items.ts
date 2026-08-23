@@ -10,10 +10,7 @@ import { INVENTORY_NAV_GROUPS } from "./sidebar-nav-groups-inventory";
 import { WORK_MANAGEMENT_NAV_GROUPS } from "./sidebar-nav-groups-work-management";
 import { KNOWLEDGE_SUPPORT_NAV_GROUPS } from "./sidebar-nav-groups-knowledge-support";
 import { ADMINISTRATION_NAV_GROUPS } from "./sidebar-nav-groups-administration";
-import {
-  PRODUCT_NAV_GROUP_LABELS,
-  isModuleEnabled,
-} from "./sidebar-products";
+import { isModuleEnabled } from "./sidebar-products";
 import type {
   NavGroup,
   NavRoute,
@@ -289,6 +286,5 @@ export function getNavGroupsForProduct(
     return getHomeNavGroups(role, permissions, enabledModules);
 
   const allGroups = getNavGroupsForUser(role, permissions, enabledModules);
-  const labels = PRODUCT_NAV_GROUP_LABELS[productKey];
-  return allGroups.filter((g) => labels.includes(g.label));
+  return allGroups.filter((group) => group.product === productKey);
 }

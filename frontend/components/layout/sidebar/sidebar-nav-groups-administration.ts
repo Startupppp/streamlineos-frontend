@@ -4,6 +4,7 @@ import type { NavGroup } from "./sidebar-nav-types";
 export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
 {
     label: "Account",
+    product: "administration",
     routes: [
       {
         label: "My Account",
@@ -15,6 +16,7 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
   },
 {
     label: "Workspace",
+    product: "administration",
     requiredPermission: ["settings:manage", "ownership:transfer:respond"],
     routes: [
       {
@@ -34,6 +36,7 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
   },
 {
     label: "People",
+    product: "administration",
     requiredPermission: [
       "directory:people:view",
       "settings:view",
@@ -65,6 +68,7 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
   },
 {
     label: "Access",
+    product: "administration",
     requiredPermission: ["settings:rbac:manage", "settings:manage"],
     routes: [
       {
@@ -83,8 +87,8 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
   },
 {
     label: "Organization",
+    product: "administration",
     requiredPermission: ["settings:manage", "settings:view"],
-    module: "hrms",
     routes: [
       {
         label: "Structure",
@@ -139,6 +143,7 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
   },
 {
     label: "Modules",
+    product: "administration",
     requiredPermission: "settings:manage",
     routes: [
       {
@@ -151,6 +156,7 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
   },
 {
     label: "Billing",
+    product: "administration",
     requiredPermission: ["billing:subscription:view", "billing:ai-credits:view"],
     routes: [
       {
@@ -170,6 +176,7 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
   },
 {
     label: "Security",
+    product: "administration",
     requiredPermission: "settings:manage",
     routes: [
       {
@@ -182,6 +189,7 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
   },
 {
     label: "Developer",
+    product: "administration",
     requiredPermission: [
       "settings:manage",
       "settings:api-tokens:read",
