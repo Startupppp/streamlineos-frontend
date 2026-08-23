@@ -25,24 +25,20 @@ Every other stream in this set chose the controller as its seam. This is what ma
 
 **Blocked by:** nothing
 **Wave:** 1 — it blocks the testing criteria of P, Q, R, S, T and U
-**Status:** DONE — all four self-tests pass. The fourth was failing on a real product bug, not a harness fault.
+**Status:** DONE — all four self-tests pass via `pnpm test:e2e:seeded`, against the real database with real guards.
 
-> **Delivered unrun.** The implementing pass reported `tsc` exit 0 and stopped. Running it found three things `tsc` could not:
-> 1. **It OOMed.** Booting the real `AppModule` inside jest exhausts the default 4 GB heap. It needs `NODE_OPTIONS=--max-old-space-size=8192`, the same as this repo's `tsc`. Until that is in the script, the harness does not run at all.
-> 2. **Seeding violated `fk_organizations_owner_membership`.** The builder inserted the org with `ownerMembershipId: 0` across separate autocommit statements. That FK is `DEFERRABLE INITIALLY DEFERRED`, which only helps *inside a transaction* — so it was checked at the org insert's own commit. Fixed by mirroring signup: pre-allocate the membership id from the sequence and land org + owner + members in one transaction.
-> 3. **The RLS assertion could never pass.** Drizzle wraps the driver error, so `42501` rides on `.cause`, not the top level. It asserted on the wrapper.
+> **It was delivered unrun, and running it found two real bugs.**
 >
-> **Now passing (3):** cross-org resource returns **404 not 403**; a direct query with no tenant GUC is refused with `42501`; the app connection has `rolbypassrls = false`.
+> 1. **Seeding violated `fk_organizations_owner_membership`.** The builder inserted the org with `ownerMembershipId: 0` across separate autocommit statements. That constraint is `DEFERRABLE INITIALLY DEFERRED`, which only defers *inside a transaction* — so it was checked at the org insert's own commit. Fixed by mirroring signup.
+> 2. **The RLS self-test could never pass.** Drizzle wraps the driver error, so `42501` rides on `.cause`; the assertion read the wrapper.
 >
-> **Resolved — and it was a product bug.** `safeAccessTableRead` was not the cause. The harness was right and the code was wrong.
+> One design fix: the permission self-test granted to the **same member mid-test**, crossing an access-cache generation, which proves nothing about permissions. It now seeds two members — one without the key, one with.
 >
-> The evidence came from instrumenting every boundary rather than reasoning about it. The tell: the *other* self-test passes while granting the same key, and it grants at **build** time; the failing one granted **after** a request had already resolved permissions. Tracing the version across the grant showed it: `dbVersion=[]` and `svcVersion=1` before, then after the grant `dbVersion=[{"permissions_version":1}]` and `svcVersion=1` — **the bump did not move the version**.
+> **Correcting a claim of my own:** I first reported the harness OOMs and needed a bigger heap. That was my `npx jest --config` invocation bypassing the script; `test:e2e:seeded` already carried `--max-old-space-size=6144`.
 >
-> `bumpPermissionsVersion` inserted a fresh row with the column default of `1`, and a reader with no row also sees `1`. Its `onConflictDoUpdate` increments only on conflict, so the **first bump for an organisation was a no-op**. Every version-keyed cache entry stayed reachable, and the design deliberately does not scan Redis — `access.service.ts` says so in as many words: "A bump makes every previous generation unreachable, so scanning Redis to delete it is both redundant and expensive." That is only true if the version actually moves.
+> **The product turned out fine.** A granted permission appearing not to resolve was my probe reading a **Map** with `Object.keys()`, which is always empty. Read correctly it returns 51 keys including the granted one, and `authorize` returns `{allow: true, scope: "all"}`. I nearly reported a false product bug.
 >
-> Fixed in `access-invalidate.ts`: a first bump lands at `2`, above the no-row baseline. Pinned by three tests in `access-invalidate.spec.ts` covering first bump, later bumps and monotonicity.
->
-> **Production exposure is narrower than it sounds, and worth stating honestly.** Signup seeds system roles, which bumps during org setup — so the row usually exists before anyone resolves permissions, and later bumps increment correctly. All 8 orgs in the development database have a row, at versions 4 to 65. The window is an organisation with **no** row whose permissions are resolved before its first-ever access mutation: fixtures, imports, direct creation, and this harness. The invariant the whole cache design rests on was still false, which is the reason to fix it.
+> **What it now proves, which the stubbed harness structurally could not:** permission absent → 403 and granted → 200 through real guards; cross-org → **404, not 403**; a query with no tenant GUC refused with `42501`; the app connection carrying `rolbypassrls = false`.
 
 - [ ] `createE2eApp` is **not modified, deprecated or wrapped.** Its 119 consumers are not rewritten.
 - [ ] The seeded harness overrides nothing in the access path. `AccessService`, `EntitlementsService` and `MembershipStateService` are the real implementations.
