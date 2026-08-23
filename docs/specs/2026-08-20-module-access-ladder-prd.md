@@ -1,9 +1,20 @@
 # PRD — Module owner/admin/member ladder for every module
 
-Status: ready-for-agent
+Status: **SUPERSEDED — do not execute**
+Superseded on: 2026-08-23, by `2026-08-23-module-registry-prd.md` and `2026-08-23-access-version-channel-prd.md`
 Date: 2026-08-20
 Scope: candidate C3 from the 2026-08-20 architecture review, extended to all modules
 Supersedes: the "permission catalog drift" item, which did not survive verification (see Appendix B)
+
+> **Both of this PRD's premises failed re-verification on 2026-08-23. Read it for the product model it describes; do not build from it.**
+>
+> **Premise one — the access path fix.** Its first sequenced deliverable, "establish tenant context once per request and have the guard chain reuse it", cannot be built. The tenant context interceptor is a global interceptor and interceptors run *after* guards; the organization is not known until the authentication guard resolves it, so there is no earlier point at which to establish anything; and the transaction helper is callback-scoped and cannot span the guard-to-handler boundary. It would also not have removed the cost, because the queries inside the transaction still run. The real root cause — a five-second access-version poll standing in for a cross-instance invalidation channel that does not exist — is specified in `2026-08-23-access-version-channel-prd.md`.
+>
+> **Premise two — the eight missing modules.** Of the eight it names, the three genuinely delegable ones (Workflows, Blog, Directory) have since been added. A Home ladder covering the communication surfaces was built and then deliberately retired, on the rule that Home and the communication surfaces are platform core rather than delegable entitlements. Building ladders for Chat, Mail, Calendar and Notifications would now undo four deliberate commits. What is genuinely left is a module registry, specified in `2026-08-23-module-registry-prd.md`.
+>
+> **On its measurements.** The four transactions and roughly 1,266 tuples quoted below were measured on 2026-08-20 and have not been re-run. The transaction *structure* was re-derived by reading the guards and holds; the tuple figure should not be quoted as current.
+>
+> **What survives.** The product model — an organization owner appoints a module owner, who appoints module admins and members and authors their grants — is correct and unchanged, and the implementation it documents is the one still running for the ten original modules. That is the reason to keep this file.
 
 ## Problem Statement
 
