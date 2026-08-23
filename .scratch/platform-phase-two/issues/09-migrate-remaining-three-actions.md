@@ -45,3 +45,7 @@ Deleting the dialog to satisfy the criterion would remove capability, which is a
 `EntityActionInput` needs to describe where an input's options come from — the same job `choices` already does for the `choice` kind, extended to references. The Build adapter can emit it: it already resolves the ticket, so it knows the project. Then a declaration-driven form is safe to build and the dialogs can go.
 
 That is a change to the seam's public type plus both adapters plus the client — its own ticket, not a loose end on this one.
+
+### Update — 2026-08-24
+
+**Unblocked 2026-08-24 by ticket 16.** The blocker is gone: an assign input now declares the ticket's project as its option source, so a generic form can offer exactly the people the old dialog did. The dialogs are still present. This ticket stays open until they are deleted.

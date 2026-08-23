@@ -10,17 +10,17 @@ Once an input can name its option source, a declaration-driven form is safe to b
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** DONE — one criterion lands with ticket 04, recorded below
 
-- [ ] `EntityActionInput` can describe where an input's options come from, in the same spirit `choices` already does for the `choice` kind — but able to name a reference, not just a literal list.
-- [ ] The shape covers the case that motivated it: "people who are members of *this* project", where the project is derived from the record being acted on, not passed by the client.
-- [ ] The Build adapter emits it for `assign`. It already resolves the ticket, so it already knows the project — the client must not have to supply it.
-- [ ] An adapter that declares no option source still works: the input renders with a sensible default and nothing regresses.
-- [ ] The client can resolve an option source to a list without knowing which module produced it.
-- [ ] The person case reuses the existing shared person picker rather than introducing a second one.
-- [ ] A test asserts an input's declared options and the adapter's own validation agree — offering a candidate the adapter would refuse is the same class of defect as discovery offering an action submission refuses, which is already pinned.
-- [ ] Cross-tenant and unreadable references yield no options rather than an error, matching how the seam already treats resolution.
-- [ ] Types check; the adapter specs and the chat entity-action e2e specs pass unchanged.
+- [x] `EntityActionInput.options` is an `EntityActionOptionSource` naming a reference.
+- [x] The Build adapter derives the project from the ticket in `owningProjectIds`. The client never supplies it — a caller that could name the source could widen it.
+- [x] Emitted for every `user` input on a resolved ticket, in one batched ticket→project query rather than one per reference.
+- [x] `options` and `optionsFor` are both optional. CRM declares neither and its suite passes untouched.
+- [x] `useEntityActionOptions(channelId, source)` posts the declared reference to `POST /chat/entity-actions/options`; the seam dispatches by type.
+- [ ] ~~The person case reuses the existing shared person picker.~~ **Not met here.** The hook returns candidates; nothing renders them yet, because the form that would is ticket 04. Stated rather than quietly counted as done.
+- [x] Asserted — and it found a live defect. See below.
+- [x] Unreadable project, wrong reference type, non-numeric id and disabled module all yield `[]`.
+- [x] Types check; 61 entity tests and 40 chat e2e tests pass.
 
 ## Why this is its own ticket
 
@@ -30,3 +30,13 @@ It changes the seam's public type, both adapters and the client. Folding it into
 
 - **04**, criterion 8: the client renders text, date, user and choice inputs from the declaration.
 - **09**, criterion 3: the bespoke assign and due-date dialogs are deleted once nothing imports them.
+
+## Result — the agreement test found a live defect
+
+Criterion 7 asked for a test that an input's declared options and the adapter's own validation agree. Writing it showed they did not.
+
+`assign` validated only that `assigneeId` was a non-empty string. It never checked the assignee belonged to the ticket's project — while the dialog has only ever offered project members. So submission accepted anyone the picker would never have shown, including a user from another organisation, who would then hold a ticket they cannot open: Build's read scoping is project-membership based.
+
+That is a bug rather than a capability, so `assign` now validates the assignee against the same set the option source offers. Mutation-checked: remove the check and the agreement test fails.
+
+**Unblocks:** ticket 04 criterion 8 and ticket 09 criterion 3. Both are now buildable; neither is built.

@@ -17,6 +17,8 @@ export const collaborationQueryKeys = {
       [...base, "chat", "poll", channelId, since] as const,
     entityActions: (channelId: number, referenceKeys: string) =>
       [...base, "chat", "entityActions", channelId, referenceKeys] as const,
+    entityActionOptions: (channelId: number, referenceKey: string) =>
+      [...base, "chat", "entityActionOptions", channelId, referenceKey] as const,
     unreadTotal: (orgId?: string | null) =>
       orgId
         ? ([...base, "chat", "unreadTotal", orgId] as const)

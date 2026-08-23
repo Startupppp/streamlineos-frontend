@@ -867,6 +867,8 @@ export interface EntityActionInputSpec {
   kind: EntityActionInputKind;
   required: boolean;
   choices?: string[];
+  /** Where the valid answers come from, when they are not a literal list. */
+  options?: { from: EntityReferenceInput };
 }
 
 export interface EntityAction {
@@ -950,5 +952,36 @@ export function useCreateTaskFromMessage() {
         queryKey: queryKeys.chat.messages(variables.channelId),
       });
     },
+  });
+}
+
+export interface EntityOption {
+  value: string;
+  label: string;
+  imageUrl?: string | null;
+}
+
+/**
+ * Resolves an input's declared option source to its candidates. The caller
+ * passes the reference the declaration named and never has to know which module
+ * produced it — which is the whole point of the source being declared.
+ */
+export function useEntityActionOptions(
+  channelId: number,
+  source: EntityReferenceInput | null | undefined,
+) {
+  return useQuery({
+    queryKey: queryKeys.chat.entityActionOptions(
+      channelId,
+      source ? entityReferenceKey(source) : "",
+    ),
+    queryFn: () =>
+      apiClient.post<{ options: EntityOption[] }>(
+        "/chat/entity-actions/options",
+        { channelId, reference: source },
+      ),
+    enabled: channelId > 0 && Boolean(source),
+    staleTime: 60_000,
+    select: (data) => data.options,
   });
 }
