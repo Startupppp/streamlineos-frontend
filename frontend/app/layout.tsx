@@ -9,6 +9,7 @@ import { SessionProvider } from "../components/providers/session-provider";
 import { getServerAuth } from "../lib/get-server-auth";
 import { MotionProvider } from "../components/providers/motion-provider";
 import { QueryProvider } from "../components/providers/query-provider";
+import { ObservabilityProvider } from "../components/providers/observability-provider";
 import {
   BRAND_NAME,
   BRAND_TAGLINE,
@@ -142,6 +143,7 @@ export default async function RootLayout({
       >
         <GoogleTagManagerNoscript />
         <SessionProvider session={session}>
+          <ObservabilityProvider />
           <QueryProvider>
             <MotionProvider>{children}</MotionProvider>
             <Toaster position="top-right" richColors />
