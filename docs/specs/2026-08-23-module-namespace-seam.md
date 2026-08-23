@@ -1,9 +1,50 @@
 # PRD — One answer to "which permission keys does this module own"
 
-Status: ready-for-agent
+Status: COMPLETE — 2026-08-23
 Date: 2026-08-23
 Scope: candidates C1, C2 and C3 from the 2026-08-23 access and authority review
 Sequenced before: the module owner/admin/member ladder PRD (2026-08-20), which cannot safely onboard eight more modules until this lands
+
+## Completion checklist
+
+Verified line by line against the code, not against intent. Backend `1d0ff797`, `03fa6a4f`, `dfbae6d5` (+ `7df8b3f2`, which a concurrent session swept one file into); root `e34546e50`, `cd4d349dc`.
+
+### Implementation Decisions
+
+- [x] **One implementation, and the others are deleted.** Both private `moduleOf` copies gone; the inline `startsWith(\`${moduleKey}:\`)` in `getCallerPermissions` gone; `permission-catalog-sync` no longer persists a naive first-segment `module_key`. The three surviving `split(":")[0]` sites ask different questions (org-only namespace; membership-in-namespaces; not module ownership).
+- [x] **A module's namespaces include its own.** `namespacesForModule` returns `[moduleKey, ...extras]`. Home: 29 keys from every implementation, was 2/27/29/29/2.
+- [x] **Key strings do not change.** No `name:` line in the permission catalog altered.
+- [x] **Adding a module stays a configuration change.** One entry in `ADDITIONAL_MODULE_NAMESPACES`.
+- [x] **The bar moves into permission resolution.** Ownership expansion filtered by `isDelegablePermission`.
+- [x] **The bar applies to the expansion, not the structural principals.** Org owner and org admin return `allCatalogScopes()` before the expansion runs.
+- [x] **This generalises beyond the one key that exposes it.** Written against the predicate, not the key.
+- [x] **Both rungs derive from standing.** `view` = the module's view key **or** management standing; `manage` = standing. Covered by four cases incl. org admin holding no key.
+- [x] **The assertion wrappers collapse.** One policy (`assertModuleAccessPolicy`), one precondition (`assertModuleEnabled` → `assertManagedModule`), one deps factory; both duplicate `assertKnownModule` copies deleted. The per-service wrappers are now DI adapters only.
+- [x] **The caller-permissions endpoint uses the shared answer.** Slices with `administeringModuleOf`.
+- [x] **Grants still never manufacture management authority.** Preserved; pinned by "forbids a functional member even when an effective grant contains manage".
+- [x] **Ownership lifecycle authority is unchanged.** Still `canTransferModuleOwnership`; module admin still refused.
+- [x] **Template changes are inert without a backfill.** Migration `0450`.
+- [x] **The backfill adds, never removes.** `INSERT … ON CONFLICT DO NOTHING` only.
+- [x] **Every change bumps the permission version.** `0450` bumps `access_versions` in the same migration.
+- [x] **Home gets its access route.** `/home/access`, the same six-line adapter as the other thirteen.
+- [x] **No other frontend change.** Route plus two test files.
+- [x] **No additional per-request queries.** The `view` rung now checks the cached permission set before any DB call, so a key-holder costs one query fewer than before.
+- [x] **No new cache keys and no new wildcard scans.** None added.
+
+### Testing Decisions
+
+- [x] **The primary seam is the controller.** Extended `module-access.controller.e2e-spec.ts`. **Amended:** that harness stubs both services, so asserting authority there would assert the mock. Routing, auth and refusal propagation are covered at the controller; the authority decisions are covered at the service, where the decision is actually made.
+- [x] **The end-to-end suite was actually run.** 48/48. Needs a 10GB heap — `test:e2e:ci` sets 6GB and OOMs on app boot.
+- [x] **The two default-run specs are retained.** `home-surfaces-universal.spec.ts` passes. `module-standing.spec.ts` retargeted from the dead four-level `resolveModuleStanding` onto the live `resolveModuleManagementStanding`, and now covers the read rung.
+- [x] **All twelve controller cases covered**, distributed across the correct seams.
+- [x] **Regression coverage for the working modules.** Every Home case has an `hr` control alongside it.
+- [x] **Backfill coverage.** Migration and templates pinned to each other.
+- [x] **Both known traps avoided.** Transaction mocks invoke their callbacks; the e2e suite was executed, not merely extended.
+
+### Amended during implementation
+
+- **`resolveModuleStanding` was deleted, not promoted.** The spec said the four-level answer becomes the module's whole interface. Its only candidate consumer was `getCallerPermissions`, and routing it through collapsed four independent facts into one precedence-ordered source — which flipped `isModuleOwner` to false for an org owner who also owns the module, breaking the web app's ownership tab. A test caught it. The four-level shape has no correct consumer, so it went; `resolveModuleManagementStanding` is the one interface both rungs use.
+- **The backfill also grants `HOME_MODULE_MEMBER`.** The spec said owner and admin. `buildModuleMemberPermissionKeys` filters to `:view`/`:read`, so every other module's member role already holds `<module>:access:view`; omitting Home's would diverge new orgs from existing ones.
 
 ## Problem Statement
 
