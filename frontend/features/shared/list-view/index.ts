@@ -1,3 +1,7 @@
+export {
+  FilterTriggerButton,
+  MobileFilterSearch,
+} from "./filter-trigger-button";
 export { FilterChip, type FilterChipProps } from "./filter-chip";
 export {
   categoryParams,

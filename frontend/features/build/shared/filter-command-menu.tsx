@@ -31,10 +31,10 @@ import { useHorizontalSwipe } from "@/hooks/common/use-horizontal-swipe";
 import { FilterCategorySubmenu } from "./filter-category-submenu";
 import { FilterFlatSearch } from "./filter-flat-search";
 import { FilterAssigneeLeading } from "./filter-option-leading";
-import { FilterTriggerButton, MobileFilterSearch } from "./filter-trigger-button";
+import { FilterTriggerButton, MobileFilterSearch } from "@/features/shared/list-view";
 import { FilterCategoryList } from "./filter-category-list";
 import {
-  FILTER_CATEGORY_TITLES,
+  categoryTitle,
   type FilterCategory,
   type StatusFilterOption,
   type Member,
@@ -316,7 +316,7 @@ export function FilterCommandMenu({
 
   if (isMobile) {
     const drillTitle = activeCategory
-      ? FILTER_CATEGORY_TITLES[activeCategory]
+      ? categoryTitle(activeCategory)
       : "Filters";
     const slideVariants = shouldReduceMotion ? stepSlideReduced : stepSlide;
 
