@@ -22,6 +22,7 @@ import {
 const projectsNav: NavGroup[] = [
   {
     label: "Projects",
+    product: "build",
     routes: [
       { label: "Home", icon: LayoutDashboard, href: "/build/command-center" },
       { label: "Inbox", icon: Inbox, href: "/build/inbox" },
@@ -37,6 +38,7 @@ const projectsNav: NavGroup[] = [
 const smallNav: NavGroup[] = [
   {
     label: "Small",
+    product: "build",
     routes: [
       { label: "A", icon: LayoutDashboard, href: "/a" },
       { label: "B", icon: Inbox, href: "/b" },
@@ -48,6 +50,7 @@ const smallNav: NavGroup[] = [
 const exactFiveNav: NavGroup[] = [
   {
     label: "Five",
+    product: "build",
     routes: [
       { label: "One", icon: LayoutDashboard, href: "/one" },
       { label: "Two", icon: Inbox, href: "/two" },
@@ -106,6 +109,7 @@ describe("mobile module nav items", () => {
       const nav: NavGroup[] = [
         {
           label: "G",
+          product: "build",
           routes: [
             { label: "A", icon: LayoutDashboard, href: "/a" },
             { label: "B", icon: Inbox, href: "/b" },
@@ -158,6 +162,7 @@ describe("mobile module nav items", () => {
       const multiGroupNav: NavGroup[] = [
         {
           label: "Group A",
+          product: "build",
           routes: [
             { label: "A1", icon: LayoutDashboard, href: "/a1" },
             { label: "A2", icon: Inbox, href: "/a2" },
@@ -167,6 +172,7 @@ describe("mobile module nav items", () => {
         },
         {
           label: "Group B",
+          product: "build",
           routes: [
             { label: "B1", icon: Users, href: "/b1" },
             { label: "B2", icon: Timer, href: "/b2" },
@@ -185,6 +191,7 @@ describe("mobile module nav items", () => {
       const tabs = getMobileModuleBottomTabs([
         {
           label: "Projects",
+          product: "build",
           routes: [
             { label: "Projects", icon: Briefcase, href: "/build", exact: true },
             { label: "Inbox", icon: Inbox, href: "/build/inbox" },
@@ -199,6 +206,7 @@ describe("mobile module nav items", () => {
       const tabs = getMobileModuleBottomTabs([
         {
           label: "Timesheets",
+          product: "build",
           routes: [
             { label: "My Time", icon: Timer, href: "/timesheets", exact: true },
             { label: "Team", icon: Users, href: "/timesheets/team" },
@@ -212,6 +220,7 @@ describe("mobile module nav items", () => {
       const tabs = getMobileModuleBottomTabs([
         {
           label: "People",
+          product: "build",
           routes: [
             {
               label: "Directory",
@@ -281,6 +290,7 @@ describe("mobile module nav items", () => {
       const single: NavGroup[] = [
         {
           label: "Overview",
+          product: "build",
           routes: [
             { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
           ],

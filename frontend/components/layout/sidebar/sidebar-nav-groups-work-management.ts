@@ -76,7 +76,7 @@ export const WORK_MANAGEMENT_NAV_GROUPS: NavGroup[] = [
     ],
   },
 {
-    label: "Product Management",
+    label: "Delivery",
     product: "build",
     module: "build",
     requiredPermission: ["build:view", "build:tickets:view", "build:portal:view"],
@@ -145,7 +145,7 @@ export const WORK_MANAGEMENT_NAV_GROUPS: NavGroup[] = [
     ],
   },
 {
-    label: "More",
+    label: "Product",
     product: "build",
     module: "build",
     defaultCollapsed: true,
