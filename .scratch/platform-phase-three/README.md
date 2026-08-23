@@ -40,6 +40,25 @@ Recorded because each would have produced a ticket that built the wrong thing.
 - **The config secrets fail closed.** The unvalidated webhook and token secrets reject every webhook and mint no tokens when unset. This is availability and diagnosability, not an authorization hole, and ticket 04 says so on its face.
 - **The contractor premise was already corrected in Stream G's PRD.** An earlier draft claimed consolidating the person models would remove the ability to pay a non-member. `hr_employments` keys on `hr_people`, not on membership, and `hr_people.user_id` is nullable. The real gap is that payroll has two payee entry points and needs a third.
 
+## Carried forward — verified, real, and not yet ticketed
+
+The six architecture review HTML files in the repository root were the source for phases two and three. Everything actionable in them is now either shipped, ticketed, or listed here; the files themselves are deleted, and recoverable from git (`git show 8244527bf:architecture-review-20260820-1.html`).
+
+These are the findings that survived verification and belong to no stream yet, most valuable first.
+
+- **`ChatAssistantController` carries no `@NoTenantTransaction`.** Twelve other AI controllers do. Its streaming `@Post()` returns before the stream ends, so the request transaction commits while tools and `onFinish` still run on a live-but-dead tenant context — the failure mode that produced `42501` elsewhere. One decorator; latent rather than live, because its tools currently open their own transactions by convention.
+- **Chat scale residue.** Six items deliberately not carried when the chat tenancy fix shipped: `reactions` is `jsonb` (`chat.ts:110`), so concurrent reaction writes are read-modify-write and silently lose each other; chat invite tokens are stored plaintext (`chat.ts:428`) against a hash-at-rest house rule; `MAX_CAPABILITY_CHANNELS = 500` silently truncates an org with more channels; `sendToChannelMembers` fans out N push calls in the request thread; `chat_messages` is unpartitioned and flagged in its own comments as needing it; twelve chat tables use `serial` primary keys against the `generatedAlwaysAsIdentity` rule. The reactions loss and the plaintext tokens are the two worth doing first.
+- **`applyScope`'s team branch runs a correlated subquery.** The fast path taking pre-fetched `teamIds` exists in the code and **no call site supplies them**, so the `teammateUserIds` subquery runs for every team-scoped list. The backend constitution already says `team` scope ships only once that is eliminated, so this is the measurement confirming it has not been.
+- **The invitation state machine has no owner.** Predicates are partly centralised in `invitations.helpers.ts`, but no unified transition module exists and `InvitationLifecycleService` is a thin wrapper. Adding a state still means finding several services. Low urgency — the dangerous accept/decline races were already correct — but it grows with every transition.
+- **AI model choice is two global tiers.** `resolveLlmProvider` returns one fast and one standard model for every feature, so a trivial classification and a payroll explanation pay the same rate. Needs a product decision on the feature taxonomy before it can be ticketed.
+- **`rich-text-content.tsx` has no Plate branch**, so a Knowledge Base document cannot render outside the Knowledge Base. The review downgraded this to speculative itself; the sharpened form is to add the branch rather than collapse the editors.
+- **Housekeeping knip reports**: 14 unused web files and the `@reactour/tour` dependency are safe to remove. The 11 unused API schema files are **not** — that is the deliberate SQL-managed arrangement guarded by `migration-integrity.spec.ts`.
+
+## Two review claims that were measured wrong, not just stale
+
+- **"219 files import the filter row"** was retracted by the review itself; the real filter-bar family had 15 importers. `FILTER_TOOLBAR_ROW` is a generic layout constant used by 223 files and was never part of the Build filter module — counting it conflated a shared CSS class with a deep module.
+- **Chat's permission vocabulary** was reported as 4 keys against 21 routes. It is 11 keys against 72 routes. The ratio is still thin and still worth widening, but the numbers that made it sound alarming were wrong in both directions.
+
 ## Known hazards in this area
 
 - The web `tsconfig.json` **excludes test files**, so a clean `tsc --noEmit` does not prove the tests compile. A required field added to a shared type is invisible there until a test runs.
