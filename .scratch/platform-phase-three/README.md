@@ -16,7 +16,14 @@ These are the candidates the earlier phases left uncovered. Phase two's four str
 
 **Stream E is complete.** Tickets 01, 02 and 03 are done and committed. Full web suite 77 suites / 438 tests green, `tsc --noEmit` 0, `madge --circular` clean across 3,146 files. One criterion is deliberately left unticked on ticket 03: nothing was verified by running the application.
 
-**Stream F: ticket 04 done**, ticket 05 largely done. Nineteen reads have moved onto injected config across twilio, the notification worker, razorpay, contact, roadmap, platform, storage, KB, realtime and push. Ticket 06 (the import-time reads in `email/email.provider.ts`) is open and is the one part of this stream that is not a substitution — it constructs its provider clients from module-scope constants, so it needs a factory and a module-wiring change across Automation and Notifications, and its own criterion is to verify by sending mail.
+**Stream F: tickets 04, 05 and 07 done. Ticket 06 is open and is the only open ticket in this phase.** Nineteen reads have moved onto injected config across twilio, the notification worker, razorpay, contact, roadmap, platform, storage, KB, realtime and push. Ticket 06 — the import-time reads in `email/email.provider.ts` — is deliberately **not** attempted. It is the one part of this stream that is not a substitution: the file builds its Resend and ZeptoMail clients from module-scope constants at import time, so converting it needs a factory provider plus module wiring across Automation and Notifications, and its own acceptance criterion is to verify by **sending mail**, which was not possible here. A half-done version that ticks the type-level boxes and leaves a lazy mutable singleton would be worse than the current state, which is at least honest about what it does.
+
+### Verified state — 2026-08-23
+
+- **Backend: `tsc --noEmit` clean. Full suite 553 suites / 4,743 tests, exit 0** (six sequential shards at `--maxWorkers=2`; the whole suite at once gets its workers OS-killed).
+- **Backend: `pnpm lint` 0 errors, 32 warnings.** It was failing before this phase — `script.executor.ts:131` had a `require()` error, so the CI lint job was red.
+- **Web: `tsc --noEmit` clean. Full suite 77 suites / 438 tests, exit 0. `madge --circular` clean across 3,146 files.**
+- **Nothing was verified by running the application.** Every criterion that asked for that is left unticked and says so.
 
 **Stream G: two of three tickets were already shipped**, discovered while writing them. `directory/person-seam.ts` carries the three-way subject and resolves the person-record path on the link column, and payroll consumes it — so tickets 08 and 09 describe work that exists. They are marked SHIPPED with only the criteria actually re-verified ticked; the rest are left unchecked because they were not tested, not because they are known to fail. **Ticket 10, the contract step, is genuinely open**: `payroll/filings/filings.service.ts` and `payroll/lib/payroll-run-payee.ts` still import HR and directory schema directly.
 
