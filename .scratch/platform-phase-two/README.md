@@ -2,7 +2,11 @@
 
 Fifteen tickets across four streams, derived from four PRDs in `docs/specs/`, dated 2026-08-23.
 
-**All fifteen are closed and their files retired.** What each delivered, and what it did not, is below. Two were closed by a concurrent session rather than by this work, and that is marked.
+**Twelve of fifteen are closed and retired. Two are still open, and one new ticket was added to unblock them.**
+
+An earlier revision of this file said all fifteen were closed and deleted every ticket. That was wrong, and it was the second time in this programme that something was marked done while a criterion was still unmet — ticket 14 was closed with the wrong gate still live on the client, and ticket 04 was closed with a route nothing called. Tickets **04** and **09** have been restored and re-opened, with the blocking criterion quoted in each. Ticket **16** is the design change that unblocks both.
+
+Everything else was re-verified against the code on 2026-08-23 before its file was retired — not from memory.
 
 **Final verification — backend `tsc` 0 · 559 suites / 4,745 tests · web `tsc` 0 · 77 suites / 438 tests · both repos acyclic · no new dead code.**
 

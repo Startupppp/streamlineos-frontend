@@ -33,6 +33,7 @@ import type { Message, TicketEntityRef, CommentEntityRef, MessageMetadata } from
 import { useCan } from "@/hooks/api/access";
 import { apiClient, isApiError } from "@/lib/api-client";
 import { useEntityAction } from "./entity-actions-context";
+import { useSubmitEntityAction } from "@/hooks/api/chat";
 import { ConvertToTaskDialog } from "./convert-to-task-dialog";
 import { AssignTicketDialog } from "./assign-ticket-dialog";
 import { SetDueDateDialog } from "./set-due-date-dialog";
@@ -127,6 +128,7 @@ function TicketPill({ entity, channelId }: { entity: TicketEntityRef; channelId:
     entity.card?.status ?? entity.status ?? "TODO",
   );
   const [isChangingStatus, setIsChangingStatus] = useState(false);
+  const submitEntityAction = useSubmitEntityAction();
   const canUpdate = Boolean(
     useEntityAction({ type: "ticket", id: String(entity.id) }, "status"),
   );
@@ -154,7 +156,7 @@ function TicketPill({ entity, channelId }: { entity: TicketEntityRef; channelId:
       setCurrentStatus(nextStatus);
       setIsChangingStatus(true);
       try {
-        await apiClient.post("/chat/entity-actions/submit", {
+        await submitEntityAction.mutateAsync({
           channelId,
           reference: { type: "ticket", id: String(entity.id) },
           actionId: "status",
