@@ -22,9 +22,10 @@ Superseded note, kept because the reasoning was sound at the time: It is the one
 
 ### Verified state — 2026-08-23
 
-- **Backend: `tsc --noEmit` clean. Full suite 553 suites / 4,743 tests, exit 0** (six sequential shards at `--maxWorkers=2`; the whole suite at once gets its workers OS-killed).
+- **Backend: `tsc --noEmit` clean. Full suite 554 suites / 4,751 tests, exit 0** (six sequential shards at `--maxWorkers=2`; the whole suite at once gets its workers OS-killed).
 - **Backend: `pnpm lint` 0 errors, 32 warnings.** It was failing before this phase — `script.executor.ts:131` had a `require()` error, so the CI lint job was red.
-- **Web: `tsc --noEmit` clean. Full suite 77 suites / 438 tests, exit 0. `madge --circular` clean across 3,146 files.**
+- **Web: `tsc --noEmit` clean. Full suite 77 suites / 438 tests, exit 0. `madge --circular` clean on both repos (3,146 web files, 3,363 API files).**
+- **Controller e2e: `chat-entity-actions.controller.e2e-spec.ts` 10/10 under `pnpm test:e2e`** — run explicitly, because e2e specs are excluded from the default suite and a green default run says nothing about them.
 - **Nothing was verified by running the application.** Every criterion that asked for that is left unticked and says so.
 
 **Stream G: two of three tickets were already shipped**, discovered while writing them. `directory/person-seam.ts` carries the three-way subject and resolves the person-record path on the link column, and payroll consumes it — so tickets 08 and 09 describe work that exists. They are marked SHIPPED with only the criteria actually re-verified ticked; the rest are left unchecked because they were not tested, not because they are known to fail. **Ticket 10 is BLOCKED, and the blocker is in the ticket rather than the code.** `resolvePerson` answers for one subject; the payroll code it targets runs one batched query per run projecting identity for every payee at once. Following ticket 10 literally would turn that into an N+1 on the payroll path. **Ticket 11** adds the batch identity read the seam is missing; ticket 10 is mechanical after it.
