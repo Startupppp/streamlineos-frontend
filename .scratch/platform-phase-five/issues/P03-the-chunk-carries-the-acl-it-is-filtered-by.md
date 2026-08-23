@@ -1,5 +1,14 @@
 # P03 — The chunk carries the ACL it is filtered by
 
+> **NOT ATTEMPTED.**
+>
+> This is an indexed-predicate optimisation, not a correctness fix — P01 and P02 already closed the disclosure. It requires a schema change plus an additive, staged migration: add nullable, backfill in batches, tighten separately, then `VACUUM ANALYZE`.
+>
+> **The reason to hold.** The only database available here is the shared development one, which other sessions are actively using, and this repository's own record contains three separate migration-drift incidents — a stale snapshot after a custom migration, a desynced journal, and a migration recorded as applied with half its statements unrun. Authoring a migration and leaving it unapplied adds to a chain that has been fragile, on work whose benefit is speed rather than safety.
+>
+> **What it needs:** a database that is not shared, or a maintenance window, plus a before/after buffer measurement taken as `streamline_app` with the tenant GUC set — never as the owner, whose `BYPASSRLS` hides the cost that matters.
+
+
 **What to build:** `kb_article_chunks` stores the visibility columns its retrieval filter needs, so the filter is an indexed predicate instead of a rejoin.
 
 `kbArticleChunks` holds `orgId`, `articleId`, `pageId`, `sourceId`, content and embedding — nothing about who may read it. Every vector query therefore joins back to `kb_pages` (or `kb_articles` and `kb_spaces`) to re-evaluate the ACL, on a table that is scanned by distance and then filtered.
@@ -14,7 +23,7 @@ That rejoin is also what let the predicates drift in the first place: a filter y
 
 **Blocked by:** P02
 **Wave:** 2
-**Status:** ready-for-agent
+**Status:** NOT DONE — deliberately not attempted, reason below
 
 - [ ] The chunk row carries the page's `visibility`, `projectId` and `createdById`, written at index time.
 - [ ] Re-indexing a page updates those columns, so a page moved between projects does not keep stale ACL on its chunks.

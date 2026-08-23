@@ -16,18 +16,18 @@ The composer already knew exactly who the sender picked from the autocomplete. I
 
 **Blocked by:** U01
 **Wave:** 2
-**Status:** ready-for-agent
+**Status:** DONE
 
-- [ ] The send-message payload carries resolved mention user ids, Zod-validated at the boundary, in a `*-schema.ts` file — never inline in the controller.
-- [ ] The server validates each id is an **active member of that channel** and ignores the rest. It never trusts the list.
-- [ ] Substring matching is **deleted, not kept as a fallback.** A fallback that fires on the same input is the same bug with a longer name.
-- [ ] `@channel`, `@everyone` and `@here` stay server-side. They are a channel-level fact, not an identity the composer resolves.
-- [ ] The full member load with names disappears from the send path unless `@channel`-style mentions are present.
-- [ ] The client request type mirrors the backend schema exactly. A contract that drifts silently strips the field and the feature becomes a no-op that still returns 200.
-- [ ] A test asserts an id that is not a channel member produces no notification.
-- [ ] A test asserts two members with overlapping names — "Alex" and "Alexander" — each get exactly one notification, for their own id only.
-- [ ] **The mutation check:** a message whose text contains `@alex` but carries no mention metadata produces **no** mention notification. Restore substring matching and this fails.
-- [ ] A test asserts `@everyone` still notifies the channel.
-- [ ] The composer sends the id for every mention the user picked from autocomplete, and a hand-typed `@name` that was never resolved sends no id.
-- [ ] Both repos typecheck. The web `tsconfig.json` excludes tests, so run the web suite as well.
+- [x] The send-message payload carries resolved mention user ids, Zod-validated at the boundary, in a `*-schema.ts` file — never inline in the controller.
+- [x] The server validates each id is an **active member of that channel** and ignores the rest. It never trusts the list.
+- [x] Substring matching is **deleted, not kept as a fallback.** A fallback that fires on the same input is the same bug with a longer name.
+- [x] `@channel`, `@everyone` and `@here` stay server-side. They are a channel-level fact, not an identity the composer resolves.
+- [x] The full member load with names disappears from the send path unless `@channel`-style mentions are present.
+- [x] The client request type mirrors the backend schema exactly. A contract that drifts silently strips the field and the feature becomes a no-op that still returns 200.
+- [x] A test asserts an id that is not a channel member produces no notification.
+- [x] A test asserts two members with overlapping names — "Alex" and "Alexander" — each get exactly one notification, for their own id only.
+- [x] **The mutation check:** a message whose text contains `@alex` but carries no mention metadata produces **no** mention notification. Restore substring matching and this fails.
+- [x] A test asserts `@everyone` still notifies the channel.
+- [x] The composer sends the id for every mention the user picked from autocomplete, and a hand-typed `@name` that was never resolved sends no id.
+- [x] Both repos typecheck. The web `tsconfig.json` excludes tests, so run the web suite as well.
 - [ ] **NOT verified unless stated:** no mention was sent through a booted app and observed arriving at the right person.

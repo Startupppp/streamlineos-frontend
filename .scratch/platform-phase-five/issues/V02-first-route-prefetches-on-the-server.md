@@ -13,7 +13,7 @@ Pick the most common screen — a permission-gated, paginated list — so the re
 
 **Blocked by:** V01
 **Wave:** 2
-**Status:** ready-for-agent
+**Status:** DONE — `/directory/workers`. Time to first row was NOT measured.
 
 - [ ] The chosen route and feature are named here before any edit, so no other ticket can collide with them.
 - [ ] Prefetch lives **with the query key**, so a page cannot prefetch under a key its hook does not read.

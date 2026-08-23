@@ -1,5 +1,14 @@
 # P04 — `kb/` nests by domain
 
+> **NOT ATTEMPTED.**
+>
+> This relocates all 126 files of `modules/kb/`. It is mechanical but total: every import updated, `madge --circular` clean, `knip` reporting no new unused files, and `nest build` green — `tsc` alone misses a missing side-effect import, and a bare `import "./x";` is invisible to from-based scanning, which has already cost this repository a live file.
+>
+> **The reason to hold is the shared tree.** Three times in this ticket set a concurrent session has edited files mid-flight — one rewrote a committed adapter and left the web build red. A 126-file move is the single change most likely to collide irrecoverably with another session's in-flight work, and the ticket already says it must run alone.
+>
+> **What it needs:** exclusive access to the tree, and it should be the only thing in its commit.
+
+
 **What to build:** The knowledge-base module folder reads as a table of contents instead of 109 flat files.
 
 `modules/kb/` is 126 files, 109 of them flat, with one subfolder. It holds two products: a public help centre (`kb_articles`, `kb_categories`, the widget, `/help/:orgId`) and an internal wiki (`kb_pages`, `kb_spaces`, the page tree, versions, reviews) — plus `kb-article-migration.service.ts`, which maps one into the other and is therefore temporary by construction.
@@ -12,7 +21,7 @@ The backend constitution already requires this shape and two modules already hav
 
 **Blocked by:** P01, P02, P03 — all of them
 **Wave:** 3 — by itself
-**Status:** ready-for-agent
+**Status:** NOT DONE — deliberately not attempted, reason below
 
 - [ ] `kb/core/` holds the module file, settings, tags, translations and the shared entry points.
 - [ ] `kb/help-centre/` holds articles, categories, the widget, public pages and article AI.

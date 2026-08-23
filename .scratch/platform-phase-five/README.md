@@ -113,6 +113,48 @@ Not verified: nothing was run against a booted application, and no query was mea
 
 **P01 does not close the hole on its own.** A member of zero projects still gets the permissive branch inside the seam, so retrieval and read are now consistent and both wider than they should be for that person. **P02 closes it and should lead wave 1.**
 
+## Progress — 2026-08-24 (second pass)
+
+| Ticket | State |
+|---|---|
+| O01 seeded harness | **DONE** — 5/5, including a test covering the version-bump bug it found. |
+| P01, P02 KB predicate | **DONE.** |
+| P03 chunk carries the ACL | **NOT DONE** — needs a database that is not shared. |
+| P04 `kb/` nests by domain | **NOT DONE** — a 126-file move needs an exclusive tree. |
+| Q01 one representation | **DONE.** |
+| R01 availability answer | **Landed** by a concurrent session. |
+| R02 registry decides core | **BLOCKED** — pricing decision. |
+| S01 calendar source interface | **Landed** by a concurrent session. |
+| S02 sources move to their modules | **NOT DONE** — eight fixture sets first; half-migrating is worse. |
+| T01 money path | **WON'T DO** — premise false. |
+| U01 fan-out is one module | **DONE.** |
+| U02 mentions carry identities | **DONE.** |
+| U03 listing issues no write | **DONE.** |
+| V01 server-data adapter | **DONE.** |
+| V02 first route prefetched | **DONE** — `/directory/workers`. Gain not measured. |
+
+**Eleven of sixteen resolved: nine done, one blocked on a product decision, one closed won't-do.** The three not attempted each carry a reason on their ticket rather than a status alone.
+
+### The mention fix is the one users will notice
+
+Mentions resolved by matching the text after `@` against every member's name, **in both directions, as substrings**. An Alex and an Alexander notified each other every time; `@al` notified everyone containing those letters. The composer already knew who was picked and threw it away.
+
+Identities now travel with the message the way entity references already do, and the server validates membership rather than guessing. Substring matching is deleted, not kept as a fallback.
+
+**Caught in review:** the id was first validated as `z.string().uuid()`, but `users.id` is a `text` column. Values are uuid-shaped today and nothing guarantees it — an id from another auth provider would have 400'd the whole message. It validates as text now; membership is the real gate.
+
+### A concurrent session rewrote a committed adapter
+
+`serverFetch` was renamed to `serverGet` and lost its params argument after V01 landed, which left the committed prefetch importing a name that no longer existed and **the web build red**. Repaired by changing only the prefetch. Their rewrite also dropped the response shape-check in `getServerAccess`; a malformed 200 would now be returned rather than falling back to `DENIED`. Flagged, not edited — editing a file another session is mid-way through is how the last two collisions happened.
+
+### Verified state — 2026-08-24 (second pass)
+
+- **Backend: 570 suites, ~4,836 tests, zero failures** across six shards.
+- **Seeded harness 5/5** against a real database as the application role.
+- **Web: `tsc` exit 0, 82 suites / 482 tests**, plus a passing `next build`.
+- **Backend `tsc` exit 0. `madge --circular` clean on both repos.**
+- **Nothing verified through a booted application** beyond the harness's own HTTP requests. Time to first row on the prefetched route was **not measured**.
+
 ## Progress — 2026-08-24
 
 | Ticket | State |

@@ -17,7 +17,7 @@ This ticket builds the seam. V02 proves it.
 
 **Blocked by:** nothing
 **Wave:** 1
-**Status:** ready-for-agent
+**Status:** DONE — the adapter was renamed to `serverGet` by a concurrent session after landing
 
 - [ ] `lib/server-fetch.ts` is marked `import "server-only"` and wrapped in React `cache()` for per-request dedupe — the pattern `getServerAccess` already uses.
 - [ ] It reads the session's `backendJwt`. It never accepts an actor id or an org id from a caller.

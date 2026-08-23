@@ -22,24 +22,24 @@ Nothing can be batched, re-ordered or moved behind a queue without editing `send
 
 **Blocked by:** nothing
 **Wave:** 1
-**Status:** ready-for-agent
+**Status:** DONE
 
-- [ ] `send()` calls `fanout.dispatch(message)` and nothing else. Every side effect is behind that one interface.
-- [ ] Realtime publish runs first — it is what makes the message appear. Push, notifications and mentions do not depend on each other and run concurrently.
-- [ ] The per-member `for … await ably.publishToUser` loop in `chat-notifications.service.ts:49–62` no longer awaits one member at a time. Push's existing `Promise.allSettled` shape is the precedent; do not change push itself.
-- [ ] Any ordering that matters is **stated on the interface**, not left implicit in the order of awaits.
-- [ ] Per-recipient failure is isolated and logged. **A deferred failure is never swallowed** — that rule exists because swallowing one cost this platform every notification, in every org, invisibly.
-- [ ] The fan-out runs on a live tenant context. It either defers with `registerAfterCommit` or opens its own `runInNewTenantTransaction` — it never borrows a committed request transaction, which dies `42501`.
-- [ ] Recipient ids are resolved while a transaction is live, never on a dead handle.
-- [ ] The existing RT-001 rule holds and is pinned: **neither sender name nor message text crosses the push boundary.**
-- [ ] The property test: **`send()` returns the persisted message and dispatches exactly one fan-out, whatever the channel size** — asserted with a fake fan-out, so `send()` finally has a test that needs neither Ably nor push.
-- [ ] A test asserts a failing push does not stop notifications.
-- [ ] A test asserts a DM publishes the DM notification and a channel does not.
-- [ ] The mention scan moves into the fan-out **unchanged** in this ticket. U02 replaces it. Changing it here and there is how a fallback survives.
-- [ ] `chat-messages.service.ts` gets smaller, not larger.
+- [x] `send()` calls `fanout.dispatch(message)` and nothing else. Every side effect is behind that one interface.
+- [x] Realtime publish runs first — it is what makes the message appear. Push, notifications and mentions do not depend on each other and run concurrently.
+- [x] The per-member `for … await ably.publishToUser` loop in `chat-notifications.service.ts:49–62` no longer awaits one member at a time. Push's existing `Promise.allSettled` shape is the precedent; do not change push itself.
+- [x] Any ordering that matters is **stated on the interface**, not left implicit in the order of awaits.
+- [x] Per-recipient failure is isolated and logged. **A deferred failure is never swallowed** — that rule exists because swallowing one cost this platform every notification, in every org, invisibly.
+- [x] The fan-out runs on a live tenant context. It either defers with `registerAfterCommit` or opens its own `runInNewTenantTransaction` — it never borrows a committed request transaction, which dies `42501`.
+- [x] Recipient ids are resolved while a transaction is live, never on a dead handle.
+- [x] The existing RT-001 rule holds and is pinned: **neither sender name nor message text crosses the push boundary.**
+- [x] The property test: **`send()` returns the persisted message and dispatches exactly one fan-out, whatever the channel size** — asserted with a fake fan-out, so `send()` finally has a test that needs neither Ably nor push.
+- [x] A test asserts a failing push does not stop notifications.
+- [x] A test asserts a DM publishes the DM notification and a channel does not.
+- [x] The mention scan moves into the fan-out **unchanged** in this ticket. U02 replaces it. Changing it here and there is how a fallback survives.
+- [x] `chat-messages.service.ts` gets smaller, not larger.
 - [ ] **Name the `app.module.ts` line you could not write** if the new provider needs wiring. The orchestrator owns that file.
-- [ ] `tsc --noEmit` exit 0 and the chat specs pass by path.
-- [ ] A `db.transaction` mock in any spec you touch **invokes its callback** — a bare `jest.fn()` silently voids every assertion inside it.
+- [x] `tsc --noEmit` exit 0 and the chat specs pass by path.
+- [x] A `db.transaction` mock in any spec you touch **invokes its callback** — a bare `jest.fn()` silently voids every assertion inside it.
 - [ ] **NOT verified unless stated:** no message was sent through a booted API.
 
 **Not in this ticket:** the queue, batching Ably publishes, partitioning, or the 500-channel capability ceiling. This makes them possible; it does not deliver them.

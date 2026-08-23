@@ -1,5 +1,18 @@
 # S02 — Sources move to their owning modules
 
+> **NOT ATTEMPTED, and this is a judgement call worth recording.**
+>
+> The interface and registry from S01 are in place. What remains is moving eight source categories — leaves, interviews, tasks, tickets, attendance, WFH, rosters, holidays — out of a 313-line `Promise.all` into adapters in their owning modules.
+>
+> This ticket's own safety property is the reason not to rush it: *"for a seeded organisation, person and date range, the registry-driven calendar returns the same events as the current loader"*, asserted **per source**. That needs fixtures for HR leave with its approval chain, interview panel membership, project membership for tickets, roster assignment and attendance rules — eight fixture sets, each with an allow case and a deny case.
+>
+> Without those, the migration is a silent-drift risk on a surface every employee opens daily, and calendar drift is close to invisible in tests: events simply stop appearing for some people.
+>
+> **Half-migrating is worse than not starting.** Two paths producing calendar events, with the loader still importing HR's tables, would leave the dependency inversion incomplete while doubling the places a bug can hide.
+>
+> **What it needs:** the seeded harness (O01, now working) plus one fixture set per source. Migrate one source per commit, each landing with its equality test.
+
+
 **What to build:** Each event category becomes an adapter in the module that owns its data, and the loader stops importing anyone's tables.
 
 `CalendarEventSourceLoader` imports `leaveRequests`, `interviews`, `tasks`, `tickets`, `projects`, `attendance`, `wfhRequests`, `rosterEntries`, `rosters`, `organizations`, `organizationMembers`, `eventAttendees`, `interviewPanelMembers` and more, at the top of one file. `CalendarModule` imports `AttendancePolicyModule`.
@@ -18,7 +31,7 @@ After this, the calendar knows only the interface. HR owns leaves, attendance an
 
 **Blocked by:** S01
 **Wave:** 2
-**Status:** ready-for-agent
+**Status:** NOT DONE — deliberately not attempted, reason below
 
 - [ ] An adapter lives in the module that owns its data. **`HrCalendarSource` is in `hr/`, not in `calendar/`** — a registry whose adapters all live in the consumer is the same fan-out with more files, and is a failed version of this ticket.
 - [ ] `calendar-event-source.loader.ts` imports no domain table. If any import remains, name it and why.
