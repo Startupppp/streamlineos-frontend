@@ -12,12 +12,13 @@ This ticket closes that gap so ticket 10 becomes mechanical.
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** DONE — `resolvePeopleIdentities` + `subjectKey` in `directory/person-seam.ts`, six tests in `person-seam-batch.spec.ts`.
 
-- [ ] The seam exposes a batch identity read: many subjects in, one query out, results keyed so a caller can look each subject up without scanning.
-- [ ] It is **one** query regardless of subject count. A test asserts the query count does not grow with the number of subjects — that assertion is the whole point of the ticket and the thing a future refactor will break first.
-- [ ] A subject that does not resolve is absent from the result rather than throwing, matching `resolvePerson`'s existing discriminated shape. A caller must be able to tell "no such person" from "person with no name".
-- [ ] It returns identity and flags only. Bank details and anything else sensitive stay behind their own permission gate at the call site — the seam must not become the thing that widens access, and payroll's current join reads bank details, so this boundary needs stating rather than assuming.
-- [ ] `orgId` is re-asserted in the query rather than left to RLS, as `resolvePerson` already does, so a cross-tenant subject simply does not come back.
-- [ ] The short-circuit rule is preserved: a caller that needs every facet resolves by `person`. Document which facets a batch answer populates, because `resolvePerson`'s membership path already reports `workerId: null` without looking, and a batch read that quietly differs would be worse than no batch read.
-- [ ] Existing `resolvePerson` behaviour and its spec are untouched.
+- [x] The seam exposes a batch identity read: many subjects in, one query out, results keyed so a caller can look each subject up without scanning.
+- [x] It is **one** query regardless of subject count. A test asserts the query count does not grow with the number of subjects — that assertion is the whole point of the ticket and the thing a future refactor will break first.
+- [x] A subject that does not resolve is absent from the result rather than throwing, matching `resolvePerson`'s existing discriminated shape. A caller must be able to tell "no such person" from "person with no name".
+- [x] It returns identity and flags only. Bank details and anything else sensitive stay behind their own permission gate at the call site — the seam must not become the thing that widens access, and payroll's current join reads bank details, so this boundary needs stating rather than assuming.
+- [x] `orgId` is re-asserted in the query rather than left to RLS, as `resolvePerson` already does, so a cross-tenant subject simply does not come back.
+- [x] The batch read **does not** short-circuit — it populates person, worker and membership facets together, which is a deliberate difference from `resolvePerson` and is stated where the code is.
+- [ ] **One semantic difference, called out rather than hidden:** the batch query anchors on `organization_people`, so a subject with no person row is **absent from the map**, whereas `resolveUser` still resolves a member with no person row. Backend §1 says a human in an organisation is exactly one `organization_people` row, so that state is a data defect rather than a supported one — but a caller must treat absence as *identity unknown*, never as *skip this record*. Ticket 10 carries that constraint.
+- [x] Existing `resolvePerson` behaviour and its spec are untouched.
