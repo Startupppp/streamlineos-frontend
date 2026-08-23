@@ -93,6 +93,26 @@ describe("parseApiResponse — failure shapes", () => {
       code: "MODULE_DISABLED",
     });
   });
+
+  it("carries status 401", async () => {
+    const error = await errorFrom(jsonResponse(401, { message: "Unauthorized" }));
+    expect(error.status).toBe(401);
+    expect(error.message).toBe("Unauthorized");
+  });
+
+  it("carries status 404", async () => {
+    const error = await errorFrom(jsonResponse(404, { message: "Not found" }));
+    expect(error.status).toBe(404);
+    expect(error.message).toBe("Not found");
+  });
+
+  it("carries status 409", async () => {
+    const error = await errorFrom(jsonResponse(409, { message: "Conflict", code: "CONFLICT" }));
+    expect({ status: error.status, code: error.code }).toEqual({
+      status: 409,
+      code: "CONFLICT",
+    });
+  });
 });
 
 describe("the two paths cannot disagree", () => {
@@ -105,4 +125,21 @@ describe("the two paths cannot disagree", () => {
     expect(isApiError(error)).toBe(true);
     expect(error).toBeInstanceOf(ClientApiError);
   });
+
+  it.each([
+    [401, { message: "Unauthorized" }],
+    [402, { message: "Payment required", code: "PAYMENT_REQUIRED" }],
+    [403, { message: "Forbidden" }],
+    [404, { message: "Not found" }],
+    [409, { message: "Conflict" }],
+    [500, {}],
+  ] as const)(
+    "status %i: server and client paths produce the same ApiError shape",
+    async (status, body) => {
+      const error = await errorFrom(jsonResponse(status, body));
+      expect(error.status).toBe(status);
+      expect(isApiError(error)).toBe(true);
+      expect(error).toBeInstanceOf(ClientApiError);
+    },
+  );
 });
