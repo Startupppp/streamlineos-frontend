@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { isToday, format } from "date-fns";
 import { CalendarClock } from "lucide-react";
-import { getUserDisplayName } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName } from "@/lib/person-display";
 import { HrPanel, HrSectionHeader } from "@/features/hr/shared/hr-ui";
 import {
   hubSectionData,

@@ -16,7 +16,7 @@ import {
   PM_FILL_PANEL,
   PM_PANEL,
 } from "@/features/build/shared/pm-chrome";
-import { listItem, listItemReduced, pmSnappy } from "@/features/build/shared/pm-motion";
+import { listItem, listItemReduced, pmSnappy } from "@/lib/motion-presets";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";

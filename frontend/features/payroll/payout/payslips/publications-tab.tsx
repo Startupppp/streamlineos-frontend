@@ -30,7 +30,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { usePayrollRuns } from "@/hooks/api/payroll";
 import { useRunPublications, usePublishPayslips, downloadPayslipPdf } from "@/hooks/api/payroll";
 import { useOrgMembersByIds } from "@/hooks/api/organization";
-import { getUserDisplayName, type NamedUser } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName, type NamedUser } from "@/lib/person-display";
 import type { PayslipPublication, PublicationStatus } from "@/types/payroll";
 import type { PayrollRunStatus } from "@/types/payroll/runs";
 import { formatMonth } from "@/features/payroll/shared";

@@ -15,7 +15,7 @@ import type { TicketComment, CommentReaction } from "@/types/projects";
 import { MentionTextarea, type MentionUser } from "@/features/build/comments/mention-textarea";
 import { EmojiReactionBar, type ReactionGroup } from "@/features/build/comments/emoji-reaction-bar";
 import { RichTextContent } from "@/components/editor/rich-text-content";
-import { getUserDisplayName, getUserInitials } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 
 const TiptapEditorDynamic = dynamic(
   () => import("@/components/editor/tiptap-editor").then((m) => ({ default: m.TiptapEditor })),

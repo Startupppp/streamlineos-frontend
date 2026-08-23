@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { Loader2, AlertTriangle } from "lucide-react";
 import { useOrgMembersByIds } from "@/hooks/api/organization";
-import { getUserDisplayName, type NamedUser } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName, type NamedUser } from "@/lib/person-display";
 
 export function BurnoutFlagsList() {
   const { data, isLoading } = useBurnoutFlags();

@@ -10,7 +10,7 @@ import type { ProjectWorkspaceMember } from "@/hooks/api/build/workspace-members
 import {
   getUserDisplayName,
   getUserInitials,
-} from "@/features/build/shared/resolve-user-name";
+} from "@/lib/person-display";
 import { WorkspaceRoleBadge } from "./members-toolbar";
 import { MemberActions } from "./member-row-actions";
 import type { DisplayProps } from "./display-props";

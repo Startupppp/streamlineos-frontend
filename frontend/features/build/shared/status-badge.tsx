@@ -2,8 +2,8 @@
 
 import { memo } from "react";
 import { cn } from "@/lib/utils";
-import { resolveColumnColor } from "@/features/build/shared/column-colors";
-import type { StatusConfigEntry } from "@/features/build/shared/types";
+import { resolveColumnColor } from "@/lib/column-colors";
+import type { StatusConfigEntry } from "@/lib/status-config";
 
 const STATUS_DOT: Record<string, string> = {
   TODO: "bg-slate-400",
@@ -47,27 +47,6 @@ export function getStatusBadgeClass(status: string): string {
 
 export function getStatusHexColor(status: string): string {
   return STATUS_HEX[status] ?? "#94a3b8";
-}
-
-interface StatusConfigDotProps {
-  entry: StatusConfigEntry;
-  className?: string;
-}
-
-export function StatusConfigDot({
-  entry,
-  className = "h-2 w-2 shrink-0 rounded-full",
-}: StatusConfigDotProps) {
-  if (entry.color) {
-    return (
-      <span
-        className={className}
-        style={{ backgroundColor: resolveColumnColor(entry.color) }}
-        aria-hidden="true"
-      />
-    );
-  }
-  return <span className={cn(className, entry.dotColor)} aria-hidden="true" />;
 }
 
 interface StatusBadgeProps {

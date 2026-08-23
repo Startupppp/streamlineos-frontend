@@ -15,8 +15,9 @@ import {
   popoverOptionBaseClass,
   popoverOptionSelectedClass,
 } from "../shared/popover-option-classes";
-import { StatusConfigDot } from "../shared/status-badge";
-import { buildStatusConfig, getStatusEntry } from "../shared/types";
+import { StatusConfigDot } from "@/components/ui/status-config-dot";
+import { buildStatusConfig } from "../shared/types";
+import { getStatusEntry } from "@/lib/status-config";
 import { Check } from "lucide-react";
 import { InlineFieldWrapper } from "./card-field-wrapper";
 

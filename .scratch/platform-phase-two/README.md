@@ -4,6 +4,8 @@ Fifteen tickets across four streams, derived from four PRDs in `docs/specs/`, da
 
 **All fifteen are closed and their files retired.** What each delivered, and what it did not, is below. Two were closed by a concurrent session rather than by this work, and that is marked.
 
+**Final verification — backend `tsc` 0 · 559 suites / 4,745 tests · web `tsc` 0 · 77 suites / 438 tests · both repos acyclic · no new dead code.**
+
 ## Outcome by stream
 
 ### A — Access version channel
@@ -38,7 +40,7 @@ Fifteen tickets across four streams, derived from four PRDs in `docs/specs/`, da
 |---|---|---|
 | 03 | Fence Build's filter bar | **Done, two criteria unmet.** 20 tests. Overflow is not fenced — jsdom performs no layout, and an assertion that cannot fail is worse than an absent one. Keyboard navigation is not fenced either. |
 | 08 | Filters take a description of what a page filters by | **Done, three criteria unmet.** Three arities — multi, single, range — carry all nine Build categories. 18 tests drive a deliberately non-Build spec. |
-| 13 | Move to a neutral home | **Partial.** The decision layer and the chip moved to `features/shared/list-view/`. Nine presentation files stayed: every one imports Build's own types, so moving them means generalising them first. |
+| 13 | Move to a neutral home | **Done.** Five Build helpers lifted to `lib/` and `components/ui/`, then six controls moved. Three stayed in Build because they are written around Build's nine categories, not merely coupled to its helpers — see below. |
 | 15 | First non-Build adoption | **Done, three criteria unmet.** Inventory purchase orders. |
 
 **The wall is half down.** Another module can now own its filter *state* declaratively and still has to build its own filter *control*.
@@ -59,7 +61,7 @@ Fifteen tickets across four streams, derived from four PRDs in `docs/specs/`, da
 
 The key assertion lives in `chat-entity-actions.controller.e2e-spec.ts:86`: **a caller holding no Build permission is not refused for a record Build does not own.** It is committed in `781aaae6` and passes. A later commit message (`a16a661b6`) states no such spec exists; that part of it is incorrect — its other two observations about this stream were right, and are recorded above.
 
-**What ticket 09 did not do:** the generic action form driven by `actionsFor`'s declared input kinds was not built, so the assign and due-date dialogs remain. They are the input UI a generic form would have rendered; replacing them is a design job, not a wiring one. No test asserts that discovery and submission cannot disagree.
+**What ticket 09 did not do:** the generic action form driven by `actionsFor`'s declared input kinds was not built, so the assign and due-date dialogs remain. They are the input UI a generic form would have rendered; replacing them is a design job, not a wiring one. The agreement between discovery and submission *is* now asserted — see "Closed after the fact".
 
 ## Verified state at close
 
@@ -75,9 +77,25 @@ The key assertion lives in `chat-entity-actions.controller.e2e-spec.ts:86`: **a 
 - **Ticket 13, second increment.** `FilterCategory` was a closed union of Build's nine categories; it is now open, with Build's list kept as `BuildFilterCategory` and `satisfies` proving those nine still have titles — no cast. `filter-trigger-button.tsx` (the one presentation file with zero Build imports) moved to the shared module. **`features/shared/list-view/` imports nothing from `features/build/`**, so the one-directional flow rule holds.
 - **`PAGES.md` and `code-review.txt` restored.** Both were swept into `c27680b6e`, a commit titled for filter parameters that mentions neither. Recovered from `c27680b6e^`, byte-identical.
 
-### Why the remaining seven presentation files did not move
+### Ticket 13, final — five helpers lifted, six controls moved, three stayed for a reason
 
-Not effort — a rule. They import Build's `StatusConfigEntry`/`getStatusEntry`, `resolveColumnColor`, `pm-motion`, `status-badge` and `resolve-user-name`. Moving them while those imports stand would make `features/shared/` depend on `features/build/`, which is the exact inversion CLAUDE.md §9 forbids — worse than leaving them where they are. The prerequisite is lifting five genuinely generic helpers (person display, status config, motion constants, column colours, status dot) out of Build first. That is its own ticket, and the overflow behaviour it would carry is still unfenced because jsdom performs no layout.
+The blocker was never effort: the controls imported Build's helpers, and moving them with those imports intact would make `features/shared/` depend on `features/build/` — the exact inversion CLAUDE.md §9 forbids, and worse than leaving them. So the helpers came out first, each one moved with every call site rewritten and no re-export shim left behind:
+
+| Helper | New home | Call sites rewritten |
+|---|---|---|
+| `resolve-user-name` | `lib/person-display.ts` | 99 |
+| `pm-motion` | `lib/motion-presets.ts` | 21 |
+| `status-badge`'s `StatusConfigDot` | `components/ui/status-config-dot.tsx` | 5 |
+| `StatusConfigEntry` · `getStatusEntry` | `lib/status-config.ts` | 10 |
+| `column-colors` | `lib/column-colors.ts` | 8 |
+
+`features/shared/list-view/` now holds ten files — the spec, the hook, the chip, the trigger, the category list and row, the submenu internals and the open type layer. **It imports nothing from `features/build/`**, checked directly.
+
+**Three controls stayed in Build, and the reason is structural.** `filter-category-submenu`, `filter-flat-search` and `filter-option-leading` are not generic machinery borrowing Build's icons — they are written section by section around Build's nine categories, with a hard-coded priority block, type block, assignee block and label block. Generalising them means rewriting them to iterate a spec, which is a redesign, not a move. `filter-command-menu` composes the submenu, so it stayed too. Moving them would have produced a shared module shaped entirely like one product.
+
+**A correction made during this work:** I first moved all eight, declared them Build-free on a grep for `features/build`, and the typecheck caught two files importing `./ticket-type-icon` and `./types` relatively. The grep could not see a relative import. Two of the five I then moved back were genuinely generic and came back again — `filter-category-row`'s only Build import was a type alias that now lives in the shared type layer.
+
+The overflow behaviour these controls own is still unfenced, because jsdom performs no layout. That is the remaining risk on anything that touches them.
 
 - **Discovery and submission cannot disagree** — the assertion ticket 09 called for and did not get. Every action `actionsFor` offers on a Build reference is accepted by `submitAction` at the adapter gate, tested as a property over the whole catalog with a deliberately partial permission set. Mutation-checked: drop the `holds` filter from discovery and it fails.
 - The same tests pin a real asymmetry rather than papering over it: discovery gates on *readability*, submission on the *write key* plus the runner's tenant and project-membership checks. They are different questions, so an unreadable reference offers nothing while submission is decided further down. Left as-is because the runner is the stricter of the two — the gap cannot admit anything, and closing it would mean discovery re-deciding what the runner already decides better.

@@ -20,7 +20,7 @@ import { FormSheetChrome } from "@/components/shared";
 import { EmojiIconPicker } from "@/components/ui/emoji-icon-picker";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ColumnColorPicker } from "@/features/build/shared/column-color-picker";
-import { DEFAULT_COLUMN_COLOR } from "@/features/build/shared/column-colors";
+import { DEFAULT_COLUMN_COLOR } from "@/lib/column-colors";
 import type { ProjectTeam, CreateTeamInput, UpdateTeamInput } from "@/types/projects";
 import { cn } from "@/lib/utils";
 import {

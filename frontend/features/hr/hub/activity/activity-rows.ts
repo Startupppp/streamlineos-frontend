@@ -1,5 +1,5 @@
 import type { AgingBucket } from "@/hooks/api/hr/service-delivery";
-import { getUserDisplayName } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName } from "@/lib/person-display";
 import { Clock, UserMinus, ShieldAlert, MessageSquare, Inbox } from "lucide-react";
 
 export const BUCKET_SCORE: Record<AgingBucket, number> = {

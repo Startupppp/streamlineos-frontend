@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getUserDisplayName } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName } from "@/lib/person-display";
 import { CONDITIONS } from "./asset-return-constants";
 import type { Asset, Employee } from "@/types/hr";
 

@@ -12,7 +12,7 @@ import { Draggable } from "@hello-pangea/dnd";
 import { PriorityBadge } from "@/features/build/shared/priority-badge";
 import { StatusBadge } from "@/features/build/shared/status-badge";
 import { TicketTypeIcon } from "@/features/build/shared/ticket-type-icon";
-import { getUserDisplayName, getUserInitials } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import { formatTicketKey } from "@/features/build/shared/format-ticket-key";
 import { resolveImageUrl } from "@/lib/utils";
 import { cn } from "@/lib/utils";

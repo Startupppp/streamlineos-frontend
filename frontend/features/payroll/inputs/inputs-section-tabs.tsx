@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useState, type ReactNode } from "react";
-import { getUserDisplayName } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName } from "@/lib/person-display";
 import { SourceRefsPopover } from "./source-refs-popover";
 import {
   useAttendanceSnapshot,

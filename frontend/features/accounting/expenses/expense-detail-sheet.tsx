@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { FinanceStatusBadge, Money } from "@/features/accounting/shared";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { getUserDisplayName } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName } from "@/lib/person-display";
 import { useApproveExpense, useRejectExpense } from "@/hooks/api/accounting/expenses";
 import type { ExpenseWithRelations } from "@/types/hr/expenses";
 import type { ExpenseStatus } from "@/features/accounting/shared";

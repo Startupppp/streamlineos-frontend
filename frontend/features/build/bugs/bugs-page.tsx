@@ -6,7 +6,7 @@ import { useBugs, useDeleteBug } from "@/hooks/api/build/bugs";
 import { useCan } from "@/hooks/api/access";
 import { useProjectMembers } from "@/hooks/api/build";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { getUserDisplayName } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName } from "@/lib/person-display";
 import type { Bug, BugSeverity, BugStatus, BugPriority } from "@/types/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable } from "@/components/ui/data-table";

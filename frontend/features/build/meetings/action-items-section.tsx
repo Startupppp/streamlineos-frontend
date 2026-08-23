@@ -19,7 +19,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ActionItemStatusBadge } from "./meeting-badges";
 import { ActionItemFormSheet } from "./action-item-form-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { getUserDisplayName } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName } from "@/lib/person-display";
 import { cn } from "@/lib/utils";
 import { PM_ROW } from "@/features/build/shared/pm-chrome";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";

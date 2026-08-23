@@ -7,7 +7,7 @@ import { useProjectRoster } from "@/hooks/api/build/roster";
 import {
   getUserDisplayName,
   getUserInitials,
-} from "@/features/build/shared/resolve-user-name";
+} from "@/lib/person-display";
 import { resolveImageUrl } from "@/lib/utils";
 
 function SectionLabel({ children }: { children: React.ReactNode }) {

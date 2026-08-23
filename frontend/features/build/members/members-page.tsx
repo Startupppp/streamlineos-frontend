@@ -21,7 +21,7 @@ import {
 import type { ProjectWorkspaceMember } from "@/hooks/api/build/workspace-members";
 import { useCan } from "@/hooks/api/access";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
-import { getUserDisplayName } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName } from "@/lib/person-display";
 import { PmAccessButton } from "@/features/build/members/pm-access-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";

@@ -2,7 +2,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { resolveImageUrl } from "@/lib/utils";
-import { getUserDisplayName, getUserInitials } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import { ProjectMemberSelect } from "@/components/members/project-member-select";
 
 export interface DisplayedAssignee {

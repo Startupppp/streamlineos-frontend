@@ -11,7 +11,7 @@ import { getColorSafe } from "@/lib/theme-constants";
 import { cn } from "@/lib/utils";
 import type { ProjectTemplate } from "@/hooks/api/build";
 import { PM_PANEL } from "@/features/build/shared/pm-chrome";
-import { listItem, listItemReduced, pmSnappy } from "@/features/build/shared/pm-motion";
+import { listItem, listItemReduced, pmSnappy } from "@/lib/motion-presets";
 import { TEXT_TWO_LINES } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import {

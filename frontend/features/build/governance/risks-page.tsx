@@ -7,7 +7,7 @@ import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useProjectRisks, useCreateRisk, useUpdateRisk, useDeleteRisk, useProjectMembers } from "@/hooks/api/build";
 import { useCan } from "@/hooks/api/access";
-import { getUserDisplayName } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName } from "@/lib/person-display";
 import type { Risk, RiskStatus, RiskProbability, RiskImpact, CreateRiskInput, UpdateRiskInput } from "@/types/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";

@@ -5,8 +5,8 @@ import {
   FilterPriorityLeading,
   FilterTypeLeading,
 } from "@/features/build/shared/filter-option-leading";
-import { getUserDisplayName } from "@/features/build/shared/resolve-user-name";
-import { resolveColumnColor } from "@/features/build/shared/column-colors";
+import { getUserDisplayName } from "@/lib/person-display";
+import { resolveColumnColor } from "@/lib/column-colors";
 import type { FilterState } from "./workload-types";
 import {
   type WorkloadFilterCategory,

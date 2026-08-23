@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Combobox } from "@/components/ui/combobox";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { resolveImageUrl } from "@/lib/utils";
-import { getUserDisplayName, getUserInitials } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import type { MeetingAttendee, ProjectMemberRecord } from "@/types/projects";
 

@@ -16,7 +16,7 @@ import { ProjectFilterBar } from "@/features/build/project-list/project-filter-b
 import { TablePagination } from "@/components/ui/table-pagination";
 import { ProjectsEmptyState } from "@/features/build/project-list/projects-empty-state";
 import { GroupingSidebar } from "@/features/build/project-list/grouping-sidebar";
-import { getUserDisplayName } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName } from "@/lib/person-display";
 import { useDisplayPrefs } from "@/features/build/project-list/use-display-prefs";
 import type { ProjectActiveFilters } from "@/features/build/project-list/add-filter-popover";
 import { EmptySearchIllustration } from "@/components/illustrations";
@@ -32,7 +32,7 @@ import {
   PM_FILL_PANEL,
   PM_PANEL,
 } from "@/features/build/shared/pm-chrome";
-import { fadeUp, fadeUpReduced } from "@/features/build/shared/pm-motion";
+import { fadeUp, fadeUpReduced } from "@/lib/motion-presets";
 import { motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import type { ProjectListItem } from "@/types/projects/projects";

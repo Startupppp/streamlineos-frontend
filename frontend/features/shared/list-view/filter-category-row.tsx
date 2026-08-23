@@ -19,8 +19,8 @@ import {
 import type { IconHandle } from "@animateicons/react";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { cn } from "@/lib/utils";
-import { pmSnappy } from "@/features/build/shared/pm-motion";
-import type { FilterCategory } from "./filter-category-submenu";
+import { pmSnappy } from "@/lib/motion-presets";
+import type { FilterCategory } from "./filter-types";
 
 interface CategoryLeadingProps {
   category: FilterCategory;

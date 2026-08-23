@@ -16,7 +16,7 @@ import type { KanbanTicket, DisplayOptions } from "@/features/build/shared/types
 import type { ViewType } from "./view-switcher";
 import { type FilterState as WorkloadFilterState } from "./workload-types";
 import type { Sprint } from "@/types/projects";
-import { pmSnappy, viewSwap, viewSwapReduced } from "@/features/build/shared/pm-motion";
+import { pmSnappy, viewSwap, viewSwapReduced } from "@/lib/motion-presets";
 import { PM_PANEL } from "@/features/build/shared/pm-chrome";
 import { PAGE_CHROME_X } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";

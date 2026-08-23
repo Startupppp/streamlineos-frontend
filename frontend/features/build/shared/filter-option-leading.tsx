@@ -3,7 +3,7 @@
 import { AlertTriangle, ArrowUp, Minus, ArrowDown, User } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn, resolveImageUrl } from "@/lib/utils";
-import { getUserInitials, type NamedUser } from "@/features/build/shared/resolve-user-name";
+import { getUserInitials, type NamedUser } from "@/lib/person-display";
 import { TicketTypeIcon } from "./ticket-type-icon";
 import { priorityConfig } from "./types";
 

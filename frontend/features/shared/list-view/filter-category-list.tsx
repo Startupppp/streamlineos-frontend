@@ -8,7 +8,7 @@ import {
   listItem,
   listItemReduced,
   pmSnappy,
-} from "@/features/build/shared/pm-motion";
+} from "@/lib/motion-presets";
 import type { CategoryDefinition, FilterCategory } from "./filter-types";
 
 export interface FilterCategoryListProps {

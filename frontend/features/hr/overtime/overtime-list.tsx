@@ -10,7 +10,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useOvertimeRequests, useApproveOvertime, useRejectOvertime } from "@/hooks/api/hr/overtime";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useOrgMembersByIds } from "@/hooks/api/organization";
-import { getUserDisplayName, type NamedUser } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName, type NamedUser } from "@/lib/person-display";
 
 interface Props {
   canManage: boolean;

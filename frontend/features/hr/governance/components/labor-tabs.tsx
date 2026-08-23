@@ -44,7 +44,7 @@ import { PlusIcon } from "@animateicons/react/lucide";
 import { StateIllustration } from "@/components/illustrations";
 import { useCan } from "@/hooks/api/access";
 import { useOrgMembersByIds } from "@/hooks/api/organization";
-import { getUserDisplayName, type NamedUser } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName, type NamedUser } from "@/lib/person-display";
 import {
   useUnionMemberships,
   useCollectiveAgreements,

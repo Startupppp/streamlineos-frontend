@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/responsive-popover";
 import { Input } from "@/components/ui/input";
 import type { Sprint } from "@/types/projects";
-import { getUserDisplayName } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName } from "@/lib/person-display";
 import { PM_TOOLBAR } from "@/features/build/shared/pm-chrome";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { useTicketSearch } from "@/hooks/api/build/ticket-search";

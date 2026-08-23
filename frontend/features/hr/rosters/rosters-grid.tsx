@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useOrgMembersByIds } from "@/hooks/api/organization";
-import { getUserDisplayName, type NamedUser } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName, type NamedUser } from "@/lib/person-display";
 
 interface Props {
   canManage: boolean;

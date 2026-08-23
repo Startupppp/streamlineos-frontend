@@ -12,7 +12,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import { useReimbursementBatch, useApproveBatch } from "@/hooks/api/accounting/expenses";
 import { PayBatchDialog } from "@/features/accounting/expenses/pay-batch-dialog";
-import { getUserDisplayName } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName } from "@/lib/person-display";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import type { ReimbursementBatchStatus, ReimbursementBatchItem } from "@/types/accounting/expenses";
 import type { FinanceStatus } from "@/features/accounting/shared";

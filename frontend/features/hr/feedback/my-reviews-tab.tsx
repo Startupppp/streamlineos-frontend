@@ -24,7 +24,7 @@ import {
   type FeedbackCycleRequest,
 } from "@/hooks/api/hr";
 import { useOrgMembersByIds } from "@/hooks/api/organization";
-import { getUserDisplayName, type NamedUser } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName, type NamedUser } from "@/lib/person-display";
 
 const RELATIONSHIP_COLORS: Record<string, string> = {
   PEER: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",

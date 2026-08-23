@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useCan } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
-import { getUserDisplayName } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName } from "@/lib/person-display";
 import type { StepSharedProps } from "../use-project-create";
 
 export function StepTeam({ draft, updateDraft }: StepSharedProps) {

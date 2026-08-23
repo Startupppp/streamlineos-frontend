@@ -13,7 +13,7 @@ import { IndianRupee, TrendingUp, Pencil } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useProjectBudget, useUpdateProjectBudget, useProjectMembers } from "@/hooks/api/build";
 import { useOrgMembers } from "@/hooks/api/organization";
-import { getUserDisplayName, getUserInitials, type NamedUser } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName, getUserInitials, type NamedUser } from "@/lib/person-display";
 import { resolveImageUrl } from "@/lib/utils";
 import { toast } from "sonner";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";

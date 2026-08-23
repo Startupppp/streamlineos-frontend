@@ -9,7 +9,7 @@ import { useOrgMembers } from "@/hooks/api/organization";
 import {
   getUserDisplayName,
   type NamedUser,
-} from "@/features/build/shared/resolve-user-name";
+} from "@/lib/person-display";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyLeaderboardIllustration } from "@/components/illustrations";
 

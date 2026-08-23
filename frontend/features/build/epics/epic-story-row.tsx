@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useCan } from "@/hooks/api/access";
-import { buildStatusConfig, getStatusEntry } from "../shared/types";
+import { buildStatusConfig } from "../shared/types";
+import { getStatusEntry } from "@/lib/status-config";
 import {
   InlineStatus,
   InlinePriority,

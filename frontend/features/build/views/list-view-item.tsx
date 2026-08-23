@@ -11,12 +11,12 @@ import { ChevronRightIcon } from "@animateicons/react/lucide";
 import { TicketTypeIcon } from "../shared/ticket-type-icon";
 import { getStatusDotClass } from "../shared/status-badge";
 import { formatTicketKey } from "../shared/format-ticket-key";
-import { getUserDisplayName, getUserInitials } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import { TicketQuickActions } from "./ticket-quick-actions";
 import { InlineStatus, InlinePriority, InlineAssignee, InlineEstimate } from "./card-inline-fields";
 import { InlineType, InlineLabels } from "./card-inline-extra-fields";
 import { InlineDueDate } from "./card-inline-date-fields";
-import { pmSnappy } from "@/features/build/shared/pm-motion";
+import { pmSnappy } from "@/lib/motion-presets";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import type { ListViewItemProps } from "./list-view-shared";
 

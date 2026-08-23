@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { getUserDisplayName, getUserInitials } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import type { User } from "@/hooks/api/users";
 import { resolveOrgUnitName } from "./resolve-org-unit-name";
 import { UserActionsMenu } from "./user-actions-menu";

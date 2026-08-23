@@ -24,7 +24,7 @@ import { useOrgMembers } from "@/hooks/api/organization";
 import {
   getUserDisplayName,
   type NamedUser,
-} from "@/features/build/shared/resolve-user-name";
+} from "@/lib/person-display";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { successionFormSchema } from "./succession-schema";
 import { zodFieldErrors } from "./zod-field-errors";

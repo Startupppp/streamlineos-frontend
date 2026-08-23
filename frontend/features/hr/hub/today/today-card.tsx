@@ -3,7 +3,7 @@
 import { AlertCircle, RefreshCcw } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getUserInitials } from "@/features/build/shared/resolve-user-name";
+import { getUserInitials } from "@/lib/person-display";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 export function SkeletonRows() {

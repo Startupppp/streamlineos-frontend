@@ -1,5 +1,5 @@
 ﻿import { z } from "zod";
-import { isValidHexColor } from "@/features/build/shared/column-colors";
+import { isValidHexColor } from "@/lib/column-colors";
 
 export const teamFormSchema = z.object({
   name: z.string().min(1, "Name is required").max(255),

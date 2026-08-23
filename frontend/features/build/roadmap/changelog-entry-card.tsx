@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import type { ChangelogEntry } from "@/types/projects";
 import { cn } from "@/lib/utils";
 import { PM_PANEL } from "@/features/build/shared/pm-chrome";
-import { listItem, listItemReduced, pmSnappy } from "@/features/build/shared/pm-motion";
+import { listItem, listItemReduced, pmSnappy } from "@/lib/motion-presets";
 import { TEXT_TWO_LINES } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { CHANGELOG_TYPE_OPTIONS, CHANGELOG_TYPE_VARIANT } from "./roadmap-constants";

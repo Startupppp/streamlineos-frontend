@@ -19,7 +19,7 @@ import { useOrgMembers } from "@/hooks/api/organization";
 import {
   getUserDisplayName,
   type NamedUser,
-} from "@/features/build/shared/resolve-user-name";
+} from "@/lib/person-display";
 
 const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   active: "default",

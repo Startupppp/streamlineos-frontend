@@ -1,7 +1,7 @@
 import type { DraggableProvidedDragHandleProps } from "@hello-pangea/dnd";
 import type { UpdateTicketInput } from "@/types/projects";
 import type { DisplayOptions } from "../shared/types";
-import { getUserDisplayName } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName } from "@/lib/person-display";
 
 export interface Ticket {
   id: number;

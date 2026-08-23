@@ -23,7 +23,7 @@ import {
   listItem,
   listItemReduced,
   pmSnappy,
-} from "@/features/build/shared/pm-motion";
+} from "@/lib/motion-presets";
 import {
   FLEX_TITLE_SLOT,
   TEXT_ONE_LINE,

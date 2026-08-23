@@ -11,7 +11,7 @@ import { PM_PANEL, PM_ROW } from "@/features/build/shared/pm-chrome";
 import { FLEX_TITLE_SLOT, TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getUserDisplayName, getUserInitials } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import { resolveImageUrl } from "@/lib/utils";
 import { format } from "date-fns";
 import type { Ticket } from "@/types/projects";

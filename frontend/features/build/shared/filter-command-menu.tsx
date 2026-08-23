@@ -32,7 +32,7 @@ import { FilterCategorySubmenu } from "./filter-category-submenu";
 import { FilterFlatSearch } from "./filter-flat-search";
 import { FilterAssigneeLeading } from "./filter-option-leading";
 import { FilterTriggerButton, MobileFilterSearch } from "@/features/shared/list-view";
-import { FilterCategoryList } from "./filter-category-list";
+import { FilterCategoryList } from "@/features/shared/list-view";
 import {
   categoryTitle,
   type FilterCategory,
@@ -44,15 +44,15 @@ import {
   type ProjectOption,
   type FilterState,
   type CategoryDefinition,
-} from "./filter-types";
-import type { StatusConfigEntry } from "@/features/build/shared/types";
+} from "@/features/shared/list-view";
+import type { StatusConfigEntry } from "@/lib/status-config";
 import {
   pmSnappy,
   stepSlide,
   stepSlideReduced,
-} from "@/features/build/shared/pm-motion";
+} from "@/lib/motion-presets";
 
-export type { FilterState } from "./filter-types";
+export type { FilterState } from "@/features/shared/list-view";
 
 export interface FilterCommandMenuProps {
   activeFilterCount: number;

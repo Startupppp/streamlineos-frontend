@@ -10,7 +10,7 @@ import { EyeIcon, EyeOffIcon } from "@animateicons/react/lucide";
 import { resolveImageUrl } from "@/lib/utils";
 import { MemberPicker } from "@/components/members/member-picker";
 import { useWatchers, useToggleWatch, useAddWatcher } from "@/hooks/api/build";
-import { getUserDisplayName, getUserInitials } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 
 interface WatcherListProps {
   projectId: number;

@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Separator } from "@/components/ui/separator";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { getUserDisplayName } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName } from "@/lib/person-display";
 import { cn } from "@/lib/utils";
 import { PM_PANEL, PM_PANEL_SOLID } from "@/features/build/shared/pm-chrome";
 import { TEXT_ONE_LINE, TEXT_BODY } from "@/lib/text-overflow";

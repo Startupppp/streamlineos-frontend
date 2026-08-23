@@ -14,7 +14,7 @@ import { ChevronDown, ChevronRight, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import type { KanbanTicket } from "../shared/types";
-import { getUserDisplayName, getUserInitials } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import { stopEvent, InlineAssignee } from "./card-inline-fields";
 import { TicketQuickActions } from "./ticket-quick-actions";
 import { getTicketDetailHref } from "@/features/build/shared/format-ticket-key";

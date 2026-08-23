@@ -45,7 +45,7 @@ import {
 } from "@/lib/date-constraints";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { useSimpleClientsList } from "@/hooks/api/crm/clients";
-import { getUserDisplayName, getUserInitials } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import { generateProjectKey } from "../generate-project-key";
 import { basicsSchema, PROJECT_NAME_MAX, PROJECT_KEY_MAX, PROJECT_DESCRIPTION_MAX } from "../project-create-schema";
 import type { BasicsValues } from "../project-create-schema";

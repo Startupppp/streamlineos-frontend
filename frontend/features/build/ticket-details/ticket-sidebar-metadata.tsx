@@ -8,7 +8,7 @@ import { resolveImageUrl } from "@/lib/utils";
 import {
   getUserDisplayName,
   getUserInitials,
-} from "@/features/build/shared/resolve-user-name";
+} from "@/lib/person-display";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface ReporterShape {

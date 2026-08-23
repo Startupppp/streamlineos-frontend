@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Combobox } from "@/components/ui/combobox";
 import { resolveImageUrl } from "@/lib/utils";
-import { getUserDisplayName, getUserInitials } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import type { ProjectMemberRecord } from "@/types/projects";
 
 interface MeetingAttendeePickerProps {

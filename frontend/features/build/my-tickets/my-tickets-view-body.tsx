@@ -6,7 +6,7 @@ import { KanbanBoard } from "@/features/build/views/kanban-board";
 import { ListView } from "@/features/build/views/list-view";
 import { TableView } from "@/features/build/views/table-view";
 import { DEFAULT_DISPLAY_OPTIONS } from "@/features/build/views/display-options-panel";
-import { pmSnappy, viewSwap, viewSwapReduced } from "@/features/build/shared/pm-motion";
+import { pmSnappy, viewSwap, viewSwapReduced } from "@/lib/motion-presets";
 import type { KanbanTicket, DisplayOptions } from "@/features/build/shared/types";
 import type { MyTicketsView } from "./my-tickets-view";
 

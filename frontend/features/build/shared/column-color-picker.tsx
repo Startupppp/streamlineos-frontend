@@ -8,7 +8,7 @@ import {
   COLUMN_COLORS,
   normalizeHexColor,
   resolveColumnColor,
-} from "./column-colors";
+} from "@/lib/column-colors";
 
 interface ColumnColorPickerProps {
   value: string;

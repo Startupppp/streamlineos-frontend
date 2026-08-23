@@ -19,7 +19,7 @@ import {
 import {
   getUserDisplayName,
   getUserInitials,
-} from "@/features/build/shared/resolve-user-name";
+} from "@/lib/person-display";
 import { TEXT_FLEX_CHILD } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import type { ProjectListItem, ProjectHealth } from "@/types/projects/projects";

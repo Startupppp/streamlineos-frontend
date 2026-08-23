@@ -24,7 +24,7 @@ import {
   PmPanel,
   PM_PANEL,
 } from "@/features/build/shared/pm-chrome";
-import { pmSnappy } from "@/features/build/shared/pm-motion";
+import { pmSnappy } from "@/lib/motion-presets";
 import { cn } from "@/lib/utils";
 import { useKeyboardShortcuts } from "./use-keyboard-shortcuts";
 import {

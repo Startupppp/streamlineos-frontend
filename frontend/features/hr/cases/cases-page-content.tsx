@@ -27,7 +27,7 @@ import {
 import { StateIllustration } from "@/components/illustrations";
 import { useCan } from "@/hooks/api/access";
 import { useOrgMembersByIds } from "@/hooks/api/organization";
-import { getUserDisplayName, type NamedUser } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName, type NamedUser } from "@/lib/person-display";
 import { useHrCases, useDisciplinaryActions } from "@/hooks/api/hr/cases";
 import type { HrCase, CaseCategory, CaseStatus, CaseSeverity } from "@/hooks/api/hr/cases";
 import { TruncatedText } from "@/components/ui/truncated-text";

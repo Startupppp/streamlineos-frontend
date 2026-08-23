@@ -5,7 +5,7 @@ import { Clock, Users, ClipboardList, FileText, Layers } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { MeetingTypeBadge, MeetingStatusBadge } from "./meeting-badges";
-import { getUserDisplayName } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName } from "@/lib/person-display";
 import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import type { Meeting, ProjectMemberRecord } from "@/types/projects";
