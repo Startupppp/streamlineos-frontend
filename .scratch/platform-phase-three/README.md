@@ -22,7 +22,7 @@ Superseded note, kept because the reasoning was sound at the time: It is the one
 
 ### Verified state — 2026-08-23
 
-- **Backend: `tsc --noEmit` clean. Full suite 554 suites / 4,751 tests, exit 0** (six sequential shards at `--maxWorkers=2`; the whole suite at once gets its workers OS-killed).
+- **Backend: `tsc --noEmit` clean. Full suite 557 suites / 4,761 tests, exit 0** (six sequential shards at `--maxWorkers=2`; the whole suite at once gets its workers OS-killed).
 - **Backend: `pnpm lint` 0 errors, 32 warnings.** It was failing before this phase — `script.executor.ts:131` had a `require()` error, so the CI lint job was red.
 - **Web: `tsc --noEmit` clean. Full suite 77 suites / 438 tests, exit 0. `madge --circular` clean on both repos (3,146 web files, 3,363 API files).**
 - **Controller e2e: `chat-entity-actions.controller.e2e-spec.ts` 10/10 under `pnpm test:e2e`** — run explicitly, because e2e specs are excluded from the default suite and a green default run says nothing about them.
