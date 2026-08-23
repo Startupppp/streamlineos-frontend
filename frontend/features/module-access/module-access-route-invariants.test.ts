@@ -5,7 +5,6 @@ const ACCESS_ROUTES = [
   "accounting",
   "build",
   "crm",
-  "home",
   "hr",
   "inventory",
   "payroll",
