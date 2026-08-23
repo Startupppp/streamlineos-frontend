@@ -6,7 +6,15 @@ Ticket 08 built the seam and ticket 09 made its link trustworthy. Both left the 
 
 **Blocked by:** Nothing — 08 and 09 turned out to be already shipped. This is the only open ticket in the stream.
 
-**Status:** ready-for-agent
+**Status:** BLOCKED — the seam cannot answer this shape of question yet.
+
+> **Do not implement this ticket as written.** Verified 2026-08-23: `resolvePerson(db, orgId, subject)` resolves **one** subject. The payroll code this ticket targets does not resolve one person — it runs **one batched query per payroll run** that joins `organization_people` and `users` to project display name, work email, employee id, designation, joining date and bank details for *every* payee at once (`lib/payroll-run-payee.ts:85-119`).
+>
+> Replacing that with `resolvePerson` per payee turns one query into N, each of which issues its own lookups, on the payroll run path for an organisation that may have hundreds of employees. That breaks backend §3 ("No N+1") and §7, and it would be a real regression on money-adjacent code — a worse outcome than the direct import this ticket exists to remove.
+>
+> The three files are `lib/payroll-run-payee.ts` (24 references), `filings/filings.service.ts` (21) and `runs/profiles.service.ts` (16). An earlier audit named six files; three of those were wrong.
+>
+> **Prerequisite: ticket 11.** The seam needs a batch identity read — many subjects, one query — before any of this is safe. Once that exists this ticket is mechanical.
 
 Verified still open 2026-08-23: `payroll/filings/filings.service.ts` joins `hrPeople` directly (lines 20, 460-476) and `payroll/lib/payroll-run-payee.ts` imports `organizationPeople` and `hrPeople` (lines 8-11).
 

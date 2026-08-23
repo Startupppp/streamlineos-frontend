@@ -10,13 +10,15 @@ These are the candidates the earlier phases left uncovered. Phase two's four str
 |---|---|---|---|
 | **E — Route registry** | `2026-08-23-route-registry-prd.md` | 01, 02, 03 | A screen's product is declared once, so the sidebar cannot silently lose a module. |
 | **F — Config seam** | `2026-08-23-config-seam-prd.md` | 04, 05, 06, 07 | Misconfiguration fails at boot, and a new direct read fails the build. |
-| **G — Person directory** | `2026-08-20-person-directory-seam.md` | 08, 09, 10 | One way to resolve a person, and the payroll entry point that is missing. |
+| **G — Person directory** | `2026-08-20-person-directory-seam.md` | 08, 09, 10, 11 | One way to resolve a person, and the payroll entry point that is missing. |
 
 ## Progress — 2026-08-23
 
 **Stream E is complete.** Tickets 01, 02 and 03 are done and committed. Full web suite 77 suites / 438 tests green, `tsc --noEmit` 0, `madge --circular` clean across 3,146 files. One criterion is deliberately left unticked on ticket 03: nothing was verified by running the application.
 
-**Stream F: tickets 04, 05 and 07 done. Ticket 06 is open and is the only open ticket in this phase.** Nineteen reads have moved onto injected config across twilio, the notification worker, razorpay, contact, roadmap, platform, storage, KB, realtime and push. Ticket 06 — the import-time reads in `email/email.provider.ts` — is deliberately **not** attempted. It is the one part of this stream that is not a substitution: the file builds its Resend and ZeptoMail clients from module-scope constants at import time, so converting it needs a factory provider plus module wiring across Automation and Notifications, and its own acceptance criterion is to verify by **sending mail**, which was not possible here. A half-done version that ticks the type-level boxes and leaves a lazy mutable singleton would be worse than the current state, which is at least honest about what it does.
+**Stream F is complete — tickets 04, 05, 06 and 07 all done.** Nineteen reads have moved onto injected config across twilio, the notification worker, razorpay, contact, roadmap, platform, storage, KB, realtime and push. Ticket 06 — the import-time reads in `email/email.provider.ts` — is now **done** (`e2d5d111`). It became tractable on discovering `EmailModule` is `@Global()`, so no consumer module needed an import change. Provider selection was pinned with eight pure-function tests before the refactor touched anything, because which provider wins when both are configured is the one behaviour here a reader could not reconstruct from the code. Its send-real-mail criterion is still unmet.
+
+Superseded note, kept because the reasoning was sound at the time: It is the one part of this stream that is not a substitution: the file builds its Resend and ZeptoMail clients from module-scope constants at import time, so converting it needs a factory provider plus module wiring across Automation and Notifications, and its own acceptance criterion is to verify by **sending mail**, which was not possible here. A half-done version that ticks the type-level boxes and leaves a lazy mutable singleton would be worse than the current state, which is at least honest about what it does.
 
 ### Verified state — 2026-08-23
 
@@ -25,7 +27,7 @@ These are the candidates the earlier phases left uncovered. Phase two's four str
 - **Web: `tsc --noEmit` clean. Full suite 77 suites / 438 tests, exit 0. `madge --circular` clean across 3,146 files.**
 - **Nothing was verified by running the application.** Every criterion that asked for that is left unticked and says so.
 
-**Stream G: two of three tickets were already shipped**, discovered while writing them. `directory/person-seam.ts` carries the three-way subject and resolves the person-record path on the link column, and payroll consumes it — so tickets 08 and 09 describe work that exists. They are marked SHIPPED with only the criteria actually re-verified ticked; the rest are left unchecked because they were not tested, not because they are known to fail. **Ticket 10, the contract step, is genuinely open**: `payroll/filings/filings.service.ts` and `payroll/lib/payroll-run-payee.ts` still import HR and directory schema directly.
+**Stream G: two of three tickets were already shipped**, discovered while writing them. `directory/person-seam.ts` carries the three-way subject and resolves the person-record path on the link column, and payroll consumes it — so tickets 08 and 09 describe work that exists. They are marked SHIPPED with only the criteria actually re-verified ticked; the rest are left unchecked because they were not tested, not because they are known to fail. **Ticket 10 is BLOCKED, and the blocker is in the ticket rather than the code.** `resolvePerson` answers for one subject; the payroll code it targets runs one batched query per run projecting identity for every payee at once. Following ticket 10 literally would turn that into an N+1 on the payroll path. **Ticket 11** adds the batch identity read the seam is missing; ticket 10 is mechanical after it.
 
 Writing a ticket for shipped work is cheap; the expensive mistake is the opposite, so the ticket is kept as the record of what was required rather than deleted.
 
