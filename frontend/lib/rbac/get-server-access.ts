@@ -1,11 +1,8 @@
 import "server-only";
 
 import { cache } from "react";
-import { getServerAuth } from "@/lib/get-server-auth";
-import { BACKEND_URL } from "@/lib/backend-url";
+import { serverFetch } from "@/lib/server-fetch";
 import type { AccessResponse } from "@/types/access";
-
-const REQUEST_TIMEOUT_MS = 8_000;
 
 const DENIED: AccessResponse = {
   scopes: {},
@@ -15,11 +12,7 @@ const DENIED: AccessResponse = {
   mfa: { enforced: false, satisfied: true },
 };
 
-function unwrap(body: unknown): AccessResponse | null {
-  if (body === null || typeof body !== "object") return null;
-  const envelope = body as Record<string, unknown>;
-  const payload =
-    envelope.success === true && "data" in envelope ? envelope.data : envelope;
+function asAccessResponse(payload: unknown): AccessResponse | null {
   if (payload === null || typeof payload !== "object") return null;
   const snapshot = payload as Record<string, unknown>;
   if (typeof snapshot.scopes !== "object" || snapshot.scopes === null) return null;
@@ -27,18 +20,8 @@ function unwrap(body: unknown): AccessResponse | null {
 }
 
 export const getServerAccess = cache(async (): Promise<AccessResponse> => {
-  const session = await getServerAuth();
-  const token = session?.backendJwt;
-  if (!token) return DENIED;
-
   try {
-    const res = await fetch(`${BACKEND_URL}/me/access`, {
-      headers: { Authorization: `Bearer ${token}` },
-      cache: "no-store",
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-    });
-    if (!res.ok) return DENIED;
-    return unwrap(await res.json()) ?? DENIED;
+    return asAccessResponse(await serverFetch<unknown>("/me/access")) ?? DENIED;
   } catch {
     return DENIED;
   }
