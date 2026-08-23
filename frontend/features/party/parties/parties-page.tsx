@@ -117,6 +117,7 @@ export function PartiesPage() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [partyTypeFilter, setPartyTypeFilter] = useState<PartyTypeFilter>("ALL");
+  const [roleFilter, setRoleFilter] = useState<string>("ALL");
 
   const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } =
     useQueryParamOpen("create");
@@ -127,6 +128,7 @@ export function PartiesPage() {
     page,
     limit: PAGE_SIZE,
     partyType: partyTypeFilter === "ALL" ? undefined : partyTypeFilter,
+    role: roleFilter === "ALL" ? undefined : roleFilter,
     search: debouncedSearch || undefined,
   });
 
@@ -200,7 +202,8 @@ export function PartiesPage() {
 
   const rows = data?.data ?? [];
   const pagination = data?.pagination;
-  const isFiltered = !!debouncedSearch.trim() || partyTypeFilter !== "ALL";
+  const isFiltered =
+    !!debouncedSearch.trim() || partyTypeFilter !== "ALL" || roleFilter !== "ALL";
 
   const filtersBar = (
     <div className={FILTER_TOOLBAR_ROW}>
@@ -222,6 +225,24 @@ export function PartiesPage() {
           <SelectItem value="VENDOR">Vendor</SelectItem>
           <SelectItem value="PARTNER">Partner</SelectItem>
           <SelectItem value="BOTH">Customer &amp; Vendor</SelectItem>
+        </SelectContent>
+      </Select>
+      <Select
+        value={roleFilter}
+        onValueChange={(value) => {
+          setRoleFilter(value);
+          setPage(1);
+        }}
+      >
+        <SelectTrigger className={FILTER_SELECT_TRIGGER} aria-label="Filter by role">
+          <SelectValue placeholder="All roles" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="ALL">All roles</SelectItem>
+          <SelectItem value="CUSTOMER">Customer</SelectItem>
+          <SelectItem value="VENDOR">Vendor</SelectItem>
+          <SelectItem value="PARTNER">Partner</SelectItem>
+          <SelectItem value="PROSPECT">Prospect</SelectItem>
         </SelectContent>
       </Select>
     </div>
