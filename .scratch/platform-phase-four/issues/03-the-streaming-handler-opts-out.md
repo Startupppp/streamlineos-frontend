@@ -8,9 +8,9 @@
 
 **Blocked by:** None.
 
-**Status:** ready-for-agent
+**Status:** DONE.
 
-- [ ] The streaming handler is opted out of the ambient request transaction.
-- [ ] The opt-out is on the **handler**, not the class. The controller also serves conversation listing and action confirmation, which are ordinary requests that should keep the ambient transaction. `getAllAndOverride([handler, class])` makes handler-level win.
-- [ ] Everything the stream does afterwards already opens its own transaction — verified before adding the decorator, not assumed: tools go through `withTenantScopedTools` → `runInNewTenantTransaction`, and `onFinish` wraps its ledger settle, usage tracking and history append the same way. Adding the opt-out to a handler that did *not* do this would break it.
-- [ ] No other handler in the product streams without the opt-out.
+- [x] The streaming handler is opted out of the ambient request transaction.
+- [x] The opt-out is on the **handler**, not the class. The controller also serves conversation listing and action confirmation, which are ordinary requests that should keep the ambient transaction. `getAllAndOverride([handler, class])` makes handler-level win.
+- [x] Everything the stream does afterwards already opens its own transaction — verified before adding the decorator, not assumed: tools go through `withTenantScopedTools` → `runInNewTenantTransaction`, and `onFinish` wraps its ledger settle, usage tracking and history append the same way. Adding the opt-out to a handler that did *not* do this would break it.
+- [x] No other handler in the product streams without the opt-out.
