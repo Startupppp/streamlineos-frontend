@@ -2,6 +2,26 @@
 
 Fifteen tickets across four independent streams, derived from four PRDs in `docs/specs/`, dated 2026-08-23.
 
+## Progress — 2026-08-23
+
+**Six done: 01, 05, 10 (backend, committed) · 03, 08, 13, 15 (frontend, uncommitted by request).** That is seven tickets; 13 landed partial and says so on its face.
+
+**Five blocked by a concurrent session**, not by their blockers: 02, 04, 06, 07, 09, 12, 14. Another agent has been editing this tree throughout — `common/rbac/module-vocabulary.ts` (tickets 02, 06, 07), `common/rbac/module.guard.ts` (07), and the whole `entity-reference` / `build-entity` / `crm-entity` / `chat-messages` set (04, 09, 14). Stream B was clear when the tickets were written and was overtaken while stream A was being built.
+
+**11 not started** — it is infrastructure-dependent and was flagged as such when ticketed.
+
+### Verified state
+
+- Backend: `tsc --noEmit` 0 errors. 59 suites / 539 tests green across access, rbac, module-access, delegations and organization.
+- Frontend: `tsc --noEmit` 0 errors. **Full suite 76 suites / 432 tests green.**
+- Nothing was run against a booted application. Several criteria are marked unmet for exactly that reason.
+
+### Incident — commit 496d0404 in `streamlineos-api`
+
+That commit is titled for ticket 10 and contains seven files belonging to it plus **24 files of the concurrent session's in-flight work**. Cause: `git add <paths>` followed by a bare `git commit`, which takes the whole index — and the index is shared. The staged count printed 31 against 7 expected and that signal was not acted on. Nothing was lost and the tree typechecks; the commit is mislabelled, not broken. History was left intact by decision, with commit `56fdde0c` recording exactly which files were swept in.
+
+**The correct form is `git commit -m … -- <paths>`**, which commits only those paths whatever else is staged. Any future work in this tree should use it.
+
 Every premise here was re-verified against the tree before ticketing. Three of the source review's claims did not survive that check and are corrected in the PRDs rather than carried into the tickets — see "Premises corrected" below.
 
 ## The streams

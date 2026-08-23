@@ -33,7 +33,7 @@ type FormValues = z.infer<typeof onboardEmployeeInputSchema>;
 
 const DEFAULT_TEMPLATE_VALUE = "default";
 
-function inr(value: number): string {
+function formatRoundedInr(value: number): string {
   return formatINR(Math.round(value));
 }
 
@@ -160,22 +160,22 @@ export function StepSkillsPay({ form }: StepSkillsPayProps) {
               <span className="text-muted-foreground">
                 Basic Pay ({breakdownPercents.basic}% of CTC):
               </span>
-              <span className="font-medium tabular-nums">{inr(breakdown.basic)}</span>
+              <span className="font-medium tabular-nums">{formatRoundedInr(breakdown.basic)}</span>
               <span className="text-muted-foreground">
                 HRA ({breakdownPercents.hra}% of basic):
               </span>
-              <span className="font-medium tabular-nums">{inr(breakdown.hra)}</span>
+              <span className="font-medium tabular-nums">{formatRoundedInr(breakdown.hra)}</span>
               <span className="text-muted-foreground">Other allowances:</span>
-              <span className="font-medium tabular-nums">{inr(breakdown.balance)}</span>
+              <span className="font-medium tabular-nums">{formatRoundedInr(breakdown.balance)}</span>
               <span className="text-muted-foreground">Professional Tax:</span>
               <span className="font-medium text-red-600 tabular-nums">
-                -{inr(breakdown.professionalTax)}
+                -{formatRoundedInr(breakdown.professionalTax)}
               </span>
               <span className="text-muted-foreground font-semibold border-t pt-2">
                 Net Salary:
               </span>
               <span className="font-bold text-green-600 border-t pt-2 tabular-nums">
-                {inr(breakdown.net)}
+                {formatRoundedInr(breakdown.net)}
               </span>
             </div>
             <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">

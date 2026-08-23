@@ -10,10 +10,9 @@ commits that closed them.
 
 ## Carried forward — real gaps, not finished work
 
-- **The transaction ceiling is a manual gate, not a regression test.** `pnpm db:check-request-txn`
-  needs a running API and a seeded database, and nothing runs it automatically, so the ceiling
-  *can* silently regress. Ticket 04's criterion said it could not. Wiring it into CI is the honest
-  fix and is not done.
+- **Both ceiling scripts run automatically in CI.** `pnpm db:check-request-txn` runs in the
+  `txn-ceiling` job; `pnpm db:check-build-reads` runs in `build-read-ceiling`. Each job bootstraps
+  and seeds its own database, so neither ceiling can silently regress.
 - **Migration snapshots are stale repo-wide** — 27 snapshots for 202 migrations, highest `0185`.
   The eight added here follow that existing state rather than breaking new ground, but a future
   `db:generate` diffs against `0185` and will re-propose everything since. That predates this work

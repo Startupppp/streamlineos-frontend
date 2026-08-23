@@ -151,10 +151,11 @@ function TicketPill({ entity, channelId }: { entity: TicketEntityRef; channelId:
       setCurrentStatus(nextStatus);
       setIsChangingStatus(true);
       try {
-        await apiClient.post("/chat/actions/ticket-status", {
+        await apiClient.post("/chat/entity-actions/submit", {
           channelId,
-          ticketId: Number(entity.id),
-          nextStatus,
+          reference: { type: "ticket", id: String(entity.id) },
+          actionId: "status",
+          input: { status: nextStatus },
         });
       } catch (err) {
         setCurrentStatus(prev);
@@ -260,9 +261,11 @@ function TicketPill({ entity, channelId }: { entity: TicketEntityRef; channelId:
 
 function CommentPill({ entity }: { entity: CommentEntityRef }) {
   const router = useRouter();
-  const { data: ticket } = useQuery(
-    ticketPermalinkQueryOptions(entity.projectId, entity.ticketId),
-  );
+  const canViewTickets = useCan("build:tickets:view");
+  const { data: ticket } = useQuery({
+    ...ticketPermalinkQueryOptions(entity.projectId, entity.ticketId),
+    enabled: canViewTickets,
+  });
 
   const href = `/build/${entity.projectId}?ticket=${entity.ticketId}&comment=${entity.id}`;
   const label = ticket

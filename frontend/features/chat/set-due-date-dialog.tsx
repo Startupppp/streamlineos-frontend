@@ -25,7 +25,7 @@ import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Form } from "@/components/ui/form";
 import { useProjects } from "@/hooks/api/build/projects";
-import { useSetDueDateFromChat } from "@/hooks/api/chat";
+import { useSubmitEntityAction } from "@/hooks/api/chat";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TicketCombobox } from "./ticket-combobox";
 
@@ -86,7 +86,7 @@ export function SetDueDateDialog({
     enabled: open && projectId === undefined,
   });
 
-  const dueDateMutation = useSetDueDateFromChat();
+  const dueDateMutation = useSubmitEntityAction();
 
   const handleCancel = useCallback(() => onOpenChange(false), [onOpenChange]);
 
@@ -120,9 +120,9 @@ export function SetDueDateDialog({
     try {
       await dueDateMutation.mutateAsync({
         channelId,
-        ticketId: resolvedTicketId,
-        projectId: resolvedProjectId,
-        dueDate: values.dueDate,
+        reference: { type: "ticket", id: String(resolvedTicketId) },
+        actionId: "due-date",
+        input: { dueDate: values.dueDate },
       });
       toast.success("Due date set");
       onOpenChange(false);

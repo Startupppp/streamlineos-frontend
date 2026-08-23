@@ -106,11 +106,6 @@ describe("permission catalog sync", () => {
     expect(ghosts).toEqual([]);
   });
 
-  /**
-   * Arity is not fixed at three: 53 keys are two-segment (`surveys:create`) and some
-   * are four (`build:workspaces:members:manage`). What every key must have is a module
-   * segment and at least one more, because module scoping slices on the first segment.
-   */
   it("every key parses into a module segment plus at least one more", () => {
     if (!backendAvailable) return;
     const unparseable = [...backendNames].filter((name) => {

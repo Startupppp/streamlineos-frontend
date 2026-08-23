@@ -8,12 +8,22 @@ By this point the type layer is open (ticket 08), so this is relocation and nami
 
 **Blocked by:** 08 — Filters take a description of what a page filters by.
 
-**Status:** ready-for-agent
+**Status:** PARTIAL - the decision layer moved, the presentation layer could not
 
-- [ ] The machinery lives in a shared location named for lists rather than for a product module, following the repository's kebab-case file and folder convention.
-- [ ] No exported name mentions tickets, sprints, cycles or projects.
-- [ ] Build's imports change path and nothing else in Build changes.
-- [ ] The fence from ticket 03 passes unchanged.
-- [ ] The module **composes** the existing shared table, table pagination, cursor page controls, search input, filter pill and page wrapper primitives rather than reimplementing any of them. If it ends up reimplementing one, the boundary is drawn in the wrong place and that is worth stopping for.
-- [ ] Build's list screens behave identically — verified by running them.
-- [ ] Nothing is left behind at the old location. A moved surface deletes its old home rather than re-exporting from it.
+- [ ] ~~The machinery lives in a shared location named for lists.~~ **Partly met.** `features/shared/list-view/` now holds the spec, the hook and the chip primitive behind a barrel. The interaction machinery - command menu, category submenus, flat search, category list and row, option leading, trigger button, submenu internals - did **not** move: every one of them imports Build's `filter-types.ts` or `StatusConfigEntry`, so moving them means generalising them first. That is its own ticket.
+- [x] No exported name mentions tickets, sprints, cycles or projects - true of everything that moved.
+- [x] Build's imports change path and nothing else in Build changes. Three files repointed: the ticket hook, the ticket filter bar, and the workload filter bar.
+- [x] The fence from ticket 03 passes unchanged.
+- [x] The module reimplements none of the shared table, pagination, search-input or page-wrapper primitives. What moved is URL state plus one chip; presentation stays with the caller.
+- [ ] ~~Build's list screens behave identically - verified by running them.~~ **Not met.** Tests and typecheck only; the app was not booted.
+- [x] Nothing is left behind. The files were moved, not copied, and no re-export shim was created.
+
+## Result
+
+Moved to `features/shared/list-view/`: `list-filter-spec.ts`, `use-list-filter-params.ts`, its test, and `filter-chips.tsx` (renamed `filter-chip.tsx` for its single export), behind an `index.ts` barrel.
+
+**What did not move, and why it matters.** Nine presentation files stayed in `features/build/shared/`. The wall this stream set out to remove is therefore only half down: another module can now own its filter *state* declaratively, but still has to build its own filter *control*. Ticket 15 proves the state half works; the control half needs the same treatment ticket 08 gave the types.
+
+Also found while surveying: Build holds at least three further independent filter implementations - `all-work/use-all-work-filters.ts` (which the frontend constitution names canonical), `project-list/add-filter-popover.tsx` and `customers/customer-filter-popover.tsx`. The duplication is wider than the review's figures suggested, and the canonical one named in the constitution is not the one this stream generalised.
+
+Verified: 39/39 tests; frontend `tsc --noEmit` 0 errors.

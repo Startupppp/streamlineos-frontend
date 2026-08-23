@@ -16,7 +16,6 @@ export interface TicketEntityRef {
   type: "ticket";
   id: string;
   card?: EntityCard | null;
-  /** Snapshot fields on messages sent before references resolved at read time. */
   projectId?: number;
   ticketNumber?: number;
   projectKey?: string;

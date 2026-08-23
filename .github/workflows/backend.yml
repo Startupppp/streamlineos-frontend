@@ -163,3 +163,80 @@ jobs:
 
       - name: Check Request Transaction Ceiling
         run: pnpm db:check-request-txn
+
+  build-read-ceiling:
+    runs-on: ubuntu-latest
+    needs: [backend]
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: streamlineos
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U user -d streamlineos"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgres://user:password@localhost:5432/streamlineos
+      APP_DATABASE_URL: postgres://streamline_app:ci-app-password@localhost:5432/streamlineos
+      APP_DB_PASSWORD: ci-app-password
+      PGSSLMODE: disable
+      SEED_ORG_ID: ci-build-probe-org
+      SEED_NEIGHBOUR_ORG_ID: ci-build-neighbour-org
+      SEED_TICKETS: "20000"
+      SEED_PROJECTS: "4"
+      SEED_COMMENTS: "0"
+      SEED_ACTIVITY: "0"
+      SEED_RELATIONS: "0"
+      SEED_TIMESHEETS: "0"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          package_json_file: backend/package.json
+          run_install: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: backend/pnpm-lock.yaml
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Bootstrap Database
+        run: pnpm db:bootstrap
+
+      - name: Create App Role
+        run: pnpm db:bootstrap-role
+
+      - name: Seed Probe Orgs
+        run: |
+          psql "$DATABASE_URL" -c "INSERT INTO users (id, email) VALUES ('ci-build-probe', 'build-probe@ci.internal')"
+          psql "$DATABASE_URL" -c "INSERT INTO organizations (id, name, slug, owner_membership_id) VALUES ('ci-build-probe-org', 'CI Build Probe', 'ci-build-probe', 0)"
+          psql "$DATABASE_URL" -c "INSERT INTO organization_members (user_id, org_id, role, is_owner, status) VALUES ('ci-build-probe', 'ci-build-probe-org', 'MEMBER', false, 'ACTIVE')"
+          psql "$DATABASE_URL" -c "UPDATE organizations SET owner_membership_id = (SELECT id FROM organization_members WHERE user_id = 'ci-build-probe' LIMIT 1) WHERE id = 'ci-build-probe-org'"
+          psql "$DATABASE_URL" -c "INSERT INTO users (id, email) VALUES ('ci-build-neighbour', 'build-neighbour@ci.internal')"
+          psql "$DATABASE_URL" -c "INSERT INTO organizations (id, name, slug, owner_membership_id) VALUES ('ci-build-neighbour-org', 'CI Neighbour', 'ci-build-neighbour', 0)"
+          psql "$DATABASE_URL" -c "INSERT INTO organization_members (user_id, org_id, role, is_owner, status) VALUES ('ci-build-neighbour', 'ci-build-neighbour-org', 'MEMBER', false, 'ACTIVE')"
+          psql "$DATABASE_URL" -c "UPDATE organizations SET owner_membership_id = (SELECT id FROM organization_members WHERE user_id = 'ci-build-neighbour' LIMIT 1) WHERE id = 'ci-build-neighbour-org'"
+
+      - name: Seed Build Load
+        run: pnpm seed:build-load
+
+      - name: Check Build Read Ceiling
+        run: pnpm db:check-build-reads

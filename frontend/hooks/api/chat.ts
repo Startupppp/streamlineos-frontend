@@ -848,19 +848,34 @@ export interface CreateTaskFromMessageInput {
   title?: string;
 }
 
-export interface AssignTicketFromChatInput {
-  channelId: number;
-  ticketId: number;
-  projectId: number;
-  assigneeId: string;
+export interface EntityReferenceInput {
+  type: string;
+  id: string;
 }
 
-export function useAssignTicketFromChat() {
+export interface SubmitEntityActionInput {
+  channelId: number;
+  reference: EntityReferenceInput;
+  actionId: string;
+  input?: Record<string, unknown>;
+}
+
+/**
+ * One route for every action on every referenced record. The action's identity
+ * travels in the body, so adding one is an adapter change on the server rather
+ * than a new endpoint, a new hook and a new dialog here.
+ */
+export function useSubmitEntityAction() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationKey: ["chat", "actions", "assign-ticket"],
-    mutationFn: (input: AssignTicketFromChatInput) =>
-      apiClient.post<{ ok: boolean }>("/chat/actions/assign-ticket", input),
+    mutationKey: ["chat", "entity-actions", "submit"],
+    mutationFn: (variables: SubmitEntityActionInput) =>
+      apiClient.post<Record<string, unknown>>("/chat/entity-actions/submit", {
+        channelId: variables.channelId,
+        reference: variables.reference,
+        actionId: variables.actionId,
+        input: variables.input ?? {},
+      }),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.chat.messages(variables.channelId),
@@ -869,27 +884,11 @@ export function useAssignTicketFromChat() {
   });
 }
 
-export interface SetDueDateFromChatInput {
-  channelId: number;
-  ticketId: number;
-  projectId: number;
-  dueDate: string;
-}
-
-export function useSetDueDateFromChat() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationKey: ["chat", "actions", "set-due-date"],
-    mutationFn: (input: SetDueDateFromChatInput) =>
-      apiClient.post<{ ok: boolean }>("/chat/actions/set-due-date", input),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.chat.messages(variables.channelId),
-      });
-    },
-  });
-}
-
+/**
+ * Stays chat-specific on purpose: the server reads the message's own text to
+ * fill the new record's description, which the generic entity-action route
+ * cannot do without knowing what a chat message is.
+ */
 export function useCreateTaskFromMessage() {
   const queryClient = useQueryClient();
   return useMutation({

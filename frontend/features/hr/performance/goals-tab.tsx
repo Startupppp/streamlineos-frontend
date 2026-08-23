@@ -215,11 +215,6 @@ export function GoalsTab() {
 
   const watchedUserId = goalForm.watch("userId");
 
-  const handleUserIdChange = useCallback(
-    (id: string) => goalForm.setValue("userId", id, { shouldValidate: true }),
-    [goalForm],
-  );
-
   if (isLoading) {
     return <LoadingState variant="cards" rows={9} />;
   }

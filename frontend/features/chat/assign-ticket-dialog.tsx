@@ -24,7 +24,7 @@ import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Form } from "@/components/ui/form";
 import { useProjects, useProjectMembers } from "@/hooks/api/build/projects";
-import { useAssignTicketFromChat } from "@/hooks/api/chat";
+import { useSubmitEntityAction } from "@/hooks/api/chat";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TicketCombobox } from "./ticket-combobox";
 
@@ -88,7 +88,7 @@ export function AssignTicketDialog({
   const { data: members, isLoading: loadingMembers } =
     useProjectMembers(effectiveProjectId);
 
-  const assign = useAssignTicketFromChat();
+  const assign = useSubmitEntityAction();
 
   const handleCancel = useCallback(() => onOpenChange(false), [onOpenChange]);
 
@@ -122,9 +122,9 @@ export function AssignTicketDialog({
     try {
       await assign.mutateAsync({
         channelId,
-        ticketId: resolvedTicketId,
-        projectId: resolvedProjectId,
-        assigneeId: values.assigneeId,
+        reference: { type: "ticket", id: String(resolvedTicketId) },
+        actionId: "assign",
+        input: { assigneeId: values.assigneeId },
       });
       toast.success("Ticket assigned");
       onOpenChange(false);

@@ -10,7 +10,7 @@ import {
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { InfoIcon, XIcon } from "@animateicons/react/lucide";
 import { cn } from "@/lib/utils";
-import { FilterChip } from "@/features/build/shared/filter-chips";
+import { FilterChip } from "@/features/shared/list-view";
 import { getUserDisplayName } from "@/features/build/shared/resolve-user-name";
 import { useSprints } from "@/hooks/api/build/sprints";
 import { useCycles } from "@/hooks/api/build/advanced";

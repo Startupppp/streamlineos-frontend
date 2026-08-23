@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 import { getUserDisplayName } from "@/features/build/shared/resolve-user-name";
 import { useCycles } from "@/hooks/api/build/advanced";
 import { useProjectLabels } from "@/hooks/api/build/projects";
-import { FilterChip } from "./filter-chips";
+import { FilterChip } from "@/features/shared/list-view";
 import { FilterCommandMenu } from "./filter-command-menu";
 import type { StatusFilterOption } from "./filter-types";
 import { buildStatusConfig } from "@/features/build/shared/types";
