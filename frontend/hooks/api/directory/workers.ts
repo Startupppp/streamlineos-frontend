@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { workersListParams } from "@/lib/query-keys/directory-workers-list";
 import { useCan } from "@/hooks/api/access";
 import type {
   CreateEngagementInput,
@@ -25,10 +26,7 @@ export interface UseWorkersParams {
 export function useWorkers(params: UseWorkersParams = {}) {
   const canView = useCan("directory:workers:view");
   const { cursor, limit = 20, status, search, organizationPersonId } = params;
-  const queryParams: Record<string, unknown> = { cursor, limit };
-  if (status) queryParams.status = status;
-  if (search) queryParams.search = search;
-  if (organizationPersonId) queryParams.organizationPersonId = organizationPersonId;
+  const queryParams = workersListParams(params);
 
   return useQuery({
     queryKey: queryKeys.directory.workers(queryParams),
