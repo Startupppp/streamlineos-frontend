@@ -95,8 +95,8 @@ export function AppSidebar({
   }, [pathname]);
 
   const permissions = useMemo(
-    () => access?.permissions ?? [],
-    [access?.permissions],
+    () => (access ? Object.keys(access.scopes) : []),
+    [access?.scopes],
   );
   const canApproveLeaves = useCan("hr:leaves:approve");
   const canReadChat = useCan("chat:channels:read");

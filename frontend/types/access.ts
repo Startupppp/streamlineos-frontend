@@ -10,13 +10,12 @@ export interface MfaState {
 }
 
 export interface AccessResponse {
-  permissions: string[];
+  scopes: Record<string, DataScope>;
   isOrgOwner: boolean;
   canManageOrganizationMembership: boolean;
   modules: Record<string, boolean>;
   mfa?: MfaState;
   enabledModules?: string[];
-  dataScopes?: Record<string, string>;
   version?: number;
   tier?: Tier;
 }

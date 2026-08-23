@@ -42,8 +42,8 @@ export function useDashboardAccess(): DashboardAccess {
     const moduleOn = (name: string) =>
       matchesOrgModule(enabledModules, name);
     const owner = data?.isOrgOwner ?? false;
-    const permissions = data?.permissions ?? [];
-    const can = (key: PermissionKey) => owner || permissions.includes(key);
+    const scopes = data?.scopes ?? {};
+    const can = (key: PermissionKey) => owner || key in scopes;
 
     return {
       accessLoading: isLoading,

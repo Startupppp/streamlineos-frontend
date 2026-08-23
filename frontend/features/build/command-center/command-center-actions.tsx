@@ -138,7 +138,7 @@ export function PinnedNav({ defaultProjectId = null }: PinnedNavProps) {
     (permission: PermissionKey): boolean => {
       if (!access) return false;
       if (access.isOrgOwner) return true;
-      return access.permissions.includes(permission);
+      return permission in access.scopes;
     },
     [access],
   );

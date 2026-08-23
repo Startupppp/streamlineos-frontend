@@ -43,7 +43,7 @@ export function DashboardGate({
 
   if (permission) {
     const perms = Array.isArray(permission) ? permission : [permission];
-    const granted = perms.some((p) => access?.permissions.includes(p) ?? false);
+    const granted = perms.some((p) => (access ? p in access.scopes : false));
     if (granted) return <>{children}</>;
     return (
       <AccessDenied currentRole={userRole} requiredRoles={allowedRoles ?? []} />

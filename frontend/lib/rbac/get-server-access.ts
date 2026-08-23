@@ -8,7 +8,7 @@ import type { AccessResponse } from "@/types/access";
 const REQUEST_TIMEOUT_MS = 8_000;
 
 const DENIED: AccessResponse = {
-  permissions: [],
+  scopes: {},
   isOrgOwner: false,
   canManageOrganizationMembership: false,
   modules: {},
@@ -22,7 +22,7 @@ function unwrap(body: unknown): AccessResponse | null {
     envelope.success === true && "data" in envelope ? envelope.data : envelope;
   if (payload === null || typeof payload !== "object") return null;
   const snapshot = payload as Record<string, unknown>;
-  if (!Array.isArray(snapshot.permissions)) return null;
+  if (typeof snapshot.scopes !== "object" || snapshot.scopes === null) return null;
   return snapshot as unknown as AccessResponse;
 }
 

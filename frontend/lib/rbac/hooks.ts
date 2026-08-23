@@ -7,8 +7,8 @@ export function usePermissions() {
   const { data: access, isLoading } = useAccess();
 
   const permissions = useMemo(
-    () => access?.permissions ?? EMPTY_PERMISSIONS,
-    [access?.permissions],
+    () => (access ? Object.keys(access.scopes) : EMPTY_PERMISSIONS),
+    [access?.scopes],
   );
 
   return useMemo(() => ({ permissions, isLoading }), [permissions, isLoading]);

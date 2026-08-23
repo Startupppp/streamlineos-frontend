@@ -214,7 +214,7 @@ export function HubGrid({ isAdvanced, onSwitchToAdvanced }: Props) {
       ? card.permission
       : [card.permission];
     return required.some((permission) =>
-      access?.permissions.includes(permission),
+      access ? permission in access.scopes : false,
     );
   };
   const accessibleGroups = CARD_GROUPS.map((group) => ({
