@@ -9,8 +9,8 @@ export const metadata: Metadata = {
 };
 
 export default async function WorkersRoute() {
-  const { access } = await requirePermission("directory:workers:view");
-  const state = await prefetchWorkers("directory:workers:view" in access.scopes);
+  await requirePermission("directory:workers:view");
+  const state = await prefetchWorkers();
 
   return (
     <HydrationBoundary state={state}>

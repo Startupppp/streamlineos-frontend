@@ -9,15 +9,13 @@ import { serverGet } from "@/lib/server-fetch";
 import type { WorkersPage } from "@/types/directory/workers";
 
 
-export async function prefetchWorkers(canView: boolean) {
+export async function prefetchWorkers() {
   const queryClient = new QueryClient();
-  if (canView) {
-    await queryClient.prefetchQuery({
-      queryKey: workersListKey(),
-      queryFn: () =>
-        serverGet<WorkersPage>(`/directory/workers?limit=${WORKERS_PAGE_SIZE}`),
-      staleTime: 60_000,
-    });
-  }
+  await queryClient.prefetchQuery({
+    queryKey: workersListKey(),
+    queryFn: () =>
+      serverGet<WorkersPage>(`/directory/workers?limit=${WORKERS_PAGE_SIZE}`),
+    staleTime: 60_000,
+  });
   return dehydrate(queryClient);
 }
