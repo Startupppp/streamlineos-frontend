@@ -883,10 +883,7 @@ export function entityReferenceKey(reference: EntityReferenceInput): string {
   return `${reference.type}:${reference.id}`;
 }
 
-/**
- * One batched ask per visible set of references — fetching per bubble would
- * reintroduce the request-per-record problem the seam's batching exists to prevent.
- */
+// One batched ask per visible set of references; per bubble would be a request per record.
 export function useEntityActions(
   channelId: number,
   references: EntityReferenceInput[],

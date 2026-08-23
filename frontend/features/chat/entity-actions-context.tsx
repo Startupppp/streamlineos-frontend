@@ -56,10 +56,7 @@ export function EntityActionsProvider({
   );
 }
 
-/**
- * What the server says this actor may do to this record — never a permission key
- * the client guessed, which is how a CRM deal ended up gated on Build permissions.
- */
+// What the server says this actor may do here - never a permission key the client guessed.
 export function useAvailableActions(
   reference: EntityReferenceInput,
 ): EntityAction[] {
