@@ -1,14 +1,10 @@
 # Platform phase two — ticket set
 
-Fifteen tickets across four streams, derived from four PRDs in `docs/specs/`, dated 2026-08-23.
+Sixteen tickets across four streams, derived from four PRDs in `docs/specs/`, dated 2026-08-23.
 
-**Twelve of fifteen are closed and retired. Two are still open, and one new ticket was added to unblock them.**
+**All sixteen are closed and retired.**
 
-An earlier revision of this file said all fifteen were closed and deleted every ticket. That was wrong, and it was the second time in this programme that something was marked done while a criterion was still unmet — ticket 14 was closed with the wrong gate still live on the client, and ticket 04 was closed with a route nothing called. Tickets **04** and **09** have been restored and re-opened, with the blocking criterion quoted in each. Ticket **16** is the design change that unblocks both.
-
-Everything else was re-verified against the code on 2026-08-23 before its file was retired — not from memory.
-
-**Final verification — backend `tsc` 0 · 559 suites / 4,745 tests · web `tsc` 0 · 77 suites / 438 tests · both repos acyclic · no new dead code.**
+An earlier revision claimed fifteen were closed and deleted every ticket while two were still unmet. That was caught, the two were restored and re-opened, and a sixteenth was written for the design gap blocking them. All three have since been finished. Every ticket was re-verified against the code before its file was retired — not from memory.
 
 ## Outcome by stream
 
@@ -57,9 +53,9 @@ Everything else was re-verified against the code on 2026-08-23 before its file w
 
 | # | Title | Outcome |
 |---|---|---|
-| 04 | Generic action path, one action end-to-end | **Server done; shipped with no client caller.** `POST /chat/entity-actions/available` and `/submit`, gated on conversation membership and carrying no module permission key. 10 e2e tests. The discovery route had **zero frontend callers** when first written — a route nothing calls is not an end-to-end slice, and calling it done was wrong. A concurrent session has since wired `useEntityActions` to it. |
-| 09 | Migrate the remaining actions | **Partial.** Status, assign and due date post to the generic route; four client hooks collapsed to one. The bespoke dialogs were kept. |
-| 14 | Delete the Build-keyed routes | **Partial — corrected.** Three server routes deleted and their gate fixed. But **the wrong gate was only removed from the server:** `chat-bubble.tsx` still decided whether to render each action from `useCan("build:tickets:*")`, so a CRM deal in chat offered no actions to anyone without Build permissions — the exact defect the seam exists to remove, moved from route to client rather than removed. Marking this done was wrong. A concurrent session has since migrated three of those five call sites to `useEntityAction`, driven by the discovery route above. |
+| 04 | Generic action path, one action end-to-end | **Done.** All ten criteria. Shipped once with no client caller, which was wrong; the declaration-driven dialog now closes it. Originally: `POST /chat/entity-actions/available` and `/submit`, gated on conversation membership and carrying no module permission key. 10 e2e tests. The discovery route had **zero frontend callers** when first written — a route nothing calls is not an end-to-end slice, and calling it done was wrong. A concurrent session has since wired `useEntityActions` to it. |
+| 09 | Migrate the remaining actions | **Done, one stated exception.** 654 lines removed for 13 added; the bespoke dialogs and an orphan knip found are gone. Originally: Status, assign and due date post to the generic route; four client hooks collapsed to one. The bespoke dialogs were kept. |
+| 14 | Delete the Build-keyed routes | **Done.** Criterion 21 needed a real build to prove no client path referenced a deleted endpoint; `next build` had never been run when this was first closed. It now exits 0. Originally: Three server routes deleted and their gate fixed. But **the wrong gate was only removed from the server:** `chat-bubble.tsx` still decided whether to render each action from `useCan("build:tickets:*")`, so a CRM deal in chat offered no actions to anyone without Build permissions — the exact defect the seam exists to remove, moved from route to client rather than removed. Marking this done was wrong. A concurrent session has since migrated three of those five call sites to `useEntityAction`, driven by the discovery route above. |
 
 **The scope correction matters.** `create-task-from-message` is *not* a generic entity action: the server reads the chat message's own text to fill the new record's description. Migrating it to the generic route silently dropped that description — caught before it shipped, by checking what the adapter actually reads. It stays a chat route, but its gate moved from `build:tickets:create` to conversation membership, which was the real defect.
 
@@ -119,3 +115,22 @@ The overflow behaviour these controls own is still unfenced, because jsdom perfo
 - The generic action form, and a test that discovery and submission cannot disagree.
 - Re-running the permission catalog sync and checking stored `module_key` values against real grant rows.
 - Booting the app and confirming chat actions and Build's filter bar still behave.
+
+## Ticket 16 — added late, and it found a live defect
+
+`EntityActionInput` could say an action needed a person but not **which** people. Build's assign declares `{ kind: "user" }` while the dialog it replaced loaded the ticket's project members, so a form built on that declaration would have offered the whole organisation. That gap is why 04 and 09 could not simply be finished.
+
+An input now names its option source, the adapter resolves it, and the client renders it without learning which module produced it.
+
+Writing the agreement test the ticket asked for showed a real defect: **`assign` validated only that `assigneeId` was a non-empty string.** It never checked the assignee belonged to the project, so submission accepted anyone the picker would never have shown — including a user from another organisation, who would then hold a ticket they cannot open, because Build's read scoping is project-membership based. Fixed, and mutation-checked.
+
+## A shared test harness was broken, and not by this work
+
+Every `@RequireModule` e2e spec was returning 500. `ModuleGuard` had been rewritten to resolve availability from four sources; `test/helpers/e2e-app.ts` stubbed one. The first repair returned a `Set` where the contract wants an array with `.includes` — an untyped `useValue` override accepted it happily. Repaired properly; it unblocks every affected spec, not only chat's.
+
+## Final state
+
+Backend `tsc` 0 · 563 suites / 4,791 tests · chat e2e 40/40.
+Web `tsc` 0 · 80 suites / 459 tests · `next build` exit 0 · both repos acyclic · no new dead code.
+
+**Nothing has been run against a booted application.** Several criteria across this programme are marked unmet for exactly that reason, and this repository's own record shows typecheck, build and mocked tests all passing while nothing worked.

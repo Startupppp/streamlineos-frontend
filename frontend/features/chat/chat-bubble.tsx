@@ -35,8 +35,7 @@ import { apiClient, isApiError } from "@/lib/api-client";
 import { useEntityAction } from "./entity-actions-context";
 import { useSubmitEntityAction } from "@/hooks/api/chat";
 import { ConvertToTaskDialog } from "./convert-to-task-dialog";
-import { AssignTicketDialog } from "./assign-ticket-dialog";
-import { SetDueDateDialog } from "./set-due-date-dialog";
+import { EntityActionDialog } from "./entity-action-dialog";
 import { ticketPermalinkQueryOptions } from "@/hooks/api/build/comment-permalink";
 import { InternalLinkPreview } from "./internal-link-preview";
 import { getStatusBadgeClass } from "@/features/build/shared/status-badge";
@@ -361,7 +360,8 @@ export function ChatBubble({
     id: ticketEntity ? String(ticketEntity.id) : "",
   };
   const canConvertToTask = useCan("build:tickets:create");
-  const canAssignTicket = Boolean(useEntityAction(ticketReference, "assign"));
+  const assignAction = useEntityAction(ticketReference, "assign");
+  const canAssignTicket = Boolean(assignAction);
   const senderName = resolveUserName
     ? resolveUserName(message.senderId, message.sender)
     : (message.sender?.name ?? "Unknown");
@@ -370,7 +370,8 @@ export function ChatBubble({
       ? resolveUserName(message.replyTo.sender?.id ?? "", message.replyTo.sender)
       : (message.replyTo.sender?.name ?? "Unknown")
     : null;
-  const canSetDueDate = Boolean(useEntityAction(ticketReference, "due-date"));
+  const dueDateAction = useEntityAction(ticketReference, "due-date");
+  const canSetDueDate = Boolean(dueDateAction);
 
   const handleOpenConvertDialog = useCallback(() => setConvertDialogOpen(true), []);
   const handleOpenAssignDialog = useCallback(() => setAssignDialogOpen(true), []);
@@ -667,22 +668,22 @@ export function ChatBubble({
             defaultTitle={(message.content ?? "").slice(0, 80)}
           />
         )}
-        {canAssignTicket && (
-          <AssignTicketDialog
+        {assignAction && (
+          <EntityActionDialog
             open={assignDialogOpen}
             onOpenChange={setAssignDialogOpen}
             channelId={message.channelId}
-            ticketId={linkedTicket?.ticketId}
-            projectId={linkedTicket?.projectId}
+            reference={ticketReference}
+            action={assignAction}
           />
         )}
-        {canSetDueDate && (
-          <SetDueDateDialog
+        {dueDateAction && (
+          <EntityActionDialog
             open={dueDateDialogOpen}
             onOpenChange={setDueDateDialogOpen}
             channelId={message.channelId}
-            ticketId={linkedTicket?.ticketId}
-            projectId={linkedTicket?.projectId}
+            reference={ticketReference}
+            action={dueDateAction}
           />
         )}
         {!isEditing && (

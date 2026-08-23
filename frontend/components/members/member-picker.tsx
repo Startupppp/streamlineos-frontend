@@ -40,6 +40,13 @@ interface MemberOption extends NamedUser {
 }
 
 interface MemberPickerBaseProps {
+  /**
+   * An explicit candidate list, when the caller already knows who is eligible.
+   * Used by the declaration-driven action form: the seam resolves an input's
+   * option source and hands the result here, so this picker never has to learn
+   * which module produced it.
+   */
+  candidates?: MemberOption[];
   projectId?: number;
   /** Scopes candidates to a module's member-access candidates instead of org/project members. */
   moduleKey?: string;
@@ -78,6 +85,7 @@ interface MemberPickerMultiProps extends MemberPickerBaseProps {
 export type MemberPickerProps = MemberPickerSingleProps | MemberPickerMultiProps;
 
 function useMemberOptions(
+  candidates: MemberOption[] | undefined,
   projectId: number | undefined,
   moduleKey: string | undefined,
   excludeAssigned: boolean,
@@ -85,16 +93,18 @@ function useMemberOptions(
   search: string,
   selectedIds: string[],
 ): { options: MemberOption[]; selectedMembers: MemberOption[] } {
+  const explicit = candidates !== undefined;
   const canViewOrgMembers = useCan("settings:view");
   const canViewProjectWorkspaceMembers = useCan("build:members:view");
   const useOrgDirectory =
-    projectId === undefined && moduleKey === undefined && canViewOrgMembers;
+    !explicit && projectId === undefined && moduleKey === undefined && canViewOrgMembers;
   const useWorkspaceDirectory =
+    !explicit &&
     projectId === undefined &&
     moduleKey === undefined &&
     !canViewOrgMembers &&
     canViewProjectWorkspaceMembers;
-  const useModuleDirectory = moduleKey !== undefined && enabled;
+  const useModuleDirectory = !explicit && moduleKey !== undefined && enabled;
 
   const debouncedSearch = useDebouncedValue(search.trim(), 300);
   const { data: orgData } = useOrgMembers(1, 50, debouncedSearch || undefined, {
@@ -167,6 +177,12 @@ function useMemberOptions(
   const { data: selectedData } = useOrgMembersByIds(missingIds);
 
   return useMemo(() => {
+    if (candidates !== undefined) {
+      return {
+        options: candidates,
+        selectedMembers: candidates.filter((m) => selectedIds.includes(m.id)),
+      };
+    }
     if (projectId !== undefined) {
       const options = projectMembers.map((m) => ({
         id: m.id,
@@ -259,6 +275,7 @@ function MemberAvatar({ member, className }: { member: MemberOption; className?:
 
 export function MemberPicker(props: MemberPickerProps) {
   const {
+    candidates,
     projectId,
     moduleKey,
     excludeAssigned = true,
@@ -281,6 +298,7 @@ export function MemberPicker(props: MemberPickerProps) {
     [multiValues, singleValue],
   );
   const { options: members, selectedMembers } = useMemberOptions(
+    candidates,
     projectId,
     moduleKey,
     excludeAssigned,
@@ -288,7 +306,7 @@ export function MemberPicker(props: MemberPickerProps) {
     search,
     selectedIds,
   );
-  const serverFiltered = projectId === undefined;
+  const serverFiltered = candidates === undefined && projectId === undefined;
   const filtered = useMemo(
     () => filterMembers(members, search, serverFiltered, excludeUserId, excludeUserIds),
     [members, search, serverFiltered, excludeUserId, excludeUserIds],
