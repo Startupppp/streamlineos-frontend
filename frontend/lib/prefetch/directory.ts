@@ -5,7 +5,7 @@ import {
   WORKERS_PAGE_SIZE,
   workersListKey,
 } from "@/lib/query-keys/directory-workers-list";
-import { serverFetch } from "@/lib/server-fetch";
+import { serverGet } from "@/lib/server-fetch";
 import type { WorkersPage } from "@/types/directory/workers";
 
 
@@ -15,7 +15,7 @@ export async function prefetchWorkers(canView: boolean) {
     await queryClient.prefetchQuery({
       queryKey: workersListKey(),
       queryFn: () =>
-        serverFetch<WorkersPage>("/directory/workers", { limit: WORKERS_PAGE_SIZE }),
+        serverGet<WorkersPage>(`/directory/workers?limit=${WORKERS_PAGE_SIZE}`),
       staleTime: 60_000,
     });
   }
