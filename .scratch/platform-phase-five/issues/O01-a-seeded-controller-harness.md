@@ -25,7 +25,16 @@ Every other stream in this set chose the controller as its seam. This is what ma
 
 **Blocked by:** nothing
 **Wave:** 1 — it blocks the testing criteria of P, Q, R, S, T and U
-**Status:** ready-for-agent
+**Status:** PARTIAL — the harness boots and 3 of its 4 self-tests pass. It was delivered unrun; running it is what found the rest.
+
+> **Delivered unrun.** The implementing pass reported `tsc` exit 0 and stopped. Running it found three things `tsc` could not:
+> 1. **It OOMed.** Booting the real `AppModule` inside jest exhausts the default 4 GB heap. It needs `NODE_OPTIONS=--max-old-space-size=8192`, the same as this repo's `tsc`. Until that is in the script, the harness does not run at all.
+> 2. **Seeding violated `fk_organizations_owner_membership`.** The builder inserted the org with `ownerMembershipId: 0` across separate autocommit statements. That FK is `DEFERRABLE INITIALLY DEFERRED`, which only helps *inside a transaction* — so it was checked at the org insert's own commit. Fixed by mirroring signup: pre-allocate the membership id from the sequence and land org + owner + members in one transaction.
+> 3. **The RLS assertion could never pass.** Drizzle wraps the driver error, so `42501` rides on `.cause`, not the top level. It asserted on the wrapper.
+>
+> **Now passing (3):** cross-org resource returns **404 not 403**; a direct query with no tenant GUC is refused with `42501`; the app connection has `rolbypassrls = false`.
+>
+> **Still failing (1):** `permission absent → 403; permission granted → 200`. The grant is written (role → grants → assignment → `bumpPermissionsVersion`, which publishes on the in-process channel the app shares), and waiting past the 1s version-cache window does not help. The response is `{"code":"FORBIDDEN"}` from `PermissionGuard`, so the route is right and the key matches. **Unresolved**, and worth resolving carefully rather than quickly — the leading suspect is `safeAccessTableRead`, which swallows a failed read of the access tables and returns an empty grant list, which would present as exactly this. If that is what it is, it is a product finding and not a harness one.
 
 - [ ] `createE2eApp` is **not modified, deprecated or wrapped.** Its 119 consumers are not rewritten.
 - [ ] The seeded harness overrides nothing in the access path. `AccessService`, `EntitlementsService` and `MembershipStateService` are the real implementations.
