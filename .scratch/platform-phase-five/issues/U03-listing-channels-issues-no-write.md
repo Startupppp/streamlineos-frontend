@@ -20,7 +20,7 @@ There is no write in a GET, and a side effect a seam does not declare is a side 
 
 **Blocked by:** nothing — no file overlap with U01 or U02
 **Wave:** 1
-**Status:** ready-for-agent
+**Status:** DONE
 
 - [ ] Listing channels issues **no** write. **This is the mutation check** — a test asserts the read path calls no `update`.
 - [ ] The name is resolved when the entity channel is created, so the common case never needs a repair.

@@ -9,7 +9,19 @@ Two unrelated parts of the product with the same shape of problem: a well-design
 
 ---
 
-# Part one — payments (stream T)
+# Part one — payments (stream T) — **RETRACTED**
+
+> **This half of the spec is wrong and stream T is closed WON'T DO.**
+>
+> Platform billing (StreamlineOS charging a tenant for their SaaS plan, credentials from platform env config) and tenant merchant payments (a tenant charging their own customers, per-org encrypted credentials) are **two different concerns**, not one seam being bypassed. The adapter's own header says so, and the credential sources confirm it: `RazorpayService` reads `this.config.RAZORPAY_*`; every registry caller passes a `keyId`/`keySecret` fetched per-org and decrypted per call.
+>
+> Building this would mean inventing per-org credentials platform billing does not have, and conflating StreamlineOS's own Razorpay account with each tenant's.
+>
+> **Where the analysis went wrong.** The deletion test was applied and passed — delete the interface and `BillingService` compiles unchanged — and that was read as "the seam has no enforcement on the path it was built for". It compiles unchanged because it is *a different feature*. The deletion test answers "is this a pass-through", not "are these two things the same thing".
+>
+> Part two (chat fan-out, stream U) is unaffected and still stands. Retained rather than deleted so the reasoning stays visible.
+
+## Original text, retained for the record
 
 ## Problem Statement
 

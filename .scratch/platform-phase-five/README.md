@@ -113,6 +113,53 @@ Not verified: nothing was run against a booted application, and no query was mea
 
 **P01 does not close the hole on its own.** A member of zero projects still gets the permissive branch inside the seam, so retrieval and read are now consistent and both wider than they should be for that person. **P02 closes it and should lead wave 1.**
 
+## Progress — 2026-08-24
+
+| Ticket | State |
+|---|---|
+| O01 seeded harness | **DONE.** All four self-tests pass. The fourth was failing on a real product bug — see below. |
+| P01 retrieval crosses the seam | **DONE.** |
+| P02 predicate cannot be called half-informed | **DONE**, with one deviation the tests forced. |
+| Q01 one representation | **DONE.** |
+| R01 one availability answer | **Landed** by a concurrent session; wired into both guards. |
+| R02 registry decides core | **BLOCKED** — needs a pricing decision, not a refactor. |
+| S01 calendar source interface | **Landed** by a concurrent session; registry wired. |
+| T01 money path through the adapter | **WON'T DO** — the premise is false. |
+| U03 listing channels issues no write | **DONE.** |
+| P03, P04, S02, U01, U02, V01, V02 | **Not started.** |
+
+### Three tickets did not survive contact with the code
+
+Recorded because in each case building what was written would have made the product worse.
+
+**T01 — closed.** Platform billing (StreamlineOS charging a tenant, platform env credentials) and tenant merchant payments (a tenant charging their own customers, per-org encrypted credentials) are two different concerns, not one seam being bypassed. Routing the first through the second's registry would mean inventing per-org credentials platform billing does not have. The deletion test passed — delete the interface and `BillingService` compiles — but it compiles because it is *a different feature*. The deletion test answers "is this a pass-through", not "are these the same thing".
+
+**R02 — blocked.** Its central criterion, "the derived set equals today's nine keys", is false: `coreModuleKeys`, `ladder: "universal"` and `!planGated` give three different answers and no two agree. Deriving from `ladder` would newly plan-gate workflows, blog and directory. `ladder` answers delegation; `planGated` answers money; a module can be delegable and free. Pinned instead, in `module-core-consistency.spec.ts`.
+
+**P02 — deviated.** Its stated base of `visibility = 'org'` would have spread a defect: the pre-existing project branch used it, which meant a member of any project could not see a public page at all. The base is `IN ('org','public')`.
+
+### The harness found a product bug, which is the point of it
+
+`bumpPermissionsVersion` inserted a fresh `access_versions` row taking the column default of `1`, and a reader with no row also sees `1`. Its `onConflictDoUpdate` increments only on conflict, so **the first bump for an organisation did not move the version** — and every version-keyed cache entry stayed reachable. `access.service.ts` does not scan Redis on purpose: "a bump makes every previous generation unreachable". That holds only while the version moves.
+
+Found by instrumenting every boundary rather than reasoning about it. The tell was that a sibling self-test granting the same key passed — it granted at build time, before anything had been cached.
+
+Production exposure is narrower than it sounds: signup seeds system roles and bumps during org setup, so the row usually exists first. All 8 development orgs sit at versions 4–65. The window is an org with no row whose permissions are resolved before its first access mutation.
+
+### Verified state — 2026-08-24
+
+- **Backend: 566 suites, ~4,833 tests, zero failures** across six sequential shards at `--maxWorkers=2`.
+- **Backend `tsc --noEmit` exit 0.** Note that `ts-jest` runs with diagnostics off, so a green suite does not mean it typechecks — one spec here passed jest and failed `tsc`.
+- **Seeded harness: 4/4**, against a real database as the application role.
+- **Web: `tsc --noEmit` exit 0, 79 suites / 453 tests.**
+- **Chat e2e: 4 suites / 40 tests**, run explicitly with `--runInBand` and a raised heap; the default parallel run gets its workers OS-killed.
+- **Nothing was verified through a booted application** other than the seeded harness's own HTTP requests.
+
+### Found while working, not ticketed
+
+- **`listMemberChannels` catches every error and returns `[]`**, so a database fault presents to the user as "you have no channels". It also made the first version of the U03 test pass while proving nothing.
+- **`chat` and `kb` are marked `planGated: true`** while the constitution calls them core. Unreachable today because `coreModuleKeys` short-circuits first.
+
 ## Premises corrected before ticketing
 
 Recorded because each would have produced a ticket that built the wrong thing.

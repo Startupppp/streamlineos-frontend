@@ -25,7 +25,7 @@ Every other stream in this set chose the controller as its seam. This is what ma
 
 **Blocked by:** nothing
 **Wave:** 1 — it blocks the testing criteria of P, Q, R, S, T and U
-**Status:** PARTIAL — the harness boots and 3 of its 4 self-tests pass. It was delivered unrun; running it is what found the rest.
+**Status:** DONE — all four self-tests pass. The fourth was failing on a real product bug, not a harness fault.
 
 > **Delivered unrun.** The implementing pass reported `tsc` exit 0 and stopped. Running it found three things `tsc` could not:
 > 1. **It OOMed.** Booting the real `AppModule` inside jest exhausts the default 4 GB heap. It needs `NODE_OPTIONS=--max-old-space-size=8192`, the same as this repo's `tsc`. Until that is in the script, the harness does not run at all.
@@ -34,7 +34,15 @@ Every other stream in this set chose the controller as its seam. This is what ma
 >
 > **Now passing (3):** cross-org resource returns **404 not 403**; a direct query with no tenant GUC is refused with `42501`; the app connection has `rolbypassrls = false`.
 >
-> **Still failing (1):** `permission absent → 403; permission granted → 200`. The grant is written (role → grants → assignment → `bumpPermissionsVersion`, which publishes on the in-process channel the app shares), and waiting past the 1s version-cache window does not help. The response is `{"code":"FORBIDDEN"}` from `PermissionGuard`, so the route is right and the key matches. **Unresolved**, and worth resolving carefully rather than quickly — the leading suspect is `safeAccessTableRead`, which swallows a failed read of the access tables and returns an empty grant list, which would present as exactly this. If that is what it is, it is a product finding and not a harness one.
+> **Resolved — and it was a product bug.** `safeAccessTableRead` was not the cause. The harness was right and the code was wrong.
+>
+> The evidence came from instrumenting every boundary rather than reasoning about it. The tell: the *other* self-test passes while granting the same key, and it grants at **build** time; the failing one granted **after** a request had already resolved permissions. Tracing the version across the grant showed it: `dbVersion=[]` and `svcVersion=1` before, then after the grant `dbVersion=[{"permissions_version":1}]` and `svcVersion=1` — **the bump did not move the version**.
+>
+> `bumpPermissionsVersion` inserted a fresh row with the column default of `1`, and a reader with no row also sees `1`. Its `onConflictDoUpdate` increments only on conflict, so the **first bump for an organisation was a no-op**. Every version-keyed cache entry stayed reachable, and the design deliberately does not scan Redis — `access.service.ts` says so in as many words: "A bump makes every previous generation unreachable, so scanning Redis to delete it is both redundant and expensive." That is only true if the version actually moves.
+>
+> Fixed in `access-invalidate.ts`: a first bump lands at `2`, above the no-row baseline. Pinned by three tests in `access-invalidate.spec.ts` covering first bump, later bumps and monotonicity.
+>
+> **Production exposure is narrower than it sounds, and worth stating honestly.** Signup seeds system roles, which bumps during org setup — so the row usually exists before anyone resolves permissions, and later bumps increment correctly. All 8 orgs in the development database have a row, at versions 4 to 65. The window is an organisation with **no** row whose permissions are resolved before its first-ever access mutation: fixtures, imports, direct creation, and this harness. The invariant the whole cache design rests on was still false, which is the reason to fix it.
 
 - [ ] `createE2eApp` is **not modified, deprecated or wrapped.** Its 119 consumers are not rewritten.
 - [ ] The seeded harness overrides nothing in the access path. `AccessService`, `EntitlementsService` and `MembershipStateService` are the real implementations.
