@@ -9,6 +9,7 @@ import React from "react";
 import { cn } from "@/lib/utils";
 import type { Message } from "./chat-types";
 import { ChatBubble } from "./chat-bubble";
+import { EntityActionsProvider } from "./entity-actions-context";
 
 interface GroupedMessages {
   date: string;
@@ -170,6 +171,7 @@ export function MessageList({
   isFetchingNextPage,
   fetchNextPage,
   currentUserId,
+  channelId,
   displayName,
   channelType,
   editingMessage,
@@ -201,6 +203,7 @@ export function MessageList({
   const handleFetchNextPage = useCallback(() => fetchNextPage(), [fetchNextPage]);
 
   return (
+    <EntityActionsProvider channelId={channelId} messages={messages}>
     <div className="flex-1 min-h-0 min-w-0 relative flex flex-col overflow-hidden">
       <ScrollArea
         hideScrollbar
@@ -360,5 +363,6 @@ export function MessageList({
         )}
       </AnimatePresence>
     </div>
+    </EntityActionsProvider>
   );
 }

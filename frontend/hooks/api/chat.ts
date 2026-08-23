@@ -860,6 +860,56 @@ export interface SubmitEntityActionInput {
   input?: Record<string, unknown>;
 }
 
+export type EntityActionInputKind = "text" | "date" | "user" | "choice";
+
+export interface EntityActionInputSpec {
+  name: string;
+  kind: EntityActionInputKind;
+  required: boolean;
+  choices?: string[];
+}
+
+export interface EntityAction {
+  id: string;
+  label: string;
+  inputs: EntityActionInputSpec[];
+}
+
+interface EntityActionsResponse {
+  references: { reference: EntityReferenceInput; actions: EntityAction[] }[];
+}
+
+export function entityReferenceKey(reference: EntityReferenceInput): string {
+  return `${reference.type}:${reference.id}`;
+}
+
+/**
+ * One batched ask per visible set of references — fetching per bubble would
+ * reintroduce the request-per-record problem the seam's batching exists to prevent.
+ */
+export function useEntityActions(
+  channelId: number,
+  references: EntityReferenceInput[],
+) {
+  const referenceKeys = references.map(entityReferenceKey).sort().join(",");
+  return useQuery({
+    queryKey: queryKeys.chat.entityActions(channelId, referenceKeys),
+    queryFn: () =>
+      apiClient.post<EntityActionsResponse>("/chat/entity-actions/available", {
+        channelId,
+        references,
+      }),
+    enabled: channelId > 0 && references.length > 0,
+    staleTime: 30_000,
+    select: (data) => {
+      const byReference = new Map<string, EntityAction[]>();
+      for (const entry of data.references)
+        byReference.set(entityReferenceKey(entry.reference), entry.actions);
+      return byReference;
+    },
+  });
+}
+
 /**
  * One route for every action on every referenced record. The action's identity
  * travels in the body, so adding one is an adapter change on the server rather

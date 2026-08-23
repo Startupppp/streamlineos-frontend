@@ -32,6 +32,7 @@ import {
 import type { Message, TicketEntityRef, CommentEntityRef, MessageMetadata } from "./chat-types";
 import { useCan } from "@/hooks/api/access";
 import { apiClient, isApiError } from "@/lib/api-client";
+import { useEntityAction } from "./entity-actions-context";
 import { ConvertToTaskDialog } from "./convert-to-task-dialog";
 import { AssignTicketDialog } from "./assign-ticket-dialog";
 import { SetDueDateDialog } from "./set-due-date-dialog";
@@ -126,7 +127,9 @@ function TicketPill({ entity, channelId }: { entity: TicketEntityRef; channelId:
     entity.card?.status ?? entity.status ?? "TODO",
   );
   const [isChangingStatus, setIsChangingStatus] = useState(false);
-  const canUpdate = useCan("build:tickets:update");
+  const canUpdate = Boolean(
+    useEntityAction({ type: "ticket", id: String(entity.id) }, "status"),
+  );
 
   const card = entity.card;
   const ticketKey =
@@ -347,8 +350,16 @@ export function ChatBubble({
   const [convertDialogOpen, setConvertDialogOpen] = useState(false);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [dueDateDialogOpen, setDueDateDialogOpen] = useState(false);
+  const bubbleMeta = message.metadata as MessageMetadata | null;
+  const ticketEntity = (bubbleMeta?.entities ?? []).find(
+    (e): e is TicketEntityRef => e.type === "ticket",
+  );
+  const ticketReference = {
+    type: "ticket",
+    id: ticketEntity ? String(ticketEntity.id) : "",
+  };
   const canConvertToTask = useCan("build:tickets:create");
-  const canAssignTicket = useCan("build:tickets:assign");
+  const canAssignTicket = Boolean(useEntityAction(ticketReference, "assign"));
   const senderName = resolveUserName
     ? resolveUserName(message.senderId, message.sender)
     : (message.sender?.name ?? "Unknown");
@@ -357,7 +368,7 @@ export function ChatBubble({
       ? resolveUserName(message.replyTo.sender?.id ?? "", message.replyTo.sender)
       : (message.replyTo.sender?.name ?? "Unknown")
     : null;
-  const canSetDueDate = useCan("build:tickets:update");
+  const canSetDueDate = Boolean(useEntityAction(ticketReference, "due-date"));
 
   const handleOpenConvertDialog = useCallback(() => setConvertDialogOpen(true), []);
   const handleOpenAssignDialog = useCallback(() => setAssignDialogOpen(true), []);
@@ -388,12 +399,11 @@ export function ChatBubble({
     else onPin();
   }, [isPinned, onPin, onUnpin]);
 
-  const meta = message.metadata as MessageMetadata | null;
-  const linkedTicket = (() => {
-    const entities = meta?.entities ?? [];
-    const t = entities.find((e): e is TicketEntityRef => e.type === "ticket");
-    return t !== undefined ? { ticketId: Number(t.id), projectId: t.projectId } : null;
-  })();
+  const meta = bubbleMeta;
+  const linkedTicket =
+    ticketEntity !== undefined
+      ? { ticketId: Number(ticketEntity.id), projectId: ticketEntity.projectId }
+      : null;
   const { label: forwardLabel, content: displayContent } = getForwardedDisplay(
     message.content,
     meta?.forwardCount,
