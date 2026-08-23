@@ -26,13 +26,63 @@ export type {
   ProductKey,
 } from "./sidebar-nav-types";
 export {
-  getProductFromPathname,
   isModuleEnabled,
   MODULE_ACCENTS,
   PRODUCT_DEFINITIONS,
   PRODUCT_DESCRIPTIONS,
 } from "./sidebar-products";
 export type { ModuleAccent, ProductDefinition } from "./sidebar-products";
+
+export interface ProductPathException {
+  prefix: string;
+  product: ProductKey;
+  reason: string;
+}
+
+/** Paths with no navigation entry to derive from. Longest prefix wins over these too. */
+export const PRODUCT_PATH_EXCEPTIONS: ProductPathException[] = [
+  { prefix: "/me", product: "home", reason: "Self-service index; only its children are navigable." },
+  { prefix: "/knowledge", product: "documents", reason: "Knowledge index; nav lists /knowledge/chat and /knowledge/wiki." },
+  { prefix: "/support/kb", product: "documents", reason: "Knowledge base served under the support prefix." },
+  { prefix: "/recruitment", product: "hrms", reason: "Hiring pipeline reached from the Recruitment group's children." },
+  { prefix: "/sales", product: "crm", reason: "CRM operational surface with no nav entry." },
+  { prefix: "/customer-executive", product: "crm", reason: "CRM operational surface with no nav entry." },
+  { prefix: "/billing/invoices", product: "finance", reason: "The org's own customer invoicing, not platform billing." },
+  { prefix: "/portal", product: "build", reason: "Client portal for delivery work." },
+  { prefix: "/portal/projects", product: "home", reason: "Portal surfaces a client sees outside a product." },
+  { prefix: "/portal/accept-invitation", product: "home", reason: "Portal surfaces a client sees outside a product." },
+];
+
+/** The root and any path the navigation does not own answer Home. */
+const PRODUCT_FALLBACK: ProductKey = "home";
+
+let productPrefixIndex: { prefix: string; product: ProductKey }[] | null = null;
+
+function getProductPrefixIndex(): { prefix: string; product: ProductKey }[] {
+  if (productPrefixIndex) return productPrefixIndex;
+  const fromNavigation = [...NAV_GROUPS, ...HOME_NAV_GROUPS].flatMap((group) =>
+    flattenNavRoutes(group.routes).map((route) => ({
+      prefix: route.href,
+      product: group.product,
+    })),
+  );
+  const fromExceptions = PRODUCT_PATH_EXCEPTIONS.map(({ prefix, product }) => ({
+    prefix,
+    product,
+  }));
+  productPrefixIndex = [...fromNavigation, ...fromExceptions].sort(
+    (a, b) => b.prefix.length - a.prefix.length,
+  );
+  return productPrefixIndex;
+}
+
+export function getProductFromPathname(pathname: string): ProductKey {
+  for (const entry of getProductPrefixIndex()) {
+    if (pathname === entry.prefix || pathname.startsWith(`${entry.prefix}/`))
+      return entry.product;
+  }
+  return PRODUCT_FALLBACK;
+}
 
 export function isNavRouteActive(
   route: NavRoute,
