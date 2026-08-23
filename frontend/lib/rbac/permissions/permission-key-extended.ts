@@ -139,8 +139,6 @@ export type ExtendedPermissionKey =
   | "payroll:access:manage"
   | "sign:access:view"
   | "sign:access:manage"
-  | "home:access:view"
-  | "home:access:manage"
   | "workflows:access:view"
   | "workflows:access:manage"
   | "blog:access:view"
