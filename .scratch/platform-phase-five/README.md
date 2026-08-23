@@ -10,6 +10,7 @@ Source: the 2026-08-23 architecture review, scoped to org- and module-level RBAC
 
 | Stream | PRD | Tickets | What it delivers |
 |---|---|---|---|
+| **O — Seeded harness** | `2026-08-23-seeded-e2e-harness-prd.md` | O01 | A controller harness that can actually fail. **Blocks the testing criteria of every other stream.** |
 | **P — KB retrieval seam** | `2026-08-23-kb-retrieval-seam-prd.md` | P01, P02, P03, P04 | One visibility predicate, crossed by every read of a page. |
 | **Q — Access snapshot** | `2026-08-23-access-snapshot-seam-prd.md` | Q01 | One representation of what a person may do. |
 | **R — Module availability** | `2026-08-23-module-availability-seam-prd.md` | R01, R02 | One answer to "is this module available", with the reason. |
@@ -32,10 +33,10 @@ Source: the 2026-08-23 architecture review, scoped to org- and module-level RBAC
 
 ### Waves
 
-**Wave 1 — eight tickets, fully parallel, zero shared files.**
+**Wave 1 — nine tickets, fully parallel, zero shared files.**
 
 ```
-P02   Q01   R01   S01   T01   U01   U03   V01
+O01   P02   Q01   R01   S01   T01   U01   U03   V01
 ```
 
 **Wave 2 — five tickets, parallel, each unblocked by wave 1.**
@@ -56,6 +57,7 @@ P04 relocates the whole `modules/kb/` tree. Every other P ticket edits files it 
 
 | File | Owned by | Wave |
 |---|---|---|
+| `test/helpers/**`, `jest-e2e-seeded.json`, the new CI job | O01 | 1 |
 | `modules/kb/kb-page-visibility.ts` + 9 page files | P02 | 1 |
 | `modules/kb/kb-indexing.service.ts`, `db/schema/kb/**` | P03 | 2 |
 | `modules/access/access.types.ts`, `access-snapshot.resolver.ts` | Q01 | 1 |
@@ -72,6 +74,19 @@ P04 relocates the whole `modules/kb/` tree. Every other P ticket edits files it 
 | `frontend/lib/query-keys*`, one route + feature | V02 | 2 |
 
 **Two near-misses worth knowing.** R01 owns `authorize.ts`, which imports from `access.types.ts` — Q01's file. Q01 changes `AccessSnapshot` only and leaves `AuthResult` alone, so they do not collide; if either finds it must touch the other's file, stop. And Q01 owns `frontend/hooks/api/access.ts` while V01 owns `frontend/lib/rbac/get-server-access.ts` — different files, both about access.
+
+### The test seam — decided, and it applies to every ticket
+
+**The primary seam is the controller, against seeded data.** This overrides any looser wording in an individual ticket.
+
+**It also depends on O01, because the harness these specs need does not exist yet.** `createE2eApp` overrides `EntitlementsService` and `AccessService` with fixtures and connects to no database, so all 119 existing controller e2e specs prove guard-tier behaviour only: that a route is decorated and refuses a caller without the key. They structurally cannot fail on a module-availability bug, a permission-resolution bug, or any row-level visibility bug — the code that decides those is replaced before the request starts.
+
+So, per ticket:
+
+- A claim about **routing or gating** may use the existing harness. That is what it is for.
+- A claim about **what a person actually receives** needs O01's seeded harness.
+- Until O01 lands, a ticket **states plainly which of its criteria are proven and which are not.** Do not tick a "verified by running the app" criterion on the strength of a stubbed harness — this repository's record already shows typecheck, build and 165 mocked tests passing while nothing worked.
+- Service-level tests are still wanted where they pin a **drift property** — for example that two code paths build the same predicate. They run in the default suite and catch the specific regression. Say which claim each test carries.
 
 ### Verification each ticket owes
 

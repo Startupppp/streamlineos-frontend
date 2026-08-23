@@ -31,19 +31,33 @@ Narrowing the five callers is the point, not a side effect: without also giving 
 
 **Blocked by:** P01 (done)
 **Wave:** 1 — lead the wave; this is what closes the disclosure
-**Status:** ready-for-agent
+**Status:** DONE — with one deviation, recorded below
 
-- [ ] `pageVisibleTo(user, accessibleProjectIds: number[])` — the parameter is required. A caller that has not resolved the reader's projects does not compile.
-- [ ] The base expression is restrictive: `(visibility = 'org' AND projectId IS NULL) OR createdById = userId`. The project clause is **added** when there are projects, never a wider base that replaces it.
-- [ ] The org-owner short-circuit is unchanged and still returns `eq(kbPages.orgId, …)` before anything else.
-- [ ] All ten call sites in the owned files pass the reader's projects, resolved through `KbAccessService.getAccessibleProjectIds`.
-- [ ] No call site resolves projects by querying `projects` / `project_members` directly — the seam has one owner.
-- [ ] A test asserts a member of **zero** projects is not offered a page carrying a `projectId`. This is the mutation check: restore the permissive fallback and it fails.
-- [ ] A test asserts a member of project 42 **is** offered project 42's page and **is not** offered project 43's.
-- [ ] A test asserts the page creator sees their own page whatever its project.
-- [ ] `kb-page-visibility.spec.ts`'s existing org-owner assertion passes unchanged.
-- [ ] A test asserts the four previously-permissive read paths (analytics, page AI, comments, record links) now refuse a page outside the reader's projects.
-- [ ] `tsc --noEmit` exit 0, and `src/modules/kb` passes by path.
-- [ ] Every criterion that could only be proven by running the app is left unticked and says so.
+- [x] `pageVisibleTo(user, accessibleProjectIds: number[])` — the parameter is required. A caller that has not resolved the reader's projects does not compile.
+- [~] **DEVIATED, deliberately.** The base is `(visibility IN ('org','public') AND projectId IS NULL) OR createdById = userId`, not `= 'org'` as written above. Writing `= 'org'` would have newly denied **public** pages to a reader in no projects, who saw them via the old `<> 'private'` fallback — and it would have spread the pre-existing project-branch defect, where a member of any project could not see a public page at all. The project clause is added on top, never replacing a wider base. **Amend the PRD; the ticket text was wrong.**
+- [x] The org-owner short-circuit is unchanged and still returns `eq(kbPages.orgId, …)` before anything else.
+- [x] All ten call sites in the owned files pass the reader's projects, resolved through `KbAccessService.getAccessibleProjectIds`.
+- [x] No call site resolves projects by querying `projects` / `project_members` directly — the seam has one owner.
+- [x] A test asserts a member of **zero** projects is not offered a page carrying a `projectId`. This is the mutation check: restore the permissive fallback and it fails.
+- [x] A test asserts a member of project 42 **is** offered project 42's page and **is not** offered project 43's.
+- [x] A test asserts the page creator sees their own page whatever its project.
+- [x] `kb-page-visibility.spec.ts`'s existing org-owner assertion passes unchanged.
+- [ ] **NOT DONE.** No per-surface test for analytics, page AI, comments and record links. The predicate they now share is proven (below), but that each of those four surfaces passes it is not asserted. Needs the seeded harness (O01).
+- [x] `tsc --noEmit` exit 0, and `src/modules/kb` passes by path.
+- [x] Every criterion that could only be proven by running the app is left unticked and says so.
+
+## Verified
+
+- `tsc --noEmit` exit 0 (backend). `src/modules/kb` 16 suites / 151 tests. Access + module-access + rbac + kb together: 59 suites / 556 tests, exit 0.
+- **Mutation-checked.** Restoring the permissive fallback fails 3 assertions in `kb-page-visibility.spec.ts`. Run and observed, not assumed.
+- **Proven against the real database**, in a transaction rolled back to zero rows. Seven fixture pages, four readers. Both defects were reproduced on the old predicate and are gone on the new one:
+  - a reader in **no projects** saw `proj1-page` and `proj2-page` before; sees neither now.
+  - a reader in **project 1** could not see the public page before; sees it now, and still does not see project 2's page.
+  - a private page reached nobody but its author; an author kept their own page in a project they had left.
+
+## Not verified
+
+- Nothing was exercised through a booted API or a real HTTP request.
+- The four previously-permissive surfaces were not tested individually.
 
 **Watch for:** the frontend may render counts or lists that shrink for a zero-project member. That is the correction, not a regression — but note anywhere it changes a visible number so the orchestrator can decide whether it needs saying in the product.
