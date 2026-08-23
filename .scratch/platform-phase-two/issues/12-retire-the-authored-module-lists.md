@@ -7,6 +7,8 @@ Ticket 02 made the lists derived while keeping every existing name and value, so
 **Blocked by:** 02 — One registry declares what a module is. 06 — Resolve the `home` ghost. 07 — Case translation into the registry.
 
 **Status:** ready-for-agent
+> **Status re-verified 2026-08-23: DONE.** The authored arrays are gone; `MODULE_CATALOG = planGatedModuleIds()`, `ACCESS_MANAGED_MODULES = delegableModuleIds()`.
+
 
 - [ ] Call sites read the registry or a derived view. No module fact is authored in two places.
 - [ ] The previously authored arrays are deleted, not deprecated.

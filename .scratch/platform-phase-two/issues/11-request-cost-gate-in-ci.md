@@ -11,6 +11,8 @@ It is also manual. It needs a running API and a seeded database, and nothing run
 **Blocked by:** 05 — Access version channel. (So that the ceilings pinned are the post-change numbers rather than numbers that will move immediately.)
 
 **Status:** ready-for-agent
+> **Status re-verified 2026-08-23: DONE.** `.github/workflows/backend.yml` has a `txn-ceiling` job that seeds a non-owner probe, boots the API and runs `db:check-request-txn`.
+
 
 - [ ] CI boots the API against a seeded database and runs the gate.
 - [ ] A ceiling breach fails the build, naming the endpoint and the measured number.

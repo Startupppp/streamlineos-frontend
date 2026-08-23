@@ -9,6 +9,8 @@ That means suspending someone, removing them from an organization, or changing w
 **Blocked by:** 05 — Access version channel.
 
 **Status:** ready-for-agent
+> **Status re-verified 2026-08-23: DONE.** Membership access state joined the access version keying (`496d0404`).
+
 
 - [ ] Membership access state is keyed by the access version, or is cleared by the same bump.
 - [ ] Suspending or removing a member is honoured within the same stated window as a permission change, on every instance.

@@ -9,6 +9,8 @@ This ticket delivers one action — changing a ticket's status — through a dis
 **Blocked by:** None — can start immediately.
 
 **Status:** ready-for-agent
+> **Status re-verified 2026-08-23: DONE.** `chat/chat-entity-actions.controller.ts` exposes `@Post("available")` taking a list of references and `@Post("submit")`, both carrying no module permission key.
+
 
 - [ ] A discovery route returns, per reference, the actions available to the calling actor with their labels and declared inputs. This is the seam's first production caller for that method.
 - [ ] The discovery route accepts a **list** of references and answers in one round trip. Fetching per message would reintroduce the request-per-record problem the seam's batching exists to prevent.

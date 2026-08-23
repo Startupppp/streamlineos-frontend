@@ -11,6 +11,8 @@ This ticket makes the version a counter shared through the cache. Reading it bec
 **Blocked by:** 01 — Pin what an authorization resolution costs.
 
 **Status:** ready-for-agent
+> **Status re-verified 2026-08-23: DONE.** `common/rbac/access-version-channel.ts` shipped; in-process TTL cut to a backstop.
+
 
 - [ ] One module owns publishing and subscribing to access version changes for an organization. Nothing outside it knows how the change travels.
 - [ ] The version is read from a shared counter in the cache, falling back to the durable database row on a miss and repopulating from it.

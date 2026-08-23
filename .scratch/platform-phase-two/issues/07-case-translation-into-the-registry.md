@@ -9,6 +9,8 @@ A translation applied at whichever boundary happened to break is a translation w
 **Blocked by:** 02 — One registry declares what a module is.
 
 **Status:** ready-for-agent
+> **Status re-verified 2026-08-23: DONE.** `storedModuleKey` / `moduleIdFromStored` are the one translation pair; `module.guard.ts` no longer lowercases inline.
+
 
 - [ ] One function owns the translation between the stored projection form and the registry identifier, and it round-trips.
 - [ ] The module guard no longer lowercases inline.

@@ -9,6 +9,8 @@ So today the platform's answer to "who administers a chat permission" is a modul
 **Blocked by:** 02 — One registry declares what a module is.
 
 **Status:** ready-for-agent
+> **Status re-verified 2026-08-23: DONE.** `home` is a registry entry with `ladder: "universal"` administering chat, mail, calendar and notifications; `administering-module-exists.spec.ts` asserts every key's module exists.
+
 
 - [ ] One of the two outcomes is chosen and the choice is recorded with its reason:
   - `home` becomes a registry entry with a **universal** ladder, administering the chat, mail, calendar and notification namespaces — the catalog's module column then names a module that exists, and the grouping decision that was deliberately made is preserved; **or**

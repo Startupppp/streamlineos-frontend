@@ -9,6 +9,8 @@ By this point every action runs through the generic path (ticket 09), so these f
 **Blocked by:** 09 — Migrate the remaining three actions.
 
 **Status:** ready-for-agent
+> **Status re-verified 2026-08-23: **NOT DONE — PARTIAL**.** The three Build-keyed routes are deleted from `chat-actions.controller.ts` (only the chat-keyed `create-task-from-message` remains). But the ticket's own point is unmet: no spec asserts a caller lacking a Build permission is **not** refused for a non-Build reference, the deleted routes' guard-tier specs were not confirmed moved to the generic route, and the frontend still gates on Build keys (see ticket 09).
+
 
 - [ ] The four endpoints are deleted, not deprecated. A moved surface deletes its old route rather than leaving a redirect.
 - [ ] Their guard-tier specs **move to the generic route** rather than being deleted alongside them. These specs were named as the behaviour-preservation control for this whole seam, and losing them loses the control.

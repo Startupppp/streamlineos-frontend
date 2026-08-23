@@ -9,6 +9,8 @@ This is the expand step. The lists keep their current values and become derived 
 **Blocked by:** None — can start immediately.
 
 **Status:** ready-for-agent
+> **Status re-verified 2026-08-23: DONE.** `common/rbac/module-registry.ts` carries the three-valued ladder; MODULE_CATALOG, ACCESS_MANAGED_MODULES and the id types are derived from it.
+
 
 - [ ] A registry entry exists for every module the platform ships, carrying at least: stable identifier, display name, whether a plan gates it, its ladder policy, and any permission namespaces it administers beyond its own.
 - [ ] Ladder policy is **three-valued** — delegable, universal, platform-admin — not a boolean. "No ladder" today conflates *universal* (every active member has it; there is no membership to appoint) with *organization administration* (governed by settings permissions, never delegated to a module owner). A boolean cannot express that, which is part of why the distinction was never written down. This shape came from the architecture review and encodes the decision:
