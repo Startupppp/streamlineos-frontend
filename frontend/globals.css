@@ -1370,3 +1370,166 @@ button.goal-everything-chip[aria-checked="true"]::before {
 .plate-editor .hljs-regexp {
   color: #ef4444;
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   DESIGN TOKEN LAYER — expand phase (ticket 02)
+   Additive only. Every name below is new, so nothing above changes meaning.
+   Existing modules keep their literals until they are migrated in ticket 17.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Semantic status ───
+   Status colour is currently written as literals (bg-emerald-50 text-emerald-700
+   …) in roughly 360 files, which is why it drifts: each site picks its own shade
+   and half forget the dark pairing. These name the ROLE instead of the hue.
+
+   Defined against Tailwind's own palette variables rather than copied hexes, so
+   a token can never fall out of step with the utility it replaces. The hex
+   fallbacks only apply if the palette variable is absent. */
+:root {
+  --status-success-surface: var(--color-emerald-50, #ecfdf5);
+  --status-success-ink: var(--color-emerald-600, #059669);
+  --status-success-ink-strong: var(--color-emerald-700, #047857);
+  --status-success-rule: var(--color-emerald-200, #a7f3d0);
+
+  --status-warning-surface: var(--color-amber-50, #fffbeb);
+  --status-warning-ink: var(--color-amber-600, #d97706);
+  --status-warning-ink-strong: var(--color-amber-700, #b45309);
+  --status-warning-rule: var(--color-amber-200, #fde68a);
+
+  --status-danger-surface: var(--color-red-50, #fef2f2);
+  --status-danger-ink: var(--color-red-600, #dc2626);
+  --status-danger-ink-strong: var(--color-red-700, #b91c1c);
+  --status-danger-rule: var(--color-red-200, #fecaca);
+
+  --status-info-surface: var(--color-blue-50, #eff6ff);
+  --status-info-ink: var(--color-blue-600, #2563eb);
+  --status-info-ink-strong: var(--color-blue-700, #1d4ed8);
+  --status-info-rule: var(--color-blue-200, #bfdbfe);
+
+  --status-neutral-surface: var(--color-slate-50, #f8fafc);
+  --status-neutral-ink: var(--color-slate-500, #64748b);
+  --status-neutral-ink-strong: var(--color-slate-700, #334155);
+  --status-neutral-rule: var(--color-slate-200, #e2e8f0);
+}
+
+/* Dark pairings. A tint at 50 is invisible on a dark canvas, so surfaces become a
+   10% wash of the 500 and ink lifts to 400 — the pattern the codebase already
+   applies by hand, made automatic. */
+.dark {
+  --status-success-surface: color-mix(in oklab, var(--color-emerald-500, #10b981) 10%, transparent);
+  --status-success-ink: var(--color-emerald-400, #34d399);
+  --status-success-ink-strong: var(--color-emerald-300, #6ee7b7);
+  --status-success-rule: color-mix(in oklab, var(--color-emerald-500, #10b981) 30%, transparent);
+
+  --status-warning-surface: color-mix(in oklab, var(--color-amber-500, #f59e0b) 10%, transparent);
+  --status-warning-ink: var(--color-amber-400, #fbbf24);
+  --status-warning-ink-strong: var(--color-amber-300, #fcd34d);
+  --status-warning-rule: color-mix(in oklab, var(--color-amber-500, #f59e0b) 30%, transparent);
+
+  --status-danger-surface: color-mix(in oklab, var(--color-red-500, #ef4444) 10%, transparent);
+  --status-danger-ink: var(--color-red-400, #f87171);
+  --status-danger-ink-strong: var(--color-red-300, #fca5a5);
+  --status-danger-rule: color-mix(in oklab, var(--color-red-500, #ef4444) 30%, transparent);
+
+  --status-info-surface: color-mix(in oklab, var(--color-blue-500, #3b82f6) 10%, transparent);
+  --status-info-ink: var(--color-blue-400, #60a5fa);
+  --status-info-ink-strong: var(--color-blue-300, #93c5fd);
+  --status-info-rule: color-mix(in oklab, var(--color-blue-500, #3b82f6) 30%, transparent);
+
+  --status-neutral-surface: color-mix(in oklab, var(--color-slate-500, #64748b) 10%, transparent);
+  --status-neutral-ink: var(--color-slate-400, #94a3b8);
+  --status-neutral-ink-strong: var(--color-slate-300, #cbd5e1);
+  --status-neutral-rule: color-mix(in oklab, var(--color-slate-500, #64748b) 30%, transparent);
+}
+
+/* ─── Density ───
+   Comfortable is the default; compact restores today's tighter chrome. Set
+   data-density="compact" on <html> to switch.
+
+   Nothing consumes these yet. They ship now so the metadata renderer has one
+   place to read from, instead of a second density convention being invented
+   alongside this one. */
+:root {
+  --density-control-h: 2.5rem;
+  --density-row-h: 3rem;
+  --density-card-pad: 1.25rem;
+  --density-stack-gap: 1rem;
+}
+
+:root[data-density="compact"] {
+  --density-control-h: 2.25rem;
+  --density-row-h: 2.5rem;
+  --density-card-pad: 1rem;
+  --density-stack-gap: 0.75rem;
+}
+
+/* ─── Elevation ───
+   shadow-noir already exists as a hand-written class. These name the two
+   elevations the system actually uses so a component asks for a role. */
+:root {
+  --elevation-panel: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --elevation-card: 0 1px 2px 0 rgb(11 18 32 / 0.04), 0 2px 8px -2px rgb(11 18 32 / 0.06);
+  --elevation-raised: 0 4px 12px -2px rgb(11 18 32 / 0.1);
+}
+
+.dark {
+  --elevation-panel: 0 1px 2px 0 rgb(0 0 0 / 0.4);
+  --elevation-card: inset 0 1px 0 0 rgb(255 255 255 / 0.04), 0 2px 8px -2px rgb(0 0 0 / 0.5);
+  --elevation-raised: inset 0 1px 0 0 rgb(255 255 255 / 0.06), 0 8px 24px -6px rgb(0 0 0 / 0.6);
+}
+
+/* ─── Utility exposure ───
+   `inline` matters: it makes each utility emit var(--token) rather than the
+   value resolved at build time, so density and theme switches take effect
+   without a rebuild. */
+@theme inline {
+  --color-status-success-surface: var(--status-success-surface);
+  --color-status-success-ink: var(--status-success-ink);
+  --color-status-success-ink-strong: var(--status-success-ink-strong);
+  --color-status-success-rule: var(--status-success-rule);
+
+  --color-status-warning-surface: var(--status-warning-surface);
+  --color-status-warning-ink: var(--status-warning-ink);
+  --color-status-warning-ink-strong: var(--status-warning-ink-strong);
+  --color-status-warning-rule: var(--status-warning-rule);
+
+  --color-status-danger-surface: var(--status-danger-surface);
+  --color-status-danger-ink: var(--status-danger-ink);
+  --color-status-danger-ink-strong: var(--status-danger-ink-strong);
+  --color-status-danger-rule: var(--status-danger-rule);
+
+  --color-status-info-surface: var(--status-info-surface);
+  --color-status-info-ink: var(--status-info-ink);
+  --color-status-info-ink-strong: var(--status-info-ink-strong);
+  --color-status-info-rule: var(--status-info-rule);
+
+  --color-status-neutral-surface: var(--status-neutral-surface);
+  --color-status-neutral-ink: var(--status-neutral-ink);
+  --color-status-neutral-ink-strong: var(--status-neutral-ink-strong);
+  --color-status-neutral-rule: var(--status-neutral-rule);
+
+  /* Type scale — names the 10/11/13px sizes the codebase writes as arbitrary
+     values, so text-[11px] becomes text-dense. Body stays on Tailwind's text-sm. */
+  --text-micro: 0.625rem;
+  --text-dense: 0.6875rem;
+  --text-label: 0.8125rem;
+
+  /* Semantic spacing — the rhythm CLAUDE.md §7 describes in prose. */
+  --spacing-gap-inline: 0.25rem;
+  --spacing-gap-field: 0.5rem;
+  --spacing-gap-toolbar: 0.75rem;
+  --spacing-gap-grid: 1rem;
+  --spacing-gap-section: 1.5rem;
+  --spacing-card: 1rem;
+  --spacing-card-compact: 0.75rem;
+
+  /* Density — dynamic, follows data-density. */
+  --spacing-control-h: var(--density-control-h);
+  --spacing-row-h: var(--density-row-h);
+  --spacing-card-pad: var(--density-card-pad);
+  --spacing-stack-gap: var(--density-stack-gap);
+
+  --shadow-panel: var(--elevation-panel);
+  --shadow-card: var(--elevation-card);
+  --shadow-raised: var(--elevation-raised);
+}

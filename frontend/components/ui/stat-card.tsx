@@ -17,6 +17,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { statusToneClasses } from "@/lib/design-tokens";
 
 function countGridChildren(node: ReactNode): number {
   let count = 0;
@@ -42,23 +43,18 @@ export type StatTone =
 
 export type StatColor = StatTone | "cyan" | "green" | "gold" | "purple";
 
+const success = statusToneClasses("success");
+const warning = statusToneClasses("warning");
+const danger = statusToneClasses("danger");
+
 const TONE_MAP: Record<StatTone, { bg: string; text: string }> = {
   default: { bg: "bg-muted", text: "text-muted-foreground" },
   accent: { bg: "bg-primary/10", text: "text-primary" },
   blue: { bg: "bg-primary/10", text: "text-primary" },
   violet: { bg: "bg-primary/10", text: "text-primary" },
-  emerald: {
-    bg: "bg-emerald-50 dark:bg-emerald-500/10",
-    text: "text-emerald-600 dark:text-emerald-400",
-  },
-  amber: {
-    bg: "bg-amber-50 dark:bg-amber-500/10",
-    text: "text-amber-600 dark:text-amber-400",
-  },
-  red: {
-    bg: "bg-red-50 dark:bg-red-500/10",
-    text: "text-red-600 dark:text-red-400",
-  },
+  emerald: { bg: success.surface, text: success.ink },
+  amber: { bg: warning.surface, text: warning.ink },
+  red: { bg: danger.surface, text: danger.ink },
 };
 
 const COLOR_TONE: Partial<Record<StatColor, StatTone>> = {
@@ -280,7 +276,7 @@ export const StatCard = memo(function StatCard({
         <TruncatedTooltipText
           text={label}
           className={cn(
-            "text-[11px] font-medium leading-tight truncate",
+            "text-dense font-medium leading-tight truncate",
             featured ? "text-primary-foreground/70" : "text-muted-foreground",
           )}
         />
@@ -301,10 +297,8 @@ export const StatCard = memo(function StatCard({
         {!isLoading && effectiveDelta && (
           <p
             className={cn(
-              "text-[11px] font-medium",
-              effectiveDelta.direction === "up"
-                ? "text-emerald-600 dark:text-emerald-400"
-                : "text-red-600 dark:text-red-400",
+              "text-dense font-medium",
+              effectiveDelta.direction === "up" ? success.ink : danger.ink,
             )}
           >
             {effectiveDelta.direction === "up" ? "↑" : "↓"}{" "}
@@ -315,7 +309,7 @@ export const StatCard = memo(function StatCard({
           <TruncatedTooltipText
             text={effectiveHint}
             className={cn(
-              "text-[11px] leading-snug truncate",
+              "text-dense leading-snug truncate",
               featured ? "text-primary-foreground/70" : "text-muted-foreground",
             )}
           />
