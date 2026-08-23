@@ -4,7 +4,7 @@
 
 **Blocked by:** a production row count for the partitioning question.
 
-**Status:** needs-measurement
+**Status:** CLOSED — measured; partitioning refused on the number, serial keys converted.
 
 ## Not defects — closing these
 
@@ -18,5 +18,7 @@
 
 ## Needs a number before it is a decision
 
-- [ ] **`chat_messages` is unpartitioned.** Backend §3 is explicit: *do not partition a table that is not demonstrably large, and record the triggering row count in the migration.* I cannot query production, so I cannot supply that number, and partitioning on a guess is exactly what the rule forbids. Get `count(*)` and the growth rate first. Note the ordering trap §3 also names: the partition key must be in every PK and UNIQUE, so the primary key becomes `(id, created_at)` and bare `id` stops being globally unique — that decision comes *before* partitioning, not after.
-- [ ] **Twelve chat tables use `serial` primary keys** against the `generatedAlwaysAsIdentity` rule. This is a real inconsistency and a wide, mechanical migration. It is worth doing as its own expand–contract stream, and worth doing *before* partitioning, since partitioning rewrites the primary keys anyway.
+- [x] **`chat_messages` is unpartitioned, and stays that way. Measured: 2 rows, 136 kB.** §3 says do not partition a table that is not demonstrably large, so this is refused on the number rather than deferred. Revisit on a real row count.
+- [x] ~~**`chat_messages` is unpartitioned.**~~ Backend §3 is explicit: *do not partition a table that is not demonstrably large, and record the triggering row count in the migration.* I cannot query production, so I cannot supply that number, and partitioning on a guess is exactly what the rule forbids. Get `count(*)` and the growth rate first. Note the ordering trap §3 also names: the partition key must be in every PK and UNIQUE, so the primary key becomes `(id, created_at)` and bare `id` stops being globally unique — that decision comes *before* partitioning, not after.
+- [x] **DONE — twelve chat tables converted to `generatedAlwaysAsIdentity` (migration `0460`, applied).** Done *now* precisely because they hold 20 rows between them, which makes the rewrite free; after real traffic it would not be. Each sequence restarts above its table's max, verified so no insert can collide. Originally:
+- [x] ~~**Twelve chat tables use `serial` primary keys**~~ against the `generatedAlwaysAsIdentity` rule. This is a real inconsistency and a wide, mechanical migration. It is worth doing as its own expand–contract stream, and worth doing *before* partitioning, since partitioning rewrites the primary keys anyway.

@@ -13,10 +13,16 @@ Five tickets from the "carried forward" section of phase three, each re-measured
 - **The Ably capability cap is not silent.** It logs the truncation with org, user, total and granted. A bounded capability list is deliberate.
 - **The push fan-out is not a dangerous N+1.** Sends are concurrent (`Promise.allSettled`) and awaited inside the send path rather than fired after commit, so it never runs on a dead tenant context.
 
-## Put up as decisions rather than taken
+## Decided on measurement, once the database was reachable
 
-- **04 — team scope's fast path is unreachable.** Of **56** `applyScope` call sites, **zero** supply a `teamColumn`, so the branch is guarded by a condition no caller can make true and every team-scoped list takes the correlated subquery. A test pins this. The three ways out include removing a capability the roles screen currently offers — a product decision, not a cleanup.
-- **05 — partitioning `chat_messages` and the twelve `serial` primary keys.** §3 requires a demonstrated row count before partitioning and says to record it in the migration; source cannot supply that number. The `serial` → identity migration should come first, since partitioning rewrites primary keys anyway.
+- **04 — team scope: accepted, not changed.** Measured: **0** role grants and **0** user grants use `scope='team'` (distribution is `all=8291, own=6`), and `org_unit_members` holds **0 rows**. That last number decides it — with no unit memberships the subquery returns nothing, so team scope is behaviourally identical to `own` today. Removing the offer would need deletion semantics added to a sync service that currently only inserts (`onConflictDoNothing`), which is a bigger and riskier change than an unused, non-functional option warrants. The pin test stays; revisit when org units are populated.
+- **05 — partitioning refused on the number; serial keys converted.** `chat_messages` holds **2 rows / 136 kB**. §3 says do not partition a table that is not demonstrably large, so this is refused on evidence rather than deferred. The twelve `serial` primary keys **were** converted (migration `0460`), precisely because those tables hold 20 rows between them — the rewrite is free now and would not be later.
+
+## Migrations applied — 2026-08-23
+
+`0455`–`0460` are applied. The catalog was probed first: none of the objects they create existed, so nothing was re-run — `0455` and `0458` create an index and policies **without** `IF NOT EXISTS` and would have failed partway had they already been there.
+
+Verified after applying: the invite-token backfill produces a hash that **matches what the application computes**, so links already in circulation still resolve; and all twelve identity sequences sit above their table's maximum, so no insert can collide.
 
 ## Verified state — 2026-08-23
 
