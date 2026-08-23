@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { ShieldCheckIcon } from "@animateicons/react/lucide";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { RoleAssignmentsSheet } from "@/components/rbac/role-assignments-sheet";
-import { useRoles, useCloneRoleTemplate } from "@/hooks/api/roles";
+import { useRoles, useMaterializeRoleTemplate } from "@/hooks/api/roles";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { Role } from "@/types/organization";
@@ -51,7 +51,7 @@ export function PmAccessButton() {
   const [pendingRole, setPendingRole] = useState<Role | null>(null);
 
   const rolesQuery = useRoles();
-  const cloneTemplate = useCloneRoleTemplate();
+  const materializeTemplate = useMaterializeRoleTemplate();
 
   const existingRole =
     rolesQuery.data != null ? resolvePmRole(rolesQuery.data) : undefined;
@@ -63,8 +63,8 @@ export function PmAccessButton() {
       return;
     }
 
-    cloneTemplate.mutate(
-      { templateId: PM_TEMPLATE_ID, name: PM_ROLE_NAME, slug: PM_ROLE_SLUG },
+    materializeTemplate.mutate(
+      { templateId: PM_TEMPLATE_ID },
       {
         onSuccess: (createdRole) => {
           setPendingRole(createdRole);
@@ -75,14 +75,14 @@ export function PmAccessButton() {
         },
       },
     );
-  }, [existingRole, cloneTemplate]);
+  }, [existingRole, materializeTemplate]);
 
   const handleSheetOpenChange = useCallback((open: boolean) => {
     setSheetOpen(open);
     if (!open) setPendingRole(null);
   }, []);
 
-  const isPending = cloneTemplate.isPending || rolesQuery.isLoading;
+  const isPending = materializeTemplate.isPending || rolesQuery.isLoading;
 
   return (
     <>

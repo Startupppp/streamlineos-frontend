@@ -95,20 +95,6 @@ export const useRole = (
   });
 };
 
-export const useCreateRole = () => {
-  const queryClient = useQueryClient();
-  return useMutation<
-    Role,
-    Error,
-    { name: string; slug: string; permissions?: string[] }
-  >({
-    mutationKey: ["roles", "create"],
-    mutationFn: (data) => apiClient.post<Role>("/roles", data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.roles.all });
-    },
-  });
-};
 
 export const useDeleteRole = () => {
   const queryClient = useQueryClient();
@@ -137,6 +123,15 @@ export const useUpdateRole = (roleId: number) => {
   });
 };
 
+export function useMaterializeRoleTemplate() {
+  const queryClient = useQueryClient();
+  return useMutation<Role, Error, { templateId: string }>({
+    mutationKey: ["roles", "materialize-template"],
+    mutationFn: (data) => apiClient.post<Role>("/roles/templates", data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.roles.all }),
+  });
+}
+
 export interface RoleTemplate {
   id: string;
   name: string;
@@ -144,13 +139,6 @@ export interface RoleTemplate {
   permissions: readonly string[];
 }
 
-export function useRoleTemplates() {
-  return useQuery<RoleTemplate[], Error>({
-    queryKey: [...queryKeys.roles.all, "templates"] as const,
-    queryFn: () => apiClient.get<RoleTemplate[]>("/roles/templates"),
-    staleTime: 10 * 60_000,
-  });
-}
 
 export function useSeedDefaultRoles() {
   const queryClient = useQueryClient();
@@ -164,14 +152,6 @@ export function useSeedDefaultRoles() {
   });
 }
 
-export function useCloneRoleTemplate() {
-  const queryClient = useQueryClient();
-  return useMutation<Role, Error, { templateId: string; name?: string; slug?: string }>({
-    mutationKey: ["roles", "clone-template"],
-    mutationFn: (data) => apiClient.post<Role>("/roles/templates", data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.roles.all }),
-  });
-}
 
 export const useRolePermissionGrants = (
   roleId: number,

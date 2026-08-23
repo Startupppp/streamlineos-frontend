@@ -11,7 +11,7 @@ import {
   TrendingUp,
   FlaskConical,
 } from "lucide-react";
-import { PlusIcon, CopyIcon, EllipsisIcon } from "@animateicons/react/lucide";
+import { EllipsisIcon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -55,10 +55,8 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useCan } from "@/hooks/api/access";
 import type { Role } from "@/types/organization";
 import { PermissionMatrix } from "@/components/rbac/permission-matrix";
-import { CreateRoleDialog } from "@/components/rbac/create-role-dialog";
 import { RenameRoleDialog } from "@/components/rbac/rename-role-dialog";
 import { RoleAssignmentsSheet } from "@/components/rbac/role-assignments-sheet";
-import { RoleTemplateDialog } from "./role-dialogs";
 import { useRoleListState } from "./use-role-list-state";
 import { RolesListPanel } from "./roles-list-panel";
 
@@ -88,8 +86,6 @@ export function RolesPage() {
   const deleteRole = useDeleteRole();
 
   const [selectedRoleId, setSelectedRoleId] = useState<number | null>(null);
-  const [createOpen, setCreateOpen] = useState(false);
-  const [templateOpen, setTemplateOpen] = useState(false);
   const [assignmentsOpen, setAssignmentsOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<RoleListRow | null>(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
@@ -107,8 +103,6 @@ export function RolesPage() {
   const selectedRole =
     roles.find((role) => role.id === selectedRoleId) ?? null;
 
-  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
-  const handleOpenTemplate = useCallback(() => setTemplateOpen(true), []);
   const handleOpenAssignments = useCallback(() => setAssignmentsOpen(true), []);
   const handleSelectRole = useCallback((roleId: number) => setSelectedRoleId(roleId), []);
   const handleDeleteDialogClose = useCallback(() => {
@@ -193,27 +187,6 @@ export function RolesPage() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <AnimatedIconButton
-              icon={CopyIcon}
-              iconSize={14}
-              iconClassName="mr-1.5"
-              variant="outline"
-              size="sm"
-              onClick={handleOpenTemplate}
-              className="w-full sm:w-auto"
-            >
-              <span className="truncate">Template</span>
-            </AnimatedIconButton>
-            <AnimatedIconButton
-              icon={PlusIcon}
-              iconSize={14}
-              iconClassName="mr-1.5"
-              size="sm"
-              onClick={handleOpenCreate}
-              className="w-full gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90 sm:w-auto"
-            >
-              <span className="truncate">New role</span>
-            </AnimatedIconButton>
           </div>
         ) : undefined
       }
@@ -268,7 +241,6 @@ export function RolesPage() {
               pagination={pagination}
               selectedRoleId={selectedRoleId}
               onRetry={handleRetryRoles}
-              onCreate={handleOpenCreate}
               onSelect={handleSelectRole}
               onDelete={handleOpenDelete}
               onRename={setRenameTarget}
@@ -296,13 +268,11 @@ export function RolesPage() {
         </TabsContent>
       </Tabs>
 
-      <CreateRoleDialog open={createOpen} onOpenChange={setCreateOpen} />
       <RenameRoleDialog
         role={renameTarget}
         open={!!renameTarget}
         onOpenChange={handleRenameDialogClose}
       />
-      <RoleTemplateDialog open={templateOpen} onOpenChange={setTemplateOpen} />
       <RoleAssignmentsSheet
         role={selectedRole}
         open={assignmentsOpen}

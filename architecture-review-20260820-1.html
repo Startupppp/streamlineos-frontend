@@ -1,0 +1,671 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Architecture review — StreamlineOS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({ startOnLoad: true, theme: "neutral", securityLevel: "loose", flowchart: { htmlLabels: true, curve: "basis" } });
+    </script>
+    <style>
+      .seam { stroke-dasharray: 4 4; }
+      .deep { background: linear-gradient(135deg, #0f172a, #1e293b); }
+      .schem { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+      .mermaid { font-size: 13px; }
+      article { scroll-margin-top: 1.5rem; }
+    </style>
+  </head>
+  <body class="bg-stone-50 text-slate-900 font-sans antialiased">
+    <main class="max-w-5xl mx-auto px-6 py-12 space-y-14">
+
+      <!-- ================= HEADER ================= -->
+      <header class="space-y-5">
+        <div class="flex items-baseline justify-between flex-wrap gap-3">
+          <h1 class="font-serif text-4xl tracking-tight">Architecture review — <span class="text-indigo-700">StreamlineOS</span></h1>
+          <p class="font-mono text-xs text-slate-500">2026-08-20 · main @ ae5214c41</p>
+        </div>
+        <p class="text-sm text-slate-600 max-w-3xl">Scoped to the phase-one surface you named — Home, HRMS, Payroll, Build — plus the org/module access model and the Chat module at 10M-user scale.</p>
+
+        <div class="rounded-lg border border-slate-200 bg-white p-4 flex flex-wrap gap-x-8 gap-y-3 text-xs">
+          <span class="flex items-center gap-2"><span class="inline-block w-6 h-4 border-2 border-slate-800 rounded-sm"></span> module</span>
+          <span class="flex items-center gap-2"><svg width="26" height="10"><line x1="0" y1="5" x2="26" y2="5" stroke="#64748b" stroke-width="2" class="seam"/></svg> seam</span>
+          <span class="flex items-center gap-2"><svg width="26" height="10"><line x1="0" y1="5" x2="20" y2="5" stroke="#dc2626" stroke-width="2"/><path d="M20 1 L26 5 L20 9 Z" fill="#dc2626"/></svg> leakage</span>
+          <span class="flex items-center gap-2"><span class="inline-block w-6 h-4 rounded-sm deep"></span> deep module</span>
+          <span class="flex items-center gap-2"><span class="inline-block w-6 h-4 rounded-sm bg-slate-200 border border-slate-300"></span> shallow module</span>
+        </div>
+
+        <nav class="rounded-lg border border-slate-200 bg-white p-4 text-sm">
+          <p class="schem text-slate-500 mb-3">Candidates</p>
+          <ol class="grid sm:grid-cols-2 gap-x-8 gap-y-1.5 list-decimal list-inside text-slate-700">
+            <li><a class="hover:text-indigo-700 underline decoration-slate-300" href="#c1">Chat tenancy seam is severed</a> <span class="text-red-600 font-semibold text-xs">P0</span></li>
+            <li><a class="hover:text-indigo-700 underline decoration-slate-300" href="#c2">No seam for cross-module references</a></li>
+            <li><a class="hover:text-indigo-700 underline decoration-slate-300" href="#c3">Three copies of the permission catalog</a></li>
+            <li><a class="hover:text-indigo-700 underline decoration-slate-300" href="#c4">Navigation keyed on display strings</a></li>
+            <li><a class="hover:text-indigo-700 underline decoration-slate-300" href="#c5">No list-view module — 220 pages improvise</a></li>
+            <li><a class="hover:text-indigo-700 underline decoration-slate-300" href="#c6">Three generations of “person”</a></li>
+            <li><a class="hover:text-indigo-700 underline decoration-slate-300" href="#c7">Config module bypassed 108 times</a></li>
+          </ol>
+        </nav>
+      </header>
+
+      <section id="candidates" class="space-y-14">
+
+        <!-- ================= C1 ================= -->
+        <article id="c1" class="space-y-5">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <h2 class="font-serif text-2xl tracking-tight">1 · The Chat tenancy seam is severed between schema and database</h2>
+            <div class="flex gap-2 shrink-0">
+              <span class="rounded-full bg-red-600 text-white px-3 py-1 text-xs font-semibold">P0 — ships broken</span>
+              <span class="rounded-full bg-emerald-100 text-emerald-800 px-3 py-1 text-xs font-semibold">Strong</span>
+            </div>
+          </div>
+
+          <ul class="font-mono text-sm text-slate-600 space-y-0.5">
+            <li>backend/src/db/schema/chat/chat.ts</li>
+            <li>backend/migrations/0306_chat_org_id.sql</li>
+            <li>backend/src/modules/chat/chat-messages.service.ts:137, :411</li>
+          </ul>
+
+          <div class="grid md:grid-cols-2 gap-4">
+            <!-- BEFORE -->
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-3">Before — two disagreeing sources of truth</p>
+              <div class="relative h-[300px] text-xs">
+                <div class="absolute inset-x-0 top-0 border-2 border-slate-800 rounded-sm p-2 bg-white">
+                  <p class="schem text-slate-500">Drizzle schema · chat.ts</p>
+                  <p class="mt-1 font-mono text-[11px] leading-5">chatMessages { id, channelId,<br/>&nbsp;&nbsp;senderId, content, … }<br/><span class="text-red-600 font-semibold">✗ no orgId</span></p>
+                </div>
+                <div class="absolute inset-x-0 bottom-0 border-2 border-slate-800 rounded-sm p-2 bg-white">
+                  <p class="schem text-slate-500">Postgres · after 0306</p>
+                  <p class="mt-1 font-mono text-[11px] leading-5">chat_messages.org_id<br/><span class="text-red-600 font-semibold">NOT NULL</span> · FK · no default · no trigger</p>
+                </div>
+                <svg class="absolute left-1/2 -translate-x-1/2 top-[86px]" width="220" height="120">
+                  <line x1="110" y1="4" x2="110" y2="60" stroke="#dc2626" stroke-width="2"/>
+                  <path d="M104 60 L110 68 L116 60 Z" fill="#dc2626"/>
+                  <text x="110" y="88" text-anchor="middle" fill="#dc2626" font-size="12" font-weight="600">INSERT omits org_id</text>
+                  <text x="110" y="106" text-anchor="middle" fill="#dc2626" font-size="12" font-weight="600">→ 23502 on every send</text>
+                </svg>
+              </div>
+            </div>
+            <!-- AFTER -->
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-3">After — one tenancy seam, enforced</p>
+              <div class="relative h-[300px] text-xs">
+                <div class="absolute inset-x-0 top-0 rounded-sm p-3 deep text-white">
+                  <p class="schem text-slate-300">Chat schema · tenant-complete</p>
+                  <p class="mt-1 font-mono text-[11px] leading-5">every chat table carries<br/>orgId · (orgId, id) key · (orgId, createdAt) index<br/>identity PK, not serial · RANGE partition</p>
+                </div>
+                <div class="absolute inset-x-0 top-[132px] rounded-sm border-2 border-slate-800 bg-white p-2">
+                  <p class="schem text-slate-500">One writer</p>
+                  <p class="mt-1 font-mono text-[11px]">insertMessage(orgId, …) — orgId non-optional in the type</p>
+                </div>
+                <div class="absolute inset-x-0 bottom-0 rounded-sm border-2 border-emerald-700 bg-emerald-50 p-2">
+                  <p class="schem text-emerald-800">RLS becomes representable</p>
+                  <p class="mt-1 font-mono text-[11px] text-emerald-900">policy on org_id · fails closed without the GUC</p>
+                </div>
+                <svg class="absolute left-1/2 -translate-x-1/2 top-[104px]" width="10" height="28"><line x1="5" y1="0" x2="5" y2="20" stroke="#0f172a" stroke-width="2"/><path d="M0 20 L5 27 L10 20 Z" fill="#0f172a"/></svg>
+                <svg class="absolute left-1/2 -translate-x-1/2 bottom-[76px]" width="10" height="28"><line x1="5" y1="0" x2="5" y2="20" stroke="#0f172a" stroke-width="2"/><path d="M0 20 L5 27 L10 20 Z" fill="#0f172a"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm space-y-2">
+            <p class="font-semibold text-red-900">Evidence chain</p>
+            <p class="text-red-900"><code class="font-mono text-xs">0306_chat_org_id</code> is in <code class="font-mono text-xs">migrations/meta/_journal.json:184</code> · it runs <code class="font-mono text-xs">ALTER COLUMN org_id SET NOT NULL</code> with no default · <code class="font-mono text-xs">0320</code>'s auto-<code class="font-mono text-xs">org_id</code> trigger sweep skips tables that already have the column, so <code class="font-mono text-xs">chat_messages</code> has no <code class="font-mono text-xs">trg_set_org_id</code> · <code class="font-mono text-xs">chat.ts</code> declares <code class="font-mono text-xs">orgId</code> on 4 of 13 chat tables · both inserts omit it.</p>
+            <p class="text-red-800 text-xs">Static proof only — the project's own rule is to boot the API and send a real message before calling it confirmed.</p>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-4 text-sm">
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-2">Problem</p>
+              <p>The schema and the database disagree about the tenancy column, so message writes violate NOT NULL and the next <code class="font-mono text-xs">db:generate</code> will propose dropping <code class="font-mono text-xs">org_id</code> from eight chat tables.</p>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-2">Solution</p>
+              <p>Declare <code class="font-mono text-xs">orgId</code> on every chat table, make it a required parameter of the write interface, then take the 10M-scale items below in the same pass while the tables are being rewritten.</p>
+            </div>
+          </div>
+
+          <div class="rounded-lg border border-slate-200 bg-white p-4">
+            <p class="schem text-slate-500 mb-3">Riding along — what else blocks 10M users in <span class="font-mono normal-case tracking-normal">chat/chat.ts</span></p>
+            <table class="w-full text-sm">
+              <thead><tr class="text-left text-slate-500 schem border-b border-slate-200"><th class="py-2">Finding</th><th class="py-2">Line</th><th class="py-2">Consequence at scale</th></tr></thead>
+              <tbody class="divide-y divide-slate-100">
+                <tr><td class="py-2 font-mono text-xs">serial PKs on all 13 tables</td><td class="py-2 font-mono text-xs">:22 :58 :85 …</td><td class="py-2">int4 ceiling 2.1B messages; house rule is identity/UUID</td></tr>
+                <tr><td class="py-2 font-mono text-xs">chat_messages unpartitioned</td><td class="py-2 font-mono text-xs">:82</td><td class="py-2">named in the house rules as a must-partition table</td></tr>
+                <tr><td class="py-2 font-mono text-xs">reactions jsonb</td><td class="py-2 font-mono text-xs">:97</td><td class="py-2">read-modify-write; concurrent reactions lost</td></tr>
+                <tr><td class="py-2 font-mono text-xs">uniq_chat_presence_user on (userId)</td><td class="py-2 font-mono text-xs">:155</td><td class="py-2"><strong class="text-red-700">one presence row per human, not per membership</strong> — your two-org users collide</td></tr>
+                <tr><td class="py-2 font-mono text-xs">invite token stored plaintext</td><td class="py-2 font-mono text-xs">:383</td><td class="py-2">house rule is hash-at-rest for invitation tokens</td></tr>
+                <tr><td class="py-2 font-mono text-xs">ilike '%q%' message search</td><td class="py-2 font-mono text-xs">chat-search.service.ts:13</td><td class="py-2">seq scan; leading-wildcard ILIKE is banned in §3</td></tr>
+                <tr><td class="py-2 font-mono text-xs">member channel ids inlined as ANY(ARRAY[…])</td><td class="py-2 font-mono text-xs">chat-search.service.ts:25</td><td class="py-2">unbounded IN list built per search request</td></tr>
+                <tr><td class="py-2 font-mono text-xs">cursor on id, ORDER BY createdAt</td><td class="py-2 font-mono text-xs">chat-search.service.ts:28</td><td class="py-2">cursor and sort key disagree — skips/repeats rows</td></tr>
+                <tr><td class="py-2 font-mono text-xs">MAX_CAPABILITY_CHANNELS = 500</td><td class="py-2 font-mono text-xs">ably.service.ts:7</td><td class="py-2">silent truncation; realtime just stops past 500 channels</td></tr>
+                <tr><td class="py-2 font-mono text-xs">sendToChannelMembers fan-out</td><td class="py-2 font-mono text-xs">web-push.service.ts:64</td><td class="py-2">N push calls awaited inside the send request</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="rounded-lg border border-slate-200 bg-white p-4">
+            <p class="schem text-slate-500 mb-2">Wins</p>
+            <ul class="grid sm:grid-cols-2 gap-x-8 gap-y-1 text-sm list-disc list-inside text-slate-700">
+              <li>Sending a message works</li>
+              <li>Locality: tenancy decided once, in the schema</li>
+              <li>RLS becomes representable on chat</li>
+              <li>Destructive <code class="font-mono text-xs">db:generate</code> defused</li>
+              <li>Presence stops colliding across orgs</li>
+              <li>Search stops seq-scanning</li>
+            </ul>
+          </div>
+        </article>
+
+        <!-- ================= C2 ================= -->
+        <article id="c2" class="space-y-5">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <h2 class="font-serif text-2xl tracking-tight">2 · Cross-module references have no seam — three mechanisms, none extensible</h2>
+            <div class="flex gap-2 shrink-0">
+              <span class="rounded-full bg-indigo-100 text-indigo-800 px-3 py-1 text-xs font-semibold">unlocks your ask</span>
+              <span class="rounded-full bg-emerald-100 text-emerald-800 px-3 py-1 text-xs font-semibold">Strong</span>
+            </div>
+          </div>
+
+          <ul class="font-mono text-sm text-slate-600 space-y-0.5">
+            <li>backend/src/modules/chat/chat-actions.controller.ts</li>
+            <li>backend/src/modules/chat/chat-channels.service.ts:307</li>
+            <li>backend/src/modules/chat/dto/chat.schemas.ts:8</li>
+            <li>backend/src/db/schema/chat/chat.ts:34–40 (entityType/entityId + linkedDealId)</li>
+          </ul>
+
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-3">Before — chat reaches into Build directly</p>
+              <pre class="mermaid">
+flowchart TB
+  CH["Chat module"]
+  A["ChatActionsController<br/>ticket-status · create-task<br/>assign · due-date"]
+  T[("tickets")]
+  P[("projects")]
+  PM[("project_members")]
+  D[("deals")]
+  M["metadata jsonb<br/>entities: [ ... ]"]
+  CH --> A
+  A -.->|imports schema| T
+  A -.->|imports schema| P
+  A -.->|imports schema| PM
+  CH -.->|linkedDealId FK| D
+  CH --> M
+  L["leads · employees · invoices<br/>no path"]:::none
+  classDef leak stroke:#dc2626,stroke-width:2px,color:#7f1d1d;
+  classDef none stroke:#cbd5e1,stroke-dasharray:4 4,color:#94a3b8;
+  class T,P,PM,D leak
+              </pre>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-3">After — one Entity Reference seam</p>
+              <pre class="mermaid">
+flowchart TB
+  CH["Chat"] --> R
+  KB["Knowledge Base"] --> R
+  NO["Notifications"] --> R
+  CA["Calendar"] --> R
+  R["<b>EntityReference module</b><br/>resolve(orgId, actor, ref)<br/>actionsFor(ref, actor)"]:::deep
+  R --> B["Build adapter"]
+  R --> C["CRM adapter"]
+  R --> H["HR adapter"]
+  R --> I["Inventory adapter"]
+  classDef deep fill:#0f172a,color:#fff,stroke:#0f172a,stroke-width:2px;
+              </pre>
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-3 gap-4 text-sm">
+            <div class="rounded-lg border border-slate-200 bg-white p-4 md:col-span-2">
+              <p class="schem text-slate-500 mb-2">Problem</p>
+              <p>Three unrelated mechanisms describe “this chat thing points at that business thing”: an untyped <code class="font-mono text-xs">entityType/entityId</code> pair on the channel, a hard <code class="font-mono text-xs">linkedDealId</code> FK next to it, and free-form <code class="font-mono text-xs">metadata.entities</code> on the message. The only actions that exist are four Build endpoints that import <code class="font-mono text-xs">tickets</code>, <code class="font-mono text-xs">projects</code> and <code class="font-mono text-xs">project_members</code> schema directly — cross-module access through another module's tables, which §1 forbids. Adding leads or HRMS records means writing that controller again per module.</p>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-2">Solution</p>
+              <p>One module, one interface: <code class="font-mono text-xs">resolve</code> returns a display card or <code class="font-mono text-xs">null</code> when the reader lacks access; <code class="font-mono text-xs">actionsFor</code> returns the actions this actor may take. Each product module registers an adapter.</p>
+            </div>
+          </div>
+
+          <div class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm">
+            <p class="text-amber-900"><strong>Security note, not a style note.</strong> Today an unfurled ticket is rendered from <code class="font-mono text-xs">metadata.entities</code>, captured at send time. A reader who never had — or has since lost — <code class="font-mono text-xs">build:tickets:view</code> still sees it in scrollback. <code class="font-mono text-xs">resolve()</code> re-asserts object-level access at read time, so the reference degrades to “a ticket you can't see” instead of leaking its title.</p>
+          </div>
+
+          <div class="rounded-lg border border-slate-200 bg-white p-4">
+            <p class="schem text-slate-500 mb-2">Wins</p>
+            <ul class="grid sm:grid-cols-2 gap-x-8 gap-y-1 text-sm list-disc list-inside text-slate-700">
+              <li>Leverage: one interface, every module</li>
+              <li>Chat stops importing Build schema</li>
+              <li>Access re-checked at render, not send</li>
+              <li>Two adapters justify the seam on day one</li>
+              <li>Mentions, unfurls and slash-actions share it</li>
+              <li>Delete the polymorphic pair and <code class="font-mono text-xs">linkedDealId</code></li>
+            </ul>
+          </div>
+        </article>
+
+        <!-- ================= C3 ================= -->
+        <article id="c3" class="space-y-5">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <h2 class="font-serif text-2xl tracking-tight">3 · The permission catalog exists three times and disagrees with itself</h2>
+            <span class="rounded-full bg-emerald-100 text-emerald-800 px-3 py-1 text-xs font-semibold shrink-0">Strong</span>
+          </div>
+
+          <ul class="font-mono text-sm text-slate-600 space-y-0.5">
+            <li>backend/src/modules/rbac/permissions/** — 631 keys</li>
+            <li>frontend/lib/rbac/permissions/roles.ts → PERMISSIONS — 425 keys</li>
+            <li>frontend/lib/rbac/permissions/permission-key-{foundation,business,extended}.ts — 652 literals</li>
+            <li>backend/src/modules/rbac/permissions/module-access.ts:3 — ACCESS_MANAGED_MODULES</li>
+          </ul>
+
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-3">Before — mass diagram, three catalogs</p>
+              <div class="h-[300px] flex items-end justify-around gap-4 pb-6">
+                <div class="flex flex-col items-center gap-2 w-24">
+                  <div class="w-full bg-slate-800 rounded-t" style="height:210px"></div>
+                  <p class="schem text-slate-500 text-center leading-tight">backend<br/>631</p>
+                </div>
+                <div class="flex flex-col items-center gap-2 w-24">
+                  <div class="w-full bg-amber-500 rounded-t" style="height:141px"></div>
+                  <p class="schem text-slate-500 text-center leading-tight">FE PERMISSIONS<br/>425</p>
+                </div>
+                <div class="flex flex-col items-center gap-2 w-24">
+                  <div class="w-full bg-red-500 rounded-t" style="height:217px"></div>
+                  <p class="schem text-slate-500 text-center leading-tight">FE PermissionKey<br/>652</p>
+                </div>
+              </div>
+              <p class="text-xs text-slate-500 -mt-4">Counted from source. 21 union literals have no backend key (20 are generated <code class="font-mono">*:access:*</code>; <code class="font-mono">crm:incentives:config</code> is a real ghost — and <code class="font-mono">config</code> isn't a legal action).</p>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-3">After — one catalog, two projections</p>
+              <div class="h-[300px] flex flex-col items-center justify-center gap-4">
+                <div class="w-56 rounded-sm deep text-white p-3 text-center">
+                  <p class="schem text-slate-300">single source</p>
+                  <p class="font-mono text-xs mt-1">permissions catalog<br/>+ per-module <code>ACCESS_MANAGED</code></p>
+                </div>
+                <svg width="200" height="46">
+                  <line x1="100" y1="0" x2="40" y2="34" stroke="#0f172a" stroke-width="2"/><path d="M44 28 L36 38 L48 38 Z" fill="#0f172a"/>
+                  <line x1="100" y1="0" x2="160" y2="34" stroke="#0f172a" stroke-width="2"/><path d="M156 28 L164 38 L152 38 Z" fill="#0f172a"/>
+                </svg>
+                <div class="flex gap-4">
+                  <div class="w-40 rounded-sm border-2 border-slate-800 bg-white p-2 text-center"><p class="font-mono text-[11px]">generated<br/>PermissionKey.d.ts</p></div>
+                  <div class="w-40 rounded-sm border-2 border-slate-800 bg-white p-2 text-center"><p class="font-mono text-[11px]">GET /rbac/permissions<br/>(runtime picker)</p></div>
+                </div>
+                <p class="text-xs text-slate-500 text-center px-4">A key that isn't in the catalog fails the build, not silently at runtime.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-4 text-sm">
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-2">Problem</p>
+              <p>The frontend's runtime <code class="font-mono text-xs">PERMISSIONS</code> array — what a module owner picks from when granting a permission — is 206 keys short of the backend catalog. And the resolver silently drops any stored grant whose key is unknown (<code class="font-mono text-xs">access-permission.resolver.ts:160</code> <code class="font-mono text-xs">mergeIfKnown</code>): a grant can be saved, shown as saved, and never take effect.</p>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-2">Solution</p>
+              <p>Backend catalog is the module. The frontend key union is generated from it in CI; the picker reads the live endpoint. Delete the hand-maintained <code class="font-mono text-xs">PERMISSIONS</code> array.</p>
+            </div>
+          </div>
+
+          <div class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm space-y-2">
+            <p class="font-semibold text-amber-900">This is also where your module-owner model is only two-thirds built</p>
+            <p class="text-amber-900"><code class="font-mono text-xs">ACCESS_MANAGED_MODULES</code> lists <span class="font-mono text-xs">hr, crm, build, accounting, inventory, support, surveys, payroll, sign, timesheets</span>. You said every module except Home and Knowledge Base should have owner/admin/member and owner-authored permissions. <strong>Chat, Mail, Calendar, Notifications, Blog, Workflows, Directory and Billing have no per-module access surface at all</strong> — <code class="font-mono text-xs">assertKnownModule</code> 404s them.</p>
+            <p class="text-amber-900">Module <em>admin</em> is a rank-20 role assignment (<code class="font-mono text-xs">module-access.helpers.ts:77</code>) while module <em>owner</em> is a <code class="font-mono text-xs">module_ownerships</code> row — two different storage mechanisms for two rungs of one ladder, which is why the ladder only exists in ten modules.</p>
+          </div>
+
+          <div class="rounded-lg border border-slate-200 bg-white p-4">
+            <p class="schem text-slate-500 mb-2">Wins</p>
+            <ul class="grid sm:grid-cols-2 gap-x-8 gap-y-1 text-sm list-disc list-inside text-slate-700">
+              <li>Drift becomes a compile error</li>
+              <li>Module owners can grant all 631 keys</li>
+              <li>Silent grant-drop stops</li>
+              <li>Owner/admin/member ladder reaches every module</li>
+            </ul>
+          </div>
+        </article>
+
+        <!-- ================= C4 ================= -->
+        <article id="c4" class="space-y-5">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <h2 class="font-serif text-2xl tracking-tight">4 · Route → product → module → permission lives in five hand-kept tables, one keyed on display strings</h2>
+            <span class="rounded-full bg-emerald-100 text-emerald-800 px-3 py-1 text-xs font-semibold shrink-0">Strong</span>
+          </div>
+
+          <ul class="font-mono text-sm text-slate-600 space-y-0.5">
+            <li>frontend/components/layout/sidebar/sidebar-products.ts:148 PRODUCT_NAV_GROUP_LABELS</li>
+            <li>frontend/components/layout/sidebar/sidebar-products.ts:197 getProductFromPathname</li>
+            <li>frontend/components/layout/sidebar/sidebar-nav-groups-*.ts (11 files, ~2,000 lines)</li>
+            <li>frontend/lib/rbac/require-permission.ts · hooks/api/access.ts useCan</li>
+          </ul>
+
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-3">Before — cross-section, five layers to place one route</p>
+              <div class="space-y-1.5 text-xs">
+                <div class="h-12 border-l-4 border-red-400 bg-red-50 px-3 flex items-center justify-between"><span class="font-mono">NavRoute.requiredPermission</span><span class="text-slate-500">11 group files</span></div>
+                <div class="h-12 border-l-4 border-red-400 bg-red-50 px-3 flex items-center justify-between"><span class="font-mono">PRODUCT_NAV_GROUP_LABELS["hrms"]</span><span class="text-red-700 font-semibold">matches on "HR – People"</span></div>
+                <div class="h-12 border-l-4 border-red-400 bg-red-50 px-3 flex items-center justify-between"><span class="font-mono">getProductFromPathname(path)</span><span class="text-slate-500">28-branch prefix chain</span></div>
+                <div class="h-12 border-l-4 border-red-400 bg-red-50 px-3 flex items-center justify-between"><span class="font-mono">requirePermission() in page.tsx</span><span class="text-slate-500">544 pages</span></div>
+                <div class="h-12 border-l-4 border-red-400 bg-red-50 px-3 flex items-center justify-between"><span class="font-mono">useCan() in the hook</span><span class="text-slate-500">per query</span></div>
+                <p class="pt-2 text-slate-500">Five places must agree. Nothing checks that they do.</p>
+              </div>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-3">After — one route registry, four consumers</p>
+              <div class="space-y-2 text-xs">
+                <div class="rounded-sm deep text-white p-3">
+                  <p class="schem text-slate-300">Route registry (deep)</p>
+                  <p class="font-mono text-[11px] mt-1 leading-5">{ href, product, module,<br/>&nbsp;&nbsp;permission, label, icon }</p>
+                </div>
+                <svg width="100%" height="30"><line x1="50%" y1="0" x2="50%" y2="22" stroke="#0f172a" stroke-width="2"/><path d="M0 22 L100 22" stroke="#0f172a" stroke-width="2" transform="translate(0,0)" style="display:none"/></svg>
+                <div class="grid grid-cols-2 gap-2">
+                  <div class="h-12 border-2 border-slate-800 rounded-sm px-2 flex items-center font-mono text-[11px]">sidebar</div>
+                  <div class="h-12 border-2 border-slate-800 rounded-sm px-2 flex items-center font-mono text-[11px]">mobile nav + drawer</div>
+                  <div class="h-12 border-2 border-slate-800 rounded-sm px-2 flex items-center font-mono text-[11px]">command palette</div>
+                  <div class="h-12 border-2 border-slate-800 rounded-sm px-2 flex items-center font-mono text-[11px]">page guard</div>
+                </div>
+                <p class="pt-1 text-slate-500">Product membership is a field, not a label match. A route with no catalog permission fails the build.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-4 text-sm">
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-2">Problem</p>
+              <p>Renaming a sidebar group heading removes that whole group from its product's sidebar, silently — <code class="font-mono text-xs">PRODUCT_NAV_GROUP_LABELS</code> matches on the human-readable string, en-dash included. Meanwhile <code class="font-mono text-xs">getProductFromPathname</code> re-derives the same fact from URL prefixes, and neither knows what the page's own <code class="font-mono text-xs">requirePermission()</code> demands.</p>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-2">Solution</p>
+              <p>One typed route registry as the module. The sidebar, the mobile nav, the command palette and the server-side page guard all become adapters over it — which is what §17 already asks for and currently isn't true.</p>
+            </div>
+          </div>
+
+          <div class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm">
+            <p class="text-amber-900">Also visible here: <code class="font-mono text-xs">PRODUCT_DEFINITIONS</code> labels the Build product <strong>“Product Management”</strong> (<code class="font-mono text-xs">sidebar-products.ts:17</code>), which contradicts the Build rename in the root rules. Users see the old name in the product switcher.</p>
+          </div>
+
+          <div class="rounded-lg border border-slate-200 bg-white p-4">
+            <p class="schem text-slate-500 mb-2">Wins</p>
+            <ul class="grid sm:grid-cols-2 gap-x-8 gap-y-1 text-sm list-disc list-inside text-slate-700">
+              <li>Locality: one row per screen</li>
+              <li>“Sidebar shows what I can open” holds by construction</li>
+              <li>Renaming a heading stops breaking nav</li>
+              <li>Delete <code class="font-mono text-xs">getProductFromPathname</code></li>
+            </ul>
+          </div>
+        </article>
+
+        <!-- ================= C5 ================= -->
+        <article id="c5" class="space-y-5">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <h2 class="font-serif text-2xl tracking-tight">5 · There is no list-view module — ~220 pages improvise the same filter bar</h2>
+            <div class="flex gap-2 shrink-0">
+              <span class="rounded-full bg-indigo-100 text-indigo-800 px-3 py-1 text-xs font-semibold">your filter complaint</span>
+              <span class="rounded-full bg-emerald-100 text-emerald-800 px-3 py-1 text-xs font-semibold">Strong</span>
+            </div>
+          </div>
+
+          <ul class="font-mono text-sm text-slate-600 space-y-0.5">
+            <li>219 files import FILTER_TOOLBAR_ROW</li>
+            <li>103 files hand-sync filters via router.replace + useSearchParams</li>
+            <li>82 files hand-debounce their own search</li>
+            <li>70 sites hand-handle the "all" sentinel</li>
+            <li>worst offenders: notification-filter-bar.tsx · crm/tasks/tasks-toolbar.tsx · inventory/stock/movements/page.tsx (5 selects + search)</li>
+          </ul>
+
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-3">Before — everything fits, nothing fits</p>
+              <div class="h-[300px] flex flex-col justify-center gap-4">
+                <div class="border border-slate-300 rounded-md p-2 overflow-hidden">
+                  <p class="schem text-slate-400 mb-2">1280px — a single non-wrapping row</p>
+                  <div class="flex gap-2 items-center text-[10px]">
+                    <div class="h-9 flex-1 min-w-[90px] rounded-md border border-slate-300 bg-white flex items-center px-2 text-slate-400">Search…</div>
+                    <div class="h-9 w-20 rounded-md border border-slate-300 bg-white flex items-center px-2 text-slate-500">Status</div>
+                    <div class="h-9 w-20 rounded-md border border-slate-300 bg-white flex items-center px-2 text-slate-500">Type</div>
+                    <div class="h-9 w-20 rounded-md border border-slate-300 bg-white flex items-center px-2 text-slate-500">Owner</div>
+                    <div class="h-9 w-20 rounded-md border border-slate-300 bg-white flex items-center px-2 text-slate-500">Wareh…</div>
+                    <div class="h-9 w-16 rounded-md border border-red-400 bg-red-50 flex items-center px-2 text-red-600">Date…</div>
+                  </div>
+                  <p class="text-[10px] text-red-600 mt-2">→ overflow-x-auto: the filter bar scrolls sideways. Filters 4–6 are invisible.</p>
+                </div>
+                <ul class="text-xs text-slate-600 space-y-1 list-disc list-inside">
+                  <li>No overflow policy above <code class="font-mono">md</code> — the rule only defines the mobile Drawer</li>
+                  <li>Active filters aren't visible as chips, so “why is this list empty?” has no answer on screen</li>
+                  <li>Each page re-decides URL keys, debounce, sentinel and page-reset</li>
+                </ul>
+              </div>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-3">After — Linear's shape: two visible, rest behind “+ Filter”</p>
+              <div class="h-[300px] flex flex-col justify-center gap-4">
+                <div class="border border-slate-300 rounded-md p-2">
+                  <p class="schem text-slate-400 mb-2">1280px — bounded row</p>
+                  <div class="flex gap-2 items-center text-[10px]">
+                    <div class="h-9 flex-1 rounded-md border border-slate-300 bg-white flex items-center px-2 text-slate-400">Search…</div>
+                    <div class="h-9 w-24 rounded-md border border-slate-300 bg-white flex items-center px-2 text-slate-500">Status</div>
+                    <div class="h-9 w-24 rounded-md border-2 border-slate-800 bg-white flex items-center px-2 text-slate-800 font-semibold">+ Filter</div>
+                  </div>
+                  <div class="flex gap-1.5 mt-2 flex-wrap text-[10px]">
+                    <span class="rounded-full bg-slate-900 text-white px-2 py-0.5">Type: Bug ×</span>
+                    <span class="rounded-full bg-slate-900 text-white px-2 py-0.5">Owner: Priya ×</span>
+                    <span class="rounded-full border border-slate-300 px-2 py-0.5 text-slate-600">Clear all</span>
+                  </div>
+                  <p class="text-[10px] text-emerald-700 mt-2">→ Applied filters are chips. Nothing hides off-screen.</p>
+                </div>
+                <div class="rounded-sm deep text-white p-3 text-xs">
+                  <p class="schem text-slate-300">defineListView(spec) — one interface</p>
+                  <p class="font-mono text-[11px] mt-1 leading-5">→ { state, filterBar, tableProps, chips }</p>
+                  <p class="text-slate-300 mt-1 text-[11px]">owns: URL sync · debounce · sentinel · page reset · overflow · Drawer &lt; md</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-4 text-sm">
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-2">Problem</p>
+              <p><code class="font-mono text-xs">PageWrapper</code>, <code class="font-mono text-xs">DataTable</code> and <code class="font-mono text-xs">FILTER_TOOLBAR_ROW</code> are correct primitives, but nothing owns the <em>coordination</em> between them. So no module owns the overflow policy — which is exactly why filter bars grew past the width you have.</p>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-2">Solution</p>
+              <p>A list-view module taking a declarative spec (columns, filters, permission key, hook). Overflow, chips and the mobile Drawer are decided once inside it. Pages shrink to the spec.</p>
+            </div>
+          </div>
+
+          <div class="rounded-lg border border-slate-200 bg-white p-4">
+            <p class="schem text-slate-500 mb-2">Wins</p>
+            <ul class="grid sm:grid-cols-2 gap-x-8 gap-y-1 text-sm list-disc list-inside text-slate-700">
+              <li>Leverage: one spec, ~220 pages</li>
+              <li>Overflow decided once</li>
+              <li>Locality: filter bugs fixed in one module</li>
+              <li>103 URL-sync copies collapse</li>
+              <li>The interface is the test surface</li>
+              <li>Consistency stops depending on review</li>
+            </ul>
+          </div>
+        </article>
+
+        <!-- ================= C6 ================= -->
+        <article id="c6" class="space-y-5">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <h2 class="font-serif text-2xl tracking-tight">6 · Three generations of “person”, and Payroll is split across two of them</h2>
+            <div class="flex gap-2 shrink-0">
+              <span class="rounded-full bg-red-100 text-red-800 px-3 py-1 text-xs font-semibold">phase-1 blocker</span>
+              <span class="rounded-full bg-amber-100 text-amber-800 px-3 py-1 text-xs font-semibold">Worth exploring</span>
+            </div>
+          </div>
+
+          <ul class="font-mono text-sm text-slate-600 space-y-0.5">
+            <li>db/schema/common/auth.ts — users, organization_members</li>
+            <li>db/schema/hr/core-people.ts — hr_people, hr_employments, hr_employee_sensitive_fields</li>
+            <li>db/schema/directory/{organization-people,workers,worker-engagements}.ts</li>
+            <li>db/schema/hr/** — 23 payroll_* tables · db/schema/payroll/** — 5 payroll_* tables</li>
+          </ul>
+
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-3">Before — three answers to “who is this person”</p>
+              <pre class="mermaid">
+flowchart TB
+  U[("users<br/>global identity<br/>+ legacy HR fields")]
+  OM[("organization_members")]
+  HP[("hr_people / hr_employments")]:::g2
+  OP[("organization_people")]:::g3
+  W[("workers → engagements")]:::g3
+  PRA["payroll_runs · line_items<br/>23 tables in hr/"]:::g2
+  PRB["payroll_entities · periods<br/>5 tables in payroll/"]:::g3
+  U --> OM
+  OM --> HP
+  OM --> OP
+  OP --> W
+  HP --> PRA
+  W --> PRB
+  PRA -.->|no link| PRB
+  classDef g2 fill:#fef3c7,stroke:#b45309;
+  classDef g3 fill:#dbeafe,stroke:#1d4ed8;
+              </pre>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-3">After — one Person module, one Payroll schema folder</p>
+              <pre class="mermaid">
+flowchart TB
+  U[("users<br/>identity only")]
+  OM[("organization_members<br/>membership + org role")]
+  P["<b>Person module</b><br/>organization_people → workers<br/>→ engagements → periods"]:::deep
+  PR["payroll/** — all payroll_* tables<br/>keyed on worker_id"]
+  U --> OM --> P --> PR
+  classDef deep fill:#0f172a,color:#fff,stroke:#0f172a,stroke-width:2px;
+              </pre>
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-4 text-sm">
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-2">Problem</p>
+              <p>The <code class="font-mono text-xs">directory</code> generation is the best-designed of the three — composite tenant FKs, checks, soft delete, row versions — and the HR module barely references it (2 files). HRMS runs on <code class="font-mono text-xs">hr_people</code>; the newer Payroll tables key on <code class="font-mono text-xs">workers</code>. Phase one ships two payroll domains that can't join.</p>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-2">Solution</p>
+              <p>Pick the <code class="font-mono text-xs">directory</code> generation, put every <code class="font-mono text-xs">payroll_*</code> table in <code class="font-mono text-xs">db/schema/payroll/</code>, and expose one Person interface that HRMS, Payroll, Build and Chat all read through. Retire <code class="font-mono text-xs">hr_people</code> behind it.</p>
+            </div>
+          </div>
+
+          <div class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm">
+            <p class="text-amber-900"><strong>This is the biggest one and the one I'd most want your call on.</strong> It's a migration, not a refactor — it can be sequenced after a phase-one release if you're willing to ship HRMS on <code class="font-mono text-xs">hr_people</code> and keep the newer payroll tables dark. Tell me which and I'll plan around it.</p>
+          </div>
+
+          <div class="rounded-lg border border-slate-200 bg-white p-4">
+            <p class="schem text-slate-500 mb-2">Wins</p>
+            <ul class="grid sm:grid-cols-2 gap-x-8 gap-y-1 text-sm list-disc list-inside text-slate-700">
+              <li>One person id across modules</li>
+              <li>Payroll joins its own inputs</li>
+              <li>Module owns its schema folder</li>
+              <li>Locality: HR fields leave <code class="font-mono text-xs">users</code></li>
+            </ul>
+          </div>
+        </article>
+
+        <!-- ================= C7 ================= -->
+        <article id="c7" class="space-y-5">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <h2 class="font-serif text-2xl tracking-tight">7 · The validated config module is a shallow module nobody has to use</h2>
+            <span class="rounded-full bg-emerald-100 text-emerald-800 px-3 py-1 text-xs font-semibold shrink-0">Strong</span>
+          </div>
+
+          <ul class="font-mono text-sm text-slate-600 space-y-0.5">
+            <li>backend/src/config/env.validation.ts · config.module.ts</li>
+            <li>108 direct process.env reads across 56 variables in non-spec source</li>
+            <li>e.g. realtime/ably.service.ts:12 · realtime/web-push.service.ts:86</li>
+          </ul>
+
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-3">Before — the seam is optional, so it isn't a seam</p>
+              <pre class="mermaid">
+flowchart LR
+  E[".env"] --> V["env.validation.ts<br/>(validated)"]
+  V --> C["ConfigService"]
+  C --> A["a few call sites"]
+  E -.->|"108 reads · 56 vars"| B["everything else<br/>process.env.X"]
+  classDef leak stroke:#dc2626,stroke-width:2px,color:#7f1d1d;
+  class B leak
+              </pre>
+              <p class="text-xs text-slate-500 mt-3"><strong>Deletion test:</strong> delete the config module and 108 call sites are unaffected. It concentrates nothing.</p>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-3">After — one way in, typed</p>
+              <pre class="mermaid">
+flowchart LR
+  E[".env"] --> V["<b>config module</b><br/>zod schema · fail fast<br/>typed accessors"]:::deep
+  V --> A["every call site<br/>config.ably.apiKey"]
+  L["lint: no process.env<br/>outside config/"]:::rule --> A
+  classDef deep fill:#0f172a,color:#fff,stroke:#0f172a,stroke-width:2px;
+  classDef rule fill:#ecfdf5,stroke:#047857,color:#065f46;
+              </pre>
+              <p class="text-xs text-slate-500 mt-3">Missing vars fail at boot, not at the first request that needs them.</p>
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-4 text-sm">
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-2">Problem</p>
+              <p>Direct reads are untyped, unvalidated and lazily evaluated. <code class="font-mono text-xs">web-push.service.ts:86</code> throws “VAPID subject requires APP_URL” at push time, not at boot — a config error surfaces as a failed notification hours after deploy.</p>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-2">Solution</p>
+              <p>Move all 56 variables into the zod schema, expose typed accessors, and add a lint rule banning <code class="font-mono text-xs">process.env</code> outside <code class="font-mono text-xs">config/</code>. Mechanical and low-risk.</p>
+            </div>
+          </div>
+
+          <div class="rounded-lg border border-slate-200 bg-white p-4">
+            <p class="schem text-slate-500 mb-2">Wins</p>
+            <ul class="grid sm:grid-cols-2 gap-x-8 gap-y-1 text-sm list-disc list-inside text-slate-700">
+              <li>Misconfiguration fails at boot</li>
+              <li>The module stops being deletable</li>
+              <li>Locality: one place to see every var</li>
+              <li>Lint keeps the seam closed</li>
+            </ul>
+          </div>
+        </article>
+
+      </section>
+
+      <!-- ================= TOP RECOMMENDATION ================= -->
+      <section id="top-recommendation" class="space-y-4">
+        <h2 class="font-serif text-3xl tracking-tight">Top recommendation</h2>
+        <div class="rounded-xl deep text-white p-8 space-y-4">
+          <p class="schem text-slate-400">Fix first, this week</p>
+          <p class="font-serif text-2xl"><a href="#c1" class="underline decoration-slate-600 hover:decoration-white">1 · The Chat tenancy seam is severed</a></p>
+          <p class="text-slate-300 text-sm max-w-3xl">Not an architecture preference — <code class="font-mono text-xs bg-slate-800 px-1 rounded">chat_messages.org_id</code> is <code class="font-mono text-xs bg-slate-800 px-1 rounded">NOT NULL</code> in the database and absent from the Drizzle schema and both inserts. Chat can't accept a message, and the next <code class="font-mono text-xs bg-slate-800 px-1 rounded">db:generate</code> would propose dropping the column from eight tables. Everything else on this page can wait behind it.</p>
+          <hr class="border-slate-700" />
+          <p class="schem text-slate-400">Deepen first, before building on it</p>
+          <p class="font-serif text-2xl"><a href="#c2" class="underline decoration-slate-600 hover:decoration-white">2 · The EntityReference seam</a></p>
+          <p class="text-slate-300 text-sm max-w-3xl">You want to share tickets, leads and HRMS records in chat. Today that means a fourth mechanism and a second controller that imports another module's tables. One interface — <code class="font-mono text-xs bg-slate-800 px-1 rounded">resolve</code> + <code class="font-mono text-xs bg-slate-800 px-1 rounded">actionsFor</code> — with one adapter per module gives you every combination, re-checks access at read time, and is the same seam Knowledge Base, notifications and calendar will need.</p>
+        </div>
+        <div class="rounded-lg border border-slate-200 bg-white p-5 text-sm space-y-2">
+          <p class="schem text-slate-500">Suggested order for a phase-one release</p>
+          <ol class="list-decimal list-inside space-y-1 text-slate-700">
+            <li><strong>C1</strong> — chat tenancy + the scale items, while the tables are being rewritten</li>
+            <li><strong>C3</strong> — one catalog; unblocks module owner/admin/member on every module</li>
+            <li><strong>C4</strong> — route registry; makes “sidebar shows what I can open” true by construction</li>
+            <li><strong>C5</strong> — list-view module; fixes the filter overflow across all of HRMS, Payroll and Build at once</li>
+            <li><strong>C2</strong> — EntityReference seam; then chat sharing is additive per module</li>
+            <li><strong>C7</strong> — config sweep; mechanical, can run in parallel</li>
+            <li><strong>C6</strong> — person consolidation; needs your decision on whether it precedes or follows the release</li>
+          </ol>
+        </div>
+      </section>
+
+      <footer class="pt-6 border-t border-slate-200 text-xs text-slate-500 space-y-1">
+        <p>Counts taken from source on 2026-08-20. Runtime claims about chat message inserts are proven statically from the migration journal, the Drizzle schema and the insert call sites — booting the API and sending a message is the confirming test.</p>
+        <p>No ADRs found (<span class="font-mono">docs/adr/</span> does not exist) and no <span class="font-mono">CONTEXT.md</span> — domain vocabulary taken from <span class="font-mono">CLAUDE.md</span>, <span class="font-mono">backend/CLAUDE.md</span> and <span class="font-mono">frontend/CLAUDE.md</span>.</p>
+      </footer>
+
+    </main>
+  </body>
+</html>

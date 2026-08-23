@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Build + HRMS architecture review — StreamlineOS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({ startOnLoad: true, theme: "neutral", securityLevel: "loose", flowchart: { htmlLabels: true, curve: "basis" } });
+    </script>
+    <style>
+      .seam { stroke-dasharray: 4 4; }
+      .deep { background: linear-gradient(135deg, #0f172a, #1e293b); }
+      .schem { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+      .mermaid { font-size: 13px; }
+      article { scroll-margin-top: 1.5rem; }
+    </style>
+  </head>
+  <body class="bg-stone-50 text-slate-900 font-sans antialiased">
+    <main class="max-w-5xl mx-auto px-6 py-12 space-y-14">
+
+      <header class="space-y-5">
+        <div class="flex items-baseline justify-between flex-wrap gap-3">
+          <h1 class="font-serif text-4xl tracking-tight">Build + HRMS — <span class="text-indigo-700">measured</span></h1>
+          <p class="font-mono text-xs text-slate-500">2026-08-20 · plans run as streamline_app under RLS</p>
+        </div>
+        <p class="text-sm text-slate-600 max-w-3xl">Every number here comes from <code class="font-mono text-xs">EXPLAIN (ANALYZE, BUFFERS)</code> against the 200,001-ticket organisation, executed as the RLS-enforced application role with the tenant GUC set — not as the owner, whose <code class="font-mono text-xs">BYPASSRLS</code> hides exactly the problems that matter. Redis is over quota, so no figure here goes through the cache.</p>
+
+        <div class="rounded-xl border-2 border-emerald-300 bg-emerald-50 p-5">
+          <p class="schem text-emerald-800 mb-2">First, the premise</p>
+          <p class="text-emerald-950 text-sm"><strong>Build and HRMS both work.</strong> <code class="font-mono text-xs">GET /build</code> returns real projects and <code class="font-mono text-xs">GET /hr/employees</code> returns real people — in the organisation that has data. They looked broken because the signed-in org has <strong>zero</strong> Build records, and because every request currently takes 2–6s with the cache down. Two configuration facts, no architectural failure.</p>
+        </div>
+
+        <div class="grid sm:grid-cols-4 gap-3">
+          <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500">Tickets</p><p class="font-mono text-lg mt-1">200,001</p><p class="text-xs text-slate-500">234 MB · 15 indexes</p></div>
+          <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500">Project list</p><p class="font-mono text-lg mt-1 text-emerald-700">1.2ms</p><p class="text-xs text-slate-500">25 buffers</p></div>
+          <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500">Scoped my-work</p><p class="font-mono text-lg mt-1 text-red-700">373ms</p><p class="text-xs text-slate-500">14,883 buffers</p></div>
+          <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500">hr_* tables</p><p class="font-mono text-lg mt-1 text-amber-700">98</p><p class="text-xs text-slate-500">95 with zero rows</p></div>
+        </div>
+      </header>
+
+      <section id="candidates" class="space-y-14">
+
+        <!-- B1 -->
+        <article id="b1" class="space-y-5">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <h2 class="font-serif text-2xl tracking-tight">1 · The scoped ticket read is the most expensive query in the product</h2>
+            <div class="flex gap-2 shrink-0"><span class="rounded-full bg-red-600 text-white px-3 py-1 text-xs font-semibold">measured</span><span class="rounded-full bg-emerald-100 text-emerald-800 px-3 py-1 text-xs font-semibold">Strong</span></div>
+          </div>
+          <ul class="font-mono text-sm text-slate-600"><li>modules/build/core/projects-tickets-read.service.ts — the DataScope clause</li></ul>
+
+          <div class="rounded-lg border border-slate-200 bg-white p-5">
+            <p class="schem text-slate-500 mb-3">The clause every non-admin hits</p>
+            <pre class="bg-slate-900 text-slate-100 rounded p-3 text-xs overflow-x-auto">scope !== "all"
+  ? or(
+      eq(tickets.assigneeId, u.userId),   <span class="text-emerald-400">// indexed (org_id, assignee_id, …)</span>
+      eq(tickets.reporterId, u.userId),   <span class="text-red-400">// NO INDEX EXISTS</span>
+      sql`EXISTS (SELECT 1 FROM ticket_assignees ta WHERE …)`,  <span class="text-amber-400">// 171,431 rows</span>
+    )
+  : undefined</pre>
+            <p class="text-xs text-slate-500 mt-3">Three different access paths joined by <code class="font-mono">OR</code>. A single index cannot satisfy an OR across three columns, one of which is unindexed and one of which is a correlated subquery. And the list sorts by <code class="font-mono">created_at</code>, which is not the trailing column of either assignee index — so even the indexed branch cannot return rows in order.</p>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-3">Before — measured, 200k tickets, under RLS</p>
+              <div class="h-[280px] flex flex-col justify-center gap-3 text-xs">
+                <div><p class="mb-1">scoped my-work <span class="font-mono text-red-700">373.2ms</span></p><div class="bg-red-500 h-6 rounded-sm" style="width:100%"></div><p class="text-slate-500 mt-1">14,883 buffers ≈ 116 MB read per page view</p></div>
+                <div><p class="mb-1">assignee-only <span class="font-mono">33.5ms</span></p><div class="bg-amber-400 h-6 rounded-sm" style="width:24%"></div><p class="text-slate-500 mt-1">11,881 buffers — still a scan, wrong sort column</p></div>
+                <div><p class="mb-1">project list <span class="font-mono text-emerald-700">1.2ms</span></p><div class="bg-emerald-500 h-6 rounded-sm" style="width:2%"></div><p class="text-slate-500 mt-1">25 buffers — the partial rank index works perfectly</p></div>
+              </div>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-3">After — one membership path, one index</p>
+              <div class="h-[280px] flex flex-col justify-center gap-3 text-xs">
+                <div class="rounded-sm deep text-white p-3">
+                  <p class="schem text-slate-300">Collapse three paths into one</p>
+                  <p class="font-mono text-[11px] mt-1 leading-5">ticket_participants (org_id, user_id, ticket_id)<br/>— assignee, reporter and co-assignee<br/>all become rows in one relation</p>
+                </div>
+                <svg width="100%" height="24"><line x1="50%" y1="0" x2="50%" y2="16" stroke="#0f172a" stroke-width="2"/><path d="M0 0 L12 0 L6 8 Z" transform="translate(calc(50% - 6px),16)" fill="#0f172a"/></svg>
+                <div class="rounded-sm border-2 border-emerald-700 bg-emerald-50 p-2 font-mono text-[11px] text-emerald-900">index (org_id, user_id, created_at DESC)<br/>→ ordered index scan, no OR, no sort</div>
+                <p class="text-slate-600">The read becomes a single indexed lookup that returns rows already in display order.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-4 text-sm">
+            <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500 mb-2">Problem</p><p>"Which tickets are mine" is expressed three different ways, so it cannot be indexed as one question. Every non-admin page view reads ~116 MB. On Neon that is billed compute, and it is the default path — not an edge case.</p></div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500 mb-2">Solution</p><p>Make participation a single relation rather than three columns. Assignee, reporter and co-assignee become rows; the scope clause becomes one indexed predicate with the sort column in the index.</p></div>
+          </div>
+          <div class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"><strong>Cheaper interim fix, if the relation is too big a change:</strong> add an index on <code class="font-mono text-xs">(org_id, reporter_id, created_at DESC)</code> and one on <code class="font-mono text-xs">(org_id, assignee_id, created_at DESC)</code> so the planner can BitmapOr two indexed branches instead of scanning. That will not reach 25 buffers, but it should take a large bite out of 14,883 — and it is a migration, not a redesign. <strong>Measure it; do not assume it.</strong></div>
+          <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500 mb-2">Wins</p><ul class="grid sm:grid-cols-2 gap-x-8 gap-y-1 text-sm list-disc list-inside text-slate-700"><li>The hottest read stops scanning</li><li>Locality: one definition of "mine"</li><li>Database compute billed drops</li><li>Sort served by the index, not a sort node</li></ul></div>
+        </article>
+
+        <!-- B2 -->
+        <article id="b2" class="space-y-5">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <h2 class="font-serif text-2xl tracking-tight">2 · A greedy route param at the module root swallows every sibling path</h2>
+            <span class="rounded-full bg-emerald-100 text-emerald-800 px-3 py-1 text-xs font-semibold shrink-0">Strong</span>
+          </div>
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-3">Before</p>
+              <pre class="mermaid">
+flowchart TB
+  R["GET /build/anything"] --> M{"matches<br/>/build/:projectId"}
+  M --> P["ParseIntPipe('anything')"]:::leak
+  P --> E["400 Validation failed<br/>numeric string is expected"]:::leak
+  classDef leak fill:#fee2e2,stroke:#dc2626,color:#7f1d1d;
+              </pre>
+              <p class="text-xs text-red-700 mt-2 font-mono">GET /build/projects → 400<br/>GET /build/goals → 400</p>
+              <p class="text-xs text-slate-500 mt-1">Neither is a real route; both should be 404. Any future <code class="font-mono">/build/templates</code> is shadowed unless declared first.</p>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-3">After</p>
+              <pre class="mermaid">
+flowchart TB
+  R["GET /build/anything"] --> M{"numeric segment?"}
+  M -->|yes| D["/build/:projectId"]:::ok
+  M -->|no| N["404 Not Found"]:::ok
+  classDef ok fill:#ecfdf5,stroke:#047857,color:#065f46;
+              </pre>
+              <p class="text-xs text-slate-500 mt-2">Constrain the param to digits so a non-numeric segment simply does not match, and 404s honestly.</p>
+            </div>
+          </div>
+          <div class="grid md:grid-cols-2 gap-4 text-sm">
+            <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500 mb-2">Problem</p><p>A 400 on an unknown path is a misleading error, and it made this module look catastrophically broken during diagnosis. It also silently reserves the entire <code class="font-mono text-xs">/build/*</code> namespace against future routes.</p></div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500 mb-2">Solution</p><p>Constrain the parameter pattern to digits, or move project detail under an explicit prefix. Small change, removes a whole class of confusing failures.</p></div>
+          </div>
+        </article>
+
+        <!-- H1 -->
+        <article id="h1" class="space-y-5">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <h2 class="font-serif text-2xl tracking-tight">3 · HRMS: the model that was built is not the model that runs</h2>
+            <div class="flex gap-2 shrink-0"><span class="rounded-full bg-red-600 text-white px-3 py-1 text-xs font-semibold">measured</span><span class="rounded-full bg-emerald-100 text-emerald-800 px-3 py-1 text-xs font-semibold">Strong</span></div>
+          </div>
+
+          <div class="rounded-lg border border-slate-200 bg-white p-5">
+            <p class="schem text-slate-500 mb-3">98 hr_* tables — live row counts</p>
+            <div class="flex items-end gap-1 h-24">
+              <div class="bg-red-500 rounded-t" style="width:97%;height:100%"></div>
+              <div class="bg-emerald-500 rounded-t" style="width:3%;height:8%"></div>
+            </div>
+            <div class="flex justify-between text-xs mt-2"><span class="text-red-700 font-semibold">95 tables · 0 rows</span><span class="text-emerald-700 font-semibold">3 tables · 1 row each</span></div>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-3">Before — built model vs working model</p>
+              <pre class="mermaid">
+flowchart TB
+  API["GET /hr/employees<br/>returns real people ✓"]
+  OM[("organization_members + users")]
+  HP[("hr_people — 0 rows")]:::dead
+  HE[("hr_employments — 0 rows")]:::dead
+  REST[("93 more hr_* tables<br/>0 rows")]:::dead
+  API --> OM
+  HP -.->|nothing reads this| HE
+  HE -.-> REST
+  classDef dead fill:#fee2e2,stroke:#dc2626,color:#7f1d1d;
+              </pre>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-3">After — one person seam, one model</p>
+              <pre class="mermaid">
+flowchart TB
+  API["GET /hr/employees"] --> P
+  PAY["Payroll"] --> P
+  DIR["Directory"] --> P
+  P["<b>PersonDirectory.resolve</b>"]:::deep
+  P --> M[("organization_members + users<br/>identity & membership")]
+  P --> E[("employment — the tables that earn their place")]
+  classDef deep fill:#0f172a,color:#fff,stroke:#0f172a,stroke-width:2px;
+              </pre>
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-4 text-sm">
+            <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500 mb-2">Problem</p><p>HRMS works — but not through the model it was designed around. The employees endpoint reads membership and identity directly, while <code class="font-mono text-xs">hr_people</code>, <code class="font-mono text-xs">hr_employments</code> and 93 sibling tables hold nothing. Every future HR feature faces the same fork, and picks differently.</p></div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500 mb-2">Solution</p><p>Decide which model is canonical and route every read through one seam — the Person Directory spec. With 95 empty tables there is <strong>no migration cost</strong>, and tables that stay empty after the decision are deletion candidates rather than architecture.</p></div>
+          </div>
+          <div class="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">This measurement strengthens the Person Directory spec considerably. It was argued on reference counts; the row counts now say the same thing far more bluntly — and confirm the spec's "no data migration" claim outright.</div>
+        </article>
+
+        <!-- H2 -->
+        <article id="h2" class="space-y-5">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <h2 class="font-serif text-2xl tracking-tight">4 · Schema files declare tables the database does not have</h2>
+            <span class="rounded-full bg-amber-100 text-amber-800 px-3 py-1 text-xs font-semibold shrink-0">Worth exploring</span>
+          </div>
+          <div class="rounded-lg border border-slate-200 bg-white p-5 text-sm space-y-2">
+            <p class="text-slate-700">The HR schema folder declares several attendance table families — event store, projections, correction links, evidence. The database has <strong>two</strong> attendance tables. Directory declares <code class="font-mono text-xs">worker_assignment_periods</code> and <code class="font-mono text-xs">worker_reporting_lines</code>; neither exists.</p>
+            <p class="text-slate-700">This is the same class of defect as the chat <code class="font-mono text-xs">org_id</code> failure, in the opposite direction: there, the database had a column the schema did not declare, and every insert died. Here the schema declares tables the database lacks — so any query against them fails at runtime while passing every static check.</p>
+          </div>
+          <div class="grid md:grid-cols-2 gap-4 text-sm">
+            <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500 mb-2">Problem</p><p>Neither typecheck nor a module-graph tool can see this. It surfaces only as a runtime <code class="font-mono text-xs">42P01</code>, on whichever feature touches the missing table first.</p></div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500 mb-2">Solution</p><p>A drift check comparing declared tables against the catalog, run in CI. The <code class="font-mono text-xs">org_id</code> scanner written earlier is the same shape and can be generalised.</p></div>
+          </div>
+        </article>
+
+        <!-- B3 -->
+        <article id="b3" class="space-y-5">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <h2 class="font-serif text-2xl tracking-tight">5 · Build lives in its own Postgres schema — deliberate, or drift?</h2>
+            <span class="rounded-full bg-slate-200 text-slate-700 px-3 py-1 text-xs font-semibold shrink-0">Speculative</span>
+          </div>
+          <div class="rounded-lg border border-slate-200 bg-white p-5">
+            <div class="grid grid-cols-4 gap-3 text-center text-xs">
+              <div class="rounded border border-slate-300 p-3"><p class="font-mono text-lg">701</p><p class="text-slate-500 mt-1">public</p></div>
+              <div class="rounded border-2 border-indigo-400 bg-indigo-50 p-3"><p class="font-mono text-lg">79</p><p class="text-slate-500 mt-1">build</p></div>
+              <div class="rounded border border-slate-300 p-3"><p class="font-mono text-lg">3</p><p class="text-slate-500 mt-1">build_events</p></div>
+              <div class="rounded border border-slate-300 p-3"><p class="font-mono text-lg">0</p><p class="text-slate-500 mt-1">app (functions)</p></div>
+            </div>
+          </div>
+          <div class="grid md:grid-cols-2 gap-4 text-sm">
+            <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500 mb-2">Problem</p><p>One module sits in its own namespace while eighteen others share <code class="font-mono text-xs">public</code>. That affects <code class="font-mono text-xs">search_path</code>, how RLS policies are applied, cross-schema foreign keys and every ad-hoc query — I hit it myself when a count returned "no such table".</p></div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500 mb-2">Solution</p><p>Either commit to schema-per-module and move the rest, or fold Build back into <code class="font-mono text-xs">public</code>. The costly state is the current one — a single exception nobody remembers.</p></div>
+          </div>
+          <div class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">Marked speculative because this may be a deliberate in-progress migration rather than drift. Worth one sentence from you before anyone acts on it.</div>
+        </article>
+
+      </section>
+
+      <section id="top-recommendation" class="space-y-4">
+        <h2 class="font-serif text-3xl tracking-tight">Top recommendation</h2>
+        <div class="rounded-xl deep text-white p-8 space-y-4">
+          <p class="schem text-slate-400">Do this first</p>
+          <p class="font-serif text-2xl"><a href="#b1" class="underline decoration-slate-600 hover:decoration-white">1 · Collapse the three definitions of "my tickets" into one</a></p>
+          <p class="text-slate-300 text-sm max-w-3xl">It is the only finding here that is both measured and on the default path. Every non-admin ticket list currently reads about 116 MB, and Build is a phase-one module with a 10M-user bar. Start with the two-index interim fix and <em>measure</em> — if that gets close enough, the participation relation can wait; if it does not, the measurement justifies the redesign. Either way the decision is made on numbers, not argument.</p>
+        </div>
+        <div class="rounded-lg border border-slate-200 bg-white p-5 text-sm space-y-2">
+          <p class="schem text-slate-500">What is genuinely healthy — do not touch it</p>
+          <ul class="list-disc list-inside space-y-1 text-slate-700">
+            <li>The project-scoped ticket list is <strong>1.2ms and 25 buffers</strong> on 200k rows. The partial <code class="font-mono text-xs">(org_id, project_id, rank) WHERE deleted_at IS NULL</code> index is doing exactly its job.</li>
+            <li>Tickets carry 15 indexes, most org-leading composites with partial predicates — this table has been thought about carefully.</li>
+            <li>RLS failed closed with <code class="font-mono text-xs">42501</code> the moment I queried without the tenant GUC. The isolation is real, not nominal.</li>
+            <li>Both APIs return correct data. Neither module is broken.</li>
+          </ul>
+        </div>
+      </section>
+
+      <footer class="pt-6 border-t border-slate-200 text-xs text-slate-500 space-y-1">
+        <p>Plans captured 2026-08-20 against 200,001 tickets as <span class="font-mono">streamline_app</span> with <span class="font-mono">app.organization_id</span> set. Buffer counts are the portable measure; wall-clock includes remote-region round trips. Redis was over quota throughout, so no figure is cache-assisted — these are cold-path costs.</p>
+      </footer>
+
+    </main>
+  </body>
+</html>

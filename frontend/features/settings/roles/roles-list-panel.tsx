@@ -112,7 +112,6 @@ export interface RolesListPanelProps {
   pagination: PaginatedRolesResponse["pagination"];
   selectedRoleId: number | null;
   onRetry: () => void;
-  onCreate: () => void;
   onSelect: (roleId: number) => void;
   onDelete: (role: RoleListRow) => void;
   onRename: (role: Role) => void;
@@ -129,7 +128,6 @@ export function RolesListPanel({
   pagination,
   selectedRoleId,
   onRetry,
-  onCreate,
   onSelect,
   onDelete,
   onRename,
@@ -179,7 +177,6 @@ export function RolesListPanel({
             ? "Try a different search term."
             : "Create a role to manage permissions."
         }
-        action={search.trim() ? undefined : { label: "New role", onClick: onCreate }}
         compact
         className="h-full min-h-0 flex-1 border-0 bg-transparent"
       />

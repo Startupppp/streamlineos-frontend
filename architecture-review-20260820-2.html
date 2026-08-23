@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Architecture review II — StreamlineOS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({ startOnLoad: true, theme: "neutral", securityLevel: "loose", flowchart: { htmlLabels: true, curve: "basis" } });
+    </script>
+    <style>
+      .seam { stroke-dasharray: 4 4; }
+      .deep { background: linear-gradient(135deg, #0f172a, #1e293b); }
+      .schem { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+      .mermaid { font-size: 13px; }
+      article { scroll-margin-top: 1.5rem; }
+      .strike { text-decoration: line-through; text-decoration-thickness: 2px; }
+    </style>
+  </head>
+  <body class="bg-stone-50 text-slate-900 font-sans antialiased">
+    <main class="max-w-5xl mx-auto px-6 py-12 space-y-14">
+
+      <header class="space-y-5">
+        <div class="flex items-baseline justify-between flex-wrap gap-3">
+          <h1 class="font-serif text-4xl tracking-tight">Architecture review <span class="text-indigo-700">II</span> — StreamlineOS</h1>
+          <p class="font-mono text-xs text-slate-500">2026-08-20 · evidence-based pass</p>
+        </div>
+        <p class="text-sm text-slate-600 max-w-3xl">Every claim below was checked against the running API, the live database catalog, or a module-graph tool. The first review was built from reading code; four of its claims dissolved on contact with reality. Those are recorded rather than quietly dropped.</p>
+
+        <div class="grid sm:grid-cols-4 gap-3">
+          <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500">Codebase</p><p class="font-mono text-lg mt-1">961k</p><p class="text-xs text-slate-500">LOC · 7,087 files</p></div>
+          <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500">Circular deps</p><p class="font-mono text-lg mt-1 text-emerald-700">0</p><p class="text-xs text-slate-500">both repos, verified</p></div>
+          <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500">Over 500 lines</p><p class="font-mono text-lg mt-1 text-amber-700">95</p><p class="text-xs text-slate-500">55 API · 40 web</p></div>
+          <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500">Txns / request</p><p class="font-mono text-lg mt-1 text-red-700">3.2–4.0</p><p class="text-xs text-slate-500">measured, target 1</p></div>
+        </div>
+
+        <div class="rounded-lg border border-slate-200 bg-white p-4 flex flex-wrap gap-x-8 gap-y-3 text-xs">
+          <span class="flex items-center gap-2"><span class="inline-block w-6 h-4 border-2 border-slate-800 rounded-sm"></span> module</span>
+          <span class="flex items-center gap-2"><svg width="26" height="10"><line x1="0" y1="5" x2="26" y2="5" stroke="#64748b" stroke-width="2" class="seam"/></svg> seam</span>
+          <span class="flex items-center gap-2"><svg width="26" height="10"><line x1="0" y1="5" x2="20" y2="5" stroke="#dc2626" stroke-width="2"/><path d="M20 1 L26 5 L20 9 Z" fill="#dc2626"/></svg> leakage</span>
+          <span class="flex items-center gap-2"><span class="inline-block w-6 h-4 rounded-sm deep"></span> deep module</span>
+        </div>
+      </header>
+
+      <!-- ============ LEDGER ============ -->
+      <section class="space-y-4">
+        <h2 class="font-serif text-2xl tracking-tight">Ledger since review I</h2>
+        <div class="grid md:grid-cols-2 gap-4">
+          <div class="rounded-lg border border-emerald-200 bg-emerald-50 p-5">
+            <p class="schem text-emerald-800 mb-3">Fixed and verified</p>
+            <ul class="space-y-2 text-sm text-emerald-950">
+              <li><strong>Blank app.</strong> Web app pointed at the production API while authenticating locally — prod CORS excludes localhost and the local JWT can't be verified there. Every module rendered empty. One line.</li>
+              <li><strong>Chat writes were dead.</strong> Migration 0306 set <code class="font-mono text-xs">org_id NOT NULL</code> on 8 tables; the schema never declared it. <code class="font-mono text-xs">chat_messages</code> had 0 rows. Now sends, pins, saves, huddles, invites — proven over HTTP.</li>
+              <li><strong>Presence collapsed across orgs.</strong> Unique on <code class="font-mono text-xs">user_id</code> alone made a second presence row impossible. Now <code class="font-mono text-xs">(org_id, user_id)</code>; multi-org user proven to hold both.</li>
+              <li><strong>Chat search.</strong> Leading-wildcard ILIKE → indexed <code class="font-mono text-xs">SECURITY DEFINER</code> helper with cap fallback; unbounded id array → indexed <code class="font-mono text-xs">EXISTS</code>; cursor/sort mismatch fixed.</li>
+            </ul>
+          </div>
+          <div class="rounded-lg border border-amber-200 bg-amber-50 p-5">
+            <p class="schem text-amber-800 mb-3">Claimed in review I — did not survive verification</p>
+            <ul class="space-y-2 text-sm text-amber-950">
+              <li class="strike decoration-amber-700/50">"Nothing joins the two person chains."</li>
+              <li class="strike decoration-amber-700/50">"<code class="font-mono text-xs">hr_people</code> is the older generation with bare FKs."</li>
+              <li class="strike decoration-amber-700/50">"Consolidating onto <code class="font-mono text-xs">hr_people</code> is a simplification."</li>
+              <li class="strike decoration-amber-700/50">"The web catalog is 206 keys short, so owners can't grant them."</li>
+            </ul>
+            <p class="text-xs text-amber-900 mt-3 pt-3 border-t border-amber-200">Payroll already models both identities in a tested union type. <code class="font-mono">hr_people</code> already has row versions, soft delete and composite tenant keys. Consolidating naively would have <em>deleted</em> the ability to pay a non-member. And the permission picker reads the API catalog, so all 631 keys are already grantable — the smaller array is a subset by design, guarded by an existing test.</p>
+          </div>
+        </div>
+        <p class="text-sm text-slate-600">The pattern: findings that could be <em>executed against</em> held; findings inferred from reading did not. Everything below was executed against.</p>
+      </section>
+
+      <section id="candidates" class="space-y-14">
+
+        <!-- C1 -->
+        <article id="c1" class="space-y-5">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <h2 class="font-serif text-2xl tracking-tight">1 · Authorization is the platform's hottest query surface, and it has no single seam</h2>
+            <div class="flex gap-2 shrink-0"><span class="rounded-full bg-indigo-100 text-indigo-800 px-3 py-1 text-xs font-semibold">measured</span><span class="rounded-full bg-emerald-100 text-emerald-800 px-3 py-1 text-xs font-semibold">Strong</span></div>
+          </div>
+          <ul class="font-mono text-sm text-slate-600 space-y-0.5">
+            <li>modules/access · modules/rbac · modules/module-access · modules/ownership · modules/delegations — ~24,600 lines</li>
+            <li>common/tenant/tenant-context.interceptor.ts · common/auth/membership-state.service.ts</li>
+          </ul>
+
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-3">Before — each check opens its own transaction</p>
+              <pre class="mermaid">
+sequenceDiagram
+  participant R as Request
+  participant G as Guard chain
+  participant I as TenantContext
+  participant DB as Neon
+  R->>G: JwtAuthGuard
+  G->>DB: BEGIN / SET LOCAL / query / COMMIT
+  R->>G: ModuleGuard
+  G->>DB: BEGIN / SET LOCAL / query / COMMIT
+  R->>G: PermissionGuard
+  G->>DB: BEGIN / SET LOCAL / query / COMMIT
+  R->>I: interceptor (finally)
+  I->>DB: BEGIN / SET LOCAL / handler / COMMIT
+              </pre>
+              <p class="text-xs text-red-700 mt-2">Guards run <em>before</em> interceptors, so each opens its own tenant transaction. Access resolution does this in 5+ methods, membership in 2 more.</p>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-3">After — one context, reused</p>
+              <div class="h-[300px] flex flex-col justify-center gap-3">
+                <div class="rounded-sm deep text-white p-3 text-xs">
+                  <p class="schem text-slate-300">Tenant context — established once, earliest</p>
+                  <p class="font-mono text-[11px] mt-1">BEGIN · SET LOCAL app.organization_id</p>
+                </div>
+                <div class="pl-6 space-y-2 text-xs">
+                  <div class="border-2 border-slate-800 rounded-sm p-2 bg-white font-mono text-[11px]">guards reuse ambient context</div>
+                  <div class="border-2 border-slate-800 rounded-sm p-2 bg-white font-mono text-[11px]">handler reuses ambient context</div>
+                </div>
+                <div class="rounded-sm border-2 border-emerald-700 bg-emerald-50 p-2 text-xs font-mono text-emerald-900">COMMIT — one round-trip sequence</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="rounded-lg border border-slate-200 bg-white p-4">
+            <p class="schem text-slate-500 mb-3">Measured — 10 warm requests each</p>
+            <table class="w-full text-sm">
+              <thead><tr class="text-left text-slate-500 schem border-b border-slate-200"><th class="py-2">Request</th><th class="py-2">Latency</th><th class="py-2">Transactions</th><th class="py-2">Tuples read</th></tr></thead>
+              <tbody class="divide-y divide-slate-100 font-mono text-xs">
+                <tr><td class="py-2">GET /me/access</td><td class="py-2">384ms</td><td class="py-2">3.2</td><td class="py-2">1</td></tr>
+                <tr class="bg-red-50"><td class="py-2">GET /me — <span class="font-sans">echoes the token, touches no business data</span></td><td class="py-2">491ms</td><td class="py-2 font-bold">4.0</td><td class="py-2 font-bold">1,266</td></tr>
+                <tr><td class="py-2">GET /chat/channels</td><td class="py-2">397ms</td><td class="py-2">3.8</td><td class="py-2">61</td></tr>
+              </tbody>
+            </table>
+            <p class="text-xs text-slate-500 mt-2">Row two is the tell: its entire cost is the guard chain. Tuple volume is inflated by re-parse/re-plan catalog reads, because prepared statements are disabled for the Neon pooler — deliberately, so the lever is <em>fewer statements</em>, not statement reuse.</p>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-4 text-sm">
+            <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500 mb-2">Problem</p><p>Five modules and ~24,600 lines answer "may this person do this", and no single one owns establishing tenant context. So every request pays for three or four separate transactions before the handler runs — on every endpoint, for every user.</p></div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500 mb-2">Solution</p><p>Establish tenant context once at the earliest point in the request and have guards reuse it. One transaction per request, with a test asserting the ceiling so it cannot regress.</p></div>
+          </div>
+          <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500 mb-2">Wins</p><ul class="grid sm:grid-cols-2 gap-x-8 gap-y-1 text-sm list-disc list-inside text-slate-700"><li>Locality: tenancy established in one place</li><li>Every endpoint gets faster</li><li>Database compute billed goes down</li><li>Cost stops scaling with module count</li></ul></div>
+        </article>
+
+        <!-- C2 -->
+        <article id="c2" class="space-y-5">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <h2 class="font-serif text-2xl tracking-tight">2 · The module ladder reaches 10 of 18 modules</h2>
+            <span class="rounded-full bg-emerald-100 text-emerald-800 px-3 py-1 text-xs font-semibold shrink-0">Strong</span>
+          </div>
+          <ul class="font-mono text-sm text-slate-600"><li>modules/rbac/permissions/module-access.ts — ACCESS_MANAGED_MODULES</li></ul>
+          <div class="rounded-lg border border-slate-200 bg-white p-5">
+            <div class="grid grid-cols-2 gap-6">
+              <div>
+                <p class="schem text-emerald-700 mb-2">Has owner / admin / member</p>
+                <div class="flex flex-wrap gap-1.5 text-xs">
+                  <span class="rounded bg-emerald-100 text-emerald-900 px-2 py-1 font-mono">hr</span><span class="rounded bg-emerald-100 text-emerald-900 px-2 py-1 font-mono">crm</span><span class="rounded bg-emerald-100 text-emerald-900 px-2 py-1 font-mono">build</span><span class="rounded bg-emerald-100 text-emerald-900 px-2 py-1 font-mono">accounting</span><span class="rounded bg-emerald-100 text-emerald-900 px-2 py-1 font-mono">inventory</span><span class="rounded bg-emerald-100 text-emerald-900 px-2 py-1 font-mono">support</span><span class="rounded bg-emerald-100 text-emerald-900 px-2 py-1 font-mono">surveys</span><span class="rounded bg-emerald-100 text-emerald-900 px-2 py-1 font-mono">payroll</span><span class="rounded bg-emerald-100 text-emerald-900 px-2 py-1 font-mono">sign</span><span class="rounded bg-emerald-100 text-emerald-900 px-2 py-1 font-mono">timesheets</span>
+                </div>
+              </div>
+              <div>
+                <p class="schem text-red-700 mb-2">Returns not-found — no ladder at all</p>
+                <div class="flex flex-wrap gap-1.5 text-xs">
+                  <span class="rounded bg-red-100 text-red-900 px-2 py-1 font-mono">chat</span><span class="rounded bg-red-100 text-red-900 px-2 py-1 font-mono">mail</span><span class="rounded bg-red-100 text-red-900 px-2 py-1 font-mono">calendar</span><span class="rounded bg-red-100 text-red-900 px-2 py-1 font-mono">notifications</span><span class="rounded bg-red-100 text-red-900 px-2 py-1 font-mono">blog</span><span class="rounded bg-red-100 text-red-900 px-2 py-1 font-mono">workflows</span><span class="rounded bg-red-100 text-red-900 px-2 py-1 font-mono">directory</span><span class="rounded bg-red-100 text-red-900 px-2 py-1 font-mono">billing</span>
+                </div>
+                <p class="text-xs text-red-700 mt-2">Chat, Mail and Calendar are phase-one surfaces.</p>
+              </div>
+            </div>
+          </div>
+          <div class="grid md:grid-cols-2 gap-4 text-sm">
+            <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500 mb-2">Problem</p><p>Your model says every module except Home and Knowledge Base gets an owner who appoints admins and members and authors grants. Eight modules can only be run by an org admin — there is no middle rung, so delegating them means over-privileging.</p></div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500 mb-2">Solution</p><p>The API is already generic on the module key and the web app is already one shared screen with thin per-module routes. Adding the eight is configuration plus a resolver that answers standing in one question instead of two.</p></div>
+          </div>
+          <div class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">Owner is a lifecycle record; admin is a ranked role assignment. Two storage shapes for two rungs of one ladder — which is why nothing forced a new module to acquire both. Unify the <em>resolution</em>, not the storage: the ten working modules then aren't migrated. Detailed in the PRD.</div>
+        </article>
+
+        <!-- C3 -->
+        <article id="c3" class="space-y-5">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <h2 class="font-serif text-2xl tracking-tight">3 · There is no list-view module — every list page improvises</h2>
+            <div class="flex gap-2 shrink-0"><span class="rounded-full bg-indigo-100 text-indigo-800 px-3 py-1 text-xs font-semibold">your filter complaint</span><span class="rounded-full bg-emerald-100 text-emerald-800 px-3 py-1 text-xs font-semibold">Strong</span></div>
+          </div>
+          <div class="rounded-lg border border-slate-200 bg-white p-5">
+            <p class="schem text-slate-500 mb-3">Counted across the web app</p>
+            <div class="grid grid-cols-4 gap-4 text-center">
+              <div><p class="font-mono text-2xl">219</p><p class="text-xs text-slate-500 mt-1">files import the filter row</p></div>
+              <div><p class="font-mono text-2xl">103</p><p class="text-xs text-slate-500 mt-1">hand-sync filters to the URL</p></div>
+              <div><p class="font-mono text-2xl">82</p><p class="text-xs text-slate-500 mt-1">hand-debounce their search</p></div>
+              <div><p class="font-mono text-2xl">70</p><p class="text-xs text-slate-500 mt-1">hand-handle the "all" sentinel</p></div>
+            </div>
+          </div>
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-3">Before — no owner of overflow</p>
+              <div class="border border-slate-300 rounded-md p-2 mt-8">
+                <div class="flex gap-2 items-center text-[10px]">
+                  <div class="h-9 flex-1 min-w-[70px] rounded-md border border-slate-300 bg-white flex items-center px-2 text-slate-400">Search…</div>
+                  <div class="h-9 w-16 rounded-md border border-slate-300 bg-white flex items-center px-2 text-slate-500">Status</div>
+                  <div class="h-9 w-16 rounded-md border border-slate-300 bg-white flex items-center px-2 text-slate-500">Type</div>
+                  <div class="h-9 w-16 rounded-md border border-slate-300 bg-white flex items-center px-2 text-slate-500">Owner</div>
+                  <div class="h-9 w-14 rounded-md border border-red-400 bg-red-50 flex items-center px-2 text-red-600">Ware…</div>
+                </div>
+                <p class="text-[10px] text-red-600 mt-2">Row scrolls sideways. Filters past the third are invisible, and nothing shows which are active.</p>
+              </div>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-3">After — bounded row, chips carry state</p>
+              <div class="border border-slate-300 rounded-md p-2 mt-8">
+                <div class="flex gap-2 items-center text-[10px]">
+                  <div class="h-9 flex-1 rounded-md border border-slate-300 bg-white flex items-center px-2 text-slate-400">Search…</div>
+                  <div class="h-9 w-20 rounded-md border border-slate-300 bg-white flex items-center px-2 text-slate-500">Status</div>
+                  <div class="h-9 w-20 rounded-md border-2 border-slate-800 bg-white flex items-center px-2 font-semibold">+ Filter</div>
+                </div>
+                <div class="flex gap-1.5 mt-2 text-[10px]"><span class="rounded-full bg-slate-900 text-white px-2 py-0.5">Type: Bug ×</span><span class="rounded-full bg-slate-900 text-white px-2 py-0.5">Owner: Priya ×</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="grid md:grid-cols-2 gap-4 text-sm">
+            <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500 mb-2">Problem</p><p>The page shell, table and filter row are correct primitives, but nothing owns the <em>coordination</em>. So no module owns the overflow policy — which is exactly why filter bars grew past the width available.</p></div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500 mb-2">Solution</p><p>A list-view module taking a declarative spec. Overflow, chips, URL sync, debounce, sentinel and the mobile drawer are decided once inside it. Pages shrink to the spec.</p></div>
+          </div>
+          <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500 mb-2">Wins</p><ul class="grid sm:grid-cols-2 gap-x-8 gap-y-1 text-sm list-disc list-inside text-slate-700"><li>Leverage: one spec, ~220 pages</li><li>Overflow decided once</li><li>The interface is the test surface</li><li>Consistency stops depending on review</li></ul></div>
+        </article>
+
+        <!-- C4 -->
+        <article id="c4" class="space-y-5">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <h2 class="font-serif text-2xl tracking-tight">4 · Cross-module references have no seam</h2>
+            <div class="flex gap-2 shrink-0"><span class="rounded-full bg-indigo-100 text-indigo-800 px-3 py-1 text-xs font-semibold">unlocks chat sharing</span><span class="rounded-full bg-emerald-100 text-emerald-800 px-3 py-1 text-xs font-semibold">Strong</span></div>
+          </div>
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-3">Before — three mechanisms, none extensible</p>
+              <pre class="mermaid">
+flowchart TB
+  CH["Chat"]
+  A["ChatActionsController<br/>4 endpoints, Build only"]
+  T[("tickets")]
+  P[("projects")]
+  D[("deals")]
+  M["metadata jsonb"]
+  CH --> A
+  A -.->|imports schema| T
+  A -.->|imports schema| P
+  CH -.->|linkedDealId FK| D
+  CH --> M
+  L["leads · employees · invoices<br/>no path"]:::none
+  classDef leak stroke:#dc2626,stroke-width:2px,color:#7f1d1d;
+  classDef none stroke:#cbd5e1,stroke-dasharray:4 4,color:#94a3b8;
+  class T,P,D leak
+              </pre>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-3">After — one reference seam</p>
+              <pre class="mermaid">
+flowchart TB
+  CH["Chat"] --> R
+  KB["Knowledge Base"] --> R
+  NO["Notifications"] --> R
+  CA["Calendar"] --> R
+  R["<b>EntityReference</b><br/>resolve(orgId, actor, ref)<br/>actionsFor(ref, actor)"]:::deep
+  R --> B["Build adapter"]
+  R --> C["CRM adapter"]
+  R --> H["HR adapter"]
+  classDef deep fill:#0f172a,color:#fff,stroke:#0f172a,stroke-width:2px;
+              </pre>
+            </div>
+          </div>
+          <div class="grid md:grid-cols-2 gap-4 text-sm">
+            <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500 mb-2">Problem</p><p>An untyped entity pair on the channel, a hard deal FK beside it, and free-form message metadata all describe "this points at that". The only actions are four Build endpoints importing Build's tables directly. Sharing a lead or an employee means writing that controller again.</p></div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500 mb-2">Solution</p><p>One interface: resolve returns a card or nothing when the reader lacks access; actionsFor returns what this actor may do. Each module registers an adapter.</p></div>
+          </div>
+          <div class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"><strong>Security, not style.</strong> An unfurled ticket renders from metadata captured at send time. A reader who lost access still sees it in scrollback. Resolving at read time degrades it to "a ticket you can't see".</div>
+        </article>
+
+        <!-- C5 -->
+        <article id="c5" class="space-y-5">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <h2 class="font-serif text-2xl tracking-tight">5 · AI model choice is two global tiers, not per-task routing</h2>
+            <div class="flex gap-2 shrink-0"><span class="rounded-full bg-indigo-100 text-indigo-800 px-3 py-1 text-xs font-semibold">new</span><span class="rounded-full bg-amber-100 text-amber-800 px-3 py-1 text-xs font-semibold">Worth exploring</span></div>
+          </div>
+          <ul class="font-mono text-sm text-slate-600"><li>modules/ai/core/providers/llm-provider.config.ts · gateway/ai-gateway.service.ts</li></ul>
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-3">Before — one provider, two tiers, globally</p>
+              <div class="h-[240px] flex flex-col justify-center gap-2 text-xs">
+                <div class="rounded border-2 border-slate-800 bg-white p-2 font-mono text-[11px]">fastModel = gpt-4o-mini</div>
+                <div class="rounded border-2 border-slate-800 bg-white p-2 font-mono text-[11px]">standardModel = gpt-4o</div>
+                <p class="text-slate-500 mt-2">Every feature — HR summaries, CRM copilot, KB retrieval, chat assistant, blog drafting — picks one of two. Provider is a single global switch.</p>
+              </div>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-3">After — a routing policy keyed by feature</p>
+              <div class="h-[240px] flex flex-col justify-center gap-3 text-xs">
+                <div class="rounded-sm deep text-white p-3">
+                  <p class="schem text-slate-300">ModelRouting</p>
+                  <p class="font-mono text-[11px] mt-1">routeFor(feature) → { provider, model, chain, cap }</p>
+                </div>
+                <div class="grid grid-cols-2 gap-2 font-mono text-[10px]">
+                  <div class="border border-slate-300 rounded p-1.5">kb.retrieval → cheap</div>
+                  <div class="border border-slate-300 rounded p-1.5">hr.summary → cheap</div>
+                  <div class="border border-slate-300 rounded p-1.5">crm.copilot → standard</div>
+                  <div class="border border-slate-300 rounded p-1.5">payroll.explain → strongest</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="grid md:grid-cols-2 gap-4 text-sm">
+            <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500 mb-2">Problem</p><p>You asked for each task to be able to use a different provider and model so the cheapest reliable one wins. Today that decision is two constants shared by every AI feature, so a trivial classification and a payroll explanation pay the same rate.</p></div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500 mb-2">Solution</p><p>A routing module mapping feature to provider, model, fallback chain and output cap. The gateway already meters tokens per call, so cost per feature becomes measurable — and tunable — rather than assumed.</p></div>
+          </div>
+          <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500 mb-2">Wins</p><ul class="grid sm:grid-cols-2 gap-x-8 gap-y-1 text-sm list-disc list-inside text-slate-700"><li>Cost per feature becomes visible</li><li>Locality: model policy in one module</li><li>Swap a provider without touching features</li><li>Cheap tier for the many, strong for the few</li></ul></div>
+        </article>
+
+        <!-- C6 -->
+        <article id="c6" class="space-y-5">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <h2 class="font-serif text-2xl tracking-tight">6 · 95 files past the size limit, concentrated where change is riskiest</h2>
+            <span class="rounded-full bg-amber-100 text-amber-800 px-3 py-1 text-xs font-semibold shrink-0">Worth exploring</span>
+          </div>
+          <div class="rounded-lg border border-slate-200 bg-white p-5">
+            <p class="schem text-slate-500 mb-3">Largest files — the 500-line limit is a hard review gate</p>
+            <div class="space-y-1.5 text-xs">
+              <div class="flex items-center gap-3"><div class="bg-red-500 h-5 rounded-sm" style="width:52%"></div><span class="font-mono">1,566</span><span class="text-slate-600">module-access-groups.service.ts</span></div>
+              <div class="flex items-center gap-3"><div class="bg-red-500 h-5 rounded-sm" style="width:43%"></div><span class="font-mono">1,285</span><span class="text-slate-600">features/chat/message-panel.tsx</span></div>
+              <div class="flex items-center gap-3"><div class="bg-red-400 h-5 rounded-sm" style="width:36%"></div><span class="font-mono">1,075</span><span class="text-slate-600">notification-events.catalog.ts</span></div>
+              <div class="flex items-center gap-3"><div class="bg-red-400 h-5 rounded-sm" style="width:32%"></div><span class="font-mono">973</span><span class="text-slate-600">org-membership.service.ts</span></div>
+              <div class="flex items-center gap-3"><div class="bg-amber-400 h-5 rounded-sm" style="width:30%"></div><span class="font-mono">908</span><span class="text-slate-600">hooks/api/chat.ts</span></div>
+              <div class="flex items-center gap-3"><div class="bg-amber-400 h-5 rounded-sm" style="width:28%"></div><span class="font-mono">854</span><span class="text-slate-600">support/routing/page.tsx</span></div>
+            </div>
+            <p class="text-xs text-slate-500 mt-3">Three of the top six sit in access, chat and membership — the surfaces being changed for phase one.</p>
+          </div>
+          <div class="grid md:grid-cols-2 gap-4 text-sm">
+            <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500 mb-2">Problem</p><p>A 1,285-line page component and a 1,566-line access service are not just hard to read — they are hard for a coding agent to change safely, because the blast radius of any edit is the whole file.</p></div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500 mb-2">Solution</p><p>Split by responsibility, prioritising the files that phase one will touch anyway. Not a sweep — a rule applied to files already being edited.</p></div>
+          </div>
+          <div class="rounded-lg border border-slate-200 bg-white p-4 text-sm"><p class="schem text-slate-500 mb-2">Also verified</p><p class="text-slate-700">Dead code, confirmed with knip rather than grep: <strong>14 unused files</strong> (5 HR, 9 in settings hierarchy), <strong>24 unused exports</strong>, and one unused dependency. Small, but it is real and safe to delete.</p></div>
+        </article>
+
+        <!-- C7 -->
+        <article id="c7" class="space-y-5">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <h2 class="font-serif text-2xl tracking-tight">7 · The validated config module fails the deletion test</h2>
+            <span class="rounded-full bg-emerald-100 text-emerald-800 px-3 py-1 text-xs font-semibold shrink-0">Strong</span>
+          </div>
+          <ul class="font-mono text-sm text-slate-600"><li>config/env.validation.ts — bypassed by 108 direct reads across 56 variables</li></ul>
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-3">Before</p>
+              <pre class="mermaid">
+flowchart LR
+  E[".env"] --> V["env.validation.ts"]
+  V --> C["ConfigService"] --> A["a few call sites"]
+  E -.->|"108 reads · 56 vars"| B["everything else<br/>process.env.X"]
+  classDef leak stroke:#dc2626,stroke-width:2px,color:#7f1d1d;
+  class B leak
+              </pre>
+              <p class="text-xs text-slate-500 mt-2"><strong>Deletion test:</strong> delete the module and 108 call sites are unaffected. It concentrates nothing.</p>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-3">After</p>
+              <pre class="mermaid">
+flowchart LR
+  E[".env"] --> V["<b>config module</b><br/>zod · fail fast · typed"]:::deep
+  V --> A["every call site"]
+  L["lint: no process.env<br/>outside config/"]:::rule --> A
+  classDef deep fill:#0f172a,color:#fff,stroke:#0f172a,stroke-width:2px;
+  classDef rule fill:#ecfdf5,stroke:#047857,color:#065f46;
+              </pre>
+            </div>
+          </div>
+          <div class="rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-700">Consequence today: a missing variable surfaces as a failed notification hours after deploy rather than a refusal to boot. The AI provider config and the push subject both read raw environment at call time.</div>
+        </article>
+
+        <!-- C8 -->
+        <article id="c8" class="space-y-5">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <h2 class="font-serif text-2xl tracking-tight">8 · Two rich-text stacks — but this one contradicts a written decision</h2>
+            <span class="rounded-full bg-slate-200 text-slate-700 px-3 py-1 text-xs font-semibold shrink-0">Speculative</span>
+          </div>
+          <ul class="font-mono text-sm text-slate-600"><li>components/editor/tiptap-editor.tsx · components/editor/plate/** (24 files)</li></ul>
+          <div class="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm">
+            <p class="font-semibold text-amber-900 mb-1">⚠ Contradicts a documented decision — but worth reopening because you raised it directly.</p>
+            <p class="text-amber-900">The project rules explicitly sanction two stacks: simple fields (tickets, blog, comments) extend Tiptap; Notion-style surfaces (the KB wiki) use Plate. You asked for one editor maintained in one place, with props for the differences. Those are incompatible positions and only you can settle it.</p>
+          </div>
+          <div class="grid md:grid-cols-2 gap-4 text-sm">
+            <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500 mb-2">The case for keeping both</p><p>A comment box and a Notion-style document editor have genuinely different interfaces — block handling, slash menus, drag reordering and collaborative structure only exist in one of them. Collapsing them yields a single component with two disjoint prop sets, which is a shallow module wearing one name.</p></div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500 mb-2">The case for collapsing</p><p>Two stacks means two toolbars, two serialisation formats, two upload paths and two sets of bugs — and content authored in one may not render in the other. If documents and tickets should share content, one stack is the only way.</p></div>
+          </div>
+          <p class="text-sm text-slate-600">My read: keep both, but unify what actually should be shared — the serialisation format and the upload path — so content is portable even though the editing surfaces differ. That is a smaller, safer change than one editor.</p>
+        </article>
+
+      </section>
+
+      <section id="top-recommendation" class="space-y-4">
+        <h2 class="font-serif text-3xl tracking-tight">Top recommendation</h2>
+        <div class="rounded-xl deep text-white p-8 space-y-4">
+          <p class="schem text-slate-400">Do this first</p>
+          <p class="font-serif text-2xl"><a href="#c1" class="underline decoration-slate-600 hover:decoration-white">1 · One tenant context per request</a></p>
+          <p class="text-slate-300 text-sm max-w-3xl">It is the only candidate that makes <em>every other one cheaper</em>. Authorization runs on every request, currently costs three to four transactions, and the module ladder is about to add eight more modules on top of it. Fixing the path first means the ladder rides something cheap; fixing it second means optimising a larger surface. It also directly serves the database bill, which you named as a goal.</p>
+          <hr class="border-slate-700" />
+          <p class="schem text-slate-400">Then, in order</p>
+          <p class="text-slate-300 text-sm">2 · the ladder across all 18 modules — 3 · the list-view module, which fixes filters across HRMS, Payroll and Build at once — 4 · the reference seam, after which chat sharing is additive per module.</p>
+        </div>
+        <div class="rounded-lg border border-slate-200 bg-white p-5 text-sm space-y-2">
+          <p class="schem text-slate-500">Where the architecture is genuinely healthy</p>
+          <ul class="list-disc list-inside space-y-1 text-slate-700">
+            <li>Zero circular dependencies in both repos — verified with a module-graph tool, not asserted.</li>
+            <li>Tenant isolation has real depth: RLS policies are live, and they caught a missing application predicate during this review.</li>
+            <li>The module-access API and web screen are already generic, which is why the ladder is additive rather than a rebuild.</li>
+            <li>The permission catalog has a working parity guard, in the direction that matters.</li>
+            <li>Schema hardening is real — composite tenant keys, soft delete, row versions and actor FKs are widespread.</li>
+          </ul>
+        </div>
+      </section>
+
+      <footer class="pt-6 border-t border-slate-200 text-xs text-slate-500 space-y-1">
+        <p>Every measurement taken 2026-08-20 against the running API and development database. Latency figures include round trips to a remote region and should be read as relative; transaction counts are the portable number.</p>
+        <p>No ADRs exist (<span class="font-mono">docs/adr/</span> absent) and no <span class="font-mono">CONTEXT.md</span>; domain vocabulary taken from the three <span class="font-mono">CLAUDE.md</span> files, which function as the de-facto decision record.</p>
+      </footer>
+
+    </main>
+  </body>
+</html>

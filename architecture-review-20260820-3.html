@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Spec validation — StreamlineOS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({ startOnLoad: true, theme: "neutral", securityLevel: "loose", flowchart: { htmlLabels: true, curve: "basis" } });
+    </script>
+    <style>
+      .seam { stroke-dasharray: 4 4; }
+      .deep { background: linear-gradient(135deg, #0f172a, #1e293b); }
+      .schem { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+      .mermaid { font-size: 13px; }
+      article { scroll-margin-top: 1.5rem; }
+    </style>
+  </head>
+  <body class="bg-stone-50 text-slate-900 font-sans antialiased">
+    <main class="max-w-5xl mx-auto px-6 py-12 space-y-14">
+
+      <header class="space-y-5">
+        <div class="flex items-baseline justify-between flex-wrap gap-3">
+          <h1 class="font-serif text-4xl tracking-tight">Spec validation — <span class="text-indigo-700">round III</span></h1>
+          <p class="font-mono text-xs text-slate-500">2026-08-20 · both specs tested against the database</p>
+        </div>
+        <p class="text-sm text-slate-600 max-w-3xl">You asked me to validate the two specs I wrote. I tested their load-bearing claims rather than re-reading them. <strong>Both contain errors.</strong> One is mine, in the exact place you made a decision from it.</p>
+
+        <div class="rounded-xl border-2 border-red-300 bg-red-50 p-6">
+          <p class="schem text-red-800 mb-2">Correction — this one changes a decision you already made</p>
+          <p class="text-red-950 text-sm mb-3">The person spec says <em>"hr_employments hangs off organization_members, so consolidating naively would have removed the ability to pay a non-member."</em> I asserted that. It is <strong>false</strong>.</p>
+          <div class="grid md:grid-cols-2 gap-4 text-xs">
+            <div class="rounded bg-white border border-red-200 p-3">
+              <p class="schem text-red-700 mb-1">What I claimed</p>
+              <p class="font-mono text-[11px] leading-5">hr_employments → organization_members<br/>∴ employment requires membership<br/>∴ contractors impossible on this chain</p>
+            </div>
+            <div class="rounded bg-white border border-emerald-300 p-3">
+              <p class="schem text-emerald-700 mb-1">What the catalog says</p>
+              <p class="font-mono text-[11px] leading-5">hr_employments → hr_people (person_id)<br/><strong>no FK to organization_members at all</strong><br/>hr_people.user_id is NULLABLE</p>
+            </div>
+          </div>
+          <p class="text-red-950 text-sm mt-3">A person can exist in <code class="font-mono text-xs">hr_people</code> with no login and no membership, and hold an employment. <strong>The HR chain can already represent a contractor.</strong> What it lacks is a payroll entry point keyed by person — payroll has one keyed by user and one keyed by worker, and no third. That is a missing function, not a missing capability.</p>
+          <p class="text-red-950 text-sm mt-2"><strong>What this means for your decision.</strong> You chose "keep workers as the contractor lane" partly because I said consolidating would delete a capability. It would not. That choice may still be correct — it is less work — but the reason I gave you was wrong, and you should get to re-decide on the real one.</p>
+        </div>
+      </header>
+
+      <!-- SCORECARD -->
+      <section class="space-y-4">
+        <h2 class="font-serif text-2xl tracking-tight">Claim-by-claim</h2>
+        <div class="rounded-lg border border-slate-200 bg-white overflow-hidden">
+          <table class="w-full text-sm">
+            <thead><tr class="text-left text-slate-500 schem border-b border-slate-200 bg-slate-50"><th class="py-2 px-4">Spec claim</th><th class="py-2 px-4">Verdict</th><th class="py-2 px-4">Evidence</th></tr></thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr><td class="py-2 px-4 font-mono text-xs">person · hr_employments requires membership</td><td class="py-2 px-4"><span class="rounded bg-red-100 text-red-800 px-2 py-0.5 text-xs font-semibold">FALSE</span></td><td class="py-2 px-4 text-xs">FK is to hr_people; user_id nullable</td></tr>
+              <tr><td class="py-2 px-4 font-mono text-xs">person · 7 consumers, all in Payroll</td><td class="py-2 px-4"><span class="rounded bg-emerald-100 text-emerald-800 px-2 py-0.5 text-xs font-semibold">HOLDS</span></td><td class="py-2 px-4 text-xs">grep, non-spec</td></tr>
+              <tr><td class="py-2 px-4 font-mono text-xs">person · link column already exists</td><td class="py-2 px-4"><span class="rounded bg-emerald-100 text-emerald-800 px-2 py-0.5 text-xs font-semibold">HOLDS</span></td><td class="py-2 px-4 text-xs">partial unique index present</td></tr>
+              <tr><td class="py-2 px-4 font-mono text-xs">person · no data migration needed</td><td class="py-2 px-4"><span class="rounded bg-emerald-100 text-emerald-800 px-2 py-0.5 text-xs font-semibold">HOLDS</span></td><td class="py-2 px-4 text-xs">all tables empty; no prod</td></tr>
+              <tr><td class="py-2 px-4 font-mono text-xs">prd · 10 of 18 modules have the ladder</td><td class="py-2 px-4"><span class="rounded bg-emerald-100 text-emerald-800 px-2 py-0.5 text-xs font-semibold">HOLDS</span></td><td class="py-2 px-4 text-xs">ACCESS_MANAGED_MODULES</td></tr>
+              <tr><td class="py-2 px-4 font-mono text-xs">prd · API generic, web screen shared</td><td class="py-2 px-4"><span class="rounded bg-emerald-100 text-emerald-800 px-2 py-0.5 text-xs font-semibold">HOLDS</span></td><td class="py-2 px-4 text-xs">21 routes on :moduleKey</td></tr>
+              <tr><td class="py-2 px-4 font-mono text-xs">prd · 3.2–4.0 transactions per request</td><td class="py-2 px-4"><span class="rounded bg-emerald-100 text-emerald-800 px-2 py-0.5 text-xs font-semibold">HOLDS</span></td><td class="py-2 px-4 text-xs">measured, 10 warm requests</td></tr>
+              <tr class="bg-red-50"><td class="py-2 px-4 font-mono text-xs">prd · adding a module is configuration, not code</td><td class="py-2 px-4"><span class="rounded bg-red-100 text-red-800 px-2 py-0.5 text-xs font-semibold">FALSE</span></td><td class="py-2 px-4 text-xs">chat has 4 keys; blog has 1</td></tr>
+              <tr class="bg-amber-50"><td class="py-2 px-4 font-mono text-xs">prd · each module needs role templates</td><td class="py-2 px-4"><span class="rounded bg-amber-100 text-amber-800 px-2 py-0.5 text-xs font-semibold">UNDERSTATED</span></td><td class="py-2 px-4 text-xs">4 of 8 have zero template grants</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="candidates" class="space-y-14">
+
+        <!-- C1 -->
+        <article id="c1" class="space-y-5">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <h2 class="font-serif text-2xl tracking-tight">1 · The permission vocabulary is too thin to delegate anything</h2>
+            <div class="flex gap-2 shrink-0"><span class="rounded-full bg-red-600 text-white px-3 py-1 text-xs font-semibold">corrects the PRD</span><span class="rounded-full bg-emerald-100 text-emerald-800 px-3 py-1 text-xs font-semibold">Strong</span></div>
+          </div>
+          <ul class="font-mono text-sm text-slate-600"><li>modules/rbac/permissions/{chat,mail,calendar,blog,directory,notifications,workflows,billing}.ts</li></ul>
+
+          <div class="rounded-lg border border-slate-200 bg-white p-5">
+            <p class="schem text-slate-500 mb-3">Keys available to grant, per module</p>
+            <div class="space-y-2 text-xs">
+              <div class="flex items-center gap-3"><span class="font-mono w-24 text-right">workflows</span><div class="bg-emerald-500 h-5 rounded-sm" style="width:14%"></div><span class="font-mono">14</span></div>
+              <div class="flex items-center gap-3"><span class="font-mono w-24 text-right">notifications</span><div class="bg-emerald-500 h-5 rounded-sm" style="width:10%"></div><span class="font-mono">10</span></div>
+              <div class="flex items-center gap-3"><span class="font-mono w-24 text-right">billing</span><div class="bg-emerald-500 h-5 rounded-sm" style="width:10%"></div><span class="font-mono">10</span></div>
+              <div class="flex items-center gap-3"><span class="font-mono w-24 text-right">chat</span><div class="bg-red-500 h-5 rounded-sm" style="width:4%"></div><span class="font-mono">4</span> <span class="text-red-700">← Slack replacement</span></div>
+              <div class="flex items-center gap-3"><span class="font-mono w-24 text-right">mail</span><div class="bg-red-500 h-5 rounded-sm" style="width:4%"></div><span class="font-mono">4</span> <span class="text-red-700">← Inbox</span></div>
+              <div class="flex items-center gap-3"><span class="font-mono w-24 text-right">directory</span><div class="bg-red-500 h-5 rounded-sm" style="width:4%"></div><span class="font-mono">4</span></div>
+              <div class="flex items-center gap-3"><span class="font-mono w-24 text-right">calendar</span><div class="bg-red-500 h-5 rounded-sm" style="width:3%"></div><span class="font-mono">3</span> <span class="text-red-700">← Calendar</span></div>
+              <div class="flex items-center gap-3"><span class="font-mono w-24 text-right">blog</span><div class="bg-red-600 h-5 rounded-sm" style="width:1%"></div><span class="font-mono">1</span> <span class="text-red-700">← literally only <code>blog:ai:use</code></span></div>
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-3">Before — chat's entire vocabulary</p>
+              <div class="h-[260px] flex flex-col justify-center gap-2 font-mono text-[11px]">
+                <div class="border-2 border-slate-800 rounded p-2 bg-white">chat:channels:read</div>
+                <div class="border-2 border-slate-800 rounded p-2 bg-white">chat:channels:write</div>
+                <div class="border-2 border-slate-800 rounded p-2 bg-white">chat:messages:read</div>
+                <div class="border-2 border-slate-800 rounded p-2 bg-white">chat:messages:write</div>
+                <p class="font-sans text-xs text-red-700 mt-2">Nothing here can express: may start huddles · may create public channels · may manage org chat settings · may mint invite links · may delete others' messages · may pin.</p>
+              </div>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-3">After — a vocabulary matching the surface</p>
+              <div class="h-[260px] flex flex-col justify-center gap-1.5 font-mono text-[10px]">
+                <div class="rounded bg-slate-900 text-white p-1.5">chat:channels:view / create / update / delete</div>
+                <div class="rounded bg-slate-900 text-white p-1.5">chat:messages:view / create / update / delete</div>
+                <div class="rounded bg-slate-900 text-white p-1.5">chat:huddles:create / manage</div>
+                <div class="rounded bg-slate-900 text-white p-1.5">chat:invites:manage</div>
+                <div class="rounded bg-slate-900 text-white p-1.5">chat:pins:manage · chat:files:create</div>
+                <div class="rounded bg-slate-900 text-white p-1.5">chat:settings:manage</div>
+                <p class="font-sans text-xs text-emerald-700 mt-2">Now a module owner has something to actually delegate.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-4 text-sm">
+            <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500 mb-2">Problem</p><p>The PRD said adding the eight modules is configuration. It is not. Adding chat to the managed list gives a module owner a ladder over four keys — they could not express any of the distinctions your model requires. The ladder would exist and be useless.</p></div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500 mb-2">Solution</p><p>Author a real permission catalog per module <em>before</em> adding it to the managed list, derived from the endpoints that module actually exposes. Chat has 21 routes and 4 keys; that ratio is the work.</p></div>
+          </div>
+          <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500 mb-2">Wins</p><ul class="grid sm:grid-cols-2 gap-x-8 gap-y-1 text-sm list-disc list-inside text-slate-700"><li>Delegation becomes meaningful, not nominal</li><li>Hidden controls map to real keys</li><li>Locality: a module's vocabulary in one file</li><li>The ladder ships working, not empty</li></ul></div>
+        </article>
+
+        <!-- C2 -->
+        <article id="c2" class="space-y-5">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <h2 class="font-serif text-2xl tracking-tight">2 · The key grammar is documented, violated 53 times, and enforced nowhere</h2>
+            <div class="flex gap-2 shrink-0"><span class="rounded-full bg-indigo-100 text-indigo-800 px-3 py-1 text-xs font-semibold">new</span><span class="rounded-full bg-emerald-100 text-emerald-800 px-3 py-1 text-xs font-semibold">Strong</span></div>
+          </div>
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-3">Before — grammar as prose</p>
+              <div class="h-[240px] flex flex-col justify-center gap-3 text-xs">
+                <div class="rounded border border-slate-300 bg-slate-50 p-3">
+                  <p class="schem text-slate-500">Written rule</p>
+                  <p class="font-mono text-[11px] mt-1">module:resource:action — three segments<br/>action ∈ view create update delete manage<br/>assign export approve reject import</p>
+                </div>
+                <div class="rounded border-2 border-red-400 bg-red-50 p-3">
+                  <p class="schem text-red-700">Actual keys</p>
+                  <p class="font-mono text-[11px] mt-1 text-red-900">build:create · accounting:read · branch:view<br/>chat:channels:read · calendar:write · blog:ai:use</p>
+                  <p class="font-sans text-[11px] text-red-800 mt-1"><strong>53 keys</strong> are two-segment. <code>read</code>, <code>write</code>, <code>use</code>, <code>report</code> are not permitted actions. No validator exists.</p>
+                </div>
+              </div>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-3">After — grammar as a type and a test</p>
+              <div class="h-[240px] flex flex-col justify-center gap-3 text-xs">
+                <div class="rounded-sm deep text-white p-3">
+                  <p class="schem text-slate-300">PermissionKey — constructed, not typed by hand</p>
+                  <p class="font-mono text-[11px] mt-1">`${Module}:${Resource}:${Action}`</p>
+                </div>
+                <div class="rounded border-2 border-emerald-700 bg-emerald-50 p-2 font-mono text-[11px] text-emerald-900">catalog test: every key parses · action ∈ allowed set</div>
+                <p class="font-sans text-slate-600">A malformed key stops being a runtime surprise and becomes a failing build.</p>
+              </div>
+            </div>
+          </div>
+          <div class="grid md:grid-cols-2 gap-4 text-sm">
+            <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500 mb-2">Problem</p><p>Two-segment keys break the assumption that a key's module is segment one and its resource segment two — which is exactly how module-scoped grants, the module catalog filter and the access screen slice the catalog. <code class="font-mono text-xs">build:create</code> is a phase-one key in this state.</p></div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500 mb-2">Solution</p><p>Settle the grammar, migrate the 53, and add a catalog test so the next module cannot reintroduce the drift. Do this <em>before</em> authoring eight new catalogs, or the new ones inherit the inconsistency.</p></div>
+          </div>
+          <div class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">Sequencing consequence: this now sits <em>ahead</em> of the ladder in the PRD, not inside it. Authoring eight catalogs against an unsettled grammar would triple the migration later.</div>
+        </article>
+
+        <!-- C3 -->
+        <article id="c3" class="space-y-5">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <h2 class="font-serif text-2xl tracking-tight">3 · Payroll has two payee entry points and no third — the real person problem</h2>
+            <div class="flex gap-2 shrink-0"><span class="rounded-full bg-red-600 text-white px-3 py-1 text-xs font-semibold">corrects the spec</span><span class="rounded-full bg-emerald-100 text-emerald-800 px-3 py-1 text-xs font-semibold">Strong</span></div>
+          </div>
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-3">Before — two doors, asymmetric</p>
+              <pre class="mermaid">
+flowchart TB
+  U["by userId"] --> M{"member?"}
+  M -->|yes| OK1["payable"]
+  M -->|no| W2["worker with that userId?"]
+  W2 --> OK1
+  WK["by workerId"] --> P{"isPayee?"}
+  P -->|yes| OK2["payable — userId may be null"]
+  HP["hr_people row<br/>user_id NULL"]:::orphan --> X["no entry point"]:::orphan
+  classDef orphan fill:#fee2e2,stroke:#dc2626,color:#7f1d1d;
+              </pre>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="schem text-slate-500 mb-3">After — one door</p>
+              <pre class="mermaid">
+flowchart TB
+  S["PersonSubject<br/>user | worker | person"] --> R["<b>PersonDirectory.resolve</b>"]:::deep
+  R --> A["member → hr_people + employment"]
+  R --> B["non-member payee → worker"]
+  R --> C["person, no login → hr_people"]
+  A --> PAY["payable"]
+  B --> PAY
+  C --> PAY
+  classDef deep fill:#0f172a,color:#fff,stroke:#0f172a,stroke-width:2px;
+              </pre>
+            </div>
+          </div>
+          <div class="grid md:grid-cols-2 gap-4 text-sm">
+            <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500 mb-2">Problem</p><p>The genuine defect is not two person models — it is that payroll's eligibility has one door keyed by user and one keyed by worker, and a person recorded only in HR with no login can be employed but never paid. That is a hole the original spec missed because it was reasoning from the wrong premise.</p></div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4"><p class="schem text-slate-500 mb-2">Solution</p><p>The seam is still right; its <em>justification</em> changes. One resolver over a three-way subject, with payroll's two assertions becoming thin wrappers that preserve their current errors.</p></div>
+          </div>
+          <div class="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">The good news: the spec's <em>conclusion</em> survives. One resolver, both models retained, no data migration. Only the reasoning needed replacing — and the corrected reasoning is stronger, because it names a real hole rather than defending a hypothetical one.</div>
+        </article>
+
+      </section>
+
+      <section id="top-recommendation" class="space-y-4">
+        <h2 class="font-serif text-3xl tracking-tight">Top recommendation</h2>
+        <div class="rounded-xl deep text-white p-8 space-y-4">
+          <p class="schem text-slate-400">Resequence before building</p>
+          <p class="font-serif text-2xl"><a href="#c2" class="underline decoration-slate-600 hover:decoration-white">2 · Settle and enforce the key grammar</a>, then <a href="#c1" class="underline decoration-slate-600 hover:decoration-white">1 · author the eight catalogs</a></p>
+          <p class="text-slate-300 text-sm max-w-3xl">The PRD's plan is sound but its order is wrong, because it assumed the eight modules were ready to delegate. They are not: chat has four keys and blog has one. Authoring eight catalogs against a grammar that is violated 53 times and enforced nowhere means migrating them twice. Grammar first, catalogs second, ladder third — and the transaction fix still runs ahead of all of it, since it makes every request cheaper regardless.</p>
+        </div>
+        <div class="rounded-lg border border-slate-200 bg-white p-5 text-sm space-y-2">
+          <p class="schem text-slate-500">Revised order</p>
+          <ol class="list-decimal list-inside space-y-1 text-slate-700">
+            <li>One tenant context per request — unchanged, still first, makes everything else cheaper</li>
+            <li><strong>New:</strong> settle the key grammar + catalog test — blocks meaningful catalog work</li>
+            <li><strong>New:</strong> author permission catalogs for the eight modules</li>
+            <li>Extend the ladder — now it ships useful rather than empty</li>
+            <li>Person Directory seam — conclusion unchanged, justification corrected</li>
+          </ol>
+        </div>
+      </section>
+
+      <footer class="pt-6 border-t border-slate-200 text-xs text-slate-500 space-y-1">
+        <p>Both specs updated to match these findings. The person spec's contractor reasoning and the PRD's "configuration, not code" claim were the two errors; both are corrected in place rather than left for a future reader to trip over.</p>
+        <p>Verified 2026-08-20 against the development database catalog and the permission catalog source. No production data exists, so every schema decision here remains reversible.</p>
+      </footer>
+
+    </main>
+  </body>
+</html>
