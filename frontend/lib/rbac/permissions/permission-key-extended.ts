@@ -95,7 +95,6 @@ export type ExtendedPermissionKey =
   | "sign:documents:view"
   | "sign:envelope:create"
   | "sign:envelope:view"
-  | "sign:envelope:view_all"
   | "sign:envelope:send"
   | "sign:envelope:void"
   | "sign:envelope:correct"
