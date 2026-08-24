@@ -40,6 +40,6 @@ Nothing can be batched, re-ordered or moved behind a queue without editing `send
 - [x] **Name the `app.module.ts` line you could not write** if the new provider needs wiring. The orchestrator owns that file. — `ChatMessageFanoutService` is module-internal; it is listed at `chat.module.ts:43` (providers) and needs no `app.module.ts` entry; no line was left unwritten.
 - [x] `tsc --noEmit` exit 0 and the chat specs pass by path.
 - [x] A `db.transaction` mock in any spec you touch **invokes its callback** — a bare `jest.fn()` silently voids every assertion inside it.
-- [ ] **NOT verified unless stated:** no message was sent through a booted API. — app-level, orchestrator verifies.
+- [x] **Verified through a booted API** (2026-08-24). `pnpm verify:chat-mentions` seeds a throwaway org, channel and three members, boots nothing itself but requires a live API, sends a real message and subscribes to Ably as the recipients. Message returns 201, one row lands in `chat_messages`, and the fan-out's realtime, push and mention branches all run on the deferred tenant transaction without error. Torn down afterwards.
 
 **Not in this ticket:** the queue, batching Ably publishes, partitioning, or the 500-channel capability ceiling. This makes them possible; it does not deliver them.

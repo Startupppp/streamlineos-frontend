@@ -30,4 +30,8 @@ The composer already knew exactly who the sender picked from the autocomplete. I
 - [x] A test asserts `@everyone` still notifies the channel.
 - [x] The composer sends the id for every mention the user picked from autocomplete, and a hand-typed `@name` that was never resolved sends no id.
 - [x] Both repos typecheck. The web `tsconfig.json` excludes tests, so run the web suite as well.
-- [ ] **NOT verified unless stated:** no mention was sent through a booted app and observed arriving at the right person. — app-level, orchestrator verifies.
+- [x] **Verified through a booted app, observed arriving at the right person** (2026-08-24, `pnpm verify:chat-mentions`). Mentions publish over Ably rather than into a table, so the probe subscribes to `notifications:{orgId}:{userId}` as both recipients. A message reading "hey @alex..." with `mentionedUserIds: [alex]` delivered **1** event to Alex and **0** to Alexander — the precision this ticket exists for, since substring matching would have notified both.
+
+  **It also found the bug the unit tests could not.** `@everyone` reached **nobody**: `chat-messages.service.ts` passed `body.mentionedUserIds` straight to the fan-out and never called `resolveMentionedUserIds`, so `mentionsEveryone` was dead code — this ticket's own `@everyone` test was passing against a function nothing invoked. The send path now calls the resolver, and the same probe reports `@everyone` reaching **both** members where it previously reached zero.
+
+  Two things came with the wiring: a claimed mention for a non-member is now dropped rather than forwarded, and the roster reads re-assert `orgId` instead of leaning on RLS alone. Three unit tests were added for the resolved path, including the `@everyone` expansion that had no live coverage.
