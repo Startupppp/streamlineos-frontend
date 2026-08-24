@@ -8,21 +8,21 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { RecordDetail, type RecordValue } from "@/features/renderer";
-import { subjectLayout, subjectRecord } from "@/lib/renderer/subject-layout";
+import { subjectLayout, subjectRecord, type RenderableSubject } from "@/lib/renderer/subject-layout";
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
 import { useSubject, useUnlinkParty } from "@/hooks/api/party/subjects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { LinkPartyControl } from "./link-party-control";
 import { ActivityTimeline } from "@/features/crm/timeline/activity-timeline";
-import type { SubjectType, SubjectWithParties } from "@/types/party/subjects";
+import type { SubjectType } from "@/types/party/subjects";
 
 export interface SubjectDetailSheetProps {
   subjectId: string | null;
   type: SubjectType;
   onOpenChange: (open: boolean) => void;
   /** Absent when the viewer cannot manage subjects, so no control is rendered. */
-  onEdit?: (subject: SubjectWithParties) => void;
+  onEdit?: (subject: RenderableSubject) => void;
   canManage?: boolean;
 }
 

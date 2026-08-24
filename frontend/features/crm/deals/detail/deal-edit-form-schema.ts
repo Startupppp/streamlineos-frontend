@@ -11,6 +11,8 @@ export const dealEditSchema = z.object({
   expectedCloseDate: z.string().optional(),
   notes: z.string().optional(),
   lostReason: z.string().optional(),
+  partyId: z.string().optional(),
+  subjectId: z.string().optional(),
 });
 
 export type EditFormValues = z.infer<typeof dealEditSchema>;

@@ -4,11 +4,12 @@ import { useMemo } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { formatINRCompact } from "@/lib/format-utils";
+import { formatMoneyCompact } from "@/lib/format-utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import type { Deal, DealStage } from "@/types/crm";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
+import { useOrgDisplay } from "@/hooks/api/org-display";
 
 const STAGE_PROBABILITY: Record<string, number> = {
   LEAD: 10,
@@ -50,6 +51,7 @@ interface DealForecastChartProps {
 }
 
 export function DealForecastChart({ deals }: DealForecastChartProps) {
+  const money = useOrgDisplay();
   const shouldReduceMotion = useReducedMotion();
 
   const { rows, maxWeighted } = useMemo(() => {
@@ -120,10 +122,10 @@ export function DealForecastChart({ deals }: DealForecastChartProps) {
                   </div>
                   <div className="text-right shrink-0">
                     <p className="text-sm font-semibold tabular-nums">
-                      {formatINRCompact(row.weightedValue)}
+                      {formatMoneyCompact(row.weightedValue, money)}
                     </p>
                     <p className="text-[10px] text-muted-foreground tabular-nums">
-                      of {formatINRCompact(row.totalValue)}
+                      of {formatMoneyCompact(row.totalValue, money)}
                     </p>
                   </div>
                 </div>

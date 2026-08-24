@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { createDealSchema, type CreateDealFormValues } from "./create-deal-form-schema";
@@ -30,6 +30,7 @@ import { useCrmStages } from "@/hooks/api/crm/metadata";
 import { getCrmTokenClasses } from "@/features/crm/shared/metadata";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
+import { DealLinkFields } from "./deal-link-fields";
 
 interface CreateDealFormProps {
   employees: Array<{ id: string; name: string | null }>;
@@ -53,8 +54,22 @@ export function CreateDealForm({ employees, onSuccess }: CreateDealFormProps) {
       assignedToId: "",
       expectedCloseDate: "",
       notes: "",
+      partyId: "",
+      subjectId: "",
     },
   });
+
+  const linkedPartyId = useWatch({ control: form.control, name: "partyId" });
+  const linkedSubjectId = useWatch({ control: form.control, name: "subjectId" });
+
+  const handlePartyChange = useCallback(
+    (partyId: string) => form.setValue("partyId", partyId, { shouldDirty: true }),
+    [form],
+  );
+  const handleSubjectChange = useCallback(
+    (subjectId: string) => form.setValue("subjectId", subjectId, { shouldDirty: true }),
+    [form],
+  );
 
   const handleSubmit = useCallback(
     (data: CreateDealFormValues) => {
@@ -70,6 +85,8 @@ export function CreateDealForm({ employees, onSuccess }: CreateDealFormProps) {
           assignedToId: data.assignedToId || undefined,
           expectedCloseDate: data.expectedCloseDate || undefined,
           notes: data.notes || undefined,
+          partyId: data.partyId || undefined,
+          subjectId: data.subjectId || undefined,
         },
         {
           onSuccess: () => {
@@ -250,6 +267,12 @@ export function CreateDealForm({ employees, onSuccess }: CreateDealFormProps) {
             )}
           />
         </div>
+        <DealLinkFields
+          partyId={linkedPartyId ?? ""}
+          subjectId={linkedSubjectId ?? ""}
+          onPartyChange={handlePartyChange}
+          onSubjectChange={handleSubjectChange}
+        />
         <FormField
           control={form.control}
           name="notes"

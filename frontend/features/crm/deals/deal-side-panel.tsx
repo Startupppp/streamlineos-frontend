@@ -17,6 +17,7 @@ import {
   useDealActivities,
 } from "@/hooks/api/crm";
 import { ActivityTimeline } from "./detail/activity-timeline";
+import { ActivityTimeline as UnifiedTimeline } from "@/features/crm/timeline/activity-timeline";
 import { DealEditForm, type EditFormValues } from "./detail/deal-edit-form";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { toast } from "sonner";
@@ -25,7 +26,8 @@ import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { useCrmStages } from "@/hooks/api/crm/metadata";
 import { CrmStageBadge } from "@/features/crm/shared/metadata";
-import { formatINRCompact } from "@/lib/format-utils";
+import { formatMoneyCompact } from "@/lib/format-utils";
+import { useOrgDisplay } from "@/hooks/api/org-display";
 
 interface DealSidePanelProps {
   dealId: number | null;
@@ -33,6 +35,7 @@ interface DealSidePanelProps {
 }
 
 export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
+  const money = useOrgDisplay();
   const isOpen = dealId !== null;
 
   const { data: deal, isLoading: dealLoading } = useDealDetail(dealId ?? 0);
@@ -59,6 +62,8 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
           expectedCloseDate: values.expectedCloseDate ?? null,
           contactPerson: values.contactPerson,
           notes: values.notes,
+          partyId: values.partyId || null,
+          subjectId: values.subjectId || null,
         },
         {
           onSuccess: () => toast.success("Deal updated"),
@@ -99,7 +104,7 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
                   <div className="flex items-center gap-2">
                     {stage && <CrmStageBadge stage={stage} size="card" />}
                     <span className="text-sm font-semibold text-primary">
-                      {formatINRCompact(Number(deal.value ?? 0))}
+                      {formatMoneyCompact(deal.value, money)}
                     </span>
                   </div>
                 </div>
@@ -136,18 +141,35 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
                   </h3>
                 </div>
                 <ScrollArea className="flex-1">
-                  <div className="p-4">
-                    {activitiesLoading ? (
-                      <div className="space-y-3">
-                        {Array.from({ length: 6 }).map((_, i) => (
-                          <Skeleton key={i} className="h-12 w-full" />
-                        ))}
-                      </div>
-                    ) : (
-                      <ActivityTimeline
-                        activities={activities ?? []}
-                      />
-                    )}
+                  <div className="flex flex-col gap-6 p-4">
+                    {/*
+                      The unified timeline: calls, emails, meetings, notes and
+                      tasks together, from the one activity model. The log below
+                      it reads `deal_activities`, a separate store that still
+                      holds every historical stage change — it is retired once
+                      ticket 10's ingress is the only writer.
+                    */}
+                    <UnifiedTimeline
+                      anchor={{ kind: "deal", dealId: String(deal.id) }}
+                      emptyDescription="Calls, emails, meetings, notes and tasks on this deal will appear here as they happen."
+                    />
+
+                    <div className="flex flex-col gap-2">
+                      <h4 className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                        Activity log
+                      </h4>
+                      {activitiesLoading ? (
+                        <div className="space-y-3">
+                          {Array.from({ length: 6 }).map((_, i) => (
+                            <Skeleton key={i} className="h-12 w-full" />
+                          ))}
+                        </div>
+                      ) : (
+                        <ActivityTimeline
+                          activities={activities ?? []}
+                        />
+                      )}
+                    </div>
                   </div>
                 </ScrollArea>
               </div>

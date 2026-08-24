@@ -9,17 +9,17 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { RecordForm, type RecordFormValues } from "@/features/renderer";
-import { subjectLayout, subjectRecord } from "@/lib/renderer/subject-layout";
+import { subjectLayout, subjectRecord, type RenderableSubject } from "@/lib/renderer/subject-layout";
 import { useCreateSubject, useUpdateSubject } from "@/hooks/api/party/subjects";
 import { getErrorMessage } from "@/lib/get-error-message";
-import type { Subject, SubjectType } from "@/types/party/subjects";
+import type { SubjectType } from "@/types/party/subjects";
 
 export interface SubjectFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   type: SubjectType;
   /** Absent for a create. */
-  subject?: Subject;
+  subject?: RenderableSubject;
 }
 
 /**

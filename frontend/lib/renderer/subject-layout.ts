@@ -111,13 +111,19 @@ export function subjectLayout(type: SubjectType): RecordLayout {
  * declared values nested under `customFields`, because that is what makes the
  * schema fixed. This is the one place the two representations meet.
  */
-export function subjectRecord(subject: {
+/**
+ * The parts of a subject the renderer needs, named so a caller can accept either
+ * a list row or the single read without one type pretending to be the other.
+ */
+export interface RenderableSubject {
   subjectId: string;
   reference: string | null;
   status: string | null;
   createdAt: string;
   customFields: Record<string, unknown> | null;
-}): Record<string, unknown> {
+}
+
+export function subjectRecord(subject: RenderableSubject): Record<string, unknown> {
   return {
     ...(subject.customFields ?? {}),
     subjectId: subject.subjectId,

@@ -61,7 +61,26 @@ export interface PartySubjectLink {
   subjectPartyLinkId: string;
 }
 
-export interface SubjectWithParties extends Subject {
+/**
+ * One subject read on its own, which resolves through the seam and so carries
+ * its type's declaration alongside the record. Deliberately not `extends
+ * Subject`: the single read is a projection, not the row, and declaring columns
+ * it does not return is how a field becomes silently `undefined` at runtime.
+ */
+export interface SubjectWithParties {
+  subjectId: string;
+  organizationId: string;
+  subjectTypeId: string;
+  typeKey: string;
+  typeSingular: string;
+  title: string;
+  reference: string | null;
+  status: string | null;
+  fields: SubjectFieldDefinition[];
+  customFields: Record<string, unknown> | null;
+  createdAt: string;
+  linkedPartyId: string | null;
+  resolvedVia: "subject-record" | "link-record";
   parties: SubjectPartyLink[];
 }
 

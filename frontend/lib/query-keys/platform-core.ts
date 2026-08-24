@@ -64,6 +64,7 @@ export const platformCoreQueryKeys = {
     archived: () => [...base, "organization", "archived"] as const,
     members: () => [...base, "organization", "members"] as const,
     settings: () => [...base, "organization", "settings"] as const,
+    display: () => [...base, "organization", "display"] as const,
   },
 
   orgSetup: {

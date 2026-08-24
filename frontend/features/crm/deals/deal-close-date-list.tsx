@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { formatINRCompact } from "@/lib/format-utils";
+import { formatMoneyCompact } from "@/lib/format-utils";
 import type { Deal, DealStage } from "@/types/crm";
+import { useOrgDisplay } from "@/hooks/api/org-display";
 
 const STAGE_DOT: Partial<Record<DealStage, string>> = {
   LEAD: "bg-blue-500",
@@ -62,6 +63,7 @@ interface DealRowProps {
 }
 
 function DealRow({ deal, delay, onNavigate, shouldReduceMotion }: DealRowProps) {
+  const money = useOrgDisplay();
   const handleClick = useCallback(() => onNavigate(deal.id), [deal.id, onNavigate]);
   const past = isPastDue(deal.expectedCloseDate);
 
@@ -91,7 +93,7 @@ function DealRow({ deal, delay, onNavigate, shouldReduceMotion }: DealRowProps) 
       </div>
       <div className="text-right shrink-0 space-y-0.5">
         <p className="text-sm font-semibold tabular-nums">
-          {deal.value ? formatINRCompact(Number(deal.value)) : "—"}
+          {Number(deal.value) ? formatMoneyCompact(deal.value, money) : "—"}
         </p>
         <p className={`text-[11px] tabular-nums ${past ? "text-red-600 dark:text-red-400 font-medium" : "text-muted-foreground"}`}>
           {formatCloseDate(deal.expectedCloseDate)}

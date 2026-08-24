@@ -13,11 +13,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { formatINRCompact, formatDealId } from "@/lib/format-utils";
+import { formatDealId, formatMoneyCompact } from "@/lib/format-utils";
 import { useCrmStages } from "@/hooks/api/crm/metadata";
 import { getCrmTokenClasses } from "@/features/crm/shared/metadata";
 import type { Deal } from "@/types/crm";
 import { AIPredictDealButton } from "./ai-predict-deal-button";
+import { useOrgDisplay } from "@/hooks/api/org-display";
 
 function DealHealthBadge({ expectedCloseDate }: { expectedCloseDate: string | null }) {
   const status = useMemo(() => {
@@ -62,6 +63,7 @@ function StageMenuItem({
 }
 
 export const DealKanbanCard = memo(function DealKanbanCard({ deal, onStageChange, onDelete, onOpen }: DealKanbanCardProps) {
+  const money = useOrgDisplay();
   const router = useRouter();
   const { data: dealStages = [] } = useCrmStages("deal");
   const handleDelete = useCallback(() => onDelete(deal.id), [deal.id, onDelete]);
@@ -111,7 +113,7 @@ export const DealKanbanCard = memo(function DealKanbanCard({ deal, onStageChange
         </div>
 
         <p className="text-lg font-bold text-primary mt-1">
-          {formatINRCompact(deal.value || 0)}
+          {formatMoneyCompact(deal.value, money)}
         </p>
 
         {deal.contactPerson && (

@@ -44,6 +44,7 @@ import {
 } from "@/features/crm/deals/detail/deal-dialogs";
 import { DealInfoCard } from "@/features/crm/deals/detail/deal-info-card";
 import { DealSidebarCards } from "@/features/crm/deals/detail/deal-sidebar-cards";
+import { DealLinkedRecordsCard } from "@/features/crm/deals/detail/deal-linked-records-card";
 import { DealQuotesSection } from "@/features/crm/deals/deal-quotes-section";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { ErrorState } from "@/components/shared";
@@ -138,6 +139,8 @@ export default function DealDetailPage({
           expectedCloseDate: data.expectedCloseDate || undefined,
           notes: data.notes || undefined,
           lostReason: data.lostReason || undefined,
+          partyId: data.partyId || null,
+          subjectId: data.subjectId || null,
         },
         {
           onSuccess: () => {
@@ -472,6 +475,7 @@ export default function DealDetailPage({
               nextStep={deal.nextStep}
               pipelineId={deal.pipelineId}
             />
+            <DealLinkedRecordsCard partyId={deal.partyId} subjectId={deal.subjectId} />
             <DealQuotesSection dealId={dealId} />
           </motion.div>
         </div>

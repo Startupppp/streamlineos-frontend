@@ -7,7 +7,6 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { RecordList, type RecordValue } from "@/features/renderer";
 import { subjectLayout, subjectRecord } from "@/lib/renderer/subject-layout";
-import type { Subject } from "@/types/party/subjects";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { SearchInput } from "@/components/ui/search-input";
@@ -30,6 +29,7 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { SubjectDetailSheet } from "./subject-detail-sheet";
 import { SubjectFormDialog } from "./subject-form-dialog";
 import { cn } from "@/lib/utils";
+import type { RenderableSubject } from "@/lib/renderer/subject-layout";
 
 function AddSubjectButton({ label, onClick }: { label: string; onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
@@ -59,7 +59,7 @@ export function SubjectsPage() {
   const [cursor, setCursor] = useState<string | undefined>(undefined);
   const [openSubjectId, setOpenSubjectId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
-  const [editTarget, setEditTarget] = useState<Subject | null>(null);
+  const [editTarget, setEditTarget] = useState<RenderableSubject | null>(null);
 
   const types = useSubjectTypes();
   const typeList = types.data?.data ?? [];
@@ -99,7 +99,7 @@ export function SubjectsPage() {
     if (!open) setEditTarget(null);
   }
 
-  function handleEditRequest(subject: Subject) {
+  function handleEditRequest(subject: RenderableSubject) {
     setOpenSubjectId(null);
     setEditTarget(subject);
   }
