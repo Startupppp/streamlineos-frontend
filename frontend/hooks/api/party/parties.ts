@@ -45,6 +45,17 @@ export function useParties(params: UsePartiesParams = {}) {
   });
 }
 
+export function useParty(partyId: string | null) {
+  const canView = useCan("party:parties:view");
+
+  return useQuery({
+    queryKey: queryKeys.party.party(partyId ?? ""),
+    queryFn: () => apiClient.get<BusinessParty>(`/party/parties/${partyId}`),
+    staleTime: 60_000,
+    enabled: canView && !!partyId,
+  });
+}
+
 export function useCreateParty() {
   const qc = useQueryClient();
   return useMutation({

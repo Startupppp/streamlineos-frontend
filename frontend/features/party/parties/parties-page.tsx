@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -41,6 +42,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { PartyFormDialog } from "./party-form-dialog";
+import { PartyDetailSheet } from "./party-detail-sheet";
 import type { BusinessParty, PartyType } from "@/types/party/parties";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -123,6 +125,36 @@ export function PartiesPage() {
     useQueryParamOpen("create");
   const [editTarget, setEditTarget] = useState<BusinessParty | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<BusinessParty | null>(null);
+
+  // The open record lives in the URL so a link from a subject's linked-parties
+  // panel lands on the party itself, not merely on the list.
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const openPartyId = searchParams.get("partyId");
+
+  const setOpenPartyId = useCallback(
+    (partyId: string | null) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (partyId) params.set("partyId", partyId);
+      else params.delete("partyId");
+      const query = params.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    },
+    [pathname, router, searchParams],
+  );
+
+  const handleRowClick = useCallback(
+    (row: RecordValue) => setOpenPartyId(String(row.partyId)),
+    [setOpenPartyId],
+  );
+
+  const handleDetailOpenChange = useCallback(
+    (open: boolean) => {
+      if (!open) setOpenPartyId(null);
+    },
+    [setOpenPartyId],
+  );
 
   const { data, isLoading, isError, refetch } = useParties({
     page,
@@ -286,6 +318,7 @@ export function PartiesPage() {
                 rows={rows as unknown as RecordValue[]}
                 actions={renderRowActions}
                 getRowKey={(row) => String(row.partyId)}
+                onRowClick={handleRowClick}
                 minWidth="720px"
                 className={CONTENT_FILL_PANEL}
               />
@@ -319,6 +352,8 @@ export function PartiesPage() {
           defaultValues={editTarget}
         />
       )}
+
+      <PartyDetailSheet partyId={openPartyId} onOpenChange={handleDetailOpenChange} />
 
       <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteDialogChange}>
         <AlertDialogContent>
