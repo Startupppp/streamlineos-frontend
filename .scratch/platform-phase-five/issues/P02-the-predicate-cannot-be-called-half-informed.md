@@ -42,7 +42,8 @@ Narrowing the five callers is the point, not a side effect: without also giving 
 - [x] A test asserts a member of project 42 **is** offered project 42's page and **is not** offered project 43's.
 - [x] A test asserts the page creator sees their own page whatever its project.
 - [x] `kb-page-visibility.spec.ts`'s existing org-owner assertion passes unchanged.
-- [ ] **NOT DONE.** No per-surface test for analytics, page AI, comments and record links. The predicate they now share is proven (below), but that each of those four surfaces passes it is not asserted. Needs the seeded harness (O01).
+- [x] **The rule is now proven through a real request.** `test/kb/kb-page-visibility.seeded-e2e-spec.ts` runs against the real database with RLS in force: a member of project alpha reads its page, a colleague in project beta gets **404 not 403**, the shared page reaches both, and an author keeps their own page. Mutation-checked against the database — restore the permissive base and the outsider sees the project page.
+- [ ] Still no **per-surface** test for analytics, page AI, comments and record links. They share the proven predicate, but that each of those four passes it is asserted only by typecheck.
 - [x] `tsc --noEmit` exit 0, and `src/modules/kb` passes by path.
 - [x] Every criterion that could only be proven by running the app is left unticked and says so.
 
@@ -57,7 +58,7 @@ Narrowing the five callers is the point, not a side effect: without also giving 
 
 ## Not verified
 
-- Nothing was exercised through a booted API or a real HTTP request.
-- The four previously-permissive surfaces were not tested individually.
+- The four previously-permissive surfaces are not tested individually.
+- No HTTP request was made; the proof calls the real service inside a real tenant transaction, which is where the predicate lives.
 
 **Watch for:** the frontend may render counts or lists that shrink for a zero-project member. That is the correction, not a regression — but note anywhere it changes a visible number so the orchestrator can decide whether it needs saying in the product.
