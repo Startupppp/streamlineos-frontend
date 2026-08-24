@@ -20,6 +20,22 @@
 >
 > **What unblocks this.** One answer: are `chat` and `kb` free or paid? Say that, correct `planGated` to match, and `coreModuleKeys` can then derive from `!planGated` in one line with the pin as its regression net.
 
+> ### Attempted 2026-08-24, reverted — and the blocker is worse than recorded
+>
+> I tried to unblock this with evidence rather than a decision, on the reasoning that `backend/CLAUDE.md` §5 already says "`home`, `kb`, `chat`, `mail` and `calendar` are core", so correcting `planGated` for chat and kb is a data fix rather than a pricing change. Two supporting facts held up:
+>
+> - **`PLAN_LOCKED_MODULES` locks only `payroll` and `inventory`, on FREE.** Chat and KB are locked on no tier, so no customer pays for them today.
+> - **The derivation works.** `!planGated && ladder !== "platform-admin"` yields exactly today's nine once chat and kb are corrected — and it avoids the trap the ticket identified, because deriving from `ladder` would plan-gate workflows, blog and directory.
+>
+> **It still has to be reverted, for a reason this ticket did not have.** `MODULE_CATALOG` is not only the plan-gating set — it is also what `EntitlementsService.listModules` iterates, and that is the administration modules screen. Removing chat and kb from it makes them **disappear from that screen**, when root §8 requires core products to appear there as disabled "Included" controls. Four tests caught it; two of them were the admin-list contract, not a stale pin.
+>
+> So `planGated` carries two meanings — "costs money" and "appears on the modules screen" — and they are not the same question. Splitting them is the real prerequisite, and it is a bigger change than this ticket.
+>
+> ### One thing worth fixing regardless, found while checking
+>
+> The ticket's last criterion says the stored `modules_catalog` rows have never been checked against the registry. **They now have been.** The database has `is_core = true` for eight modules — blog, calendar, chat, directory, home, kb, mail, workflows — and **`notifications` is missing.** The compile-time set has nine and includes it. The two disagree today and nobody would know, because `onModuleInit` merges them with a union and logs nothing. That union is why it is currently harmless. Reconciling loudly, as this ticket's third criterion already asks, is worth doing on its own and does not need the pricing answer.
+
+
 **What to build:** `ladder: "universal"` in `MODULE_REGISTRY` produces the always-on behaviour, so the registry and `coreModuleKeys` cannot disagree.
 
 The registry says `ladder: "universal"` for chat, home, mail, calendar and notifications. That field drives nothing. The always-on bypass in `isModuleEnabled` comes from `coreModuleKeys`, which is the union of `FALLBACK_CORE_MODULE_KEYS` — nine entries compiled into `entitlements.service.ts` — and whatever `modules_catalog.isCore` rows exist.
