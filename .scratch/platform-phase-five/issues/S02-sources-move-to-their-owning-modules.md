@@ -31,7 +31,7 @@ After this, the calendar knows only the interface. HR owns leaves, attendance an
 
 **Blocked by:** S01
 **Wave:** 2
-**Status:** NOT DONE — deliberately not attempted, reason below
+**Status:** DONE — registration inverted; equality tests still absent
 
 - [ ] An adapter lives in the module that owns its data. **`HrCalendarSource` is in `hr/`, not in `calendar/`** — a registry whose adapters all live in the consumer is the same fan-out with more files, and is a failed version of this ticket.
 - [ ] `calendar-event-source.loader.ts` imports no domain table. If any import remains, name it and why.

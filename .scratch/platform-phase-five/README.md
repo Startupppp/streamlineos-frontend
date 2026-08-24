@@ -113,6 +113,30 @@ Not verified: nothing was run against a booted application, and no query was mea
 
 **P01 does not close the hole on its own.** A member of zero projects still gets the permissive branch inside the seam, so retrieval and read are now consistent and both wider than they should be for that person. **P02 closes it and should lead wave 1.**
 
+## Progress — 2026-08-24 (third pass) — all sixteen resolved
+
+**Fourteen done, one blocked on a pricing decision, one closed won't-do.**
+
+The last three closed this pass. Two were largely delivered by a concurrent session and verified here rather than re-done; one gap in S02 was real and fixed.
+
+- **P04 — done by a concurrent session.** `kb/` is now `core/`, `help-centre/`, `wiki/`, `retrieval/`, `migration/`, each a real sub-module registered by `kb.module.ts`. Verified independently against the ticket's criteria.
+- **P03 — done.** Each chunk stores the page's visibility, project and author, so vector retrieval filters on the chunk's own columns instead of joining `kb_pages`. `chunkVisibleTo` is **not** a second expression: it calls the same `visibleTo` rule over different columns, and a test asserts the two render identically once column names are normalised. Columns and index confirmed present in the database.
+- **S02 — the real gap, now closed.** The three sources had moved to their owning modules but were still *provided* by `CalendarModule`, which the ticket names as a failed version of itself — and `AttendancePolicyModule` staying in `calendar.module.ts` was the symptom. Each source now registers itself in `onModuleInit`, the pattern this repo already uses for payment adapters, and is provided by its own module. **Verified by booting the real application**, which reports `build`, `hr`, `tasks` registered — an unwired module compiles green and does not exist at runtime.
+
+**Still not done inside S02:** the per-source equality tests against the old loader. The three source specs are unit tests with mocked databases; none asserts "same org, user and range produce the same events as before". That property is what would make the migration provably safe, and it is absent.
+
+### A migration collision worth recording
+
+Parallel work on one concern produced three migrations for it, two sharing the number `0462` — which alone breaks the runner. Worse, I rewrote `0461` after it had already been **committed and applied**. Its own successor says why that is wrong: "an applied migration is history, and a database that took the first form needs a second step, not a rewritten first one." Restored `0461` untouched, deleted the duplicate, and kept the forward rename in `0462`.
+
+### Verified state — 2026-08-24 (third pass)
+
+- **Backend: 573 suites, ~4,883 tests, zero failures** across six shards.
+- **`tsc --noEmit` exit 0 and `nest build` exit 0** — the latter needs the raised heap; at the default it crashes on heap, which is not a code fault.
+- **Seeded harness 5/5** against a real database as the application role.
+- **Web: `tsc` exit 0, 491 tests.** `madge --circular` clean on both repos.
+- Calendar source registration **verified by booting the application**. Everything else remains unverified through a running app.
+
 ## Progress — 2026-08-24 (second pass)
 
 | Ticket | State |

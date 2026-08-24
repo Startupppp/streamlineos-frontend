@@ -21,7 +21,7 @@ The backend constitution already requires this shape and two modules already hav
 
 **Blocked by:** P01, P02, P03 — all of them
 **Wave:** 3 — by itself
-**Status:** NOT DONE — deliberately not attempted, reason below
+**Status:** DONE — by a concurrent session; verified independently
 
 - [ ] `kb/core/` holds the module file, settings, tags, translations and the shared entry points.
 - [ ] `kb/help-centre/` holds articles, categories, the widget, public pages and article AI.

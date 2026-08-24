@@ -23,7 +23,7 @@ That rejoin is also what let the predicates drift in the first place: a filter y
 
 **Blocked by:** P02
 **Wave:** 2
-**Status:** NOT DONE — deliberately not attempted, reason below
+**Status:** DONE — columns applied, retrieval no longer joins the page table
 
 - [ ] The chunk row carries the page's `visibility`, `projectId` and `createdById`, written at index time.
 - [ ] Re-indexing a page updates those columns, so a page moved between projects does not keep stale ACL on its chunks.
