@@ -21,7 +21,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useCanManageProject } from "@/hooks/api/build/use-can-manage-project";
 import { useCustomStates, useCreateCustomState } from "@/hooks/api/build/custom-states";
 import { ColumnColorPicker } from "@/features/build/shared/column-color-picker";
-import { DEFAULT_COLUMN_COLOR } from "@/features/build/shared/column-colors";
+import { DEFAULT_COLUMN_COLOR } from "@/lib/column-colors";
 import { TEXT_ONE_LINE, TEXT_BODY } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
 import {

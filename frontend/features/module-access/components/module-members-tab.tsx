@@ -216,12 +216,9 @@ export function ModuleMembersTab({
   const handleRemoveClose = useCallback((open: boolean) => {
     if (!open) setRemoveTarget(null);
   }, []);
-  const handleManageGrants = useCallback(
-    (member: ModuleMember) => {
-      if (canManage) setGrantsTarget(member);
-    },
-    [canManage],
-  );
+  const handleManageGrants = useCallback((member: ModuleMember) => {
+    setGrantsTarget(member);
+  }, []);
   const handleGrantsClose = useCallback((open: boolean) => {
     if (!open) setGrantsTarget(null);
   }, []);

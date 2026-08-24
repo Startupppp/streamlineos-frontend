@@ -29,7 +29,7 @@ import {
 } from "@/hooks/api/build/custom-states";
 import type { KanbanColumn } from "../shared/types";
 import { ColumnColorPicker } from "../shared/column-color-picker";
-import { resolveColumnColor } from "../shared/column-colors";
+import { resolveColumnColor } from "@/lib/column-colors";
 
 const MAX_COLUMN_NAME = 50;
 

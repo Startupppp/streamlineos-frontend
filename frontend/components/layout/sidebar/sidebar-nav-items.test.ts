@@ -140,7 +140,8 @@ describe("Administration information architecture", () => {
     ]);
   });
 
-  it("hides HR organization structure when HR is not enabled", () => {
+  // OrgHierarchyController carries no @RequireModule, so gating this nav on HRMS hid a working surface.
+  it("keeps organization structure available when HR is not enabled", () => {
     const groups = getNavGroupsForProduct(
       "administration",
       "OWNER",
@@ -149,7 +150,8 @@ describe("Administration information architecture", () => {
     );
     const hrefs = groups.flatMap((group) => flattenNavRoutes(group.routes)).map((route) => route.href);
 
-    expect(groups.some((group) => group.label === "Organization")).toBe(false);
+    expect(groups.some((group) => group.label === "Organization")).toBe(true);
+    expect(hrefs).toContain("/settings/organization/cost-centers");
     expect(hrefs).not.toContain("/directory/workers");
     expect(hrefs).toContain("/settings/directory");
     expect(hrefs).toContain("/settings/users");

@@ -12,7 +12,7 @@ import { MemberPicker } from "@/components/members/member-picker";
 import {
   getUserDisplayName,
   getUserInitials,
-} from "@/features/build/shared/resolve-user-name";
+} from "@/lib/person-display";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { TEXT_FLEX_CHILD } from "@/lib/text-overflow";
 import { InlineFieldWrapper } from "@/features/build/views/card-inline-fields";

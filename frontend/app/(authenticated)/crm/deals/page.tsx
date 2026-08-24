@@ -359,7 +359,14 @@ export default function DealsPage() {
           <LayoutGrid className="h-3.5 w-3.5" />
         </Button>
       </div>
-      <Button variant="outline" size="sm" className="text-xs shrink-0" onClick={handleExport}>
+      <Button
+        variant="outline"
+        size="sm"
+        className="text-xs shrink-0"
+        onClick={handleExport}
+        disabled={!allDeals || allDeals.length === 0}
+        title={!allDeals || allDeals.length === 0 ? "No deals to export" : undefined}
+      >
         <Download className="h-3.5 w-3.5 mr-1.5" />
         Export
       </Button>

@@ -22,7 +22,7 @@ import { useOrgMembers } from "@/hooks/api/organization";
 import {
   getUserDisplayName,
   type NamedUser,
-} from "@/features/build/shared/resolve-user-name";
+} from "@/lib/person-display";
 
 const STATUS_COLORS: Record<AccommodationStatus, string> = {
   requested: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",

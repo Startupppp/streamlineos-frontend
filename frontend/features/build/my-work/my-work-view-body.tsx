@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { KanbanBoard } from "@/features/build/views/kanban-board";
 import { ListView } from "@/features/build/views/list-view";
 import { TableView } from "@/features/build/views/table-view";
-import { pmSnappy, viewSwap, viewSwapReduced } from "@/features/build/shared/pm-motion";
+import { pmSnappy, viewSwap, viewSwapReduced } from "@/lib/motion-presets";
 import type { KanbanTicket, DisplayOptions } from "@/features/build/shared/types";
 import type { AllWorkTicketMeta } from "./map-all-work-ticket";
 import type { MyWorkView } from "./my-work-view";

@@ -16,7 +16,7 @@ import { useIsMobile } from "@/hooks/common/use-mobile";
 import { cn } from "@/lib/utils";
 import { PriorityBadge } from "../shared/priority-badge";
 import { StatusBadge } from "../shared/status-badge";
-import { pmSnappy } from "../shared/pm-motion";
+import { pmSnappy } from "@/lib/motion-presets";
 import { TicketSidebar } from "./ticket-sidebar";
 import { TicketTimeTracker } from "./ticket-time-tracker";
 import { WatcherList } from "./watcher-list";

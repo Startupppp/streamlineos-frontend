@@ -48,11 +48,14 @@ interface MentionItemProps {
   user: OrgUser;
   idx: number;
   mentionIndex: number;
-  onInsert: (name: string) => void;
+  onInsert: (name: string, userId: string) => void;
 }
 
 function MentionItem({ user, idx, mentionIndex, onInsert }: MentionItemProps) {
-  const handleClick = useCallback(() => onInsert(user.name ?? ""), [user.name, onInsert]);
+  const handleClick = useCallback(
+    () => onInsert(user.name ?? "", user.id),
+    [user.name, user.id, onInsert],
+  );
   return (
     <button
       onClick={handleClick}
@@ -143,7 +146,7 @@ interface MessageInputProps {
   mentionIndex: number;
   setMentionIndex: React.Dispatch<React.SetStateAction<number>>;
   filteredMentions: OrgUser[];
-  insertMention: (name: string) => void;
+  insertMention: (name: string, userId: string) => void;
 
   showTicketPicker: boolean;
   ticketQuery: string;

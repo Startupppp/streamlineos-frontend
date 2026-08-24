@@ -848,19 +848,83 @@ export interface CreateTaskFromMessageInput {
   title?: string;
 }
 
-export interface AssignTicketFromChatInput {
-  channelId: number;
-  ticketId: number;
-  projectId: number;
-  assigneeId: string;
+export interface EntityReferenceInput {
+  type: string;
+  id: string;
 }
 
-export function useAssignTicketFromChat() {
+export interface SubmitEntityActionInput {
+  channelId: number;
+  reference: EntityReferenceInput;
+  actionId: string;
+  input?: Record<string, unknown>;
+}
+
+export type EntityActionInputKind = "text" | "date" | "user" | "choice";
+
+export interface EntityActionInputSpec {
+  name: string;
+  kind: EntityActionInputKind;
+  required: boolean;
+  choices?: string[];
+  /** Where the valid answers come from, when they are not a literal list. */
+  options?: { from: EntityReferenceInput };
+}
+
+export interface EntityAction {
+  id: string;
+  label: string;
+  inputs: EntityActionInputSpec[];
+}
+
+interface EntityActionsResponse {
+  references: { reference: EntityReferenceInput; actions: EntityAction[] }[];
+}
+
+export function entityReferenceKey(reference: EntityReferenceInput): string {
+  return `${reference.type}:${reference.id}`;
+}
+
+// One batched ask per visible set of references; per bubble would be a request per record.
+export function useEntityActions(
+  channelId: number,
+  references: EntityReferenceInput[],
+) {
+  const referenceKeys = references.map(entityReferenceKey).sort().join(",");
+  return useQuery({
+    queryKey: queryKeys.chat.entityActions(channelId, referenceKeys),
+    queryFn: () =>
+      apiClient.post<EntityActionsResponse>("/chat/entity-actions/available", {
+        channelId,
+        references,
+      }),
+    enabled: channelId > 0 && references.length > 0,
+    staleTime: 30_000,
+    select: (data) => {
+      const byReference = new Map<string, EntityAction[]>();
+      for (const entry of data.references)
+        byReference.set(entityReferenceKey(entry.reference), entry.actions);
+      return byReference;
+    },
+  });
+}
+
+/**
+ * One route for every action on every referenced record. The action's identity
+ * travels in the body, so adding one is an adapter change on the server rather
+ * than a new endpoint, a new hook and a new dialog here.
+ */
+export function useSubmitEntityAction() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationKey: ["chat", "actions", "assign-ticket"],
-    mutationFn: (input: AssignTicketFromChatInput) =>
-      apiClient.post<{ ok: boolean }>("/chat/actions/assign-ticket", input),
+    mutationKey: ["chat", "entity-actions", "submit"],
+    mutationFn: (variables: SubmitEntityActionInput) =>
+      apiClient.post<Record<string, unknown>>("/chat/entity-actions/submit", {
+        channelId: variables.channelId,
+        reference: variables.reference,
+        actionId: variables.actionId,
+        input: variables.input ?? {},
+      }),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.chat.messages(variables.channelId),
@@ -869,27 +933,11 @@ export function useAssignTicketFromChat() {
   });
 }
 
-export interface SetDueDateFromChatInput {
-  channelId: number;
-  ticketId: number;
-  projectId: number;
-  dueDate: string;
-}
-
-export function useSetDueDateFromChat() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationKey: ["chat", "actions", "set-due-date"],
-    mutationFn: (input: SetDueDateFromChatInput) =>
-      apiClient.post<{ ok: boolean }>("/chat/actions/set-due-date", input),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.chat.messages(variables.channelId),
-      });
-    },
-  });
-}
-
+/**
+ * Stays chat-specific on purpose: the server reads the message's own text to
+ * fill the new record's description, which the generic entity-action route
+ * cannot do without knowing what a chat message is.
+ */
 export function useCreateTaskFromMessage() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -904,5 +952,36 @@ export function useCreateTaskFromMessage() {
         queryKey: queryKeys.chat.messages(variables.channelId),
       });
     },
+  });
+}
+
+export interface EntityOption {
+  value: string;
+  label: string;
+  imageUrl?: string | null;
+}
+
+/**
+ * Resolves an input's declared option source to its candidates. The caller
+ * passes the reference the declaration named and never has to know which module
+ * produced it — which is the whole point of the source being declared.
+ */
+export function useEntityActionOptions(
+  channelId: number,
+  source: EntityReferenceInput | null | undefined,
+) {
+  return useQuery({
+    queryKey: queryKeys.chat.entityActionOptions(
+      channelId,
+      source ? entityReferenceKey(source) : "",
+    ),
+    queryFn: () =>
+      apiClient.post<{ options: EntityOption[] }>(
+        "/chat/entity-actions/options",
+        { channelId, reference: source },
+      ),
+    enabled: channelId > 0 && Boolean(source),
+    staleTime: 60_000,
+    select: (data) => data.options,
   });
 }

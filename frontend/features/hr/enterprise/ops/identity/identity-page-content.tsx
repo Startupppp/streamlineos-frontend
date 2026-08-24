@@ -29,7 +29,7 @@ import { useOrgMembers } from "@/hooks/api/organization";
 import {
   getUserDisplayName,
   type NamedUser,
-} from "@/features/build/shared/resolve-user-name";
+} from "@/lib/person-display";
 import { StateIllustration } from "@/components/illustrations";
 
 const STATUS_COLORS: Record<ProvisioningStatus, string> = {

@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
 
 const EXPECTED_NAVIGATION_INVENTORY_DIGEST =
-  "34f5b9876525127742d06e7783e93b90ef7443334676bbb965060daa629b44ae";
+  "8efe13a7143eddb59dfd619e7d1284f264bb210ba598ad42b2b032955826ef76";
 
 function serializeNavigationRoute(route: NavRoute): unknown {
   return {
@@ -25,6 +25,7 @@ describe("sidebar navigation inventory", () => {
       label: group.label,
       defaultCollapsed: group.defaultCollapsed,
       requiredPermission: group.requiredPermission,
+      product: group.product,
       module: group.module,
       routes: group.routes.map(serializeNavigationRoute),
     }));

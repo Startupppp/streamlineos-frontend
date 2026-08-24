@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ManagedProductStatusBadge } from "./managed-product-status-badge";
 import { ManagedProductFormSheet } from "./managed-product-form-sheet";
 import type { ManagedProduct, UpdateManagedProductInput } from "@/types/projects";
-import { getUserDisplayName } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName } from "@/lib/person-display";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PmPageShell, PmSection, PM_PANEL } from "@/features/build/shared/pm-chrome";
 import { cn } from "@/lib/utils";

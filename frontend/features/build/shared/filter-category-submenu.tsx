@@ -7,9 +7,9 @@ import {
   useEffect,
   type KeyboardEvent,
 } from "react";
-import { getUserDisplayName } from "@/features/build/shared/resolve-user-name";
-import { resolveColumnColor } from "@/features/build/shared/column-colors";
-import { getStatusEntry, type StatusConfigEntry } from "@/features/build/shared/types";
+import { getUserDisplayName } from "@/lib/person-display";
+import { resolveColumnColor } from "@/lib/column-colors";
+import { getStatusEntry, type StatusConfigEntry } from "@/lib/status-config";
 import {
   FilterAssigneeLeading,
   FilterLabelDot,
@@ -22,7 +22,7 @@ import {
   PanelShell,
   EmptyHint,
   FilterDatesPanel,
-} from "./filter-submenu-internals";
+} from "@/features/shared/list-view";
 import {
   PRIORITIES,
   TYPES,
@@ -33,10 +33,10 @@ import {
   type Cycle,
   type Sprint,
   type ProjectOption,
-} from "./filter-types";
+} from "@/features/shared/list-view";
 
-export type { FilterCategory, StatusFilterOption } from "./filter-types";
-export { StatusFilterDot } from "./filter-submenu-internals";
+export type { FilterCategory, StatusFilterOption } from "@/features/shared/list-view";
+export { StatusFilterDot } from "@/features/shared/list-view";
 
 interface FilterCategorySubmenuProps {
   category: FilterCategory;

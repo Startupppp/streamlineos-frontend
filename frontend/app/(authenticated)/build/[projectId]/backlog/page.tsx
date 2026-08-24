@@ -20,7 +20,7 @@ import { TicketTypeIcon } from "@/features/build/shared/ticket-type-icon";
 import { PriorityBadge } from "@/features/build/shared/priority-badge";
 import { StatusBadge } from "@/features/build/shared/status-badge";
 import { formatTicketKey } from "@/features/build/shared/format-ticket-key";
-import { getUserDisplayName, getUserInitials } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import { PmPageShell, PM_TOOLBAR, PmPanel } from "@/features/build/shared/pm-chrome";
 import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";

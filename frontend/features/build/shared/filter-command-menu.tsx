@@ -31,10 +31,10 @@ import { useHorizontalSwipe } from "@/hooks/common/use-horizontal-swipe";
 import { FilterCategorySubmenu } from "./filter-category-submenu";
 import { FilterFlatSearch } from "./filter-flat-search";
 import { FilterAssigneeLeading } from "./filter-option-leading";
-import { FilterTriggerButton, MobileFilterSearch } from "./filter-trigger-button";
-import { FilterCategoryList } from "./filter-category-list";
+import { FilterTriggerButton, MobileFilterSearch } from "@/features/shared/list-view";
+import { FilterCategoryList } from "@/features/shared/list-view";
 import {
-  FILTER_CATEGORY_TITLES,
+  categoryTitle,
   type FilterCategory,
   type StatusFilterOption,
   type Member,
@@ -44,15 +44,15 @@ import {
   type ProjectOption,
   type FilterState,
   type CategoryDefinition,
-} from "./filter-types";
-import type { StatusConfigEntry } from "@/features/build/shared/types";
+} from "@/features/shared/list-view";
+import type { StatusConfigEntry } from "@/lib/status-config";
 import {
   pmSnappy,
   stepSlide,
   stepSlideReduced,
-} from "@/features/build/shared/pm-motion";
+} from "@/lib/motion-presets";
 
-export type { FilterState } from "./filter-types";
+export type { FilterState } from "@/features/shared/list-view";
 
 export interface FilterCommandMenuProps {
   activeFilterCount: number;
@@ -316,7 +316,7 @@ export function FilterCommandMenu({
 
   if (isMobile) {
     const drillTitle = activeCategory
-      ? FILTER_CATEGORY_TITLES[activeCategory]
+      ? categoryTitle(activeCategory)
       : "Filters";
     const slideVariants = shouldReduceMotion ? stepSlideReduced : stepSlide;
 

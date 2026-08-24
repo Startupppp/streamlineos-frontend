@@ -25,7 +25,7 @@ import {
   type HrWorkflowAction,
   type HrWorkflowInstanceStatus,
 } from "@/types/hr/workflows";
-import { getUserDisplayName } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName } from "@/lib/person-display";
 
 const rejectSchema = z.object({ comment: z.string().min(1, "Comment is required") });
 type RejectForm = z.infer<typeof rejectSchema>;

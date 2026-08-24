@@ -6,7 +6,7 @@ import { Combobox } from "@/components/ui/combobox";
 import { useCustomStates } from "@/hooks/api/build/custom-states";
 import { useProjectMembers, useProjectLabels } from "@/hooks/api/build/projects";
 import { cn } from "@/lib/utils";
-import { getUserDisplayName } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName } from "@/lib/person-display";
 
 const PRIORITY_OPTIONS = [
   { value: "LOW", label: "Low" },

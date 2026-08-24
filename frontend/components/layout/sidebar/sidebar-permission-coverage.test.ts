@@ -1,12 +1,5 @@
 import { flattenNavRoutes, NAV_GROUPS } from "./sidebar-nav-items";
 
-/**
- * Every module surface is reached only by someone who holds a permission for it.
- * The exceptions are the universal surfaces the product guarantees to every active
- * member — Home, communication, self-service and knowledge reading — which are
- * deliberately ungated. Anything else without a requirement is visible to people
- * who cannot use it.
- */
 const UNIVERSAL_HREFS = ["/settings"];
 
 const UNIVERSAL_HREF_PREFIXES = [

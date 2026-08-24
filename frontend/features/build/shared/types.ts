@@ -1,3 +1,5 @@
+import type { StatusConfigEntry } from "@/lib/status-config";
+
 import type { TicketPriority } from "@/types/projects";
 
 export type GroupByOption = "status" | "assignee" | "priority" | "label" | "cycle" | "project" | "none";
@@ -108,12 +110,6 @@ export const priorityConfig: Record<
   LOW: { label: "Low", color: "text-blue-400", icon: "ArrowDown" },
 };
 
-export interface StatusConfigEntry {
-  label: string;
-  dotColor: string;
-  color?: string | null;
-}
-
 export const statusConfig: Record<string, StatusConfigEntry> = {
   TODO: { label: "To Do", dotColor: "bg-muted-foreground" },
   IN_PROGRESS: { label: "In Progress", dotColor: "bg-blue-500" },
@@ -140,13 +136,6 @@ export function buildStatusConfig(
     };
   }
   return merged;
-}
-
-export function getStatusEntry(
-  config: Record<string, StatusConfigEntry>,
-  key: string,
-): StatusConfigEntry {
-  return config[key] ?? { label: key.replace(/_/g, " "), dotColor: "bg-muted-foreground" };
 }
 
 export const typeConfig: Record<

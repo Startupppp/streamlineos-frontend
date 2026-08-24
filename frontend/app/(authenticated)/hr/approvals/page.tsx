@@ -31,7 +31,7 @@ import {
   type HrWorkflowInstance,
   type HrWorkflowInstanceStatus,
 } from "@/types/hr/workflows";
-import { getUserDisplayName } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName } from "@/lib/person-display";
 
 const STATUS_CHIP: Record<
   HrWorkflowInstanceStatus,

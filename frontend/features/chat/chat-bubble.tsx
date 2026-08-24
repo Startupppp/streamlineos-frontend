@@ -3,7 +3,7 @@
 import React, { useCallback, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { ArrowDown, CalendarClock, CheckCheck, FileText, Forward, Link, ListPlus, Loader2, MessageSquare, Pencil, Pin, Smile, Ticket, Trash2 } from "lucide-react";
+import { ArrowDown, CalendarClock, CheckCheck, FileText, Forward, Link, ListPlus, Loader2, Lock, MessageSquare, Pencil, Pin, Smile, Ticket, Trash2 } from "lucide-react";
 import { ReplyIcon, BookmarkCheckIcon, BookmarkPlusIcon, CopyIcon, Trash2Icon, UserPlusIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useQuery } from "@tanstack/react-query";
@@ -32,9 +32,10 @@ import {
 import type { Message, TicketEntityRef, CommentEntityRef, MessageMetadata } from "./chat-types";
 import { useCan } from "@/hooks/api/access";
 import { apiClient, isApiError } from "@/lib/api-client";
+import { useEntityAction } from "./entity-actions-context";
+import { useSubmitEntityAction } from "@/hooks/api/chat";
 import { ConvertToTaskDialog } from "./convert-to-task-dialog";
-import { AssignTicketDialog } from "./assign-ticket-dialog";
-import { SetDueDateDialog } from "./set-due-date-dialog";
+import { EntityActionDialog } from "./entity-action-dialog";
 import { ticketPermalinkQueryOptions } from "@/hooks/api/build/comment-permalink";
 import { InternalLinkPreview } from "./internal-link-preview";
 import { getStatusBadgeClass } from "@/features/build/shared/status-badge";
@@ -107,20 +108,46 @@ const TICKET_STATUS_DISPLAY: Record<string, string> = {
   DONE: "Done",
 };
 
+/**
+ * The reader could not resolve the record — it is gone, or it was never theirs
+ * to see. Both look the same on purpose, so scrollback leaks neither.
+ */
+function UnresolvedPill({ label }: { label: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted/30 px-2.5 py-1.5 my-1 text-[11px] text-muted-foreground">
+      <Lock className="h-3 w-3 shrink-0 text-muted-foreground/60" />
+      {label}
+    </span>
+  );
+}
+
 function TicketPill({ entity, channelId }: { entity: TicketEntityRef; channelId: number }) {
   const router = useRouter();
-  const [currentStatus, setCurrentStatus] = useState(entity.status ?? "TODO");
+  const [currentStatus, setCurrentStatus] = useState(
+    entity.card?.status ?? entity.status ?? "TODO",
+  );
   const [isChangingStatus, setIsChangingStatus] = useState(false);
-  const canUpdate = useCan("build:tickets:update");
+  const submitEntityAction = useSubmitEntityAction();
+  const canUpdate = Boolean(
+    useEntityAction({ type: "ticket", id: String(entity.id) }, "status"),
+  );
 
-  const hasFullInfo = Boolean(entity.projectKey && entity.ticketNumber);
-  const ticketKey = hasFullInfo
-    ? `${entity.projectKey}-${entity.ticketNumber}`
-    : `Ticket #${entity.id}`;
+  const card = entity.card;
+  const ticketKey =
+    card?.subtitle ??
+    (entity.projectKey && entity.ticketNumber
+      ? `${entity.projectKey}-${entity.ticketNumber}`
+      : `Ticket #${entity.id}`);
+  const hasFullInfo = Boolean(card?.subtitle) || Boolean(entity.projectKey && entity.ticketNumber);
+  const ticketTitle = card?.title ?? entity.title;
 
   const handlePillClick = useCallback(() => {
-    router.push(`/build/${entity.projectId}?ticket=${entity.id}`);
-  }, [router, entity.projectId, entity.id]);
+    if (card?.href) {
+      router.push(card.href);
+      return;
+    }
+    if (entity.projectId) router.push(`/build/${entity.projectId}?ticket=${entity.id}`);
+  }, [router, card?.href, entity.projectId, entity.id]);
 
   const handleStatusChange = useCallback(
     async (nextStatus: string) => {
@@ -128,11 +155,11 @@ function TicketPill({ entity, channelId }: { entity: TicketEntityRef; channelId:
       setCurrentStatus(nextStatus);
       setIsChangingStatus(true);
       try {
-        await apiClient.post("/chat/actions/ticket-status", {
+        await submitEntityAction.mutateAsync({
           channelId,
-          projectId: entity.projectId,
-          ticketId: Number(entity.id),
-          nextStatus,
+          reference: { type: "ticket", id: String(entity.id) },
+          actionId: "status",
+          input: { status: nextStatus },
         });
       } catch (err) {
         setCurrentStatus(prev);
@@ -152,6 +179,8 @@ function TicketPill({ entity, channelId }: { entity: TicketEntityRef; channelId:
     },
     [currentStatus, channelId, entity],
   );
+
+  if (entity.card === null) return <UnresolvedPill label="A ticket you can't see" />;
 
   if (!hasFullInfo) {
     return (
@@ -180,13 +209,13 @@ function TicketPill({ entity, channelId }: { entity: TicketEntityRef; channelId:
         <Ticket className="h-3 w-3 shrink-0 text-muted-foreground/60" />
         {ticketKey}
       </button>
-      {entity.title && (
+      {ticketTitle && (
         <button
           type="button"
           onClick={handlePillClick}
           className="text-[12px] text-foreground/80 hover:underline max-w-[160px] min-w-0"
         >
-          <TruncatedText text={entity.title} />
+          <TruncatedText text={ticketTitle} />
         </button>
       )}
       {canUpdate ? (
@@ -236,9 +265,11 @@ function TicketPill({ entity, channelId }: { entity: TicketEntityRef; channelId:
 
 function CommentPill({ entity }: { entity: CommentEntityRef }) {
   const router = useRouter();
-  const { data: ticket } = useQuery(
-    ticketPermalinkQueryOptions(entity.projectId, entity.ticketId),
-  );
+  const canViewTickets = useCan("build:tickets:view");
+  const { data: ticket } = useQuery({
+    ...ticketPermalinkQueryOptions(entity.projectId, entity.ticketId),
+    enabled: canViewTickets,
+  });
 
   const href = `/build/${entity.projectId}?ticket=${entity.ticketId}&comment=${entity.id}`;
   const label = ticket
@@ -320,8 +351,17 @@ export function ChatBubble({
   const [convertDialogOpen, setConvertDialogOpen] = useState(false);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [dueDateDialogOpen, setDueDateDialogOpen] = useState(false);
+  const bubbleMeta = message.metadata as MessageMetadata | null;
+  const ticketEntity = (bubbleMeta?.entities ?? []).find(
+    (e): e is TicketEntityRef => e.type === "ticket",
+  );
+  const ticketReference = {
+    type: "ticket",
+    id: ticketEntity ? String(ticketEntity.id) : "",
+  };
   const canConvertToTask = useCan("build:tickets:create");
-  const canAssignTicket = useCan("build:tickets:assign");
+  const assignAction = useEntityAction(ticketReference, "assign");
+  const canAssignTicket = Boolean(assignAction);
   const senderName = resolveUserName
     ? resolveUserName(message.senderId, message.sender)
     : (message.sender?.name ?? "Unknown");
@@ -330,7 +370,8 @@ export function ChatBubble({
       ? resolveUserName(message.replyTo.sender?.id ?? "", message.replyTo.sender)
       : (message.replyTo.sender?.name ?? "Unknown")
     : null;
-  const canSetDueDate = useCan("build:tickets:update");
+  const dueDateAction = useEntityAction(ticketReference, "due-date");
+  const canSetDueDate = Boolean(dueDateAction);
 
   const handleOpenConvertDialog = useCallback(() => setConvertDialogOpen(true), []);
   const handleOpenAssignDialog = useCallback(() => setAssignDialogOpen(true), []);
@@ -361,12 +402,11 @@ export function ChatBubble({
     else onPin();
   }, [isPinned, onPin, onUnpin]);
 
-  const meta = message.metadata as MessageMetadata | null;
-  const linkedTicket = (() => {
-    const entities = meta?.entities ?? [];
-    const t = entities.find((e): e is TicketEntityRef => e.type === "ticket");
-    return t !== undefined ? { ticketId: Number(t.id), projectId: t.projectId } : null;
-  })();
+  const meta = bubbleMeta;
+  const linkedTicket =
+    ticketEntity !== undefined
+      ? { ticketId: Number(ticketEntity.id), projectId: ticketEntity.projectId }
+      : null;
   const { label: forwardLabel, content: displayContent } = getForwardedDisplay(
     message.content,
     meta?.forwardCount,
@@ -628,22 +668,22 @@ export function ChatBubble({
             defaultTitle={(message.content ?? "").slice(0, 80)}
           />
         )}
-        {canAssignTicket && (
-          <AssignTicketDialog
+        {assignAction && (
+          <EntityActionDialog
             open={assignDialogOpen}
             onOpenChange={setAssignDialogOpen}
             channelId={message.channelId}
-            ticketId={linkedTicket?.ticketId}
-            projectId={linkedTicket?.projectId}
+            reference={ticketReference}
+            action={assignAction}
           />
         )}
-        {canSetDueDate && (
-          <SetDueDateDialog
+        {dueDateAction && (
+          <EntityActionDialog
             open={dueDateDialogOpen}
             onOpenChange={setDueDateDialogOpen}
             channelId={message.channelId}
-            ticketId={linkedTicket?.ticketId}
-            projectId={linkedTicket?.projectId}
+            reference={ticketReference}
+            action={dueDateAction}
           />
         )}
         {!isEditing && (

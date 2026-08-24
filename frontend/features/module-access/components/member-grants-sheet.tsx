@@ -26,6 +26,15 @@ import {
   type ModuleMember,
 } from "@/hooks/api/module-access";
 
+const SKELETON_ROWS = [
+  "grant-1",
+  "grant-2",
+  "grant-3",
+  "grant-4",
+  "grant-5",
+  "grant-6",
+] as const;
+
 interface MemberGrantsSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -134,8 +143,8 @@ export function MemberGrantsSheet({
         <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-4">
           {isLoading ? (
             <div className="space-y-2">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-3 py-2">
+              {SKELETON_ROWS.map((row) => (
+                <div key={row} className="flex items-center gap-3 py-2">
                   <Skeleton className="h-4 w-4 rounded" />
                   <Skeleton className="h-4 w-48" />
                 </div>

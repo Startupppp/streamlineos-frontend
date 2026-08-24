@@ -26,7 +26,7 @@ import {
   getUserDisplayName,
   getUserInitials,
   type NamedUser,
-} from "@/features/build/shared/resolve-user-name";
+} from "@/lib/person-display";
 
 interface Recognition {
   id: number;

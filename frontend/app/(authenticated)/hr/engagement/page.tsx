@@ -31,7 +31,7 @@ import {
   getUserDisplayName,
   getUserInitials,
   type NamedUser,
-} from "@/features/build/shared/resolve-user-name";
+} from "@/lib/person-display";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { MoodCheckinWidget } from "@/features/hr/engagement/mood-checkin-widget";
 import {

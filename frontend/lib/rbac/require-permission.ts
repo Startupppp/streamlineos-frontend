@@ -45,8 +45,8 @@ export async function requirePermission(
 
   const access = await getServerAccess();
   const perms = Array.isArray(permission) ? permission : [permission];
-  const granted = new Set(access.permissions);
-  const allowed = access.isOrgOwner || perms.some((p) => granted.has(p));
+  const granted = access.scopes;
+  const allowed = access.isOrgOwner || perms.some((p) => p in granted);
 
   if (!allowed) {
     if (options.redirectTo) redirect(options.redirectTo);
@@ -78,8 +78,8 @@ export async function requireModulePermission(
 
   if (permission) {
     const required = Array.isArray(permission) ? permission : [permission];
-    const granted = new Set(access.permissions);
-    if (!access.isOrgOwner && !required.some((key) => granted.has(key))) {
+    const granted = access.scopes;
+    if (!access.isOrgOwner && !required.some((key) => key in granted)) {
       const from = await getCurrentPath();
       const params = new URLSearchParams({ required: required.join(",") });
       if (from) params.set("from", from);

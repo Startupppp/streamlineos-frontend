@@ -24,7 +24,7 @@ import { useProjectMembers } from "@/hooks/api/build/projects";
 import {
   getUserDisplayName,
   getUserInitials,
-} from "@/features/build/shared/resolve-user-name";
+} from "@/lib/person-display";
 import { User, Check } from "lucide-react";
 import { InlineFieldWrapper } from "./card-field-wrapper";
 

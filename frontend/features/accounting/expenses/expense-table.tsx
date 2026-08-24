@@ -10,7 +10,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { FinanceStatusBadge, Money } from "@/features/accounting/shared";
-import { getUserDisplayName, getUserInitials } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import type { ExpenseWithRelations } from "@/types/hr/expenses";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import type { ExpenseStatus } from "@/features/accounting/shared";

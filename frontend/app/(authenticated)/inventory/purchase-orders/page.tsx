@@ -1,8 +1,8 @@
 "use client";
 
-import { memo, useState, useTransition, type ChangeEvent } from "react";
+import { memo, useState, type ChangeEvent } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Store } from "lucide-react";
 import { EllipsisIcon, PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -43,7 +43,10 @@ import {
   useClosePurchaseOrder,
   useCancelPurchaseOrder,
 } from "@/hooks/api/inventory/purchase-orders";
-import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import {
+  useListFilterParams,
+  type ListFilterSpec,
+} from "@/features/shared/list-view";
 import type { PurchaseOrderStatus, PurchaseOrderSummary } from "@/types/inventory";
 
 const STATUS_OPTIONS = [
@@ -272,55 +275,44 @@ function NewPoButton({ disabled }: { disabled: boolean }) {
   );
 }
 
+const PURCHASE_ORDER_FILTERS: ListFilterSpec = {
+  categories: [
+    { key: "status", label: "Status", arity: "single", params: ["status"] },
+    { key: "vendor", label: "Vendor", arity: "single", params: ["vendor"] },
+  ],
+};
+
+const ALL = "all";
+
 export default function PurchaseOrdersListPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const [, startTransition] = useTransition();
-  const [search, setSearch] = useState<string>("");
-  const debouncedSearch = useDebouncedValue(search, 300);
+  const filters = useListFilterParams(PURCHASE_ORDER_FILTERS);
 
-  const statusParam = searchParams.get("status") ?? "all";
-  const vendorParam = searchParams.get("vendor") ?? "all";
-  const page = Math.max(1, Number(searchParams.get("page") ?? "1"));
+  const statusParam = filters.values["status"]?.[0] || ALL;
+  const vendorParam = filters.values["vendor"]?.[0] || ALL;
+  const page = filters.page;
 
   const resolvedStatus = VALID_STATUSES.has(statusParam)
     ? (statusParam as PurchaseOrderStatus)
     : undefined;
-  const resolvedVendorId = vendorParam !== "all" ? Number(vendorParam) : undefined;
+  const resolvedVendorId = vendorParam !== ALL ? Number(vendorParam) : undefined;
 
-  function updateParams(updates: Record<string, string>): void {
-    const params = new URLSearchParams(searchParams.toString());
-    for (const [key, value] of Object.entries(updates)) {
-      if (value === "all" || value === "" || (key === "page" && value === "1")) {
-        params.delete(key);
-      } else {
-        params.set(key, value);
-      }
-    }
-    startTransition(() => {
-      router.replace(`?${params.toString()}`, { scroll: false });
-    });
+  function selectCategory(categoryKey: string, value: string): void {
+    if (value === ALL) filters.clearCategory(categoryKey);
+    else filters.setAt(categoryKey, 0, value);
   }
 
   function handleStatusChange(value: string): void {
-    updateParams({ status: value, page: "1" });
+    selectCategory("status", value);
   }
 
   function handleVendorChange(value: string): void {
-    updateParams({ vendor: value, page: "1" });
-  }
-
-  function handleSearchChange(value: string): void {
-    setSearch(value);
-  }
-
-  function handlePageChange(nextPage: number): void {
-    updateParams({ page: String(nextPage) });
+    selectCategory("vendor", value);
   }
 
   function handleClearFilters(): void {
-    setSearch("");
-    updateParams({ status: "all", vendor: "all", page: "1" });
+    filters.setSearch("");
+    filters.clearAll();
   }
 
   const vendorsQuery = useVendors({ isActive: true, limit: 100 });
@@ -337,15 +329,16 @@ export default function PurchaseOrdersListPage() {
   const totalPages = query.data?.totalPages ?? 1;
   const hasNoVendors = !vendorsQuery.isLoading && vendors.length === 0;
 
-  const filteredItems = debouncedSearch.trim()
+  const search = filters.search;
+  const filteredItems = search.trim()
     ? allItems.filter(
         (po) =>
-          po.poNumber.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-          (po.vendor?.name ?? "").toLowerCase().includes(debouncedSearch.toLowerCase()),
+          po.poNumber.toLowerCase().includes(search.toLowerCase()) ||
+          (po.vendor?.name ?? "").toLowerCase().includes(search.toLowerCase()),
       )
     : allItems;
 
-  const hasFilters = statusParam !== "all" || vendorParam !== "all" || search.length > 0;
+  const hasFilters = filters.activeFilterCount > 0 || search.length > 0;
 
   function handleRetry(): void {
     void query.refetch();
@@ -357,7 +350,11 @@ export default function PurchaseOrdersListPage() {
 
   const filterBar = (
     <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide lg:gap-3 [&>*]:shrink-0">
-        <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search PO number or vendor…" />
+        <SearchInput
+          value={filters.localSearch}
+          onValueChange={filters.setSearch}
+          placeholder="Search PO number or vendor…"
+        />
       <div className="hidden min-w-0 flex-row flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide sm:flex lg:gap-3 [&>*]:shrink-0">
         <Select value={statusParam} onValueChange={handleStatusChange}>
           <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "min-w-0 flex-1 text-xs")}>
@@ -449,7 +446,7 @@ export default function PurchaseOrdersListPage() {
                   page,
                   pageSize: 50,
                   total,
-                  onPageChange: handlePageChange,
+                  onPageChange: filters.setPage,
                 }
               : undefined
           }

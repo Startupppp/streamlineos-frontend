@@ -22,7 +22,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   getUserDisplayName,
   getUserInitials,
-} from "@/features/build/shared/resolve-user-name";
+} from "@/lib/person-display";
 import { TicketTypeIcon } from "@/features/build/shared/ticket-type-icon";
 import { getStatusDotClass, getStatusBadgeClass } from "@/features/build/shared/status-badge";
 import { priorityConfig, statusConfig } from "@/features/build/shared/types";

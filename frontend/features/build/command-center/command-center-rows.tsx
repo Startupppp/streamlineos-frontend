@@ -24,7 +24,7 @@ import {
   listItemReduced,
   pmSnappy,
   pmSpring,
-} from "@/features/build/shared/pm-motion";
+} from "@/lib/motion-presets";
 import { PM_ROW } from "@/features/build/shared/pm-chrome";
 import { FLEX_TITLE_SLOT } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";

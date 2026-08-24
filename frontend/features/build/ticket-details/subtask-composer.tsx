@@ -29,9 +29,10 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PriorityBadge } from "../shared/priority-badge";
 import { popoverOptionBaseClass, popoverOptionSelectedClass } from "../shared/popover-option-classes";
-import { StatusConfigDot } from "../shared/status-badge";
-import { buildStatusConfig, getStatusEntry } from "../shared/types";
-import { getUserDisplayName, getUserInitials } from "../shared/resolve-user-name";
+import { StatusConfigDot } from "@/components/ui/status-config-dot";
+import { buildStatusConfig } from "../shared/types";
+import { getStatusEntry } from "@/lib/status-config";
+import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import type { TicketPriority } from "@/types/projects";
 import type { ProjectStatusRecord } from "@/types/projects";
 

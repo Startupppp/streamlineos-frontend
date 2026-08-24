@@ -31,7 +31,14 @@ export interface ProjectOption {
   key: string;
 }
 
-export type FilterCategory =
+/**
+ * Open on purpose. The filter controls are generic over the category set; the
+ * closed union below is Build's own list, not the platform's, and keeping the
+ * two apart is what lets another module reuse these controls.
+ */
+export type FilterCategory = string;
+
+export type BuildFilterCategory =
   | "status"
   | "priority"
   | "type"
@@ -51,7 +58,8 @@ export interface StatusFilterOption {
 export const PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
 export const TYPES = ["TASK", "BUG", "STORY", "EPIC", "SUBTASK"] as const;
 
-export const FILTER_CATEGORY_TITLES: Record<FilterCategory, string> = {
+/** `satisfies` keeps Build's nine exhaustive; the wider type lets any key be looked up. */
+const BUILD_CATEGORY_TITLES = {
   status: "Status",
   priority: "Priority",
   type: "Type",
@@ -61,7 +69,14 @@ export const FILTER_CATEGORY_TITLES: Record<FilterCategory, string> = {
   sprint: "Sprint",
   dates: "Due Dates",
   project: "Project",
-};
+} satisfies Record<BuildFilterCategory, string>;
+
+export const FILTER_CATEGORY_TITLES: Record<string, string> = BUILD_CATEGORY_TITLES;
+
+/** Falls back to the key itself, because an open category set has no exhaustive title map. */
+export function categoryTitle(category: FilterCategory): string {
+  return FILTER_CATEGORY_TITLES[category] ?? category;
+}
 
 export interface FilterState {
   selectedStatuses: string[];

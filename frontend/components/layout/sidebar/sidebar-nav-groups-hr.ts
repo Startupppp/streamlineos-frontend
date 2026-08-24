@@ -7,6 +7,7 @@ import { HR_SETTINGS_ROUTES } from "./sidebar-nav-routes-hr-settings";
 export const HR_NAV_GROUPS: NavGroup[] = [
 {
     label: "HR – People",
+    product: "hrms",
     module: "hrms",
     requiredPermission: [
       "hr:employees:view",

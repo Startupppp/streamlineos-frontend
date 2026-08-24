@@ -32,7 +32,7 @@ import {
 import {
   getUserDisplayName,
   getUserInitials,
-} from "@/features/build/shared/resolve-user-name";
+} from "@/lib/person-display";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type {
   PmWorkspace,

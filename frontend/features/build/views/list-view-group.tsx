@@ -10,8 +10,8 @@ import {
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { User } from "lucide-react";
 import { Droppable, Draggable } from "@hello-pangea/dnd";
-import { getUserInitials } from "@/features/build/shared/resolve-user-name";
-import { pmSnappy } from "@/features/build/shared/pm-motion";
+import { getUserInitials } from "@/lib/person-display";
+import { pmSnappy } from "@/lib/motion-presets";
 import { getGroupStatus } from "./list-view-shared";
 import type { OuterGroupHeaderProps, NestedGroupProps, DroppableGroupProps } from "./list-view-shared";
 import { ListViewItem } from "./list-view-item";

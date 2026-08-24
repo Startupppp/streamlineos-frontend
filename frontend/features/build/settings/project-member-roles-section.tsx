@@ -19,7 +19,7 @@ import { useCanManageProject } from "@/hooks/api/build/use-can-manage-project";
 import {
   getUserDisplayName,
   getUserInitials,
-} from "@/features/build/shared/resolve-user-name";
+} from "@/lib/person-display";
 import type { ProjectMemberRecord } from "@/types/projects";
 
 type ProjectMemberRole = "ADMIN" | "MEMBER" | "VIEWER";

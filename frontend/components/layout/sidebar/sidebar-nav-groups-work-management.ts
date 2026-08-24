@@ -4,6 +4,7 @@ import type { NavGroup } from "./sidebar-nav-types";
 export const WORK_MANAGEMENT_NAV_GROUPS: NavGroup[] = [
 {
     label: "Timesheets",
+    product: "timesheets",
     module: "timesheets",
     requiredPermission: [
       "timesheets:entries:view",
@@ -75,7 +76,8 @@ export const WORK_MANAGEMENT_NAV_GROUPS: NavGroup[] = [
     ],
   },
 {
-    label: "Product Management",
+    label: "Delivery",
+    product: "build",
     module: "build",
     requiredPermission: ["build:view", "build:tickets:view", "build:portal:view"],
     routes: [
@@ -143,7 +145,8 @@ export const WORK_MANAGEMENT_NAV_GROUPS: NavGroup[] = [
     ],
   },
 {
-    label: "More",
+    label: "Product",
+    product: "build",
     module: "build",
     defaultCollapsed: true,
     requiredPermission: [

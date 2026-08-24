@@ -7,6 +7,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type {
   AccessResponse,
+  DataScope,
   RbacDiscoveryGrantable,
   RbacDiscoveryMember,
 } from "@/types/access";
@@ -40,7 +41,14 @@ export function useCan(permissionKey: PermissionKey): boolean {
   const { data } = useAccess();
   if (!data) return false;
   if (data.isOrgOwner) return true;
-  return data.permissions.includes(permissionKey);
+  return permissionKey in data.scopes;
+}
+
+export function useScope(permissionKey: PermissionKey): DataScope {
+  const { data } = useAccess();
+  if (!data) return "none";
+  if (data.isOrgOwner) return "all";
+  return data.scopes[permissionKey] ?? "none";
 }
 
 export function canManageOrganizationMembership(

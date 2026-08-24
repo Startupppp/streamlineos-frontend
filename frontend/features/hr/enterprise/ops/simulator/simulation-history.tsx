@@ -12,7 +12,7 @@ import { useOrgMembers } from "@/hooks/api/organization";
 import {
   getUserDisplayName,
   type NamedUser,
-} from "@/features/build/shared/resolve-user-name";
+} from "@/lib/person-display";
 
 const TYPE_COLORS: Record<SimulationType, string> = {
   policy: "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",

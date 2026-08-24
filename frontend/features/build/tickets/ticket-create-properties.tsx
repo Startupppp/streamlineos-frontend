@@ -23,10 +23,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { popoverOptionBaseClass, popoverOptionSelectedClass } from "../shared/popover-option-classes";
 import { LabelsSearchCommand } from "../shared/labels-search-command";
-import { StatusConfigDot } from "../shared/status-badge";
-import { buildStatusConfig, getStatusEntry } from "../shared/types";
+import { StatusConfigDot } from "@/components/ui/status-config-dot";
+import { buildStatusConfig } from "../shared/types";
+import { getStatusEntry } from "@/lib/status-config";
 import { getPriorityColor } from "../shared/priority-badge";
-import { getUserDisplayName, getUserInitials } from "../shared/resolve-user-name";
+import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import type { ProjectStatusRecord, ProjectMemberRecord, Cycle, TicketLabel } from "@/types/projects";
 import type { TicketPriority } from "@/types/projects";
 

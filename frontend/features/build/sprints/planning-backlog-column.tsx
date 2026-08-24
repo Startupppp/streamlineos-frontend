@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Droppable } from "@hello-pangea/dnd";
 import { cn } from "@/lib/utils";
-import { getUserDisplayName } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName } from "@/lib/person-display";
 import { PlanningCard } from "./planning-card";
 import type { PlanningTicket } from "./planning-card";
 import {

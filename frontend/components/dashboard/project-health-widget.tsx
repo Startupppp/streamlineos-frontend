@@ -12,7 +12,7 @@ export function BusinessPulseWidget() {
 
   const hasCrmAccess =
     accessData?.isOrgOwner === true ||
-    (accessData?.permissions.includes("crm:leads:view") ?? false);
+    (accessData ? "crm:leads:view" in accessData.scopes : false);
 
   const { data, isLoading, error, refetch } = useExecutiveDashboard({
     enabled: hasCrmAccess,

@@ -31,7 +31,7 @@ import {
   HELPDESK_CATEGORY_LABELS,
   type TicketStatus,
 } from "@/hooks/api/hr/helpdesk";
-import { getUserInitials } from "@/features/build/shared/resolve-user-name";
+import { getUserInitials } from "@/lib/person-display";
 
 const STATUS_LABELS: Record<TicketStatus, string> = {
   TODO: "Open",

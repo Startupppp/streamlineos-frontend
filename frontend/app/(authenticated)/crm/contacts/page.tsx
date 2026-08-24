@@ -295,6 +295,8 @@ export default function ContactsPage() {
                 className="ml-auto text-xs"
                 onClick={handleExport}
                 isPending={exportContacts.isPending}
+                disabled={total === 0}
+                title={total === 0 ? "No contacts to export" : undefined}
               >
                 <Download className="h-3.5 w-3.5 mr-1.5" />
                 Export

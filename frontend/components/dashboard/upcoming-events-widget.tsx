@@ -57,6 +57,7 @@ function EventRow({ ev }: { ev: UpcomingEvent }) {
 export function UpcomingEventsWidget() {
   const { data, isLoading, error } = usePersonalDashboard();
   const events = data?.upcomingEvents ?? [];
+  const sourceFailed = data?.degraded?.includes("upcomingEvents") ?? false;
   const todayEvents = events.filter((ev) => isToday(new Date(ev.startTime)));
   const laterEvents = events.filter((ev) => !isToday(new Date(ev.startTime)));
 
@@ -70,7 +71,10 @@ export function UpcomingEventsWidget() {
         ariaLabel: "View calendar",
       }}
       isLoading={isLoading}
-      error={error}
+      error={error || sourceFailed}
+      errorMessage={
+        !error && sourceFailed ? "Couldn't load upcoming events." : undefined
+      }
       isEmpty={!events.length}
       empty={
         <EmptyState

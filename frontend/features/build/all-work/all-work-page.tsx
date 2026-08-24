@@ -25,7 +25,7 @@ import {
   pmSnappy,
   viewSwap,
   viewSwapReduced,
-} from "@/features/build/shared/pm-motion";
+} from "@/lib/motion-presets";
 import { groupByProject } from "./all-work-ticket-utils";
 import { getTicketDetailHref } from "@/features/build/shared/format-ticket-key";
 import { AllWorkViewSwitcher, AllWorkSkeleton } from "./all-work-view-switcher";

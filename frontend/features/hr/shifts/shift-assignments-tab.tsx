@@ -6,7 +6,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useShiftAssignments } from "@/hooks/api/hr/shifts";
 import { useOrgMembersByIds } from "@/hooks/api/organization";
-import { getUserDisplayName, type NamedUser } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName, type NamedUser } from "@/lib/person-display";
 
 export function ShiftAssignmentsTab() {
   const { data: assignments, isLoading } = useShiftAssignments();

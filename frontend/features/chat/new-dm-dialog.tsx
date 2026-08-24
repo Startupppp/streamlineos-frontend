@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import {
   Dialog,
   DialogContent,
@@ -38,10 +39,17 @@ interface DMUserItemProps {
   user: OrgUser;
   isOnline: boolean;
   isPending: boolean;
+  isSelf?: boolean;
   onSelect: (userId: string) => void;
 }
 
-function DMUserItem({ user, isOnline, isPending, onSelect }: DMUserItemProps) {
+function DMUserItem({
+  user,
+  isOnline,
+  isPending,
+  isSelf,
+  onSelect,
+}: DMUserItemProps) {
   const handleClick = useCallback(() => onSelect(user.id), [user.id, onSelect]);
   return (
     <button
@@ -61,8 +69,14 @@ function DMUserItem({ user, isOnline, isPending, onSelect }: DMUserItemProps) {
         )}
       </div>
       <div className="flex-1 text-left min-w-0">
-        <TruncatedText text={user.name ?? ""} className="text-[13px] font-medium" />
-        <TruncatedText text={user.email ?? ""} className="text-[11px] text-muted-foreground" />
+        <TruncatedText
+          text={isSelf ? `${user.name ?? "You"} (you)` : (user.name ?? "")}
+          className="text-[13px] font-medium"
+        />
+        <TruncatedText
+          text={isSelf ? "Note to self" : (user.email ?? "")}
+          className="text-[11px] text-muted-foreground"
+        />
       </div>
       <Badge
         variant="outline"
@@ -87,6 +101,8 @@ export function NewDMDialog({
 }) {
   const { data: orgUsers, isLoading } = useChatOrgUsers();
   const { data: onlineUsers } = useChatOnlineUsers();
+  const { data: session } = useSession();
+  const currentUserId = session?.user?.id;
   const createDM = useCreateDMChannel();
   const [search, setSearch] = useState("");
 
@@ -115,13 +131,19 @@ export function NewDMDialog({
 
   const filteredUsers = useMemo(() => {
     if (!orgUsers) return [];
-    if (!search) return orgUsers;
-    const q = search.toLowerCase();
-    return orgUsers.filter(
-      (u) =>
-        u.name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q),
-    );
-  }, [orgUsers, search]);
+    const q = search.trim().toLowerCase();
+    const matched = q
+      ? orgUsers.filter(
+          (u) =>
+            u.name?.toLowerCase().includes(q) ||
+            u.email?.toLowerCase().includes(q),
+        )
+      : orgUsers;
+    if (!currentUserId) return matched;
+    const self = matched.find((u) => u.id === currentUserId);
+    if (!self) return matched;
+    return [self, ...matched.filter((u) => u.id !== currentUserId)];
+  }, [orgUsers, search, currentUserId]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -155,6 +177,7 @@ export function NewDMDialog({
                 user={user}
                 isOnline={onlineUserIds.has(user.id)}
                 isPending={createDM.isPending}
+                isSelf={user.id === currentUserId}
                 onSelect={handleSelectUser}
               />
             ))}

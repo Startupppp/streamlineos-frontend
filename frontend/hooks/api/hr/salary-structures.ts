@@ -22,11 +22,12 @@ export interface SalaryStructureTemplate {
 
 export type CreateSalaryTemplateInput = Omit<SalaryStructureTemplate, "id" | "orgId" | "createdAt">;
 
-export function useSalaryStructureTemplates() {
+export function useSalaryStructureTemplates(options?: { enabled?: boolean }) {
   return useQuery<SalaryStructureTemplate[]>({
     queryKey: queryKeys.hr.salaryStructureTemplates(),
     queryFn: () => apiClient.get<SalaryStructureTemplate[]>("/hr/payroll/salary-structures"),
     staleTime: 120_000,
+    enabled: options?.enabled ?? true,
   });
 }
 

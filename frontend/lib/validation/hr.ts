@@ -73,6 +73,7 @@ export const onboardEmployeeInputSchema = z.object({
     .min(0, "Salary cannot be negative")
     .max(9_999_999, "Salary exceeds maximum allowed value")
     .optional(),
+  salaryStructureTemplateId: z.number().int().positive().optional(),
   bankDetails: z
     .object({
       accountNumber: z

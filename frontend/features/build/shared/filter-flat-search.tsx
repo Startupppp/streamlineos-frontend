@@ -12,7 +12,7 @@ import {
 import { DatePicker } from "@/components/ui/date-picker";
 import { Check, CalendarRange } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getUserDisplayName } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName } from "@/lib/person-display";
 import {
   StatusFilterDot,
   type StatusFilterOption,
@@ -23,7 +23,7 @@ import {
   FilterPriorityLeading,
   FilterTypeLeading,
 } from "./filter-option-leading";
-import type { StatusConfigEntry } from "@/features/build/shared/types";
+import type { StatusConfigEntry } from "@/lib/status-config";
 
 const PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
 const TYPES = ["TASK", "BUG", "STORY", "EPIC", "SUBTASK"] as const;

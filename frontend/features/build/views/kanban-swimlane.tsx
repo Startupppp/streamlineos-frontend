@@ -4,7 +4,7 @@ import { memo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User } from "lucide-react";
 import { resolveImageUrl } from "@/lib/utils";
-import { getUserDisplayName, getUserInitials } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import type { KanbanTicket } from "../shared/types";
 
 interface AssigneeInfo {

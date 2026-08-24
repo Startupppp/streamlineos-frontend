@@ -17,7 +17,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import {
   getUserDisplayName,
   type NamedUser,
-} from "@/features/build/shared/resolve-user-name";
+} from "@/lib/person-display";
 import type { PayoutBatchItem, BankBatchStatus, BankItemStatus } from "@/types/payroll";
 
 const ITEM_STATUS_STYLES: Record<BankItemStatus, string> = {

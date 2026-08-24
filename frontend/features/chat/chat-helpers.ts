@@ -2,7 +2,7 @@
 import {
   getUserDisplayName,
   type NamedUser,
-} from "@/features/build/shared/resolve-user-name";
+} from "@/lib/person-display";
 import {
   getInitials as _getInitials,
   formatFileSize as _formatFileSize,

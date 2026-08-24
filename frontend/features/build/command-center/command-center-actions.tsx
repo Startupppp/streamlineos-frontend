@@ -46,7 +46,7 @@ import {
   listItem,
   listItemReduced,
   pmSpring,
-} from "@/features/build/shared/pm-motion";
+} from "@/lib/motion-presets";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 
 type IconRef = RefObject<IconHandle | null>;
@@ -138,7 +138,7 @@ export function PinnedNav({ defaultProjectId = null }: PinnedNavProps) {
     (permission: PermissionKey): boolean => {
       if (!access) return false;
       if (access.isOrgOwner) return true;
-      return access.permissions.includes(permission);
+      return permission in access.scopes;
     },
     [access],
   );

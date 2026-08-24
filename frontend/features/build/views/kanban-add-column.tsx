@@ -11,7 +11,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateCustomState } from "@/hooks/api/build/custom-states";
 import { useCan } from "@/hooks/api/access";
 import { ColumnColorPicker } from "../shared/column-color-picker";
-import { DEFAULT_COLUMN_COLOR } from "../shared/column-colors";
+import { DEFAULT_COLUMN_COLOR } from "@/lib/column-colors";
 
 const MAX_NAME_LENGTH = 50;
 

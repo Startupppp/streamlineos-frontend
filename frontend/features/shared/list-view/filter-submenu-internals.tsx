@@ -4,9 +4,9 @@ import { type ChangeEvent, type KeyboardEvent, type ReactNode, type RefObject } 
 import { Check, Search, CalendarRange } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
 import { cn } from "@/lib/utils";
-import { StatusConfigDot } from "@/features/build/shared/status-badge";
-import { getStatusEntry, type StatusConfigEntry } from "@/features/build/shared/types";
-import { FILTER_CATEGORY_TITLES, type FilterCategory, type StatusFilterOption } from "./filter-types";
+import { StatusConfigDot } from "@/components/ui/status-config-dot";
+import { getStatusEntry, type StatusConfigEntry } from "@/lib/status-config";
+import { categoryTitle, type FilterCategory, type StatusFilterOption } from "./filter-types";
 
 export function OptionRow({
   active,
@@ -127,7 +127,7 @@ export function PanelShell({
       {showTitle && !withSearch ? (
         <div className="flex h-10 shrink-0 items-center border-b border-border px-3">
           <span className="text-sm font-medium text-foreground">
-            {FILTER_CATEGORY_TITLES[category]}
+            {categoryTitle(category)}
           </span>
         </div>
       ) : null}

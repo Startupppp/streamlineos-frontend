@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { fadeUp, fadeUpReduced, pmSnappy, pmStagger } from "./pm-motion";
+import { fadeUp, fadeUpReduced, pmSnappy, pmStagger } from "@/lib/motion-presets";
 
 export const PM_PANEL =
   "rounded-xl border border-border/80 bg-card/85 shadow-sm backdrop-blur-md supports-[backdrop-filter]:bg-card/75";

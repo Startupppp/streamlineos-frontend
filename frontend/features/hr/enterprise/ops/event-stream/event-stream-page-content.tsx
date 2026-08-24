@@ -24,7 +24,7 @@ import { useOrgMembers } from "@/hooks/api/organization";
 import {
   getUserDisplayName,
   type NamedUser,
-} from "@/features/build/shared/resolve-user-name";
+} from "@/lib/person-display";
 
 export function EventStreamPageContent() {
   const canExport = useCan("hr:analytics:read");

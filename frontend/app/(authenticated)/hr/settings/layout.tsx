@@ -63,7 +63,7 @@ export default function HrSettingsLayout({
       ? tab.permission
       : [tab.permission];
     return required.some((permission) =>
-      access?.permissions.includes(permission),
+      access ? permission in access.scopes : false,
     );
   };
   const visibleTabs = TABS.filter(

@@ -309,6 +309,7 @@ interface PersonalDashboard {
   leaveBalance: { type: string; remaining: number; total: number }[];
   upcomingEvents: { id: number; title: string; startTime: Date; endTime: Date; type: string }[];
   unreadNotifications: number;
+  degraded?: string[];
 }
 
 interface ExecutiveDashboard {

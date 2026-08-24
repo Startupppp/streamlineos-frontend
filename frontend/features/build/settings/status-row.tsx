@@ -27,7 +27,7 @@ import {
   type CustomState,
 } from "@/hooks/api/build/custom-states";
 import { ColumnColorPicker } from "@/features/build/shared/column-color-picker";
-import { resolveColumnColor } from "@/features/build/shared/column-colors";
+import { resolveColumnColor } from "@/lib/column-colors";
 import { cn } from "@/lib/utils";
 
 export type StateType = "unstarted" | "started" | "completed" | "cancelled";

@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn, resolveImageUrl } from "@/lib/utils";
-import { getUserDisplayName, getUserInitials } from "@/features/build/shared/resolve-user-name";
+import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import { fmtCost, STATUS_META } from "./asset-constants";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import type { Asset, Employee } from "@/types/hr";
