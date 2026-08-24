@@ -1,6 +1,6 @@
 # Route registry — product membership is a field, not a label match
 
-Status: ready-for-tickets · 2026-08-23 · derived from `architecture-review-20260820-1.html` candidate 4, re-verified against the tree.
+Status: **SHIPPED 2026-08-24 — kept only for what is unverified.** Tickets 01, 02 and 03 are complete and retired; the field, the filter and the reachability test are in the tree. What remains is browser work on all three: Workflows appearing in a sidebar, Organization surviving with HRMS disabled, the Build heading unclipped at 375/768/1280, and per-product deep links activating the right switcher entry. There is no Playwright in this repo and adding it was declined, so these are verified by hand. Delete this file once they are.
 
 ## Problem Statement
 

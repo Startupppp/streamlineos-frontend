@@ -1,6 +1,6 @@
 # Spec — The web app can read the API on the server
 
-Status: **ready-for-agent**
+Status: **SHIPPED 2026-08-24 — kept only for what is unverified.** V01 and V02 are complete and retired. What remains is V02's browser check: the workers page's loading, empty, error and no-permission states, and that the skeleton still matches the real shape. `next build` passes and the hydration test proves the prefetched cache suppresses the initial fetch, but the states were never driven in a browser. Delete this file once they are.
 Date: 2026-08-23
 Stream: V · Tickets V01, V02
 
