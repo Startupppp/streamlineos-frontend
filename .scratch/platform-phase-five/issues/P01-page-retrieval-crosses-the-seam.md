@@ -27,7 +27,9 @@ Three queries in `kb-search.service.ts` hand-wrote `visibility IN ('org', 'publi
 - [x] **Watched failing first.** The rendered failure showed `visibility IN ('org', 'public')` against the expected project-scoped expression.
 - [x] `src/modules/kb` — 16 suites, 141 tests, exit 0.
 - [x] `tsc --noEmit` exit 0.
-- [ ] **NOT DONE — verified by running the app:** a project-scoped page asked about by a non-member returns no content. Proven only by the predicate equality above, which is strong evidence and not the same evidence.
-- [ ] **NOT DONE — measured.** No `EXPLAIN` was run as `streamline_app` with the tenant GUC, so the plan cost of the wider predicate is unknown. P03 is where that matters.
+- [~] **Still not verified through the ask path.** What changed since this was written: P02 proved the *same predicate* through a real seeded request against a real database with RLS in force — a member of project alpha reads its page, a colleague in project beta gets 404 — and mutation-checked it there. The ask path shares that predicate and its candidate/content fusion is pinned by the equality test above.
+
+  What is still missing is the ask path specifically, and it needs more than a booted API: `kb_pages` and `kb_article_chunks` are empty here, so it needs seeded pages plus chunks carrying embeddings, and the ask itself embeds the question through a provider. Left undone rather than approximated.
+- [~] **NOT MEASURED, and the reason is now specific rather than "not done".** Checked 2026-08-24: `kb_pages` and `kb_article_chunks` both hold **0 rows** on this database. An `EXPLAIN` over empty tables reports a plan the planner would never choose at size, so recording those buffer counts would be worse than recording none — it would read as evidence. Honest measurement needs KB seeded to scale first, then `VACUUM ANALYZE`, then `EXPLAIN` as `streamline_app` with the tenant GUC. That is a seeding exercise of its own, of the shape `seed:build-load` + `baseline:build` already provide for Build.
 
 **Note for P02.** This does not close the hole by itself. `pageVisibleTo` still falls to a *permissive* branch when the project list is empty, so a member of zero projects sees every project's pages — through both paths, now consistently. P02 is the fix.

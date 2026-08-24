@@ -13,7 +13,11 @@
 
 ## Real, but a design change on the hot path
 
-- [ ] **A message sender waits for every push.** Because the fan-out is awaited (`chat-messages.service.ts:297`), sending one message to a large channel blocks the sender's request on N calls to a third-party push service. A slow provider slows every message send in the product. The fix is to defer it past the response — which means it needs its own tenant transaction, because the request's will have committed. That is a change to the busiest write path in chat and should be verified against a running system, not merged on a green type-check.
+- [x] **A message sender no longer waits for every push — and this was fixed by U01, not by this ticket.** The premise above is now stale and was re-checked at source rather than assumed: `chat-messages.service.ts` builds the whole fan-out as a `deferred` closure wrapped in `runInNewTenantTransaction`, hands it to `registerAfterCommit(deferred)`, and **returns the message immediately**. `TenantContextInterceptor` then fires each hook with `void hook().catch(...)` after the transaction commits — never awaited — so the response is not held for push, Ably or mention delivery.
+
+  Exactly what this ticket asked for: deferred past the response, in its own tenant transaction because the request's has committed. The failure it feared — running on a dead tenant context — is handled by that new transaction, and the failure is logged rather than swallowed, as §4 requires.
+
+  Confirmed against a running system, not on a type-check: `pnpm verify:chat-mentions` sends real messages through a booted API and observes delivery arriving on Ably **after** the 201 returns.
 - [x] Its member read carries no explicit `orgId` predicate. **FIXED** (`96b8fef2`) — `sendToChannelMembers` now takes `orgId` and puts `eq(chatChannelMembers.orgId, orgId)` in the query beside the channel predicate. Done ahead of the deferral above rather than waiting for it, because it was two lines and the caller already held `orgId`; backend §4's point is that a table whose policy is ever missed is readable org-wide with no visible symptom.
 
 ## Needs a number before it is a decision
