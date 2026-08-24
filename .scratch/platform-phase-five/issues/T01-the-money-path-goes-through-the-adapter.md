@@ -35,20 +35,20 @@ Delete the interface and the registry and `BillingService` compiles unchanged. T
 **Wave:** 1
 **Status:** WON'T DO — the premise is false
 
-- [ ] `BillingService` injects the registry. It does not import `RazorpayService`.
-- [ ] Order creation, payment verification and webhook verification all go through the interface.
-- [ ] No Razorpay-typed shape crosses the seam. Anything `BillingService` needs from `raw` is named on the interface — **and if it needs a field no other provider could supply, stop and say so** rather than widening the interface to fit one provider.
-- [ ] Webhook handling is provider-dispatched. The route may keep its path for compatibility; the handler must not assume the provider.
-- [ ] An unknown or unconfigured provider is **refused**, never assumed.
-- [ ] **No behaviour change.** Same orders, same signature outcomes, same webhook results. This is a routing change and the tests must show that.
-- [ ] The proof this ticket exists for: **an in-memory adapter drives the whole checkout path in a test.** Today that is impossible.
-- [ ] A test asserts an invalid signature is rejected through the registry.
-- [ ] A test asserts billing tests run with no Razorpay credentials configured.
-- [ ] Mutation check: point the registry at an adapter that rejects every signature — the verification tests must fail.
-- [ ] `razorpay.adapter.spec.ts` passes unchanged.
-- [ ] Money stays integer cents throughout. No float touches an amount.
-- [ ] `tsc --noEmit` exit 0 and the billing specs pass by path.
-- [ ] Billing is **not** added to `MODULE_CATALOG` or `ACCESS_MANAGED_MODULES`, and `assertPermissionsGrantable` still refuses the whole `billing:` namespace on every grant path including the org owner's own. Platform billing is never delegated.
-- [ ] **NOT verified unless stated:** no real payment was taken and no real webhook was received. Say so.
+- [~] `BillingService` injects the registry. It does not import `RazorpayService`. — **SUPERSEDED**: ticket is WON'T DO; `billing.service.ts:25` correctly imports `RazorpayService` (platform env credentials) — that is intentional, not a defect.
+- [~] Order creation, payment verification and webhook verification all go through the interface. — **SUPERSEDED**: these go through `RazorpayService` for platform billing; the registry/adapter path is the separate tenant merchant payments feature.
+- [~] No Razorpay-typed shape crosses the seam. Anything `BillingService` needs from `raw` is named on the interface — **and if it needs a field no other provider could supply, stop and say so** rather than widening the interface to fit one provider. — **SUPERSEDED**: no seam exists to cross; two distinct concerns share a provider name, not a common interface.
+- [~] Webhook handling is provider-dispatched. The route may keep its path for compatibility; the handler must not assume the provider. — **SUPERSEDED**: platform billing webhook handling (`razorpay-webhook.controller.ts`) correctly assumes the platform's own Razorpay account.
+- [~] An unknown or unconfigured provider is **refused**, never assumed. — **SUPERSEDED**: platform billing has one fixed provider; the multi-provider refusal rule applies only to the tenant merchant registry.
+- [~] **No behaviour change.** Same orders, same signature outcomes, same webhook results. This is a routing change and the tests must show that. — **SUPERSEDED**: no routing change was built.
+- [~] The proof this ticket exists for: **an in-memory adapter drives the whole checkout path in a test.** Today that is impossible. — **SUPERSEDED**: the two payment concerns are separate features; an in-memory adapter for platform billing would require inventing per-org credentials that don't exist.
+- [~] A test asserts an invalid signature is rejected through the registry. — **SUPERSEDED**: signature rejection is tested on `RazorpayService` directly; no registry in this path.
+- [~] A test asserts billing tests run with no Razorpay credentials configured. — **SUPERSEDED**: platform billing requires `RAZORPAY_*` env vars; the registry is for per-org secrets on a different path.
+- [~] Mutation check: point the registry at an adapter that rejects every signature — the verification tests must fail. — **SUPERSEDED**: no registry on the platform billing path to point anywhere.
+- [~] `razorpay.adapter.spec.ts` passes unchanged. — **SUPERSEDED**: not relevant to a WON'T DO; `razorpay.adapter.ts` in `billing/payments/adapters/` covers the tenant merchant path, which was never touched.
+- [~] Money stays integer cents throughout. No float touches an amount. — **SUPERSEDED**: this is a valid invariant but not specific to this ticket; confirmed intact in existing code independently.
+- [~] `tsc --noEmit` exit 0 and the billing specs pass by path. — **SUPERSEDED**: no code was changed; existing billing specs and typecheck remain unaffected.
+- [~] Billing is **not** added to `MODULE_CATALOG` or `ACCESS_MANAGED_MODULES`, and `assertPermissionsGrantable` still refuses the whole `billing:` namespace on every grant path including the org owner's own. Platform billing is never delegated. — **SUPERSEDED**: this invariant holds and was never at risk from this ticket.
+- [~] **NOT verified unless stated:** no real payment was taken and no real webhook was received. Say so. — **SUPERSEDED**: nothing was built.
 
 **Not in this ticket:** adding a second provider. This makes it cheap; it does not do it.

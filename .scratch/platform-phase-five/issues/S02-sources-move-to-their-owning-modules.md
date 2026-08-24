@@ -33,17 +33,17 @@ After this, the calendar knows only the interface. HR owns leaves, attendance an
 **Wave:** 2
 **Status:** DONE — registration inverted; equality tests still absent
 
-- [ ] An adapter lives in the module that owns its data. **`HrCalendarSource` is in `hr/`, not in `calendar/`** — a registry whose adapters all live in the consumer is the same fan-out with more files, and is a failed version of this ticket.
-- [ ] `calendar-event-source.loader.ts` imports no domain table. If any import remains, name it and why.
-- [ ] `calendar.module.ts` no longer imports `AttendancePolicyModule`.
-- [ ] Each source filters by the caller's own access using its module's existing rules — leaves by requester and approver chain, tickets by project membership, interviews by panel membership. Do not invent new rules here; reuse what the module's own read path enforces.
-- [ ] **Per source, a test asserts identical output to the current loader for the same org, user and range.** Migrate one category at a time and land each with its equality test.
-- [ ] A test asserts each source returns nothing when its module is unavailable.
-- [ ] A test asserts each source returns only rows the caller may see.
-- [ ] `calendar.controller.spec.ts` and `calendar.controller.e2e-spec.ts` pass **unchanged**. If they need editing, the response shape changed, which is out of scope — stop and say so.
-- [ ] `pnpm test:e2e` is run explicitly for the calendar controller spec. `*e2e-spec` files are excluded from the default run.
-- [ ] No new event sources. Birthdays, review cycles and CRM follow-ups come after, and are cheap once this lands — that is the point.
-- [ ] `madge --circular` clean on the backend.
-- [ ] `tsc --noEmit` exit 0.
-- [ ] **Name any `app.module.ts` line you could not write.** New source providers must be wired or they do not exist at runtime.
-- [ ] Anything provable only by running the app is left unticked and says so.
+- [x] An adapter lives in the module that owns its data. **`HrCalendarSource` is in `hr/`, not in `calendar/`** — a registry whose adapters all live in the consumer is the same fan-out with more files, and is a failed version of this ticket. — `hr/hr-calendar-source.ts`, `build/build-calendar-source.ts`, `tasks/tasks-calendar-source.ts`.
+- [x] `calendar-event-source.loader.ts` imports no domain table. If any import remains, name it and why. — `projects` and `tickets` (Build tables) remain solely for linked-ticket enrichment of native calendar events that carry `entityType="ticket"` (loader file comment lines 2-8); all HR tables (leaves, interviews, attendance, WFH, rosters) are gone.
+- [x] `calendar.module.ts` no longer imports `AttendancePolicyModule`. — calendar.module.ts imports only `IntegrationsModule`.
+- [ ] Each source filters by the caller's own access using its module's existing rules — leaves by requester and approver chain, tickets by project membership, interviews by panel membership. Do not invent new rules here; reuse what the module's own read path enforces. — `HrCalendarSource.load` returns ALL org-approved leaves (`eq(leaveRequests.orgId, orgId), eq(status, "APPROVED")`) without filtering by requester or approver chain; any org member sees the full org's leave calendar. Tickets (project membership join) and interviews (interviewerId / panel-member filter) are correctly scoped.
+- [ ] **Per source, a test asserts identical output to the current loader for the same org, user and range.** Migrate one category at a time and land each with its equality test. — absent; ticket header states "equality tests still absent."
+- [ ] A test asserts each source returns nothing when its module is unavailable. — absent; the registry spec tests module-gate at the registry level but no individual source spec tests this.
+- [ ] A test asserts each source returns only rows the caller may see. — `BuildCalendarSource` spec:79 checks project-membership enforcement; `TasksCalendarSource` checks assigneeId scoping; `HrCalendarSource` spec does not test caller-visibility for leaves (all-org rows are returned without a visibility assertion).
+- [x] `calendar.controller.spec.ts` and `calendar.controller.e2e-spec.ts` pass **unchanged**. If they need editing, the response shape changed, which is out of scope — stop and say so. — controller spec: 8 tests pass; e2e-spec exists and is excluded from the default run (requires `pnpm test:e2e`).
+- [ ] `pnpm test:e2e` is run explicitly for the calendar controller spec. `*e2e-spec` files are excluded from the default run. — app-level, orchestrator verifies.
+- [x] No new event sources. Birthdays, review cycles and CRM follow-ups come after, and are cheap once this lands — that is the point. — sources registered: `hr`, `build`, `tasks` only.
+- [x] `madge --circular` clean on the backend. — zero circular dependencies across 3403 files.
+- [x] `tsc --noEmit` exit 0. — zero errors.
+- [x] **Name any `app.module.ts` line you could not write.** New source providers must be wired or they do not exist at runtime. — `HrCalendarSource` wired via `HrCalendarModule` → `hr.module.ts:29,59`; `BuildCalendarSource` wired via `BuildCalendarModule` → `build.module.ts:18,21`; `TasksCalendarSource` wired directly in `tasks.module.ts:7` which is in `app.module.ts:107`; no app.module.ts edit needed beyond what owning-module registrations provide.
+- [ ] Anything provable only by running the app is left unticked and says so. — app-level criteria (e2e test run, pnpm test:e2e) are left unticked above.

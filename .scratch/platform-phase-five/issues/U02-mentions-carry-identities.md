@@ -30,4 +30,4 @@ The composer already knew exactly who the sender picked from the autocomplete. I
 - [x] A test asserts `@everyone` still notifies the channel.
 - [x] The composer sends the id for every mention the user picked from autocomplete, and a hand-typed `@name` that was never resolved sends no id.
 - [x] Both repos typecheck. The web `tsconfig.json` excludes tests, so run the web suite as well.
-- [ ] **NOT verified unless stated:** no mention was sent through a booted app and observed arriving at the right person.
+- [ ] **NOT verified unless stated:** no mention was sent through a booted app and observed arriving at the right person. — app-level, orchestrator verifies.

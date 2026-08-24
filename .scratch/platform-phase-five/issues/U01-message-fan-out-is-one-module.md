@@ -37,9 +37,9 @@ Nothing can be batched, re-ordered or moved behind a queue without editing `send
 - [x] A test asserts a DM publishes the DM notification and a channel does not.
 - [x] The mention scan moves into the fan-out **unchanged** in this ticket. U02 replaces it. Changing it here and there is how a fallback survives.
 - [x] `chat-messages.service.ts` gets smaller, not larger.
-- [ ] **Name the `app.module.ts` line you could not write** if the new provider needs wiring. The orchestrator owns that file.
+- [x] **Name the `app.module.ts` line you could not write** if the new provider needs wiring. The orchestrator owns that file. — `ChatMessageFanoutService` is module-internal; it is listed at `chat.module.ts:43` (providers) and needs no `app.module.ts` entry; no line was left unwritten.
 - [x] `tsc --noEmit` exit 0 and the chat specs pass by path.
 - [x] A `db.transaction` mock in any spec you touch **invokes its callback** — a bare `jest.fn()` silently voids every assertion inside it.
-- [ ] **NOT verified unless stated:** no message was sent through a booted API.
+- [ ] **NOT verified unless stated:** no message was sent through a booted API. — app-level, orchestrator verifies.
 
 **Not in this ticket:** the queue, batching Ably publishes, partitioning, or the 500-channel capability ceiling. This makes them possible; it does not deliver them.
