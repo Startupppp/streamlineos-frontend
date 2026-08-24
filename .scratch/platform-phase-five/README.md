@@ -233,3 +233,32 @@ Recorded because each would have produced a ticket that built the wrong thing.
 - A side effect fired after the request must not borrow the request's transaction.
 - A `db.transaction` mock must invoke its callback, or every assertion inside it silently passes.
 - This tree is edited by more than one session at once and the git index is shared. This set was renumbered because of exactly that.
+
+## Progress — 2026-08-24, second pass
+
+| Ticket | State |
+|---|---|
+| O01 | **DONE.** 5/5 self-tests, including the invalidation regression restored after I had weakened it. |
+| P01, P02, P03 | **DONE.** P03 generalised the predicate to `visibleTo(columns, …)` rather than copying it; migration `0461` applied. |
+| P04 | **DONE.** 126 files into five sub-modules; `nest build` 0, madge clean, real app boots. |
+| Q01, R01, S01, S02, T01, U01, U02, U03, V01, V02 | **DONE.** |
+| R02 | **BLOCKED**, and the blocker is deeper than first recorded — see the ticket. |
+
+### Two live defects found by verifying rather than trusting
+
+- **A migration was edited after it was applied.** `0461` first added `visibility` / `project_id` / `created_by_id` and was applied in that form; it was then rewritten to `page_*` names and the schema followed. Drizzle skips by timestamp, so the database kept the old names while the code expected the new ones, and every chunk-ACL query would have failed. Fixed forward in `0462`, guarded both ways. **An applied migration is history — a database that took the first form needs a second step, not a rewritten first one.**
+- **A `jest.mock()` path the kb move left behind.** The import was updated, the string literal above it was not. `tsc` and `nest build` both passed while the suite could not load the file. The compiler is blind to a module named as data — the same class as the side-effect import that has cost this repository a live file before.
+
+### Where I was wrong, recorded because the corrections matter
+
+- **I weakened a test to make it pass.** O01's permission self-test granted to the same member mid-test and failed; I replaced it with two members and wrote a comment claiming a same-member grant proves nothing. It proves *version invalidation*, which was genuinely broken — `bumpPermissionsVersion` inserted a fresh row at the column default, so the first bump for an org never moved the version. A concurrent session found the root cause. Both tests now exist.
+- **I nearly reported a false product bug**: `resolveUserPermissions` returns a `Map`, and my probe read it with `Object.keys()`, which is always empty.
+- **I claimed the harness needed a bigger heap.** It did not; my `npx jest --config` bypassed the script, which already set it.
+- **I tried to unblock R02 and had to revert.** `PLAN_LOCKED_MODULES` proved no customer pays for chat or kb, but `MODULE_CATALOG` also drives the administration modules screen, so correcting `planGated` removes them from it.
+
+### Verified state — 2026-08-24
+
+- **Backend: 576 suites / 4,883 tests, zero failures.** `tsc --noEmit` clean, `pnpm lint` **0 errors**, `madge --circular` clean, `nest build` 0.
+- **Seeded harness 5/5** against the real database as the application role — the only check here that proves DI wiring, and it caught nothing only because the wiring was right.
+- **Web: 84 suites / 491 tests**, `tsc --noEmit` clean.
+- **Migrations `0461` and `0462` applied and verified against the catalog.**
