@@ -22,7 +22,6 @@ import {
   useDealDetail,
   useUpdateDeal,
   useUpdateDealStage,
-  useDealActivities,
   useLogDealActivity,
   useDealMeetings,
   useCreateDealMeeting,
@@ -45,6 +44,7 @@ import {
 import { DealInfoCard } from "@/features/crm/deals/detail/deal-info-card";
 import { DealSidebarCards } from "@/features/crm/deals/detail/deal-sidebar-cards";
 import { DealLinkedRecordsCard } from "@/features/crm/deals/detail/deal-linked-records-card";
+import { DealStageHistory } from "@/features/crm/deals/detail/deal-stage-history";
 import { DealQuotesSection } from "@/features/crm/deals/deal-quotes-section";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { ErrorState } from "@/components/shared";
@@ -79,7 +79,6 @@ export default function DealDetailPage({
   const [isCreatingProject, setIsCreatingProject] = useState(false);
 
   const updateDeal = useUpdateDeal();
-  const { data: activities } = useDealActivities(dealId, 30);
   const { data: meetings } = useDealMeetings(dealId);
   const logActivity = useLogDealActivity();
   const createMeeting = useCreateDealMeeting(dealId);
@@ -467,7 +466,6 @@ export default function DealDetailPage({
               client={deal.client}
               keyDates={keyDates}
               meetings={meetings}
-              activities={activities ?? []}
               onQuickActionClick={handleQuickActionClick}
               onAddMeeting={handleOpenMeetingDialog}
               onDeleteMeeting={handleDeleteMeeting}
@@ -476,6 +474,7 @@ export default function DealDetailPage({
               pipelineId={deal.pipelineId}
             />
             <DealLinkedRecordsCard partyId={deal.partyId} subjectId={deal.subjectId} />
+            <DealStageHistory dealId={dealId} card />
             <DealQuotesSection dealId={dealId} />
           </motion.div>
         </div>

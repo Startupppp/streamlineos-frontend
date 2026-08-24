@@ -46,6 +46,14 @@ export const accessAndCrmQueryKeys = {
 
   crm: {
     all: [...base, "crm"] as const,
+    activityTimeline: (anchor: Record<string, unknown>) =>
+      [...base, "crm", "activities", "timeline", anchor] as const,
+    myActivityTasks: (params?: Record<string, unknown>) =>
+      [...base, "crm", "activities", "my-tasks", params] as const,
+    activityParticipants: (activityId: string) =>
+      [...base, "crm", "activities", activityId, "participants"] as const,
+    dealStageTransitions: (dealId: number) =>
+      [...base, "crm", "deals", dealId, "transitions"] as const,
     salesDashboard: () => [...base, "crm", "salesDashboard"] as const,
     salesKpis: (params: Record<string, unknown>) =>
       [...base, "crm", "salesKpis", params] as const,

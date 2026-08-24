@@ -174,6 +174,8 @@ export type ExtendedPermissionKey =
   | "crm:campaigns:view"
   | "crm:clients:manage"
   | "crm:customer360:view"
+  | "crm:activities:view"
+  | "crm:activities:manage"
   | "crm:data-quality:view"
   | "crm:email-templates:manage"
   | "crm:offer-fulfillment:create"

@@ -14,10 +14,9 @@ import { Separator } from "@/components/ui/separator";
 import {
   useDealDetail,
   useUpdateDeal,
-  useDealActivities,
 } from "@/hooks/api/crm";
-import { ActivityTimeline } from "./detail/activity-timeline";
 import { ActivityTimeline as UnifiedTimeline } from "@/features/crm/timeline/activity-timeline";
+import { DealStageHistory } from "./detail/deal-stage-history";
 import { DealEditForm, type EditFormValues } from "./detail/deal-edit-form";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { toast } from "sonner";
@@ -39,9 +38,6 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
   const isOpen = dealId !== null;
 
   const { data: deal, isLoading: dealLoading } = useDealDetail(dealId ?? 0);
-  const { data: activities, isLoading: activitiesLoading } = useDealActivities(
-    dealId ?? 0,
-  );
   const updateDeal = useUpdateDeal();
   const { data: dealStages = [] } = useCrmStages("deal");
 
@@ -142,13 +138,6 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
                 </div>
                 <ScrollArea className="flex-1">
                   <div className="flex flex-col gap-6 p-4">
-                    {/*
-                      The unified timeline: calls, emails, meetings, notes and
-                      tasks together, from the one activity model. The log below
-                      it reads `deal_activities`, a separate store that still
-                      holds every historical stage change — it is retired once
-                      ticket 10's ingress is the only writer.
-                    */}
                     <UnifiedTimeline
                       anchor={{ kind: "deal", dealId: String(deal.id) }}
                       emptyDescription="Calls, emails, meetings, notes and tasks on this deal will appear here as they happen."
@@ -156,19 +145,9 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
 
                     <div className="flex flex-col gap-2">
                       <h4 className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                        Activity log
+                        Stage history
                       </h4>
-                      {activitiesLoading ? (
-                        <div className="space-y-3">
-                          {Array.from({ length: 6 }).map((_, i) => (
-                            <Skeleton key={i} className="h-12 w-full" />
-                          ))}
-                        </div>
-                      ) : (
-                        <ActivityTimeline
-                          activities={activities ?? []}
-                        />
-                      )}
+                      <DealStageHistory dealId={deal.id} />
                     </div>
                   </div>
                 </ScrollArea>
