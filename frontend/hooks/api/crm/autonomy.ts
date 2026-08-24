@@ -5,8 +5,11 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type {
+  AutonomySettings,
   DecisionFilters,
   DecisionPage,
+  ReviewQueueItem,
+  Scoreboard,
   SwitchesResponse,
 } from "@/types/crm/autonomy";
 
@@ -102,6 +105,68 @@ export function useSetAutonomySwitch() {
       apiClient.patch<SwitchesResponse>("/crm/autonomy/switches", input),
     onSuccess: (data) => {
       queryClient.setQueryData(queryKeys.crm.autonomySwitches(), data);
+    },
+  });
+}
+
+/** How often the system was right, per action type, over a window. */
+export function useAutonomyScoreboard(days = 30) {
+  const canView = useCan("crm:autonomy:view");
+
+  return useQuery({
+    queryKey: queryKeys.crm.autonomyScoreboard(days),
+    queryFn: () => apiClient.get<Scoreboard>(`/crm/autonomy/scoreboard?days=${days}`),
+    staleTime: 60_000,
+    enabled: canView,
+  });
+}
+
+/** What a second pass disagreed with and nobody has looked at. */
+export function useAutonomyReviewQueue() {
+  const canView = useCan("crm:autonomy:view");
+
+  return useQuery({
+    queryKey: queryKeys.crm.autonomyReviewQueue(),
+    queryFn: () => apiClient.get<ReviewQueueItem[]>("/crm/autonomy/review-queue"),
+    staleTime: 30_000,
+    enabled: canView,
+  });
+}
+
+export function useMarkReviewed() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (shadowScoreId: string) =>
+      apiClient.post<{ reviewed: boolean }>(
+        `/crm/autonomy/review-queue/${shadowScoreId}/reviewed`,
+        {},
+      ),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.crm.autonomyReviewQueue() });
+    },
+  });
+}
+
+export function useAutonomySettings() {
+  const canView = useCan("crm:autonomy:view");
+
+  return useQuery({
+    queryKey: queryKeys.crm.autonomySettings(),
+    queryFn: () => apiClient.get<AutonomySettings>("/crm/autonomy/settings"),
+    staleTime: 60_000,
+    enabled: canView,
+  });
+}
+
+export function useUpdateAutonomySettings() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (patch: Partial<AutonomySettings>) =>
+      apiClient.patch<AutonomySettings>("/crm/autonomy/settings", patch),
+    onSuccess: (data) => {
+      queryClient.setQueryData(queryKeys.crm.autonomySettings(), data);
     },
   });
 }

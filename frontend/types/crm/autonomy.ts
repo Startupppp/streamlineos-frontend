@@ -96,3 +96,40 @@ export const OUTCOME_LABELS: Record<DecisionOutcome, string> = {
   reversed: "Undone",
   failed: "Failed",
 };
+
+export interface ScoreboardKindRow {
+  kind: DecisionKind;
+  actions: number;
+  corrections: number;
+  /** Null when nothing has happened — distinct from a rate of zero. */
+  correctionRate: number | null;
+  shadowScored: number;
+  shadowDisagreed: number;
+  shadowDisagreementRate: number | null;
+}
+
+export interface Scoreboard {
+  since: string;
+  days: number;
+  perKind: ScoreboardKindRow[];
+  spend: { calls: number; totalTokens: number; estimatedCostUsd: string };
+}
+
+export interface ReviewQueueItem {
+  autonomyShadowScoreId: string;
+  autonomousDecisionId: string;
+  kind: DecisionKind;
+  verdict: "agrees" | "disagrees" | "uncertain" | "failed";
+  score: number | null;
+  rationale: string | null;
+  createdAt: string;
+  decisionSummary: string | null;
+  decidedAt: string;
+  confidence: number | null;
+}
+
+export interface AutonomySettings {
+  shadowSampleRate: number;
+  shadowDailyCap: number;
+  holdWindowSeconds: number;
+}
