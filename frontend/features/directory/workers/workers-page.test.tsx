@@ -12,6 +12,12 @@ import { workersListKey } from "@/lib/query-keys/directory-workers-list";
 import type { Worker, WorkersPage } from "@/types/directory/workers";
 import { WorkersPage as WorkersPageComponent } from "./workers-page";
 
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: jest.fn() }),
+  usePathname: () => "/directory/workers",
+  useSearchParams: () => new URLSearchParams(),
+}));
+
 jest.mock("@animateicons/react/lucide", () => ({
   PlusIcon: () => null,
   EllipsisIcon: () => null,

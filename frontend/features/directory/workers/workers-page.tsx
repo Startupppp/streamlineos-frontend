@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { useWorkersFilters } from "./use-workers-filters";
 import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useWorkers } from "@/hooks/api/directory/workers";
@@ -118,31 +119,39 @@ function WorkerRowActions({
 export function WorkersPage() {
   const canManage = useCan("directory:workers:manage");
 
-  const [cursorHistory, setCursorHistory] = useState<(string | undefined)[]>([
-    undefined,
-  ]);
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<WorkerStatus | "ALL">("ALL");
+  const {
+    localSearch,
+    search,
+    status,
+    cursor,
+    page,
+    hasHistory,
+    setSearch,
+    setStatus,
+    pushCursor,
+    popCursor,
+  } = useWorkersFilters();
+
   const [createOpen, setCreateOpen] = useState(false);
   const [engagementsTarget, setEngagementsTarget] = useState<Worker | null>(null);
 
   const { data, isLoading, isError, refetch } = useWorkers({
-    cursor: cursorHistory.at(-1),
+    cursor,
     limit: PAGE_SIZE,
-    search: debouncedSearch || undefined,
-    status: statusFilter === "ALL" ? undefined : statusFilter,
+    search: search || undefined,
+    status: status === "ALL" ? undefined : status,
   });
+
+  const rows = data?.data ?? [];
+  const pageInfo = data?.pageInfo;
+  const isFiltered = !!search.trim() || status !== "ALL";
 
   function handleSearchChange(value: string) {
     setSearch(value);
-    setCursorHistory([undefined]);
-    setDebouncedSearch(value);
   }
 
   function handleStatusChange(value: string) {
-    setStatusFilter(value as WorkerStatus | "ALL");
-    setCursorHistory([undefined]);
+    setStatus(value as WorkerStatus | "ALL");
   }
 
   function handleOpenCreate() {
@@ -155,6 +164,10 @@ export function WorkersPage() {
 
   function handleEngagementsSheetChange(open: boolean) {
     if (!open) setEngagementsTarget(null);
+  }
+
+  function handleNext() {
+    if (pageInfo?.nextCursor) pushCursor(pageInfo.nextCursor);
   }
 
   function handleRetry() {
@@ -245,18 +258,14 @@ export function WorkersPage() {
     },
   ];
 
-  const rows = data?.data ?? [];
-  const pageInfo = data?.pageInfo;
-  const isFiltered = !!debouncedSearch.trim() || statusFilter !== "ALL";
-
   const filtersBar = (
     <div className={FILTER_TOOLBAR_ROW}>
       <SearchInput
         placeholder="Search workers…"
-        value={search}
+        value={localSearch}
         onValueChange={handleSearchChange}
       />
-      <Select value={statusFilter} onValueChange={handleStatusChange}>
+      <Select value={status} onValueChange={handleStatusChange}>
         <SelectTrigger
           size="sm"
           className={cn(FILTER_SELECT_TRIGGER, "w-[130px]")}
@@ -315,21 +324,12 @@ export function WorkersPage() {
                 minWidth="640px"
                 className={CONTENT_FILL_PANEL}
               />
-              {cursorHistory.length > 1 || pageInfo?.hasMore ? (
+              {hasHistory || pageInfo?.hasMore ? (
                 <CursorPageControls
-                  page={cursorHistory.length}
+                  page={page}
                   hasNext={pageInfo?.hasMore ?? false}
-                  onPrevious={() =>
-                    setCursorHistory((current) => current.slice(0, -1))
-                  }
-                  onNext={() => {
-                    if (pageInfo?.nextCursor) {
-                      setCursorHistory((current) => [
-                        ...current,
-                        pageInfo.nextCursor ?? undefined,
-                      ]);
-                    }
-                  }}
+                  onPrevious={popCursor}
+                  onNext={handleNext}
                   className="mt-2"
                 />
               ) : null}
