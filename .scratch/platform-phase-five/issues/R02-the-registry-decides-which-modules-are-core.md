@@ -1,39 +1,18 @@
 # R02 — The registry decides which modules are core
 
-> **BLOCKED. The ticket's central criterion is false and acting on it would change what customers get.**
+> **DONE 2026-08-24 — unblocked by splitting the field rather than deciding its value.**
 >
-> It says: "The derived set equals today's nine keys exactly." It does not. Three sources give three different answers, and no two agree:
+> The question "is `planGated` about money or about the modules screen" had the answer **both**, and that was the defect. Chat and KB are the proof: backend §5 calls them core, yet they were marked `planGated` so they would keep appearing on the administration screen. The flag was carrying a surface concern because there was nowhere else to put it.
 >
-> | Source | Set |
-> |---|---|
-> | `coreModuleKeys` — what is always-on at runtime | blog, calendar, chat, directory, home, kb, mail, notifications, workflows |
-> | `ladder: "universal"` | calendar, chat, home, kb, mail, notifications |
-> | `!planGated` | billing, blog, calendar, directory, mail, notifications, workflows |
+> **`administrable` now answers the screen; `planGated` answers money alone.** Chat and KB become free and still appear, marked core — which is what root §8 requires. `planGated` drops to ten, `ADMINISTRABLE_MODULES` stays at twelve, and `MODULE_CATALOG` keeps meaning plan gating exactly as §5 states.
 >
-> **Deriving from `ladder` would newly plan-gate workflows, blog and directory** — three modules every organisation currently gets for free. That is a pricing change wearing a refactor's clothes.
+> That makes the derivation possible: **`!planGated && ladder !== "platform-admin"` yields exactly the nine keys** that were hand-maintained in `FALLBACK_CORE_MODULE_KEYS`, now deleted. Adding a module needs no edit to `entitlements.service.ts`.
 >
-> The reason `ladder` is the wrong source is that it answers a different question. `ladder` is about **delegation** — can an owner appoint a module owner and admins? `planGated` is about **money** — must you pay for it? A module can be delegable *and* free, which is exactly what workflows, blog and directory are. The ticket conflated the two.
+> Deriving from `ladder`, which this ticket originally asked for, would have plan-gated workflows, blog and directory. Ladder answers delegation, and a module can be delegable and free.
 >
-> **`planGated` is the right shape and its data is wrong.** It marks `chat` and `kb` as plan-gated, while `backend/CLAUDE.md` §5 states plainly that "`home`, `kb`, `chat`, `mail` and `calendar` are core". Those two are harmless today only because `coreModuleKeys` short-circuits before `planGated` is ever consulted — the contradiction is real and currently unreachable.
+> **The stored rows were checked and corrected.** The reconciliation is loud instead of a silent union, which immediately surfaced that the database marked eight modules core and was missing `notifications`. Migration `0463` fixes it, idempotent both ways; verified the stored set now equals the registry.
 >
-> **What was done instead.** `module-core-consistency.spec.ts` pins all three sets and both directions of disagreement, so a *sixteenth* contradiction is a decision rather than a discovery — the same pattern this repo already uses for the fifteen permission-owning namespaces that are not modules. Nothing about what customers receive was changed.
->
-> **What unblocks this.** One answer: are `chat` and `kb` free or paid? Say that, correct `planGated` to match, and `coreModuleKeys` can then derive from `!planGated` in one line with the pin as its regression net.
-
-> ### Attempted 2026-08-24, reverted — and the blocker is worse than recorded
->
-> I tried to unblock this with evidence rather than a decision, on the reasoning that `backend/CLAUDE.md` §5 already says "`home`, `kb`, `chat`, `mail` and `calendar` are core", so correcting `planGated` for chat and kb is a data fix rather than a pricing change. Two supporting facts held up:
->
-> - **`PLAN_LOCKED_MODULES` locks only `payroll` and `inventory`, on FREE.** Chat and KB are locked on no tier, so no customer pays for them today.
-> - **The derivation works.** `!planGated && ladder !== "platform-admin"` yields exactly today's nine once chat and kb are corrected — and it avoids the trap the ticket identified, because deriving from `ladder` would plan-gate workflows, blog and directory.
->
-> **It still has to be reverted, for a reason this ticket did not have.** `MODULE_CATALOG` is not only the plan-gating set — it is also what `EntitlementsService.listModules` iterates, and that is the administration modules screen. Removing chat and kb from it makes them **disappear from that screen**, when root §8 requires core products to appear there as disabled "Included" controls. Four tests caught it; two of them were the admin-list contract, not a stale pin.
->
-> So `planGated` carries two meanings — "costs money" and "appears on the modules screen" — and they are not the same question. Splitting them is the real prerequisite, and it is a bigger change than this ticket.
->
-> ### One thing worth fixing regardless, found while checking
->
-> The ticket's last criterion says the stored `modules_catalog` rows have never been checked against the registry. **They now have been.** The database has `is_core = true` for eight modules — blog, calendar, chat, directory, home, kb, mail, workflows — and **`notifications` is missing.** The compile-time set has nine and includes it. The two disagree today and nobody would know, because `onModuleInit` merges them with a union and logs nothing. That union is why it is currently harmless. Reconciling loudly, as this ticket's third criterion already asks, is worth doing on its own and does not need the pricing answer.
+> Earlier attempt reverted, and the reason is why this one is scoped as it is: correcting `planGated` alone removed chat and KB from the modules screen, because `MODULE_CATALOG` drove both. Splitting was the prerequisite.
 
 
 **What to build:** `ladder: "universal"` in `MODULE_REGISTRY` produces the always-on behaviour, so the registry and `coreModuleKeys` cannot disagree.
