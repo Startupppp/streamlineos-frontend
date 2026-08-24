@@ -133,3 +133,15 @@ export interface AutonomySettings {
   shadowDailyCap: number;
   holdWindowSeconds: number;
 }
+
+export interface LiveHold {
+  autonomyHoldId: string;
+  autonomousDecisionId: string;
+  quoteId: number | null;
+  holdUntil: string;
+  createdAt: string;
+  quoteSubject: string | null;
+  summary: string | null;
+  /** Server-computed at fetch time; the browser counts down from it. */
+  secondsRemaining: number;
+}

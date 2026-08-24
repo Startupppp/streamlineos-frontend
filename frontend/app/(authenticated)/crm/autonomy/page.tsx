@@ -5,6 +5,7 @@ import { useCan } from "@/hooks/api/access";
 import { AutonomyReviewFeed } from "@/features/crm/autonomy/autonomy-review-feed";
 import { AutonomySwitchesPanel } from "@/features/crm/autonomy/autonomy-switches-panel";
 import { AutonomyScoreboard } from "@/features/crm/autonomy/autonomy-scoreboard";
+import { PendingSendsPanel } from "@/features/crm/autonomy/pending-sends-panel";
 
 /**
  * Oversight for a product that acts without asking.
@@ -23,6 +24,8 @@ export default function AutonomyReviewPage() {
       subtitle="Every action taken without being asked, and what it was based on."
     >
       <div className="flex flex-col gap-gap-section">
+        {/* First, because it is the only thing here that is time-critical. */}
+        <PendingSendsPanel />
         <AutonomyScoreboard />
         <AutonomySwitchesPanel />
         <AutonomyReviewFeed />

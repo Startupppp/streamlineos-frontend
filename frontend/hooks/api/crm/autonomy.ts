@@ -8,6 +8,7 @@ import type {
   AutonomySettings,
   DecisionFilters,
   DecisionPage,
+  LiveHold,
   ReviewQueueItem,
   Scoreboard,
   SwitchesResponse,
@@ -167,6 +168,39 @@ export function useUpdateAutonomySettings() {
       apiClient.patch<AutonomySettings>("/crm/autonomy/settings", patch),
     onSuccess: (data) => {
       queryClient.setQueryData(queryKeys.crm.autonomySettings(), data);
+    },
+  });
+}
+
+/**
+ * What is about to leave the building.
+ *
+ * Polled on a short interval rather than fetched once: the whole value of the
+ * window is that somebody sees it while it is still open, and a stale list
+ * showing a send that already went is worse than showing nothing.
+ */
+export function useLiveHolds() {
+  const canView = useCan("crm:autonomy:view");
+
+  return useQuery({
+    queryKey: queryKeys.crm.autonomyHolds(),
+    queryFn: () => apiClient.get<LiveHold[]>("/crm/autonomy/holds"),
+    refetchInterval: canView ? 10_000 : false,
+    staleTime: 0,
+    enabled: canView,
+  });
+}
+
+export function useCancelHold() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ holdId, reason }: { holdId: string; reason?: string }) =>
+      apiClient.post<{ cancelled: boolean }>(`/crm/autonomy/holds/${holdId}/cancel`, {
+        ...(reason ? { reason } : {}),
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.crm.all });
     },
   });
 }

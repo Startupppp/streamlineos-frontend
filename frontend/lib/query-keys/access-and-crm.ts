@@ -63,6 +63,7 @@ export const accessAndCrmQueryKeys = {
       [...base, "crm", "autonomy", "scoreboard", days] as const,
     autonomyReviewQueue: () => [...base, "crm", "autonomy", "review-queue"] as const,
     autonomySettings: () => [...base, "crm", "autonomy", "settings"] as const,
+    autonomyHolds: () => [...base, "crm", "autonomy", "holds"] as const,
     salesDashboard: () => [...base, "crm", "salesDashboard"] as const,
     salesKpis: (params: Record<string, unknown>) =>
       [...base, "crm", "salesKpis", params] as const,
