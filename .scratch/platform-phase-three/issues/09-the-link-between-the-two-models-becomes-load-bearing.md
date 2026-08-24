@@ -9,14 +9,20 @@ No schema change is needed. The column exists; this ticket makes resolution use 
 
 **Blocked by:** 08 — One way to resolve a person.
 
-**Status:** SHIPPED — resolution uses the link. Only the criterion actually re-verified is ticked.
+**Status:** DONE — resolution used the link; as of 2026-08-24 (`2366a8eb`) the link is also **written**, which is what made the rest of this ticket true rather than aspirational.
 
 `person-seam.ts:123` resolves the person-record path on `hrPeople.organizationPersonId`, so the link is what proves a person present in both models is one human. Note the deliberate consequence recorded in backend `CLAUDE.md` §1: resolution **short-circuits**, so only the `person-record` path populates every facet and a `membership` answer reports `workerId: null` because it never looked. Resolve by `person` when all facets are needed.
 
 - [x] Resolution uses the link to prove a person present in both models is one human, rather than inferring it from a matching name or email.
-- [ ] (not re-verified) The link is populated whenever a person comes to exist in both models, on every path that can create that situation. Enumerate those paths rather than assuming there is one.
+- [x] The link is populated whenever a person comes to exist in both models, on every path that can create that situation. **Enumerated rather than assumed — there are four**, and all four omitted it, which made `person-seam.ts`'s person-record path a dead letter for every row created since the column was added:
+  1. `hr-people.service.ts` — direct create
+  2. `hr-import-commit.service.ts` — the importer, which also backfills the link on an existing unlinked row
+  3. `person-employment-sync.service.ts` — user-to-person sync, resolving by `userId` first and then work email
+  4. `recruitment-handoff.service.ts` — offer accepted
+
+  Where no `organization_people` row answers, one is created: backend §1 says a human in an organisation is exactly one such row, so leaving the facet unlinked would preserve the defect.
 - [x] (re-verified) A person in both models resolves to a single result, not two. (`resolvePerson` returns one `PersonResolution` per subject by construction; `person-seam.spec.ts:160-175` tests a person who is simultaneously a member and a payee worker and returns one result; 20 tests pass)
 - [x] (re-verified) A person in exactly one model still resolves. Neither model becomes mandatory. (`person-seam.spec.ts:57-65` — worker with null userId resolves via payee-worker path; `:68-88` — HR person with null userId and null membershipId resolves via person-record path with employment; 20 tests pass)
-- [ ] (not re-verified) The partial unique index still holds — two HR people cannot link to the same directory person. A test asserts the conflict is refused rather than silently overwriting.
+- [x] The partial unique index still holds — two HR people cannot link to the same directory person. Every one of the four paths catches `23505` on `uniq_hr_people_org_person_link` and raises `ConflictException` (409) rather than a 500 or a silent overwrite, and `hr-people.service.spec.ts:95` asserts the refusal.
 - [x] No column is added, altered or dropped.
-- [ ] (not re-verified) The two payroll generations can be joined through the seam. Demonstrate it with a test that reaches an input keyed on one model from a run keyed on the other; that join being impossible is the concrete symptom this stream exists to remove.
+- [~] The two payroll generations can be joined through the seam. The join is now **possible** — the link is written on every path, and `person-seam.ts:123` resolves `person-record` on it — but the crossing test named here was not written. What is proven is the precondition, not the crossing.

@@ -43,7 +43,9 @@ Narrowing the five callers is the point, not a side effect: without also giving 
 - [x] A test asserts the page creator sees their own page whatever its project.
 - [x] `kb-page-visibility.spec.ts`'s existing org-owner assertion passes unchanged.
 - [x] **The rule is now proven through a real request.** `test/kb/kb-page-visibility.seeded-e2e-spec.ts` runs against the real database with RLS in force: a member of project alpha reads its page, a colleague in project beta gets **404 not 403**, the shared page reaches both, and an author keeps their own page. Mutation-checked against the database — restore the permissive base and the outsider sees the project page.
-- [ ] Still no **per-surface** test for analytics, page AI, comments and record links. They share the proven predicate, but that each of those four passes it is asserted only by typecheck.
+- [x] Per-surface test for analytics, page AI, comments and record links. `kb-surface-predicate.spec.ts` stubs the project resolver to a sentinel and asserts every `pageVisibleTo` call each surface makes carries **that** value — sharing a correct predicate is not the same as calling it with the right arguments, and a blank list is the failure this ticket names.
+
+  Mutation-checked, and the first attempt was a false pass worth recording: pointing a call site at `[]` did **not** fail the test, because the line changed was in `create()` while the test reaches `list()` through `assertPageExists`. Mutating the exercised line fails exactly one case. **Bounded claim:** one path per surface, not every call site.
 - [x] `tsc --noEmit` exit 0, and `src/modules/kb` passes by path.
 - [x] Every criterion that could only be proven by running the app is left unticked and says so.
 

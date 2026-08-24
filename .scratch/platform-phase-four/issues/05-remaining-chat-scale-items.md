@@ -14,7 +14,7 @@
 ## Real, but a design change on the hot path
 
 - [ ] **A message sender waits for every push.** Because the fan-out is awaited (`chat-messages.service.ts:297`), sending one message to a large channel blocks the sender's request on N calls to a third-party push service. A slow provider slows every message send in the product. The fix is to defer it past the response — which means it needs its own tenant transaction, because the request's will have committed. That is a change to the busiest write path in chat and should be verified against a running system, not merged on a green type-check.
-- [ ] Its member read carries no explicit `orgId` predicate and leans entirely on RLS. RLS does scope it, so this is defence in depth rather than a hole — but the seam's own rule is to re-assert. Cheap to add when the above is done.
+- [x] Its member read carries no explicit `orgId` predicate. **FIXED** (`96b8fef2`) — `sendToChannelMembers` now takes `orgId` and puts `eq(chatChannelMembers.orgId, orgId)` in the query beside the channel predicate. Done ahead of the deferral above rather than waiting for it, because it was two lines and the caller already held `orgId`; backend §4's point is that a table whose policy is ever missed is readable org-wide with no visible symptom.
 
 ## Needs a number before it is a decision
 
