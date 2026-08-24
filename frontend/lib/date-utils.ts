@@ -30,3 +30,46 @@ export function formatShortDate(value: string | Date | null | undefined): string
 }
 
 
+
+/**
+ * "2 hours ago", for a feed that is read as a stream of recent events.
+ *
+ * `Intl.RelativeTimeFormat` rather than a hand-rolled ladder: it is locale-aware
+ * for free and gets the plural rules right, which a `n === 1 ? "" : "s"` does
+ * not once the locale is not English.
+ *
+ * Beyond a week it falls back to an absolute date. "43 days ago" is arithmetic
+ * the reader has to undo; a date is the thing they were going to work out
+ * anyway. Always pair it with the exact timestamp in a `title` or `dateTime`,
+ * because an audit trail has to be able to answer "when exactly".
+ */
+export function formatRelativeTime(
+  value: string | Date | null | undefined,
+  now: Date = new Date(),
+): string {
+  if (!value) return "";
+  const then = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(then.getTime())) return "";
+
+  const seconds = Math.round((then.getTime() - now.getTime()) / 1000);
+  const absolute = Math.abs(seconds);
+
+  // Under a minute reads better as words than as "in 0 seconds".
+  if (absolute < 45) return "just now";
+
+  const formatter = new Intl.RelativeTimeFormat("en-IN", { numeric: "auto" });
+  const divisions: ReadonlyArray<[number, Intl.RelativeTimeFormatUnit]> = [
+    [60, "second"],
+    [3600, "minute"],
+    [86400, "hour"],
+    [604800, "day"],
+  ];
+
+  let previous = 1;
+  for (const [limit, unit] of divisions) {
+    if (absolute < limit) return formatter.format(Math.round(seconds / previous), unit);
+    previous = limit;
+  }
+
+  return formatShortDate(then);
+}

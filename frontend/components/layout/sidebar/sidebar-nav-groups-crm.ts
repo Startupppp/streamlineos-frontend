@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Briefcase, Clock, FileText, Handshake, Contact2, BarChart3, UserCheck, ShieldCheck, Star, TrendingUp, Package, Share2, MailOpen, Zap, History, BarChart2, Inbox, Building2, SlidersHorizontal, Brain, Copy, Search, Sliders, CheckSquare, Key, Activity, Megaphone } from "lucide-react";
+import { LayoutDashboard, Users, Briefcase, Clock, FileText, Handshake, Contact2, BarChart3, UserCheck, ShieldCheck, Star, TrendingUp, Package, Share2, MailOpen, Zap, History, BarChart2, Inbox, Building2, SlidersHorizontal, Brain, Copy, Search, Sliders, CheckSquare, Key, Activity, Megaphone, Bot } from "lucide-react";
 import type { NavGroup } from "./sidebar-nav-types";
 
 export const CRM_NAV_GROUPS: NavGroup[] = [
@@ -131,6 +131,15 @@ export const CRM_NAV_GROUPS: NavGroup[] = [
         icon: Activity,
         href: "/crm/activities",
         requiredPermission: "crm:leads:view",
+      },
+      {
+        // The oversight surface for everything the system does without asking.
+        // Gated on its own key rather than a CRM-wide one: reading what was
+        // decided is a distinct authority from working the pipeline.
+        label: "What the system did",
+        icon: Bot,
+        href: "/crm/autonomy",
+        requiredPermission: "crm:autonomy:view",
       },
       {
         label: "Tasks",
