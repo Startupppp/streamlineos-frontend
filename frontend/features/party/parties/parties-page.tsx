@@ -12,6 +12,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import type { ReactNode } from "react";
 import { RecordList, type RecordValue } from "@/features/renderer";
+import { DensityToggle, useDensity } from "@/features/renderer/density-toggle";
 import { PARTY_LAYOUT } from "@/lib/renderer/party-layout";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -233,6 +234,7 @@ export function PartiesPage() {
     ) : null;
 
   const rows = data?.data ?? [];
+  const [density, setDensity] = useDensity();
   const pagination = data?.pagination;
   const isFiltered =
     !!debouncedSearch.trim() || partyTypeFilter !== "ALL" || roleFilter !== "ALL";
@@ -244,6 +246,7 @@ export function PartiesPage() {
         value={search}
         onValueChange={handleSearchChange}
       />
+      <DensityToggle density={density} onChange={setDensity} className="order-last ml-auto" />
       <Select value={partyTypeFilter} onValueChange={handlePartyTypeChange}>
         <SelectTrigger
           className={cn("h-9 w-fit min-w-[9rem]", FILTER_SELECT_TRIGGER)}
@@ -319,6 +322,7 @@ export function PartiesPage() {
                 actions={renderRowActions}
                 getRowKey={(row) => String(row.partyId)}
                 onRowClick={handleRowClick}
+                density={density}
                 minWidth="720px"
                 className={CONTENT_FILL_PANEL}
               />

@@ -28,6 +28,7 @@ import {
   defaultValuesForLayout,
   formFields,
   schemaForLayout,
+  type FormMode,
 } from "@/lib/renderer/layout-schema";
 import { cn } from "@/lib/utils";
 
@@ -41,6 +42,8 @@ export interface RecordFormProps {
   isSubmitting?: boolean;
   submitLabel?: string;
   className?: string;
+  /** Creating drops `editOnly` fields; editing keeps them. */
+  mode?: FormMode;
 }
 
 function controlType(kind: FieldSpec["kind"]): string {
@@ -78,13 +81,14 @@ export function RecordForm({
   isSubmitting = false,
   submitLabel,
   className,
+  mode = "edit",
 }: RecordFormProps) {
-  const schema = useMemo(() => schemaForLayout(layout), [layout]);
-  const fields = useMemo(() => formFields(layout), [layout]);
+  const schema = useMemo(() => schemaForLayout(layout, mode), [layout, mode]);
+  const fields = useMemo(() => formFields(layout, mode), [layout, mode]);
 
   const form = useForm<RecordFormValues>({
     resolver: zodResolver(schema),
-    defaultValues: defaultValuesForLayout(layout, initial),
+    defaultValues: defaultValuesForLayout(layout, initial, mode),
   });
 
   const byName = new Map(fields.map((field) => [field.name, field]));
@@ -119,26 +123,38 @@ export function RecordForm({
                           {field.required ? <span aria-hidden="true"> *</span> : null}
                         </FormLabel>
 
-                        <FormControl>
-                          {field.kind === "select" || field.kind === "badge" ? (
-                            <Select value={control.value} onValueChange={control.onChange}>
+                        {field.kind === "select" || field.kind === "badge" ? (
+                          <Select value={control.value} onValueChange={control.onChange}>
+                            {/*
+                              FormControl wraps the TRIGGER, not the Select root.
+                              It clones its child to attach the id the label
+                              points at, and the Radix root renders no element —
+                              so wrapping the root left every select in every
+                              generated form with a label associated to nothing,
+                              for a screen reader as much as for a test.
+                            */}
+                            <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder={`Select ${field.label.toLowerCase()}`} />
                               </SelectTrigger>
-                              <SelectContent>
-                                {field.options?.map((option) => (
-                                  <SelectItem key={option.value} value={option.value}>
-                                    {option.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          ) : field.kind === "longText" ? (
-                            <Textarea rows={4} {...control} />
-                          ) : (
-                            <Input type={controlType(field.kind)} {...control} />
-                          )}
-                        </FormControl>
+                            </FormControl>
+                            <SelectContent>
+                              {field.options?.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <FormControl>
+                            {field.kind === "longText" ? (
+                              <Textarea rows={4} {...control} />
+                            ) : (
+                              <Input type={controlType(field.kind)} {...control} />
+                            )}
+                          </FormControl>
+                        )}
 
                         {field.hint ? <FormDescription>{field.hint}</FormDescription> : null}
                         <FormMessage />

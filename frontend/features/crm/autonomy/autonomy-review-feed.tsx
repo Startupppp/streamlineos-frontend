@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, Rows3, Rows4 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,7 +16,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useCan } from "@/hooks/api/access";
 import { useAutonomyDecisions, useReverseDecision } from "@/hooks/api/crm/autonomy";
-import { densityAttribute, type DensityMode } from "@/lib/design-tokens";
+import { densityAttribute } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
 import {
   DECISION_KINDS,
@@ -27,6 +27,7 @@ import {
   type DecisionKind,
   type DecisionOutcome,
 } from "@/types/crm/autonomy";
+import { DensityToggle, useDensity } from "@/features/renderer/density-toggle";
 import { DecisionEntryRow } from "./decision-entry-row";
 
 const ANY = "__any__";
@@ -40,7 +41,7 @@ const ANY = "__any__";
  */
 export function AutonomyReviewFeed() {
   const [filters, setFilters] = useState<DecisionFilters>({});
-  const [density, setDensity] = useState<DensityMode>("comfortable");
+  const [density, setDensity] = useDensity();
 
   const canReverse = useCan("crm:autonomy:reverse");
   const feed = useAutonomyDecisions(filters);
@@ -120,20 +121,8 @@ export function AutonomyReviewFeed() {
           </Label>
         </div>
 
-        {/* Density: forty rows for a pipeline review, twelve for reading. */}
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="ml-auto"
-          aria-pressed={density === "compact"}
-          onClick={() => setDensity((mode) => (mode === "compact" ? "comfortable" : "compact"))}
-        >
-          {density === "compact" ? <Rows4 className="size-4" /> : <Rows3 className="size-4" />}
-          <span className="ml-1.5 hidden sm:inline">
-            {density === "compact" ? "Comfortable" : "Compact"}
-          </span>
-        </Button>
+        {/* One shared control: density is the engine's property, not this screen's. */}
+        <DensityToggle density={density} onChange={setDensity} className="ml-auto" />
       </div>
 
       {reverse.isError ? (

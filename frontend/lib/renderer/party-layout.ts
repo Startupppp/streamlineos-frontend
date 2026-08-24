@@ -34,6 +34,9 @@ export const PARTY_LAYOUT: RecordLayout = {
       name: "status",
       label: "Status",
       kind: "badge",
+      // Create does not accept a status — `createPartySchema` has no such key,
+      // so offering one would be a control whose value is silently dropped.
+      editOnly: true,
       options: [
         { value: "active", label: "Active", tone: "success" },
         { value: "inactive", label: "Inactive", tone: "neutral" },

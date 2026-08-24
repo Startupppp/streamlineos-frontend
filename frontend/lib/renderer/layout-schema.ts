@@ -68,14 +68,24 @@ function schemaForField(field: FieldSpec): z.ZodType<string, string> {
   });
 }
 
-/** Every editable field the form will render, in declared order. */
-export function formFields(layout: RecordLayout): FieldSpec[] {
+export type FormMode = "create" | "edit";
+
+/**
+ * Every editable field the form will render, in declared order.
+ *
+ * `editOnly` fields are dropped when creating: some fields only exist once the
+ * record does, and offering one on a create form offers a value the API will
+ * reject or silently drop — which is a form that appears to work and does not.
+ */
+export function formFields(layout: RecordLayout, mode: FormMode = "edit"): FieldSpec[] {
   const fields: FieldSpec[] = [];
 
   for (const section of layout.form.sections)
     for (const name of section.fields) {
       const field = layout.fields.find((candidate) => candidate.name === name);
-      if (field && !field.readOnly) fields.push(field);
+      if (!field || field.readOnly) continue;
+      if (mode === "create" && field.editOnly) continue;
+      fields.push(field);
     }
 
   return fields;
@@ -83,18 +93,20 @@ export function formFields(layout: RecordLayout): FieldSpec[] {
 
 export function schemaForLayout(
   layout: RecordLayout,
+  mode: FormMode = "edit",
 ): z.ZodType<RecordFormShape, RecordFormShape> {
   const shape: Record<string, z.ZodType<string, string>> = {};
-  for (const field of formFields(layout)) shape[field.name] = schemaForField(field);
+  for (const field of formFields(layout, mode)) shape[field.name] = schemaForField(field);
   return z.object(shape);
 }
 
 export function defaultValuesForLayout(
   layout: RecordLayout,
   initial?: Record<string, unknown>,
+  mode: FormMode = "edit",
 ): RecordFormShape {
   const values: RecordFormShape = {};
-  for (const field of formFields(layout)) {
+  for (const field of formFields(layout, mode)) {
     const value = initial?.[field.name];
     values[field.name] = value === null || value === undefined ? "" : String(value);
   }

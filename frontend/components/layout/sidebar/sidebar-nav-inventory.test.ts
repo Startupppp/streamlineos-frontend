@@ -1,8 +1,11 @@
 import { createHash } from "node:crypto";
 import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
 
+// Moved 2026-08-24 by the CRM autonomy review route ("What the system did",
+// /crm/autonomy, gated on crm:autonomy:view). The digest exists so a route or
+// its permission cannot change without somebody saying why.
 const EXPECTED_NAVIGATION_INVENTORY_DIGEST =
-  "8efe13a7143eddb59dfd619e7d1284f264bb210ba598ad42b2b032955826ef76";
+  "05d565de31fe70bfbe8b930b65f13a0d90092f29cac2c74ce3a572a793da0308";
 
 function serializeNavigationRoute(route: NavRoute): unknown {
   return {

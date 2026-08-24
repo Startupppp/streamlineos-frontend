@@ -1443,12 +1443,14 @@ button.goal-everything-chip[aria-checked="true"]::before {
 }
 
 /* ─── Density ───
-   Comfortable is the default; compact restores today's tighter chrome. Set
-   data-density="compact" on <html> to switch.
+   Comfortable is the default; compact restores today's tighter chrome.
 
-   Nothing consumes these yet. They ship now so the metadata renderer has one
-   place to read from, instead of a second density convention being invented
-   alongside this one. */
+   The compact block is deliberately NOT scoped to :root. Scoped that way, only
+   the whole document could be compact — a manager wanting forty rows in one
+   pipeline list would have to tighten every other surface at the same time, and
+   `data-density` set on a wrapper would silently do nothing. Any element may
+   now declare it, and the tokens cascade to that subtree; setting it on <html>
+   still switches the whole product. */
 :root {
   --density-control-h: 2.5rem;
   --density-row-h: 3rem;
@@ -1456,7 +1458,7 @@ button.goal-everything-chip[aria-checked="true"]::before {
   --density-stack-gap: 1rem;
 }
 
-:root[data-density="compact"] {
+[data-density="compact"] {
   --density-control-h: 2.25rem;
   --density-row-h: 2.5rem;
   --density-card-pad: 1rem;

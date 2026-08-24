@@ -117,7 +117,14 @@ describe("design token contract", () => {
     for (const role of DENSITY_SPACING_ROLES) {
       expect(root).toContain(`--density-${role}:`);
     }
-    expect(css).toContain(':root[data-density="compact"]');
+    /**
+     * Unscoped on purpose. Scoped to `:root`, only the whole document could be
+     * compact — a manager wanting forty rows in one pipeline list would have to
+     * tighten every other surface too, and `data-density` on a wrapper would
+     * silently do nothing. Setting it on <html> still switches the product.
+     */
+    expect(css).toContain('[data-density="compact"]');
+    expect(css).not.toContain(':root[data-density="compact"]');
   });
 
   it("names a class for every status role the catalogue advertises", () => {

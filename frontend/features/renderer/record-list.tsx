@@ -5,6 +5,7 @@ import { DataTable, type DataTableColumn, type DataTableProps } from "@/componen
 import { isNumericField, type RecordLayout } from "@/lib/renderer/layout";
 import { cn } from "@/lib/utils";
 import { formatFieldText, renderFieldValue, resolveField, type RecordValue } from "./format-value";
+import { densityAttribute, type DensityMode } from "@/lib/design-tokens";
 
 type BorrowedProps = Pick<
   DataTableProps<RecordValue>,
@@ -21,6 +22,12 @@ export interface RecordListProps extends BorrowedProps {
    * concern rather than a shape one.
    */
   actions?: (row: RecordValue) => ReactNode;
+  /**
+   * Set by the surface so the toggle can live in its toolbar. Omitted, the list
+   * renders comfortable and shows no control — a screen with no room for one
+   * should not grow a floating button.
+   */
+  density?: DensityMode;
 }
 
 /**
@@ -46,6 +53,7 @@ export function RecordList({
   onRowClick,
   minWidth,
   className,
+  density = "comfortable",
 }: RecordListProps) {
   const columns = useMemo<DataTableColumn<RecordValue>[]>(
     () =>
@@ -127,17 +135,31 @@ export function RecordList({
   };
 
   return (
-    <DataTable
-      data={rows}
-      columns={allColumns}
-      getRowKey={getRowKey}
-      isLoading={isLoading}
-      emptyState={emptyState}
-      pagination={pagination}
-      onRowClick={onRowClick}
-      minWidth={minWidth}
-      mobileCard={mobileCard}
-      className={className}
-    />
+    /*
+      `data-density` sits on a wrapper rather than on <html>, so one pipeline
+      list can be dense while the rest of the product is not. The tokens are
+      declared for any element carrying the attribute, and cascade to this
+      subtree only.
+    */
+    <div {...densityAttribute(density)} className="flex min-w-0 flex-col">
+      <DataTable
+        data={rows}
+        columns={allColumns}
+        getRowKey={getRowKey}
+        isLoading={isLoading}
+        emptyState={emptyState}
+        pagination={pagination}
+        onRowClick={onRowClick}
+        minWidth={minWidth}
+        mobileCard={mobileCard}
+        className={className}
+        /*
+          The row height comes from the density token rather than from the
+          table's own padding, which is what makes the toggle do anything at
+          all. `h-row-h` resolves to 3rem comfortable and 2.5rem compact.
+        */
+        rowClassName={() => "h-row-h"}
+      />
+    </div>
   );
 }

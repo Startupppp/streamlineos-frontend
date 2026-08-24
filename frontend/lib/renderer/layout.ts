@@ -45,6 +45,14 @@ export interface FieldSpec {
   readonly hint?: string;
   /** Right-aligned and tabular in a list; set automatically for numeric kinds. */
   readonly numeric?: boolean;
+  /**
+   * Present when editing, absent when creating.
+   *
+   * Some fields only exist once the record does — a status a workflow assigns,
+   * an identifier the server mints. Rendering them on a create form offers a
+   * value the API will reject or ignore, which is a form that fails on submit.
+   */
+  readonly editOnly?: boolean;
 }
 
 export interface ColumnSpec {

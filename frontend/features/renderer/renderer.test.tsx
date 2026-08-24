@@ -259,3 +259,33 @@ describe("RecordForm", () => {
     }
   });
 });
+
+describe("RecordForm create vs edit", () => {
+  /**
+   * `status` is `editOnly` in PARTY_LAYOUT because `createPartySchema` has no
+   * such key. Rendering it on a create form offers a control whose value the API
+   * silently drops — a form that appears to work and does not.
+   */
+  it("omits an edit-only field when creating", () => {
+    render(
+      <RecordForm layout={PARTY_LAYOUT} mode="create" onSubmit={jest.fn()} />,
+    );
+    expect(screen.queryByLabelText("Status")).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/^Name/)).toBeInTheDocument();
+  });
+
+  it("includes it when editing", () => {
+    render(
+      <RecordForm layout={PARTY_LAYOUT} mode="edit" onSubmit={jest.fn()} />,
+    );
+    expect(screen.getByLabelText("Status")).toBeInTheDocument();
+  });
+
+  it("renders the fields the hand-written form had forgotten", () => {
+    // The form this replaced never gained displayName or notes, both of which
+    // the API has always accepted. Two descriptions of one record drift.
+    render(<RecordForm layout={PARTY_LAYOUT} mode="create" onSubmit={jest.fn()} />);
+    expect(screen.getByLabelText("Display name")).toBeInTheDocument();
+    expect(screen.getByLabelText("Notes")).toBeInTheDocument();
+  });
+});

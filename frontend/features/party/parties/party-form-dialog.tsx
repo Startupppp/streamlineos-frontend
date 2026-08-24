@@ -1,69 +1,56 @@
 "use client";
 
-import { useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { toast } from "sonner";
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { LoadingButton } from "@/components/ui/loading-button";
 import { AppDialog } from "@/components/shared/app-dialog";
+import { RecordForm } from "@/features/renderer/record-form";
+import { PARTY_LAYOUT } from "@/lib/renderer/party-layout";
+import type { RecordFormValues } from "@/features/renderer/record-form";
 import { useCreateParty, useUpdateParty } from "@/hooks/api/party/parties";
-import type { BusinessParty } from "@/types/party/parties";
+import type { BusinessParty, CreatePartyInput, UpdatePartyInput } from "@/types/party/parties";
 import { getErrorMessage } from "@/lib/get-error-message";
 
-const partySchema = z.object({
-  name: z.string().min(1, "Name is required").max(200),
-  partyType: z.enum(["CUSTOMER", "VENDOR", "PARTNER", "BOTH"]),
-  legalName: z.string().max(300).optional(),
-  taxNumber: z.string().max(100).optional(),
-  email: z
-    .string()
-    .email("Must be a valid email address")
-    .optional()
-    .or(z.literal("")),
-  phone: z.string().max(30).optional(),
-  website: z.string().url("Must be a valid URL").optional().or(z.literal("")),
-});
+/**
+ * The create and edit form, rendered from the layout description.
+ *
+ * This used to be three hundred lines of hand-written fields, with its own Zod
+ * schema listing the same columns the layout already describes. Two descriptions
+ * of one record drift: the hand-written one had never gained `displayName` or
+ * `notes`, both of which the API has always accepted.
+ *
+ * The layout is now the only place a party's shape is written down, so the list,
+ * the detail view and this form cannot disagree about what a party is.
+ */
 
-type PartyFormValues = z.infer<typeof partySchema>;
+/**
+ * Empty strings mean "not provided" on create, and "clear it" on edit.
+ *
+ * The API distinguishes them: `undefined` means "do not change" to the update
+ * DTO, so sending it would make a field impossible to clear — the same trap
+ * ticket 08 hit with the deal links.
+ */
+function forCreate(values: RecordFormValues): CreatePartyInput {
+  const optional: Record<string, string> = {};
+  for (const [key, value] of Object.entries(values)) {
+    if (key === "name") continue;
+    const trimmed = value.trim();
+    if (trimmed) optional[key] = trimmed;
+  }
 
-const EMPTY_DEFAULTS: PartyFormValues = {
-  name: "",
-  partyType: "CUSTOMER",
-  legalName: "",
-  taxNumber: "",
-  email: "",
-  phone: "",
-  website: "",
-};
+  // `name` is stated rather than swept up with the rest: it is the one field the
+  // API requires, and building it generically would leave the type unable to
+  // promise it is there.
+  return { ...optional, name: values.name?.trim() ?? "" } as CreatePartyInput;
+}
 
-function toFormValues(party: BusinessParty): PartyFormValues {
-  return {
-    name: party.name,
-    partyType: party.partyType,
-    legalName: party.legalName ?? "",
-    taxNumber: party.taxNumber ?? "",
-    email: party.email ?? "",
-    phone: party.phone ?? "",
-    website: party.website ?? "",
-  };
+function forUpdate(values: RecordFormValues): Omit<UpdatePartyInput, "partyId"> {
+  const payload: Record<string, string | null> = {};
+  for (const [key, value] of Object.entries(values)) {
+    if (key === "name") continue;
+    const trimmed = value.trim();
+    payload[key] = trimmed ? trimmed : null;
+  }
+
+  return { ...payload, name: values.name?.trim() } as Omit<UpdatePartyInput, "partyId">;
 }
 
 interface CreateProps {
@@ -86,226 +73,52 @@ export function PartyFormDialog({ open, onOpenChange, mode, defaultValues }: Pro
   const createParty = useCreateParty();
   const updateParty = useUpdateParty();
 
-  const form = useForm<PartyFormValues>({
-    resolver: zodResolver(partySchema),
-    defaultValues: EMPTY_DEFAULTS,
-  });
+  const isPending = mode === "create" ? createParty.isPending : updateParty.isPending;
 
-  useEffect(() => {
-    if (!open) return;
-    if (mode === "edit" && defaultValues) {
-      form.reset(toFormValues(defaultValues));
-    } else {
-      form.reset(EMPTY_DEFAULTS);
-    }
-  }, [open, mode, defaultValues, form]);
-
-  const isPending =
-    mode === "create" ? createParty.isPending : updateParty.isPending;
-
-  function handleSubmit(values: PartyFormValues) {
-    const legalName = values.legalName || undefined;
-    const taxNumber = values.taxNumber || undefined;
-    const email = values.email || undefined;
-    const phone = values.phone || undefined;
-    const website = values.website || undefined;
-
+  function handleSubmit(values: RecordFormValues) {
     if (mode === "create") {
-      createParty.mutate(
-        {
-          name: values.name,
-          partyType: values.partyType,
-          ...(legalName ? { legalName } : {}),
-          ...(taxNumber ? { taxNumber } : {}),
-          ...(email ? { email } : {}),
-          ...(phone ? { phone } : {}),
-          ...(website ? { website } : {}),
+      createParty.mutate(forCreate(values), {
+        onSuccess: () => {
+          toast.success("Party added");
+          onOpenChange(false);
         },
-        {
-          onSuccess: () => {
-            toast.success("Party added");
-            onOpenChange(false);
-          },
-          onError: (e) => toast.error(getErrorMessage(e)),
-        },
-      );
-    } else {
-      if (!defaultValues) return;
-      updateParty.mutate(
-        {
-          partyId: defaultValues.partyId,
-          name: values.name,
-          partyType: values.partyType,
-          legalName: legalName ?? null,
-          taxNumber: taxNumber ?? null,
-          email: email ?? null,
-          phone: phone ?? null,
-          website: website ?? null,
-        },
-        {
-          onSuccess: () => {
-            toast.success("Party updated");
-            onOpenChange(false);
-          },
-          onError: (e) => toast.error(getErrorMessage(e)),
-        },
-      );
+        onError: (e) => toast.error(getErrorMessage(e)),
+      });
+      return;
     }
+
+    if (!defaultValues) return;
+
+    updateParty.mutate(
+      { ...forUpdate(values), partyId: defaultValues.partyId },
+      {
+        onSuccess: () => {
+          toast.success("Party updated");
+          onOpenChange(false);
+        },
+        onError: (e) => toast.error(getErrorMessage(e)),
+      },
+    );
   }
-
-  function handleCancel() {
-    onOpenChange(false);
-  }
-
-  const formId = mode === "edit" ? "party-edit-form" : "party-create-form";
-
-  const footer = (
-    <>
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        onClick={handleCancel}
-        disabled={isPending}
-      >
-        Cancel
-      </Button>
-      <LoadingButton
-        type="submit"
-        form={formId}
-        size="sm"
-        isPending={isPending}
-        loadingText="Saving…"
-      >
-        {mode === "edit" ? "Save Changes" : "Add Party"}
-      </LoadingButton>
-    </>
-  );
 
   return (
     <AppDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={mode === "edit" ? "Edit Party" : "Add Party"}
-      description={
-        mode === "edit"
-          ? "Update this party's details."
-          : "Add a customer, vendor or partner to your directory."
-      }
-      footer={footer}
+      title={mode === "create" ? "Add a party" : "Edit party"}
     >
-      <Form {...form}>
-        <form
-          id={formId}
-          onSubmit={form.handleSubmit(handleSubmit)}
-          className="space-y-4"
-          noValidate
-        >
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Name</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="Acme Corp" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="partyType"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Type</FormLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="CUSTOMER">Customer</SelectItem>
-                    <SelectItem value="VENDOR">Vendor</SelectItem>
-                    <SelectItem value="PARTNER">Partner</SelectItem>
-                    <SelectItem value="BOTH">Customer &amp; Vendor</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="legalName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Legal name (optional)</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="Acme Corporation Ltd." />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="taxNumber"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Tax number (optional)</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="GST / VAT / EIN" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <div className="grid grid-cols-2 gap-3">
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email (optional)</FormLabel>
-                  <FormControl>
-                    <Input {...field} type="email" placeholder="contact@acme.com" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Phone (optional)</FormLabel>
-                  <FormControl>
-                    <Input {...field} type="tel" placeholder="+1 555 000 0000" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          <FormField
-            control={form.control}
-            name="website"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Website (optional)</FormLabel>
-                <FormControl>
-                  <Input {...field} type="url" placeholder="https://acme.com" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </form>
-      </Form>
+      <RecordForm
+        // Remounted per open so the form resets to the record being edited
+        // rather than keeping the last one's values.
+        key={`${mode}:${defaultValues?.partyId ?? "new"}:${String(open)}`}
+        layout={PARTY_LAYOUT}
+        mode={mode}
+        initial={defaultValues as unknown as Record<string, unknown> | undefined}
+        onSubmit={handleSubmit}
+        onCancel={() => onOpenChange(false)}
+        isSubmitting={isPending}
+        submitLabel={mode === "create" ? "Add party" : "Save changes"}
+      />
     </AppDialog>
   );
 }
