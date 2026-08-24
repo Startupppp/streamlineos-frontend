@@ -71,6 +71,7 @@ export const CRM_PERMISSIONS: Permission[] = [
   { name: "crm:campaigns:view", resource: "crm:campaigns", action: "view", description: "View CRM campaigns, attribution reports, and ROI metrics" },
   { name: "crm:clients:manage", resource: "crm:clients", action: "manage", description: "Manage client accounts" },
   { name: "crm:customer360:view", resource: "crm:customer360", action: "view", description: "View Customer 360 aggregated profile (respects per-module permissions)" },
+  { name: "crm:ingress:submit", resource: "crm:ingress", action: "submit", description: "Deliver a normalised inbound communication event into the CRM" },
   { name: "crm:activities:view", resource: "crm:activities", action: "view", description: "Read the unified timeline of calls, emails, meetings, notes and tasks" },
   { name: "crm:activities:manage", resource: "crm:activities", action: "manage", description: "Log, edit, complete and remove activities on the timeline" },
   { name: "crm:data-quality:view", resource: "crm:data-quality", action: "view", description: "View CRM data quality dashboard" },
