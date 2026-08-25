@@ -37,7 +37,7 @@
 - [x] Convert the first route and confirm rows appear in view-source, not just on screen — **the answer was no; then fixed, then yes**
 - [x] Write both test halves for it before moving on
 - [x] Repeat per route
-- [ ] Check a client-side navigation between two converted routes does not refetch — **not exercised; needs a browser, and there is no browser automation in this repo**
+- [x] Check a client-side navigation between two converted routes does not refetch
 - [x] Verify at a cold load with JavaScript disabled that rows are present in the markup
 - [x] Fix the root cause
 - [x] Tick every acceptance criterion above
@@ -171,6 +171,26 @@ Also worth recording: the workers page has three tables and 138 `<td>` cells, mo
 skeletons. Those belong to other sections whose queries are not prefetched — `useRolesAnalytics`
 and friends. A skeleton on the page is not evidence the prefetch failed, which is why the check
 has to be "is this row's real text in the markup", not "are there any skeletons".
+
+### The last criterion, closed as a test rather than a glance
+
+"A client-side navigation between two converted routes does not refetch" was parked as browser-only.
+It is expressible at the React seam, and now is: `lib/prefetch/cache-across-navigation.test.tsx`
+mounts `useWorkers`, unmounts it (navigating away), mounts `usePaginatedRoles`, then remounts the
+first — all against **one** `createAppQueryClient(scope)`, as real client-side navigation does — and
+asserts the fetch ran exactly once.
+
+Two things stop it being a test that cannot fail:
+
+- It waits for `status === "success"` before asserting. Both hooks are `useCan`-gated, so a
+  disabled query would otherwise sit at zero calls and pass for entirely the wrong reason.
+- It carries two negative cases: a fresh client per mount **does** refetch (so the test can see a
+  refetch at all), and a remount after invalidation **does** refetch (so staleness, not the
+  initial-mount exemption, is what is being measured).
+
+Then the mechanism was deliberately broken — `staleTime: 0` on `useWorkers` — and test 1 failed
+`Expected: 1, Received: 2` while the negatives stayed green. Production code restored. A test that
+has never been seen to fail is not evidence.
 
 ### The lesson
 
