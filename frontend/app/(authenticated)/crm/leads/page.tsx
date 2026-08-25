@@ -483,7 +483,7 @@ export default function LeadsPipelinePage() {
               canCreateDeal={canCreateDeal}
               canCreate={canCreate}
               activeFilterLabels={activeFilterLabels}
-              onClearFilters={clearFilters}
+              onClearFilters={handleClearFilters}
               onCreateLead={handleOpenCreateLead}
             />
           </div>
@@ -506,7 +506,7 @@ export default function LeadsPipelinePage() {
             <LeadsFunnelView
               board={filteredBoard}
               searchQuery={searchQuery}
-              onClearSearch={clearFilters}
+              onClearSearch={handleClearFilters}
               onCreateLead={handleOpenCreateLead}
               canCreate={canCreate}
             />
