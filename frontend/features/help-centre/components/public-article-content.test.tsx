@@ -1,5 +1,7 @@
 jest.mock("server-only", () => ({}));
 
+jest.mock("sanitize-html", () => (html: string) => html);
+
 jest.mock("./public-article-feedback", () => ({
   PublicArticleFeedback: () => null,
 }));

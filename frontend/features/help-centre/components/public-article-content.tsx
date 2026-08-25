@@ -1,4 +1,5 @@
 import Link from "next/link";
+import sanitizeHtml from "sanitize-html";
 import { Badge } from "@/components/ui/badge";
 import { Eye } from "lucide-react";
 import { extractToc, type TocItem } from "@/lib/blog-utils";
@@ -6,7 +7,42 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import type { PublicKbArticle } from "@/lib/public-fetch";
 import { PublicArticleFeedback } from "./public-article-feedback";
-import { PublicArticleBody } from "./public-article-body";
+
+const PROSE_CLASS =
+  "prose prose-slate dark:prose-invert max-w-none prose-headings:font-semibold prose-headings:tracking-tight prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none prose-pre:bg-muted prose-pre:border prose-pre:border-border prose-img:rounded-lg prose-img:border prose-img:border-border";
+
+const SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
+  allowedTags: [
+    "h1", "h2", "h3", "h4", "h5", "h6",
+    "p", "br", "hr",
+    "strong", "em", "b", "i", "u", "s", "del", "ins", "mark", "sub", "sup",
+    "blockquote",
+    "ul", "ol", "li",
+    "a",
+    "code", "pre",
+    "img",
+    "table", "thead", "tbody", "tfoot", "tr", "th", "td", "caption", "colgroup", "col",
+    "div", "span",
+  ],
+  allowedAttributes: {
+    h1: ["id"],
+    h2: ["id"],
+    h3: ["id"],
+    h4: ["id"],
+    h5: ["id"],
+    h6: ["id"],
+    a: ["href", "target", "rel"],
+    img: ["src", "alt", "title", "width", "height"],
+    td: ["colspan", "rowspan"],
+    th: ["colspan", "rowspan", "scope"],
+    col: ["span"],
+    colgroup: ["span"],
+  },
+  allowedSchemes: ["http", "https", "mailto"],
+  allowedSchemesByTag: {
+    img: ["http", "https", "data"],
+  },
+};
 
 interface ArticleTocProps {
   items: TocItem[];
@@ -97,9 +133,10 @@ export function PublicArticleContent({ article, orgId }: PublicArticleContentPro
                 </p>
               )}
 
-              <div className="mt-6">
-                <PublicArticleBody html={withIds} />
-              </div>
+              <div
+                className={cn("mt-6", PROSE_CLASS)}
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(withIds, SANITIZE_OPTIONS) }}
+              />
 
               {article.tags && article.tags.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-6">

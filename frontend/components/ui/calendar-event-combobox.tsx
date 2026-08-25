@@ -40,7 +40,8 @@ export function CalendarEventCombobox({
     return { start, end };
   }, []);
 
-  const { data: events = [], isFetching } = useCalendarEvents(range.start, range.end);
+  const { data: eventsResponse, isFetching } = useCalendarEvents(range.start, range.end);
+  const events = eventsResponse?.events ?? [];
 
   const options = useMemo(() => {
     const q = debouncedSearch.trim().toLowerCase();

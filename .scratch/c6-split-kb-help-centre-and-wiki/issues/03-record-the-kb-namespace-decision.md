@@ -4,7 +4,7 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** decided 2026-08-25 — keep one namespace
+**Status:** done — decided 2026-08-25, keep one namespace
 
 ---
 
@@ -62,4 +62,4 @@ A key that gates the shared container legitimately governs both products' conten
 - [x] Check whether any role template grants a key that reaches the other product — moot once the crossing is shown to follow the shared container
 - [x] Decide and record the verdict with reasoning
 - [x] No follow-up ticket needed; nothing to split
-- [ ] Set **Status** to `done` and update this ticket's row in `../README.md`
+- [x] Set **Status** to `done` and update this ticket's row in `../README.md`

@@ -123,11 +123,13 @@ export function CalendarView() {
 
   const searchParams = useSearchParams();
   const {
-    data: events = [],
+    data: eventsResponse,
     isError: eventsIsError,
     error: eventsError,
     refetch: refetchEvents,
   } = useCalendarEvents(rangeStart, rangeEnd);
+  const events = eventsResponse?.events ?? [];
+  const sourceFailures = eventsResponse?.failures ?? [];
   const { data: connections = [] } = useCalendarConnections();
   const finalize = useFinalizeIntegrationConnection();
   const finalizeRef = useRef(false);
@@ -346,6 +348,7 @@ export function CalendarView() {
           hrEventsVisible={hrEventsVisible}
           crmEventsVisible={crmEventsVisible}
           attendanceEventsVisible={attendanceEventsVisible}
+          sourceFailures={sourceFailures}
           onPrev={handlePrev}
           onNext={handleNext}
           onToday={handleToday}

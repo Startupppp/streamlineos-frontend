@@ -172,6 +172,20 @@ describe("CalendarSourcePanel", () => {
       expect(screen.getByText(/some events could not be loaded/i)).not.toBeNull();
     });
   });
+
+  it("banner shows the human label of the failed source, not the internal key", async () => {
+    setSourcesData([]);
+    render(
+      <CalendarSourcePanel
+        failures={[{ key: "internal-key-hr-leaves", label: "Leaves" }]}
+      />,
+    );
+    openPanel();
+    await waitFor(() => {
+      expect(screen.getByText(/Leaves/)).not.toBeNull();
+      expect(screen.queryByText(/internal-key-hr-leaves/)).toBeNull();
+    });
+  });
 });
 
 describe("CalendarSourcePanel — mobile drawer", () => {

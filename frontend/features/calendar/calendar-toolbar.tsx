@@ -143,6 +143,7 @@ interface CalendarToolbarProps {
   hrEventsVisible: boolean;
   crmEventsVisible: boolean;
   attendanceEventsVisible: boolean;
+  sourceFailures?: ReadonlyArray<{ key: string; label: string }>;
   onPrev: () => void;
   onNext: () => void;
   onToday: () => void;
@@ -162,6 +163,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
   hrEventsVisible,
   crmEventsVisible,
   attendanceEventsVisible,
+  sourceFailures,
   onPrev,
   onNext,
   onToday,
@@ -295,11 +297,11 @@ export const CalendarToolbar = memo(function CalendarToolbar({
             <span className="hidden xl:inline">CRM events</span>
           </Button>
 
-          <CalendarSourcePanel />
+          <CalendarSourcePanel failures={sourceFailures} />
         </div>
 
         <div className="flex items-center gap-1.5 lg:hidden">
-          <CalendarSourcePanel />
+          <CalendarSourcePanel failures={sourceFailures} />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <AnimatedIconButton

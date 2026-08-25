@@ -141,12 +141,17 @@ interface UpdateCalendarEventPayload
   entityId?: string | null;
 }
 
+export interface CalendarEventsResponse {
+  events: CalendarListItem[];
+  failures: Array<{ key: string; label: string }>;
+}
+
 export function useCalendarEvents(start: Date, end: Date) {
   const canView = useCan("calendar:read");
   return useQuery({
     queryKey: queryKeys.calendar.events(start.toISOString(), end.toISOString()),
     queryFn: () =>
-      apiClient.get<CalendarListItem[]>("/calendar/events", {
+      apiClient.get<CalendarEventsResponse>("/calendar/events", {
         start: start.toISOString(),
         end: end.toISOString(),
       }),

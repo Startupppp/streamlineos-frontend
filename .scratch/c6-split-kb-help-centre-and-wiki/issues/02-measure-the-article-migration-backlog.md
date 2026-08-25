@@ -42,7 +42,7 @@ Naming it `migration/` therefore invites exactly the wrong action: it reads as t
 - [x] Identify which surfaces still write articles
 - [x] Decide transition vs conversion tool and record the reasoning
 - [x] Execute the rename
-- [ ] Set **Status** to `done` and update this ticket's row in `../README.md`
+- [x] Set **Status** to `done` and update this ticket's row in `../README.md`
 
 ## Note for whoever runs the rename
 
